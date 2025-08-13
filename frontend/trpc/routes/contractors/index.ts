@@ -24,6 +24,7 @@ export const contractorsRouter = createRouter({
       const where = and(
         eq(companyContractors.companyId, ctx.company.id),
         input.excludeAlumni ? isNull(companyContractors.endedAt) : undefined,
+        isNotNull(companyContractors.role),
       );
       const rows = await db.query.companyContractors.findMany({
         where,
@@ -39,14 +40,8 @@ export const contractorsRouter = createRouter({
         limit: input.limit,
       });
       const workers = rows.map((worker) => ({
-        ...pick(worker, [
-          "startedAt",
-          "payRateInSubunits",
-          "endedAt",
-          "role",
-          "payRateType",
-          "contractSignedElsewhere",
-        ]),
+        ...pick(worker, ["startedAt", "payRateInSubunits", "endedAt", "payRateType", "contractSignedElsewhere"]),
+        role: worker.role ?? "",
         id: worker.externalId,
         user: {
           ...simpleUser(worker.user),
@@ -54,7 +49,7 @@ export const contractorsRouter = createRouter({
           onboardingCompleted: worker.user.legalName && worker.user.preferredName && worker.user.countryCode,
         } as const,
       }));
-      return workers.filter((worker) => worker.role);
+      return workers;
     }),
   get: companyProcedure.input(z.object({ userId: z.string() })).query(async ({ ctx, input }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });

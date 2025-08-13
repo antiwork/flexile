@@ -112,11 +112,6 @@
       "tender_offer": {
         "minimum_valuation": 99000000
       },
-      "company_monthly_financial_reports": {
-        "random_records_metadata": {
-          "count": 24
-        }
-      },
       "equity_buyback_rounds": [
         {
           "number_of_shares": 2000000,

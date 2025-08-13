@@ -16,7 +16,7 @@ export const trpc = createTRPCReact<AppRouter>();
 
 export const UserDataProvider = ({ children }: { children: React.ReactNode }) => {
   const { data: session, status } = useSession();
-  const { login, logout } = useUserStore();
+  const { user, login, logout } = useUserStore();
 
   const isSignedIn = !!session?.user;
   const userId = session?.user.email;
@@ -49,7 +49,7 @@ export const UserDataProvider = ({ children }: { children: React.ReactNode }) =>
   if (status === "loading") return null;
 
   // Wait for query to complete before rendering children
-  if (isSignedIn && (isLoading || !data)) return null;
+  if (isSignedIn && (isLoading || !user)) return null;
   return children;
 };
 

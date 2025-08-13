@@ -8,10 +8,7 @@ class CreateOrUpdateCompanyUpdate
   end
 
   def perform!
-    company_update.assign_attributes(
-      company_update_params.except(:show_revenue, :show_net_income)
-    )
-
+    company_update.assign_attributes(company_update_params)
 
     company_update.save!
 

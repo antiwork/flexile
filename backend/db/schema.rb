@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -102,11 +102,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.boolean "is_trusted", default: false, null: false
     t.boolean "show_analytics_to_contractors", default: false, null: false
     t.string "default_currency", default: "usd", null: false
-    t.boolean "lawyers_enabled", default: false, null: false
     t.decimal "conversion_share_price_usd"
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
+    t.string "invite_link"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
+    t.index ["invite_link"], name: "index_companies_on_invite_link", unique: true
   end
 
   create_table "company_administrators", force: :cascade do |t|
@@ -175,18 +176,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.index ["user_id"], name: "index_company_investors_on_user_id"
   end
 
-  create_table "company_invite_links", force: :cascade do |t|
-    t.bigint "company_id", null: false
-    t.bigint "document_template_id"
-    t.string "token", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_id", "document_template_id"], name: "idx_on_company_id_document_template_id_57bbad7c26", unique: true
-    t.index ["company_id"], name: "index_company_invite_links_on_company_id"
-    t.index ["document_template_id"], name: "index_company_invite_links_on_document_template_id"
-    t.index ["token"], name: "index_company_invite_links_on_token", unique: true
-  end
-
   create_table "company_lawyers", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "company_id", null: false
@@ -197,18 +186,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.index ["external_id"], name: "index_company_lawyers_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_lawyers_on_user_id_and_company_id", unique: true
     t.index ["user_id"], name: "index_company_lawyers_on_user_id"
-  end
-
-  create_table "company_monthly_financial_reports", force: :cascade do |t|
-    t.bigint "company_id", null: false
-    t.integer "year", null: false
-    t.integer "month", null: false
-    t.bigint "net_income_cents", null: false
-    t.bigint "revenue_cents", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_id", "year", "month"], name: "index_company_monthly_financials_on_company_year_month", unique: true
-    t.index ["company_id"], name: "index_company_monthly_financial_reports_on_company_id"
   end
 
   create_table "company_stripe_accounts", force: :cascade do |t|
@@ -230,21 +207,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.string "external_id", null: false
-    t.string "period"
-    t.date "period_started_on"
-    t.boolean "show_revenue", default: false, null: false
-    t.boolean "show_net_income", default: false, null: false
     t.index ["company_id"], name: "index_company_updates_on_company_id"
     t.index ["external_id"], name: "index_company_updates_on_external_id", unique: true
-  end
-
-  create_table "company_updates_financial_reports", force: :cascade do |t|
-    t.bigint "company_update_id", null: false
-    t.bigint "company_monthly_financial_report_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_monthly_financial_report_id"], name: "idx_on_company_monthly_financial_report_id_d65ba22efd"
-    t.index ["company_update_id"], name: "index_company_updates_financial_reports_on_company_update_id"
   end
 
   create_table "consolidated_invoices", force: :cascade do |t|
@@ -925,7 +889,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.string "otp_secret_key"
     t.integer "otp_failed_attempts_count", default: 0, null: false
     t.datetime "otp_first_failed_at"
-    t.bigint "signup_invite_link_id"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -934,7 +897,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
     t.index ["invited_by_type", "invited_by_id"], name: "index_users_on_invited_by"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
-    t.index ["signup_invite_link_id"], name: "index_users_on_signup_invite_link_id"
   end
 
   create_table "versions", force: :cascade do |t|

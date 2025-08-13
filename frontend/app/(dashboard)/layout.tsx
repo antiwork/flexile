@@ -55,11 +55,11 @@ import {
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import { storageKeys } from "@/models/constants";
-import { trpc } from "@/trpc/client";
+import { trpc, UserDataProvider } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_switch_path } from "@/utils/routes";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const pathname = usePathname();
@@ -368,6 +368,14 @@ const NavLinks = () => {
     </SidebarMenu>
   );
 };
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <UserDataProvider>
+      <DashboardLayout>{children}</DashboardLayout>
+    </UserDataProvider>
+  );
+}
 
 const NavItem = <T extends string>({
   icon,

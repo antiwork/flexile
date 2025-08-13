@@ -45,9 +45,7 @@ test.describe("Investors", () => {
       .set({ totalShares: BigInt(50000) })
       .where(eq(companyInvestors.id, companyInvestor2.id));
 
-    await login(page, adminUser);
-    await page.goto("/equity/investors");
-
+    await login(page, adminUser, "/equity/investors");
     await expect(page.getByText("Investors")).toBeVisible();
     await expect(page.getByText("Alice Investor")).toBeVisible();
     await expect(page.getByText("Bob Investor")).toBeVisible();
@@ -80,8 +78,7 @@ test.describe("Investors", () => {
       .set({ totalShares: BigInt(200000) })
       .where(eq(companyInvestors.id, companyInvestor.id));
 
-    await login(page, adminUser);
-    await page.goto("/equity/investors");
+    await login(page, adminUser, "/equity/investors");
 
     await expect(page.getByText("Test Investor")).toBeVisible();
     await expect(page.locator("tbody")).toContainText("20.00%");
@@ -109,8 +106,7 @@ test.describe("Investors", () => {
       .set({ totalShares: BigInt(300000) })
       .where(eq(companyInvestors.id, companyInvestor.id));
 
-    await login(page, adminUser);
-    await page.goto("/equity/investors");
+    await login(page, adminUser, "/equity/investors");
 
     await expect(page.getByText("Major Investor")).toBeVisible();
     await expect(page.locator("tbody")).toContainText("15.00%");

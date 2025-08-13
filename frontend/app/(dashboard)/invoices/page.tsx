@@ -10,15 +10,17 @@ import {
   CheckCircle,
   CircleAlert,
   CircleCheck,
+  CircleCheckBig,
   Download,
   Eye,
   Info,
   Plus,
   SquarePen,
   Trash2,
+  X,
 } from "lucide-react";
 import Link from "next/link";
-import React, { Fragment, useCallback, useMemo, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -26,7 +28,6 @@ import {
   DeleteModal,
   EDITABLE_INVOICE_STATES,
   RejectModal,
-  taxRequirementsMet,
   useApproveInvoices,
   useIsActionable,
   useIsDeletable,
@@ -35,8 +36,8 @@ import {
 import Status, { StatusDetails } from "@/app/(dashboard)/invoices/Status";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
-import { SelectionActions } from "@/components/actions/SelectionActions";
-import type { ActionConfig, ActionContext } from "@/components/actions/types";
+import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
+import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DatePicker from "@/components/DatePicker";
@@ -95,7 +96,7 @@ export default function InvoicesPage() {
   const isPayNowDisabled = useCallback(
     (invoice: Invoice) => {
       const payable = isPayable(invoice);
-      return payable && (!company.completedPaymentMethodSetup || !taxRequirementsMet(invoice));
+      return payable && !company.completedPaymentMethodSetup;
     },
     [isPayable, company.completedPaymentMethodSetup],
   );
@@ -289,7 +290,6 @@ export default function InvoicesPage() {
 
   const selectedRows = table.getSelectedRowModel().rows;
   const selectedInvoices = selectedRows.map((row) => row.original);
-
   const selectedApprovableInvoices = useMemo(
     () => selectedInvoices.filter(isActionable),
     [selectedInvoices, isActionable],
@@ -303,6 +303,11 @@ export default function InvoicesPage() {
   const selectedDeletableInvoices = useMemo(
     () => selectedInvoices.filter(isDeletable),
     [selectedInvoices, isDeletable],
+  );
+
+  const availableActions = useMemo(
+    () => getAvailableActions(selectedInvoices, actionConfig, actionContext),
+    [selectedInvoices, actionConfig, actionContext],
   );
 
   return (
@@ -395,16 +400,6 @@ export default function InvoicesPage() {
               </AlertDescription>
             </Alert>
           ) : null}
-
-          {!data.every(taxRequirementsMet) && (
-            <Alert className="mx-4" variant="destructive">
-              <AlertTriangle className="size-4" />
-              <AlertTitle>Missing tax information.</AlertTitle>
-              <AlertDescription>
-                Some invoices are not payable until contractors provide tax information.
-              </AlertDescription>
-            </Alert>
-          )}
         </>
       ) : null}
 
@@ -439,11 +434,11 @@ export default function InvoicesPage() {
                 </Button>
               ) : null
             }
-            selectionActions={(selectedRows) => (
+            selectionActions={(selectedInvoices) => (
               <SelectionActions
-                selectedItems={selectedRows}
+                selectedItems={selectedInvoices}
                 config={actionConfig}
-                actionContext={actionContext}
+                availableActions={availableActions}
                 onAction={handleInvoiceAction}
               />
             )}
@@ -538,6 +533,16 @@ export default function InvoicesPage() {
         }}
         invoices={selectedDeletableInvoices}
       />
+      {isMobile ? (
+        <InvoiceBulkActionsBar
+          availableActions={availableActions}
+          selectedInvoices={selectedInvoices}
+          onClose={() => {
+            table.toggleAllRowsSelected(false);
+          }}
+          onAction={handleInvoiceAction}
+        />
+      ) : null}
     </>
   );
 }
@@ -558,15 +563,17 @@ const TasksModal = ({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="w-110 p-6">
+      <DialogContent className="md:w-110">
         <DialogHeader>
-          <DialogTitle>{invoice.billFrom}</DialogTitle>
+          <DialogTitle className="max-md:pb-4 max-md:text-base max-md:leading-5 max-md:font-medium">
+            {invoice.billFrom}
+          </DialogTitle>
         </DialogHeader>
         <section>
           <StatusDetails invoice={invoice} />
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-            <Alert className="mx-4" variant="warning">
+            <Alert className="max-md:mb-4" variant="warning">
               <CircleAlert />
               <AlertDescription>
                 This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
@@ -574,46 +581,121 @@ const TasksModal = ({
               </AlertDescription>
             </Alert>
           ) : null}
-          <header className="flex items-center justify-between gap-4 pt-4">
-            <h3>Invoice details</h3>
-            <Button variant="outline" size="small" asChild>
+          <header className="flex items-center justify-between gap-4 md:pt-4">
+            <h3 className="text-base max-md:leading-5">Invoice details</h3>
+            <Button variant="outline" size="small" asChild className="max-md:font-regular max-md:h-7.5 max-md:text-sm">
               <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
             </Button>
           </header>
           <Separator />
-          <Card className="border-none">
-            <CardContent className="p-0">
-              <div className="flex justify-between gap-2">
-                <div>Net amount in cash</div>
-                <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
-              </div>
-              <Separator />
-              {invoice.equityAmountInCents ? (
-                <>
-                  <div className="flex justify-between gap-2">
-                    <div>Swapped for equity ({invoice.equityPercentage}%)</div>
-                    <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
-                  </div>
-                  <Separator />
-                </>
-              ) : null}
-              <div className="flex justify-between gap-2 pb-4 font-medium">
-                <div>Payout total</div>
-                <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-              </div>
-            </CardContent>
-          </Card>
+          <div>
+            <div className="flex justify-between gap-2 max-md:leading-5">
+              <div>Net amount in cash</div>
+              <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
+            </div>
+            <Separator />
+            {invoice.equityAmountInCents ? (
+              <>
+                <div className="flex justify-between gap-2 max-md:leading-5">
+                  <div>Swapped for equity ({invoice.equityPercentage}%)</div>
+                  <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
+                </div>
+                <Separator />
+              </>
+            ) : null}
+            <div className="flex justify-between gap-2 pb-4 font-medium">
+              <div>Payout total</div>
+              <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+            </div>
+          </div>
         </section>
         {isActionable(invoice) ? (
           <DialogFooter>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" onClick={onReject}>
+              <Button variant="outline" onClick={onReject} className="max-md:h-9 max-md:text-sm">
                 Reject
               </Button>
-              <ApproveButton invoice={invoice} onApprove={onClose} />
+              <ApproveButton invoice={invoice} onApprove={onClose} className="max-md:h-9 max-md:text-sm" />
             </div>
           </DialogFooter>
         ) : null}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const InvoiceBulkActionsBar = ({
+  selectedInvoices,
+  onClose,
+  availableActions,
+  onAction,
+}: {
+  selectedInvoices: Invoice[];
+  onClose: () => void;
+  availableActions: AvailableActions<Invoice>[];
+  onAction: (actionId: string, items: Invoice[]) => void;
+}) => {
+  const [visibleInvoices, setVisibleInvoices] = useState<Invoice[]>([]);
+  const [visibleActions, setVisibleActions] = useState<AvailableActions<Invoice>[]>([]);
+
+  useEffect(() => {
+    const isOpen = selectedInvoices.length > 0;
+    if (isOpen) {
+      setVisibleInvoices(selectedInvoices);
+      setVisibleActions(availableActions);
+    }
+  }, [selectedInvoices, availableActions]);
+
+  const rowsSelected = visibleInvoices.length;
+  const rejectAction = visibleActions.find((action) => action.key === "reject");
+  const approveAction = visibleActions.find((action) => action.key === "approve");
+  const deleteAction = visibleActions.find((action) => action.key === "delete");
+
+  return (
+    <Dialog open={selectedInvoices.length > 0} modal={false}>
+      <DialogContent className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Selected invoices</DialogTitle>
+        </DialogHeader>
+        <div className="flex gap-2 p-2">
+          <Button
+            variant="outline"
+            className="border-muted flex h-9 items-center gap-2 rounded-lg border border-dashed text-sm font-medium hover:bg-white"
+            onClick={onClose}
+          >
+            <span className="tabular-nums">{rowsSelected}</span> selected
+            <X className="size-4" />
+          </Button>
+          {rejectAction ? (
+            <Button
+              variant="outline"
+              className="flex h-9 items-center gap-2 text-sm"
+              onClick={() => rejectAction.action && onAction(rejectAction.action, selectedInvoices)}
+            >
+              <Ban className="size-3.5" strokeWidth={2.5} />
+              Reject
+            </Button>
+          ) : null}
+          {approveAction ? (
+            <Button
+              variant="primary"
+              className="flex h-9 items-center gap-2 border-none text-sm"
+              onClick={() => approveAction.action && onAction(approveAction.action, selectedInvoices)}
+            >
+              <CircleCheckBig className="size-3.5" strokeWidth={2.5} />
+              Approve
+            </Button>
+          ) : null}
+          {deleteAction ? (
+            <Button
+              variant="outline"
+              className="flex h-9 items-center"
+              onClick={() => deleteAction.action && onAction(deleteAction.action, selectedInvoices)}
+            >
+              <Trash2 className="size-3.5" strokeWidth={2.5} />
+            </Button>
+          ) : null}
+        </div>
       </DialogContent>
     </Dialog>
   );

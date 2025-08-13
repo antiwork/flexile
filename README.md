@@ -93,10 +93,23 @@ pnpm playwright test
    WISE_PROFILE_ID=your_membership_number_here
    WISE_API_KEY=your_full_api_token_here
    ```
+   </details>
 
-**Note**: Keep credentials secure and never commit to version control.
+<details> 
+<summary>Resend</summary>
+
+1. Create account at [resend.com](https://resend.com) and complete email verification
+2. Navigate to **API Keys** in the dashboard
+3. Click **Create API Key**, give it a name (e.g., "Flexile Development")
+4. Copy the API key immediately (starts with re\_)
+5. Add to `.env`:
+   ```
+   RESEND_API_KEY=re_your_api_key_here
+   ```
 
 </details>
+
+**Note**: Keep credentials secure and never commit to version control.
 
 ## License
 

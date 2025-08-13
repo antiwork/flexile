@@ -37,8 +37,7 @@ test.describe("view company updates", () => {
       sentAt: new Date(),
     });
 
-    await login(page, user);
-    await page.goto(`/updates/company`);
+    await login(page, user, "/updates/company");
 
     await page.getByRole("row").getByText(companyUpdate.title).first().click();
 
@@ -60,9 +59,7 @@ test.describe("view company updates", () => {
       sentAt: new Date(),
     });
 
-    await login(page, user);
-    await page.goto(`/updates/company`);
-
+    await login(page, user, "/updates/company");
     await page.getByRole("row").getByText(companyUpdate.title).first().click();
 
     await withinModal(
