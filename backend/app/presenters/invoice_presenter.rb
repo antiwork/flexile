@@ -20,7 +20,7 @@ class InvoicePresenter
       user: user_props(contractor:),
       company: InvoicePresenter.company_props(company),
       invoice: {
-        attachment: nil,
+        attachments: [],
         bill_address: AddressPresenter.new(user).props,
         description: "",
         invoice_date: new_invoice_date,
@@ -41,10 +41,9 @@ class InvoicePresenter
       {
         invoice: {
           id: external_id,
-          attachment: attachment ? {
-            name: attachment.filename,
-            url: Rails.application.routes.url_helpers.rails_blob_path(attachment, disposition: "attachment"),
-          } : nil,
+          attachments: invoice.attachments.map do |attachment|
+            { name: attachment.filename, url: Rails.application.routes.url_helpers.rails_blob_path(attachment, disposition: "attachment") }
+          end,
           bill_address: AddressPresenter.new(invoice).props,
           description:,
           invoice_date:,

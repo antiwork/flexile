@@ -78,9 +78,7 @@ class CreateOrUpdateInvoiceService
       invoice.equity_amount_in_options = equity_options
       invoice.flexile_fee_cents = invoice.calculate_flexile_fee_cents
 
-      if invoice_attachment.present?
-        invoice.attachments.attach(invoice_attachment)
-      end
+      invoice.attachments.attach(invoice_attachments) if invoice_attachments.present?
 
       unless invoice.save
         error = invoice.errors.full_messages.to_sentence
@@ -107,8 +105,8 @@ class CreateOrUpdateInvoiceService
       params.permit(invoice: [:invoice_date, :invoice_number, :notes, :equity_percentage])[:invoice]
     end
 
-    def invoice_attachment
-      params.dig(:invoice, :attachment)
+    def invoice_attachments
+      params.dig(:invoice, :attachments)
     end
 
     def invoice_line_items_params

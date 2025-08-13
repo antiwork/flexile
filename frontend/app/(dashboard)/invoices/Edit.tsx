@@ -67,7 +67,7 @@ const dataSchema = z.object({
     invoice_number: z.string(),
     notes: z.string().nullable(),
     status: z.enum(["received", "approved", "processing", "payment_pending", "paid", "rejected", "failed"]).nullable(),
-    attachment: z.object({ name: z.string(), url: z.string() }).nullable().optional(),
+    attachments: z.array(z.object({ name: z.string(), url: z.string() })).default([]),
     line_items: z.array(
       z.object({
         id: z.number().optional(),
@@ -127,8 +127,8 @@ const Edit = () => {
   );
   const invoiceYear = issueDate.year;
   const [notes, setNotes] = useState(data.invoice.notes ?? "");
-  const [attachment, setAttachment] = useState<{ name: string; url: string; blob?: File } | null>(
-    data.invoice.attachment ?? null,
+  const [attachments, setAttachments] = useState<{ name: string; url: string; blob?: File }[]>(
+    data.invoice.attachments,
   );
   const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
     if (data.invoice.line_items.length) return List(data.invoice.line_items);
@@ -185,7 +185,9 @@ const Edit = () => {
         }
       }
       if (notes.length) formData.append("invoice[notes]", notes);
-      if (attachment?.blob) formData.append("invoice[attachment]", attachment.blob);
+      for (const file of attachments) {
+        if (file.blob) formData.append("invoice[attachments][]", file.blob);
+      }
 
       await request({
         method: id ? "PATCH" : "POST",
@@ -510,13 +512,17 @@ const Edit = () => {
             type="file"
             className="hidden"
             accept="application/pdf"
+            multiple
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              setAttachment({ name: file.name, url: URL.createObjectURL(file), blob: file });
+              const files = e.target.files;
+              if (!files) return;
+              setAttachments((prev) => [
+                ...prev,
+                ...[...files].map((file) => ({ name: file.name, url: URL.createObjectURL(file), blob: file })),
+              ]);
             }}
           />
-          {attachment ? (
+          {attachments.length ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -525,18 +531,24 @@ const Edit = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <a href={attachment.url} download>
-                      <PaperClipIcon className="inline size-4" /> {attachment.name}
-                    </a>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="link" aria-label="Remove" onClick={() => setAttachment(null)}>
-                      <TrashIcon className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                {attachments.map((att, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <a href={att.url} download>
+                        <PaperClipIcon className="inline size-4" /> {att.name}
+                      </a>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="link"
+                        aria-label="Remove"
+                        onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== index))}
+                      >
+                        <TrashIcon className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           ) : null}

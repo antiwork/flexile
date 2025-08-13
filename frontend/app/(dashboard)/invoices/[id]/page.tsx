@@ -397,24 +397,26 @@ export default function InvoicePage() {
               </Card>
             )}
 
-            {invoice.attachment ? (
+            {invoice.attachments.length ? (
               <Card className="mx-4 print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
                 <CardContent>
                   <div className="flex justify-between gap-2">
-                    <div>Attachment</div>
+                    <div>Attachments</div>
                     <div />
                   </div>
                   <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
-                  <div className="flex justify-between gap-2">
-                    <Link
-                      href={`/download/${invoice.attachment.key}/${invoice.attachment.filename}`}
-                      download
-                      className={cn(linkClasses, "print:text-black print:no-underline")}
-                    >
-                      <PaperClipIcon className="inline size-4 print:hidden" /> {invoice.attachment.filename}
-                    </Link>
-                    <span />
-                  </div>
+                  {invoice.attachments.map((attachment, index) => (
+                    <div key={index} className="flex justify-between gap-2">
+                      <Link
+                        href={`/download/${attachment.key}/${attachment.filename}`}
+                        download
+                        className={cn(linkClasses, "print:text-black print:no-underline")}
+                      >
+                        <PaperClipIcon className="inline size-4 print:hidden" /> {attachment.filename}
+                      </Link>
+                      <span />
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             ) : null}
