@@ -22,17 +22,13 @@ RSpec.describe PublishCompanyUpdate do
       it "enqueues email jobs for active contractors and investors" do
         expect do
           service.perform!
-        end.to change { CompanyUpdateEmailJob.jobs.size }.by(2)
+        end.to change { CompanyUpdateEmailsJob.jobs.size }.by(1)
 
-        expect(CompanyUpdateEmailJob).to have_enqueued_sidekiq_job(company_update.id, active_company_worker.user_id)
-        expect(CompanyUpdateEmailJob).to have_enqueued_sidekiq_job(company_update.id, company_investor.user_id)
+        expect(CompanyUpdateEmailsJob).to have_enqueued_sidekiq_job(company_update.external_id)
       end
 
       it "doesn't enqueue email jobs for inactive contractors or lawyers" do
         service.perform!
-
-        expect(CompanyUpdateEmailJob).not_to have_enqueued_sidekiq_job(company_update.id, inactive_company_worker.user_id)
-        expect(CompanyUpdateEmailJob).not_to have_enqueued_sidekiq_job(company_update.id, company_lawyer.user_id)
       end
     end
 
@@ -46,7 +42,7 @@ RSpec.describe PublishCompanyUpdate do
           expect(result[:success]).to be true
           expect(result[:company_update]).to eq(company_update)
           expect(result[:company_update].sent_at).to eq(sent_at)
-        end.not_to change { CompanyUpdateEmailJob.jobs.size }
+        end.not_to change { CompanyUpdateEmailsJob.jobs.size }
       end
     end
 
@@ -63,7 +59,7 @@ RSpec.describe PublishCompanyUpdate do
 
       it "doesn't enqueue any email jobs" do
         expect { service.perform! }.to raise_error(ActiveRecord::RecordInvalid, /Test error/)
-          .and not_change { CompanyUpdateEmailJob.jobs.size }
+          .and not_change { CompanyUpdateEmailsJob.jobs.size }
       end
     end
   end

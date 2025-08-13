@@ -3,7 +3,6 @@ import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { integrations } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import {
   CLEARANCE_BANK_ACCOUNT_NAME,
   getQuickbooksAuthUrl,
@@ -195,9 +194,31 @@ export const quickbooksRouter = createRouter({
         })
         .where(eq(integrations.id, integration.id));
 
-      await inngest.send({
-        name: "quickbooks/sync-integration",
-        data: { companyId: String(ctx.company.id) },
-      });
+      try {
+        const response = await fetch(
+          `/internal/companies/${ctx.company.id}/administrator/quickbooks/${integration.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              quickbooks_integration: {
+                consulting_services_expense_account_id: input.consultingServicesExpenseAccountId,
+                flexile_fees_expense_account_id: input.flexileFeesExpenseAccountId,
+                equity_compensation_expense_account_id: input.equityCompensationExpenseAccountId,
+                default_bank_account_id: input.defaultBankAccountId,
+              },
+            }),
+          },
+        );
+
+        if (!response.ok) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to update QuickBooks configuration" });
+        }
+      } catch (_error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to call Rails API for QuickBooks sync" });
+      }
     }),
 });

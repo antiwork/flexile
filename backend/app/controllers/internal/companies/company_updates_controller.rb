@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::Companies::CompanyUpdatesController < Internal::Companies::BaseController
-  before_action :load_company_update!, only: [:show, :edit, :update, :destroy, :send_test_email]
+  before_action :load_company_update!, only: [:show, :edit, :update, :destroy, :send_test_email, :send_emails, :send_test_email_async]
 
 
   def index
@@ -53,6 +53,19 @@ class Internal::Companies::CompanyUpdatesController < Internal::Companies::BaseC
   def send_test_email
     authorize @company_update
     CompanyUpdateMailer.update_published(company_update_id: @company_update.id, user_id: Current.user.id).deliver_now
+    head :ok
+  end
+
+  def send_emails
+    authorize @company_update
+    CompanyUpdateEmailsJob.perform_async(@company_update.external_id)
+    head :ok
+  end
+
+  def send_test_email_async
+    authorize @company_update
+    recipient_user_id = params[:recipient_user_id] || Current.user.id
+    CompanyUpdateEmailsJob.perform_async(@company_update.external_id, [recipient_user_id])
     head :ok
   end
 

@@ -414,7 +414,7 @@ const NavBadge = ({ count }: { count: number }) => (
   </Badge>
 );
 
-const NavLink = <T extends string>(props: LinkProps<T>) => {
+const NavLink = <T extends string>(props: LinkProps<T> & { children: React.ReactNode }) => {
   const sidebar = useSidebar();
   return <Link onClick={() => sidebar.setOpenMobile(false)} {...props} />;
 };

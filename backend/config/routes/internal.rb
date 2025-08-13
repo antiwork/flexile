@@ -49,7 +49,11 @@ scope path: :internal, module: :internal do
     resource :leave, only: [:destroy], controller: "leave_company"
 
     resources :company_updates do
-      post :send_test_email, on: :member
+      member do
+        post :send_test_email
+        post :send_emails
+        post :send_test_email_async
+      end
     end
     resources :workers, only: [:create]
     resources :lawyers, only: [:create]

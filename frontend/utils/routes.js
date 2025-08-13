@@ -2151,6 +2151,26 @@ export const roles_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/company_updates/:id/send_emails(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const send_emails_company_company_update_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"company_updates"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"send_emails"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/company_updates/:id/send_emails(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const send_emails_company_company_update_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"company_updates"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"send_emails"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /internal/signup/send_otp(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -2164,6 +2184,26 @@ export const send_otp_signup_index_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2
  * @returns {string} route path
  */
 export const send_otp_signup_index_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"signup"],[2,[7,"/"],[2,[6,"send_otp"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/company_updates/:id/send_test_email_async(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const send_test_email_async_company_company_update_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"company_updates"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"send_test_email_async"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/company_updates/:id/send_test_email_async(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const send_test_email_async_company_company_update_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"company_updates"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"send_test_email_async"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
 
 /**
  * Generates rails route to

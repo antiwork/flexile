@@ -7,8 +7,25 @@ class Wise::AccountBalance
   def self.refresh_flexile_balance
     api_response = Wise::PayoutApi.new.get_balances
 
+    # Handle HTTParty::Response objects and HTTP errors
+    if api_response.is_a?(HTTParty::Response)
+      unless api_response.success?
+        Rails.logger.error "API error from get_balances: #{api_response.code} - #{api_response.body}"
+        return nil
+      end
+      api_response = api_response.parsed_response
+    end
+
+    # Add validation to ensure api_response is an array
+    unless api_response.is_a?(Array)
+      Rails.logger.error "Expected array from get_balances, got #{api_response.class}: #{api_response}"
+      return nil
+    end
+
     usd_balance_info = api_response.find { |balance| balance["currency"] == "USD" }
     amount = usd_balance_info&.dig("amount", "value")&.to_f
+
+    return nil unless amount
 
     update_flexile_balance(amount_cents: (amount * 100).to_i)
     amount
@@ -16,6 +33,22 @@ class Wise::AccountBalance
 
   def self.create_usd_balance_if_needed
     api_response = Wise::PayoutApi.new.get_balances
+
+    # Handle HTTParty::Response objects and HTTP errors
+    if api_response.is_a?(HTTParty::Response)
+      unless api_response.success?
+        Rails.logger.error "API error from get_balances: #{api_response.code} - #{api_response.body}"
+        return
+      end
+      api_response = api_response.parsed_response
+    end
+
+    # Add validation to ensure api_response is an array
+    unless api_response.is_a?(Array)
+      Rails.logger.error "Expected array from get_balances, got #{api_response.class}: #{api_response}"
+      return
+    end
+
     return if api_response.find { |balance| balance["currency"] == "USD" }.present?
 
     Wise::PayoutApi.new.create_usd_balance
