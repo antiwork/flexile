@@ -190,7 +190,12 @@ const Edit = () => {
       }
 
       if (notes.length) formData.append("invoice[notes]", notes);
-      if (document?.blob) formData.append("invoice[attachment]", document?.blob);
+
+      if (document?.blob) {
+        formData.append("invoice[attachment]", document.blob);
+      } else if (document === null && data.invoice.attachment) {
+        formData.append("invoice[remove_attachment]", "true");
+      }
 
       await request({
         method: id ? "PATCH" : "POST",
