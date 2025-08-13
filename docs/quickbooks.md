@@ -217,7 +217,6 @@ QuickbooksDataSyncJob.perform_async(contractor_id, 'CompanyContractor')
 - Creates new Vendor in QBO if not found
 - Updates existing Vendor sync token if found
 - Creates or updates `integration_record` to link Flexile `CompanyContractor` with QBO `Vendor`
-- Triggers `QuickbooksWorkersSyncJob` Sidekiq job for batch processing
 
 ### Syncing Invoices as Bills
 
@@ -349,7 +348,6 @@ puts integration.sync_error if integration.sync_error.present?
 Monitor job status for:
 
 - `QuickbooksIntegrationSyncScheduleJob` - Sidekiq job for integration sync
-- `QuickbooksWorkersSyncJob` - Sidekiq job for workers sync
 - `QuickbooksDataSyncJob` - Sidekiq job for individual record sync
 
 ### Manual Resync
