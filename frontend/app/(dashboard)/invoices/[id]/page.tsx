@@ -265,7 +265,7 @@ export default function InvoicePage() {
       <StatusDetails invoice={invoice} className="print:hidden" />
 
       {payRateInSubunits && invoice.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-        <Alert className="print:hidden" variant="warning">
+        <Alert className="mx-4 print:hidden" variant="warning">
           <CircleAlert />
           <AlertDescription>
             This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
