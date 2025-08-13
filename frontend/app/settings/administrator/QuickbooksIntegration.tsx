@@ -15,6 +15,8 @@ import quickbooksLogo from "@/images/quickbooks.svg";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { getOauthCode } from "@/utils/oauth";
+import { request } from "@/utils/request";
+import { sync_integration_company_administrator_quickbooks_path } from "@/utils/routes";
 
 const quickbooksFormSchema = z.object({
   consultingServicesExpenseAccountId: z.string().min(1, "Please select an expense account"),
@@ -93,7 +95,16 @@ export default function QuickbooksRow() {
       setShowAccountsModal(false);
       void refetch();
     },
-    onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
+    onSuccess: async () => {
+      await request({
+        url: sync_integration_company_administrator_quickbooks_path({ company_id: company.id }),
+        method: "POST",
+        accept: "json",
+        assertOk: true,
+      });
+
+      setTimeout(() => saveMutation.reset(), 2000);
+    },
   });
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 

@@ -11,8 +11,6 @@ import {
 } from "@/lib/quickbooks";
 import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
 import { assert, assertDefined } from "@/utils/assert";
-import { request } from "@/utils/request";
-import { sync_integration_company_administrator_quickbooks_path } from "@/utils/routes";
 
 const oauthState = (ctx: CompanyContext) => Buffer.from(`${ctx.company.id}:${ctx.company.name}`).toString("base64");
 
@@ -44,7 +42,7 @@ export const quickbooksRouter = createRouter({
       expenseAccounts: [],
       bankAccounts: [],
     };
-    if (integration.status !== "active") return data;
+    if (integration.status !== "active" && integration.status !== "initialized") return data;
 
     const qbo = getQuickbooksClient(integration);
     const [expenseAccounts, bankAccounts] = await Promise.all([
