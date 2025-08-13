@@ -2392,6 +2392,30 @@ export const sign_company_dividend_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/administrator/quickbooks/sync_integration(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const sync_integration_company_administrator_quickbooks_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/administrator/quickbooks/sync_integration(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const sync_integration_company_administrator_quickbooks_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /webhooks/wise/transfer_state_change(.:format)
  * @param {object | undefined} options
  * @returns {string} route path

@@ -15,10 +15,8 @@ class QuickbooksIntegrationSyncScheduleJob
     contractors = company.company_workers.active
     return if contractors.none?
 
-    array_of_args = contractors.map do |object|
-      [company_id, object.class.name, object.id]
-    end
-
-    QuickbooksDataSyncJob.perform_bulk(array_of_args)
+    # Enqueue workers sync job to match Inngest functionality
+    active_worker_ids = contractors.pluck(:id)
+    QuickbooksWorkersSyncJob.perform_async(company_id, active_worker_ids)
   end
 end

@@ -2305,6 +2305,24 @@ export const sign_company_dividend_path = /*#__PURE__*/ __jsr.r({"company_id":{"
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/administrator/quickbooks/sync_integration(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const sync_integration_company_administrator_quickbooks_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"quickbooks"],[2,[7,"/"],[2,[6,"sync_integration"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/administrator/quickbooks/sync_integration(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const sync_integration_company_administrator_quickbooks_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"quickbooks"],[2,[7,"/"],[2,[6,"sync_integration"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /webhooks/wise/transfer_state_change(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
