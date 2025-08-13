@@ -4,7 +4,7 @@ class RemoveCompanyInviteLinks < ActiveRecord::Migration[8.0]
     add_index :companies, :invite_link, unique: true
 
     up_only do
-      execute "UPDATE companies SET invite_link = (SELECT token FROM company_invite_links WHERE company_id = companies.id ORDER BY created_at DESC LIMIT 1)"
+      execute "UPDATE companies SET invite_link = (SELECT token FROM company_invite_links WHERE company_id = companies.id AND document_template_id IS NULL)"
     end
     remove_index :company_invite_links, :token, unique: true
     remove_index :company_invite_links, [:company_id, :document_template_id], unique: true
