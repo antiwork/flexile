@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class DividendComputationGeneration
+  class InsufficientFundsError < StandardError; end
+
   DEFAULT_SHARE_HOLDING_DAYS = 60
   MAX_PREFERRED_SHARE_HOLDING_DAYS = 90
   private_constant :DEFAULT_SHARE_HOLDING_DAYS, :MAX_PREFERRED_SHARE_HOLDING_DAYS
@@ -13,13 +15,21 @@ class DividendComputationGeneration
   end
 
   def process
-    @computation = company.dividend_computations.create!(
-      total_amount_in_usd: amount_in_usd, dividends_issuance_date:, return_of_capital:
-    )
     @preferred_dividend_total = 0.to_d
     @common_dividend_total = 0.to_d
 
     generate_preferred_dividends
+
+    if @preferred_dividend_total > @amount_in_usd
+      raise InsufficientFundsError,
+            "Sorry, you cannot distribute $#{@amount_in_usd} as preferred investors require a return of at least $#{@preferred_dividend_total}."
+    end
+
+    @computation = company.dividend_computations.create!(
+      total_amount_in_usd: amount_in_usd, dividends_issuance_date:, return_of_capital:
+    )
+
+    save_preferred_dividends
     generate_common_dividends
 
     computation
@@ -29,6 +39,8 @@ class DividendComputationGeneration
     attr_reader :company, :amount_in_usd, :dividends_issuance_date, :computation, :return_of_capital
 
     def generate_preferred_dividends
+      @preferred_dividend_outputs = []
+
       shares_per_class_per_investor.each do |share_holding|
         hurdle_rate = share_holding.share_class.hurdle_rate
         original_issue_price_in_usd = share_holding.share_class.original_issue_price_in_dollars
@@ -48,15 +60,22 @@ class DividendComputationGeneration
           qualified_dividend_amount_usd:,
           total_amount_in_usd: dividend_usd,
         }
-        computation.dividend_computation_outputs.create!(attrs)
+        @preferred_dividend_outputs << attrs
         @preferred_dividend_total += dividend_usd
       end
 
       # I'm assuming that SAFEs don't have hurdle rates to keep things simple as that is also the current state
     end
 
+    def save_preferred_dividends
+      @preferred_dividend_outputs.each do |attrs|
+        computation.dividend_computation_outputs.create!(attrs)
+      end
+    end
+
     def generate_common_dividends
       available_amount = @amount_in_usd - @preferred_dividend_total
+      return if available_amount == 0
 
       eligible_fully_diluted_shares =
         company.convertible_investments.sum(:implied_shares) + company.share_holdings.sum(:number_of_shares)

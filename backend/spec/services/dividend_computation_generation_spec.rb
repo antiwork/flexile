@@ -60,6 +60,62 @@ RSpec.describe DividendComputationGeneration do
                                   principal_value_in_cents: 966_308_66)
   end
 
+  describe "validation" do
+    it "raises error when dividend amount is insufficient for preferred dividends" do
+      seed_data
+
+      # Preferred dividends require $22,184.03
+      insufficient_amount = 20_000 # Less than required preferred dividend amount
+
+      expect do
+        described_class.new(company, amount_in_usd: insufficient_amount, return_of_capital: false).process
+      end.to raise_error(
+        DividendComputationGeneration::InsufficientFundsError,
+        "Sorry, you cannot distribute $20000.0 as preferred investors require a return of at least $22184.03."
+      )
+    end
+
+    it "generates only preferred dividends when amount equals preferred dividend requirement" do
+      seed_data
+
+      amount_equal_to_preferred = 22_184.03
+
+      dividend_computation = described_class.new(company, amount_in_usd: amount_equal_to_preferred, return_of_capital: false).process
+      expect(dividend_computation).to be_present
+
+      # Should have preferred dividend outputs
+      preferred_outputs = dividend_computation.dividend_computation_outputs.where.not(preferred_dividend_amount_in_usd: 0)
+      expect(preferred_outputs.count).to be > 0
+
+      # Should NOT have common dividend outputs (since available_amount = 0)
+      common_outputs = dividend_computation.dividend_computation_outputs.where.not(dividend_amount_in_usd: 0)
+      expect(common_outputs.count).to eq(0)
+
+      # Total should equal the input amount
+      expect(dividend_computation.dividend_computation_outputs.sum(:total_amount_in_usd)).to eq(amount_equal_to_preferred)
+    end
+
+    it "generates both preferred and common dividends when amount exceeds preferred dividend requirement" do
+      seed_data
+      amount_exceeding_preferred = 25_000
+
+      dividend_computation = described_class.new(company, amount_in_usd: amount_exceeding_preferred, return_of_capital: false).process
+      expect(dividend_computation).to be_present
+
+      # Should have preferred dividend outputs
+      preferred_outputs = dividend_computation.dividend_computation_outputs.where.not(preferred_dividend_amount_in_usd: 0)
+      expect(preferred_outputs.count).to be > 0
+
+      # Should also have common dividend outputs (since available_amount > 0)
+      common_outputs = dividend_computation.dividend_computation_outputs.where.not(dividend_amount_in_usd: 0)
+      expect(common_outputs.count).to be > 0
+
+      # Total should equal the input amount
+      total_amount = dividend_computation.dividend_computation_outputs.sum(:total_amount_in_usd)
+      expect(total_amount).to be_within(1.0).of(amount_exceeding_preferred)
+    end
+  end
+
   it "generates records as expected" do
     seed_data
 
