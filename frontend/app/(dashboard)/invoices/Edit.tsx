@@ -85,6 +85,12 @@ const dataSchema = z.object({
         attachment: z.object({ name: z.string(), url: z.string() }),
       }),
     ),
+    attachment: z
+      .object({
+        name: z.string(),
+        url: z.string(),
+      })
+      .nullable(),
   }),
 });
 type Data = z.infer<typeof dataSchema>;
@@ -140,6 +146,8 @@ const Edit = () => {
   const [showExpenses, setShowExpenses] = useState(false);
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
+  const uploadDocumentRef = useRef<HTMLInputElement>(null);
+  const [documents, setDocuments] = useState<{ name: string; url: string; blob: File }[]>([]);
   const showExpensesTable = showExpenses || expenses.size > 0;
 
   const validate = () => {
@@ -178,6 +186,13 @@ const Edit = () => {
           formData.append("invoice_expenses[][attachment]", expense.blob);
         }
       }
+
+      // Add document attachments
+      documents.forEach((doc) => {
+        formData.append(`documents[][attachment]`, doc.blob);
+        formData.append(`documents[][name]`, doc.name);
+      });
+
       if (notes.length) formData.append("invoice[notes]", notes);
 
       await request({
@@ -219,6 +234,23 @@ const Edit = () => {
         })),
       ),
     );
+  };
+
+  const addDocument = () => {
+    uploadDocumentRef.current?.click();
+  };
+
+  const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Add the document to our documents array
+    setDocuments((docs) => [...docs, { name: file.name, url: URL.createObjectURL(file), blob: file }]);
+
+    // Reset the file input
+    if (uploadDocumentRef.current) {
+      uploadDocumentRef.current.value = "";
+    }
   };
 
   const parseQuantity = (value: string | null | undefined) => {
@@ -401,6 +433,10 @@ const Edit = () => {
                         Add expense
                       </Button>
                     ) : null}
+                    <Button variant="link" onClick={addDocument}>
+                      <PlusIcon className="inline size-4" />
+                      Add Document
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -415,6 +451,43 @@ const Edit = () => {
               multiple
               onChange={createNewExpenseEntries}
             />
+          ) : null}
+          <input
+            ref={uploadDocumentRef}
+            type="file"
+            className="hidden"
+            accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"
+            onChange={handleDocumentUpload}
+          />
+          {documents.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Document</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {documents.map((doc, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <a href={doc.url} download>
+                        <PaperClipIcon className="inline size-4" /> {doc.name}
+                      </a>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="link"
+                        aria-label="Remove"
+                        onClick={() => setDocuments((docs) => docs.filter((_, i) => i !== index))}
+                      >
+                        <TrashIcon className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : null}
           {showExpensesTable ? (
             <Table>
