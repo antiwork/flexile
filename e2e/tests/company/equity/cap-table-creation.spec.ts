@@ -44,19 +44,22 @@ test.describe("Cap table creation", () => {
     await expect(page).toHaveURL("/equity/investors/add");
 
     // Fill in first investor
-    await page.getByText("Select investor").click();
+    await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText(investor1.legalName || "").click();
-    await page.getByRole("spinbutton").first().fill("100000");
+    const row = page.getByRole("row", { name: new RegExp(investor1.legalName || "", "u") });
+
+    await row.getByRole("textbox", { name: "Number of shares" }).fill("100000");
 
     // Add second investor
     await page.getByRole("button", { name: "Add new investor" }).click();
-    await page.getByText("Select investor").click();
+    await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText(investor2.legalName || "").click();
-    await page.getByRole("spinbutton").nth(1).fill("50000");
+    const row2 = page.getByRole("row", { name: new RegExp(investor2.legalName || "", "u") });
+    await row2.getByRole("textbox", { name: "Number of shares" }).fill("50000");
 
     // Verify ownership percentages
-    await expect(page.getByText("67%")).toBeVisible(); // 100k / 150k
-    await expect(page.getByText("33%")).toBeVisible(); // 50k / 150k
+    await expect(page.getByText("66.7%")).toBeVisible(); // 100k / 150k
+    await expect(page.getByText("33.3%")).toBeVisible(); // 50k / 150k
 
     // Finalize cap table
     await page.getByRole("button", { name: "Finalize cap table" }).click();
@@ -114,7 +117,11 @@ test.describe("Cap table creation", () => {
     await page.getByRole("button", { name: "Finalize cap table" }).click();
 
     // Should show validation error
-    await expect(page.getByText("Please add at least one investor with shares")).toBeVisible();
+    await expect(
+      page.getByText(
+        "Some investor details are missing. Please fill in all required fields before finalizing the cap table.",
+      ),
+    ).toBeVisible();
   });
 
   test("validates share amounts", async ({ page }) => {
@@ -132,14 +139,19 @@ test.describe("Cap table creation", () => {
     await page.goto("/equity/investors/add");
 
     // Select investor but enter 0 shares
-    await page.getByText("Select investor").click();
+    await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText("Test Investor").click();
-    await page.getByRole("spinbutton").first().fill("0");
+    const row = page.getByRole("row", { name: new RegExp(investor.legalName || "", "u") });
+    await row.getByRole("textbox", { name: "Number of shares" }).fill("0");
 
     await page.getByRole("button", { name: "Finalize cap table" }).click();
 
     // Should show validation error
-    await expect(page.getByText("Please add at least one investor with shares")).toBeVisible();
+    await expect(
+      page.getByText(
+        "Some investor details are missing. Please fill in all required fields before finalizing the cap table.",
+      ),
+    ).toBeVisible();
   });
 
   test("prevents duplicate investors", async ({ page }) => {
@@ -167,9 +179,10 @@ test.describe("Cap table creation", () => {
     await page.goto("/equity/investors/add");
 
     // Try to add the same investor again
-    await page.getByText("Select investor").click();
+    await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText("Test Investor").click();
-    await page.getByRole("spinbutton").first().fill("5000");
+    const row = page.getByRole("row", { name: new RegExp(investor.legalName || "", "u") });
+    await row.getByRole("textbox", { name: "Number of shares" }).fill("5000");
 
     await page.getByRole("button", { name: "Finalize cap table" }).click();
 
