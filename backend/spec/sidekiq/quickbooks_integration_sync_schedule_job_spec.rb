@@ -3,8 +3,6 @@
 require "spec_helper"
 
 RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
-  include ActiveJob::TestHelper
-
   let(:company) { create(:company) }
   let(:integration) { create(:quickbooks_integration, company: company, status: "out_of_sync") }
   let(:worker1) { create(:company_worker, company: company) }
@@ -71,7 +69,7 @@ RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
           described_class.new.perform(company.id)
         end
 
-        it "respects the batch size of 100" do
+        it "respects the batch size" do
           batches = []
           allow(QuickbooksWorkersSyncJob).to receive(:perform_async) do |company_id, worker_ids|
             batches << worker_ids.size
@@ -79,7 +77,11 @@ RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
 
           described_class.new.perform(company.id)
 
-          expect(batches).to eq([100, 100, 50])
+          total = workers.size
+          size = QuickbooksIntegrationSyncScheduleJob::BATCH_SIZE
+          full, rem = total.divmod(size)
+          expected = ([size] * full) + (rem.positive? ? [rem] : [])
+          expect(batches).to eq(expected)
         end
       end
     end

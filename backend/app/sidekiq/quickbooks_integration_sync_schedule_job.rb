@@ -4,6 +4,8 @@ class QuickbooksIntegrationSyncScheduleJob
   include Sidekiq::Job
   sidekiq_options retry: 5
 
+  BATCH_SIZE = 100
+
   def perform(company_id)
     company = Company.find_by(id: company_id)
     return if company.nil?
@@ -17,9 +19,9 @@ class QuickbooksIntegrationSyncScheduleJob
     return if contractors.none?
 
 
-    active_worker_ids = contractors.pluck(:id)
-    active_worker_ids.each_slice(100) do |batch_ids|
-      QuickbooksWorkersSyncJob.perform_async(company_id, batch_ids)
+
+    contractors.select(:id).find_in_batches(batch_size: BATCH_SIZE) do |batch|
+      QuickbooksWorkersSyncJob.perform_async(company_id, batch.map(&:id))
     end
   end
 end

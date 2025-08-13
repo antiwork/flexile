@@ -26,10 +26,11 @@ class QuickbooksWorkersSyncJob
       company.company_workers.where(id: active_worker_ids, ended_at: nil).find_each do |worker|
         qbo.sync_data_for(object: worker)
       rescue => e
-        Rails.logger.error("Failed to sync worker #{worker.id} for company #{company_id}: #{e.message}")
-        raise if e.is_a?(StandardError) && e.message.include?("Unauthorized")
+        Rails.logger.error("Failed to sync worker #{worker.id} for company #{company_id}: #{e.class}: #{e.message}")
+        raise if e.message.to_s.match?(/unauthorized/i)
       end
 
+      # TODO (techdebt): Consider tracking last_attempt_at vs last_sync_at for partial failures
       integration.update!(last_sync_at: Time.current)
     end
 end

@@ -16,6 +16,18 @@ import { sync_integration_company_administrator_quickbooks_path } from "@/utils/
 
 const oauthState = (ctx: CompanyContext) => Buffer.from(`${ctx.company.id}:${ctx.company.name}`).toString("base64");
 
+async function triggerQuickbooksSync(companyId: bigint | string) {
+  const syncUrl = sync_integration_company_administrator_quickbooks_path(String(companyId));
+  try {
+    await request({
+      url: syncUrl,
+      method: "POST",
+      accept: "json",
+      assertOk: true,
+    });
+  } catch {}
+}
+
 const companyIntegration = async (companyId: bigint) => {
   const integration = await db.query.integrations.findFirst({
     where: and(
@@ -44,7 +56,6 @@ export const quickbooksRouter = createRouter({
       expenseAccounts: [],
       bankAccounts: [],
     };
-    if (integration.status === "deleted") return data;
 
     try {
       const qbo = getQuickbooksClient(integration);
@@ -65,10 +76,11 @@ export const quickbooksRouter = createRouter({
           bankAccounts.QueryResponse.Account?.filter((account) => account.Name !== CLEARANCE_BANK_ACCOUNT_NAME),
         ),
       };
-    } catch {
-      // If we can't load accounts (e.g., token expired), return base data
-      // This allows the UI to show the integration status while preventing errors
-      return data;
+    } catch (err) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Failed to load QuickBooks accounts: ${err instanceof Error ? err.message : "Unknown error"}`,
+      });
     }
   }),
 
@@ -158,18 +170,7 @@ export const quickbooksRouter = createRouter({
         });
       }
 
-      // Trigger QuickBooks sync after successful connection/reconnection
-      const syncUrl = sync_integration_company_administrator_quickbooks_path(String(ctx.company.id));
-      try {
-        await request({
-          url: syncUrl,
-          method: "POST",
-          accept: "json",
-          assertOk: true,
-        });
-      } catch {
-        // Don't fail the connection if sync fails - non-fatal error
-      }
+      await triggerQuickbooksSync(ctx.company.id);
     }),
 
   disconnect: companyProcedure.mutation(async ({ ctx }) => {
@@ -215,18 +216,6 @@ export const quickbooksRouter = createRouter({
         })
         .where(eq(integrations.id, integration.id));
 
-      // Try to trigger sync after saving configuration, but don't fail if it doesn't work
-      const syncUrl = sync_integration_company_administrator_quickbooks_path(String(ctx.company.id));
-      try {
-        await request({
-          url: syncUrl,
-          method: "POST",
-          accept: "json",
-          assertOk: true,
-        });
-      } catch {
-        // Don't fail the configuration save if sync fails - just log it
-        // The user can manually trigger sync later if needed
-      }
+      await triggerQuickbooksSync(ctx.company.id);
     }),
 });
