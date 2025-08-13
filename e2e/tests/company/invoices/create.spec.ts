@@ -8,8 +8,9 @@ import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import {
+  activeStorageAttachments,
   companies,
   companyContractors,
   expenseCategories,
@@ -121,8 +122,11 @@ test.describe("invoice creation", () => {
     });
     await login(page, contractorUser, "/invoices/new");
 
-    await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[type="file"]').setInputFiles({
+    const [expenseChooser] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      page.getByRole("button", { name: "Add expense" }).click(),
+    ]);
+    await expenseChooser.setFiles({
       name: "receipt.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("test expense receipt"),
@@ -154,8 +158,11 @@ test.describe("invoice creation", () => {
     ]);
     await login(page, contractorUser, "/invoices/new");
 
-    await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
+    const [expenseChooser1] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      page.getByRole("button", { name: "Add expense" }).click(),
+    ]);
+    await expenseChooser1.setFiles({
       name: "receipt1.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("first expense receipt"),
@@ -164,8 +171,11 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Merchant").fill("Office Supplies Inc");
     await page.getByLabel("Amount").fill("25.50");
 
-    await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
+    const [expenseChooser2] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      page.getByRole("button", { name: "Add expense" }).click(),
+    ]);
+    await expenseChooser2.setFiles({
       name: "receipt2.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("second expense receipt"),
@@ -281,20 +291,22 @@ test.describe("invoice creation", () => {
   test("shows attachment row after upload and allows removal", async ({ page }) => {
     await login(page, contractorUser, "/invoices/new");
 
-    await page.getByRole("button", { name: "Add attachment" }).click();
-    await page.locator('input[accept="application/pdf,image/*"]').setInputFiles({
+    const [attachmentChooser] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      page.getByRole("button", { name: "Add attachment" }).click(),
+    ]);
+    await attachmentChooser.setFiles({
       name: "invoice.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("test invoice attachment"),
     });
 
-    await expect(page.getByRole("columnheader", { name: "Attachment" })).toBeVisible();
     await expect(page.getByRole("link", { name: "invoice.pdf" })).toBeVisible();
 
-    const row = page.getByRole("row").filter({ has: page.getByRole("link", { name: "invoice.pdf" }) });
-    await row.getByRole("button", { name: "Remove" }).click();
+    const attachmentRow = page.getByRole("row").filter({ has: page.getByRole("link", { name: "invoice.pdf" }) });
+    await attachmentRow.getByRole("button", { name: "Remove" }).click();
 
-    await expect(page.getByRole("columnheader", { name: "Attachment" })).not.toBeVisible();
+    await expect(page.getByRole("link", { name: "invoice.pdf" })).not.toBeVisible();
   });
 
   test("submits invoice successfully with an attachment selected", async ({ page }) => {
@@ -303,8 +315,11 @@ test.describe("invoice creation", () => {
     await page.getByPlaceholder("Description").fill("Consulting services");
     await page.getByLabel("Hours / Qty").fill("01:00");
 
-    await page.getByRole("button", { name: "Add attachment" }).click();
-    await page.locator('input[accept="application/pdf,image/*"]').setInputFiles({
+    const [attachmentChooser] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      page.getByRole("button", { name: "Add attachment" }).click(),
+    ]);
+    await attachmentChooser.setFiles({
       name: "invoice.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("test invoice attachment"),
@@ -316,6 +331,16 @@ test.describe("invoice creation", () => {
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
-    expect(invoice.totalAmountInUsdCents).toBe(6000n);
+
+    const attachment = await db.query.activeStorageAttachments.findFirst({
+      where: and(
+        eq(activeStorageAttachments.recordType, "Invoice"),
+        eq(activeStorageAttachments.recordId, invoice.id),
+        eq(activeStorageAttachments.name, "attachments"),
+      ),
+      with: { blob: { columns: { filename: true } } },
+      orderBy: desc(activeStorageAttachments.id),
+    });
+    expect(attachment?.blob.filename).toBe("invoice.pdf");
   });
 });

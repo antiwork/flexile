@@ -79,7 +79,7 @@ const dataSchema = z.object({
     ),
     expenses: z.array(
       z.object({
-        id: z.string().optional(),
+        id: z.number().optional(),
         description: z.string(),
         category_id: z.number(),
         total_amount_in_cents: z.number(),
