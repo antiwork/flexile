@@ -276,4 +276,21 @@ RSpec.describe DividendComputation do
       expect(result).to eq([])
     end
   end
+
+  describe "#number_of_shareholders" do
+    it "counts total unique shareholders" do
+      # 5 share investors + 4 SAFE investors = 9 total
+      expect(@dividend_computation.number_of_shareholders).to eq(9)
+    end
+
+    it "demonstrates SAFE counting with multiple convertible securities" do
+      # Test that @safe2 (Wefunder) correctly counts as 3 investors
+      # because it has 3 convertible_securities for different company_investors
+      expect(@dividend_computation.number_of_shareholders).to eq(9)
+
+      # Share investors: 5 (seed, series A, seed & series A, common, all class)
+      # SAFE investors: 4 (entire_safe_owner from safe1, plus 3 partial owners from safe2)
+      # Total: 9
+    end
+  end
 end
