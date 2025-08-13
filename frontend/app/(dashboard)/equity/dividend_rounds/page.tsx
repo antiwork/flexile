@@ -52,8 +52,7 @@ export default function DividendRounds() {
         assertOk: true,
       });
 
-      const data = await response.json();
-      return dividendComputationSchema.parse(data);
+      return dividendComputationSchema.parse(await response.json());
     },
     select: (computations) =>
       computations.map((computation) => ({
