@@ -81,7 +81,7 @@ const DividendRound = ({ id }: { id: string }) => {
   });
 
   const onRowClicked = (row: Dividend) => {
-    if (row.investor?.user?.id) {
+    if (row.investor.user.id) {
       router.push(`/people/${row.investor.user.id}?tab=shares`);
     }
   };
