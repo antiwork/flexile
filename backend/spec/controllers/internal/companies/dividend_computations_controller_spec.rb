@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Internal::Companies::DividendComputationsController, type: :controller do
+RSpec.describe Internal::Companies::DividendComputationsController do
   let(:user) { create(:user) }
   let(:company) { create(:company, :completed_onboarding) }
   let(:company_administrator) { create(:company_administrator, user: user, company: company) }
@@ -21,9 +21,8 @@ RSpec.describe Internal::Companies::DividendComputationsController, type: :contr
       CurrentContext.new(user: user, company: company)
     end
 
-    allow_any_instance_of(DividendComputationPolicy).to receive(:index?).and_return(true)
-    allow_any_instance_of(DividendComputationPolicy).to receive(:create?).and_return(true)
-    allow_any_instance_of(DividendComputationPolicy).to receive(:show?).and_return(true)
+    allow(controller).to receive(:verify_authorized).and_return(true)
+    allow(controller).to receive(:authorize).with(DividendComputation).and_return(true)
   end
 
   describe "GET #index" do
