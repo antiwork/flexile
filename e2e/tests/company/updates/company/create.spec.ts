@@ -53,7 +53,7 @@ test.describe("company update creation", () => {
     await page.getByRole("button", { name: "Yes, publish" }).click();
 
     await expect(page.getByRole("dialog")).not.toBeVisible();
-    await expect(page.getByRole("row").filter({ hasText: title }).filter({ hasText: "Sent" })).toBeVisible();
+    await expect(page.locator('[role="button"]').filter({ hasText: title }).filter({ hasText: "Sent" })).toBeVisible();
 
     const updates = await db.query.companyUpdates.findMany({
       where: eq(companyUpdates.companyId, company.id),

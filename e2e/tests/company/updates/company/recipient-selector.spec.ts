@@ -108,7 +108,7 @@ test.describe("recipient selector for company updates", () => {
     const modal = page.getByRole("dialog", { name: "New company update" });
 
     // Should show count for admins (2)
-    await expect(modal.getByText(/Recipients \(2\)/u)).toBeVisible();
+    await expect(modal.getByText("2 recipients")).toBeVisible();
 
     // Open dropdown
     const dropdownTrigger = modal.locator("button").filter({ hasText: "Admins" }).first();
@@ -116,10 +116,10 @@ test.describe("recipient selector for company updates", () => {
 
     const menu = page.locator('[role="menu"]');
 
-    // Check counts in menu items
-    await expect(menu.getByText("Admins").locator("..").locator("..")).toContainText("2");
-    await expect(menu.getByText("Investors").locator("..").locator("..")).toContainText("2");
-    await expect(menu.getByText("Active contractors").locator("..").locator("..")).toContainText("2");
-    await expect(menu.getByText("Alumni contractors").locator("..").locator("..")).toContainText("1");
+    // Check counts in menu items - they are shown as spans in the menu items
+    await expect(menu.locator('[role="menuitem"]').filter({ hasText: "Admins" })).toContainText("2");
+    await expect(menu.locator('[role="menuitem"]').filter({ hasText: "Investors" })).toContainText("2");
+    await expect(menu.locator('[role="menuitem"]').filter({ hasText: "Active contractors" })).toContainText("2");
+    await expect(menu.locator('[role="menuitem"]').filter({ hasText: "Alumni contractors" })).toContainText("1");
   });
 });
