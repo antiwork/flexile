@@ -3,7 +3,7 @@
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
@@ -67,6 +67,7 @@ const dataSchema = z.object({
     invoice_number: z.string(),
     notes: z.string().nullable(),
     status: z.enum(["received", "approved", "processing", "payment_pending", "paid", "rejected", "failed"]).nullable(),
+    attachment: z.object({ name: z.string(), url: z.string() }).nullable().optional(),
     line_items: z.array(
       z.object({
         id: z.number().optional(),
@@ -101,6 +102,7 @@ const Edit = () => {
   const searchParams = useSearchParams();
   const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const trpcUtils = trpc.useUtils();
   const worker = user.roles.worker;
   assert(worker != null);
@@ -125,6 +127,9 @@ const Edit = () => {
   );
   const invoiceYear = issueDate.year;
   const [notes, setNotes] = useState(data.invoice.notes ?? "");
+  const [attachment, setAttachment] = useState<{ name: string; url: string; blob?: File } | null>(
+    data.invoice.attachment ?? null,
+  );
   const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
     if (data.invoice.line_items.length) return List(data.invoice.line_items);
 
@@ -138,6 +143,7 @@ const Edit = () => {
     ]);
   });
   const [showExpenses, setShowExpenses] = useState(false);
+  const uploadInvoiceRef = useRef<HTMLInputElement>(null);
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const showExpensesTable = showExpenses || expenses.size > 0;
@@ -179,6 +185,7 @@ const Edit = () => {
         }
       }
       if (notes.length) formData.append("invoice[notes]", notes);
+      if (attachment?.blob) formData.append("invoice[attachment]", attachment.blob);
 
       await request({
         method: id ? "PATCH" : "POST",
@@ -189,6 +196,7 @@ const Edit = () => {
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       await trpcUtils.documents.list.invalidate();
+      await queryClient.invalidateQueries({ queryKey: ["invoice", id] });
       router.push("/invoices");
     },
   });
@@ -375,7 +383,7 @@ const Edit = () => {
                     />
                   </TableCell>
                   <TableCell>{formatMoneyFromCents(lineItemTotal(item))}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-right">
                     <Button
                       variant="link"
                       aria-label="Remove"
@@ -401,6 +409,10 @@ const Edit = () => {
                         Add expense
                       </Button>
                     ) : null}
+                    <Button variant="link" onClick={() => uploadInvoiceRef.current?.click()}>
+                      <ArrowUpTrayIcon className="inline size-4" />
+                      Add attachment
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -469,7 +481,7 @@ const Edit = () => {
                         decimal
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <Button
                         variant="link"
                         aria-label="Remove"
@@ -491,6 +503,41 @@ const Edit = () => {
                   </TableCell>
                 </TableRow>
               </TableFooter>
+            </Table>
+          ) : null}
+          <input
+            ref={uploadInvoiceRef}
+            type="file"
+            className="hidden"
+            accept="application/pdf,image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setAttachment({ name: file.name, url: URL.createObjectURL(file), blob: file });
+            }}
+          />
+          {attachment ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Attachment</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>
+                    <a href={attachment.url} download>
+                      <PaperClipIcon className="inline size-4" /> {attachment.name}
+                    </a>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="link" aria-label="Remove" onClick={() => setAttachment(null)}>
+                      <TrashIcon className="size-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
             </Table>
           ) : null}
 

@@ -277,4 +277,45 @@ test.describe("invoice creation", () => {
 
     expect(Number(lineItem.quantity)).toBe(2.5);
   });
+
+  test("shows attachment row after upload and allows removal", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    await page.getByRole("button", { name: "Add attachment" }).click();
+    await page.locator('input[accept="application/pdf,image/*"]').setInputFiles({
+      name: "invoice.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("test invoice attachment"),
+    });
+
+    await expect(page.getByRole("columnheader", { name: "Attachment" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "invoice.pdf" })).toBeVisible();
+
+    const row = page.getByRole("row").filter({ has: page.getByRole("link", { name: "invoice.pdf" }) });
+    await row.getByRole("button", { name: "Remove" }).click();
+
+    await expect(page.getByRole("columnheader", { name: "Attachment" })).not.toBeVisible();
+  });
+
+  test("submits invoice successfully with an attachment selected", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    await page.getByPlaceholder("Description").fill("Consulting services");
+    await page.getByLabel("Hours / Qty").fill("01:00");
+
+    await page.getByRole("button", { name: "Add attachment" }).click();
+    await page.locator('input[accept="application/pdf,image/*"]').setInputFiles({
+      name: "invoice.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("test invoice attachment"),
+    });
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    const invoice = await db.query.invoices
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
+      .then(takeOrThrow);
+    expect(invoice.totalAmountInUsdCents).toBe(6000n);
+  });
 });
