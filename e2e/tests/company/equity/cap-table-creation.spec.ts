@@ -35,43 +35,32 @@ test.describe("Cap table creation", () => {
     await login(page, adminUser);
     await page.goto("/equity/investors");
 
-    // Should show empty state
     await expect(page.getByText("Add your cap table to start managing equity and ownership records.")).toBeVisible();
     await expect(page.getByRole("link", { name: "Add cap table" })).toBeVisible();
 
-    // Click add cap table
     await page.getByRole("link", { name: "Add cap table" }).click();
     await expect(page).toHaveURL("/equity/investors/add");
 
-    // Fill in first investor
     await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText(investor1.legalName || "").click();
     const row = page.getByRole("row", { name: new RegExp(investor1.legalName || "", "u") });
-
     await row.getByRole("textbox", { name: "Number of shares" }).fill("100000");
 
-    // Add second investor
     await page.getByRole("button", { name: "Add new investor" }).click();
     await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText(investor2.legalName || "").click();
     const row2 = page.getByRole("row", { name: new RegExp(investor2.legalName || "", "u") });
     await row2.getByRole("textbox", { name: "Number of shares" }).fill("50000");
 
-    // Verify ownership percentages
-    await expect(page.getByText("66.7%")).toBeVisible(); // 100k / 150k
-    await expect(page.getByText("33.3%")).toBeVisible(); // 50k / 150k
+    await expect(page.getByText("66.7%")).toBeVisible();
+    await expect(page.getByText("33.3%")).toBeVisible();
 
-    // Finalize cap table
     await page.getByRole("button", { name: "Finalize cap table" }).click();
-
-    // Should redirect to investors page
     await expect(page).toHaveURL("/equity/investors");
 
-    // Should show the investors in the table
     await expect(page.getByText(investor1.legalName || "")).toBeVisible();
     await expect(page.getByText(investor2.legalName || "")).toBeVisible();
 
-    // Verify database records were created
     const companyRecord = await db.query.companies.findFirst({
       where: eq(companies.id, company.id),
     });
@@ -113,10 +102,8 @@ test.describe("Cap table creation", () => {
     await login(page, adminUser);
     await page.goto("/equity/investors/add");
 
-    // Try to finalize without selecting investors
     await page.getByRole("button", { name: "Finalize cap table" }).click();
 
-    // Should show validation error
     await expect(
       page.getByText(
         "Some investor details are missing. Please fill in all required fields before finalizing the cap table.",
@@ -138,7 +125,6 @@ test.describe("Cap table creation", () => {
     await login(page, adminUser);
     await page.goto("/equity/investors/add");
 
-    // Select investor but enter 0 shares
     await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText("Test Investor").click();
     const row = page.getByRole("row", { name: new RegExp(investor.legalName || "", "u") });
@@ -146,7 +132,6 @@ test.describe("Cap table creation", () => {
 
     await page.getByRole("button", { name: "Finalize cap table" }).click();
 
-    // Should show validation error
     await expect(
       page.getByText(
         "Some investor details are missing. Please fill in all required fields before finalizing the cap table.",
@@ -161,13 +146,11 @@ test.describe("Cap table creation", () => {
 
     const { user: investor } = await usersFactory.create({ legalName: "Test Investor" });
 
-    // Create company contractor so user appears in dropdown
     await companyContractorsFactory.create({
       companyId: company.id,
       userId: investor.id,
     });
 
-    // Create existing investor
     await db.insert(companyInvestors).values({
       companyId: company.id,
       userId: investor.id,
@@ -178,7 +161,6 @@ test.describe("Cap table creation", () => {
     await login(page, adminUser);
     await page.goto("/equity/investors/add");
 
-    // Try to add the same investor again
     await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText("Test Investor").click();
     const row = page.getByRole("row", { name: new RegExp(investor.legalName || "", "u") });
@@ -186,7 +168,6 @@ test.describe("Cap table creation", () => {
 
     await page.getByRole("button", { name: "Finalize cap table" }).click();
 
-    // Should show validation error
     await expect(page.getByText("Investor 1: User is already an investor in this company")).toBeVisible();
   });
 });

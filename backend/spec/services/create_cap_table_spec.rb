@@ -40,8 +40,8 @@ RSpec.describe CreateCapTable do
 
         expect(alice_investor.total_shares).to eq(100_000)
         expect(bob_investor.total_shares).to eq(50_000)
-        expect(alice_investor.investment_amount_in_cents).to eq(100_000_000) # 100k * $10 * 100
-        expect(bob_investor.investment_amount_in_cents).to eq(50_000_000) # 50k * $10 * 100
+        expect(alice_investor.investment_amount_in_cents).to eq(100_000_000)
+        expect(bob_investor.investment_amount_in_cents).to eq(50_000_000)
       end
 
       it "creates share holdings" do
@@ -84,42 +84,6 @@ RSpec.describe CreateCapTable do
 
         expect(result[:success]).to be false
         expect(result[:errors]).to include("Company must have equity enabled")
-      end
-
-      it "returns error when no investors data provided" do
-        service = described_class.new(company: company, investors_data: [])
-
-        result = service.perform
-
-        expect(result[:success]).to be false
-        expect(result[:errors]).to include("No investors data provided")
-      end
-
-      it "returns error when user is not selected" do
-        service = described_class.new(company: company, investors_data: [{ userId: nil, shares: 1000 }])
-
-        result = service.perform
-
-        expect(result[:success]).to be false
-        expect(result[:errors]).to include("Investor 1: User must be selected")
-      end
-
-      it "returns error when shares are zero or negative" do
-        service = described_class.new(company: company, investors_data: [{ userId: user1.external_id, shares: 0 }])
-
-        result = service.perform
-
-        expect(result[:success]).to be false
-        expect(result[:errors]).to include("Investor 1: Shares must be greater than 0")
-      end
-
-      it "returns error when user not found" do
-        service = described_class.new(company: company, investors_data: [{ userId: "invalid-id", shares: 1000 }])
-
-        result = service.perform
-
-        expect(result[:success]).to be false
-        expect(result[:errors]).to include("Investor 1: User not found")
       end
 
       it "returns error when user is already an investor" do

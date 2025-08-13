@@ -36,28 +36,10 @@ class CreateCapTable
     attr_reader :investors_data
 
     def validate_data
-      return @errors << "No investors data provided" if investors_data.blank?
-
       total_shares = 0
       investors_data.each_with_index do |investor_data, index|
-        user_id = investor_data[:userId]
+        user = User.find_by(external_id: investor_data[:userId])
         shares = investor_data[:shares].to_i
-
-        if user_id.blank?
-          @errors << "Investor #{index + 1}: User must be selected"
-          next
-        end
-
-        if shares <= 0
-          @errors << "Investor #{index + 1}: Shares must be greater than 0"
-          next
-        end
-
-        user = User.find_by(external_id: user_id)
-        if user.nil?
-          @errors << "Investor #{index + 1}: User not found"
-          next
-        end
 
         if company.company_investors.exists?(user: user)
           @errors << "Investor #{index + 1}: User is already an investor in this company"
@@ -65,10 +47,6 @@ class CreateCapTable
         end
 
         total_shares += shares
-      end
-
-      if total_shares <= 0
-        @errors << "Total shares must be greater than 0"
       end
 
       if company.fully_diluted_shares > 0 && total_shares > company.fully_diluted_shares
