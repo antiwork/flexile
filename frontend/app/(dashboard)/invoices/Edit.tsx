@@ -143,7 +143,7 @@ const Edit = () => {
     ]);
   });
   const [showExpenses, setShowExpenses] = useState(false);
-  const uploadInvoiceRef = useRef<HTMLInputElement>(null);
+  const uploadAttachmentRef = useRef<HTMLInputElement>(null);
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const showExpensesTable = showExpenses || expenses.size > 0;
@@ -409,7 +409,7 @@ const Edit = () => {
                         Add expense
                       </Button>
                     ) : null}
-                    <Button variant="link" onClick={() => uploadInvoiceRef.current?.click()}>
+                    <Button variant="link" onClick={() => uploadAttachmentRef.current?.click()}>
                       <ArrowUpTrayIcon className="inline size-4" />
                       Add attachment
                     </Button>
@@ -506,10 +506,10 @@ const Edit = () => {
             </Table>
           ) : null}
           <input
-            ref={uploadInvoiceRef}
+            ref={uploadAttachmentRef}
             type="file"
             className="hidden"
-            accept="application/pdf,image/*"
+            accept="application/pdf"
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (!file) return;
