@@ -71,6 +71,27 @@ class HelperUserInfoService
     def metadata
       return {} unless user
 
-      { name: user.email }
+      {
+        name: user.email,
+        country: user.country_code,
+        dividends: user.dividends.map do |dividend|
+          {
+            status: dividend.status,
+            amount: dividend.total_amount_in_cents,
+            net_amount: dividend.net_amount_in_cents,
+            company: dividend.company_investor.company.display_name,
+          }
+        end,
+        invoices: user.invoices.map do |invoice|
+          {
+            status: invoice.status,
+            total_amount: invoice.total_amount_in_usd_cents,
+            cash_amount: invoice.cash_amount_in_cents,
+            equity_amount: invoice.equity_amount_in_cents,
+            company: invoice.company.display_name,
+            invoice_date: invoice.invoice_date,
+          }
+        end,
+      }
     end
 end

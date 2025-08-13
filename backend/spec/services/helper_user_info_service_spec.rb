@@ -9,7 +9,8 @@ RSpec.describe HelperUserInfoService do
     create(:dividend, company_investor: acme_company_investor, total_amount_in_cents: 123_45)
 
     gumroad = create(:company, public_name: "Gumroad")
-    create(:company_worker, user:, company: gumroad)
+    company_worker = create(:company_worker, user:, company: gumroad)
+    create(:invoice, user:, company: gumroad, company_worker: company_worker, status: "approved", total_amount_in_usd_cents: 50000, cash_amount_in_cents: 30000, equity_amount_in_cents: 20000)
     gumroad_company_investor = create(:company_investor, user:, company: gumroad, investment_amount_in_cents: 234_00)
     create(:dividend, :paid, company_investor: gumroad_company_investor, total_amount_in_cents: 23_31)
 
@@ -22,7 +23,36 @@ RSpec.describe HelperUserInfoService do
       result = described_class.new(email: user.email).user_info
 
       expect(result.keys).to match_array(%i[prompt metadata])
-      expect(result[:metadata]).to eq({ name: user.email })
+
+      expected_metadata = {
+        name: user.email,
+        country: user.country_code,
+        dividends: [
+          {
+            status: "Issued",
+            amount: 123_45,
+            net_amount: 123_45,
+            company: "Acme",
+          },
+          {
+            status: "Paid",
+            amount: 23_31,
+            net_amount: 23_31,
+            company: "Gumroad",
+          }
+        ],
+        invoices: [
+          {
+            status: "approved",
+            total_amount: 50000,
+            cash_amount: 30000,
+            equity_amount: 20000,
+            company: "Gumroad",
+            invoice_date: Date.current,
+          }
+        ],
+      }
+      expect(result[:metadata]).to eq(expected_metadata)
 
       expected_prompt = [
         "The user's residence country is #{user.display_country}",
