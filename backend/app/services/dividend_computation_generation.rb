@@ -18,7 +18,7 @@ class DividendComputationGeneration
     @preferred_dividend_total = 0.to_d
     @common_dividend_total = 0.to_d
 
-    generate_preferred_dividends
+    prepare_preferred_dividends
 
     if @preferred_dividend_total > @amount_in_usd
       raise InsufficientFundsError,
@@ -30,7 +30,7 @@ class DividendComputationGeneration
     )
 
     save_preferred_dividends
-    generate_common_dividends
+    process_common_dividends
 
     computation
   end
@@ -38,7 +38,7 @@ class DividendComputationGeneration
   private
     attr_reader :company, :amount_in_usd, :dividends_issuance_date, :computation, :return_of_capital
 
-    def generate_preferred_dividends
+    def prepare_preferred_dividends
       @preferred_dividend_outputs = []
 
       shares_per_class_per_investor.each do |share_holding|
@@ -73,7 +73,7 @@ class DividendComputationGeneration
       end
     end
 
-    def generate_common_dividends
+    def process_common_dividends
       available_amount = @amount_in_usd - @preferred_dividend_total
       return if available_amount == 0
 
