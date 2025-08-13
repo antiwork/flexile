@@ -74,7 +74,10 @@ export default function DividendRounds() {
         header: "Type",
         cell: (info) => (info.getValue() ? "Return of capital" : "Dividend"),
         meta: {
-          filterOptions: ["Return of capital", "Dividend"],
+          filterOptions: [
+            ...(data.some((item) => item.returnOfCapital) ? ["Return of capital"] : []),
+            ...(data.some((item) => !item.returnOfCapital) ? ["Dividend"] : []),
+          ],
         },
         filterFn: (row, _, filterValue) =>
           Array.isArray(filterValue) &&
