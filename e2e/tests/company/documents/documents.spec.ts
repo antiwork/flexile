@@ -89,3 +89,48 @@ test.describe("Documents search functionality", () => {
     await expect(page.getByRole("row").filter({ hasText: document2.name })).not.toBeVisible();
   });
 });
+
+test.describe("Documents sign functionality", () => {
+  test("allows administrators to sign documents", async ({ page }) => {
+    const { company } = await companiesFactory.createCompletedOnboarding();
+    const { user: admin } = await usersFactory.create();
+    await companyAdministratorsFactory.create({
+      companyId: company.id,
+      userId: admin.id,
+    });
+
+    const { companyContractor: contractor1 } = await companyContractorsFactory.create({
+      companyId: company.id,
+      role: "Test Contractor",
+    });
+    const contractor1User = await db.query.users.findFirst({
+      where: eq(users.id, contractor1.userId),
+    });
+    assert(contractor1User !== undefined);
+
+    const { document: document1 } = await documentsFactory.create(
+      {
+        companyId: company.id,
+        name: "Test Document Admin unsigned",
+        textContent: "This is a test document.",
+      },
+      {
+        signatures: [{ userId: admin.id, title: "Company Representative" }],
+      },
+    );
+
+    await login(page, admin);
+
+    await page.goto("/documents");
+    await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
+
+    await expect(page.getByRole("row").filter({ hasText: document1.name })).toBeVisible();
+    await page.getByRole("row", { name: document1.name }).getByRole("button", { name: "Review and sign" }).click();
+
+    await expect(page.getByRole("heading", { name: "Sign Document" })).toBeVisible();
+    await expect(page.getByText("This is a test document.")).toBeVisible();
+    await page.getByRole("button", { name: "Agree & Submit" }).click();
+
+    await expect(page.getByRole("row").filter({ hasText: document1.name })).not.toBeVisible();
+  });
+});

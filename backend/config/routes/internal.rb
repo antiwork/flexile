@@ -86,6 +86,12 @@ scope path: :internal, module: :internal do
       post :reset
     end
 
+    resources :documents, only: [:create] do
+      member do
+        post :sign
+      end
+    end
+
     resources :dividends, only: [:show] do
       member do
         post :sign
