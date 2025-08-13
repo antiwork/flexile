@@ -2,22 +2,13 @@
 
 RSpec.describe Internal::Companies::DividendComputationsController do
   let(:user) { create(:user) }
-  let(:company) { create(:company, :completed_onboarding) }
-  let(:company_administrator) { create(:company_administrator, user: user, company: company) }
+  let(:company) { create(:company) }
   let(:dividend_computation) { create(:dividend_computation, company: company) }
-  let(:dividend_computation_output) { create(:dividend_computation_output, dividend_computation: dividend_computation) }
 
   before do
-    allow(controller).to receive(:authenticate_user_json!).and_return(true)
-
-    Current.user = user
-    Current.company = company
-    Current.company_administrator = company_administrator
-
     allow(controller).to receive(:current_context) do
       Current.user = user
       Current.company = company
-      Current.company_administrator = company_administrator
       CurrentContext.new(user: user, company: company)
     end
 
@@ -28,7 +19,6 @@ RSpec.describe Internal::Companies::DividendComputationsController do
   describe "GET #index" do
     before do
       dividend_computation
-      dividend_computation_output
     end
 
     it "returns dividend computations for the company" do
@@ -68,15 +58,14 @@ RSpec.describe Internal::Companies::DividendComputationsController do
     it "uses current date when no issuance date provided" do
       params_without_date = valid_params.deep_dup
       params_without_date[:dividend_computation].delete(:dividends_issuance_date)
-
       post :create, params: params_without_date
+
       expect(response).to have_http_status(:created)
     end
 
     it "handles return of capital parameter" do
       params_with_return = valid_params.deep_dup
       params_with_return[:dividend_computation][:return_of_capital] = true
-
       post :create, params: params_with_return
 
       expect(response).to have_http_status(:created)
@@ -85,20 +74,22 @@ RSpec.describe Internal::Companies::DividendComputationsController do
   end
 
   describe "GET #show" do
-    let(:computation_outputs) do
-      [
-        {
-          "investor_name" => "John Doe",
-          "company_investor_id" => 1,
-          "investor_external_id" => "ext_123",
-          "total_amount" => 1000,
-          "number_of_shares" => 100,
-        }
-      ]
+    let(:investor_user) { create(:user, legal_name: "John Doe") }
+    let(:company_investor) { create(:company_investor, user: investor_user, company: company) }
+    let(:dividend_computation_output) do
+      create(:dividend_computation_output,
+             dividend_computation: dividend_computation,
+             company_investor: company_investor,
+             share_class: "Common",
+             number_of_shares: 100,
+             preferred_dividend_amount_in_usd: 0,
+             dividend_amount_in_usd: 1000,
+             qualified_dividend_amount_usd: 0,
+             total_amount_in_usd: 1000)
     end
 
     before do
-      allow_any_instance_of(DividendComputation).to receive(:broken_down_by_investor).and_return(computation_outputs)
+      dividend_computation_output
     end
 
     it "returns dividend computation details" do
@@ -111,7 +102,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(json_response["dividends_issuance_date"]).to eq(dividend_computation.dividends_issuance_date.to_date.iso8601)
       expect(json_response["return_of_capital"]).to eq(dividend_computation.return_of_capital)
       expect(json_response["number_of_shareholders"]).to eq(dividend_computation.number_of_shareholders)
-      expect(json_response["computation_outputs"]).to eq(computation_outputs)
+      expect(json_response["computation_outputs"]).to be_present
     end
 
     it "includes computation outputs" do
@@ -119,7 +110,12 @@ RSpec.describe Internal::Companies::DividendComputationsController do
 
       json_response = response.parsed_body
       expect(json_response["computation_outputs"]).to be_present
-      expect(json_response["computation_outputs"]).to eq(computation_outputs)
+      computation_output = json_response["computation_outputs"].first
+      expect(computation_output["investor_name"]).to eq("John Doe")
+      expect(computation_output["company_investor_id"]).to eq(company_investor.id)
+      expect(computation_output["investor_external_id"]).to eq(investor_user.external_id)
+      expect(computation_output["total_amount"].to_f).to eq(1000.0)
+      expect(computation_output["number_of_shares"]).to eq(100)
     end
 
     it "returns not found for invalid id" do
