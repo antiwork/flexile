@@ -4,6 +4,8 @@ import { z } from "zod";
 import type { users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
+type MaybePromise<T> = T | Promise<T>;
+
 type Account = Pick<typeof users.$inferSelect, "email" | "id">;
 let lastAccountId = 1;
 export const mockStripe = (
