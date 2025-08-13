@@ -8,11 +8,12 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
   RAILS_ENV: test
-  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-  WISE_API_KEY: ${{ secrets.WISE_API_KEY }}
-  WISE_PROFILE_ID: ${{ secrets.WISE_PROFILE_ID }}
+  # External API secrets no longer needed - all services are mocked in e2e tests
+  # NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: dummy # Mocked in e2e/helpers/stripe.ts  
+  # STRIPE_SECRET_KEY: dummy # Mocked in e2e/helpers/stripe.ts
+  # WISE_API_KEY: dummy # Mocked in e2e/helpers/wise.ts
+  # WISE_PROFILE_ID: dummy # Mocked in e2e/helpers/wise.ts
 
 jobs:
   rspec:

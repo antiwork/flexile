@@ -2,12 +2,16 @@ import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { login } from "@test/helpers/auth";
+import { mockStripe } from "@test/helpers/stripe";
 import { expect, test } from "@test/index";
 import { and, eq, isNull } from "drizzle-orm";
 import { companyStripeAccounts, users } from "@/db/schema";
 
 test.describe("Company administrator settings - payment details", () => {
-  test("allows connecting a bank account", async ({ page }) => {
+  test("allows connecting a bank account", async ({ page, next }) => {
+    // Set up Stripe mock
+    const { mockForm } = mockStripe(next, {});
+    await mockForm(page);
     const { company } = await companiesFactory.create({ stripeCustomerId: null }, { withoutBankAccount: true });
     const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
     const adminUser = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) }).then(takeOrThrow);
@@ -61,7 +65,10 @@ test.describe("Company administrator settings - payment details", () => {
     expect(companyStripeAccount.bankAccountLastFour).toBe("4321");
   });
 
-  test("allows manually connecting a bank account with microdeposit verification", async ({ page }) => {
+  test("allows manually connecting a bank account with microdeposit verification", async ({ page, next }) => {
+    // Set up Stripe mock
+    const { mockForm } = mockStripe(next, {});
+    await mockForm(page);
     const { company } = await companiesFactory.create({ stripeCustomerId: null }, { withoutBankAccount: true });
     const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
     const adminUser = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) }).then(takeOrThrow);
