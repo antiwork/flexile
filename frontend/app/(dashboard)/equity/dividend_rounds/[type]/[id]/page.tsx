@@ -176,7 +176,7 @@ const DividendComputation = ({ id }: { id: string }) => {
 
   const onRowClicked = (row: DividendComputationOutput) => {
     if (row.investor_external_id) {
-      router.push(`/people/${row.investor_external_id}?tab=dividends`);
+      router.push(`/people/${row.investor_external_id}?tab=shares`);
     }
   };
 
