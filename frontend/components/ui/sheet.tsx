@@ -43,6 +43,8 @@ function SheetContent({
   return (
     <SheetPortal>
       <SheetOverlay />
+      {/* NOTE: bunch of accessibility warnings without it, not sure why shad didn't handle it the right way */}
+      <SheetPrimitive.Description data-slot="sheet-description" hidden />
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(

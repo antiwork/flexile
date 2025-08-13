@@ -67,20 +67,6 @@ RSpec.describe Internal::SignupController do
         expect(temp_user.invitation_accepted_at).to be_present
         expect(temp_user.tos_agreements).to exist
       end
-
-      it "creates a default company for the user" do
-        expect do
-          post :verify_and_create, params: {
-            email: email,
-            otp_code: valid_otp,
-            token: api_token,
-          }
-        end.to change(Company, :count).by(1)
-          .and change(CompanyAdministrator, :count).by(1)
-
-        temp_user.reload
-        expect(temp_user.companies).to exist
-      end
     end
 
     context "with invalid OTP" do

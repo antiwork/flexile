@@ -263,7 +263,7 @@ export default function RolesPage() {
       columnHelper.accessor("role", {
         header: "Role",
         cell: (info) => info.getValue() || "-",
-        meta: { className: "whitespace-nowrap text-left" },
+        meta: { cellClassName: "whitespace-nowrap text-left" },
       }),
       columnHelper.display({
         id: "actions",

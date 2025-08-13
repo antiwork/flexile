@@ -9,7 +9,6 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils";
 import { useIsMobile } from "@/utils/use-mobile";
-
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const SIDEBAR_WIDTH = "16rem";
@@ -120,6 +119,7 @@ function SidebarProvider({
   return (
     <SidebarContext.Provider value={contextValue}>
       <div
+        id="sidebar-wrapper"
         data-slot="sidebar-wrapper"
         style={{
           "--sidebar-width": SIDEBAR_WIDTH,
@@ -141,11 +141,13 @@ function Sidebar({
   collapsible = "offcanvas",
   className,
   children,
+  mobileSidebar,
   ...props
 }: React.ComponentProps<"div"> & {
   side?: "left" | "right";
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
+  mobileSidebar?: React.ReactNode;
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
 
@@ -162,7 +164,9 @@ function Sidebar({
   }
 
   if (isMobile) {
-    return (
+    return mobileSidebar ? (
+      mobileSidebar
+    ) : (
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
         <SheetContent
           data-sidebar="sidebar"
@@ -231,7 +235,9 @@ function Sidebar({
 }
 
 function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, isMobile } = useSidebar();
+
+  if (isMobile) return null;
 
   return (
     <Button
