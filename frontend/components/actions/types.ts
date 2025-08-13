@@ -25,3 +25,5 @@ export interface ActionConfig<T = unknown> {
   // NEW: Define group order for context menu separators
   contextMenuGroups?: string[];
 }
+
+export type AvailableActions<T> = ActionDefinition<T> & { key: string };

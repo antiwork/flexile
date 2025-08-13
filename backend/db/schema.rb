@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -102,7 +102,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.boolean "is_trusted", default: false, null: false
     t.boolean "show_analytics_to_contractors", default: false, null: false
     t.string "default_currency", default: "usd", null: false
-    t.boolean "lawyers_enabled", default: false, null: false
     t.decimal "conversion_share_price_usd"
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
@@ -199,18 +198,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.index ["user_id"], name: "index_company_lawyers_on_user_id"
   end
 
-  create_table "company_monthly_financial_reports", force: :cascade do |t|
-    t.bigint "company_id", null: false
-    t.integer "year", null: false
-    t.integer "month", null: false
-    t.bigint "net_income_cents", null: false
-    t.bigint "revenue_cents", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_id", "year", "month"], name: "index_company_monthly_financials_on_company_year_month", unique: true
-    t.index ["company_id"], name: "index_company_monthly_financial_reports_on_company_id"
-  end
-
   create_table "company_stripe_accounts", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.string "status", default: "initial", null: false
@@ -230,21 +217,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_08_180255) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.string "external_id", null: false
-    t.string "period"
-    t.date "period_started_on"
-    t.boolean "show_revenue", default: false, null: false
-    t.boolean "show_net_income", default: false, null: false
     t.index ["company_id"], name: "index_company_updates_on_company_id"
     t.index ["external_id"], name: "index_company_updates_on_external_id", unique: true
-  end
-
-  create_table "company_updates_financial_reports", force: :cascade do |t|
-    t.bigint "company_update_id", null: false
-    t.bigint "company_monthly_financial_report_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_monthly_financial_report_id"], name: "idx_on_company_monthly_financial_report_id_d65ba22efd"
-    t.index ["company_update_id"], name: "index_company_updates_financial_reports_on_company_update_id"
   end
 
   create_table "consolidated_invoices", force: :cascade do |t|
