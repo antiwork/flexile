@@ -196,7 +196,6 @@ export const quickbooksRouter = createRouter({
         })
         .where(eq(integrations.id, integration.id));
 
-      // Trigger QuickBooks sync via Rails API instead of Inngest
       await request({
         url: sync_integration_company_administrator_quickbooks_path({ company_id: ctx.company.id }),
         method: "POST",
