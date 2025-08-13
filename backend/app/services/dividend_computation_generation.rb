@@ -19,11 +19,7 @@ class DividendComputationGeneration
     @common_dividend_total = 0.to_d
 
     prepare_preferred_dividends
-
-    if @preferred_dividend_total > @amount_in_usd
-      raise InsufficientFundsError,
-            "Sorry, you cannot distribute $#{@amount_in_usd} as preferred investors require a return of at least $#{@preferred_dividend_total}."
-    end
+    validate_sufficient_funds
 
     @computation = company.dividend_computations.create!(
       total_amount_in_usd: amount_in_usd, dividends_issuance_date:, return_of_capital:
@@ -37,6 +33,13 @@ class DividendComputationGeneration
 
   private
     attr_reader :company, :amount_in_usd, :dividends_issuance_date, :computation, :return_of_capital
+
+    def validate_sufficient_funds
+      if @preferred_dividend_total > @amount_in_usd
+        raise InsufficientFundsError,
+              "Sorry, you cannot distribute $#{@amount_in_usd} as preferred investors require a return of at least $#{@preferred_dividend_total}."
+      end
+    end
 
     def prepare_preferred_dividends
       @preferred_dividend_outputs = []
