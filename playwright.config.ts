@@ -12,7 +12,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 4,
+  workers: 3,
   reporter: process.env.CI ? [["list"], ["html"]] : "list",
   use: {
     baseURL: "https://test.flexile.dev:3101",
@@ -24,7 +24,7 @@ export default defineConfig({
     },
     locale: "en-US",
   },
-  expect: { timeout: 30000, toPass: { timeout: 30000 } },
+  expect: { timeout: 15_000, toPass: { timeout: 30000 } },
   timeout: process.env.CI ? 30000 : 120000,
   projects: [
     {

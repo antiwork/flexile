@@ -5,7 +5,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
-import { login, logout } from "@test/helpers/auth";
+import { login } from "@test/helpers/auth";
 import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
 import { expect, type Page, test, withinModal } from "@test/index";
 import { addMonths, format } from "date-fns";
@@ -77,7 +77,7 @@ test.describe("New Contractor", () => {
       },
     });
 
-  test("allows inviting a contractor", async ({ page, next }) => {
+  test("allows inviting a contractor", async ({ context, page, next }) => {
     const { mockForm } = mockDocuseal(next, {
       __payRate: "99 per hour",
       __role: "Hourly Role 1",
@@ -104,7 +104,7 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Invited");
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
 
-    await logout(page);
+    await context.clearCookies();
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
     await page.getByRole("link", { name: "sign it" }).click();
@@ -115,7 +115,7 @@ test.describe("New Contractor", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
-  test("allows inviting a project-based contractor", async ({ page, next }) => {
+  test("allows inviting a project-based contractor", async ({ context, page, next }) => {
     const { mockForm } = mockDocuseal(next, {
       __payRate: "1,000 per project",
       __role: "Project-based Role",
@@ -143,7 +143,7 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Invited");
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
 
-    await logout(page);
+    await context.clearCookies();
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
     await page.getByRole("link", { name: "sign it" }).click();
@@ -154,7 +154,7 @@ test.describe("New Contractor", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
-  test("allows inviting a contractor with contract signed elsewhere", async ({ page }) => {
+  test("allows inviting a contractor with contract signed elsewhere", async ({ context, page }) => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Contract Signed Elsewhere Role");
 
@@ -167,11 +167,10 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Contract Signed Elsewhere Role");
     await expect(row).toContainText("Invited");
 
-    await logout(page);
+    await context.clearCookies();
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
-
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 

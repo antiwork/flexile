@@ -3,12 +3,12 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
-import { login, logout } from "@test/helpers/auth";
+import { login } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 
 test.describe("Contractor for multiple companies", () => {
-  test("contractor accepts invitation from second company and signs contract", async ({ page, next }) => {
+  test("contractor accepts invitation from second company and signs contract", async ({ context, page, next }) => {
     const { user: contractorUser } = await usersFactory.create({
       preferredName: "Alex",
       invitationCreatedAt: new Date("2023-01-01"),
@@ -25,8 +25,8 @@ test.describe("Contractor for multiple companies", () => {
     });
     await mockForm(page);
 
-    await login(page, adminUser);
-    await page.getByRole("link", { name: "People" }).click();
+    await login(page, adminUser, "/people");
+
     await page.getByRole("button", { name: "Add contractor" }).click();
 
     await page.getByLabel("Email").fill(contractorUser.email);
@@ -45,7 +45,7 @@ test.describe("Contractor for multiple companies", () => {
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
     await expect(page.getByRole("cell").filter({ hasText: "Alex" })).toBeVisible();
 
-    await logout(page);
+    await context.clearCookies();
     await login(page, contractorUser);
     // Click company switcher in sidebar
     await page.locator('[data-slot="dropdown-menu-trigger"]').first().click();
