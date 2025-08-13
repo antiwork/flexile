@@ -147,7 +147,9 @@ const Edit = () => {
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const uploadDocumentRef = useRef<HTMLInputElement>(null);
-  const [documents, setDocuments] = useState<{ name: string; url: string; blob: File }[]>([]);
+  const [document, setDocument] = useState<{ name: string; url: string; blob?: File } | null>(
+    data.invoice.attachment ?? null,
+  );
   const showExpensesTable = showExpenses || expenses.size > 0;
 
   const validate = () => {
@@ -187,13 +189,8 @@ const Edit = () => {
         }
       }
 
-      // Add document attachments
-      documents.forEach((doc) => {
-        formData.append(`documents[][attachment]`, doc.blob);
-        formData.append(`documents[][name]`, doc.name);
-      });
-
       if (notes.length) formData.append("invoice[notes]", notes);
+      if (document?.blob) formData.append("invoice[attachment]", document?.blob);
 
       await request({
         method: id ? "PATCH" : "POST",
@@ -244,13 +241,7 @@ const Edit = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Add the document to our documents array
-    setDocuments((docs) => [...docs, { name: file.name, url: URL.createObjectURL(file), blob: file }]);
-
-    // Reset the file input
-    if (uploadDocumentRef.current) {
-      uploadDocumentRef.current.value = "";
-    }
+    setDocument({ name: file.name, url: URL.createObjectURL(file), blob: file });
   };
 
   const parseQuantity = (value: string | null | undefined) => {
@@ -433,7 +424,7 @@ const Edit = () => {
                         Add expense
                       </Button>
                     ) : null}
-                    <Button variant="link" onClick={addDocument}>
+                    <Button variant="link" onClick={addDocument} disabled={document !== null}>
                       <PlusIcon className="inline size-4" />
                       Add Document
                     </Button>
@@ -459,7 +450,7 @@ const Edit = () => {
             accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"
             onChange={handleDocumentUpload}
           />
-          {documents.length > 0 ? (
+          {document ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -468,24 +459,18 @@ const Edit = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {documents.map((doc, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <a href={doc.url} download>
-                        <PaperClipIcon className="inline size-4" /> {doc.name}
-                      </a>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="link"
-                        aria-label="Remove"
-                        onClick={() => setDocuments((docs) => docs.filter((_, i) => i !== index))}
-                      >
-                        <TrashIcon className="size-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                <TableRow>
+                  <TableCell>
+                    <a href={document.url} download>
+                      <PaperClipIcon className="inline size-4" /> {document.name}
+                    </a>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="link" aria-label="Remove" onClick={() => setDocument(null)}>
+                      <TrashIcon className="size-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
               </TableBody>
             </Table>
           ) : null}
