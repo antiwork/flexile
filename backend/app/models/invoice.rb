@@ -29,8 +29,6 @@ class Invoice < ApplicationRecord
   DELETABLE_STATES = [RECEIVED, APPROVED]
   ALL_STATES = READ_ONLY_STATES + EDITABLE_STATES
 
-
-
   has_many :invoice_line_items, autosave: true
   has_many :invoice_expenses, autosave: true
   has_many :payments
