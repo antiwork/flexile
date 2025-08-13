@@ -26,19 +26,20 @@ RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
           worker2
         end
 
-        it "enqueues QuickbooksWorkersSyncJob with active worker IDs" do
-          expect(QuickbooksWorkersSyncJob).to receive(:perform_async).with(
-            company.id,
-            [worker1.id, worker2.id]
-          )
+        it "enqueues QuickbooksDataSyncJob.perform_bulk with worker arguments" do
+          expected_args = [
+            [company.id, "CompanyWorker", worker1.id],
+            [company.id, "CompanyWorker", worker2.id]
+          ]
+          expect(QuickbooksDataSyncJob).to receive(:perform_bulk).with(expected_args)
 
           described_class.new.perform(company.id)
         end
       end
 
       context "when there are no active workers" do
-        it "does not enqueue QuickbooksWorkersSyncJob" do
-          expect(QuickbooksWorkersSyncJob).not_to receive(:perform_async)
+        it "does not enqueue QuickbooksDataSyncJob" do
+          expect(QuickbooksDataSyncJob).not_to receive(:perform_bulk)
           described_class.new.perform(company.id)
         end
       end
@@ -50,10 +51,10 @@ RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
         end
 
         it "only includes active workers in the sync job" do
-          expect(QuickbooksWorkersSyncJob).to receive(:perform_async).with(
-            company.id,
-            [worker1.id]
-          )
+          expected_args = [
+            [company.id, "CompanyWorker", worker1.id]
+          ]
+          expect(QuickbooksDataSyncJob).to receive(:perform_bulk).with(expected_args)
 
           described_class.new.perform(company.id)
         end
@@ -62,7 +63,7 @@ RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
 
     context "when integration is nil" do
       it "returns early without processing" do
-        expect(QuickbooksWorkersSyncJob).not_to receive(:perform_async)
+        expect(QuickbooksDataSyncJob).not_to receive(:perform_bulk)
         described_class.new.perform(company.id)
       end
     end
@@ -73,7 +74,7 @@ RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
       end
 
       it "returns early without processing" do
-        expect(QuickbooksWorkersSyncJob).not_to receive(:perform_async)
+        expect(QuickbooksDataSyncJob).not_to receive(:perform_bulk)
         described_class.new.perform(company.id)
       end
     end
