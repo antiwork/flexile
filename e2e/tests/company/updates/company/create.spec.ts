@@ -143,7 +143,7 @@ test.describe("company update creation", () => {
 
     await login(page, adminUser, "/updates/company");
 
-    await page.getByRole("row").filter({ hasText: "Original Title" }).click();
+    await page.locator('[role="button"]').filter({ hasText: "Original Title" }).click();
     await expect(page.getByRole("dialog", { name: "Edit company update" })).toBeVisible();
 
     await withinModal(
@@ -159,7 +159,9 @@ test.describe("company update creation", () => {
     await page.getByRole("button", { name: "Yes, update" }).click();
 
     await expect(page.getByRole("dialog")).not.toBeVisible();
-    await expect(page.getByRole("row").filter({ hasText: "Updated Title" }).filter({ hasText: "Sent" })).toBeVisible();
+    await expect(
+      page.locator('[role="button"]').filter({ hasText: "Updated Title" }).filter({ hasText: "Sent" }),
+    ).toBeVisible();
 
     const updatedRecord = await db.query.companyUpdates.findFirst({
       where: eq(companyUpdates.id, companyUpdate.id),
