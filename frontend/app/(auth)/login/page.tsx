@@ -16,11 +16,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const method = localStorage.getItem("lastLoginMethod");
-
-      if (!method) return;
-
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      setLastLoginMethod(method as LoginMethod);
+      if (method === LoginMethod.Email || method === LoginMethod.Google) {
+        setLastLoginMethod(method);
+      }
     }
   }, []);
 
