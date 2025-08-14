@@ -65,16 +65,7 @@ class Internal::OauthController < Api::BaseController
           signup_invite_link: invite_link
         )
 
-        user.tos_agreements.create!(ip_address: request.remote_ip)
-
-        unless user.signup_invite_link
-          company = Company.create!(
-            email: user.email,
-            country_code: "US",
-            default_currency: "USD"
-          )
-          user.company_administrators.create!(company: company)
-        end
+        CompleteUserSetup.new(user: user, ip_address: request.remote_ip).perform
 
         user
       end

@@ -92,17 +92,7 @@ class Internal::SignupController < Internal::BaseController
           confirmed_at: Time.current,
           invitation_accepted_at: Time.current
         )
-        temp_user.tos_agreements.create!(ip_address: request.remote_ip)
-
-        # Create default company if no invite link was set during send_otp
-        unless temp_user.signup_invite_link
-          company = Company.create!(
-            email: temp_user.email,
-            country_code: "US",
-            default_currency: "USD"
-          )
-          temp_user.company_administrators.create!(company: company)
-        end
+        CompleteUserSetup.new(user: temp_user, ip_address: request.remote_ip).perform
 
         { success: true, user: temp_user }
       end
