@@ -12,20 +12,6 @@ const otpLoginSchema = z.object({
   otp: z.string().length(6),
 });
 
-function parseCookies(cookieHeader: string): Map<string, string> {
-  const cookieMap = new Map<string, string>();
-  if (!cookieHeader) return cookieMap;
-
-  cookieHeader.split("; ").forEach((cookie) => {
-    const [key, value] = cookie.split("=");
-    if (key && value) {
-      cookieMap.set(key, decodeURIComponent(value));
-    }
-  });
-
-  return cookieMap;
-}
-
 export const authOptions = {
   providers: [
     CredentialsProvider({
@@ -128,9 +114,7 @@ export const authOptions = {
 } satisfies NextAuthOptions;
 
 export function handler(req: NextRequest, ...params: unknown[]) {
-  const cookies = req.headers.get("cookie") || "";
-  const cookieMap = parseCookies(cookies);
-  const authContext = cookieMap.get("auth_context");
+  const authContext = req.cookies.get("auth_context")?.value;
 
   const augmentedOptions: NextAuthOptions = {
     ...authOptions,
@@ -143,7 +127,7 @@ export function handler(req: NextRequest, ...params: unknown[]) {
               name: "Google (Test)",
               credentials: {},
               authorize() {
-                const testGoogleUser = cookieMap.get("test_google_user");
+                const testGoogleUser = req.cookies.get("test_google_user")?.value;
 
                 if (testGoogleUser) {
                   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -172,8 +156,7 @@ export function handler(req: NextRequest, ...params: unknown[]) {
       ...authOptions.callbacks,
       async signIn({ user, account }: { user: User; account: Account | null }) {
         if (account?.provider === "google") {
-          const invitationToken = cookieMap.get("auth_invitation_token");
-
+          const invitationToken = req.cookies.get("auth_invitation_token")?.value;
           const endpoint = authContext === "signup" ? "/internal/oauth/oauth_signup" : "/internal/oauth/oauth_login";
           const requestBody: Record<string, unknown> = {
             email: user.email,
@@ -193,26 +176,27 @@ export function handler(req: NextRequest, ...params: unknown[]) {
           });
 
           if (!response.ok) {
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-            const errorData = (await response.json()) as { error?: string };
-            throw new Error(errorData.error || "Authentication failed");
+            const parsed = z.object({ error: z.string() }).safeParse(await response.json());
+            throw new Error(parsed.success ? parsed.data.error : "Authentication failed");
           }
 
-          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-          const data = (await response.json()) as {
-            user: {
-              id: number;
-              email: string;
-              name: string;
-              legal_name?: string;
-              preferred_name?: string;
-            };
-            jwt: string;
-          };
+          const data = z
+            .object({
+              user: z.object({
+                id: z.number(),
+                email: z.string().email(),
+                name: z.string().nullable().optional(),
+                legal_name: z.string().nullable().optional(),
+                preferred_name: z.string().nullable().optional(),
+              }),
+              jwt: z.string(),
+            })
+            .parse(await response.json());
 
           user.jwt = data.jwt;
-          user.legalName = data.user.legal_name || "";
-          user.preferredName = data.user.preferred_name || "";
+          user.legalName = data.user.legal_name ?? "";
+          user.preferredName = data.user.preferred_name ?? "";
+          user.name = data.user.name ?? user.name;
           user.id = data.user.id.toString();
         }
 
