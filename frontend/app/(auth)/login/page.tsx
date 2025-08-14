@@ -2,11 +2,16 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { linkClasses } from "@/components/Link";
+import { LoginMethod } from "@/db/enums";
 import { AuthPage } from "..";
 
+export const loginMethodLabels: Record<LoginMethod, string> = {
+  [LoginMethod.Email]: "your work email",
+  [LoginMethod.Google]: "Google",
+};
+
 export default function LoginPage() {
-  const [description, setDescription] = useState<string>("Use Google or your work email to log in.");
-  const [highlightedAuthMethod, setHighlightedAuthMethod] = useState<string>("google");
+  const [lastLoginMethod, setLastLoginMethod] = useState<LoginMethod | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -14,19 +19,19 @@ export default function LoginPage() {
 
       if (!method) return;
 
-      setHighlightedAuthMethod(method);
-      if (method === "google") {
-        setDescription("You used Google to log in last time.");
-      } else if (method === "email") {
-        setDescription("You used your work email to log in last time.");
-      }
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      setLastLoginMethod(method as LoginMethod);
     }
   }, []);
 
   return (
     <AuthPage
       title="Welcome back"
-      description={description}
+      description={
+        lastLoginMethod
+          ? `You used ${loginMethodLabels[lastLoginMethod]} to log in last time.`
+          : "Use your work email to log in."
+      }
       sendOtpText="Log in"
       switcher={
         <>
@@ -37,7 +42,6 @@ export default function LoginPage() {
         </>
       }
       sendOtpUrl="/internal/email_otp"
-      highlightedAuthMethod={highlightedAuthMethod}
     />
   );
 }

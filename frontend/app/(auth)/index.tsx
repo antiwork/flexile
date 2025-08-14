@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { LoginMethod } from "@/db/enums";
 import logo from "@/public/logo-icon.svg";
 import { cn } from "@/utils";
 import { request } from "@/utils/request";
@@ -96,7 +97,7 @@ export function AuthPage({
       if (!session?.user.email) throw new Error("Invalid verification code");
       await queryClient.resetQueries({ queryKey: ["currentUser", session.user.email] });
 
-      localStorage.setItem("lastLoginMethod", "email");
+      localStorage.setItem("lastLoginMethod", LoginMethod.Email);
       // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
       router.replace(getRedirectUrl());
     },
@@ -136,7 +137,7 @@ export function AuthPage({
 
     try {
       await signIn("google", { callbackUrl: getRedirectUrl() });
-      localStorage.setItem("lastLoginMethod", "google");
+      localStorage.setItem("lastLoginMethod", LoginMethod.Google);
     } catch (error) {
       setGoogleAuthError(error instanceof Error ? error.message : "Failed to continue with Google");
     }
