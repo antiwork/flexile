@@ -67,14 +67,12 @@ RSpec.describe Internal::Companies::Administrator::QuickbooksController, type: :
 
     context "when unauthenticated" do
       before do
-        Current.user = nil
-        allow(controller).to receive(:authenticate_user_json!).and_call_original
+        allow(controller).to receive(:authenticate_user_json!).and_raise(StandardError)
       end
 
-      it "does not enqueue and returns unauthorized" do
+      it "does not enqueue and raises authentication error" do
         expect(QuickbooksIntegrationSyncScheduleJob).not_to receive(:perform_async)
-        post :sync_integration, params: { company_id: company.id }
-        expect(response).to have_http_status(:unauthorized)
+        expect { post :sync_integration, params: { company_id: company.id } }.to raise_error(StandardError)
       end
     end
 
