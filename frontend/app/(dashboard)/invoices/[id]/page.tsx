@@ -397,7 +397,7 @@ export default function InvoicePage() {
               </Card>
             )}
 
-            <footer className="flex justify-between print:mt-4 print:flex print:items-start print:justify-between">
+            <footer className="flex justify-between px-4 print:mt-4 print:flex print:items-start print:justify-between">
               <div className="print:mr-4 print:flex-1">
                 {invoice.notes ? (
                   <div>
