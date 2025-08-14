@@ -3,7 +3,6 @@
 require "spec_helper"
 
 RSpec.describe Internal::OauthController, type: :controller do
-  let(:api_token) { GlobalConfig.get("API_SECRET_TOKEN", Rails.application.secret_key_base) }
   let(:email) { "user@example.com" }
 
   describe "POST #oauth_login" do
@@ -11,7 +10,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "with valid parameters" do
       it "returns a JWT token and user data" do
-        post :oauth_login, params: { email: email, token: api_token }
+        post :oauth_login, params: { email: email }
 
         expect(response).to have_http_status(:ok)
 
@@ -27,7 +26,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
       it "updates current_sign_in_at" do
         freeze_time do
-          post :oauth_login, params: { email: email, token: api_token }
+          post :oauth_login, params: { email: email }
 
           user.reload
           expect(user.current_sign_in_at).to eq(Time.current)
@@ -37,7 +36,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "with non-existent user" do
       it "returns not found" do
-        post :oauth_login, params: { email: "nonexistent@example.com", token: api_token }
+        post :oauth_login, params: { email: "nonexistent@example.com" }
 
         expect(response).to have_http_status(:not_found)
 
@@ -48,69 +47,29 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "with missing parameters" do
       it "returns bad request when email is missing" do
-        post :oauth_login, params: { token: api_token }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Email is required")
-      end
-
-      it "returns bad request when API token is missing" do
-        post :oauth_login, params: { email: email }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Token is required")
-      end
-
-      it "returns bad request when all parameters are missing" do
         post :oauth_login, params: {}
 
         expect(response).to have_http_status(:bad_request)
 
         json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Token is required")
+        expect(json_response["error"]).to eq("Email is required")
       end
     end
 
     context "with empty parameters" do
       it "returns bad request when email is empty string" do
-        post :oauth_login, params: { email: "", token: api_token }
+        post :oauth_login, params: { email: "" }
 
         expect(response).to have_http_status(:bad_request)
 
         json_response = JSON.parse(response.body)
         expect(json_response["error"]).to eq("Email is required")
       end
-
-
-
-      it "returns bad request when API token is empty string" do
-        post :oauth_login, params: { email: email, token: "" }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Token is required")
-      end
-    end
-
-    context "with invalid API token" do
-      it "returns unauthorized" do
-        post :oauth_login, params: { email: email, token: "invalid_token" }
-
-        expect(response).to have_http_status(:unauthorized)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Invalid token")
-      end
     end
 
     context "JWT token validation" do
       it "generates a valid JWT token" do
-        post :oauth_login, params: { email: email, token: api_token }
+        post :oauth_login, params: { email: email }
 
         json_response = JSON.parse(response.body)
         jwt_token = json_response["jwt"]
@@ -133,7 +92,7 @@ RSpec.describe Internal::OauthController, type: :controller do
     context "with valid parameters" do
       it "creates a new user and returns JWT" do
         expect do
-          post :oauth_signup, params: { email: new_email, token: api_token }
+          post :oauth_signup, params: { email: new_email }
         end.to change(User, :count).by(1)
 
         expect(response).to have_http_status(:ok)
@@ -148,57 +107,13 @@ RSpec.describe Internal::OauthController, type: :controller do
         expect(new_user.invitation_accepted_at).to be_present
         expect(new_user.tos_agreements).to exist
       end
-
-      it "creates a default company for the user" do
-        expect do
-          post :oauth_signup, params: { email: new_email, token: api_token }
-        end.to change(Company, :count).by(1)
-          .and change(CompanyAdministrator, :count).by(1)
-
-        new_user = User.find_by(email: new_email)
-        expect(new_user.companies).to exist
-      end
-    end
-
-    context "with invitation token" do
-      let!(:company) { create(:company) }
-      let!(:invite_link) { create(:company_invite_link, company: company) }
-
-      it "creates user without default company when invitation token is provided" do
-        expect do
-          post :oauth_signup, params: {
-            email: new_email,
-            invitation_token: invite_link.token,
-            token: api_token,
-          }
-        end.to change(User, :count).by(1)
-          .and change(Company, :count).by(0)
-          .and change(CompanyAdministrator, :count).by(0)
-
-        new_user = User.find_by(email: new_email)
-        expect(new_user).to be_present
-      end
-
-      it "handles invalid invitation token gracefully" do
-        expect do
-          post :oauth_signup, params: {
-            email: new_email,
-            invitation_token: "invalid_token",
-            token: api_token,
-          }
-        end.to change(User, :count).by(1)
-          .and change(Company, :count).by(1)
-
-        new_user = User.find_by(email: new_email)
-        expect(new_user).to be_present
-      end
     end
 
     context "with existing user" do
       let!(:existing_user) { create(:user, email: new_email) }
 
       it "returns conflict error" do
-        post :oauth_signup, params: { email: new_email, token: api_token }
+        post :oauth_signup, params: { email: new_email }
 
         expect(response).to have_http_status(:conflict)
 
@@ -208,76 +123,36 @@ RSpec.describe Internal::OauthController, type: :controller do
 
       it "does not create a new user" do
         expect do
-          post :oauth_signup, params: { email: new_email, token: api_token }
+          post :oauth_signup, params: { email: new_email }
         end.not_to change(User, :count)
       end
     end
 
     context "with missing parameters" do
       it "returns bad request when email is missing" do
-        post :oauth_signup, params: { token: api_token }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Email is required")
-      end
-
-      it "returns bad request when API token is missing" do
-        post :oauth_signup, params: { email: new_email }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Token is required")
-      end
-
-      it "returns bad request when all parameters are missing" do
         post :oauth_signup, params: {}
 
         expect(response).to have_http_status(:bad_request)
 
         json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Token is required")
+        expect(json_response["error"]).to eq("Email is required")
       end
     end
 
     context "with empty parameters" do
       it "returns bad request when email is empty string" do
-        post :oauth_signup, params: { email: "", token: api_token }
+        post :oauth_signup, params: { email: "" }
 
         expect(response).to have_http_status(:bad_request)
 
         json_response = JSON.parse(response.body)
         expect(json_response["error"]).to eq("Email is required")
       end
-
-
-
-      it "returns bad request when API token is empty string" do
-        post :oauth_signup, params: { email: new_email, token: "" }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Token is required")
-      end
-    end
-
-    context "with invalid API token" do
-      it "returns unauthorized" do
-        post :oauth_signup, params: { email: new_email, token: "invalid_token" }
-
-        expect(response).to have_http_status(:unauthorized)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Invalid token")
-      end
     end
 
     context "JWT token validation" do
       it "generates a valid JWT token" do
-        post :oauth_signup, params: { email: new_email, token: api_token }
+        post :oauth_signup, params: { email: new_email }
 
         json_response = JSON.parse(response.body)
         jwt_token = json_response["jwt"]
