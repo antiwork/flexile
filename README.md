@@ -102,7 +102,7 @@ pnpm playwright test
    ```
    </details>
 
-<details> 
+<details>
 <summary>Resend</summary>
 
 1. Create account at [resend.com](https://resend.com) and complete email verification
