@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     typedRoutes: true,
     testProxy: true,
     serverActions: {
-      allowedOrigins: [process.env.DOMAIN, process.env.APP_DOMAIN].filter((x): x is string => Boolean(x)),
+      allowedOrigins: [process.env.DOMAIN, process.env.APP_DOMAIN].filter((x) => x),
     },
   },
   images: {
@@ -23,9 +23,6 @@ const nextConfig: NextConfig = {
         hostname: "flexile-(development|production)-(public|private).s3.amazonaws.com",
       },
     ],
-  },
-  typescript: {
-    ignoreBuildErrors: process.env.NODE_ENV === "test",
   },
 };
 
