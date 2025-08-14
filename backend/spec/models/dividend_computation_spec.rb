@@ -185,8 +185,8 @@ RSpec.describe DividendComputation do
         @all_class_investor.id => { number_of_shares: 25_035, total_amount: 17_479.75, qualified_dividends_amount: 17_479.75, investment_amount_in_cents: 29_113_00 },
       })
       expect(safe_dividends).to eq({
-        @safe1.entity_name => { number_of_shares: 987_632, total_amount: 578_982.04, qualified_dividends_amount: 578_982.04, investment_amount_in_cents: 1_000_000_00 },
-        @safe2.entity_name => { number_of_shares: 497_092, total_amount: 291_411.52, qualified_dividends_amount: 291_411.52, investment_amount_in_cents: 2_000_000_00 },
+        @safe1.entity_name => { number_of_shares: 987_632, total_amount: 578_982.04, qualified_dividends_amount: 578_982.04 },
+        @safe2.entity_name => { number_of_shares: 497_092, total_amount: 291_411.52, qualified_dividends_amount: 291_411.52 },
       })
     end
   end

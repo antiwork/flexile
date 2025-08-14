@@ -79,14 +79,13 @@ class DividendComputation < ApplicationRecord
 
   def dividends_info
     share_dividends = Hash.new { |h, k| h[k] = { number_of_shares: 0, total_amount: 0.to_d, qualified_dividends_amount: 0.to_d, investment_amount_in_cents: 0 } }
-    safe_dividends = Hash.new { |h, k| h[k] = { number_of_shares: 0, total_amount: 0.to_d, qualified_dividends_amount: 0.to_d, investment_amount_in_cents: 0 } }
+    safe_dividends = Hash.new { |h, k| h[k] = { number_of_shares: 0, total_amount: 0.to_d, qualified_dividends_amount: 0.to_d } }
 
     dividend_computation_outputs.find_each do |output|
       if output.investor_name.present?
         safe_dividends[output.investor_name][:number_of_shares] += output.number_of_shares
         safe_dividends[output.investor_name][:total_amount] += output.total_amount_in_usd
         safe_dividends[output.investor_name][:qualified_dividends_amount] += output.qualified_dividend_amount_usd
-        safe_dividends[output.investor_name][:investment_amount_in_cents] += output.investment_amount_in_cents.to_i
       else
         share_dividends[output.company_investor_id][:number_of_shares] += output.number_of_shares
         share_dividends[output.company_investor_id][:total_amount] += output.total_amount_in_usd
