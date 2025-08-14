@@ -156,16 +156,11 @@ export function handler(req: NextRequest, ...params: unknown[]) {
       ...authOptions.callbacks,
       async signIn({ user, account }: { user: User; account: Account | null }) {
         if (account?.provider === "google") {
-          const invitationToken = req.cookies.get("auth_invitation_token")?.value;
           const endpoint = authContext === "signup" ? "/internal/oauth/oauth_signup" : "/internal/oauth/oauth_login";
           const requestBody: Record<string, unknown> = {
             email: user.email,
             token: env.API_SECRET_TOKEN,
           };
-
-          if (invitationToken) {
-            requestBody.invitation_token = invitationToken;
-          }
 
           const response = await fetch(`${process.env.NEXTAUTH_URL}${endpoint}`, {
             method: "POST",

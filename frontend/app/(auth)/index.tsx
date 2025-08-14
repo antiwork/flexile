@@ -54,7 +54,6 @@ export function AuthPage({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const invitationToken = searchParams.get("invitation_token");
   const [googleAuthError, setGoogleAuthError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -127,10 +126,6 @@ export function AuthPage({
     setGoogleAuthError(null);
     const context = isSignup ? "signup" : "login";
     document.cookie = `auth_context=${context}; path=/; max-age=300; Secure; SameSite=Strict`;
-
-    if (invitationToken) {
-      document.cookie = `auth_invitation_token=${invitationToken}; path=/; max-age=300; Secure; SameSite=Strict`;
-    }
 
     try {
       await signIn("google", { callbackUrl: getRedirectUrl(searchParams.get("redirect_url")) });
