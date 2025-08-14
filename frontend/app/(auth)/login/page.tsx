@@ -28,7 +28,7 @@ export default function LoginPage() {
     <AuthPage
       title="Welcome back"
       description={
-        lastLoginMethod
+        lastLoginMethod && loginMethodLabels[lastLoginMethod]
           ? `You used ${loginMethodLabels[lastLoginMethod]} to log in last time.`
           : "Use your work email to log in."
       }
