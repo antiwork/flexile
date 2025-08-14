@@ -56,11 +56,9 @@ test.describe("Document templates", () => {
     await expect(
       page.getByText("This is our default template. Replace it with your own to fully customize it."),
     ).toBeVisible();
-    // eslint-disable-next-line require-unicode-regexp -- Playwright test regex patterns
-    await expect(page.getByText(/default consulting agreement/i)).toBeVisible();
+    await expect(page.getByText(/default consulting agreement/iu)).toBeVisible();
     await page.getByRole("button", { name: "Replace default template" }).click();
-    // eslint-disable-next-line require-unicode-regexp -- Playwright test regex patterns
-    await expect(page.locator("h1").getByText(/edit consulting agreement/i)).toBeVisible();
+    await expect(page.locator("h1").getByText(/edit consulting agreement/iu)).toBeVisible();
     await page.getByRole("link", { name: "Back to documents" }).click();
 
     expectedTemplateName = "Equity grant contract";
@@ -79,8 +77,7 @@ test.describe("Document templates", () => {
       { page },
     );
 
-    // eslint-disable-next-line require-unicode-regexp -- Playwright test regex patterns
-    await expect(page.locator("h1").getByText(/equity grant contract/i)).toBeVisible();
+    await expect(page.locator("h1").getByText(/equity grant contract/iu)).toBeVisible();
     await page.getByRole("link", { name: "Back to documents" }).click();
 
     await page.getByRole("button", { name: "Edit templates" }).click();

@@ -16,10 +16,8 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await page.getByRole("button", { name: "Sign up" }).click();
     await fillOtp(page);
 
-    // eslint-disable-next-line require-unicode-regexp -- Playwright test regex patterns
-    await expect(page).toHaveURL(/documents/i);
-    // eslint-disable-next-line require-unicode-regexp -- Playwright test regex patterns
-    await expect(page.getByText(/What will you be doing at/i)).toBeVisible();
+    await expect(page).toHaveURL(/documents/iu);
+    await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
 
     const contractor = await db.query.companyContractors
       .findFirst({ with: { user: true }, where: eq(companyContractors.companyId, company.id) })
@@ -37,11 +35,9 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await login(page, adminUser);
 
     await page.goto(`/invite/${company.inviteLink}`);
-    // eslint-disable-next-line require-unicode-regexp -- Playwright test regex patterns
-    await expect(page).toHaveURL(/documents/i);
+    await expect(page).toHaveURL(/documents/iu);
 
-    // eslint-disable-next-line require-unicode-regexp -- Playwright test regex patterns
-    await expect(page.getByText(/What will you be doing at/i)).toBeVisible();
+    await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
     await expect(page.getByLabel("Role")).toBeVisible();
     await expect(page.getByLabel("Rate")).toBeVisible();
 
