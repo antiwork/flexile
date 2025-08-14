@@ -108,6 +108,30 @@ export const accept_invite_links_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/users/add_role(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const add_role_company_users_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/users/add_role(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const add_role_company_users_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /admin/companies(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -688,6 +712,30 @@ export const company_administrator_stripe_microdeposit_verifications_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/administrators(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_administrators_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/administrators(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_administrators_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /company/billing(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -880,24 +928,24 @@ export const company_invitations_path: ((
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/invite_links(.:format)
+ * /internal/companies/:company_id/invite_link(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const company_invite_links_url: ((
+export const company_invite_link_url: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/invite_links(.:format)
+ * /internal/companies/:company_id/invite_link(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const company_invite_links_path: ((
+export const company_invite_link_path: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
@@ -1122,6 +1170,30 @@ export const company_switch_url: ((
  * @returns {string} route path
  */
 export const company_switch_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/users(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_users_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/users(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_users_path: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
@@ -2000,6 +2072,30 @@ export const reject_company_invoices_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/users/remove_role(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const remove_role_company_users_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/users/remove_role(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const remove_role_company_users_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/equity_grant_exercises/:id/resend(.:format)
  * @param {any} company_id
  * @param {any} id
@@ -2028,24 +2124,24 @@ export const resend_company_equity_grant_exercise_path: ((
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/invite_links/reset(.:format)
+ * /internal/companies/:company_id/invite_link/reset(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const reset_company_invite_links_url: ((
+export const reset_company_invite_link_url: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/invite_links/reset(.:format)
+ * /internal/companies/:company_id/invite_link/reset(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const reset_company_invite_links_path: ((
+export const reset_company_invite_link_path: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
@@ -2355,26 +2451,6 @@ export const verify_and_create_signup_index_url: ((
  * @returns {string} route path
  */
 export const verify_and_create_signup_index_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/invite_links/verify(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const verify_invite_links_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/invite_links/verify(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const verify_invite_links_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 

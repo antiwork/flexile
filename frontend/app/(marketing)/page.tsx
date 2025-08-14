@@ -3,9 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect, RedirectType } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
-import { useUserStore } from "@/global";
 import logo from "@/public/flexile-logo.svg";
 import { cn } from "@/utils";
 import iconClock from "./icon-clock.svg";
@@ -22,10 +22,10 @@ const Section = ({ children, className }: { children: ReactNode; className?: str
 );
 
 export default function HomePage() {
-  const user = useUserStore((state) => state.user);
+  const { status } = useSession();
   useEffect(() => {
-    if (user) throw redirect("/dashboard", RedirectType.replace);
-  }, [user]);
+    if (status === "authenticated") throw redirect("/dashboard", RedirectType.replace);
+  }, [status]);
 
   return (
     <>
@@ -33,7 +33,7 @@ export default function HomePage() {
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4">
           <Image src={logo} alt="Flexile" className="flex h-8 w-auto shrink-0 border-none invert md:block md:h-10" />
           <div className="flex gap-2">
-            {user ? (
+            {status === "authenticated" ? (
               <Link
                 href="/dashboard"
                 className={`${buttonClasses} h-10 bg-white px-8 text-sm text-black hover:bg-blue-600 hover:text-white md:h-12 md:text-base`}

@@ -22,7 +22,7 @@ setup("global setup", async () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     type: 0,
-    docusealId: 1n,
+    docusealId: BigInt(1),
     signable: true,
   });
 });
