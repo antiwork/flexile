@@ -23,6 +23,12 @@ RSpec.describe Internal::Companies::Administrator::QuickbooksController, type: :
     end
   end
 
+  after do
+    Current.user = nil
+    Current.company = nil
+    Current.company_administrator = nil
+  end
+
   describe "POST #sync_integration" do
     before do
       integration # ensure integration exists
