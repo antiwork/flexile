@@ -24,10 +24,12 @@ class InvoiceEquityCalculator
       else
         (equity_amount_in_cents / (share_price_usd * 100.to_d)).round
       end
-    if equity_amount_in_options <= 0 || !unvested_grant.present? || unvested_grant.unvested_shares < equity_amount_in_options
-      equity_percentage = 0
-      equity_amount_in_cents = 0
-      equity_amount_in_options = 0
+
+    if equity_percentage.nonzero?
+      if !unvested_grant.present? || equity_amount_in_options <= 0 || unvested_grant.unvested_shares < equity_amount_in_options
+        equity_amount_in_cents = 0
+        equity_amount_in_options = 0
+      end
     end
 
     {
