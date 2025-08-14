@@ -156,10 +156,9 @@ export function handler(req: NextRequest, ...params: unknown[]) {
       ...authOptions.callbacks,
       async signIn({ user, account }: { user: User; account: Account | null }) {
         if (account?.provider === "google") {
-          const endpoint = authContext === "signup" ? "/internal/oauth/oauth_signup" : "/internal/oauth/oauth_login";
+          const endpoint = authContext === "signup" ? "/api/oauth/oauth_signup" : "/api/oauth/oauth_login";
           const requestBody: Record<string, unknown> = {
             email: user.email,
-            token: env.API_SECRET_TOKEN,
           };
 
           const response = await fetch(`${process.env.NEXTAUTH_URL}${endpoint}`, {

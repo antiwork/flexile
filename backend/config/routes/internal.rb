@@ -11,13 +11,6 @@ scope path: :internal, module: :internal do
     end
   end
 
-  resources :oauth, only: [] do
-    collection do
-      post :oauth_login
-      post :oauth_signup
-    end
-  end
-
   namespace :demo do
     resources :companies, only: :show
   end

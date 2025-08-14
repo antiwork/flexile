@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
-class Internal::OauthController < Internal::BaseController
-  include UserDataSerialization, JwtAuthenticatable
-
-  skip_before_action :authenticate_with_jwt
+class Api::OauthController < Api::BaseController
+  include UserDataSerialization
 
   def oauth_login
     email = params[:email]
