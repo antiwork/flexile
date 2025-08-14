@@ -59,7 +59,7 @@ test.describe("Manage roles access", () => {
   test.describe("Roles List Display", () => {
     test("displays both admins and lawyers in combined table", async ({ page }) => {
       await Promise.all([
-        page.waitForResponse((r) => r.url().includes("listCompanyUsers")),
+        page.waitForResponse((r) => r.url().includes("listCompanyUsers") && r.status() >= 200 && r.status() < 300),
         login(page, primaryAdmin, "/settings/administrator/roles"),
       ]);
 
@@ -134,7 +134,7 @@ test.describe("Manage roles access", () => {
 
     test("search functionality works for names", async ({ page }) => {
       await Promise.all([
-        page.waitForResponse((r) => r.url().includes("listCompanyUsers")),
+        page.waitForResponse((r) => r.url().includes("listCompanyUsers") && r.status() >= 200 && r.status() < 300),
         login(page, primaryAdmin, "/settings/administrator/roles"),
       ]);
 
