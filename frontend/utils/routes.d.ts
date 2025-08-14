@@ -1608,46 +1608,6 @@ export const export_company_invoices_path: ((
 
 /**
  * Generates rails route to
- * /internal/oauth/google_login(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const google_login_oauth_index_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/oauth/google_login(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const google_login_oauth_index_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/oauth/google_signup(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const google_signup_oauth_index_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/oauth/google_signup(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const google_signup_oauth_index_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /internal/current_user_data(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -2004,6 +1964,26 @@ export const new_rails_conductor_inbound_email_source_path: ((
 
 /**
  * Generates rails route to
+ * /internal/oauth/oauth_login(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const oauth_login_oauth_index_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/oauth/oauth_login(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const oauth_login_oauth_index_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /oauth_redirect(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -2019,6 +1999,26 @@ export const oauth_redirect_url: ((
  * @returns {string} route path
  */
 export const oauth_redirect_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/oauth/oauth_signup(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const oauth_signup_oauth_index_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/oauth/oauth_signup(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const oauth_signup_oauth_index_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
