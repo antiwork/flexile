@@ -127,7 +127,7 @@ const Edit = () => {
   );
   const invoiceYear = issueDate.year;
   const [notes, setNotes] = useState(data.invoice.notes ?? "");
-  const [attachments, setAttachments] = useState<{ name: string; url: string; blob?: File }[]>(
+  const [attachments, setAttachments] = useState<{ name: string; url: string; blob?: File; signed_id?: string }[]>(
     data.invoice.attachments,
   );
   const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
@@ -187,6 +187,7 @@ const Edit = () => {
       if (notes.length) formData.append("invoice[notes]", notes);
       for (const file of attachments) {
         if (file.blob) formData.append("invoice[attachments][]", file.blob);
+        else if (file.signed_id) formData.append("invoice[attachments][]", file.signed_id);
       }
 
       await request({

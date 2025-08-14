@@ -57,6 +57,7 @@ class CreateOrUpdateInvoiceService
       expenses_to_remove.each(&:mark_for_destruction)
 
       invoice.attachments.each(&:purge_later)
+      invoice.attachments.attach(invoice_attachments) if invoice_attachments.present?
 
       services_in_cents = invoice.total_amount_in_usd_cents - expenses_in_cents
       invoice_year = invoice.invoice_date.year
@@ -77,8 +78,6 @@ class CreateOrUpdateInvoiceService
       invoice.equity_amount_in_cents = equity_cents
       invoice.equity_amount_in_options = equity_options
       invoice.flexile_fee_cents = invoice.calculate_flexile_fee_cents
-
-      invoice.attachments.attach(invoice_attachments) if invoice_attachments.present?
 
       unless invoice.save
         error = invoice.errors.full_messages.to_sentence
