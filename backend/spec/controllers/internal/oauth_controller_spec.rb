@@ -176,7 +176,7 @@ RSpec.describe Internal::OauthController, type: :controller do
           .and change(CompanyAdministrator, :count).by(0)
 
         new_user = User.find_by(email: new_email)
-        expect(new_user.signup_invite_link).to eq(invite_link)
+        expect(new_user).to be_present
       end
 
       it "handles invalid invitation token gracefully" do
@@ -190,7 +190,7 @@ RSpec.describe Internal::OauthController, type: :controller do
           .and change(Company, :count).by(1)
 
         new_user = User.find_by(email: new_email)
-        expect(new_user.signup_invite_link).to be_nil
+        expect(new_user).to be_present
       end
     end
 

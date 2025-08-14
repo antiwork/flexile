@@ -8,15 +8,6 @@ class CompleteUserSetup
 
   def perform
     user.tos_agreements.create!(ip_address: ip_address)
-
-    unless user.signup_invite_link
-      company = Company.create!(
-        email: user.email,
-        country_code: "US",
-        default_currency: "USD"
-      )
-      user.company_administrators.create!(company: company)
-    end
   end
 
   private
