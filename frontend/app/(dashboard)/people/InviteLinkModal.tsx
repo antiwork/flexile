@@ -36,7 +36,7 @@ const InviteLinkModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
       return inviteLinkSchema.parse(await response.json());
     },
   });
-  const inviteLink = invite?.invite_link ? `${window.location.origin}/invite/${invite.invite_link}` : "";
+  const inviteLink = invite ? `${window.location.origin}/invite/${invite.invite_link}` : "";
 
   const resetMutation = useMutation({
     mutationFn: async () => {
