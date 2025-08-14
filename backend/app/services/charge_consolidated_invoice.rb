@@ -12,7 +12,7 @@ class ChargeConsolidatedInvoice
 
     begin
       stripe_setup_intent = company.bank_account.stripe_setup_intent
-      intent = Stripe::PaymentIntent.create({
+      intent = StripeService.create_payment_intent({
         payment_method_types: ["us_bank_account"],
         payment_method: stripe_setup_intent.payment_method,
         customer: stripe_setup_intent.customer,

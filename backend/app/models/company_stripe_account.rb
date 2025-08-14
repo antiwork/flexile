@@ -23,7 +23,7 @@ class CompanyStripeAccount < ApplicationRecord
   def initial_setup_completed? = status.present? && status != INITIAL
 
   def stripe_setup_intent
-    @_stripe_setup_intent ||= Stripe::SetupIntent.retrieve({ id: setup_intent_id, expand: ["payment_method"] })
+    @_stripe_setup_intent ||= StripeService.retrieve_setup_intent({ id: setup_intent_id, expand: ["payment_method"] })
   end
 
   def fetch_stripe_bank_account_last_four

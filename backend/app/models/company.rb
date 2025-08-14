@@ -150,7 +150,7 @@ class Company < ApplicationRecord
   def pending_invoice_cash_amount_in_cents = invoices.alive.pending.sum(:cash_amount_in_cents)
 
   def create_stripe_setup_intent
-    Stripe::SetupIntent.create({
+    StripeService.create_setup_intent({
       customer: fetch_or_create_stripe_customer_id!,
       payment_method_types: ["us_bank_account"],
       payment_method_options: {
@@ -240,7 +240,7 @@ class Company < ApplicationRecord
     def fetch_or_create_stripe_customer_id!
       return stripe_customer_id if stripe_customer_id?
 
-      stripe_customer = Stripe::Customer.create(
+      stripe_customer = StripeService.create_customer(
         name: display_name,
         email: email,
         metadata: {
