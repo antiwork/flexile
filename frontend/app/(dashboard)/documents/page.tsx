@@ -263,7 +263,16 @@ export default function DocumentsPage() {
           meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
           cell: (info) => {
             const { variant, text } = getStatus(info.row.original);
-            return <Status variant={variant}>{text}</Status>;
+            return (
+              <>
+                <span className="sr-only" id="status-label">
+                  {text}
+                </span>
+                <Status variant={variant} aria-labelledby="status-label">
+                  {text}
+                </Status>
+              </>
+            );
           },
         }),
         columnHelper.display({
@@ -330,12 +339,15 @@ export default function DocumentsPage() {
           id: "statusSentOn",
           cell: (info) => {
             const document = info.row.original;
-            const { variant } = getStatus(info.row.original);
+            const { variant, text } = getStatus(info.row.original);
 
             return (
               <div className="flex h-full flex-col items-end justify-between">
                 <div className="flex h-5 w-4 items-center justify-center">
-                  <Status variant={variant} />
+                  <span className="sr-only" id="status-label">
+                    {text}
+                  </span>
+                  <Status aria-labelledby="status-label" variant={variant} />
                 </div>
                 <div className="text-gray-600">{formatDate(document.createdAt)}</div>
               </div>

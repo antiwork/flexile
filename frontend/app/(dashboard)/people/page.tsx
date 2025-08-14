@@ -163,23 +163,32 @@ export default function PeoplePage() {
         cell: (info) => {
           const original = info.row.original;
           let variant: "critical" | "success" | "primary";
+          let text: string;
 
           if (original.endedAt) {
             variant = "critical";
+            text = "Alumni";
           } else if (original.startedAt <= new Date()) {
             variant = "success";
+            text = "Active";
           } else if (original.user.onboardingCompleted) {
             variant = "success";
+            text = "Active";
           } else if (original.user.invitationAcceptedAt) {
             variant = "primary";
+            text = "Onboarding";
           } else {
+            text = "Onboarding";
             variant = "primary";
           }
 
           return (
             <div className="flex h-full flex-col items-end justify-between">
               <div className="flex h-5 w-4 items-center justify-center">
-                <Status variant={variant} />
+                <span className="sr-only" id="status-label">
+                  {text}
+                </span>
+                <Status aria-labelledby="status-label" variant={variant} />
               </div>
             </div>
           );
