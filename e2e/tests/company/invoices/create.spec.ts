@@ -399,4 +399,104 @@ test.describe("invoice creation", () => {
     // Wait for the updated document to be visible, which confirms the update was successful
     await expect(page.getByText("updated-document.pdf")).toBeVisible();
   });
+
+  test("prevents uploading document file larger than 10MB", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    // Fill out basic invoice information
+    await page.getByPlaceholder("Description").fill("Invoice with oversized document");
+    await page.getByLabel("Hours").fill("01:00");
+
+    // Create a mock dialog handler before triggering the alert
+    page.on("dialog", async (dialog) => {
+      expect(dialog.type()).toBe("alert");
+      expect(dialog.message()).toBe("File size exceeds the maximum limit of 10MB. Please select a smaller file.");
+      await dialog.accept();
+    });
+
+    // Try to upload a document larger than 10MB
+    await page.getByRole("button", { name: "Add Document" }).click();
+
+    // Generate a large buffer (11MB)
+    const largeBuffer = Buffer.alloc(11 * 1024 * 1024, "X");
+
+    await page
+      .locator('input[accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"]')
+      .setInputFiles({
+        name: "large-document.pdf",
+        mimeType: "application/pdf",
+        buffer: largeBuffer,
+      });
+
+    // Wait to ensure the validation is processed
+    await page.waitForTimeout(300);
+
+    // Verify that the document was not added (the document table shouldn't be visible)
+    await expect(page.getByText("large-document.pdf")).not.toBeVisible();
+
+    // Now upload a valid size document to confirm the input works for proper sizes
+    await page.getByRole("button", { name: "Add Document" }).click();
+    await page
+      .locator('input[accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"]')
+      .setInputFiles({
+        name: "valid-document.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("valid document content"),
+      });
+
+    // Verify that the valid document was added
+    await expect(page.getByText("valid-document.pdf")).toBeVisible();
+  });
+
+  test("prevents uploading expense files larger than 10MB", async ({ page }) => {
+    await db.insert(expenseCategories).values({
+      companyId: company.id,
+      name: "Office Supplies",
+    });
+
+    await login(page, contractorUser, "/invoices/new");
+
+    // Create a mock dialog handler before triggering the alert
+    page.on("dialog", async (dialog) => {
+      expect(dialog.type()).toBe("alert");
+      expect(dialog.message()).toContain("exceeds the maximum limit of 10MB and will be skipped");
+      await dialog.accept();
+    });
+
+    // Try to upload a large expense file
+    await page.getByRole("button", { name: "Add expense" }).click();
+
+    // Generate a large buffer (11MB)
+    const largeBuffer = Buffer.alloc(11 * 1024 * 1024, "X");
+
+    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
+      name: "large-receipt.pdf",
+      mimeType: "application/pdf",
+      buffer: largeBuffer,
+    });
+
+    // Wait to ensure the validation is processed
+    await page.waitForTimeout(300);
+
+    // Verify that the expense was not added (expense table shouldn't show the file name)
+    await expect(page.getByText("large-receipt.pdf")).not.toBeVisible();
+
+    // Now upload a valid size expense to confirm the input works for proper sizes
+    await page.getByRole("button", { name: "Add expense" }).click();
+    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
+      name: "valid-receipt.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("valid receipt content"),
+    });
+
+    // Verify the valid receipt was added
+    await expect(page.getByText("valid-receipt.pdf")).toBeVisible();
+
+    // Fill required fields to make the form valid
+    await page.getByLabel("Merchant").fill("Office Supplies Store");
+    await page.getByLabel("Amount").fill("42.99");
+
+    // Verify the expense form is working properly
+    await expect(page.getByText("Total expenses$42.99")).toBeVisible();
+  });
 });

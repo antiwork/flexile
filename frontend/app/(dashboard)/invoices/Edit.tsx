@@ -16,6 +16,15 @@ import DatePicker from "@/components/DatePicker";
 import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,6 +120,10 @@ const Edit = () => {
   const trpcUtils = trpc.useUtils();
   const worker = user.roles.worker;
   assert(worker != null);
+
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   const { data } = useSuspenseQuery({
     queryKey: ["invoice", id],
@@ -224,20 +237,28 @@ const Edit = () => {
     );
 
   const createNewExpenseEntries = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      setAlertTitle("File Size Exceeded");
+      setAlertMessage("File size exceeds the maximum limit of 10MB. Please select a smaller file.");
+      setAlertOpen(true);
+      e.target.value = "";
+      return;
+    }
+
     const expenseCategory = assertDefined(data.company.expenses.categories[0]);
     setShowExpenses(true);
     setExpenses((expenses) =>
-      expenses.push(
-        ...[...files].map((file) => ({
-          description: "",
-          category_id: expenseCategory.id,
-          total_amount_in_cents: 0,
-          attachment: { name: file.name, url: URL.createObjectURL(file) },
-          blob: file,
-        })),
-      ),
+      expenses.push({
+        description: "",
+        category_id: expenseCategory.id,
+        total_amount_in_cents: 0,
+        attachment: { name: file.name, url: URL.createObjectURL(file) },
+        blob: file,
+      }),
     );
   };
 
@@ -248,6 +269,15 @@ const Edit = () => {
   const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      setAlertTitle("File Size Exceeded");
+      setAlertMessage("File size exceeds the maximum limit of 10MB. Please select a smaller file.");
+      setAlertOpen(true);
+      e.target.value = "";
+      return;
+    }
 
     setDocument({ name: file.name, url: URL.createObjectURL(file), blob: file });
   };
@@ -291,6 +321,18 @@ const Edit = () => {
 
   return (
     <>
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{alertMessage}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setAlertOpen(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <DashboardHeader
         title={data.invoice.id ? "Edit invoice" : "New invoice"}
         headerActions={
@@ -447,7 +489,6 @@ const Edit = () => {
               type="file"
               className="hidden"
               accept="application/pdf, image/*"
-              multiple
               onChange={createNewExpenseEntries}
             />
           ) : null}
