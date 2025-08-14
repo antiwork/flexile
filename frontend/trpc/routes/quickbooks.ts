@@ -56,32 +56,26 @@ export const quickbooksRouter = createRouter({
       expenseAccounts: [],
       bankAccounts: [],
     };
+    if (integration.status !== "active" && integration.status !== "initialized") return data;
 
-    try {
-      const qbo = getQuickbooksClient(integration);
-      const [expenseAccounts, bankAccounts] = await Promise.all([
-        qbo.findAccounts({ AccountType: "Expense" }),
-        qbo.findAccounts({ AccountType: "Bank" }),
-      ]);
-      const formatAccounts = (accounts: typeof expenseAccounts.QueryResponse.Account) =>
-        accounts?.map((account) => ({
-          id: assertDefined(account.Id),
-          name: account.AcctNum ? `${account.AcctNum} - ${account.Name}` : account.Name,
-        }));
+    const qbo = getQuickbooksClient(integration);
+    const [expenseAccounts, bankAccounts] = await Promise.all([
+      qbo.findAccounts({ AccountType: "Expense" }),
+      qbo.findAccounts({ AccountType: "Bank" }),
+    ]);
+    const formatAccounts = (accounts: typeof expenseAccounts.QueryResponse.Account) =>
+      accounts?.map((account) => ({
+        id: assertDefined(account.Id),
+        name: account.AcctNum ? `${account.AcctNum} - ${account.Name}` : account.Name,
+      }));
 
-      return {
-        ...data,
-        expenseAccounts: formatAccounts(expenseAccounts.QueryResponse.Account),
-        bankAccounts: formatAccounts(
-          bankAccounts.QueryResponse.Account?.filter((account) => account.Name !== CLEARANCE_BANK_ACCOUNT_NAME),
-        ),
-      };
-    } catch (err) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: `Failed to load QuickBooks accounts: ${err instanceof Error ? err.message : "Unknown error"}`,
-      });
-    }
+    return {
+      ...data,
+      expenseAccounts: formatAccounts(expenseAccounts.QueryResponse.Account),
+      bankAccounts: formatAccounts(
+        bankAccounts.QueryResponse.Account?.filter((account) => account.Name !== CLEARANCE_BANK_ACCOUNT_NAME),
+      ),
+    };
   }),
 
   // TODO (techdebt): move this to the page itself
