@@ -128,7 +128,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
         end.to change { user.invoices.count }.by(1)
       end
 
-      it "does not apply an equity split if the equity portion makes up less than one share" do
+      it "preserves equity percentage but zeros amounts when equity portion makes up less than one share" do
         contractor.update!(equity_percentage: 1)
         equity_grant.update!(share_price_usd: 20)
 
@@ -139,7 +139,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
 
           expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.equity_amount_in_options).to eq(0)
-          expect(invoice.equity_percentage).to eq(0)
+          expect(invoice.equity_percentage).to eq(1)
           expect(invoice.equity_amount_in_cents).to eq(0)
           expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_cents)
           expect(invoice.flexile_fee_cents).to eq(50 + (1.5 * expected_total_amount_in_cents / 100).round)
