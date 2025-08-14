@@ -56,8 +56,16 @@ class CreateOrUpdateInvoiceService
       expenses_to_remove = existing_expenses - keep_expenses
       expenses_to_remove.each(&:mark_for_destruction)
 
-      invoice.attachments.each(&:purge_later)
-      invoice.attachments.attach(invoice_attachments) if invoice_attachments.present?
+      if invoice_attachments.present?
+        invoice.attachments.each do |attachment|
+          unless invoice_attachments.include?(attachment.signed_id)
+            attachment.purge_later
+          end
+        end
+        invoice.attachments.attach(invoice_attachments)
+      else
+        invoice.attachments.each(&:purge_later)
+      end
 
       services_in_cents = invoice.total_amount_in_usd_cents - expenses_in_cents
       invoice_year = invoice.invoice_date.year

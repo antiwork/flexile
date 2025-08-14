@@ -67,7 +67,7 @@ const dataSchema = z.object({
     invoice_number: z.string(),
     notes: z.string().nullable(),
     status: z.enum(["received", "approved", "processing", "payment_pending", "paid", "rejected", "failed"]).nullable(),
-    attachments: z.array(z.object({ name: z.string(), url: z.string() })).default([]),
+    attachments: z.array(z.object({ name: z.string(), url: z.string(), signed_id: z.string().optional() })).default([]),
     line_items: z.array(
       z.object({
         id: z.number().optional(),

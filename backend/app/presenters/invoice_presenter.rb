@@ -42,7 +42,7 @@ class InvoicePresenter
         invoice: {
           id: external_id,
           attachments: invoice.attachments.map do |attachment|
-            { name: attachment.filename, url: Rails.application.routes.url_helpers.rails_blob_path(attachment, disposition: "attachment") }
+            { name: attachment.filename, url: Rails.application.routes.url_helpers.rails_blob_path(attachment, disposition: "attachment"), signed_id: attachment.signed_id }
           end,
           bill_address: AddressPresenter.new(invoice).props,
           description:,
