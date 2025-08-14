@@ -9,7 +9,7 @@ import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
 import { users } from "@/db/schema";
-import { assert } from "@/utils/assert";
+import { assert, assertDefined } from "@/utils/assert";
 
 test.describe("Edit contractor", () => {
   test("allows searching for contractors by name", async ({ page }) => {
@@ -72,7 +72,7 @@ test.describe("Edit contractor", () => {
     await page.getByRole("link", { name: contractor.preferredName }).click();
 
     await page.getByRole("heading", { name: contractor.preferredName }).click();
-    await expect(page.getByLabel("Role")).toHaveValue(companyContractor.role);
+    await expect(page.getByLabel("Role")).toHaveValue(assertDefined(companyContractor.role));
     await expect(page.getByLabel("Legal name")).toHaveValue(contractor.legalName);
     await expect(page.getByLabel("Legal name")).toBeDisabled();
 

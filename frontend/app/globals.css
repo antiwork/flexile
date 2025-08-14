@@ -9,6 +9,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@utility no-scrollbar {
+  /* Firefox */
+  scrollbar-width: none;
+  /* WebKit browsers (Chrome, Safari, Opera) */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @theme {
   --color-black: #1d1e17;
   --color-white: #ffffff;
@@ -133,4 +142,10 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }

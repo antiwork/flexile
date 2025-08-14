@@ -1,6 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSession, signIn } from "next-auth/react";
@@ -21,11 +21,10 @@ import { request } from "@/utils/request";
 const emailSchema = z.object({ email: z.string().email() });
 const otpSchema = z.object({ otp: z.string().length(6) });
 
-const getRedirectUrl = () => {
-  const redirectUrl =
-    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect_url") : null;
-  return redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard";
-};
+const getRedirectUrl = (redirectUrlParams: string | null) =>
+  redirectUrlParams && redirectUrlParams.startsWith("/") && !redirectUrlParams.startsWith("//")
+    ? redirectUrlParams
+    : "/dashboard";
 
 const GoogleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" className="size-6">
@@ -65,14 +64,13 @@ export function AuthPage({
     }
   }, [searchParams, router]);
 
-  const queryClient = useQueryClient();
   const sendOtp = useMutation({
     mutationFn: async (values: { email: string }) => {
       const response = await request({
         url: sendOtpUrl,
         method: "POST",
         accept: "json",
-        jsonData: { ...values, invitation_token: invitationToken },
+        jsonData: values,
       });
 
       if (!response.ok) {
@@ -95,11 +93,10 @@ export function AuthPage({
 
       const session = await getSession();
       if (!session?.user.email) throw new Error("Invalid verification code");
-      await queryClient.resetQueries({ queryKey: ["currentUser", session.user.email] });
 
       localStorage.setItem("lastLoginMethod", LoginMethod.Email);
       // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
-      router.replace(getRedirectUrl());
+      router.replace(getRedirectUrl(searchParams.get("redirect_url")));
     },
   });
   const emailForm = useForm({
@@ -136,7 +133,7 @@ export function AuthPage({
     }
 
     try {
-      await signIn("google", { callbackUrl: getRedirectUrl() });
+      await signIn("google", { callbackUrl: getRedirectUrl(searchParams.get("redirect_url")) });
       localStorage.setItem("lastLoginMethod", LoginMethod.Google);
     } catch (error) {
       setGoogleAuthError(error instanceof Error ? error.message : "Failed to continue with Google");
