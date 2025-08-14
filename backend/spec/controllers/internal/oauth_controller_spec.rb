@@ -5,14 +5,14 @@ require "spec_helper"
 RSpec.describe Internal::OauthController, type: :controller do
   let(:api_token) { GlobalConfig.get("API_SECRET_TOKEN", Rails.application.secret_key_base) }
   let(:email) { "user@example.com" }
-  let(:google_id) { "google_123456789" }
+
 
   describe "POST #google_login" do
     let!(:user) { create(:user, email: email) }
 
     context "with valid parameters" do
       it "returns a JWT token and user data" do
-        post :google_login, params: { email: email, google_id: google_id, token: api_token }
+        post :google_login, params: { email: email, token: api_token }
 
         expect(response).to have_http_status(:ok)
 
@@ -25,28 +25,10 @@ RSpec.describe Internal::OauthController, type: :controller do
         expect(json_response["user"]["preferred_name"]).to eq(user.preferred_name)
       end
 
-      it "updates user's google_uid when blank" do
-        user.update!(google_uid: nil)
-
-        post :google_login, params: { email: email, google_id: google_id, token: api_token }
-
-        user.reload
-        expect(user.google_uid).to eq(google_id)
-      end
-
-      it "does not update google_uid when already present" do
-        existing_google_id = "existing_google_id"
-        user.update!(google_uid: existing_google_id)
-
-        post :google_login, params: { email: email, google_id: google_id, token: api_token }
-
-        user.reload
-        expect(user.google_uid).to eq(existing_google_id)
-      end
 
       it "updates current_sign_in_at" do
         freeze_time do
-          post :google_login, params: { email: email, google_id: google_id, token: api_token }
+          post :google_login, params: { email: email, token: api_token }
 
           user.reload
           expect(user.current_sign_in_at).to eq(Time.current)
@@ -56,7 +38,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "with non-existent user" do
       it "returns not found" do
-        post :google_login, params: { email: "nonexistent@example.com", google_id: google_id, token: api_token }
+        post :google_login, params: { email: "nonexistent@example.com", token: api_token }
 
         expect(response).to have_http_status(:not_found)
 
@@ -67,7 +49,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "with missing parameters" do
       it "returns bad request when email is missing" do
-        post :google_login, params: { google_id: google_id, token: api_token }
+        post :google_login, params: { token: api_token }
 
         expect(response).to have_http_status(:bad_request)
 
@@ -75,17 +57,8 @@ RSpec.describe Internal::OauthController, type: :controller do
         expect(json_response["error"]).to eq("Email is required")
       end
 
-      it "returns bad request when google_id is missing" do
-        post :google_login, params: { email: email, token: api_token }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Google ID is required")
-      end
-
       it "returns bad request when API token is missing" do
-        post :google_login, params: { email: email, google_id: google_id }
+        post :google_login, params: { email: email }
 
         expect(response).to have_http_status(:bad_request)
 
@@ -105,7 +78,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "with empty parameters" do
       it "returns bad request when email is empty string" do
-        post :google_login, params: { email: "", google_id: google_id, token: api_token }
+        post :google_login, params: { email: "", token: api_token }
 
         expect(response).to have_http_status(:bad_request)
 
@@ -113,17 +86,10 @@ RSpec.describe Internal::OauthController, type: :controller do
         expect(json_response["error"]).to eq("Email is required")
       end
 
-      it "returns bad request when google_id is empty string" do
-        post :google_login, params: { email: email, google_id: "", token: api_token }
 
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Google ID is required")
-      end
 
       it "returns bad request when API token is empty string" do
-        post :google_login, params: { email: email, google_id: google_id, token: "" }
+        post :google_login, params: { email: email, token: "" }
 
         expect(response).to have_http_status(:bad_request)
 
@@ -134,7 +100,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "with invalid API token" do
       it "returns unauthorized" do
-        post :google_login, params: { email: email, google_id: google_id, token: "invalid_token" }
+        post :google_login, params: { email: email, token: "invalid_token" }
 
         expect(response).to have_http_status(:unauthorized)
 
@@ -145,7 +111,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "JWT token validation" do
       it "generates a valid JWT token" do
-        post :google_login, params: { email: email, google_id: google_id, token: api_token }
+        post :google_login, params: { email: email, token: api_token }
 
         json_response = JSON.parse(response.body)
         jwt_token = json_response["jwt"]
@@ -168,7 +134,7 @@ RSpec.describe Internal::OauthController, type: :controller do
     context "with valid parameters" do
       it "creates a new user and returns JWT" do
         expect do
-          post :google_signup, params: { email: new_email, google_id: google_id, token: api_token }
+          post :google_signup, params: { email: new_email, token: api_token }
         end.to change(User, :count).by(1)
 
         expect(response).to have_http_status(:ok)
@@ -179,7 +145,6 @@ RSpec.describe Internal::OauthController, type: :controller do
 
         new_user = User.find_by(email: new_email)
         expect(new_user).to be_present
-        expect(new_user.google_uid).to eq(google_id)
         expect(new_user.confirmed_at).to be_present
         expect(new_user.invitation_accepted_at).to be_present
         expect(new_user.tos_agreements).to exist
@@ -187,7 +152,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
       it "creates a default company for the user" do
         expect do
-          post :google_signup, params: { email: new_email, google_id: google_id, token: api_token }
+          post :google_signup, params: { email: new_email, token: api_token }
         end.to change(Company, :count).by(1)
           .and change(CompanyAdministrator, :count).by(1)
 
@@ -204,7 +169,6 @@ RSpec.describe Internal::OauthController, type: :controller do
         expect do
           post :google_signup, params: {
             email: new_email,
-            google_id: google_id,
             invitation_token: invite_link.token,
             token: api_token,
           }
@@ -220,7 +184,6 @@ RSpec.describe Internal::OauthController, type: :controller do
         expect do
           post :google_signup, params: {
             email: new_email,
-            google_id: google_id,
             invitation_token: "invalid_token",
             token: api_token,
           }
@@ -236,7 +199,7 @@ RSpec.describe Internal::OauthController, type: :controller do
       let!(:existing_user) { create(:user, email: new_email) }
 
       it "returns conflict error" do
-        post :google_signup, params: { email: new_email, google_id: google_id, token: api_token }
+        post :google_signup, params: { email: new_email, token: api_token }
 
         expect(response).to have_http_status(:conflict)
 
@@ -246,14 +209,14 @@ RSpec.describe Internal::OauthController, type: :controller do
 
       it "does not create a new user" do
         expect do
-          post :google_signup, params: { email: new_email, google_id: google_id, token: api_token }
+          post :google_signup, params: { email: new_email, token: api_token }
         end.not_to change(User, :count)
       end
     end
 
     context "with missing parameters" do
       it "returns bad request when email is missing" do
-        post :google_signup, params: { google_id: google_id, token: api_token }
+        post :google_signup, params: { token: api_token }
 
         expect(response).to have_http_status(:bad_request)
 
@@ -261,17 +224,8 @@ RSpec.describe Internal::OauthController, type: :controller do
         expect(json_response["error"]).to eq("Email is required")
       end
 
-      it "returns bad request when google_id is missing" do
-        post :google_signup, params: { email: new_email, token: api_token }
-
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Google ID is required")
-      end
-
       it "returns bad request when API token is missing" do
-        post :google_signup, params: { email: new_email, google_id: google_id }
+        post :google_signup, params: { email: new_email }
 
         expect(response).to have_http_status(:bad_request)
 
@@ -291,7 +245,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "with empty parameters" do
       it "returns bad request when email is empty string" do
-        post :google_signup, params: { email: "", google_id: google_id, token: api_token }
+        post :google_signup, params: { email: "", token: api_token }
 
         expect(response).to have_http_status(:bad_request)
 
@@ -299,17 +253,10 @@ RSpec.describe Internal::OauthController, type: :controller do
         expect(json_response["error"]).to eq("Email is required")
       end
 
-      it "returns bad request when google_id is empty string" do
-        post :google_signup, params: { email: new_email, google_id: "", token: api_token }
 
-        expect(response).to have_http_status(:bad_request)
-
-        json_response = JSON.parse(response.body)
-        expect(json_response["error"]).to eq("Google ID is required")
-      end
 
       it "returns bad request when API token is empty string" do
-        post :google_signup, params: { email: new_email, google_id: google_id, token: "" }
+        post :google_signup, params: { email: new_email, token: "" }
 
         expect(response).to have_http_status(:bad_request)
 
@@ -320,7 +267,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "with invalid API token" do
       it "returns unauthorized" do
-        post :google_signup, params: { email: new_email, google_id: google_id, token: "invalid_token" }
+        post :google_signup, params: { email: new_email, token: "invalid_token" }
 
         expect(response).to have_http_status(:unauthorized)
 
@@ -331,7 +278,7 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "JWT token validation" do
       it "generates a valid JWT token" do
-        post :google_signup, params: { email: new_email, google_id: google_id, token: api_token }
+        post :google_signup, params: { email: new_email, token: api_token }
 
         json_response = JSON.parse(response.body)
         jwt_token = json_response["jwt"]

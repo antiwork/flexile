@@ -77,7 +77,6 @@ function handler(req: NextRequest, ...params: unknown[]) {
           const endpoint = authContext === "signup" ? "/internal/oauth/google_signup" : "/internal/oauth/google_login";
           const requestBody: Record<string, unknown> = {
             email: user.email,
-            google_id: user.id,
             token: env.API_SECRET_TOKEN,
           };
 

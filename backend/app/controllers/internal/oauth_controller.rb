@@ -7,12 +7,10 @@ class Internal::OauthController < Api::BaseController
 
   def google_login
     email = params[:email]
-    google_id = params[:google_id]
 
     return render json: { error: "Email is required" }, status: :bad_request if email.blank?
-    return render json: { error: "Google ID is required" }, status: :bad_request if google_id.blank?
 
-    user = handle_google_login(email, google_id)
+    user = handle_google_login(email)
     return unless user
 
     user.update!(current_sign_in_at: Time.current)
@@ -21,13 +19,11 @@ class Internal::OauthController < Api::BaseController
 
   def google_signup
     email = params[:email]
-    google_id = params[:google_id]
     invitation_token = params[:invitation_token]
 
     return render json: { error: "Email is required" }, status: :bad_request if email.blank?
-    return render json: { error: "Google ID is required" }, status: :bad_request if google_id.blank?
 
-    user = handle_google_signup(email, google_id, invitation_token)
+    user = handle_google_signup(email, invitation_token)
     return unless user
 
     user.update!(current_sign_in_at: Time.current)
@@ -35,28 +31,27 @@ class Internal::OauthController < Api::BaseController
   end
 
   private
-    def handle_google_login(email, google_id)
+    def handle_google_login(email)
       user = User.find_by(email: email)
       unless user
         render json: { error: "User not found" }, status: :not_found
         return nil
       end
 
-      user.update!(google_uid: google_id) if user.google_uid.blank?
       user
     end
 
-    def handle_google_signup(email, google_id, invitation_token)
+    def handle_google_signup(email, invitation_token)
       existing_user = User.find_by(email: email)
       if existing_user
         render json: { error: "An account with this email already exists. Please log in instead." }, status: :conflict
         return nil
       end
 
-      complete_google_user_signup(email, google_id, invitation_token)
+      complete_google_user_signup(email, invitation_token)
     end
 
-    def complete_google_user_signup(email, google_id, invitation_token)
+    def complete_google_user_signup(email, invitation_token)
       ApplicationRecord.transaction do
         invite_link = nil
         if invitation_token.present?
@@ -65,7 +60,6 @@ class Internal::OauthController < Api::BaseController
 
         user = User.create!(
           email: email,
-          google_uid: google_id,
           confirmed_at: Time.current,
           invitation_accepted_at: Time.current,
           signup_invite_link: invite_link
