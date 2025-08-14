@@ -5,6 +5,7 @@ import { userComplianceInfosFactory } from "@test/factories/userComplianceInfos"
 import { usersFactory } from "@test/factories/users";
 import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
+import { mockWise } from "@test/helpers/wise";
 import { expect, type Page, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { companies, users, wiseRecipients } from "@/db/schema";
@@ -51,7 +52,8 @@ test.describe("Bank account settings", () => {
     await login(page, onboardingUser);
   });
 
-  test("trims whitespace from fields", async ({ page }) => {
+  test("trims whitespace from fields", async ({ page, next }) => {
+    mockWise(next, {});
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Payouts" }).click();
     await page.getByRole("button", { name: "Add bank account" }).click();
@@ -79,7 +81,8 @@ test.describe("Bank account settings", () => {
     expect(wiseRecipient.countryCode).toBe("US");
   });
 
-  test("allows setting a bank account from Mexico", async ({ page }) => {
+  test("allows setting a bank account from Mexico", async ({ page, next }) => {
+    mockWise(next, {});
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Payouts" }).click();
     await page.getByRole("button", { name: "Add bank account" }).click();
@@ -169,7 +172,8 @@ test.describe("Bank account settings", () => {
     await expect(page.getByText("Saving bank account...")).toBeVisible();
   });
 
-  test("allows an EUR Recipient to submit bank account info", async ({ page }) => {
+  test("allows an EUR Recipient to submit bank account info", async ({ page, next }) => {
+    mockWise(next, {});
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Payouts" }).click();
     await page.getByRole("button", { name: "Add bank account" }).click();
@@ -188,7 +192,8 @@ test.describe("Bank account settings", () => {
     await expect(page.getByText("Ending in 7589")).toBeVisible();
   });
 
-  test("allows a CAD Recipient to submit bank account info", async ({ page }) => {
+  test("allows a CAD Recipient to submit bank account info", async ({ page, next }) => {
+    mockWise(next, {});
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Payouts" }).click();
     await page.getByRole("button", { name: "Add bank account" }).click();
