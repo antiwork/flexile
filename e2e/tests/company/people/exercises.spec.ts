@@ -54,13 +54,11 @@ test.describe("People - Exercises Table", () => {
     });
 
     await login(page, adminUser, `/people/${investorUser.externalId}`);
-    await page.waitForLoadState("networkidle");
 
     // Go to the exercises tab
     const exercisesTab = page.getByRole("tab", { name: "Exercises" });
     await expect(exercisesTab).toBeVisible();
     await exercisesTab.click();
-    await page.waitForLoadState("networkidle");
 
     await expect(page.locator("tbody")).toContainText(
       [

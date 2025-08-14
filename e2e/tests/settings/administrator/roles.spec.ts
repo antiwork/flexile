@@ -58,14 +58,10 @@ test.describe("Manage roles access", () => {
 
   test.describe("Roles List Display", () => {
     test("displays both admins and lawyers in combined table", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/roles");
-
-      // Wait for the page to be fully loaded
-      await page.waitForLoadState("networkidle");
-
-      // Add a more specific wait for the table to appear
-      await page.waitForSelector("table", { timeout: 10000 });
+      await Promise.all([
+        page.waitForResponse((r) => r.url().includes("listCompanyUsers")),
+        login(page, primaryAdmin, "/settings/administrator/roles"),
+      ]);
 
       // Check page title and description
       await expect(page.getByRole("heading", { name: "Roles" })).toBeVisible();
@@ -137,11 +133,10 @@ test.describe("Manage roles access", () => {
     });
 
     test("search functionality works for names", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/roles");
-
-      // Wait for page to load
-      await page.waitForLoadState("networkidle");
+      await Promise.all([
+        page.waitForResponse((r) => r.url().includes("listCompanyUsers")),
+        login(page, primaryAdmin, "/settings/administrator/roles"),
+      ]);
 
       // Find search input
       const searchInput = page.getByPlaceholder("Search by name...");
