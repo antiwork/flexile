@@ -40,9 +40,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "11/01/2024");
     await page.getByPlaceholder("Description").fill("first item");
-    await page.waitForTimeout(500); // TODO (dani) avoid this
     await page.getByLabel("Hours / Qty").first().fill("01:23");
-    await page.waitForTimeout(500); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Add line item" }).click();
     await page.getByPlaceholder("Description").nth(1).fill("second item");
     await page.getByLabel("Hours / Qty").nth(1).fill("10");
@@ -59,9 +57,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Description").fill("woops too little time");
     await page.getByLabel("Hours / Qty").fill("0:23");
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
-    await page.waitForTimeout(300); // TODO (dani) avoid this
     await fillDatePicker(page, "Date", "12/01/2024");
-    await page.waitForTimeout(300); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
@@ -87,9 +83,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Description").fill("Invoice to be deleted");
     await page.getByLabel("Hours / Qty").fill("0:33");
     await page.getByLabel("Invoice ID").fill("CUSTOM-3");
-    await page.waitForTimeout(300); // TODO (dani) avoid this
     await fillDatePicker(page, "Date", "12/01/2024");
-    await page.waitForTimeout(300); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).toBeVisible();
@@ -99,7 +93,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.getByRole("cell", { name: "CUSTOM-3" }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Delete" }).click();
-    await page.getByRole("dialog").waitFor();
+    await page.getByRole("dialog").waitFor({ state: "visible" });
     await page.getByRole("button", { name: "Delete" }).click();
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).not.toBeVisible();
 
@@ -110,7 +104,6 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Description").fill("line item");
     await page.getByLabel("Hours / Qty").fill("10:23");
     await fillDatePicker(page, "Date", "11/20/2024");
-    await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByText("Awaiting approval")).toBeVisible();
 
@@ -209,7 +202,6 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await page.getByLabel("Hours / Qty").fill("02:30");
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
-    await page.waitForTimeout(200); // TODO (dani) avoid this
     await page.getByRole("button", { name: "Re-submit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 

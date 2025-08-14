@@ -104,7 +104,6 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
   const columnHelper = createColumnHelper<(typeof updates)[number]>();
   const desktopColumns = useMemo(
     () => [
-      columnHelper.simple("sentAt", "Sent on", (v) => (v ? formatDate(v) : "-")),
       columnHelper.accessor("title", {
         header: "Title",
         cell: (info) => (
@@ -113,6 +112,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
           </button>
         ),
       }),
+      columnHelper.simple("sentAt", "Sent On", (v) => (v ? formatDate(v) : "-")),
       columnHelper.accessor((row) => (row.sentAt ? "Sent" : "Draft"), {
         header: "Status",
         cell: (info) => <Status variant={info.getValue() === "Sent" ? "success" : undefined}>{info.getValue()}</Status>,
