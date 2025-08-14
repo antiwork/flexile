@@ -30,7 +30,6 @@ You can start the local app using the [`bin/dev` script](bin/dev) - or feel free
 Once the local services are up and running, the application will be available at `https://flexile.dev`
 
 **Development shortcuts**:
-
 - If `ENABLE_DEFAULT_OTP=true` is set in your `.env`, you can use `000000` as the OTP for logging in or signing up.
 - Use these pre-seeded accounts (password: `password` for all):
   - **Admin**: `hi+sahil@example.com` (Primary Administrator)
