@@ -98,7 +98,7 @@ export default function QuickbooksRow() {
     onSuccess: async () => {
       try {
         await request({
-          url: sync_integration_company_administrator_quickbooks_path({ company_id: company.id }),
+          url: sync_integration_company_administrator_quickbooks_path(company.id),
           method: "POST",
           accept: "json",
           assertOk: true,
