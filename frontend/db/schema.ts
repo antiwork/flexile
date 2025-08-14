@@ -1698,7 +1698,6 @@ export const users = pgTable(
     sentInvalidTaxIdEmail: boolean("sent_invalid_tax_id_email").notNull().default(false),
     clerkId: varchar("clerk_id"),
     otpSecretKey: varchar("otp_secret_key"),
-    googleUid: varchar("google_uid"),
   },
   (table) => [
     index("index_users_on_confirmation_token").using("btree", table.confirmationToken.asc().nullsLast().op("text_ops")),
