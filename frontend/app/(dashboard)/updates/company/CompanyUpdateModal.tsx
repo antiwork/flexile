@@ -58,7 +58,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       title: update?.title ?? "",
       body: update?.body ?? "",
       recipientTypes: narrowRecipientTypes(update?.recipientTypes) ?? ["admins"],
-      minBilledAmount: undefined,
+      minBilledAmount: update?.minBilledAmount ? Number(update.minBilledAmount) : undefined,
     },
   });
 
@@ -68,7 +68,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
         title: update.title,
         body: update.body,
         recipientTypes: narrowRecipientTypes(update.recipientTypes) ?? ["admins"],
-        minBilledAmount: undefined,
+        minBilledAmount: update.minBilledAmount ? Number(update.minBilledAmount) : undefined,
       });
     } else if (!updateId) {
       form.reset({
@@ -137,7 +137,6 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
         await publishMutation.mutateAsync({
           companyId: company.id,
           id,
-          minBilledAmount: values.minBilledAmount,
         });
       }
       void trpcUtils.companyUpdates.list.invalidate();

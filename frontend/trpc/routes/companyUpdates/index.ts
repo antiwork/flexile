@@ -28,6 +28,7 @@ const dataSchema = createInsertSchema(companyUpdates)
   })
   .extend({
     recipientTypes: z.array(z.enum(["admins", "investors", "active_contractors", "alumni_contractors"])).optional(),
+    minBilledAmount: z.number().nonnegative().optional(),
   });
 
 const checkHasInvestors = async (companyId: bigint) => {
@@ -65,7 +66,7 @@ export const companyUpdatesRouter = createRouter({
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
 
     return {
-      ...pick(update, ["title", "body", "sentAt", "recipientTypes"]),
+      ...pick(update, ["title", "body", "sentAt", "recipientTypes", "minBilledAmount"]),
       id: update.externalId,
     };
   }),
@@ -76,7 +77,7 @@ export const companyUpdatesRouter = createRouter({
     const [update] = await db
       .insert(companyUpdates)
       .values({
-        ...pick(input, ["title", "body"]),
+        ...pick(input, ["title", "body", "minBilledAmount"]),
         companyId: ctx.company.id,
         recipientTypes: Array.from(new Set([...(input.recipientTypes ?? []), "admins"])),
       })
@@ -89,7 +90,7 @@ export const companyUpdatesRouter = createRouter({
     const [update] = await db
       .update(companyUpdates)
       .set({
-        ...pick(input, ["title", "body"]),
+        ...pick(input, ["title", "body", "minBilledAmount"]),
         companyId: ctx.company.id,
         recipientTypes: Array.from(new Set([...(input.recipientTypes ?? []), "admins"])),
       })
@@ -101,7 +102,6 @@ export const companyUpdatesRouter = createRouter({
     .input(
       z.object({
         id: z.string(),
-        minBilledAmount: minBilledAmountSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -127,7 +127,7 @@ export const companyUpdatesRouter = createRouter({
         data: {
           updateId: update.externalId,
           recipientTypes: validRecipientTypes?.length ? validRecipientTypes : undefined,
-          minBilledAmount: input.minBilledAmount,
+          minBilledAmount: update.minBilledAmount ? Number(update.minBilledAmount) : undefined,
         },
       });
 
