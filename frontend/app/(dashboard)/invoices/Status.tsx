@@ -108,16 +108,8 @@ export default function InvoiceStatus({
 
   return (
     <>
-      <span className="sr-only" id={`invoice-status-label-${invoice.id}`}>
-        {label}
-      </span>
-      <Status
-        aria-label={label}
-        aria-labelledby={`invoice-status-label-${invoice.id}`}
-        variant={variant}
-        className={className}
-        icon={Icon ? <Icon /> : undefined}
-      >
+      <span className="sr-only">{label}</span>
+      <Status aria-label={label} variant={variant} className={className} icon={Icon ? <Icon /> : undefined}>
         {iconOnly ? null : label}
       </Status>
     </>

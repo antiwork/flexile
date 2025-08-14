@@ -185,10 +185,8 @@ export default function PeoplePage() {
           return (
             <div className="flex h-full flex-col items-end justify-between">
               <div className="flex h-5 w-4 items-center justify-center">
-                <span className="sr-only" id="status-label">
-                  {text}
-                </span>
-                <Status aria-labelledby="status-label" variant={variant} />
+                <span className="sr-only">{text}</span>
+                <Status variant={variant} />
               </div>
             </div>
           );
