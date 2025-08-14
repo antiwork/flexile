@@ -74,7 +74,7 @@ function handler(req: NextRequest, ...params: unknown[]) {
         if (account?.provider === "google") {
           const invitationToken = cookieMap.get("auth_invitation_token");
 
-          const endpoint = authContext === "signup" ? "/internal/oauth/google_signup" : "/internal/oauth/google_login";
+          const endpoint = authContext === "signup" ? "/internal/oauth/oauth_signup" : "/internal/oauth/oauth_login";
           const requestBody: Record<string, unknown> = {
             email: user.email,
             token: env.API_SECRET_TOKEN,

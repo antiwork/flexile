@@ -13,8 +13,8 @@ scope path: :internal, module: :internal do
 
   resources :oauth, only: [] do
     collection do
-      post :google_login
-      post :google_signup
+      post :oauth_login
+      post :oauth_signup
     end
   end
 

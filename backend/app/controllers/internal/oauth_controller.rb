@@ -5,25 +5,25 @@ class Internal::OauthController < Api::BaseController
 
   skip_before_action :authenticate_with_jwt
 
-  def google_login
+  def oauth_login
     email = params[:email]
 
     return render json: { error: "Email is required" }, status: :bad_request if email.blank?
 
-    user = handle_google_login(email)
+    user = handle_oauth_login(email)
     return unless user
 
     user.update!(current_sign_in_at: Time.current)
     success_response_with_jwt(user)
   end
 
-  def google_signup
+  def oauth_signup
     email = params[:email]
     invitation_token = params[:invitation_token]
 
     return render json: { error: "Email is required" }, status: :bad_request if email.blank?
 
-    user = handle_google_signup(email, invitation_token)
+    user = handle_oauth_signup(email, invitation_token)
     return unless user
 
     user.update!(current_sign_in_at: Time.current)
@@ -31,7 +31,7 @@ class Internal::OauthController < Api::BaseController
   end
 
   private
-    def handle_google_login(email)
+    def handle_oauth_login(email)
       user = User.find_by(email: email)
       unless user
         render json: { error: "User not found" }, status: :not_found
@@ -41,17 +41,17 @@ class Internal::OauthController < Api::BaseController
       user
     end
 
-    def handle_google_signup(email, invitation_token)
+    def handle_oauth_signup(email, invitation_token)
       existing_user = User.find_by(email: email)
       if existing_user
         render json: { error: "An account with this email already exists. Please log in instead." }, status: :conflict
         return nil
       end
 
-      complete_google_user_signup(email, invitation_token)
+      complete_oauth_user_signup(email, invitation_token)
     end
 
-    def complete_google_user_signup(email, invitation_token)
+    def complete_oauth_user_signup(email, invitation_token)
       ApplicationRecord.transaction do
         invite_link = nil
         if invitation_token.present?
