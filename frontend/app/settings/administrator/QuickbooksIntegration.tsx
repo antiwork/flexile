@@ -104,7 +104,6 @@ export default function QuickbooksRow() {
           assertOk: true,
         });
       } finally {
-        // TODO (techdebt): surface sync failure to the user
         setTimeout(() => saveMutation.reset(), 2000);
       }
     },

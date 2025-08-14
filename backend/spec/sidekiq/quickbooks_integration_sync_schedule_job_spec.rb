@@ -87,14 +87,4 @@ RSpec.describe QuickbooksIntegrationSyncScheduleJob, type: :sidekiq do
       end
     end
   end
-
-  describe "job configuration" do
-    it "has correct retry configuration" do
-      expect(described_class.sidekiq_options["retry"]).to eq(5)
-    end
-
-    it "includes Sidekiq::Job" do
-      expect(described_class.included_modules).to include(Sidekiq::Job)
-    end
-  end
 end

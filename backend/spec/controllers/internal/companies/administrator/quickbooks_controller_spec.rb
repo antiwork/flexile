@@ -24,7 +24,6 @@ RSpec.describe Internal::Companies::Administrator::QuickbooksController, type: :
   end
 
   describe "POST #sync_integration" do
-    # TODO (techdebt): add negative auth/authorization coverage
     before do
       integration # ensure integration exists
     end
