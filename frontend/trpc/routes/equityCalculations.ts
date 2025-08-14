@@ -46,6 +46,15 @@ export const calculateInvoiceEquity = async ({
     equityAmountInOptions = Decimal.div(equityAmountInCents, Decimal.mul(sharePriceUsd, 100)).round().toNumber();
   }
 
+  // Don't wipe equity splits if there's no grant - return null to indicate grant creation required
+  if (
+    equityPercentage !== 0 &&
+    (!unvestedGrant || (equityAmountInOptions > 0 && unvestedGrant.unvestedShares < equityAmountInOptions))
+  ) {
+    return null;
+  }
+
+  // Only set to zero if there's actually no equity intended
   if (equityAmountInOptions <= 0) {
     equityPercentage = 0;
     equityAmountInCents = 0;
@@ -84,9 +93,12 @@ export const equityCalculationsRouter = createRouter({
       });
 
       if (!result) {
+        const hasEquityPercentage = ctx.companyContractor.equityPercentage > 0;
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Something went wrong. Please contact the company administrator.",
+          message: hasEquityPercentage
+            ? "Admin must create an equity grant before this can be processed."
+            : "Something went wrong. Please contact the company administrator.",
         });
       }
 
