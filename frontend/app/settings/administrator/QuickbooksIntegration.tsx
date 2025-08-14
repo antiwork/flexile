@@ -96,14 +96,17 @@ export default function QuickbooksRow() {
       void refetch();
     },
     onSuccess: async () => {
-      await request({
-        url: sync_integration_company_administrator_quickbooks_path({ company_id: company.id }),
-        method: "POST",
-        accept: "json",
-        assertOk: true,
-      });
-
-      setTimeout(() => saveMutation.reset(), 2000);
+      try {
+        await request({
+          url: sync_integration_company_administrator_quickbooks_path({ company_id: company.id }),
+          method: "POST",
+          accept: "json",
+          assertOk: true,
+        });
+      } finally {
+        // TODO (techdebt): surface sync failure to the user
+        setTimeout(() => saveMutation.reset(), 2000);
+      }
     },
   });
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
