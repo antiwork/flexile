@@ -70,21 +70,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Cache key ordered from most stable to least stable components
+      # Monthly date ensures browser cache refreshes at least once per month
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          YEAR_MONTH=$(date +"%Y-%m")
+          CACHE_FALLBACK_KEY="setup-${{ runner.os }}-${{ hashFiles('**/Gemfile.lock', '**/pnpm-lock.yaml') }}-${YEAR_MONTH}-"
+          CACHE_KEY="setup-${{ runner.os }}-${{ hashFiles('**/Gemfile.lock', '**/pnpm-lock.yaml') }}-${YEAR_MONTH}-${{ hashFiles('backend/**/*.rb', 'backend/**/*.erb', 'frontend/**/*.ts', 'frontend/**/*.tsx') }}"
+          echo "key=$CACHE_KEY" >> $GITHUB_OUTPUT
+          echo "cache_fallback_key=$CACHE_FALLBACK_KEY" >> $GITHUB_OUTPUT
+          echo "Cache key: $CACHE_KEY"
+          echo "Cache Fallback key: $CACHE_FALLBACK_KEY"
+
+      - name: Restore playwright & build deps
+        id: restore-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.pnpm-store
+            frontend/.next
+            frontend/node_modules
+            node_modules
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.cache_fallback_key }}
+
       - name: Build setup
         uses: ./.github/common/
 
-      - run: pnpm puppeteer browsers install chrome
+      - name: Install Playwright Browsers
+        run: pnpm playwright install --with-deps chromium
+        if: steps.restore-cache.outputs.cache-hit != 'true'
 
       - run: node docker/createCertificate.js
-
-      - name: Cache Next build
-        id: next-cache
-        uses: actions/cache@v4
-        with:
-          path: frontend/.next/cache
-          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}-${{ hashFiles('frontend/**/*.{ts,tsx}') }}
-          restore-keys: |
-            next-${{ runner.os }}-
 
       - run: NODE_ENV=test pnpm run build-next --no-lint
         shell: bash
@@ -92,18 +112,16 @@ jobs:
       - name: Install foreman
         run: gem install foreman
 
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v4
+      - name: Cache playwright & build deps
+        uses: actions/cache/save@v4
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
-
-      - name: Install Playwright Browsers
-        run: pnpm playwright install --with-deps chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+          path: |
+            ~/.cache/ms-playwright
+            ~/.pnpm-store
+            frontend/.next
+            frontend/node_modules
+            node_modules
+          key: ${{ steps.cache-key.outputs.key }}
 
       - name: Run docker compose
         run: docker compose -f docker/docker-compose-local-linux.yml up -d
