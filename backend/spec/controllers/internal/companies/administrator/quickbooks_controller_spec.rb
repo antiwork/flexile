@@ -24,6 +24,7 @@ RSpec.describe Internal::Companies::Administrator::QuickbooksController, type: :
   end
 
   describe "POST #sync_integration" do
+    # TODO (techdebt): add negative auth/authorization coverage
     before do
       integration # ensure integration exists
     end
@@ -56,6 +57,29 @@ RSpec.describe Internal::Companies::Administrator::QuickbooksController, type: :
       it "does not enqueue any jobs" do
         expect(QuickbooksIntegrationSyncScheduleJob).not_to receive(:perform_async)
         post :sync_integration, params: { company_id: company.id }
+      end
+    end
+
+    context "when unauthenticated" do
+      before do
+        allow(controller).to receive(:authenticate_user_json!).and_raise(StandardError)
+      end
+
+      it "does not enqueue and raises authentication error" do
+        expect(QuickbooksIntegrationSyncScheduleJob).not_to receive(:perform_async)
+        expect { post :sync_integration, params: { company_id: company.id } }.to raise_error(StandardError)
+      end
+    end
+
+    context "when unauthorized" do
+      before do
+        allow_any_instance_of(QuickbooksIntegrationPolicy).to receive(:sync_integration?).and_return(false)
+      end
+
+      it "does not enqueue and returns forbidden" do
+        expect(QuickbooksIntegrationSyncScheduleJob).not_to receive(:perform_async)
+        post :sync_integration, params: { company_id: company.id }
+        expect(response).to have_http_status(:forbidden)
       end
     end
   end
