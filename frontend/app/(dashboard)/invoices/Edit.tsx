@@ -207,8 +207,6 @@ const Edit = () => {
 
       if (document?.blob) {
         formData.append("invoice[attachment]", document.blob);
-      } else if (document === null && data.invoice.attachment) {
-        formData.append("invoice[remove_attachment]", "true");
       }
 
       await request({
@@ -219,9 +217,11 @@ const Edit = () => {
         assertOk: true,
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
-      await trpcUtils.invoices.get.invalidate({ companyId: company.id, id });
       await trpcUtils.documents.list.invalidate();
-      await queryClient.invalidateQueries({ queryKey: ["invoice", id] });
+      if (id) {
+        await trpcUtils.invoices.get.invalidate({ companyId: company.id, id });
+        await queryClient.invalidateQueries({ queryKey: ["invoice", id] });
+      }
       router.push("/invoices");
     },
   });
