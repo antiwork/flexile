@@ -237,29 +237,56 @@ const Edit = () => {
     );
 
   const createNewExpenseEntries = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     const MAX_FILE_SIZE = 10 * 1024 * 1024;
-    if (file.size > MAX_FILE_SIZE) {
+    const oversizedFiles: string[] = [];
+    const validFiles: File[] = [];
+
+    // Check each file for size constraints
+    Array.from(files).forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        oversizedFiles.push(file.name);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    // Show alert if any files exceed size limit
+    if (oversizedFiles.length > 0) {
       setAlertTitle("File Size Exceeded");
-      setAlertMessage("File size exceeds the maximum limit of 10MB. Please select a smaller file.");
+      if (oversizedFiles.length === 1) {
+        setAlertMessage(`File "${oversizedFiles[0]}" exceeds the maximum limit of 10MB. Please select a smaller file.`);
+      } else {
+        setAlertMessage(
+          `${oversizedFiles.length} files exceed the maximum limit of 10MB: ${oversizedFiles.join(", ")}. Please select smaller files.`,
+        );
+      }
       setAlertOpen(true);
-      e.target.value = "";
-      return;
+
+      // If all files are invalid, reset the file input
+      if (validFiles.length === 0) {
+        e.target.value = "";
+        return;
+      }
     }
 
     const expenseCategory = assertDefined(data.company.expenses.categories[0]);
     setShowExpenses(true);
-    setExpenses((expenses) =>
-      expenses.push({
-        description: "",
-        category_id: expenseCategory.id,
-        total_amount_in_cents: 0,
-        attachment: { name: file.name, url: URL.createObjectURL(file) },
-        blob: file,
-      }),
-    );
+
+    // Add each valid file as a separate expense
+    validFiles.forEach((file) => {
+      setExpenses((expenses) =>
+        expenses.push({
+          description: "",
+          category_id: expenseCategory.id,
+          total_amount_in_cents: 0,
+          attachment: { name: file.name, url: URL.createObjectURL(file) },
+          blob: file,
+        }),
+      );
+    });
   };
 
   const addDocument = () => {
@@ -489,6 +516,7 @@ const Edit = () => {
               type="file"
               className="hidden"
               accept="application/pdf, image/*"
+              multiple
               onChange={createNewExpenseEntries}
             />
           ) : null}
