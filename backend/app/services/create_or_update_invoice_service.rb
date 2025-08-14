@@ -108,7 +108,7 @@ class CreateOrUpdateInvoiceService
     end
 
     def invoice_attachment
-      params.dig(:invoice, :attachment)
+      params.permit(invoice: [:attachment]).dig(:invoice, :attachment)
     end
 
     def invoice_line_items_params
