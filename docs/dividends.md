@@ -176,8 +176,8 @@ dividend_computation.generate_dividends
 ### Calculating Fees
 
 ```ruby
-company = Company.find(1823)
-dividends = company.dividends
+company = Company.find(5)
+dividends = company.dividend_rounds.last.dividends
 fees = dividends.map do |dividend|
   calculated_fee = ((dividend.total_amount_in_cents.to_d * 2.9.to_d/100.to_d) + 30.to_d).round.to_i
   [30_00, calculated_fee].min
@@ -190,14 +190,14 @@ fees.sum / 100.0
 #### Pull Funds via ACH using Stripe
 
 ```ruby
-company = Company.find(2699)
+company = Company.find(5)
 stripe_setup_intent = company.bank_account.stripe_setup_intent
 intent = Stripe::PaymentIntent.create({
   payment_method_types: ["us_bank_account"],
   payment_method: stripe_setup_intent.payment_method,
   customer: stripe_setup_intent.customer,
   confirm: true,
-  amount: 695_009_30, # set manually
+  amount: 2_600_000, # set manually
   currency: "USD",
   expand: ["latest_charge"],
   capture_method: "automatic",
