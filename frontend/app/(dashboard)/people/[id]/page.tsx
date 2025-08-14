@@ -196,7 +196,7 @@ export default function ContractorPage() {
         }
       />
 
-      <div className="container px-4">
+      <div className="px-4">
         <Dialog open={endModalOpen} onOpenChange={setEndModalOpen}>
           <DialogContent>
             <DialogHeader>
