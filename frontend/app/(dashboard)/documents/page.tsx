@@ -263,12 +263,13 @@ export default function DocumentsPage() {
           meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
           cell: (info) => {
             const { variant, text } = getStatus(info.row.original);
+            const labelId = `document-status-${info.row.id}`;
             return (
               <>
-                <span className="sr-only" id="status-label">
+                <span className="sr-only" id={labelId}>
                   {text}
                 </span>
-                <Status variant={variant} aria-labelledby="status-label">
+                <Status variant={variant} aria-labelledby={labelId}>
                   {text}
                 </Status>
               </>
@@ -340,14 +341,15 @@ export default function DocumentsPage() {
           cell: (info) => {
             const document = info.row.original;
             const { variant, text } = getStatus(info.row.original);
+            const labelId = `document-status-${info.row.id}`;
 
             return (
               <div className="flex h-full flex-col items-end justify-between">
                 <div className="flex h-5 w-4 items-center justify-center">
-                  <span className="sr-only" id="status-label">
+                  <span className="sr-only" id={labelId}>
                     {text}
                   </span>
-                  <Status aria-labelledby="status-label" variant={variant} />
+                  <Status aria-labelledby={labelId} variant={variant} />
                 </div>
                 <div className="text-gray-600">{formatDate(document.createdAt)}</div>
               </div>
