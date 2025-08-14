@@ -67,15 +67,28 @@ class CreateOrUpdateInvoiceService
         invoice_year:,
       ).calculate
       if equity_calculation_result.nil?
-        error = "Something went wrong. Please contact the company administrator."
-        raise ActiveRecord::Rollback
-      end
 
-      equity_calculation_result => { equity_cents:, equity_options:, equity_percentage: }
-      invoice.equity_percentage = equity_percentage
-      invoice.cash_amount_in_cents = invoice.total_amount_in_usd_cents - equity_cents
-      invoice.equity_amount_in_cents = equity_cents
-      invoice.equity_amount_in_options = equity_options
+        unvested_grant = contractor.unique_unvested_equity_grant_for_year(invoice_year)
+        share_price_usd = unvested_grant&.share_price_usd || invoice.company.fmv_per_share_in_usd
+
+        if contractor.equity_percentage.nonzero? && share_price_usd.present?
+
+          invoice.equity_percentage = contractor.equity_percentage
+          invoice.equity_amount_in_cents = 0
+          invoice.equity_amount_in_options = 0
+          invoice.cash_amount_in_cents = services_in_cents
+        else
+
+          error = "Something went wrong. Please contact the company administrator."
+          raise ActiveRecord::Rollback
+        end
+      else
+        equity_calculation_result => { equity_cents:, equity_options:, equity_percentage: }
+        invoice.equity_percentage = equity_percentage
+        invoice.cash_amount_in_cents = invoice.total_amount_in_usd_cents - equity_cents
+        invoice.equity_amount_in_cents = equity_cents
+        invoice.equity_amount_in_options = equity_options
+      end
       invoice.flexile_fee_cents = invoice.calculate_flexile_fee_cents
 
       unless invoice.save

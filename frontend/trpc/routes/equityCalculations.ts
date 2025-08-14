@@ -20,7 +20,7 @@ export const calculateInvoiceEquity = async ({
   invoiceYear: number;
   providedEquityPercentage?: number;
 }) => {
-  let equityPercentage = providedEquityPercentage ?? companyContractor.equityPercentage;
+  const equityPercentage = providedEquityPercentage ?? companyContractor.equityPercentage;
 
   const unvestedGrant = await getUniqueUnvestedEquityGrantForYear(companyContractor, invoiceYear);
   let sharePriceUsd = unvestedGrant?.sharePriceUsd ?? 0;
@@ -46,8 +46,16 @@ export const calculateInvoiceEquity = async ({
     equityAmountInOptions = Decimal.div(equityAmountInCents, Decimal.mul(sharePriceUsd, 100)).round().toNumber();
   }
 
+  // Return null when contractor has non-zero equity percentage but grants are missing/insufficient
+  if (
+    equityPercentage !== 0 &&
+    (!unvestedGrant || (equityAmountInOptions > 0 && unvestedGrant.unvestedShares < equityAmountInOptions))
+  ) {
+    return null;
+  }
+
+  // Only set to zero if calculation legitimately results in zero shares
   if (equityAmountInOptions <= 0) {
-    equityPercentage = 0;
     equityAmountInCents = 0;
     equityAmountInOptions = 0;
   }
@@ -84,10 +92,12 @@ export const equityCalculationsRouter = createRouter({
       });
 
       if (!result) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Something went wrong. Please contact the company administrator.",
-        });
+        // Return zero values when grants are missing - contractor can still submit
+        return {
+          equityCents: 0,
+          equityOptions: 0,
+          equityPercentage: ctx.companyContractor.equityPercentage,
+        };
       }
 
       return result;

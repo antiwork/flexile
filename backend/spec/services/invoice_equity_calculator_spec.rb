@@ -24,6 +24,7 @@ RSpec.describe InvoiceEquityCalculator do
         expect(result[:equity_cents]).to eq(432_22) # (60% of $720.37).round
         expect(result[:equity_options]).to eq(185) # ($432.22/ $2.34).round
         expect(result[:equity_percentage]).to eq(60)
+        expect(company_worker.reload.equity_percentage).to eq(60)
       end
     end
 
@@ -40,6 +41,7 @@ RSpec.describe InvoiceEquityCalculator do
         expect(result[:equity_cents]).to eq(0)
         expect(result[:equity_options]).to eq(0)
         expect(result[:equity_percentage]).to eq(0)
+        expect(company_worker.reload.equity_percentage).to eq(1)
       end
     end
 
@@ -56,11 +58,21 @@ RSpec.describe InvoiceEquityCalculator do
     context "and an eligible unvested equity grant for the year is absent" do
       let(:invoice_year) { Date.current.year + 2 }
 
-      it "returns zero for all equity values" do
+      it "returns nil when contractor has non-zero equity percentage" do
         result = calculator.calculate
-        expect(result[:equity_cents]).to eq(0)
-        expect(result[:equity_options]).to eq(0)
-        expect(result[:equity_percentage]).to eq(0)
+        expect(result).to be_nil
+        expect(company_worker.reload.equity_percentage).to eq(60)
+      end
+
+      context "when contractor has zero equity percentage" do
+        before { company_worker.update!(equity_percentage: 0) }
+
+        it "returns zero for all equity values" do
+          result = calculator.calculate
+          expect(result[:equity_cents]).to eq(0)
+          expect(result[:equity_options]).to eq(0)
+          expect(result[:equity_percentage]).to eq(0)
+        end
       end
 
       context "and the company does not have a share price" do
@@ -73,6 +85,30 @@ RSpec.describe InvoiceEquityCalculator do
           expect(Bugsnag).to receive(:notify).with(message)
 
           expect(calculator.calculate).to be_nil
+        end
+      end
+    end
+
+    context "and unvested shares are insufficient for calculated equity options" do
+      before do
+        equity_grant.update!(unvested_shares: 50, vested_shares: 750)
+      end
+
+      it "returns nil when contractor has non-zero equity percentage" do
+        result = calculator.calculate
+        expect(result).to be_nil
+
+        expect(company_worker.reload.equity_percentage).to eq(60)
+      end
+
+      context "when contractor has zero equity percentage" do
+        before { company_worker.update!(equity_percentage: 0) }
+
+        it "returns zero for all equity values" do
+          result = calculator.calculate
+          expect(result[:equity_cents]).to eq(0)
+          expect(result[:equity_options]).to eq(0)
+          expect(result[:equity_percentage]).to eq(0)
         end
       end
     end
