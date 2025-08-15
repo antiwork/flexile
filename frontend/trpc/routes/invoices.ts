@@ -262,7 +262,7 @@ export const invoicesRouter = createRouter({
       if (!equityResult) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Admin must create an equity grant before this can be processed.",
+          message: "Admin must create an equity grant before this invoice can be approved",
         });
       }
 
