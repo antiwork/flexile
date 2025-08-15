@@ -33,8 +33,7 @@ class JwtService
 
     def token_present_in_request?(request)
       authorization_header = request.headers["x-flexile-auth"]
-      cookie_token = request.cookies["x-flexile-auth"]
-      (authorization_header&.start_with?("Bearer ") || cookie_token&.start_with?("Bearer "))
+      authorization_header&.start_with?("Bearer ")
     end
 
     private
@@ -42,11 +41,6 @@ class JwtService
         authorization_header = request.headers["x-flexile-auth"]
         if authorization_header&.start_with?("Bearer ")
           return authorization_header.split(" ").last
-        end
-
-        cookie_token = request.cookies["x-flexile-auth"]
-        if cookie_token&.start_with?("Bearer ")
-          return cookie_token.split(" ").last
         end
 
         nil
