@@ -93,10 +93,24 @@ test.describe("Dividend Computations", () => {
     );
 
     await expect(page.getByRole("dialog")).not.toBeVisible();
-    await expect(page.getByText("Draft")).toBeVisible();
-    await expect(page.getByText("50,000")).toBeVisible();
+    await expect(page).toHaveURL(/\/equity\/dividend_rounds\/draft\/\d+/u);
+    await expect(page.getByRole("heading", { name: "Dividend" })).toBeVisible();
+    await expect(page.getByText("Dividend distribution is still a draft")).toBeVisible();
+    await page.getByRole("link", { name: "Dividends" }).first().click();
 
-    await expect(page.getByText(formatDate(date.toString()))).toBeVisible();
+    const draftRow = page
+      .getByRole("row")
+      .filter({
+        has: page.getByText("Draft"),
+      })
+      .filter({
+        has: page.getByText("50,000"),
+      })
+      .filter({
+        has: page.getByText(formatDate(date.toString())),
+      });
+
+    await expect(draftRow).toBeVisible();
 
     const computation = await db.query.dividendComputations
       .findFirst({ where: eq(dividendComputations.companyId, company.id) })
