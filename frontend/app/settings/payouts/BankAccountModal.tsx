@@ -75,8 +75,8 @@ const formSchema = z.object({
 
 type Form = z.infer<typeof formSchema>;
 type BillingDetails = {
-  country: string;
-  country_code: string;
+  country: string | null;
+  country_code: string | null;
   state: string | null;
   city: string | null;
   zip_code: string | null;
@@ -147,7 +147,10 @@ const fieldGroups: string[][] = [
 ];
 
 const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClose }: Props) => {
-  const defaultCurrency = bankAccount?.currency ?? currencyByCountryCode.get(billingDetails.country_code) ?? "USD";
+  const defaultCurrency =
+    bankAccount?.currency ??
+    (billingDetails.country_code ? currencyByCountryCode.get(billingDetails.country_code) : undefined) ??
+    "USD";
   const [currency, setCurrency] = useState<Currency>(defaultCurrency);
   useEffect(() => setCurrency(defaultCurrency), [defaultCurrency]);
 
@@ -209,7 +212,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
   });
   previousForms.current = forms;
 
-  const userCountry = details.get(KEY_ADDRESS_COUNTRY) || billingDetails.country_code;
+  const userCountry = details.get(KEY_ADDRESS_COUNTRY) || billingDetails.country_code || "US";
 
   const defaultFormIndex = useMemo(() => {
     const index = forms.findIndex((form) => {
@@ -444,7 +447,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="flex max-h-[90vh] flex-col">
+      <DialogContent className="flex flex-col">
         <DialogHeader>
           <DialogTitle>Bank account</DialogTitle>
         </DialogHeader>

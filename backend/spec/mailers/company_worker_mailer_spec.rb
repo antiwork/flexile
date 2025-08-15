@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe CompanyWorkerMailer, type: :mailer do
+RSpec.describe CompanyWorkerMailer do
   describe "payment_failed_generic" do
     let(:company) { create(:company) }
     let(:user) { create(:user) }

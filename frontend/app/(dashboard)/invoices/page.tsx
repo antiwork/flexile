@@ -10,15 +10,18 @@ import {
   CheckCircle,
   CircleAlert,
   CircleCheck,
+  CircleCheckBig,
   Download,
   Eye,
   Info,
+  MoreHorizontal,
   Plus,
   SquarePen,
   Trash2,
+  X,
 } from "lucide-react";
 import Link from "next/link";
-import React, { Fragment, useCallback, useMemo, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -26,7 +29,6 @@ import {
   DeleteModal,
   EDITABLE_INVOICE_STATES,
   RejectModal,
-  taxRequirementsMet,
   useApproveInvoices,
   useIsActionable,
   useIsDeletable,
@@ -35,8 +37,8 @@ import {
 import Status, { StatusDetails } from "@/app/(dashboard)/invoices/Status";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
-import { SelectionActions } from "@/components/actions/SelectionActions";
-import type { ActionConfig, ActionContext } from "@/components/actions/types";
+import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
+import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DatePicker from "@/components/DatePicker";
@@ -48,15 +50,19 @@ import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { pluralize } from "@/utils/pluralize";
 import { request } from "@/utils/request";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
@@ -95,7 +101,7 @@ export default function InvoicesPage() {
   const isPayNowDisabled = useCallback(
     (invoice: Invoice) => {
       const payable = isPayable(invoice);
-      return payable && (!company.completedPaymentMethodSetup || !taxRequirementsMet(invoice));
+      return payable && !company.completedPaymentMethodSetup;
     },
     [isPayable, company.completedPaymentMethodSetup],
   );
@@ -182,7 +188,7 @@ export default function InvoicesPage() {
   });
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
-  const columns = useMemo(
+  const desktopColumns = useMemo(
     () => [
       user.roles.administrator
         ? columnHelper.accessor("billFrom", {
@@ -210,6 +216,7 @@ export default function InvoicesPage() {
         "numeric",
       ),
       columnHelper.accessor((row) => statusNames[row.status], {
+        id: "status",
         header: "Status",
         cell: (info) => (
           <div className="relative z-1">
@@ -242,8 +249,85 @@ export default function InvoicesPage() {
         },
       }),
     ],
-    [],
+    [data, user.roles.administrator],
   );
+
+  const mobileColumns = useMemo(
+    () => [
+      columnHelper.display({
+        id: "billFromRoleAmount",
+        cell: (info) => {
+          const invoice = info.row.original;
+          const amount = formatMoneyFromCents(invoice.totalAmountInUsdCents);
+
+          return user.roles.administrator ? (
+            <div className="flex flex-col gap-2">
+              <div>
+                <div className="text-base font-medium">{invoice.billFrom}</div>
+                <div className="text-gray-600">{invoice.contractor.role}</div>
+              </div>
+              <div className="text-sm">{amount}</div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Link
+                href={`/invoices/${invoice.id}`}
+                className="relative truncate font-medium no-underline after:absolute after:inset-0"
+              >
+                {invoice.invoiceNumber}
+              </Link>
+              <div className="text-sm">{amount}</div>
+            </div>
+          );
+        },
+        meta: {
+          cellClassName: "w-full",
+        },
+      }),
+
+      columnHelper.display({
+        id: "statusSentOn",
+        cell: (info) => {
+          const invoice = info.row.original;
+
+          return (
+            <div className="flex h-full flex-col items-end justify-between">
+              <div className="flex h-5 w-4 items-center justify-center">
+                <Status invoice={invoice} iconOnly />
+              </div>
+              <div className="text-gray-600">{formatDate(invoice.invoiceDate)}</div>
+            </div>
+          );
+        },
+      }),
+
+      columnHelper.accessor((row) => statusNames[row.status], {
+        id: "status",
+        meta: {
+          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          hidden: true,
+        },
+      }),
+
+      columnHelper.accessor((row) => row.billFrom, {
+        header: "Contractor",
+        id: "billFrom",
+        meta: {
+          hidden: true,
+        },
+      }),
+
+      columnHelper.accessor("invoiceDate", {
+        id: "invoiceDate",
+        meta: {
+          hidden: true,
+        },
+      }),
+    ],
+    [data],
+  );
+
+  const columns = isMobile ? mobileColumns : desktopColumns;
 
   const handleInvoiceAction = (actionId: string, invoices: Invoice[]) => {
     const isSingleAction = invoices.length === 1;
@@ -278,8 +362,8 @@ export default function InvoicesPage() {
     data,
     getRowId: (invoice) => invoice.id,
     initialState: {
-      sorting: [{ id: user.roles.administrator ? "Status" : "invoiceDate", desc: !user.roles.administrator }],
-      columnFilters: user.roles.administrator ? [{ id: "Status", value: ["Awaiting approval", "Failed"] }] : [],
+      sorting: [{ id: user.roles.administrator ? "status" : "invoiceDate", desc: !user.roles.administrator }],
+      columnFilters: user.roles.administrator ? [{ id: "status", value: ["Awaiting approval", "Failed"] }] : [],
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -289,7 +373,6 @@ export default function InvoicesPage() {
 
   const selectedRows = table.getSelectedRowModel().rows;
   const selectedInvoices = selectedRows.map((row) => row.original);
-
   const selectedApprovableInvoices = useMemo(
     () => selectedInvoices.filter(isActionable),
     [selectedInvoices, isActionable],
@@ -305,26 +388,56 @@ export default function InvoicesPage() {
     [selectedInvoices, isDeletable],
   );
 
+  const availableActions = useMemo(
+    () => getAvailableActions(selectedInvoices, actionConfig, actionContext),
+    [selectedInvoices, actionConfig, actionContext],
+  );
+
   return (
     <>
+      {isMobile && user.roles.worker ? (
+        <Button variant="floating-action" {...(!canSubmitInvoices ? { disabled: true } : { asChild: true })}>
+          <Link href="/invoices/new" inert={!canSubmitInvoices}>
+            <Plus />
+          </Link>
+        </Button>
+      ) : null}
       <DashboardHeader
         title="Invoices"
         headerActions={
-          user.roles.worker ? (
-            !isMobile ? (
-              <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
-                <Link href="/invoices/new" inert={!canSubmitInvoices}>
-                  <Plus className="size-4" />
-                  New invoice
-                </Link>
-              </Button>
-            ) : (
-              <Button variant="floating-action" {...(!canSubmitInvoices ? { disabled: true } : { asChild: true })}>
-                <Link href="/invoices/new" inert={!canSubmitInvoices}>
-                  <Plus />
-                </Link>
-              </Button>
-            )
+          isMobile ? (
+            <div className="flex items-center">
+              {data.length > 0 ? (
+                <button
+                  className="p-2 text-blue-600"
+                  onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
+                >
+                  {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
+                </button>
+              ) : null}
+              {user.roles.administrator ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="p-2">
+                    <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <a href={export_company_invoices_path(company.id)} className="flex h-11 items-center gap-2">
+                        <Download className="size-4" />
+                        Download CSV
+                      </a>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </div>
+          ) : user.roles.worker ? (
+            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+              <Link href="/invoices/new" inert={!canSubmitInvoices}>
+                <Plus className="size-4" />
+                New invoice
+              </Link>
+            </Button>
           ) : null
         }
       />
@@ -395,16 +508,6 @@ export default function InvoicesPage() {
               </AlertDescription>
             </Alert>
           ) : null}
-
-          {!data.every(taxRequirementsMet) && (
-            <Alert className="mx-4" variant="destructive">
-              <AlertTriangle className="size-4" />
-              <AlertTitle>Missing tax information.</AlertTitle>
-              <AlertDescription>
-                Some invoices are not payable until contractors provide tax information.
-              </AlertDescription>
-            </Alert>
-          )}
         </>
       ) : null}
 
@@ -413,52 +516,40 @@ export default function InvoicesPage() {
       {isLoading ? (
         <TableSkeleton columns={6} />
       ) : data.length > 0 ? (
-        <>
-          <div className="mx-4 flex justify-between md:hidden">
-            <h2 className="text-xl font-bold">
-              {data.length} {pluralize("invoice", data.length)}
-            </h2>
-            <Checkbox
-              checked={table.getIsAllRowsSelected()}
-              label="Select all"
-              onCheckedChange={(checked) => table.toggleAllRowsSelected(checked === true)}
+        <DataTable
+          table={table}
+          onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
+          searchColumn={user.roles.administrator ? "billFrom" : undefined}
+          tabsColumn="status"
+          actions={
+            user.roles.administrator && !isMobile ? (
+              <Button variant="outline" size="small" asChild>
+                <a href={export_company_invoices_path(company.id)}>
+                  <Download className="size-4" />
+                  Download CSV
+                </a>
+              </Button>
+            ) : null
+          }
+          selectionActions={(selectedInvoices) => (
+            <SelectionActions
+              selectedItems={selectedInvoices}
+              config={actionConfig}
+              availableActions={availableActions}
+              onAction={handleInvoiceAction}
             />
-          </div>
-
-          <DataTable
-            table={table}
-            onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
-            searchColumn={user.roles.administrator ? "billFrom" : undefined}
-            actions={
-              user.roles.administrator ? (
-                <Button variant="outline" size="small" asChild>
-                  <a href={export_company_invoices_path(company.id)}>
-                    <Download className="size-4" />
-                    Download CSV
-                  </a>
-                </Button>
-              ) : null
-            }
-            selectionActions={(selectedRows) => (
-              <SelectionActions
-                selectedItems={selectedRows}
-                config={actionConfig}
-                actionContext={actionContext}
-                onAction={handleInvoiceAction}
-              />
-            )}
-            contextMenuContent={({ row, selectedRows, onClearSelection }) => (
-              <ContextMenuActions
-                item={row}
-                selectedItems={selectedRows}
-                config={actionConfig}
-                actionContext={actionContext}
-                onAction={handleInvoiceAction}
-                onClearSelection={onClearSelection}
-              />
-            )}
-          />
-        </>
+          )}
+          contextMenuContent={({ row, selectedRows, onClearSelection }) => (
+            <ContextMenuActions
+              item={row}
+              selectedItems={selectedRows}
+              config={actionConfig}
+              actionContext={actionContext}
+              onAction={handleInvoiceAction}
+              onClearSelection={onClearSelection}
+            />
+          )}
+        />
       ) : (
         <div className="mx-4">
           <Placeholder icon={CircleCheck}>No invoices to display.</Placeholder>
@@ -538,6 +629,16 @@ export default function InvoicesPage() {
         }}
         invoices={selectedDeletableInvoices}
       />
+      {isMobile ? (
+        <InvoiceBulkActionsBar
+          availableActions={availableActions}
+          selectedInvoices={selectedInvoices}
+          onClose={() => {
+            table.toggleAllRowsSelected(false);
+          }}
+          onAction={handleInvoiceAction}
+        />
+      ) : null}
     </>
   );
 }
@@ -558,15 +659,17 @@ const TasksModal = ({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="w-110 p-6">
+      <DialogContent className="md:w-110">
         <DialogHeader>
-          <DialogTitle>{invoice.billFrom}</DialogTitle>
+          <DialogTitle className="max-md:pb-4 max-md:text-base max-md:leading-5 max-md:font-medium">
+            {invoice.billFrom}
+          </DialogTitle>
         </DialogHeader>
         <section>
           <StatusDetails invoice={invoice} />
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-            <Alert className="mx-4" variant="warning">
+            <Alert className="mx-4 max-md:mb-4" variant="warning">
               <CircleAlert />
               <AlertDescription>
                 This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
@@ -574,46 +677,121 @@ const TasksModal = ({
               </AlertDescription>
             </Alert>
           ) : null}
-          <header className="flex items-center justify-between gap-4 pt-4">
-            <h3>Invoice details</h3>
-            <Button variant="outline" size="small" asChild>
+          <header className="flex items-center justify-between gap-4 md:pt-4">
+            <h3 className="text-base max-md:leading-5">Invoice details</h3>
+            <Button variant="outline" size="small" asChild className="max-md:font-regular max-md:h-7.5 max-md:text-sm">
               <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
             </Button>
           </header>
           <Separator />
-          <Card className="border-none">
-            <CardContent className="p-0">
-              <div className="flex justify-between gap-2">
-                <div>Net amount in cash</div>
-                <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
-              </div>
-              <Separator />
-              {invoice.equityAmountInCents ? (
-                <>
-                  <div className="flex justify-between gap-2">
-                    <div>Swapped for equity ({invoice.equityPercentage}%)</div>
-                    <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
-                  </div>
-                  <Separator />
-                </>
-              ) : null}
-              <div className="flex justify-between gap-2 pb-4 font-medium">
-                <div>Payout total</div>
-                <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-              </div>
-            </CardContent>
-          </Card>
+          <div>
+            <div className="flex justify-between gap-2 max-md:leading-5">
+              <div>Net amount in cash</div>
+              <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
+            </div>
+            <Separator />
+            {invoice.equityAmountInCents ? (
+              <>
+                <div className="flex justify-between gap-2 max-md:leading-5">
+                  <div>Swapped for equity ({invoice.equityPercentage}%)</div>
+                  <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
+                </div>
+                <Separator />
+              </>
+            ) : null}
+            <div className="flex justify-between gap-2 pb-4 font-medium">
+              <div>Payout total</div>
+              <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
+            </div>
+          </div>
         </section>
         {isActionable(invoice) ? (
           <DialogFooter>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" onClick={onReject}>
+              <Button variant="outline" onClick={onReject} className="max-md:h-9 max-md:text-sm">
                 Reject
               </Button>
-              <ApproveButton invoice={invoice} onApprove={onClose} />
+              <ApproveButton invoice={invoice} onApprove={onClose} className="max-md:h-9 max-md:text-sm" />
             </div>
           </DialogFooter>
         ) : null}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const InvoiceBulkActionsBar = ({
+  selectedInvoices,
+  onClose,
+  availableActions,
+  onAction,
+}: {
+  selectedInvoices: Invoice[];
+  onClose: () => void;
+  availableActions: AvailableActions<Invoice>[];
+  onAction: (actionId: string, items: Invoice[]) => void;
+}) => {
+  const [visibleInvoices, setVisibleInvoices] = useState<Invoice[]>([]);
+  const [visibleActions, setVisibleActions] = useState<AvailableActions<Invoice>[]>([]);
+
+  useEffect(() => {
+    const isOpen = selectedInvoices.length > 0;
+    if (isOpen) {
+      setVisibleInvoices(selectedInvoices);
+      setVisibleActions(availableActions);
+    }
+  }, [selectedInvoices, availableActions]);
+
+  const rowsSelected = visibleInvoices.length;
+  const rejectAction = visibleActions.find((action) => action.key === "reject");
+  const approveAction = visibleActions.find((action) => action.key === "approve");
+  const deleteAction = visibleActions.find((action) => action.key === "delete");
+
+  return (
+    <Dialog open={selectedInvoices.length > 0} modal={false}>
+      <DialogContent className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Selected invoices</DialogTitle>
+        </DialogHeader>
+        <div className="flex gap-2 p-2">
+          <Button
+            variant="outline"
+            className="border-muted flex h-9 items-center gap-2 rounded-lg border border-dashed text-sm font-medium hover:bg-white"
+            onClick={onClose}
+          >
+            <span className="tabular-nums">{rowsSelected}</span> selected
+            <X className="size-4" />
+          </Button>
+          {rejectAction ? (
+            <Button
+              variant="outline"
+              className="flex h-9 items-center gap-2 text-sm"
+              onClick={() => rejectAction.action && onAction(rejectAction.action, selectedInvoices)}
+            >
+              <Ban className="size-3.5" strokeWidth={2.5} />
+              Reject
+            </Button>
+          ) : null}
+          {approveAction ? (
+            <Button
+              variant="primary"
+              className="flex h-9 items-center gap-2 border-none text-sm"
+              onClick={() => approveAction.action && onAction(approveAction.action, selectedInvoices)}
+            >
+              <CircleCheckBig className="size-3.5" strokeWidth={2.5} />
+              Approve
+            </Button>
+          ) : null}
+          {deleteAction ? (
+            <Button
+              variant="outline"
+              className="flex h-9 items-center"
+              onClick={() => deleteAction.action && onAction(deleteAction.action, selectedInvoices)}
+            >
+              <Trash2 className="size-3.5" strokeWidth={2.5} />
+            </Button>
+          ) : null}
+        </div>
       </DialogContent>
     </Dialog>
   );

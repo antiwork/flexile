@@ -108,6 +108,19 @@ export const Editor = ({
     commands.run();
   };
 
+  const handleInsertLink = () => {
+    if (!addingLink?.url) return;
+    editor?.chain().focus().extendMarkRange("link").setLink({ href: addingLink.url }).run();
+    setAddingLink(null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleInsertLink();
+    }
+  };
+
   return (
     <div
       {...props}
@@ -147,6 +160,7 @@ export const Editor = ({
               id="link-url"
               value={addingLink?.url ?? ""}
               onChange={(e) => setAddingLink({ url: e.target.value })}
+              onKeyDown={handleKeyDown}
               type="url"
               placeholder="https://example.com"
               required
@@ -163,14 +177,7 @@ export const Editor = ({
             >
               {currentLink ? "Unlink" : "Cancel"}
             </Button>
-            <Button
-              type="submit"
-              onClick={() => {
-                if (!addingLink?.url) return;
-                editor?.chain().focus().extendMarkRange("link").setLink({ href: addingLink.url }).run();
-                setAddingLink(null);
-              }}
-            >
+            <Button type="submit" onClick={handleInsertLink}>
               Insert
             </Button>
           </DialogFooter>

@@ -56,7 +56,6 @@ class Company < ApplicationRecord
     end
   end
   has_many :company_investors
-  has_many :company_invite_links, dependent: :destroy # dependent: :destroy is needed to clean up invite links when a company is deleted
 
   has_many :investors, through: :company_investors, source: :user
   has_many :company_updates
@@ -218,6 +217,16 @@ class Company < ApplicationRecord
     return 0 if checklist_items(user).empty?
 
     (completed_count.to_f / checklist_items(user).size * 100).round
+  end
+
+  def invite_link
+    super || reset_invite_link!
+  end
+
+  def reset_invite_link!
+    invite_link = SecureRandom.base58(16)
+    update!(invite_link:)
+    invite_link
   end
 
   private

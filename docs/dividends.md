@@ -101,13 +101,7 @@ rescue => e
 end
 ```
 
-This will also send out the dividend issued email automatically.
-
-To send emails manually if needed:
-
-```ruby
-dividend_round.send_dividend_emails
-```
+Note: This will also send out the dividend issued email.
 
 #### Resending Invitations
 
@@ -141,7 +135,7 @@ This is only necessary if investors are not imported with investment and dividen
 company = Company.find(5)
 service = DividendComputationGeneration.new(
   company,
-  amount_in_usd: 5_346_877,
+  amount_in_usd: 2_570_000,
   return_of_capital: false
 )
 service.process
@@ -152,10 +146,6 @@ puts service.instance_variable_get(:@preferred_dividend_total) + service.instanc
 ```
 
 #### Generate Dividends from Computation
-
-```ruby
-DividendComputation.generate_dividends
-```
 
 #### Validate the Data
 
@@ -168,22 +158,26 @@ attached = {
 }
 
 AdminMailer.custom(
-  to: ["support@flexile.com"],
+  to: ["sahil.lavingia@gmail.com", "howard@antiwork.com"],
   subject: "Test",
   body: "Attached",
   attached: attached
 ).deliver_now
 ```
 
-> Note: After generating dividends, call `dividend_round.send_dividend_emails` to send emails to investors.
-
 ## Processing Dividends
+
+```ruby
+dividend_computation.generate_dividends
+```
+
+> Note: After generating dividends, call `dividend_round.send_dividend_emails` to send emails to investors.
 
 ### Calculating Fees
 
 ```ruby
-company = Company.find(1823)
-dividends = company.dividends
+company = Company.find(5)
+dividends = company.dividend_rounds.last.dividends
 fees = dividends.map do |dividend|
   calculated_fee = ((dividend.total_amount_in_cents.to_d * 2.9.to_d/100.to_d) + 30.to_d).round.to_i
   [30_00, calculated_fee].min
@@ -196,14 +190,14 @@ fees.sum / 100.0
 #### Pull Funds via ACH using Stripe
 
 ```ruby
-company = Company.find(2699)
+company = Company.find(5)
 stripe_setup_intent = company.bank_account.stripe_setup_intent
 intent = Stripe::PaymentIntent.create({
   payment_method_types: ["us_bank_account"],
   payment_method: stripe_setup_intent.payment_method,
   customer: stripe_setup_intent.customer,
   confirm: true,
-  amount: 695_009_30, # set manually
+  amount: 2_600_000, # set manually
   currency: "USD",
   expand: ["latest_charge"],
   capture_method: "automatic",

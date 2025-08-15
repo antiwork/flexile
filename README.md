@@ -29,7 +29,14 @@ You can start the local app using the [`bin/dev` script](bin/dev) - or feel free
 
 Once the local services are up and running, the application will be available at `https://flexile.dev`
 
-Check [the seeds](backend/config/data/seed_templates/gumroad.json) for default data created during setup.
+**Development shortcuts**:
+
+- If `ENABLE_DEFAULT_OTP=true` is set in your `.env`, you can use `000000` as the OTP for logging in or signing up.
+- Use these pre-seeded accounts (password: `password` for all):
+  - **Admin**: `hi+sahil@example.com` (Primary Administrator)
+  - **Contractor**: `hi+sharang@example.com` (Software Engineer)
+  - **Investor**: `hi+chris@example.com` (Investor)
+  - **More accounts**: See [the seed data](backend/config/data/seed_templates/gumroad.json) for additional test users (emails are always hi+firstname@example.com)
 
 ## Common Issues / Debugging
 
@@ -93,10 +100,23 @@ pnpm playwright test
    WISE_PROFILE_ID=your_membership_number_here
    WISE_API_KEY=your_full_api_token_here
    ```
+   </details>
 
-**Note**: Keep credentials secure and never commit to version control.
+<details> 
+<summary>Resend</summary>
+
+1. Create account at [resend.com](https://resend.com) and complete email verification
+2. Navigate to **API Keys** in the dashboard
+3. Click **Create API Key**, give it a name (e.g., "Flexile Development")
+4. Copy the API key immediately (starts with re\_)
+5. Add to `.env`:
+   ```
+   RESEND_API_KEY=re_your_api_key_here
+   ```
 
 </details>
+
+**Note**: Keep credentials secure and never commit to version control.
 
 ## License
 

@@ -457,7 +457,7 @@ const DetailsTab = ({
   const [contractor] = trpc.contractors.get.useSuspenseQuery({ companyId: company.id, userId });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: contractor,
+    defaultValues: { ...contractor, role: contractor.role ?? "" },
     disabled: !!contractor.endedAt,
   });
   const payRateInSubunits = form.watch("payRateInSubunits");

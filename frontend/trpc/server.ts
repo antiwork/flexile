@@ -5,6 +5,7 @@ import { companiesRouter } from "@/trpc/routes/companies";
 import { equityCalculationsRouter } from "@/trpc/routes/equityCalculations";
 import { filesRouter } from "@/trpc/routes/files";
 import { investorEntitiesRouter } from "@/trpc/routes/investorEntities";
+import { administratorsRouter } from "./routes/administrators";
 import { companyInviteLinksRouter } from "./routes/companyInviteLinks";
 import { companyUpdatesRouter } from "./routes/companyUpdates";
 import { consolidatedInvoicesRouter } from "./routes/consolidatedInvoices";
@@ -54,6 +55,7 @@ export const appRouter = createRouter({
   investorEntities: investorEntitiesRouter,
   equityCalculations: equityCalculationsRouter,
   lawyers: lawyersRouter,
+  administrators: administratorsRouter,
   companyInviteLinks: companyInviteLinksRouter,
   support: supportRouter,
 });

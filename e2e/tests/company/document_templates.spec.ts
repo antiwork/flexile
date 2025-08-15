@@ -43,8 +43,7 @@ test.describe("Document templates", () => {
       userId: adminUser.id,
     });
 
-    await login(page, adminUser);
-    await page.goto("/documents");
+    await login(page, adminUser, "/documents");
     await page.getByRole("button", { name: "Edit templates" }).click();
     await withinModal(
       async (modal) => {
