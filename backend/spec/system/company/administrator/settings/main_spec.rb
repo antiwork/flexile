@@ -41,7 +41,7 @@ RSpec.describe "Company Settings" do
     expect(company.logo_url).to end_with "image.png"
   end
 
-  context "when quickbooks flag is enabled", :billy do
+  context "QuickBooks integration", :billy do
     let(:client_id) { GlobalConfig.get("QUICKBOOKS_CLIENT_ID") }
     let(:code) { "test_code" }
     let(:state) { Base64.strict_encode64("#{company.external_id}:#{company.name}") }
@@ -51,8 +51,6 @@ RSpec.describe "Company Settings" do
     let(:authentication_token) { Base64.strict_encode64("#{client_id}:#{GlobalConfig.get("QUICKBOOKS_CLIENT_SECRET")}") }
     let!(:travel_expense_category) { create(:expense_category, company:, name: "Travel") }
     let!(:meals_expense_category) { create(:expense_category, company:, name: "Meals") }
-
-    before { Flipper.enable(:quickbooks, company) }
 
     context "when no integration is set up" do
       before do
