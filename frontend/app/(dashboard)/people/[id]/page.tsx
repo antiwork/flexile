@@ -221,7 +221,11 @@ export default function ContractorPage() {
             </Button>
             <MutationButton
               mutation={endContract}
-              param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate?.toString() ?? "" }}
+              param={{
+                companyId: company.id,
+                id: contractor?.id ?? "",
+                endDate: endDate?.toString() ?? "",
+              }}
             >
               Yes, end contract
             </MutationButton>
@@ -479,7 +483,7 @@ const DetailsTab = ({
   });
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6 p-4">
       <Form {...form}>
         <form onSubmit={(e) => void submit(e)} className="grid gap-4">
           <h2 className="text-xl font-bold">Contract</h2>

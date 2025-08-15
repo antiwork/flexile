@@ -3,7 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import { useQueryClient } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { formatISO } from "date-fns";
 import { LinkIcon, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,7 +33,7 @@ import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
-import { formatDate } from "@/utils/time";
+import { formatDate, formatServerDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
@@ -88,7 +87,7 @@ export default function PeoplePage() {
     saveMutation.mutate({
       companyId: company.id,
       ...values,
-      startedAt: formatISO(values.startDate.toDate(getLocalTimeZone())),
+      startedAt: formatServerDate(values.startDate.toDate(getLocalTimeZone())),
     });
   });
 

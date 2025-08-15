@@ -30,11 +30,19 @@ export const formatMonth = (date: Date | string) => formatDateTime(date, { month
  * the server should send a raw date string to ignore timezones (e.g "2024-01-03").
  * On the client, we convert it to UTC to avoid timezone issues.
  */
-export const formatDate = (date: Date | string, options?: { time?: boolean }) =>
-  formatDateTime(typeof date === "string" ? parseISO(date) : utc(date), {
-    dateStyle: "medium",
-    timeStyle: options?.time ? "short" : undefined,
-  });
+export const formatDate = (date: Date | string, options?: { time?: boolean }) => {
+  if (options?.time) {
+    // When time is requested, preserve time information. Treat Date as UTC to avoid client TZ drift.
+    return formatDateTime(typeof date === "string" ? parseISO(date) : utc(date), {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  }
+
+  // For date-only display, normalize to a YYYY-MM-DD string in UTC and then format as local date.
+  const normalizedDateOnly = formatServerDate(typeof date === "string" ? parseISO(date) : date);
+  return formatDateTime(normalizedDateOnly, { dateStyle: "medium" });
+};
 
 const formatDateTime = (date: Date | string, options: Intl.DateTimeFormatOptions = {}) =>
   new Intl.DateTimeFormat(undefined, options).format(typeof date === "string" ? parseISO(date) : date);
