@@ -10,6 +10,7 @@ import DividendStatusIndicator from "@/app/(dashboard)/equity/DividendStatusIndi
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -193,11 +194,9 @@ const DividendComputation = ({ id }: { id: string }) => {
 };
 
 const DistributionDraftNotice = () => (
-  <div className="mb-4 flex items-center gap-2 bg-blue-50 px-4 py-4">
-    <Info className="size-3.5 flex-shrink-0 text-blue-600" />
-    <p className="text-sm">
-      <strong>Dividend distribution is still a draft.</strong> Shareholders won't be notified or paid until you click{" "}
-      <strong>Finalize distribution.</strong>
-    </p>
-  </div>
+  <Alert className="mx-4">
+    <Info className="size-4" />
+    <AlertTitle>Dividend distribution is still a draft.</AlertTitle>
+    <AlertDescription>Shareholders won't be notified or paid until you click finalize distribution.</AlertDescription>
+  </Alert>
 );
