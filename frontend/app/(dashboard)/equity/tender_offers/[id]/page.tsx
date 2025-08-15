@@ -194,9 +194,9 @@ export default function BuybackView() {
                 ACKNOWLEDGE AND AGREE TO THE FOREGOING RESTRICTIONS.
               </div>
               <Separator />
-              <div className="flex h-96 flex-col gap-4">
+              <article aria-label="Letter of transmittal" className="flex flex-col gap-4">
                 <SignForm content={data.letterOfTransmittal} signed={signed} onSign={() => setSigned(true)} />
-              </div>
+              </article>
             </div>
 
             <Separator />

@@ -16,7 +16,7 @@ export default function SignForm({
   return (
     <>
       <div className="border-muted my-2 max-h-100 overflow-y-auto rounded-md border px-8 py-4">
-        <RichText content={content} />
+        <RichText content={content} className="max-w-none" />
       </div>
       <div className="grid gap-2">
         <h3>Your signature</h3>

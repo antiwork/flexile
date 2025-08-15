@@ -44,31 +44,26 @@ export const Editor = ({
   onChange,
   className,
   id,
-  "aria-label": ariaLabel,
   toolbarItems: propToolbarItems,
   ...props
 }: {
-  value: string | null;
-  onChange: (value: string) => void;
+  value: string | null | undefined;
+  onChange: (value: string | null) => void;
   className?: string;
   toolbarItems?: ToolbarItem[];
   id?: string;
 } & React.ComponentProps<"div">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
 
-  const uid = React.useId();
-  const componentId = id ?? uid;
-
   const editor = useEditor({
     extensions: richTextExtensions,
-    content: value,
+    content: value ?? "",
     editable: true,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    onUpdate: ({ editor }) => onChange(editor.isEmpty ? null : editor.getHTML()),
     editorProps: {
       attributes: {
-        id: componentId,
+        ...(id ? { id } : {}),
         class: cn(className, "prose p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none"),
-        "aria-label": ariaLabel ?? "",
       },
     },
     immediatelyRender: false,
@@ -76,7 +71,7 @@ export const Editor = ({
 
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value, false);
+      editor.commands.setContent(value ?? "", false);
     }
   }, [value, editor]);
 

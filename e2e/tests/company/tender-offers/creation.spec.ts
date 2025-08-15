@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
-import { fillDatePicker } from "@test/helpers";
+import { fillDatePicker, findRichTextEditor } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { addDays, format } from "date-fns";
@@ -39,7 +39,7 @@ test.describe("Buyback creation", () => {
     await page.getByLabel("Document package").setInputFiles("e2e/samples/sample.zip");
 
     const letterOfTransmittal = faker.lorem.paragraphs();
-    await page.getByLabel("Letter of transmittal").fill(letterOfTransmittal);
+    await findRichTextEditor(page, "Letter of transmittal").fill(letterOfTransmittal);
 
     await page.getByRole("button", { name: "Create buyback" }).click();
     await expect(page.getByText("There are no buybacks yet.")).toBeVisible();
@@ -51,7 +51,7 @@ test.describe("Buyback creation", () => {
       })
       .click();
 
-    await expect(page.getByRole("region", { name: "Letter of transmittal" })).toContainText(letterOfTransmittal, {
+    await expect(page.getByRole("article", { name: "Letter of transmittal" })).toContainText(letterOfTransmittal, {
       useInnerText: true,
     });
   });
