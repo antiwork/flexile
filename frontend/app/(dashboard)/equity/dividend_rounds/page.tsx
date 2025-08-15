@@ -145,14 +145,6 @@ export default function DividendRounds() {
     enableGlobalFilter: false,
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    initialState: {
-      sorting: [
-        {
-          id: "dividendsIssuanceDate",
-          desc: true,
-        },
-      ],
-    },
   });
 
   return (
