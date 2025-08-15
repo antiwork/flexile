@@ -9,7 +9,14 @@ class CreateDocumentAttachmentJob
     document = Document.find(document_id)
     html = document.text_content
     return if html.blank?
-    pdf = CreatePdf.new(body_html: sanitize(html)).perform
+
+    sanitized = sanitize(html)
+    return if sanitized.blank?
+
+    CreatePdf.new(body_html: sanitized).perform
+    return if sanitized.blank?
+    pdf = CreatePdf.new(body_html: sanitized).perform
+
     document.attachments.each { |a| a.purge if a.filename.to_s == "#{document.name.parameterize}.pdf" }
     document.attachments.attach(
       io: StringIO.new(pdf),

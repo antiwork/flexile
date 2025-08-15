@@ -67,6 +67,7 @@ export const NewDocument = () => {
           name: title,
           text_content: content,
           recipient,
+          signed,
         };
 
         await request({ url, method: "POST", accept: "json", jsonData, assertOk: true });

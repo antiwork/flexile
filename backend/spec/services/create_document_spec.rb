@@ -13,6 +13,7 @@ RSpec.describe CreateDocument do
       expect(result[:document].name).to eq("Doc")
       expect(result[:document].text_content).to eq("abc")
       expect(result[:document].year).to eq(Date.current.year)
+      expect(CreateDocumentAttachmentJob).to have_enqueued_sidekiq_job(result[:document].id)
     end
   end
 

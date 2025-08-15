@@ -45,6 +45,6 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
     end
 
     def document_params
-      params.permit(:name, :document_type, :text_content, :year, :attachment, :signed, :recipient)
+      params.permit(:name, :document_type, :text_content, :attachment, :signed, :recipient)
     end
 end

@@ -48,8 +48,9 @@ class CreateDocument
     attr_reader :company, :params, :user
 
     def document_params
-      params[:document_type] = params[:document_type].to_i if params.key?(:document_type)
-      params.to_h.slice(:name, :document_type, :text_content, :attachment, :signed, :recipient).compact
+      result = params.to_h.dup
+      result[:document_type] = result[:document_type].to_i if result.key?(:document_type)
+      result.slice(:name, :document_type, :text_content, :attachment).compact
     end
 
     def is_param_keys_valid?

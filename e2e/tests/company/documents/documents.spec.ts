@@ -125,7 +125,11 @@ test.describe("Documents sign functionality", () => {
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
 
     await expect(page.getByRole("row").filter({ hasText: document1.name })).toBeVisible();
-    await page.getByRole("row", { name: document1.name }).getByRole("button", { name: "Review and sign" }).click();
+    await page
+      .getByRole("row")
+      .filter({ hasText: document1.name })
+      .getByRole("button", { name: "Review and sign" })
+      .click();
 
     await expect(page.getByRole("heading", { name: "Sign Document" })).toBeVisible();
     await expect(page.getByText("This is a test document.")).toBeVisible();

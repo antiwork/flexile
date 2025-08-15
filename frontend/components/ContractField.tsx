@@ -1,6 +1,5 @@
 import { CloudUpload, PencilLine, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Label } from "react-aria-components";
 import { useFormContext } from "react-hook-form";
 import { z } from "zod";
 import { Editor as RichTextEditor } from "@/components/RichText";
@@ -9,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentCompany, useCurrentUser } from "@/global";
