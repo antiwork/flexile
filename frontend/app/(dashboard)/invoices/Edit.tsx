@@ -92,6 +92,7 @@ type Data = z.infer<typeof dataSchema>;
 
 type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: string[] | null };
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
+type InvoiceFormAttachment = Data["invoice"]["attachment"] & { blob?: File | null };
 
 const Edit = () => {
   const user = useCurrentUser();
@@ -127,9 +128,7 @@ const Edit = () => {
   );
   const invoiceYear = issueDate.year;
   const [notes, setNotes] = useState(data.invoice.notes ?? "");
-  const [attachment, setAttachment] = useState<{ name: string; url: string; blob?: File } | null>(
-    data.invoice.attachment ?? null,
-  );
+  const [attachment, setAttachment] = useState<InvoiceFormAttachment | null>(data.invoice.attachment ?? null);
   const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
     if (data.invoice.line_items.length) return List(data.invoice.line_items);
 
