@@ -4,8 +4,9 @@ RSpec.describe Internal::Companies::DividendComputationsController do
   let(:company) { create(:company, equity_enabled: true) }
   let(:admin_user) { create(:user) }
   let(:company_administrator) { create(:company_administrator, company: company, user: admin_user) }
+
   let(:dividend_computation) { create(:dividend_computation, company: company) }
-  let(:investor_user) { create(:user, legal_name: "John Doe") }
+  let(:investor_user) { create(:user, legal_name: "Matthew Smith") }
   let(:company_investor) { create(:company_investor, user: investor_user, company: company) }
   let(:dividend_computation_output) do
     create(:dividend_computation_output,
@@ -81,7 +82,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(json_response["id"]).to eq(dividend_computation.id)
       expect(json_response["computation_outputs"]).to be_present
       computation_output = json_response["computation_outputs"].first
-      expect(computation_output["investor_name"]).to eq("John Doe")
+      expect(computation_output["investor_name"]).to eq("Matthew Smith")
       expect(computation_output["company_investor_id"]).to eq(company_investor.id)
       expect(computation_output["investor_external_id"]).to eq(investor_user.external_id)
       expect(computation_output["total_amount"].to_f).to eq(1000.0)
