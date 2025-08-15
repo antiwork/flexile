@@ -14,7 +14,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
-import RichText from "@/components/RichText";
+import SignForm from "@/components/SignForm";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -194,27 +194,8 @@ export default function BuybackView() {
                 ACKNOWLEDGE AND AGREE TO THE FOREGOING RESTRICTIONS.
               </div>
               <Separator />
-              <div className="flex flex-col gap-4">
-                <div
-                  role="region"
-                  aria-label="Letter of transmittal"
-                  className="h-96 overflow-y-auto rounded-md border p-4"
-                >
-                  <RichText content={data.letterOfTransmittal} className="max-w-none" />
-                </div>
-                <div className="grid gap-3">
-                  {signed ? (
-                    <div className="font-signature border-b text-3xl">{user.legalName}</div>
-                  ) : (
-                    <Button variant="dashed" onClick={() => setSigned(true)}>
-                      Add your signature
-                    </Button>
-                  )}
-                  <p className="text-gray-500">
-                    By clicking the button above, you agree to using an electronic representation of your signature for
-                    all purposes within Flexile, just the same as a pen-and-paper signature.
-                  </p>
-                </div>
+              <div className="flex h-96 flex-col gap-4">
+                <SignForm content={data.letterOfTransmittal} signed={signed} onSign={() => setSigned(true)} />
               </div>
             </div>
 
