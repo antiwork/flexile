@@ -265,9 +265,6 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.0.14)
-      typescript:
-        specifier: ~5.8.0
-        version: 5.8.2
       zod:
         specifier: ^3.24.2
         version: 3.24.2
@@ -356,6 +353,9 @@ importers:
       tailwindcss:
         specifier: ^4.0.0
         version: 4.0.14
+      typescript:
+        specifier: ~5.8.2
+        version: 5.8.2
       typescript-eslint:
         specifier: ^8.0.0
         version: 8.26.1(eslint@9.22.0(jiti@2.4.2))(typescript@5.8.2)

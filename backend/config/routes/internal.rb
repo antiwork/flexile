@@ -89,6 +89,33 @@ scope path: :internal, module: :internal do
     resources :dividends, only: [:show] do
       member do
         post :sign
+        post :mark_ready
+        post :retry_payment
+      end
+    end
+
+    resources :dividend_computations, only: [:index, :show, :create, :destroy] do
+      collection do
+        post :preview
+      end
+      member do
+        post :finalize
+        get :export_csv
+      end
+    end
+
+    resources :dividend_rounds, only: [] do
+      member do
+        get :payment_status
+        post :process_payments
+      end
+    end
+
+    resource :payment_accounts, only: [] do
+      collection do
+        get :balances
+        post :pull_funds
+        post :transfer_to_wise
       end
     end
   end

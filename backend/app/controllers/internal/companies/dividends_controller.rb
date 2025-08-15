@@ -27,4 +27,54 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
       head :no_content
     end
   end
+
+  def mark_ready
+    dividend = find_dividend_for_admin
+    authorize dividend, :update?
+    
+    # Mark dividend as ready for payment
+    dividend.update!(status: Dividend::ISSUED)
+    
+    render json: { 
+      success: true, 
+      dividend_id: dividend.id,
+      status: dividend.status
+    }
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Dividend not found" }, status: :not_found
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: "Failed to mark dividend ready: #{e.message}" }, status: :unprocessable_entity
+  end
+
+  def retry_payment
+    dividend = find_dividend_for_admin
+    authorize dividend, :update?
+    
+    # Reset failed dividend and retry payment
+    dividend.update!(status: Dividend::ISSUED, retained_reason: nil)
+    
+    # Queue the payment job for this specific investor
+    InvestorDividendsPaymentJob.perform_async(dividend.company_investor_id)
+    
+    render json: { 
+      success: true, 
+      dividend_id: dividend.id,
+      status: dividend.status,
+      message: "Payment retry queued"
+    }
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "Dividend not found" }, status: :not_found
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: "Failed to retry payment: #{e.message}" }, status: :unprocessable_entity
+  rescue StandardError => e
+    Rails.logger.error "Failed to retry payment for dividend #{params[:id]}: #{e.message}"
+    render json: { error: "Failed to retry payment" }, status: :internal_server_error
+  end
+
+  private
+
+  def find_dividend_for_admin
+    # For admin actions, find dividend by company, not company_investor
+    Current.company.dividends.find(params[:id])
+  end
 end

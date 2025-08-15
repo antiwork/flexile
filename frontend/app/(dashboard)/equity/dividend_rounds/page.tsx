@@ -1,50 +1,310 @@
 "use client";
-import { CircleCheck } from "lucide-react";
+import { CircleCheck, Plus, CreditCard, Users, Eye, MoreHorizontal, Calendar, DollarSign, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 
 type DividendRound = RouterOutput["dividendRounds"]["list"][number];
-const columnHelper = createColumnHelper<DividendRound>();
-const columns = [
-  columnHelper.accessor("issuedAt", {
-    header: "Issue date",
-    cell: (info) => (
-      <Link href={`/equity/dividend_rounds/${info.row.original.id}`} className="no-underline">
-        {formatDate(info.getValue())}
-      </Link>
-    ),
-  }),
-  columnHelper.simple("totalAmountInCents", "Dividend amount", formatMoneyFromCents, "numeric"),
-  columnHelper.simple("numberOfShareholders", "Shareholders", (value) => value.toLocaleString(), "numeric"),
-];
+type DividendComputation = RouterOutput["dividendComputations"]["list"][number];
+
+const getPaymentStatus = (round: DividendRound) => {
+  // Mock payment status calculation - in real app would come from API
+  if (!(round as any).readyForPayment) {
+    return { status: 'draft', label: 'Draft', color: 'gray' };
+  }
+  
+  const now = new Date();
+  const issueDate = new Date(round.issuedAt);
+  const daysSinceIssue = Math.floor((now.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (daysSinceIssue < 1) {
+    return { status: 'processing', label: 'Processing', color: 'blue' };
+  } else if (daysSinceIssue < 7) {
+    return { status: 'paying', label: 'Paying Out', color: 'yellow' };
+  } else {
+    return { status: 'completed', label: 'Completed', color: 'green' };
+  }
+};
+
+const computationColumnHelper = createColumnHelper<DividendComputation>();
+const roundColumnHelper = createColumnHelper<DividendRound>();
 
 export default function DividendRounds() {
   const company = useCurrentCompany();
+  const user = useCurrentUser();
   const router = useRouter();
-  const { data: dividendRounds = [], isLoading } = trpc.dividendRounds.list.useQuery({ companyId: company.id });
+  const { data: dividendRounds = [], isLoading: roundsLoading } = trpc.dividendRounds.list.useQuery({ companyId: company.id });
+  const { data: dividendComputations = [], isLoading: computationsLoading } = trpc.dividendComputations.list.useQuery({ companyId: company.id });
+  
+  const finalizeMutation = trpc.dividendComputations.finalize.useMutation({
+    onSuccess: () => {
+      // Refetch both lists after finalization
+      window.location.reload();
+    },
+  });
 
-  const table = useTable({ columns, data: dividendRounds });
+  const isLoading = roundsLoading || computationsLoading;
+  const canCreateDividends = user.roles.administrator || user.roles.lawyer;
+
+  // Columns for pending computations
+  const computationColumns = [
+    computationColumnHelper.accessor("created_at", {
+      header: "Created",
+      cell: (info) => (
+        <div className="flex items-center gap-3">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <div>
+            <Link 
+              href={`/equity/dividend_computations/${info.row.original.id}`} 
+              className="font-medium no-underline hover:underline"
+            >
+              {formatDate(info.getValue())}
+            </Link>
+            <div className="text-sm text-muted-foreground">
+              Computation #{info.row.original.id}
+            </div>
+          </div>
+        </div>
+      ),
+    }),
+    computationColumnHelper.accessor("total_amount_in_usd", {
+      header: "Amount",
+      cell: (info) => (
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <span className="font-medium">${info.getValue()?.toLocaleString()}</span>
+        </div>
+      ),
+    }),
+    computationColumnHelper.accessor("dividends_issuance_date", {
+      header: "Issuance Date",
+      cell: (info) => (
+        <div className="text-sm">
+          {formatDate(info.getValue())}
+        </div>
+      ),
+    }),
+    computationColumnHelper.display({
+      id: "status",
+      header: "Status",
+      cell: () => (
+        <Badge variant="outline" className="border-amber-200 text-amber-700 bg-amber-50">
+          Pending Review
+        </Badge>
+      ),
+    }),
+    computationColumnHelper.display({
+      id: "actions",
+      header: "",
+      cell: (info) => {
+        const computation = info.row.original;
+        
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => router.push(`/equity/dividend_computations/${computation.id}`)}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                Review Details
+              </DropdownMenuItem>
+              {canCreateDividends && (
+                <DropdownMenuItem
+                  onClick={() => finalizeMutation.mutate({ companyId: company.externalId, id: computation.id })}
+                  disabled={finalizeMutation.isPending}
+                >
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  {finalizeMutation.isPending ? "Finalizing..." : "Finalize & Create Dividends"}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    }),
+  ];
+
+  // Columns for finalized dividend rounds
+  const roundColumns = [
+    roundColumnHelper.accessor("issuedAt", {
+      header: "Issue Date",
+      cell: (info) => (
+        <div className="flex items-center gap-3">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <div>
+            <Link 
+              href={`/equity/dividend_rounds/${info.row.original.id}`} 
+              className="font-medium no-underline hover:underline"
+            >
+              {formatDate(info.getValue())}
+            </Link>
+            <div className="text-sm text-muted-foreground">
+              Round #{info.row.original.id}
+            </div>
+          </div>
+        </div>
+      ),
+    }),
+    roundColumnHelper.accessor("totalAmountInCents", {
+      header: "Amount",
+      cell: (info) => (
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <span className="font-medium">{formatMoneyFromCents(info.getValue())}</span>
+        </div>
+      ),
+    }),
+    roundColumnHelper.accessor("numberOfShareholders", {
+      header: "Recipients", 
+      cell: (info) => (
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <span>{info.getValue()?.toLocaleString()} shareholders</span>
+        </div>
+      ),
+    }),
+    roundColumnHelper.display({
+      id: "status",
+      header: "Status",
+      cell: (info) => {
+        const round = info.row.original;
+        const status = getPaymentStatus(round);
+        
+        return (
+          <Badge 
+            variant="outline" 
+            className={`
+              border-${status.color}-200 text-${status.color}-700 bg-${status.color}-50
+            `}
+          >
+            {status.label}
+          </Badge>
+        );
+      },
+    }),
+    roundColumnHelper.display({
+      id: "actions",
+      header: "",
+      cell: (info) => {
+        const round = info.row.original;
+        const canManagePayments = user.roles.administrator || user.roles.lawyer;
+        
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => router.push(`/equity/dividend_rounds/${round.id}`)}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                View Details
+              </DropdownMenuItem>
+              {canManagePayments && (
+                <DropdownMenuItem
+                  onClick={() => router.push(`/equity/dividend_rounds/${round.id}/payments`)}
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Manage Payments
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    }),
+  ];
+
+  const computationTable = useTable({ columns: computationColumns, data: dividendComputations });
+  const roundTable = useTable({ columns: roundColumns, data: dividendRounds });
+
+  if (isLoading) {
+    return (
+      <>
+        <div className="flex items-center justify-between">
+          <DashboardHeader title="Dividends" />
+          {canCreateDividends && (
+            <Button disabled className="mx-4">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Dividend
+            </Button>
+          )}
+        </div>
+        <TableSkeleton columns={5} />
+      </>
+    );
+  }
+
+  const hasAnyData = dividendComputations.length > 0 || dividendRounds.length > 0;
 
   return (
     <>
-      <DashboardHeader title="Dividends" />
-      {isLoading ? (
-        <TableSkeleton columns={3} />
-      ) : dividendRounds.length > 0 ? (
-        <DataTable table={table} onRowClicked={(row) => router.push(`/equity/dividend_rounds/${row.id}`)} />
-      ) : (
+      <div className="flex items-center justify-between">
+        <DashboardHeader title="Dividends" />
+        {canCreateDividends && (
+          <Button onClick={() => router.push("/equity/dividend_rounds/new")} className="mx-4">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Dividend
+          </Button>
+        )}
+      </div>
+
+      {!hasAnyData ? (
         <div className="mx-4">
-          <Placeholder icon={CircleCheck}>You have not issued any dividends yet.</Placeholder>
+          <Placeholder icon={CircleCheck}>You have not created any dividend computations yet.</Placeholder>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {/* Pending Computations Section */}
+          {dividendComputations.length > 0 && (
+            <div className="mx-4">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold">Pending Computations</h3>
+                <p className="text-sm text-muted-foreground">
+                  Review and finalize dividend computations to create dividend rounds
+                </p>
+              </div>
+              <DataTable table={computationTable} />
+            </div>
+          )}
+
+          {/* Finalized Dividend Rounds Section */}
+          {dividendRounds.length > 0 && (
+            <div className="mx-4">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold">Dividend Rounds</h3>
+                <p className="text-sm text-muted-foreground">
+                  Finalized dividend rounds with payment tracking
+                </p>
+              </div>
+              <DataTable table={roundTable} />
+            </div>
+          )}
         </div>
       )}
     </>

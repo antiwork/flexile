@@ -8,7 +8,7 @@ export const formatMoney = (
   new Intl.NumberFormat(undefined, {
     style: "currency",
     currency,
-    trailingZeroDisplay: "stripIfInteger",
+    // trailingZeroDisplay: "stripIfInteger", // Not supported in older TS libs
     currencyDisplay: "narrowSymbol",
     maximumFractionDigits: options?.precise ? 10 : undefined,
   }).format(price instanceof Decimal ? price.toString() : price);
