@@ -1,3 +1,4 @@
+"use client";
 import { CloudUpload, PencilLine, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";

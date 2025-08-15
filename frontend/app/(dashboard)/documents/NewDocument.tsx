@@ -15,10 +15,15 @@ import { DocumentType, trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_documents_path } from "@/utils/routes";
 
-const schema = contractSchema.extend({
-  recipient: z.string().optional(),
-  type: z.enum([DocumentType.ConsultingContract.toString(), DocumentType.EquityPlanContract.toString()]),
-});
+const schema = contractSchema
+  .extend({
+    recipient: z.string().optional(),
+    type: z.enum([DocumentType.ConsultingContract.toString(), DocumentType.EquityPlanContract.toString()]),
+  })
+  .refine((data) => !!data.attachment || !!data.content?.trim(), {
+    message: "Upload a file or write content",
+    path: ["attachment"],
+  });
 
 const documentTypeOptions = [
   { value: DocumentType.ConsultingContract.toString(), label: "Agreement" },
