@@ -452,7 +452,6 @@ const DetailsTab = ({
   setCancelModalOpen: (open: boolean) => void;
 }) => {
   const company = useCurrentCompany();
-  const router = useRouter();
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id: userId });
   const [contractor] = trpc.contractors.get.useSuspenseQuery({ companyId: company.id, userId });
   const form = useForm<z.infer<typeof formSchema>>({
@@ -463,11 +462,10 @@ const DetailsTab = ({
   const payRateInSubunits = form.watch("payRateInSubunits");
   const trpcUtils = trpc.useUtils();
   const updateContractor = trpc.contractors.update.useMutation({
-    onSuccess: async (data) => {
+    onSuccess: async () => {
       await trpcUtils.contractors.list.invalidate();
       await trpcUtils.documents.list.invalidate();
       await trpcUtils.contractors.get.invalidate({ userId });
-      return router.push(data.documentId ? `/documents?sign=${data.documentId}` : "/people");
     },
   });
   const submit = form.handleSubmit((values) =>

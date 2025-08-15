@@ -18,34 +18,6 @@ class UserPresenter
     @company_lawyer = current_context.company_lawyer
   end
 
-  def zip_code_label
-    country_code == "US" ? "Zip code" : "Postal code"
-  end
-
-  def personal_details_props
-    {
-      legal_name:,
-      preferred_name:,
-      country_code:,
-      citizenship_country_code: citizenship_country_code || country_code,
-    }
-  end
-
-  def billing_details_props
-    {
-      email:,
-      country: user.display_country,
-      country_code:,
-      state:,
-      city:,
-      zip_code:,
-      street_address:,
-      billing_entity_name:,
-      legal_type: business_entity? ? "BUSINESS" : "PRIVATE",
-      unsigned_document_id: documents.unsigned.where.not(docuseal_submission_id: nil).first&.id,
-    }
-  end
-
   def logged_in_user
     roles = {}
     has_documents = documents.joins(:signatures).not_consulting_contract.or(documents.unsigned).exists?
@@ -151,61 +123,6 @@ class UserPresenter
 
   private
     attr_reader :current_context, :user, :company, :company_administrator, :company_worker, :company_investor, :company_lawyer
-
-    def user_props
-      result = common_props.merge(
-        is_worker: company_worker.present?,
-        is_investor: company_investor.present?,
-        flags: {},
-      )
-      result[:has_documents] = documents.not_consulting_contract.or(documents.unsigned).exists?
-      if company_worker.present?
-        if company_worker.active?
-          result[:flags][:equity] = true if company.equity_enabled?
-        end
-      end
-      if company_investor.present?
-        result[:flags][:equity] ||= true if company.equity_enabled?
-        result[:flags][:option_exercising] = company.json_flag?("option_exercising")
-      end
-      result
-    end
-
-    def company_admin_props
-      common_props.deep_merge(common_admin_props).merge(
-        is_company_admin: true,
-        is_invited: !!user.invited_by&.company_worker_for?(company)
-      )
-    end
-
-    def company_lawyer_props
-      common_props.deep_merge(common_admin_props).merge(is_company_lawyer: true)
-    end
-
-    def common_admin_props
-      {
-        flags: {
-          equity: company.equity_enabled?,
-          company_updates: company.company_investors.exists?,
-        },
-      }
-    end
-
-    def common_props
-      {
-        company: company.present? ? {
-          id: company.external_id,
-          name: company.display_name,
-          logo_url: company.logo_url,
-        } : nil,
-        companies: user.all_companies.compact.map do
-          company_navigation_props(
-            company: _1,
-          )
-        end,
-        legal_name:,
-      }
-    end
 
     def company_navigation_props(company:)
       CompanyNavigationPresenter.new(user: current_context.user, company:).props

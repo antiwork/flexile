@@ -1,16 +1,14 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { formatISO } from "date-fns";
 import { LinkIcon, Plus, Users } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React, { type Dispatch, type SetStateAction, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import TemplateSelector from "@/app/(dashboard)/document_templates/TemplateSelector";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DatePicker from "@/components/DatePicker";
@@ -33,16 +31,18 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
-import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
+import { PayRateType, trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { company_workers_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
+import NewDocumentField, { schema as documentSchema } from "../documents/NewDocumentField";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 
-const schema = formSchema.extend({
+const schema = formSchema.merge(documentSchema).extend({
   email: z.string().email(),
   startDate: z.instanceof(CalendarDate),
-  documentTemplateId: z.string(),
   contractSignedElsewhere: z.boolean().default(false),
 });
 
@@ -51,7 +51,6 @@ const removeMailtoPrefix = (email: string) => email.replace(/^mailto:/iu, "");
 export default function PeoplePage() {
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
-  const router = useRouter();
   const { data: workers = [], isLoading, refetch } = trpc.contractors.list.useQuery({ companyId: company.id });
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
@@ -62,7 +61,6 @@ export default function PeoplePage() {
     values: {
       email: "",
       role: lastContractor?.role ?? "",
-      documentTemplateId: "",
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
       startDate: today(getLocalTimeZone()),
@@ -72,25 +70,43 @@ export default function PeoplePage() {
   });
 
   const trpcUtils = trpc.useUtils();
-  const saveMutation = trpc.contractors.create.useMutation({
-    onSuccess: async (data) => {
+  const saveMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof schema>) => {
+      const formData = new FormData();
+      formData.append("contractor[email]", values.email);
+      formData.append("contractor[started_at]", formatISO(values.startDate.toDate(getLocalTimeZone())));
+      formData.append("contractor[pay_rate_in_subunits]", values.payRateInSubunits?.toString() ?? "");
+      formData.append(
+        "contractor[pay_rate_type]",
+        values.payRateType === PayRateType.Hourly ? "hourly" : "project_based",
+      );
+      formData.append("contractor[role]", values.role);
+      formData.append("contractor[contract_signed_elsewhere]", values.contractSignedElsewhere.toString());
+      const contract = values.contractFile || values.contractText;
+      if (contract) formData.append("contractor[contract]", contract);
+
+      const response = await request({
+        url: company_workers_path(company.id),
+        method: "POST",
+        accept: "json",
+        assertOk: true,
+        formData,
+      });
+
+      if (!response.ok) {
+        const json = z.object({ error_message: z.string() }).parse(await response.json());
+        throw new Error(json.error_message);
+      }
+    },
+    onSuccess: async () => {
       await refetch();
       await trpcUtils.documents.list.invalidate();
       setShowInviteModal(false);
       form.reset();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-
-      if (data.documentId)
-        router.push(`/documents?${new URLSearchParams({ sign: data.documentId.toString(), next: "/people" })}`);
     },
   });
-  const submit = form.handleSubmit((values) => {
-    saveMutation.mutate({
-      companyId: company.id,
-      ...values,
-      startedAt: formatISO(values.startDate.toDate(getLocalTimeZone())),
-    });
-  });
+  const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   const isMobile = useIsMobile();
 
@@ -226,6 +242,12 @@ export default function PeoplePage() {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
+  const actionsPanel = (
+    <ActionPanel
+      showInviteLinkModal={() => setShowInviteLinkModal(true)}
+      showInviteModal={() => setShowInviteModal(true)}
+    />
+  );
 
   return (
     <>
@@ -321,13 +343,7 @@ export default function PeoplePage() {
                 )}
               />
 
-              {!form.watch("contractSignedElsewhere") && (
-                <FormField
-                  control={form.control}
-                  name="documentTemplateId"
-                  render={({ field }) => <TemplateSelector type={DocumentTemplateType.ConsultingContract} {...field} />}
-                />
-              )}
+              {!form.watch("contractSignedElsewhere") && <NewDocumentField />}
               <div className="flex flex-col items-end space-y-2">
                 <MutationStatusButton mutation={saveMutation} type="submit">
                   Send invite
@@ -344,28 +360,13 @@ export default function PeoplePage() {
 }
 
 const ActionPanel = ({
-  setShowInviteLinkModal,
-  setShowInviteModal,
+  showInviteLinkModal,
+  showInviteModal,
 }: {
-  setShowInviteLinkModal: Dispatch<SetStateAction<boolean>>;
-  setShowInviteModal: Dispatch<SetStateAction<boolean>>;
+  showInviteLinkModal: () => void;
+  showInviteModal: () => void;
 }) => {
   const isMobile = useIsMobile();
-  // Ensures smooth transition from Action Panel to Invite dialog, avoiding flicker from suspense query in TemplateSelector
-  const debounce = (fn: () => void, delay: number) => {
-    let timeout: NodeJS.Timeout;
-    return () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(fn, delay);
-    };
-  };
-  const handleInviteClick = () => {
-    setShowInviteModal(true);
-  };
-  const handleInviteLinkClick = () => {
-    setShowInviteLinkModal(true);
-  };
-  const handleMobileInviteClick = debounce(handleInviteClick, 200);
 
   return isMobile ? (
     <Dialog>
@@ -378,13 +379,13 @@ const ActionPanel = ({
         <DialogTitle>Invite people to your workspace</DialogTitle>
         <DialogDescription className="sr-only">Invite people to your workspace</DialogDescription>
         <div className="flex flex-col gap-3">
-          <DialogClose asChild onClick={handleInviteLinkClick}>
+          <DialogClose asChild onClick={showInviteLinkModal}>
             <Button size="small" variant="outline">
               <LinkIcon className="size-4" />
               Invite link
             </Button>
           </DialogClose>
-          <DialogClose asChild onClick={handleMobileInviteClick}>
+          <DialogClose asChild onClick={showInviteModal}>
             <Button size="small">
               <Plus className="size-4" />
               Add contractor
@@ -395,11 +396,11 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex flex-row gap-2">
-      <Button size="small" variant="outline" onClick={handleInviteLinkClick}>
+      <Button size="small" variant="outline" onClick={showInviteLinkModal}>
         <LinkIcon className="size-4" />
         Invite link
       </Button>
-      <Button size="small" onClick={handleInviteClick}>
+      <Button size="small" onClick={showInviteModal}>
         <Plus className="size-4" />
         Add contractor
       </Button>

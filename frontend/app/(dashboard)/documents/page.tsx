@@ -1,36 +1,36 @@
 "use client";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, FileTextIcon, Info, Pencil, PercentIcon, Plus } from "lucide-react";
+import { BriefcaseBusiness, CircleCheck, Download, Info, SendHorizontal } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import DocusealForm, { customCss } from "@/app/(dashboard)/documents/DocusealForm";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
+import RichText from "@/components/RichText";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
-import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
+import { DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
-import { useIsMobile } from "@/utils/use-mobile";
 
 type Document = RouterOutput["documents"]["list"][number];
-type SignableDocument = Document & { docusealSubmissionId: number };
+type SignableDocument = Document & { text: string };
 
 const typeLabels = {
   [DocumentType.ConsultingContract]: "Agreement",
@@ -38,11 +38,6 @@ const typeLabels = {
   [DocumentType.TaxDocument]: "Tax form",
   [DocumentType.ExerciseNotice]: "Exercise notice",
   [DocumentType.EquityPlanContract]: "Equity plan",
-};
-
-const templateTypeLabels = {
-  [DocumentTemplateType.ConsultingContract]: "Agreement",
-  [DocumentTemplateType.EquityPlanContract]: "Equity plan",
 };
 
 const columnFiltersSchema = z.array(z.object({ id: z.string(), value: filterValueSchema }));
@@ -80,118 +75,9 @@ function getStatus(document: Document): { variant: StatusVariant | undefined; na
   }
 }
 
-const EditTemplates = () => {
-  const isMobile = useIsMobile();
-  const company = useCurrentCompany();
-  const router = useRouter();
-
-  const [templates, { refetch: refetchTemplates }] = trpc.documents.templates.list.useSuspenseQuery({
-    companyId: company.id,
-  });
-  const filteredTemplates = useMemo(
-    () =>
-      company.id && templates.length > 1
-        ? templates.filter(
-            (template) => !template.generic || !templates.some((t) => !t.generic && t.type === template.type),
-          )
-        : templates,
-    [templates],
-  );
-  const createTemplate = trpc.documents.templates.create.useMutation({
-    onSuccess: (id) => {
-      void refetchTemplates();
-      router.push(`/document_templates/${id}`);
-    },
-  });
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        {isMobile ? (
-          <Button variant="floating-action">
-            <Plus />
-          </Button>
-        ) : (
-          <Button variant="outline" size="small">
-            <Pencil className="size-4" />
-            Edit templates
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit templates</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTemplates.map((template) => (
-                <TableRow key={template.id}>
-                  <TableCell>
-                    <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
-                      {template.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{templateTypeLabels[template.type]}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <h3 className="text-lg font-medium">Create a new template</h3>
-          <Alert className="mx-4">
-            <Info className="size-4" />
-            <AlertDescription>
-              By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
-              liabilities, or damages arising from or related to such documents. See our{" "}
-              <Link href="/terms" className="text-blue-600 hover:underline">
-                Terms of Service
-              </Link>{" "}
-              for more details.
-            </AlertDescription>
-          </Alert>
-          <div className="grid grid-cols-3 gap-4">
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Consulting agreement",
-                type: DocumentTemplateType.ConsultingContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <FileTextIcon className="size-6" />
-                <span className="mt-2 whitespace-normal">Consulting agreement</span>
-              </div>
-            </MutationButton>
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Equity grant contract",
-                type: DocumentTemplateType.EquityPlanContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <PercentIcon className="size-6" />
-                <span className="mt-2 whitespace-normal">Equity grant contract</span>
-              </div>
-            </MutationButton>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
+const inviteLawyerSchema = z.object({
+  email: z.string().email(),
+});
 
 export default function DocumentsPage() {
   const user = useCurrentUser();
@@ -410,17 +296,11 @@ export default function DocumentsPage() {
       <DashboardHeader
         title="Documents"
         headerActions={
-          isMobile ? (
-            table.options.enableRowSelection ? (
-              <button
-                className="text-blue-600"
-                onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
-              >
-                {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
-              </button>
-            ) : null
-          ) : isCompanyRepresentative && documents.length === 0 ? (
-            <EditTemplates />
+          user.roles.administrator && company.flags.includes("lawyers") ? (
+            <Button onClick={() => setShowInviteModal(true)}>
+              <BriefcaseBusiness className="size-4" />
+              Invite lawyer
+            </Button>
           ) : null
         }
       />
@@ -455,12 +335,7 @@ export default function DocumentsPage() {
         <TableSkeleton columns={6} />
       ) : documents.length > 0 ? (
         <>
-          <DataTable
-            table={table}
-            tabsColumn="status"
-            actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
-            {...(isCompanyRepresentative && { searchColumn: "signer" })}
-          />
+          <DataTable table={table} {...(isCompanyRepresentative && { searchColumn: "Signer" })} />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
         </>
       ) : (
@@ -474,14 +349,9 @@ export default function DocumentsPage() {
 }
 
 const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; onClose: () => void }) => {
-  const user = useCurrentUser();
   const company = useCurrentCompany();
   const [redirectUrl] = useQueryState("next");
   const router = useRouter();
-  const [{ slug, readonlyFields }] = trpc.documents.templates.getSubmitterSlug.useSuspenseQuery({
-    id: document.docusealSubmissionId,
-    companyId: company.id,
-  });
   const trpcUtils = trpc.useUtils();
   const queryClient = useQueryClient();
 
@@ -499,20 +369,24 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
-        <DocusealForm
-          src={`https://docuseal.com/s/${slug}`}
-          readonlyFields={readonlyFields}
-          customCss={customCss}
-          onComplete={() => {
-            signDocument.mutate({
-              companyId: company.id,
-              id: document.id,
-              role:
-                document.signatories.find((signatory) => signatory.id === user.id)?.title ?? "Company Representative",
-            });
-          }}
-        />
+        <DialogHeader>
+          <DialogTitle>{document.name}</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-100 overflow-y-auto rounded-md border p-2">
+          <RichText content={document.text} />
+        </div>
       </DialogContent>
+      <DialogFooter>
+        <MutationButton
+          type="submit"
+          mutation={signDocument}
+          className="mt-4 w-full"
+          loadingText="Signing..."
+          param={{ companyId: company.id, id: document.id, role: "Company Representative" }}
+        >
+          Agree & Submit
+        </MutationButton>
+      </DialogFooter>
     </Dialog>
   );
 };

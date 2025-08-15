@@ -8,7 +8,6 @@ import { userComplianceInfosFactory } from "@test/factories/userComplianceInfos"
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { BusinessType, DocumentType, TaxClassification } from "@/db/enums";
@@ -20,7 +19,7 @@ test.describe("Tax settings", () => {
   let adminUser: typeof users.$inferSelect;
   let user: typeof users.$inferSelect;
 
-  test.beforeEach(async ({ page, next }) => {
+  test.beforeEach(async () => {
     ({ company, adminUser } = await companiesFactory.createCompletedOnboarding());
 
     user = (
@@ -33,10 +32,6 @@ test.describe("Tax settings", () => {
         { withoutComplianceInfo: true },
       )
     ).user;
-    const { mockForm } = mockDocuseal(next, {
-      submitters: () => ({ "Company Representative": adminUser, Signer: user }),
-    });
-    await mockForm(page);
   });
 
   test.describe("as a contractor", () => {
@@ -54,9 +49,6 @@ test.describe("Tax settings", () => {
       await login(page, user, "/settings/tax");
       await expect(
         page.getByText("These details will be included in your invoices and applicable tax forms."),
-      ).toBeVisible();
-      await expect(
-        page.getByText(`Changes to your tax information may trigger a new contract with ${company.name}`),
       ).toBeVisible();
       await expect(page.getByText("Confirm your tax information")).toBeVisible();
       await expect(page.getByLabel("Individual")).toBeChecked();
@@ -521,7 +513,6 @@ test.describe("Tax settings", () => {
       await login(page, user, "/settings/tax");
 
       await expect(page.getByText("These details will be included in your applicable tax forms.")).toBeVisible();
-      await expect(page.getByText("Changes to your tax information may trigger a new contract.")).not.toBeVisible();
     });
 
     test("allows editing tax information", async ({ page }) => {

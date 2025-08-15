@@ -34,7 +34,7 @@ export const Editor = ({
   className,
   ...props
 }: {
-  value: string | null;
+  value: string | null | undefined;
   onChange: (value: string) => void;
   className?: string;
 } & React.ComponentProps<"div">) => {
@@ -43,7 +43,7 @@ export const Editor = ({
 
   const editor = useEditor({
     extensions: richTextExtensions,
-    content: value,
+    content: value ?? "",
     editable: true,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
@@ -57,7 +57,7 @@ export const Editor = ({
 
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value, false);
+      editor.commands.setContent(value ?? "", false);
     }
   }, [value, editor]);
 

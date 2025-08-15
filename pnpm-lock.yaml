@@ -41,11 +41,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       '@docuseal/api':
-        specifier: ^1.0.13
-        version: 1.0.13
-      '@docuseal/react':
-        specifier: ^1.0.63
-        version: 1.0.63
+        specifier: ^1.0.17
+        version: 1.0.17
       '@helperai/client':
         specifier: ^0.3.1
         version: 0.3.1
@@ -614,11 +611,8 @@ packages:
     resolution: {integrity: sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==}
     engines: {node: '>=10.0.0'}
 
-  '@docuseal/api@1.0.13':
-    resolution: {integrity: sha512-nk3pGW/DbpZLN3IOVtFg8F6FtUnfzIfLfgrHpPrULqmA38J6mQGpeKN39VzP4FXe5EhdKgsvNlSOEt2D/U4Z+g==}
-
-  '@docuseal/react@1.0.63':
-    resolution: {integrity: sha512-bgduC++M3bLTUIEq2pxRX49QO0iIDOg09rgg1sK4x7afBDOMFqOvuqcAT/shRzbJLXryV68rA9vxAf5ACX4qPg==}
+  '@docuseal/api@1.0.17':
+    resolution: {integrity: sha512-RAW85xPF+gtSN+dvReR5LPdfcjCP6OS/zXIgxDB3n9UTN5iQNN5SCAF15UOgE+3Cp33jPTzdZXsNatbIfjRpBQ==}
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
@@ -7278,9 +7272,7 @@ snapshots:
 
   '@discoveryjs/json-ext@0.5.7': {}
 
-  '@docuseal/api@1.0.13': {}
-
-  '@docuseal/react@1.0.63': {}
+  '@docuseal/api@1.0.17': {}
 
   '@drizzle-team/brocli@0.10.2': {}
 

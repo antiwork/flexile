@@ -2,11 +2,13 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { useMutation } from "@tanstack/react-query";
+import { camelCase } from "lodash-es";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import TemplateSelector from "@/app/(dashboard)/document_templates/TemplateSelector";
+import NewDocumentField, { schema as documentSchema } from "@/app/(dashboard)/documents/NewDocumentField";
 import {
   optionGrantTypeDisplayNames,
   relationshipDisplayNames,
@@ -19,18 +21,15 @@ import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import {
-  DocumentTemplateType,
-  optionGrantIssueDateRelationships,
-  optionGrantTypes,
-  optionGrantVestingTriggers,
-} from "@/db/enums";
+import { optionGrantIssueDateRelationships, optionGrantTypes, optionGrantVestingTriggers } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { company_administrator_equity_grants_url } from "@/utils/routes";
 
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 
-const formSchema = z.object({
+const formSchema = documentSchema.extend({
   companyWorkerId: z.string().min(1, "Must be present."),
   optionPoolId: z.string().min(1, "Must be present."),
   numberOfShares: z.number().gt(0),
@@ -50,8 +49,8 @@ const formSchema = z.object({
   disabilityExerciseMonths: z.number().min(0),
   retirementExerciseMonths: z.number().min(0),
   boardApprovalDate: z.instanceof(CalendarDate, { message: "This field is required." }),
-  docusealTemplateId: z.string(),
 });
+
 const refinedSchema = formSchema.refine(
   (data) => data.optionGrantType !== "iso" || ["employee", "founder"].includes(data.issueDateRelationship),
   {
@@ -134,78 +133,103 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
     form.setValue("retirementExerciseMonths", optionPool.retirementExerciseMonths);
   }, [optionPool]);
 
-  const createEquityGrant = trpc.equityGrants.create.useMutation({
-    onSuccess: async () => {
+  const createEquityGrant = useMutation({
+    mutationFn: async (values: FormValues) => {
+      if (optionPool && optionPool.availableShares < values.numberOfShares)
+        return form.setError("numberOfShares", {
+          message: `Not enough shares available in the option pool "${optionPool.name}" to create a grant with this number of options.`,
+        });
+
+      const formData = new FormData();
+      formData.append("equity_grant[company_worker_id]", values.companyWorkerId);
+      formData.append("equity_grant[option_pool_id]", values.optionPoolId);
+      formData.append("equity_grant[number_of_shares]", values.numberOfShares.toString());
+      formData.append("equity_grant[issue_date_relationship]", values.issueDateRelationship);
+      formData.append("equity_grant[option_grant_type]", values.optionGrantType);
+      formData.append("equity_grant[option_expiry_months]", values.optionExpiryMonths.toString());
+      formData.append(
+        "equity_grant[voluntary_termination_exercise_months]",
+        values.voluntaryTerminationExerciseMonths.toString(),
+      );
+      formData.append(
+        "equity_grant[involuntary_termination_exercise_months]",
+        values.involuntaryTerminationExerciseMonths.toString(),
+      );
+      formData.append(
+        "equity_grant[termination_with_cause_exercise_months]",
+        values.terminationWithCauseExerciseMonths.toString(),
+      );
+      formData.append("equity_grant[death_exercise_months]", values.deathExerciseMonths.toString());
+      formData.append("equity_grant[disability_exercise_months]", values.disabilityExerciseMonths.toString());
+      formData.append("equity_grant[retirement_exercise_months]", values.retirementExerciseMonths.toString());
+      formData.append("equity_grant[board_approval_date]", values.boardApprovalDate.toString());
+      formData.append("equity_grant[vesting_trigger]", values.vestingTrigger);
+      formData.append("equity_grant[vesting_commencement_date]", values.vestingCommencementDate.toString());
+
+      if (values.vestingTrigger === "scheduled") {
+        if (!values.vestingScheduleId) return form.setError("vestingScheduleId", { message: "Must be present." });
+        formData.append("equity_grant[vesting_schedule_id]", values.vestingScheduleId);
+
+        if (values.vestingScheduleId === "custom") {
+          if (!values.totalVestingDurationMonths || values.totalVestingDurationMonths <= 0)
+            return form.setError("totalVestingDurationMonths", { message: "Must be present and greater than 0." });
+          if (values.totalVestingDurationMonths > MAX_VESTING_DURATION_IN_MONTHS)
+            return form.setError("totalVestingDurationMonths", {
+              message: `Must not be more than ${MAX_VESTING_DURATION_IN_MONTHS} months (${MAX_VESTING_DURATION_IN_MONTHS / 12} years).`,
+            });
+          if (values.cliffDurationMonths == null || values.cliffDurationMonths < 0)
+            return form.setError("cliffDurationMonths", { message: "Must be present and greater than or equal to 0." });
+          if (values.cliffDurationMonths >= values.totalVestingDurationMonths)
+            return form.setError("cliffDurationMonths", { message: "Must be less than total vesting duration." });
+          if (!values.vestingFrequencyMonths)
+            return form.setError("vestingFrequencyMonths", { message: "Must be present." });
+          if (Number(values.vestingFrequencyMonths) > values.totalVestingDurationMonths)
+            return form.setError("vestingFrequencyMonths", { message: "Must be less than total vesting duration." });
+
+          formData.append("equity_grant[total_vesting_duration_months]", values.totalVestingDurationMonths.toString());
+          formData.append("equity_grant[cliff_duration_months]", values.cliffDurationMonths.toString());
+          formData.append("equity_grant[vesting_frequency_months]", values.vestingFrequencyMonths);
+        }
+      }
+
+      const response = await request({
+        url: company_administrator_equity_grants_url(company.id),
+        method: "POST",
+        formData,
+        accept: "json",
+      });
+      if (!response.ok) {
+        const errorInfoSchema = z.object({
+          error: z.string(),
+          attribute_name: z
+            .string()
+            .nullable()
+            .transform((value) => {
+              value = camelCase(value ?? "");
+              const isFormField = (val: string): val is keyof FormValues => val in formSchema.shape;
+              return value && isFormField(value) ? value : "root";
+            }),
+        });
+
+        const errorInfo = errorInfoSchema.parse(JSON.parse(await response.text()));
+        form.setError(errorInfo.attribute_name, { message: errorInfo.error });
+        throw new Error(await response.text());
+      }
       await trpcUtils.equityGrants.list.invalidate();
       await trpcUtils.equityGrants.totals.invalidate();
       await trpcUtils.capTable.show.invalidate();
       await trpcUtils.documents.list.invalidate();
 
-      handleClose(false);
-    },
-    onError: (error) => {
-      const fieldNames = Object.keys(formSchema.shape);
-      const errorInfoSchema = z.object({
-        error: z.string(),
-        attribute_name: z
-          .string()
-          .nullable()
-          .transform((value) => {
-            const isFormField = (val: string): val is keyof FormValues => fieldNames.includes(val);
-            return value && isFormField(value) ? value : "root";
-          }),
-      });
-
-      const errorInfo = errorInfoSchema.parse(JSON.parse(error.message));
-      form.setError(errorInfo.attribute_name, { message: errorInfo.error });
+      handleClose();
     },
   });
 
-  const submit = form.handleSubmit(async (values: FormValues): Promise<void> => {
-    if (optionPool && optionPool.availableShares < values.numberOfShares)
-      return form.setError("numberOfShares", {
-        message: `Not enough shares available in the option pool "${optionPool.name}" to create a grant with this number of options.`,
-      });
+  const submit = form.handleSubmit((values: FormValues) => createEquityGrant.mutate(values));
 
-    if (values.vestingTrigger === "scheduled") {
-      if (!values.vestingScheduleId) return form.setError("vestingScheduleId", { message: "Must be present." });
-
-      if (values.vestingScheduleId === "custom") {
-        if (!values.totalVestingDurationMonths || values.totalVestingDurationMonths <= 0)
-          return form.setError("totalVestingDurationMonths", { message: "Must be present and greater than 0." });
-        if (values.totalVestingDurationMonths > MAX_VESTING_DURATION_IN_MONTHS)
-          return form.setError("totalVestingDurationMonths", {
-            message: `Must not be more than ${MAX_VESTING_DURATION_IN_MONTHS} months (${MAX_VESTING_DURATION_IN_MONTHS / 12} years).`,
-          });
-        if (values.cliffDurationMonths == null || values.cliffDurationMonths < 0)
-          return form.setError("cliffDurationMonths", { message: "Must be present and greater than or equal to 0." });
-        if (values.cliffDurationMonths >= values.totalVestingDurationMonths)
-          return form.setError("cliffDurationMonths", { message: "Must be less than total vesting duration." });
-        if (!values.vestingFrequencyMonths)
-          return form.setError("vestingFrequencyMonths", { message: "Must be present." });
-        if (Number(values.vestingFrequencyMonths) > values.totalVestingDurationMonths)
-          return form.setError("vestingFrequencyMonths", { message: "Must be less than total vesting duration." });
-      }
-    }
-
-    await createEquityGrant.mutateAsync({
-      companyId: company.id,
-      ...values,
-      totalVestingDurationMonths: values.totalVestingDurationMonths ?? null,
-      cliffDurationMonths: values.cliffDurationMonths ?? null,
-      vestingFrequencyMonths: values.vestingFrequencyMonths ?? null,
-      vestingCommencementDate: values.vestingCommencementDate.toString(),
-      vestingScheduleId: values.vestingScheduleId ?? null,
-      boardApprovalDate: values.boardApprovalDate.toString(),
-    });
-  });
-
-  const handleClose = (isOpen: boolean) => {
-    if (!isOpen) {
-      setShowExercisePeriods(false);
-      form.reset();
-    }
-    onOpenChange(isOpen);
+  const handleClose = () => {
+    setShowExercisePeriods(false);
+    form.reset();
+    onOpenChange(false);
   };
 
   return (
@@ -579,11 +603,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
               ) : null}
             </div>
 
-            <FormField
-              control={form.control}
-              name="docusealTemplateId"
-              render={({ field }) => <TemplateSelector type={DocumentTemplateType.EquityPlanContract} {...field} />}
-            />
+            <NewDocumentField />
 
             <div className="grid gap-2">
               {form.formState.errors.root ? (

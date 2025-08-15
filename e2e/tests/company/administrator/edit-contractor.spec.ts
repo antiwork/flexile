@@ -4,7 +4,6 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
@@ -49,7 +48,7 @@ test.describe("Edit contractor", () => {
     await expect(page.getByRole("row").filter({ hasText: contractor1User.preferredName || "" })).toBeVisible();
     await expect(page.getByRole("row").filter({ hasText: contractor2User.preferredName || "" })).not.toBeVisible();
   });
-  test("allows editing details of contractors", async ({ page, next }) => {
+  test("allows editing details of contractors", async ({ page }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -62,10 +61,6 @@ test.describe("Edit contractor", () => {
     assert(contractor != null, "Contractor is required");
     assert(contractor.preferredName != null, "Contractor preferred name is required");
     assert(contractor.legalName != null, "Contractor legal name is required");
-    const { mockForm } = mockDocuseal(next, {
-      submitters: () => ({ "Company Representative": admin, Signer: contractor }),
-    });
-    await mockForm(page);
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
@@ -89,7 +84,7 @@ test.describe("Edit contractor", () => {
     expect(updatedContractor.payRateInSubunits).toBe(10700);
   });
 
-  test("allows editing details of contractors with a custom rate", async ({ page, next }) => {
+  test("allows editing details of contractors with a custom rate", async ({ page }) => {
     const { company } = await companiesFactory.create();
     const { user: admin } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -103,10 +98,6 @@ test.describe("Edit contractor", () => {
     });
     assert(user !== undefined);
     assert(user.preferredName !== null);
-    const { mockForm } = mockDocuseal(next, {
-      submitters: () => ({ "Company Representative": admin, Signer: user }),
-    });
-    await mockForm(page);
 
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();

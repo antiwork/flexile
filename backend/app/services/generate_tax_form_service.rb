@@ -39,7 +39,6 @@ class GenerateTaxFormService
     )
 
     # Automatically mark as signed tax information forms (W-8/W-9) because the user gave us their e-sign consent
-    # TODO: this migrate tax information forms to DocuSeal
     signed_at = form_name.in?(Document::SUPPORTED_TAX_INFORMATION_NAMES) ? Time.current : nil
     document.signatures.build(user:, title: "Signer", signed_at:)
     document.save!
