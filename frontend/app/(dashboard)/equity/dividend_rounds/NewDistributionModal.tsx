@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -52,9 +53,10 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
 
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const mutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      await request({
+      const response = await request({
         method: "POST",
         accept: "json",
         url: company_dividend_computations_path(company.id),
@@ -65,9 +67,11 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
           },
         },
       });
+      return z.object({ id: z.number() }).parse(await response.json());
     },
-    onSuccess: async () => {
+    onSuccess: async ({ id }) => {
       await queryClient.invalidateQueries({ queryKey: ["dividendComputations", company.id] });
+      router.push(`/equity/dividend_rounds/draft/${id}`);
       handleClose();
     },
   });
