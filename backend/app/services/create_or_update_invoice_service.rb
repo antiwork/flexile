@@ -83,7 +83,9 @@ class CreateOrUpdateInvoiceService
           raise ActiveRecord::Rollback
         end
       else
-        equity_calculation_result => { equity_cents:, equity_options:, equity_percentage: }
+        equity_cents = equity_calculation_result[:equity_cents]
+        equity_options = equity_calculation_result[:equity_options]
+        equity_percentage = equity_calculation_result[:equity_percentage]
         invoice.equity_percentage = equity_percentage
         invoice.cash_amount_in_cents = invoice.total_amount_in_usd_cents - equity_cents
         invoice.equity_amount_in_cents = equity_cents

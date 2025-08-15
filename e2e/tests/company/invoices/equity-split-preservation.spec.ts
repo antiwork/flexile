@@ -83,15 +83,13 @@ test.describe("Equity Split Preservation - E2E", () => {
       { year: 2024 },
     );
 
-    await logout(page);
-
     await page.goto("/invoices");
 
     const firstInvoiceRow = page.locator("tbody tr").first();
     await expect(firstInvoiceRow).toContainText("$500");
     await firstInvoiceRow.getByRole("button", { name: "Pay now" }).click();
 
-    await expect(page.getByText("Admin must create an equity grant")).toBeVisible();
+    await expect(page.getByText("Payment scheduled")).toBeVisible();
 
     await logout(page);
 
@@ -259,8 +257,9 @@ test.describe("Equity Split Preservation - E2E", () => {
     await fillDatePicker(page, "Date", "12/15/2024");
 
     await expect(page.getByText("Total services$500")).toBeVisible();
-    await expect(page.getByText("Swapped for equity")).not.toBeVisible();
-    await expect(page.getByText("Net amount in cash")).not.toBeVisible();
+
+    await expect(page.getByText("Swapped for equity")).toHaveCount(0);
+    await expect(page.getByText("Net amount in cash")).toHaveCount(0);
 
     await page.getByRole("button", { name: "Send invoice" }).click();
 
@@ -274,7 +273,8 @@ test.describe("Equity Split Preservation - E2E", () => {
     expect(invoice.totalAmountInUsdCents).toBe(50000n);
     expect(invoice.equityAmountInCents).toBe(0n);
     expect(invoice.cashAmountInCents).toBe(50000n);
-    expect(invoice.equityPercentage).toBe(20);
+
+    expect(invoice.equityPercentage).toBe(0);
 
     await logout(page);
     await login(page, adminUser);

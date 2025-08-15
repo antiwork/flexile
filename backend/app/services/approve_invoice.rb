@@ -36,7 +36,8 @@ class ApproveInvoice
       return false unless invoice.company.equity_enabled?
       return false if invoice.company_worker.equity_percentage.zero?
 
-      services_in_cents = invoice.total_amount_in_usd_cents - (invoice.invoice_expenses.sum(&:total_amount_in_cents) || 0)
+      expenses_in_cents = invoice.invoice_expenses.sum(:total_amount_in_cents).to_i
+      services_in_cents = invoice.total_amount_in_usd_cents - expenses_in_cents
       equity_calculation_result = InvoiceEquityCalculator.new(
         company_worker: invoice.company_worker,
         company: invoice.company,

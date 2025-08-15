@@ -93,10 +93,12 @@ export const equityCalculationsRouter = createRouter({
 
       if (!result) {
         // Return zero values when grants are missing - contractor can still submit
+        // Preserve user's selected percentage or fall back to contractor's default
+        const preservedEquityPercentage = input.selectedPercentage ?? ctx.companyContractor.equityPercentage;
         return {
           equityCents: 0,
           equityOptions: 0,
-          equityPercentage: ctx.companyContractor.equityPercentage,
+          equityPercentage: preservedEquityPercentage,
         };
       }
 

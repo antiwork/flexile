@@ -151,10 +151,6 @@ export const invoicesRouter = createRouter({
         equityAmountInOptions = 0;
         equityPercentage = values.equityPercentage || 0;
       } else {
-        if (equityResult.equityPercentage !== values.equityPercentage) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "No options would be granted" });
-        }
-
         equityAmountInCents = BigInt(equityResult.equityCents);
         equityAmountInOptions = equityResult.equityOptions;
         equityPercentage = equityResult.equityPercentage;
