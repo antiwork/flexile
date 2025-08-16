@@ -154,7 +154,7 @@ RSpec.describe DividendReportCsvEmailJob do
         create(
           :dividend_round,
           company:,
-          issued_at: Time.current.last_month.beginning_of_month + 2.days
+          issued_at: Time.current.last_month.beginning_of_month - 1.month + 2.days
         )
       end
       let(:user2) { create(:user) }
@@ -219,11 +219,14 @@ RSpec.describe DividendReportCsvEmailJob do
       end
 
       it "includes all dividends regardless of status in the CSV" do
+        target_year = (Time.current.last_month - 1.month).year
+        target_month = (Time.current.last_month - 1.month).month
+
         expect do
-          described_class.new.perform(recipients)
+          described_class.new.perform(recipients, target_year, target_month)
         end.to have_enqueued_mail(AdminMailer, :custom).with(
           to: recipients,
-          subject: "Flexile Dividend Report CSV #{Time.current.last_month.year}-#{Time.current.last_month.month.to_s.rjust(2, '0')}",
+          subject: "Flexile Dividend Report CSV #{target_year}-#{target_month.to_s.rjust(2, '0')}",
           body: "Attached",
           attached: hash_including("DividendReport.csv" => DividendReportCsv.new([dividend_round_mixed]).generate)
         )
