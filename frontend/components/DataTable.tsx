@@ -163,10 +163,8 @@ export default function DataTable<T extends RowData>({
     () =>
       table
         .getState()
-        .columnFilters.reduce(
-          (count, filter) => count + (Array.isArray(filter.value) ? filter.value.length : filter.value ? 1 : 0),
-          0,
-        ),
+        .columnFilters.filter((filter) => (Array.isArray(filter.value) ? filter.value.length > 0 : !!filter.value))
+        .length,
     [table.getState().columnFilters],
   );
 

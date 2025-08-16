@@ -72,7 +72,7 @@ import { useCanSubmitInvoices } from ".";
 
 const statusNames = {
   received: "Awaiting approval",
-  approved: "Awaiting approval",
+  approved: "Approved",
   processing: "Processing",
   payment_pending: "Processing",
   paid: "Paid",
@@ -489,7 +489,7 @@ export default function InvoicesPage() {
 
           {!company.completedPaymentMethodSetup && (
             <Alert className="mx-4" variant="destructive">
-              <AlertTriangle className="size-4" />
+              <AlertTriangle className="my-auto max-h-4 max-w-4" />
               <AlertTitle>Bank account setup incomplete.</AlertTitle>
               <AlertDescription>
                 We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
@@ -500,7 +500,7 @@ export default function InvoicesPage() {
 
           {company.completedPaymentMethodSetup && !company.isTrusted ? (
             <Alert className="mx-4" variant="destructive">
-              <AlertTriangle className="size-4" />
+              <AlertTriangle className="my-auto max-h-4 max-w-4" />
               <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
               <AlertDescription>
                 Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
