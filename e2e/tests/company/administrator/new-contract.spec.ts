@@ -5,7 +5,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
-import { login, logout } from "@test/helpers/auth";
+import { login, quickLogout } from "@test/helpers/auth";
 import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
 import { expect, type Page, test, withinModal } from "@test/index";
 import { addMonths, format } from "date-fns";
@@ -104,7 +104,7 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Invited");
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
 
-    await logout(page);
+    await quickLogout(page);
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
     await page.getByRole("link", { name: "sign it" }).click();
@@ -143,7 +143,7 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Invited");
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
 
-    await logout(page);
+    await quickLogout(page);
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
     await page.getByRole("link", { name: "sign it" }).click();
@@ -167,11 +167,10 @@ test.describe("New Contractor", () => {
     await expect(row).toContainText("Contract Signed Elsewhere Role");
     await expect(row).toContainText("Invited");
 
-    await logout(page);
+    await quickLogout(page);
     const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
-
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 

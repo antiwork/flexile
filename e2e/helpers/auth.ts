@@ -22,15 +22,15 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
   await page.waitForURL(/^(?!.*\/login$).*/u);
 };
 
-export const logout = async (page: Page) => {
-  // Navigate to invoices page to ensure we're on a dashboard page with sidebar
-  await page.goto("/invoices");
-
-  await page.getByRole("button", { name: "Log out" }).first().click();
-
-  // Wait for redirect to login
-  await page.waitForURL(/.*\/login.*/u);
-  await page.waitForLoadState("networkidle");
+export const quickLogout = async (page: Page) => {
+  // Short-circuit logout in tests: clear auth cookies and client storage
+  await page.context().clearCookies();
+  await page.evaluate(() => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
+  });
 };
 
 /**

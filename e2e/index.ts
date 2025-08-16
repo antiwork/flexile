@@ -59,6 +59,6 @@ export const withinModal = async (
   { page, title }: { page: Page; title?: string },
 ) => {
   const modal = title ? page.getByRole("dialog", { name: title }) : page.getByRole("dialog");
-  await modal.waitFor({ state: "visible" });
+  await expect(modal).toBeVisible();
   await callback(modal);
 };

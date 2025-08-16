@@ -2,7 +2,7 @@ import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { fillDatePicker } from "@test/helpers";
-import { login, logout } from "@test/helpers/auth";
+import { login, quickLogout } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { addDays, addYears, format } from "date-fns";
@@ -13,19 +13,18 @@ import { assert } from "@/utils/assert";
 test.describe("End contract", () => {
   test("allows admin to end contractor's contract", async ({ page, next }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
-
-    await login(page, adminUser);
-
     const { companyContractor } = await companyContractorsFactory.create({
       companyId: company.id,
     });
     const contractor = await db.query.users.findFirst({
       where: eq(users.id, companyContractor.userId),
     });
+
     assert(contractor != null, "Contractor is required");
     assert(contractor.preferredName != null, "Contractor preferred name is required");
 
-    await page.getByRole("link", { name: "People" }).click();
+    await login(page, adminUser, "/people");
+
     await page.getByRole("link", { name: contractor.preferredName }).click();
     await page.getByRole("button", { name: "End contract" }).click();
 
@@ -69,7 +68,7 @@ test.describe("End contract", () => {
         .filter({ hasText: `Starts on ${format(startDate, "MMM d, yyyy")}` }),
     ).toBeVisible();
 
-    await logout(page);
+    await quickLogout(page);
     await login(page, contractor);
     await page.getByRole("link", { name: "sign it" }).click();
     await page.getByRole("button", { name: "Sign now" }).click();
