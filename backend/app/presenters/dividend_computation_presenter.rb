@@ -1,63 +1,60 @@
 # frozen_string_literal: true
 
-class DividendComputationPresenter
+class DividendComputationPresenter < BasePresenter
   def initialize(dividend_computation)
+    super(dividend_computation)
     @dividend_computation = dividend_computation
   end
 
   def summary
-    {
-      id: @dividend_computation.id,
-      total_amount_in_usd: @dividend_computation.total_amount_in_usd.to_f,
-      dividends_issuance_date: @dividend_computation.dividends_issuance_date.iso8601,
-      return_of_capital: @dividend_computation.return_of_capital,
-      created_at: @dividend_computation.created_at.iso8601,
-      updated_at: @dividend_computation.updated_at.iso8601,
-      number_of_outputs: @dividend_computation.dividend_computation_outputs.count
-    }
+    common_fields.merge(
+      number_of_outputs: @dividend_computation.dividend_computation_outputs.count,
+    )
   end
 
   def detailed_view
-    {
-      id: @dividend_computation.id,
-      total_amount_in_usd: @dividend_computation.total_amount_in_usd.to_f,
-      dividends_issuance_date: @dividend_computation.dividends_issuance_date.iso8601,
-      return_of_capital: @dividend_computation.return_of_capital,
-      created_at: @dividend_computation.created_at.iso8601,
-      updated_at: @dividend_computation.updated_at.iso8601,
+    common_fields.merge(
       computation_outputs: computation_outputs,
-      totals: computation_totals
-    }
+      totals: computation_totals,
+    )
   end
 
   private
 
-    def computation_outputs
-      @dividend_computation.dividend_computation_outputs.includes(:company_investor).map do |output|
+  def common_fields
+    base_fields.merge(
+      total_amount_in_usd: decimal_to_float(@dividend_computation.total_amount_in_usd),
+      dividends_issuance_date: serialize_date(@dividend_computation.dividends_issuance_date),
+      return_of_capital: @dividend_computation.return_of_capital,
+    )
+  end
+
+  def computation_outputs
+    @dividend_computation.dividend_computation_outputs.includes(:company_investor).map do |output|
         {
           id: output.id,
           investor_name: output.investor_name || output.company_investor&.user&.name,
           share_class: output.share_class,
           number_of_shares: output.number_of_shares,
-          hurdle_rate: output.hurdle_rate&.to_f,
-          original_issue_price_in_usd: output.original_issue_price_in_usd&.to_f,
-          preferred_dividend_amount_in_usd: output.preferred_dividend_amount_in_usd.to_f,
-          dividend_amount_in_usd: output.dividend_amount_in_usd.to_f,
-          qualified_dividend_amount_usd: output.qualified_dividend_amount_usd.to_f,
-          total_amount_in_usd: output.total_amount_in_usd.to_f
+          hurdle_rate: decimal_to_float(output.hurdle_rate),
+          original_issue_price_in_usd: decimal_to_float(output.original_issue_price_in_usd),
+          preferred_dividend_amount_in_usd: decimal_to_float(output.preferred_dividend_amount_in_usd),
+          dividend_amount_in_usd: decimal_to_float(output.dividend_amount_in_usd),
+          qualified_dividend_amount_usd: decimal_to_float(output.qualified_dividend_amount_usd),
+          total_amount_in_usd: decimal_to_float(output.total_amount_in_usd),
         }
-      end
     end
+  end
 
-    def computation_totals
-      outputs = @dividend_computation.dividend_computation_outputs
-      
-      {
-        total_shareholders: outputs.count,
-        total_preferred_dividends: outputs.sum(:preferred_dividend_amount_in_usd).to_f,
-        total_common_dividends: outputs.sum(:dividend_amount_in_usd).to_f,
-        total_qualified_dividends: outputs.sum(:qualified_dividend_amount_usd).to_f,
-        grand_total: outputs.sum(:total_amount_in_usd).to_f
-      }
-    end
+  def computation_totals
+    outputs = @dividend_computation.dividend_computation_outputs
+
+    {
+      total_shareholders: outputs.count,
+      total_preferred_dividends: decimal_to_float(outputs.sum(:preferred_dividend_amount_in_usd)),
+      total_common_dividends: decimal_to_float(outputs.sum(:dividend_amount_in_usd)),
+      total_qualified_dividends: decimal_to_float(outputs.sum(:qualified_dividend_amount_usd)),
+      grand_total: decimal_to_float(outputs.sum(:total_amount_in_usd)),
+    }
+  end
 end

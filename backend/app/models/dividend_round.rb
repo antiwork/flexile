@@ -13,6 +13,8 @@ class DividendRound < ApplicationRecord
   validates :total_amount_in_cents, presence: true, numericality: { greater_than: 0 }
   validates :status, presence: true, inclusion: { in: %w(Issued Paid) }
   validates :ready_for_payment, inclusion: { in: [true, false] }
+  validate :issued_at_must_be_ten_days_in_future, on: :create
+  validate :company_must_have_dividends_enabled
 
   scope :ready_for_payment, -> { where(ready_for_payment: true) }
 
@@ -24,5 +26,23 @@ class DividendRound < ApplicationRecord
         investor_dividend_round = investor.investor_dividend_rounds.find_or_create_by!(dividend_round_id: id)
         investor_dividend_round.send_dividend_issued_email
       end
+  end
+
+  private
+
+  def issued_at_must_be_ten_days_in_future
+    return unless issued_at.present?
+
+    if issued_at < 10.days.from_now.to_date
+      errors.add(:issued_at, "must be at least 10 days in the future")
+    end
+  end
+
+  def company_must_have_dividends_enabled
+    return unless company.present?
+
+    unless company.dividends_enabled?
+      errors.add(:base, "Dividends are not enabled for this company")
+    end
   end
 end

@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { companyProcedure, createRouter } from "@/trpc";
+import { getBackendUrl } from "@/utils/backend";
 
 export const dividendComputationsRouter = createRouter({
   create: companyProcedure
@@ -12,35 +13,15 @@ export const dividendComputationsRouter = createRouter({
         returnOfCapital: z.boolean().default(false),
         investorReleaseForm: z.boolean().default(false),
         investorDetails: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-      console.log("dividendComputations.create called with input:", input);
-      console.log("ctx.company:", ctx.company);
-      console.log("ctx.companyAdministrator:", !!ctx.companyAdministrator);
-      console.log("ctx.companyLawyer:", !!ctx.companyLawyer);
-      
       if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
       if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
       try {
-        const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:5001";
-        const url = `${backendUrl}/internal/companies/${ctx.company.externalId}/dividend_computations`;
-        
-        console.log("🔵 About to fetch Rails backend at:", url);
-        console.log("🔵 Request headers:", {
-          "Content-Type": "application/json",
-          "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
-          "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-        });
-        console.log("🔵 Request body:", {
-          total_amount_in_usd: input.totalAmountInUsd,
-          dividends_issuance_date: input.dividendsIssuanceDate,
-          return_of_capital: input.returnOfCapital,
-          investor_release_form: input.investorReleaseForm,
-          investor_details: input.investorDetails || "",
-        });
-        
+        const url = `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/dividend_computations`;
+
         const response = await fetch(url, {
           method: "POST",
           headers: {
@@ -57,24 +38,25 @@ export const dividendComputationsRouter = createRouter({
           }),
         });
 
-        console.log("🔵 Rails response status:", response.status);
-        console.log("🔵 Rails response headers:", Object.fromEntries(response.headers.entries()));
-
         if (!response.ok) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const errorData = await response.json().catch(() => ({}));
-          throw new TRPCError({ 
-            code: "INTERNAL_SERVER_ERROR", 
-            message: errorData.error || "Failed to create dividend computation" 
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+            message: errorData.error || "Failed to create dividend computation",
           });
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const computation = await response.json();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
         return { id: computation.id };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
-        throw new TRPCError({ 
-          code: "INTERNAL_SERVER_ERROR", 
-          message: "Failed to create dividend computation" 
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create dividend computation",
         });
       }
     }),
@@ -87,181 +69,199 @@ export const dividendComputationsRouter = createRouter({
         returnOfCapital: z.boolean().default(false),
         investorReleaseForm: z.boolean().default(false),
         investorDetails: z.string().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
       if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
       try {
-        const response = await fetch(`${process.env.BACKEND_URL}/internal/companies/${ctx.company.externalId}/dividend_computations/preview`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
-            "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
+        const response = await fetch(
+          `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/dividend_computations/preview`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
+              "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
+            },
+            body: JSON.stringify({
+              total_amount_in_usd: input.totalAmountInUsd,
+              dividends_issuance_date: input.dividendsIssuanceDate,
+              return_of_capital: input.returnOfCapital,
+              investor_release_form: input.investorReleaseForm,
+              investor_details: input.investorDetails || "",
+            }),
           },
-          body: JSON.stringify({
-            total_amount_in_usd: input.totalAmountInUsd,
-            dividends_issuance_date: input.dividendsIssuanceDate,
-            return_of_capital: input.returnOfCapital,
-            investor_release_form: input.investorReleaseForm,
-            investor_details: input.investorDetails || "",
-          }),
-        });
+        );
 
         if (!response.ok) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const errorData = await response.json().catch(() => ({}));
-          throw new TRPCError({ 
-            code: "INTERNAL_SERVER_ERROR", 
-            message: errorData.error || "Failed to generate preview" 
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+            message: errorData.error || "Failed to generate preview",
           });
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return await response.json();
       } catch (error) {
         if (error instanceof TRPCError) throw error;
-        throw new TRPCError({ 
-          code: "INTERNAL_SERVER_ERROR", 
-          message: "Failed to generate preview" 
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to generate preview",
         });
       }
     }),
 
-  get: companyProcedure
-    .input(z.object({ id: z.number() }))
-    .query(async ({ ctx, input }) => {
-      if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
-      if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+  get: companyProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {
+    if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
-      try {
-        const response = await fetch(`${process.env.BACKEND_URL}/internal/companies/${ctx.company.externalId}/dividend_computations/${input.id}`, {
+    try {
+      const response = await fetch(
+        `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/dividend_computations/${input.id}`,
+        {
           method: "GET",
           headers: {
             "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
             "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
           },
-        });
+        },
+      );
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new TRPCError({ code: "NOT_FOUND" });
-          }
-          throw new TRPCError({ 
-            code: "INTERNAL_SERVER_ERROR", 
-            message: "Failed to fetch dividend computation" 
-          });
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new TRPCError({ code: "NOT_FOUND" });
         }
-
-        return await response.json();
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        throw new TRPCError({ 
-          code: "INTERNAL_SERVER_ERROR", 
-          message: "Failed to fetch dividend computation" 
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch dividend computation",
         });
       }
-    }),
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return await response.json();
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch dividend computation",
+      });
+    }
+  }),
 
   list: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
     if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
     try {
-      const response = await fetch(`${process.env.BACKEND_URL}/internal/companies/${ctx.company.externalId}/dividend_computations`, {
-        method: "GET",
-        headers: {
-          "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
-          "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
+      const response = await fetch(
+        `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/dividend_computations`,
+        {
+          method: "GET",
+          headers: {
+            "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
+            "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
-        throw new TRPCError({ 
-          code: "INTERNAL_SERVER_ERROR", 
-          message: "Failed to fetch dividend computations" 
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch dividend computations",
         });
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return await response.json();
     } catch (error) {
       if (error instanceof TRPCError) throw error;
-      throw new TRPCError({ 
-        code: "INTERNAL_SERVER_ERROR", 
-        message: "Failed to fetch dividend computations" 
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch dividend computations",
       });
     }
   }),
 
-  delete: companyProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
-      if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+  delete: companyProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
+    if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
-      try {
-        const response = await fetch(`${process.env.BACKEND_URL}/internal/companies/${ctx.company.externalId}/dividend_computations/${input.id}`, {
+    try {
+      const response = await fetch(
+        `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/dividend_computations/${input.id}`,
+        {
           method: "DELETE",
           headers: {
             "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
             "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
           },
-        });
+        },
+      );
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new TRPCError({ code: "NOT_FOUND" });
-          }
-          throw new TRPCError({ 
-            code: "INTERNAL_SERVER_ERROR", 
-            message: "Failed to delete dividend computation" 
-          });
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new TRPCError({ code: "NOT_FOUND" });
         }
-
-        return await response.json();
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        throw new TRPCError({ 
-          code: "INTERNAL_SERVER_ERROR", 
-          message: "Failed to delete dividend computation" 
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete dividend computation",
         });
       }
-    }),
 
-  finalize: companyProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
-      if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return await response.json();
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to delete dividend computation",
+      });
+    }
+  }),
 
-      try {
-        const response = await fetch(`${process.env.BACKEND_URL}/internal/companies/${ctx.company.externalId}/dividend_computations/${input.id}/finalize`, {
+  finalize: companyProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
+    if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
+
+    try {
+      const response = await fetch(
+        `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/dividend_computations/${input.id}/finalize`,
+        {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
             "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
           },
-        });
+        },
+      );
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new TRPCError({ code: "NOT_FOUND" });
-          }
-          const errorData = await response.json().catch(() => ({}));
-          throw new TRPCError({ 
-            code: "INTERNAL_SERVER_ERROR", 
-            message: errorData.error || "Failed to finalize dividend computation" 
-          });
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new TRPCError({ code: "NOT_FOUND" });
         }
-
-        return await response.json();
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        throw new TRPCError({ 
-          code: "INTERNAL_SERVER_ERROR", 
-          message: "Failed to finalize dividend computation" 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const errorData = await response.json().catch(() => ({}));
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+          message: errorData.error || "Failed to finalize dividend computation",
         });
       }
-    }),
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return await response.json();
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to finalize dividend computation",
+      });
+    }
+  }),
 });

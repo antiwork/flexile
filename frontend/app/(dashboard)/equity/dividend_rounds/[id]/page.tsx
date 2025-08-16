@@ -1,9 +1,9 @@
 "use client";
 
+import { CreditCard } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
-import { CreditCard } from "lucide-react";
 import DividendStatusIndicator from "@/app/(dashboard)/equity/DividendStatusIndicator";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
@@ -47,11 +47,11 @@ export default function DividendRound() {
 
   return (
     <>
-      <DashboardHeader 
-        title="Dividend" 
+      <DashboardHeader
+        title="Dividend"
         headerActions={
           <Button onClick={() => router.push(`/equity/dividend_rounds/${id}/payments`)}>
-            <CreditCard className="h-4 w-4 mr-2" />
+            <CreditCard className="mr-2 h-4 w-4" />
             Manage Payments
           </Button>
         }

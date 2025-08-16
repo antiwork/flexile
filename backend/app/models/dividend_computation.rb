@@ -8,6 +8,8 @@ class DividendComputation < ApplicationRecord
 
   validates :total_amount_in_usd, presence: true
   validates :dividends_issuance_date, presence: true
+  validate :issuance_date_must_be_ten_days_in_future
+  validate :company_must_have_dividends_enabled
 
   def to_csv
     CSV.generate(headers: true) do |csv|
@@ -61,13 +63,13 @@ class DividendComputation < ApplicationRecord
       number_of_shareholders: data.map { _1[:company_investor_id] }.uniq.count,
       status: Dividend::ISSUED,
       total_amount_in_cents: (total_amount_in_usd * 100.to_d).to_i,
-      return_of_capital:
+      return_of_capital: return_of_capital
     )
 
     data.each do |dividend_attrs|
       company.company_investors.find(dividend_attrs[:company_investor_id]).dividends.create!(
-        dividend_round:,
-        company:,
+        dividend_round: dividend_round,
+        company: company,
         total_amount_in_cents: (dividend_attrs[:total_amount] * 100.to_d).to_i,
         qualified_amount_cents: (dividend_attrs[:qualified_dividends_amount] * 100.to_d).to_i,
         number_of_shares: dividend_attrs[:number_of_shares],
@@ -102,7 +104,7 @@ class DividendComputation < ApplicationRecord
 
       share_dividends.each do |company_investor_id, info|
         data << {
-          company_investor_id:,
+          company_investor_id: company_investor_id,
           total_amount: info[:total_amount],
           qualified_dividends_amount: info[:qualified_dividends_amount],
           number_of_shares: info[:number_of_shares],
@@ -124,6 +126,22 @@ class DividendComputation < ApplicationRecord
       end
 
       data
+    end
+
+    def issuance_date_must_be_ten_days_in_future
+      return unless dividends_issuance_date.present?
+
+      if dividends_issuance_date < 10.days.from_now.to_date
+        errors.add(:dividends_issuance_date, "must be at least 10 days in the future")
+      end
+    end
+
+    def company_must_have_dividends_enabled
+      return unless company.present?
+
+      unless company.dividends_enabled?
+        errors.add(:base, "Dividends are not enabled for this company")
+      end
     end
 end
 

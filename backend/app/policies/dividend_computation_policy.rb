@@ -5,23 +5,9 @@ class DividendComputationPolicy < ApplicationPolicy
     company_administrator? || company_lawyer?
   end
 
-  def show?
-    index?
-  end
-
-  def create?
-    index?
-  end
-
-  def update?
-    index?
-  end
-
-  def destroy?
-    index?
-  end
-
-  def preview?
-    index?
-  end
+  alias_method :show?, :index?
+  alias_method :create?, :index?
+  alias_method :update?, :index?
+  alias_method :destroy?, :index?
+  alias_method :preview?, :index?
 end

@@ -3,14 +3,14 @@
 class Internal::Companies::PaymentAccountsController < Internal::Companies::BaseController
   def balances
     authorize :payment_account, :index?
-    
+
     # Get account balances from various sources
     balances = {
       stripe_balance_cents: get_stripe_balance_cents,
       wise_balance_cents: get_wise_balance_cents,
       bank_balance_cents: 0, # Would need bank API integration
     }
-    
+
     render json: balances
   rescue StandardError => e
     Rails.logger.error "Failed to fetch account balances: #{e.message}"
@@ -19,7 +19,7 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
 
   def pull_funds
     authorize :payment_account, :update?
-    
+
     amount_cents = params[:amount_in_cents].to_i
     raise ArgumentError, "Amount must be positive" if amount_cents <= 0
     
@@ -30,7 +30,7 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
       success: true,
       transfer_id: result[:transfer_id],
       status: result[:status],
-      amount_cents: amount_cents
+      amount_cents: amount_cents,
     }
   rescue ArgumentError => e
     render json: { error: e.message }, status: :bad_request
@@ -41,7 +41,7 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
 
   def transfer_to_wise
     authorize :payment_account, :update?
-    
+
     amount_cents = params[:amount_in_cents].to_i
     raise ArgumentError, "Amount must be positive" if amount_cents <= 0
     
@@ -52,7 +52,7 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
       success: true,
       transfer_id: result[:transfer_id],
       status: result[:status],
-      amount_cents: amount_cents
+      amount_cents: amount_cents,
     }
   rescue ArgumentError => e
     render json: { error: e.message }, status: :bad_request

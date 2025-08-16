@@ -5,11 +5,10 @@ RSpec.describe PaymentAccountPolicy do
   let(:admin_user) { create(:user, without_bank_account: true) }
   let(:lawyer_user) { create(:user, without_bank_account: true) }
   let(:regular_user) { create(:user, without_bank_account: true) }
-  
+
   let(:admin_company_user) { create(:company_administrator, company: company, user: admin_user) }
   let(:lawyer_company_user) { create(:company_lawyer, company: company, user: lawyer_user) }
   let(:regular_company_user) { create(:company_investor, company: company, user: regular_user) }
-  
   let(:admin_context) { CurrentContext.new(user: admin_user, company: company) }
   let(:lawyer_context) { CurrentContext.new(user: lawyer_user, company: company) }
   let(:regular_context) { CurrentContext.new(user: regular_user, company: company) }

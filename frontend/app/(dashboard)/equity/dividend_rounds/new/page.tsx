@@ -54,19 +54,7 @@ export default function NewDividendComputation() {
 
   const createMutation = useMutation({
     mutationFn: async (values: FormData) => {
-      console.log("🔵 Form submission started with values:", values);
-      console.log("🔵 Company data:", { id: company.id, externalId: company.externalId });
-      
       try {
-        console.log("🔵 About to call createDividendComputation.mutateAsync with:", {
-          companyId: company.externalId,
-          totalAmountInUsd: values.totalAmountInUsd,
-          dividendsIssuanceDate: values.dividendsIssuanceDate.toString(),
-          returnOfCapital: values.returnOfCapital,
-          investorReleaseForm: values.investorReleaseForm,
-          investorDetails: values.investorDetails || "",
-        });
-        
         const result = await createDividendComputation.mutateAsync({
           companyId: company.externalId,
           totalAmountInUsd: values.totalAmountInUsd,
@@ -76,25 +64,14 @@ export default function NewDividendComputation() {
           investorDetails: values.investorDetails || "",
         });
 
-        console.log("🟢 TRPC call succeeded with result:", result);
         router.push(`/equity/dividend_computations/${result.id}`);
       } catch (error) {
-        console.error("🔴 Error in mutationFn:", error);
-        console.error("🔴 Error details:", {
-          message: (error as any)?.message,
-          code: (error as any)?.code,
-          data: (error as any)?.data,
-          cause: (error as any)?.cause,
-        });
         throw error;
       }
     },
   });
 
   const submit = form.handleSubmit((data) => {
-    console.log("🔵 Form handleSubmit triggered with data:", data);
-    console.log("🔵 Form errors:", form.formState.errors);
-    console.log("🔵 Form is valid:", form.formState.isValid);
     createMutation.mutate(data);
   });
 

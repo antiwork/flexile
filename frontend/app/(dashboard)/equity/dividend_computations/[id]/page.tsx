@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
+import { getPublicBackendUrl } from "@/utils/backend";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 
@@ -65,7 +66,7 @@ export default function DividendComputationReview() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const router = useRouter();
-  
+
   const { data: computation, isLoading } = trpc.dividendComputations.get.useQuery({
     companyId: company.id,
     id: Number(id),
@@ -81,10 +82,7 @@ export default function DividendComputationReview() {
     onSuccess: (result) => {
       // Show payment result if available
       if (result.payment_result?.error) {
-        console.error("Payment processing failed:", result.payment_result.error);
-        // Could show a toast notification here
-      } else if (result.payment_result) {
-        console.log("Payment processed successfully:", result.payment_result);
+        // Could show a toast notification here for payment processing failures
       }
       router.push(`/equity/dividend_rounds/${result.id}`);
     },
@@ -92,34 +90,34 @@ export default function DividendComputationReview() {
 
   // Move useTable hook to top level to avoid conditional hook calls
   const computationOutputs = computation?.computation_outputs || [];
-  const table = useTable({ 
-    columns, 
-    data: computationOutputs 
+  const table = useTable({
+    columns,
+    data: computationOutputs,
   });
 
   // Check if user has permission to approve dividends (admin or lawyer only)
-  const canApproveDividends = !!(user.roles.administrator || user.roles.lawyer);
+  const canApproveDividends = user.roles.administrator || user.roles.lawyer;
 
   // Calculate estimated payment fees
   const calculatePaymentFees = (dividendAmount: number) => {
-    const processingFee = Math.round(dividendAmount * 0.029) + 0.30;
-    const transferFee = 5.00;
+    const processingFee = Math.round(dividendAmount * 0.029) + 0.3;
+    const transferFee = 5.0;
     return {
       dividendAmount,
       processingFee,
       transferFee,
-      totalWithFees: dividendAmount + processingFee + transferFee
+      totalWithFees: dividendAmount + processingFee + transferFee,
     };
   };
 
   const handleExportCSV = () => {
     // Create a direct download link to the backend CSV export endpoint
-    const csvUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001'}/internal/companies/${company.externalId}/dividend_computations/${id}/export_csv`;
-    
+    const csvUrl = `${getPublicBackendUrl()}/internal/companies/${company.externalId}/dividend_computations/${id}/export_csv`;
+
     // Create a temporary anchor element and trigger download
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = csvUrl;
-    link.download = `dividend_computation_${id}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `dividend_computation_${id}_${new Date().toISOString().split("T")[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -146,9 +144,7 @@ export default function DividendComputationReview() {
         <div className="mx-4">
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              The dividend computation you're looking for could not be found.
-            </AlertDescription>
+            <AlertDescription>The dividend computation you're looking for could not be found.</AlertDescription>
           </Alert>
         </div>
       </>
@@ -157,6 +153,7 @@ export default function DividendComputationReview() {
 
   const totalAmountUsd = parseFloat(computation.total_amount_in_usd || computation.totalAmountInUsd);
   const totals = computation.totals;
+  const fees = calculatePaymentFees(totalAmountUsd);
 
   return (
     <>
@@ -175,24 +172,26 @@ export default function DividendComputationReview() {
         <Card>
           <CardHeader>
             <CardTitle>Computation Summary</CardTitle>
-            <CardDescription>
-              Review the dividend computation details before finalizing
-            </CardDescription>
+            <CardDescription>Review the dividend computation details before finalizing</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Amount</p>
+                <p className="text-muted-foreground text-sm font-medium">Total Amount</p>
                 <p className="text-2xl font-bold">{formatMoney(totalAmountUsd)}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Issuance Date</p>
-                <p className="text-lg">{formatDate(computation.dividends_issuance_date || computation.dividendsIssuanceDate)}</p>
+                <p className="text-muted-foreground text-sm font-medium">Issuance Date</p>
+                <p className="text-lg">
+                  {formatDate(computation.dividends_issuance_date || computation.dividendsIssuanceDate)}
+                </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Type</p>
+                <p className="text-muted-foreground text-sm font-medium">Type</p>
                 <p className="text-lg">
-                  {(computation.return_of_capital ?? computation.returnOfCapital) ? "Return of Capital" : "Regular Dividend"}
+                  {(computation.return_of_capital ?? computation.returnOfCapital)
+                    ? "Return of Capital"
+                    : "Regular Dividend"}
                 </p>
               </div>
             </div>
@@ -203,17 +202,17 @@ export default function DividendComputationReview() {
           <Alert className="border-blue-200 bg-blue-50">
             <AlertCircle className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-blue-800">
-              <strong>Next Steps:</strong> This computation will calculate dividend distributions for all eligible 
-              shareholders. Once you approve and generate dividends, individual dividend records will be created 
-              and shareholders will be notified.
+              <strong>Next Steps:</strong> This computation will calculate dividend distributions for all eligible
+              shareholders. Once you approve and generate dividends, individual dividend records will be created and
+              shareholders will be notified.
             </AlertDescription>
           </Alert>
         ) : (
           <Alert className="border-orange-200 bg-orange-50">
             <AlertCircle className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-orange-800">
-              <strong>Approval Required:</strong> Only company administrators and legal team members can approve and generate dividends. 
-              Please contact an admin or legal team member to proceed with this computation.
+              <strong>Approval Required:</strong> Only company administrators and legal team members can approve and
+              generate dividends. Please contact an admin or legal team member to proceed with this computation.
             </AlertDescription>
           </Alert>
         )}
@@ -222,34 +221,27 @@ export default function DividendComputationReview() {
           <Card>
             <CardHeader>
               <CardTitle>Payment Processing</CardTitle>
-              <CardDescription>
-                Estimated fees for processing dividend payments
-              </CardDescription>
+              <CardDescription>Estimated fees for processing dividend payments</CardDescription>
             </CardHeader>
             <CardContent>
-              {(() => {
-                const fees = calculatePaymentFees(totalAmountUsd);
-                return (
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Dividend Amount</p>
-                      <p className="text-lg font-semibold">{formatMoney(fees.dividendAmount)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Processing Fee (2.9% + $0.30)</p>
-                      <p className="text-lg">{formatMoney(fees.processingFee)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Transfer Fee</p>
-                      <p className="text-lg">{formatMoney(fees.transferFee)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Charge</p>
-                      <p className="text-xl font-bold">{formatMoney(fees.totalWithFees)}</p>
-                    </div>
-                  </div>
-                );
-              })()}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                <div>
+                  <p className="text-muted-foreground text-sm font-medium">Dividend Amount</p>
+                  <p className="text-lg font-semibold">{formatMoney(fees.dividendAmount)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm font-medium">Processing Fee (2.9% + $0.30)</p>
+                  <p className="text-lg">{formatMoney(fees.processingFee)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm font-medium">Transfer Fee</p>
+                  <p className="text-lg">{formatMoney(fees.transferFee)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm font-medium">Total Charge</p>
+                  <p className="text-xl font-bold">{formatMoney(fees.totalWithFees)}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -258,26 +250,24 @@ export default function DividendComputationReview() {
           <Card>
             <CardHeader>
               <CardTitle>Computation Totals</CardTitle>
-              <CardDescription>
-                Summary of dividend calculations by type
-              </CardDescription>
+              <CardDescription>Summary of dividend calculations by type</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Shareholders</p>
+                  <p className="text-muted-foreground text-sm font-medium">Total Shareholders</p>
                   <p className="text-xl font-semibold">{totals.total_shareholders}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Preferred Dividends</p>
+                  <p className="text-muted-foreground text-sm font-medium">Preferred Dividends</p>
                   <p className="text-xl font-semibold">{formatMoney(totals.total_preferred_dividends)}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Common Dividends</p>
+                  <p className="text-muted-foreground text-sm font-medium">Common Dividends</p>
                   <p className="text-xl font-semibold">{formatMoney(totals.total_common_dividends)}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Qualified Dividends</p>
+                  <p className="text-muted-foreground text-sm font-medium">Qualified Dividends</p>
                   <p className="text-xl font-semibold">{formatMoney(totals.total_qualified_dividends)}</p>
                 </div>
               </div>
@@ -288,9 +278,7 @@ export default function DividendComputationReview() {
         <Card>
           <CardHeader>
             <CardTitle>Per-Investor Breakdown</CardTitle>
-            <CardDescription>
-              Detailed dividend calculations for each investor
-            </CardDescription>
+            <CardDescription>Detailed dividend calculations for each investor</CardDescription>
           </CardHeader>
           <CardContent>
             {computationOutputs.length > 0 ? (
@@ -317,11 +305,7 @@ export default function DividendComputationReview() {
           </MutationStatusButton>
 
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={handleExportCSV}
-              disabled={computationOutputs.length === 0}
-            >
+            <Button variant="outline" onClick={handleExportCSV} disabled={computationOutputs.length === 0}>
               <Download className="mr-2 h-4 w-4" />
               Export CSV
             </Button>

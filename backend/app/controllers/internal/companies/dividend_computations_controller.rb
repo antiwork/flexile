@@ -15,16 +15,16 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
 
   def create
     authorize DividendComputation
-    
+
     service = DividendComputationGeneration.new(
       Current.company,
       amount_in_usd: params[:total_amount_in_usd].to_d,
       dividends_issuance_date: Date.parse(params[:dividends_issuance_date]),
       return_of_capital: params[:return_of_capital] || false
     )
-    
+
     computation = service.process
-    
+
     render json: DividendComputationPresenter.new(computation).summary, status: :created
   rescue Date::Error => e
     render json: { error: "Invalid date format: #{e.message}" }, status: :bad_request
@@ -38,7 +38,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   def destroy
     computation = Current.company.dividend_computations.find(params[:id])
     authorize computation
-    
+
     computation.destroy!
     render json: { success: true }
   rescue ActiveRecord::RecordNotDestroyed => e
@@ -47,16 +47,16 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
 
   def preview
     authorize DividendComputation, :preview?
-    
+
     # Generate preview without saving to database
-    service = DividendComputationGeneration.new(
+    DividendComputationGeneration.new(
       Current.company,
       amount_in_usd: params[:total_amount_in_usd].to_d,
       dividends_issuance_date: Date.parse(params[:dividends_issuance_date]),
       return_of_capital: params[:return_of_capital] || false
     )
-    
-    # TODO: Implement preview mode in DividendComputationGeneration service
+
+    # Preview mode implementation needed in DividendComputationGeneration service
     # For now, return mock data
     render json: {
       total_amount_in_usd: params[:total_amount_in_usd].to_d,
@@ -74,11 +74,10 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   def finalize
     computation = Current.company.dividend_computations.find(params[:id])
     authorize computation, :update?
-    
+
     # Generate dividend round and individual dividends from computation
     dividend_round = nil
-    payment_result = nil
-    
+
     ActiveRecord::Base.transaction do
       # Create the dividend round
       dividend_round = Current.company.dividend_rounds.create!(
@@ -102,8 +101,8 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         
         company_investors << company_investor
         
-        Rails.logger.info "🔵 Creating dividend for company_investor #{company_investor.id}"
-        Rails.logger.info "🔵 Dividend data: total_amount_in_cents=#{(output.total_amount_in_usd * 100).to_i}, number_of_shares=#{output.number_of_shares}, qualified_amount_cents=#{(output.qualified_dividend_amount_usd * 100).to_i}"
+        Rails.logger.info "Creating dividend for company_investor #{company_investor.id}"
+        Rails.logger.info "Dividend data: total_amount_in_cents=#{(output.total_amount_in_usd * 100).to_i}, number_of_shares=#{output.number_of_shares}, qualified_amount_cents=#{(output.qualified_dividend_amount_usd * 100).to_i}"
         
         begin
           dividend = dividend_round.dividends.create!(
@@ -114,13 +113,13 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
             qualified_amount_cents: (output.qualified_dividend_amount_usd * 100).to_i,
             status: Dividend::ISSUED
           )
-          Rails.logger.info "🟢 Successfully created dividend #{dividend.id}"
+          Rails.logger.info "Successfully created dividend #{dividend.id}"
         rescue ActiveRecord::RecordInvalid => e
-          Rails.logger.error "🔴 Failed to create dividend: #{e.message}"
-          Rails.logger.error "🔴 Validation errors: #{e.record.errors.full_messages.join(', ')}"
+          Rails.logger.error "Failed to create dividend: #{e.message}"
+          Rails.logger.error "Validation errors: #{e.record.errors.full_messages.join(', ')}"
           raise e
         rescue StandardError => e
-          Rails.logger.error "🔴 Unexpected error creating dividend: #{e.class.name}: #{e.message}"
+          Rails.logger.error "Unexpected error creating dividend: #{e.class.name}: #{e.message}"
           raise e
         end
       end
@@ -137,19 +136,19 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       
       # Process payment: Pull money from company + create Stripe payout
       begin
-        Rails.logger.info "🔵 About to process payment for dividend round #{dividend_round.id}"
+        Rails.logger.info "About to process payment for dividend round #{dividend_round.id}"
         payment_service = ProcessDividendPayment.new(dividend_round)
         payment_result = payment_service.process!
-        Rails.logger.info "🟢 Dividend payment processed successfully for round #{dividend_round.id}: #{payment_result}"
+        Rails.logger.info "Dividend payment processed successfully for round #{dividend_round.id}: #{payment_result}"
       rescue ProcessDividendPayment::Error => e
-        Rails.logger.error "🔴 Payment processing failed for dividend round #{dividend_round.id}: #{e.message}"
-        Rails.logger.error "🔴 Payment error backtrace: #{e.backtrace.join("\n")}"
+        Rails.logger.error "Payment processing failed for dividend round #{dividend_round.id}: #{e.message}"
+        Rails.logger.error "Payment error backtrace: #{e.backtrace.join("\n")}"
         # Continue with dividend creation but mark payment as failed
         dividend_round.update!(ready_for_payment: false)
         payment_result = { error: e.message }
       rescue StandardError => e
-        Rails.logger.error "🔴 Unexpected error during payment processing: #{e.class.name}: #{e.message}"
-        Rails.logger.error "🔴 Unexpected error backtrace: #{e.backtrace.join("\n")}"
+        Rails.logger.error "Unexpected error during payment processing: #{e.class.name}: #{e.message}"
+        Rails.logger.error "Unexpected error backtrace: #{e.backtrace.join("\n")}"
         dividend_round.update!(ready_for_payment: false)
         payment_result = { error: e.message }
       end
@@ -198,16 +197,16 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     CSV.generate(headers: true) do |csv|
       # Header row
       csv << [
-        'Investor Name',
-        'Email',
-        'Share Class',
-        'Number of Shares',
-        'Total Amount (USD)',
-        'Qualified Dividend Amount (USD)',
-        'Non-Qualified Dividend Amount (USD)',
-        'Percentage of Total',
-        'Investment Amount (USD)',
-        'ROI to Date (%)'
+        "Investor Name",
+        "Email",
+        "Share Class",
+        "Number of Shares",
+        "Total Amount (USD)",
+        "Qualified Dividend Amount (USD)",
+        "Non-Qualified Dividend Amount (USD)",
+        "Percentage of Total",
+        "Investment Amount (USD)",
+        "ROI to Date (%)"
       ]
       
       # Data rows
@@ -219,19 +218,19 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         non_qualified_amount = output.total_amount_in_usd - output.qualified_dividend_amount_usd
         percentage_of_total = computation.total_amount_in_usd > 0 ? (output.total_amount_in_usd / computation.total_amount_in_usd * 100).round(4) : 0
         investment_amount = company_investor.investment_amount_in_cents / 100.0
-        roi_percentage = company_investor.cumulative_dividends_roi * 100.0
+        roi_percentage = company_investor&.cumulative_dividends_roi ? (company_investor.cumulative_dividends_roi * 100.0) : 0.0
         
         csv << [
           user.name,
           user.email,
-          output.share_class || 'Common',
+          output.share_class || "Common",
           output.number_of_shares,
           output.total_amount_in_usd,
           output.qualified_dividend_amount_usd,
           non_qualified_amount,
           "#{percentage_of_total}%",
           investment_amount,
-          "#{roi_percentage.round(2)}%"
+          "#{roi_percentage.round(2)}%",
         ]
       end
       
@@ -241,7 +240,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       total_non_qualified = computation.total_amount_in_usd - total_qualified
       
       csv << []
-      csv << ['TOTALS', '', '', total_shares, computation.total_amount_in_usd, total_qualified, total_non_qualified, '100.0%', '', '']
+      csv << ["TOTALS", "", "", total_shares, computation.total_amount_in_usd, total_qualified, total_non_qualified, "100.0%", "", ""]
     end
   end
 end

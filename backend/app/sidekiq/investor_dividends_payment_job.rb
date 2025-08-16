@@ -7,18 +7,29 @@ class InvestorDividendsPaymentJob
   delegate :user, to: :company_investor, private: true
   delegate :tax_information_confirmed_at, :compliance_info, to: :user, private: :true
 
-  def perform(company_investor_id)
+  def perform(company_investor_id, dividend_id = nil)
     @company_investor = CompanyInvestor.find(company_investor_id)
 
     return if !user.has_verified_tax_id? || tax_information_confirmed_at.nil?
 
     update_dividend_tax_info
 
-    dividends_eligible_for_payment = company_investor
-                                       .dividends
-                                       .joins(:dividend_round)
-                                       .where(status: [Dividend::ISSUED, Dividend::RETAINED])
-                                       .where("dividends.signed_release_at IS NOT NULL OR dividend_rounds.release_document IS NULL")
+    dividends_eligible_for_payment = if dividend_id
+      # Process only the specific dividend
+      company_investor
+        .dividends
+        .joins(:dividend_round)
+        .where(id: dividend_id, status: [Dividend::ISSUED, Dividend::RETAINED])
+        .where("dividends.signed_release_at IS NOT NULL OR dividend_rounds.release_document IS NULL")
+    else
+      # Process all eligible dividends (existing behavior)
+      company_investor
+        .dividends
+        .joins(:dividend_round)
+        .where(status: [Dividend::ISSUED, Dividend::RETAINED])
+        .where("dividends.signed_release_at IS NOT NULL OR dividend_rounds.release_document IS NULL")
+    end
+    
     PayInvestorDividends.new(company_investor, dividends_eligible_for_payment).process
   end
 

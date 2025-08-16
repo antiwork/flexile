@@ -5,7 +5,5 @@ class PaymentAccountPolicy < ApplicationPolicy
     company_administrator? || company_lawyer?
   end
 
-  def update?
-    company_administrator? || company_lawyer?
-  end
+  alias_method :update?, :index?
 end
