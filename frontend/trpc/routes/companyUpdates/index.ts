@@ -70,29 +70,38 @@ export const companyUpdatesRouter = createRouter({
       id: update.externalId,
     };
   }),
-  create: companyProcedure.input(dataSchema.required()).mutation(async ({ ctx, input }) => {
-    const hasInvestors = await checkHasInvestors(ctx.company.id);
-    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+  create: companyProcedure
+    .input(
+      dataSchema.extend({
+        title: z.string().trim().min(1),
+        body: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const hasInvestors = await checkHasInvestors(ctx.company.id);
+      if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const [update] = await db
-      .insert(companyUpdates)
-      .values({
-        ...pick(input, ["title", "body", "minBilledAmount"]),
-        companyId: ctx.company.id,
-        recipientTypes: Array.from(new Set([...(input.recipientTypes ?? []), "admins"])),
-      })
-      .returning();
-    return assertDefined(update).externalId;
-  }),
+      const [update] = await db
+        .insert(companyUpdates)
+        .values({
+          ...pick(input, ["title", "body"]),
+          companyId: ctx.company.id,
+          recipientTypes: Array.from(new Set([...(input.recipientTypes ?? []), "admins"])),
+          minBilledAmount: input.minBilledAmount?.toString(),
+        })
+        .returning();
+      return assertDefined(update).externalId;
+    }),
   update: companyProcedure.input(dataSchema.extend({ id: z.string() })).mutation(async ({ ctx, input }) => {
     const hasInvestors = await checkHasInvestors(ctx.company.id);
     if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
     const [update] = await db
       .update(companyUpdates)
       .set({
-        ...pick(input, ["title", "body", "minBilledAmount"]),
+        ...pick(input, ["title", "body"]),
         companyId: ctx.company.id,
         recipientTypes: Array.from(new Set([...(input.recipientTypes ?? []), "admins"])),
+        minBilledAmount: input.minBilledAmount?.toString(),
       })
       .where(byId(ctx, input.id))
       .returning();
@@ -105,8 +114,7 @@ export const companyUpdatesRouter = createRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const hasInvestors = await checkHasInvestors(ctx.company.id);
-      if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
       const [update] = await db
         .update(companyUpdates)
