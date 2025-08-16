@@ -537,8 +537,6 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_expense_categories!(company, categories)
-      return unless company.expenses_enabled?
-
       categories.each do |category|
         company.expense_categories.create!(name: category["name"])
       end

@@ -57,7 +57,7 @@ const dataSchema = z.object({
     id: z.string(),
     name: z.string(),
     address: addressSchema,
-    expenses: z.object({ enabled: z.boolean(), categories: z.array(z.object({ id: z.number(), name: z.string() })) }),
+    expenses: z.object({ categories: z.array(z.object({ id: z.number(), name: z.string() })) }),
   }),
   invoice: z.object({
     id: z.string().optional(),

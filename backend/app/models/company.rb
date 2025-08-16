@@ -174,10 +174,6 @@ class Company < ApplicationRecord
     is_trusted? ? 2 : 10 # estimated max number of business days for a contractor to receive payment after a consolidated invoice is charged
   end
 
-  def expenses_enabled?
-    Flipper.enabled?(:expenses, self)
-  end
-
   def find_company_worker!(user:)
     company_workers.find_by!(user:)
   end

@@ -32,7 +32,6 @@
       "feature_flags": {
         "company_updates": true,
         "equity_grants": true,
-        "expenses": true,
         "dividends": true,
         "share_certificates": true
       },
