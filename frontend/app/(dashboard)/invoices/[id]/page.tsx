@@ -397,6 +397,29 @@ export default function InvoicePage() {
               </Card>
             )}
 
+            {invoice.attachment ? (
+              <Card className="print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
+                <CardContent>
+                  <div className="mb-2">
+                    <strong>Documents</strong>
+                  </div>
+                  <>
+                    <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
+                    <div className="flex justify-between gap-2 py-2">
+                      <Link
+                        href={`/download/${invoice.attachment?.key}/${invoice.attachment?.filename}`}
+                        download
+                        className={cn(linkClasses, "print:text-black print:no-underline")}
+                      >
+                        <PaperClipIcon className="inline size-4 print:hidden" />
+                        {invoice.attachment?.filename}
+                      </Link>
+                    </div>
+                  </>
+                </CardContent>
+              </Card>
+            ) : null}
+
             <footer className="flex justify-between print:mt-4 print:flex print:items-start print:justify-between">
               <div className="print:mr-4 print:flex-1">
                 {invoice.notes ? (

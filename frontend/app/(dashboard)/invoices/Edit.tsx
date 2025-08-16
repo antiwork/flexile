@@ -3,7 +3,7 @@
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
@@ -16,6 +16,15 @@ import DatePicker from "@/components/DatePicker";
 import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,6 +94,12 @@ const dataSchema = z.object({
         attachment: z.object({ name: z.string(), url: z.string() }),
       }),
     ),
+    attachment: z
+      .object({
+        name: z.string(),
+        url: z.string(),
+      })
+      .nullable(),
   }),
 });
 type Data = z.infer<typeof dataSchema>;
@@ -101,9 +116,14 @@ const Edit = () => {
   const searchParams = useSearchParams();
   const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const trpcUtils = trpc.useUtils();
   const worker = user.roles.worker;
   assert(worker != null);
+
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   const { data } = useSuspenseQuery({
     queryKey: ["invoice", id],
@@ -140,6 +160,10 @@ const Edit = () => {
   const [showExpenses, setShowExpenses] = useState(false);
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
+  const uploadDocumentRef = useRef<HTMLInputElement>(null);
+  const [document, setDocument] = useState<{ name: string; url: string; blob?: File } | null>(
+    data.invoice.attachment ?? null,
+  );
   const showExpensesTable = showExpenses || expenses.size > 0;
 
   const validate = () => {
@@ -178,7 +202,12 @@ const Edit = () => {
           formData.append("invoice_expenses[][attachment]", expense.blob);
         }
       }
+
       if (notes.length) formData.append("invoice[notes]", notes);
+
+      if (document?.blob) {
+        formData.append("invoice[attachment]", document.blob);
+      }
 
       await request({
         method: id ? "PATCH" : "POST",
@@ -189,6 +218,10 @@ const Edit = () => {
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       await trpcUtils.documents.list.invalidate();
+      if (id) {
+        await trpcUtils.invoices.get.invalidate({ companyId: company.id, id });
+        await queryClient.invalidateQueries({ queryKey: ["invoice", id] });
+      }
       router.push("/invoices");
     },
   });
@@ -205,20 +238,75 @@ const Edit = () => {
 
   const createNewExpenseEntries = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    const oversizedFiles: string[] = [];
+    const validFiles: File[] = [];
+
+    // Check each file for size constraints
+    Array.from(files).forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        oversizedFiles.push(file.name);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    // Show alert if any files exceed size limit
+    if (oversizedFiles.length > 0) {
+      setAlertTitle("File Size Exceeded");
+      if (oversizedFiles.length === 1) {
+        setAlertMessage(`File "${oversizedFiles[0]}" exceeds the maximum limit of 10MB. Please select a smaller file.`);
+      } else {
+        setAlertMessage(
+          `${oversizedFiles.length} files exceed the maximum limit of 10MB: ${oversizedFiles.join(", ")}. Please select smaller files.`,
+        );
+      }
+      setAlertOpen(true);
+
+      // If all files are invalid, reset the file input
+      if (validFiles.length === 0) {
+        e.target.value = "";
+        return;
+      }
+    }
+
     const expenseCategory = assertDefined(data.company.expenses.categories[0]);
     setShowExpenses(true);
-    setExpenses((expenses) =>
-      expenses.push(
-        ...[...files].map((file) => ({
+
+    // Add each valid file as a separate expense
+    validFiles.forEach((file) => {
+      setExpenses((expenses) =>
+        expenses.push({
           description: "",
           category_id: expenseCategory.id,
           total_amount_in_cents: 0,
           attachment: { name: file.name, url: URL.createObjectURL(file) },
           blob: file,
-        })),
-      ),
-    );
+        }),
+      );
+    });
+  };
+
+  const addDocument = () => {
+    uploadDocumentRef.current?.click();
+  };
+
+  const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      setAlertTitle("File Size Exceeded");
+      setAlertMessage("File size exceeds the maximum limit of 10MB. Please select a smaller file.");
+      setAlertOpen(true);
+      e.target.value = "";
+      return;
+    }
+
+    setDocument({ name: file.name, url: URL.createObjectURL(file), blob: file });
   };
 
   const parseQuantity = (value: string | null | undefined) => {
@@ -260,6 +348,18 @@ const Edit = () => {
 
   return (
     <>
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{alertMessage}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setAlertOpen(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <DashboardHeader
         title={data.invoice.id ? "Edit invoice" : "New invoice"}
         headerActions={
@@ -401,6 +501,10 @@ const Edit = () => {
                         Add expense
                       </Button>
                     ) : null}
+                    <Button variant="link" onClick={addDocument} disabled={document !== null}>
+                      <PlusIcon className="inline size-4" />
+                      Add Document
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -415,6 +519,37 @@ const Edit = () => {
               multiple
               onChange={createNewExpenseEntries}
             />
+          ) : null}
+          <input
+            ref={uploadDocumentRef}
+            type="file"
+            className="hidden"
+            accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"
+            onChange={handleDocumentUpload}
+          />
+          {document ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Document</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>
+                    <a href={document.url} download>
+                      <PaperClipIcon className="inline size-4" /> {document.name}
+                    </a>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="link" aria-label="Remove" onClick={() => setDocument(null)}>
+                      <TrashIcon className="size-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           ) : null}
           {showExpensesTable ? (
             <Table>
