@@ -3,7 +3,6 @@ import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { integrations } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import {
   CLEARANCE_BANK_ACCOUNT_NAME,
   getQuickbooksAuthUrl,
@@ -12,8 +11,22 @@ import {
 } from "@/lib/quickbooks";
 import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
 import { assert, assertDefined } from "@/utils/assert";
+import { request } from "@/utils/request";
+import { sync_integration_company_administrator_quickbooks_path } from "@/utils/routes";
 
 const oauthState = (ctx: CompanyContext) => Buffer.from(`${ctx.company.id}:${ctx.company.name}`).toString("base64");
+
+async function triggerQuickbooksSync(companyId: bigint | string) {
+  const syncUrl = sync_integration_company_administrator_quickbooks_path(String(companyId));
+  try {
+    await request({
+      url: syncUrl,
+      method: "POST",
+      accept: "json",
+      assertOk: true,
+    });
+  } catch {}
+}
 
 const companyIntegration = async (companyId: bigint) => {
   const integration = await db.query.integrations.findFirst({
@@ -43,7 +56,7 @@ export const quickbooksRouter = createRouter({
       expenseAccounts: [],
       bankAccounts: [],
     };
-    if (integration.status !== "active") return data;
+    if (integration.status !== "active" && integration.status !== "initialized") return data;
 
     const qbo = getQuickbooksClient(integration);
     const [expenseAccounts, bankAccounts] = await Promise.all([
@@ -150,6 +163,8 @@ export const quickbooksRouter = createRouter({
           },
         });
       }
+
+      await triggerQuickbooksSync(ctx.company.id);
     }),
 
   disconnect: companyProcedure.mutation(async ({ ctx }) => {
@@ -195,9 +210,6 @@ export const quickbooksRouter = createRouter({
         })
         .where(eq(integrations.id, integration.id));
 
-      await inngest.send({
-        name: "quickbooks/sync-integration",
-        data: { companyId: String(ctx.company.id) },
-      });
+      await triggerQuickbooksSync(ctx.company.id);
     }),
 });
