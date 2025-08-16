@@ -231,7 +231,6 @@ test.describe("Equity Grants", () => {
     const { company } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       conversionSharePriceUsd: "1",
-      jsonData: { flags: ["option_exercising"] },
     });
     const { user } = await usersFactory.create();
     const { mockForm } = mockDocuseal(next, {});
