@@ -34,3 +34,9 @@ certificates/
 
 certificates/flexile.dev
 certificates/api.flexile.dev
+
+# Ignore plans directory
+/plans/
+
+# Claude Code documentation
+CLAUDE.md

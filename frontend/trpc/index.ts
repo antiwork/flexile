@@ -34,30 +34,28 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
     .split("; ")
     .find((row) => row.startsWith("X-CSRF-Token="))
     ?.split("=")[1];
+  let userId: number | null = null;
+  let jwtToken: string | null = null;
+
+  // Get userId and JWT from NextAuth session
+  const session = await getServerSession(authOptions);
+  const parsed = z
+    .object({ id: z.union([z.string(), z.number()]).optional(), jwt: z.string().optional() })
+    .safeParse(session?.user ?? null);
+  if (parsed.success) {
+    if (parsed.data.jwt) jwtToken = parsed.data.jwt;
+    const rawId = parsed.data.id;
+    const parsedId = typeof rawId === "string" ? Number.parseInt(rawId, 10) : (rawId ?? null);
+    if (parsedId && !Number.isNaN(parsedId)) userId = parsedId;
+  }
+
   const headers: Record<string, string> = {
     cookie,
     "user-agent": userAgent,
     accept: "application/json",
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
+    ...(jwtToken ? { Authorization: `Bearer ${jwtToken}` } : {}),
   };
-
-  let userId: number | null = null;
-
-  // Get userId from NextAuth JWT session
-  const session = await getServerSession(authOptions);
-  if (session?.user) {
-    // Extract user ID from JWT token
-    try {
-      const jwt = session.user.jwt;
-      const base64Payload = jwt.split(".")[1];
-      if (base64Payload) {
-        const payload = z
-          .object({ user_id: z.number() })
-          .safeParse(JSON.parse(Buffer.from(base64Payload, "base64").toString()));
-        if (payload.success) userId = payload.data.user_id;
-      }
-    } catch {}
-  }
 
   return {
     userId,
@@ -79,7 +77,7 @@ export const s3Client = new S3Client({
   credentials: { accessKeyId: env.AWS_ACCESS_KEY_ID, secretAccessKey: env.AWS_SECRET_ACCESS_KEY },
 });
 
-// TODO switch all stored HTML to use JSON - we should only have to call generateHTML here
+// TODO (techdebt): switch all stored HTML to use JSON - we should only have to call generateHTML here
 export const renderTiptap = (html: string) => generateHTML(generateJSON(html, richTextExtensions), richTextExtensions);
 export const renderTiptapToText = (html: string) =>
   Node.fromJSON(getSchema(richTextExtensions), generateJSON(html, richTextExtensions)).textContent;
@@ -93,7 +91,6 @@ export const protectedProcedure = baseProcedure
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 
-    // Calling opts.next in two places doesn't work, so using this slightly awkward function wrapper
     const getContext = async () => {
       if (!input?.companyId) {
         const user = assertDefined(

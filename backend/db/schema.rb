@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_16_165138) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -106,6 +106,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
     t.string "invite_link"
+    t.index ["dividends_allowed"], name: "idx_companies_dividends_allowed"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
     t.index ["invite_link"], name: "index_companies_on_invite_link", unique: true
   end
@@ -345,6 +346,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.text "release_document"
     t.index ["company_id"], name: "index_dividend_rounds_on_company_id"
     t.index ["external_id"], name: "index_dividend_rounds_on_external_id", unique: true
+    t.index ["ready_for_payment", "status", "issued_at"], name: "idx_div_rounds_auto_enable"
   end
 
   create_table "dividends", force: :cascade do |t|

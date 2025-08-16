@@ -7,18 +7,23 @@ class InvestorDividendsPaymentJob
   delegate :user, to: :company_investor, private: true
   delegate :tax_information_confirmed_at, :compliance_info, to: :user, private: :true
 
-  def perform(company_investor_id)
+  def perform(company_investor_id, dividend_id = nil)
     @company_investor = CompanyInvestor.find(company_investor_id)
 
     return if !user.has_verified_tax_id? || tax_information_confirmed_at.nil?
 
     update_dividend_tax_info
 
-    dividends_eligible_for_payment = company_investor
-                                       .dividends
-                                       .joins(:dividend_round)
-                                       .where(status: [Dividend::ISSUED, Dividend::RETAINED])
-                                       .where("dividends.signed_release_at IS NOT NULL OR dividend_rounds.release_document IS NULL")
+    # Create common scope with shared eligibility criteria
+    eligible_dividends_scope = company_investor
+      .dividends
+      .joins(:dividend_round)
+      .where(status: [Dividend::ISSUED, Dividend::RETAINED])
+      .where("dividends.signed_release_at IS NOT NULL OR dividend_rounds.release_document IS NULL")
+
+    # Conditionally add id filter when dividend_id is present
+    dividends_eligible_for_payment = dividend_id ? eligible_dividends_scope.where(id: dividend_id) : eligible_dividends_scope
+
     PayInvestorDividends.new(company_investor, dividends_eligible_for_payment).process
   end
 

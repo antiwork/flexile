@@ -1,5 +1,6 @@
 "use client";
 
+import { CreditCard } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
@@ -7,6 +8,7 @@ import DividendStatusIndicator from "@/app/(dashboard)/equity/DividendStatusIndi
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
+import { Button } from "@/components/ui/button";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -45,7 +47,18 @@ export default function DividendRound() {
 
   return (
     <>
-      <DashboardHeader title="Dividend" />
+      <DashboardHeader
+        title="Dividend"
+        headerActions={
+          // TODO (techdebt): Extract payments path to routes helper for better maintainability
+          <Button asChild>
+            <Link href={`/equity/dividend_rounds/${id}/payments`}>
+              <CreditCard className="mr-2 h-4 w-4" />
+              Manage Payments
+            </Link>
+          </Button>
+        }
+      />
       {isLoading ? (
         <TableSkeleton columns={4} />
       ) : (

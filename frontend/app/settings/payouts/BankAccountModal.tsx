@@ -394,14 +394,16 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     });
   };
 
-  const groupedFields = useMemo(
-    () =>
-      Object.groupBy(visibleFields ?? [], (field: Field, i) => {
-        const index = fieldGroups.findIndex((group) => group.includes(field.key));
-        return index === -1 ? `field${i}` : `group${index}`;
-      }),
-    [visibleFields],
-  );
+  const groupedFields = useMemo(() => {
+    const items = visibleFields ?? [];
+    const acc: Record<string, Field[]> = {};
+    items.forEach((field, i) => {
+      const index = fieldGroups.findIndex((group) => group.includes(field.key));
+      const bucket = index === -1 ? `field${i}` : `group${index}`;
+      (acc[bucket] ||= []).push(field);
+    });
+    return acc;
+  }, [visibleFields]);
 
   useEffect(() => {
     if (!allFields) return;
