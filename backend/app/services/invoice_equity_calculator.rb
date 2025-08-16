@@ -12,11 +12,15 @@ class InvoiceEquityCalculator
   def calculate
     unvested_grant = company_worker.unique_unvested_equity_grant_for_year(invoice_year)
     share_price_usd = unvested_grant&.share_price_usd || company.fmv_per_share_in_usd
-    if company_worker.equity_percentage.nonzero? && share_price_usd.nil?
+    equity_percentage = company_worker.equity_percentage
+    if equity_percentage.nonzero? && share_price_usd.nil?
       Bugsnag.notify("InvoiceEquityCalculator: Error determining share price for CompanyWorker #{company_worker.id}")
       return
     end
-    equity_percentage = company_worker.equity_percentage
+    if equity_percentage.nonzero? && unvested_grant.nil?
+      Bugsnag.notify("InvoiceEquityCalculator: Error selecting active grant for CompanyWorker #{company_worker.id}")
+      return
+    end
     equity_amount_in_cents = ((service_amount_cents * equity_percentage) / 100.to_d).round
     equity_amount_in_options =
       if equity_percentage.zero? || !company.equity_enabled?
