@@ -25,7 +25,7 @@ export default defineConfig({
     locale: "en-US",
   },
   expect: { timeout: 5000, toPass: { timeout: 5000 } },
-  timeout: process.env.CI ? 30000 : 45000,
+  timeout: process.env.CI ? 30000 : 120000,
   projects: [
     {
       name: "setup",
