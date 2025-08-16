@@ -5,6 +5,8 @@ class User < ApplicationRecord
 
   devise :invitable, :database_authenticatable
 
+  normalizes :email, with: ->(e) { e.strip.downcase }
+
   include ExternalId, Flipper::Identifier, DeviseInternal, OtpAuthentication
 
   NON_TAX_COMPLIANCE_ATTRIBUTES = %i[legal_name birth_date country_code citizenship_country_code street_address city state zip_code]

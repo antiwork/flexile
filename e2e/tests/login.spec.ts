@@ -1,6 +1,6 @@
 import { db } from "@test/db";
 import { usersFactory } from "@test/factories/users";
-import { fillOtp } from "@test/helpers/auth";
+import { fillOtp, login, logout, mockLogin } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
@@ -54,4 +54,23 @@ test("login with redirect_url", async ({ page }) => {
   await expect(page.getByText("Use your work email to log in.")).not.toBeVisible();
 
   expect(page.url()).toContain("/people");
+});
+
+test("remembers and displays last sign in provider", async ({ page }) => {
+  const { user } = await usersFactory.create();
+  const email = user.email;
+
+  await page.goto("/login");
+  await expect(page.getByText("Use your work email to log in.")).toBeVisible();
+
+  await login(page, user);
+  await logout(page);
+  await expect(page.getByText("You used your work email last time.")).toBeVisible();
+
+  await mockLogin(page, email, "google");
+  await page.getByRole("button", { name: "Log in with Google" }).click();
+  await page.waitForURL(/.*\/invoices.*/u);
+
+  await logout(page);
+  await expect(page.getByText("You used Google to log in last time.")).toBeVisible();
 });

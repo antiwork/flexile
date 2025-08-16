@@ -23,7 +23,7 @@ test.describe("Company administrator signup", () => {
     await page.goto("/signup");
 
     await page.getByLabel("Work email").fill(email);
-    await page.getByRole("button", { name: "Sign up" }).click();
+    await page.getByRole("button", { name: "Sign up", exact: true }).click();
 
     await fillOtp(page);
 

@@ -23,14 +23,14 @@ export function AuthPage({
   description,
   switcher,
   sendOtpUrl,
-  sendOtpText,
+  ctaText,
   onVerifyOtp,
 }: {
   title: string;
   description: string;
   switcher: React.ReactNode;
   sendOtpUrl: string;
-  sendOtpText: string;
+  ctaText: string;
   onVerifyOtp?: (data: { email: string; otp: string }) => Promise<void>;
 }) {
   const router = useRouter();
@@ -53,6 +53,11 @@ export function AuthPage({
     },
   });
 
+  const redirectUrl = () => {
+    const redirectUrl = searchParams.get("redirect_url");
+    return redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard";
+  };
+
   const verifyOtp = useMutation({
     mutationFn: async (values: { otp: string }) => {
       const email = emailForm.getValues("email");
@@ -65,11 +70,8 @@ export function AuthPage({
       const session = await getSession();
       if (!session?.user.email) throw new Error("Invalid verification code");
 
-      const redirectUrl = searchParams.get("redirect_url");
-      router.replace(
-        // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
-        redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard",
-      );
+      // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
+      router.replace(redirectUrl());
     },
   });
   const emailForm = useForm({
@@ -169,6 +171,34 @@ export function AuthPage({
               </form>
             </Form>
           ) : null}
+
+          {!sendOtp.isSuccess ? (
+            <div className="space-y-4">
+              <Button
+                type="button"
+                variant="primary"
+                className="w-full"
+                onClick={() => void signIn("google", { callbackUrl: redirectUrl() })}
+              >
+                <Image
+                  className="mr-2 size-4 brightness-0 invert"
+                  alt="Google icon"
+                  width={24}
+                  height={24}
+                  loading="lazy"
+                  src="/google-icon.svg"
+                />
+                {ctaText} with Google
+              </Button>
+
+              <div className="flex items-center">
+                <span className="h-px w-full bg-gray-100" />
+                <span className="px-4">or</span>
+                <span className="h-px w-full bg-gray-100" />
+              </div>
+            </div>
+          ) : null}
+
           {!sendOtp.isSuccess ? (
             <Form {...emailForm}>
               <form onSubmit={(e) => void submitEmailForm(e)} className="space-y-4">
@@ -192,8 +222,14 @@ export function AuthPage({
                     </FormItem>
                   )}
                 />
-                <MutationStatusButton mutation={sendOtp} type="submit" className="w-full" loadingText="Sending...">
-                  {sendOtpText}
+                <MutationStatusButton
+                  idleVariant="outline"
+                  mutation={sendOtp}
+                  type="submit"
+                  className="w-full"
+                  loadingText="Sending..."
+                >
+                  {ctaText}
                 </MutationStatusButton>
 
                 <div className="pt-6 text-center text-gray-600">{switcher}</div>

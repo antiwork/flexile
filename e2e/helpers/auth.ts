@@ -16,10 +16,18 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
   await page.goto(pageURL);
 
   await page.getByLabel("Work email").fill(user.email);
-  await page.getByRole("button", { name: "Log in" }).click();
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
   await fillOtp(page);
 
   await page.waitForURL(/^(?!.*\/login$).*/u);
+};
+
+export const mockLogin = async (page: Page, email: string, provider: "google") => {
+  await page.route(`**/api/auth/callback/${provider}`, async (route) => {
+    const body = route.request().postDataJSON();
+    const postData = new URLSearchParams({ ...body, email }).toString();
+    await route.continue({ postData });
+  });
 };
 
 export const logout = async (page: Page) => {
@@ -41,7 +49,7 @@ export const signup = async (page: Page, email: string) => {
 
   // Enter email and request OTP
   await page.getByLabel("Work email").fill(email);
-  await page.getByRole("button", { name: "Sign up" }).click();
+  await page.getByRole("button", { name: "Sign up", exact: true }).click();
 
   // Wait for OTP step and enter verification code
   await page.getByLabel("Verification code").waitFor();

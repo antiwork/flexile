@@ -3,6 +3,7 @@
 # Note: Route helpers don't have `internal_` prefix
 scope path: :internal, module: :internal do
   resources :login, only: :create
+  resources :oauth, only: :create
   resources :email_otp, only: :create
   resources :signup, only: [] do
     collection do

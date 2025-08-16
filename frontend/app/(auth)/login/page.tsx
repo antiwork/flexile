@@ -1,14 +1,21 @@
-"use client";
 import Link from "next/link";
 import { linkClasses } from "@/components/Link";
+import { lastSignInProvider } from "@/lib/auth";
 import { AuthPage } from "..";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const provider = (await lastSignInProvider.get()) ?? "";
+
+  const description = {
+    google: "You used Google to log in last time.",
+    otp: "You used your work email last time.",
+  }[provider];
+
   return (
     <AuthPage
       title="Welcome back"
-      description="Use your work email to log in."
-      sendOtpText="Log in"
+      description={description || "Use your work email to log in."}
+      ctaText="Log in"
       switcher={
         <>
           Don't have an account?{" "}

@@ -1964,6 +1964,26 @@ export const new_rails_conductor_inbound_email_source_path: ((
 
 /**
  * Generates rails route to
+ * /internal/oauth(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const oauth_index_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/oauth(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const oauth_index_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /oauth_redirect(.:format)
  * @param {object | undefined} options
  * @returns {string} route path

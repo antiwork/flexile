@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::SignupController < Internal::BaseController
-  include OtpValidation, UserDataSerialization, JwtAuthenticatable
+  include OtpValidation, UserDataSerialization, JwtAuthenticatable, UserSignupCompletion
 
   def send_otp
     email = params[:email]
@@ -46,14 +46,10 @@ class Internal::SignupController < Internal::BaseController
       return render json: { error: "An account with this email already exists. Please log in instead." }, status: :conflict
     end
 
-    # Complete user creation
-    result = complete_user_signup(temp_user)
-
-    if result[:success]
-      success_response_with_jwt(result[:user], :created)
-    else
-      render json: { error: result[:error_message] }, status: :unprocessable_entity
-    end
+    user = complete_user_signup(temp_user)
+    success_response_with_jwt(user, :created)
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   private
@@ -74,19 +70,5 @@ class Internal::SignupController < Internal::BaseController
       end
 
       temp_user
-    end
-
-    def complete_user_signup(temp_user)
-      ApplicationRecord.transaction do
-        temp_user.update!(
-          confirmed_at: Time.current,
-          invitation_accepted_at: Time.current
-        )
-        temp_user.tos_agreements.create!(ip_address: request.remote_ip)
-
-        { success: true, user: temp_user }
-      end
-    rescue ActiveRecord::RecordInvalid => e
-      { success: false, error_message: e.record.errors.full_messages.to_sentence }
     end
 end
