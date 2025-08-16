@@ -35,8 +35,17 @@ import { formatDate } from "@/utils/time";
 type DividendRound = RouterOutput["dividendRounds"]["list"][number];
 type DividendComputation = RouterOutput["dividendComputations"]["list"][number];
 
+// Static mapping for Tailwind classes to ensure proper JIT compilation
+const statusClassMap = {
+  blue: "border-blue-200 text-blue-700 bg-blue-50",
+  yellow: "border-yellow-200 text-yellow-700 bg-yellow-50",
+  green: "border-green-200 text-green-700 bg-green-50",
+  red: "border-red-200 text-red-700 bg-red-50",
+  gray: "border-gray-200 text-gray-700 bg-gray-50",
+} as const;
+
 const getPaymentStatus = (round: DividendRound) => {
-  // TODO: Replace this local status computation with API-provided payment status
+  // TODO (techdebt): Replace this local status computation with API-provided payment status
   // Mock payment status calculation - in real app would come from API
 
   const now = new Date();
@@ -44,12 +53,12 @@ const getPaymentStatus = (round: DividendRound) => {
   const daysSinceIssue = Math.floor((now.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24));
 
   if (daysSinceIssue < 1) {
-    return { status: "processing", label: "Processing", color: "blue" };
+    return { status: "processing", label: "Processing", color: "blue" as const };
   }
   if (daysSinceIssue < 7) {
-    return { status: "paying", label: "Paying Out", color: "yellow" };
+    return { status: "paying", label: "Paying Out", color: "yellow" as const };
   }
-  return { status: "completed", label: "Completed", color: "green" };
+  return { status: "completed", label: "Completed", color: "green" as const };
 };
 
 const computationColumnHelper = createColumnHelper<DividendComputation>();
@@ -61,10 +70,10 @@ export default function DividendRounds() {
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const { data: dividendRounds = [], isLoading: roundsLoading } = trpc.dividendRounds.list.useQuery({
-    companyId: company.id,
+    companyId: company.externalId,
   });
   const { data: dividendComputations = [], isLoading: computationsLoading } = trpc.dividendComputations.list.useQuery({
-    companyId: company.id,
+    companyId: company.externalId,
   });
 
   const finalizeMutation = trpc.dividendComputations.finalize.useMutation({
@@ -198,10 +207,7 @@ export default function DividendRounds() {
         const status = getPaymentStatus(round);
 
         return (
-          <Badge
-            variant="outline"
-            className={` border-${status.color}-200 text-${status.color}-700 bg-${status.color}-50 `}
-          >
+          <Badge variant="outline" className={statusClassMap[status.color]}>
             {status.label}
           </Badge>
         );

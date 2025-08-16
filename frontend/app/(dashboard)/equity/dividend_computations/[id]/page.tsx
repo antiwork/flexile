@@ -43,23 +43,27 @@ const columns = [
   }),
   columnHelper.accessor("number_of_shares", {
     header: "Shares",
-    cell: (info) => info.getValue()?.toLocaleString(),
+    cell: (info) => <div className="text-right">{info.getValue()?.toLocaleString()}</div>,
   }),
   columnHelper.accessor("preferred_dividend_amount_in_usd", {
     header: "Preferred",
-    cell: (info) => formatMoney(info.getValue()),
+    cell: (info) => <div className="text-right">{formatMoney(info.getValue())}</div>,
   }),
   columnHelper.accessor("dividend_amount_in_usd", {
     header: "Common",
-    cell: (info) => formatMoney(info.getValue()),
+    cell: (info) => <div className="text-right">{formatMoney(info.getValue())}</div>,
   }),
   columnHelper.accessor("qualified_dividend_amount_usd", {
     header: "Qualified",
-    cell: (info) => formatMoney(info.getValue()),
+    cell: (info) => <div className="text-right">{formatMoney(info.getValue())}</div>,
   }),
   columnHelper.accessor("total_amount_in_usd", {
     header: "Total",
-    cell: (info) => <strong>{formatMoney(info.getValue())}</strong>,
+    cell: (info) => (
+      <div className="text-right">
+        <strong>{formatMoney(info.getValue())}</strong>
+      </div>
+    ),
   }),
 ];
 
@@ -83,7 +87,8 @@ export default function DividendComputationReview() {
   const finalizeComputation = trpc.dividendComputations.finalize.useMutation({
     onSuccess: (result) => {
       if (result?.payment_result?.error) {
-        // Could show a toast notification here for payment processing failures
+        console.error("Payment processing error:", result.payment_result.error);
+        // TODO (techdebt): Show toast notification for payment processing failures
       }
       router.push(`/equity/dividend_rounds/${result?.id}`);
     },
@@ -150,10 +155,8 @@ export default function DividendComputationReview() {
     );
   }
 
-  // TODO: Unify DTO field casing between snake_case and camelCase
-  const totalAmountUsd = parseFloat(
-    computation?.total_amount_in_usd || computation?.totalAmountInUsd || "0"
-  );
+  // TODO (techdebt): Unify DTO field casing between snake_case and camelCase
+  const totalAmountUsd = parseFloat(computation?.total_amount_in_usd || computation?.totalAmountInUsd || "0");
   const totals = computation?.totals;
   const fees = calculatePaymentFees(totalAmountUsd);
 
@@ -185,7 +188,7 @@ export default function DividendComputationReview() {
               <div>
                 <p className="text-muted-foreground text-sm font-medium">Issuance Date</p>
                 <p className="text-lg">
-                  {formatDate(computation.dividends_issuance_date || computation.dividendsIssuanceDate)}
+                  {formatDate(computation.dividends_issuance_date || computation.dividendsIssuanceDate || "")}
                 </p>
               </div>
               <div>

@@ -161,7 +161,7 @@ export const contractorsRouter = createRouter({
                 ),
               ),
             );
-            // TODO store which template was used for the previous contract
+            // TODO (techdebt): store which template was used for the previous contract
             const template = await db.query.documentTemplates.findFirst({
               where: and(
                 or(eq(documentTemplates.companyId, ctx.company.id), isNull(documentTemplates.companyId)),

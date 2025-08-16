@@ -77,7 +77,7 @@ export const usersRouter = createRouter({
       with: { signatures: { with: { user: true } } },
     });
     for (const document of createdDocuments) {
-      // TODO store which template was used for the previous contract
+      // TODO (techdebt): store which template was used for the previous contract
       const template = await db.query.documentTemplates.findFirst({
         where: and(
           or(eq(documentTemplates.companyId, document.companyId), isNull(documentTemplates.companyId)),

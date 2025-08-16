@@ -3,14 +3,14 @@ import { z } from "zod";
 import { getBackendUrl } from "@/utils/backend";
 import { createRouter, protectedProcedure } from "../";
 
-// TODO: Extract shared backend proxy/header handling into a reusable helper
+// TODO (techdebt): Extract shared backend proxy/header handling into a reusable helper
 
 export const paymentManagementRouter = createRouter({
   getDividendPaymentStatus: protectedProcedure
     .input(
       z.object({
         companyId: z.string(),
-        dividendRoundId: z.number(),
+        dividendRoundId: z.number().int().positive(),
       }),
     )
     .query(async ({ input, ctx }) => {
@@ -22,9 +22,8 @@ export const paymentManagementRouter = createRouter({
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
+              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
               "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-              ...ctx.headers,
             },
           },
         );
@@ -63,9 +62,8 @@ export const paymentManagementRouter = createRouter({
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
+              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
               "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-              ...ctx.headers,
             },
           },
         );
@@ -82,12 +80,17 @@ export const paymentManagementRouter = createRouter({
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return balances;
       } catch (_error) {
-        // Return mock data for now
-        return {
-          stripe_balance_cents: 2500000, // $25,000
-          wise_balance_cents: 0,
-          bank_balance_cents: 100000000, // $1,000,000
-        };
+        if (process.env.NODE_ENV !== "production") {
+          return {
+            stripe_balance_cents: 2_500_000,
+            wise_balance_cents: 0,
+            bank_balance_cents: 100_000_000,
+          };
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch account balances",
+        });
       }
     }),
 
@@ -95,7 +98,7 @@ export const paymentManagementRouter = createRouter({
     .input(
       z.object({
         companyId: z.string(),
-        amountInCents: z.number(),
+        amountInCents: z.number().int().positive(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -107,7 +110,7 @@ export const paymentManagementRouter = createRouter({
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
+              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
               "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
               "Content-Type": "application/json",
               ...ctx.headers,
@@ -141,7 +144,7 @@ export const paymentManagementRouter = createRouter({
     .input(
       z.object({
         companyId: z.string(),
-        amountInCents: z.number(),
+        amountInCents: z.number().int().positive(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -153,7 +156,7 @@ export const paymentManagementRouter = createRouter({
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
+              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
               "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
               "Content-Type": "application/json",
               ...ctx.headers,
@@ -187,7 +190,7 @@ export const paymentManagementRouter = createRouter({
     .input(
       z.object({
         companyId: z.string(),
-        dividendId: z.number(),
+        dividendId: z.number().int().positive(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -199,9 +202,8 @@ export const paymentManagementRouter = createRouter({
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
+              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
               "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-              ...ctx.headers,
             },
           },
         );
@@ -229,7 +231,7 @@ export const paymentManagementRouter = createRouter({
     .input(
       z.object({
         companyId: z.string(),
-        dividendRoundId: z.number(),
+        dividendRoundId: z.number().int().positive(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -241,9 +243,8 @@ export const paymentManagementRouter = createRouter({
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
+              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
               "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-              ...ctx.headers,
             },
           },
         );
@@ -271,7 +272,7 @@ export const paymentManagementRouter = createRouter({
     .input(
       z.object({
         companyId: z.string(),
-        dividendId: z.number(),
+        dividendId: z.number().int().positive(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -283,9 +284,8 @@ export const paymentManagementRouter = createRouter({
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
+              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
               "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-              ...ctx.headers,
             },
           },
         );

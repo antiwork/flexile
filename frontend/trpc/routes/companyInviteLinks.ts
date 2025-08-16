@@ -1,4 +1,4 @@
-// TODO Remove this TRCP once we have moved away from DocumentTemplates table
+// TODO (techdebt): Remove this TRCP once we have moved away from DocumentTemplates table
 
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";

@@ -19,7 +19,7 @@ export const dividendComputationsRouter = createRouter({
       if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
       try {
-        // TODO: Extract a common backend fetch helper to reduce duplication across TRPC routes
+        // TODO (techdebt): Extract a common backend fetch helper to reduce duplication across TRPC routes
         const url = `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/dividend_computations`;
 
         const response = await fetch(url, {
@@ -41,7 +41,7 @@ export const dividendComputationsRouter = createRouter({
         if (!response.ok) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const errorData = await response.json().catch(() => ({}));
-          
+
           if (response.status === 422 || response.status === 400) {
             throw new TRPCError({
               code: "BAD_REQUEST",
@@ -49,11 +49,11 @@ export const dividendComputationsRouter = createRouter({
               message: errorData.error || "Invalid request data",
             });
           }
-          
+
           if (response.status === 404) {
             throw new TRPCError({ code: "NOT_FOUND" });
           }
-          
+
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
@@ -111,7 +111,7 @@ export const dividendComputationsRouter = createRouter({
         if (!response.ok) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const errorData = await response.json().catch(() => ({}));
-          
+
           if (response.status === 422 || response.status === 400) {
             throw new TRPCError({
               code: "BAD_REQUEST",
@@ -119,11 +119,11 @@ export const dividendComputationsRouter = createRouter({
               message: errorData.error || "Invalid request data",
             });
           }
-          
+
           if (response.status === 404) {
             throw new TRPCError({ code: "NOT_FOUND" });
           }
-          
+
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
@@ -142,7 +142,7 @@ export const dividendComputationsRouter = createRouter({
       }
     }),
 
-  get: companyProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {
+  get: companyProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ ctx, input }) => {
     if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
     if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -213,7 +213,7 @@ export const dividendComputationsRouter = createRouter({
     }
   }),
 
-  delete: companyProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
+  delete: companyProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
     if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
     if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -250,7 +250,7 @@ export const dividendComputationsRouter = createRouter({
     }
   }),
 
-  finalize: companyProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
+  finalize: companyProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
     if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN" });
     if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -270,7 +270,7 @@ export const dividendComputationsRouter = createRouter({
       if (!response.ok) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const errorData = await response.json().catch(() => ({}));
-        
+
         if (response.status === 422 || response.status === 400) {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -278,11 +278,11 @@ export const dividendComputationsRouter = createRouter({
             message: errorData.error || "Invalid request data",
           });
         }
-        
+
         if (response.status === 404) {
           throw new TRPCError({ code: "NOT_FOUND" });
         }
-        
+
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment

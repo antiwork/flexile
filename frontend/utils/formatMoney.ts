@@ -7,14 +7,12 @@ export const formatMoney = (
 ) => {
   // Convert price to a numeric value safely
   const numericValue = price instanceof Decimal ? parseFloat(price.toString()) : Number(price);
-  
   // Detect if it's an integer
   const isInteger = Number.isInteger(numericValue);
-  
   // Apply appropriate fraction digit settings
   let maximumFractionDigits: number | undefined;
   let minimumFractionDigits: number | undefined;
-  
+
   if (options?.precise) {
     maximumFractionDigits = 10;
   } else if (isInteger) {
@@ -22,7 +20,6 @@ export const formatMoney = (
     maximumFractionDigits = 0;
     minimumFractionDigits = 0;
   }
-  
   return new Intl.NumberFormat(undefined, {
     style: "currency",
     currency,

@@ -18,18 +18,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 
-// TODO: Track policy drift - the 10-day rule is enforced here on the client
+// TODO (techdebt): Track policy drift - the 10-day rule is enforced here on the client
 // but may also be enforced on the server. We should ensure consistency
 // between client and server validation to avoid user experience issues.
 const formSchema = z.object({
-  totalAmountInUsd: z.number().positive().min(0.01, "Amount must be at least $0.01"),
+  totalAmountInUsd: z.number().min(0.01, "Amount must be at least $0.01"),
   dividendsIssuanceDate: z.instanceof(CalendarDate, { message: "This field is required." }).refine(
     (date) => {
       const todayDate = today(getLocalTimeZone());
       const tenDaysFromNow = todayDate.add({ days: 10 });
       return date.compare(tenDaysFromNow) >= 0;
     },
-    { message: "Dividend issuance date must be at least 10 days in the future" }
+    { message: "Dividend issuance date must be at least 10 days in the future" },
   ),
   returnOfCapital: z.boolean().default(false),
   investorReleaseForm: z.boolean().default(false),
@@ -89,7 +89,8 @@ export default function NewDividendComputation() {
         <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <h3 className="mb-2 text-sm font-medium text-amber-800">About Dividend Computations</h3>
           <p className="text-sm text-amber-700">
-            This tool will calculate dividend distributions for all eligible shareholders based on their share ownership. You'll be able to review all calculations before finalizing the dividend round.
+            This tool will calculate dividend distributions for all eligible shareholders based on their share
+            ownership. You'll be able to review all calculations before finalizing the dividend round.
           </p>
         </div>
 
@@ -105,9 +106,7 @@ export default function NewDividendComputation() {
                     <NumberInput {...field} prefix="$" placeholder="0.00" className="text-lg" />
                   </FormControl>
                   <FormMessage />
-                  <p className="text-sm text-muted-foreground">
-                    Total amount to be distributed among all shareholders
-                  </p>
+                  <p className="text-muted-foreground text-sm">Total amount to be distributed among all shareholders</p>
                 </FormItem>
               )}
             />
@@ -118,10 +117,15 @@ export default function NewDividendComputation() {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <DatePicker {...field} label="Dividend Issuance Date" granularity="day" minValue={today(getLocalTimeZone())} />
+                    <DatePicker
+                      {...field}
+                      label="Dividend Issuance Date"
+                      granularity="day"
+                      minValue={today(getLocalTimeZone())}
+                    />
                   </FormControl>
                   <FormMessage />
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     The date when dividends will be issued to shareholders
                   </p>
                 </FormItem>
@@ -135,7 +139,7 @@ export default function NewDividendComputation() {
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">Return of Capital</FormLabel>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Mark this dividend as a return of capital for tax purposes
                     </p>
                   </div>
@@ -153,7 +157,7 @@ export default function NewDividendComputation() {
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">Investor Release Form</FormLabel>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Require investors to sign a release form before receiving dividends
                     </p>
                   </div>
@@ -178,7 +182,7 @@ export default function NewDividendComputation() {
                     />
                   </FormControl>
                   <FormMessage />
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Rich text details that will be included in investor notifications
                   </p>
                 </FormItem>

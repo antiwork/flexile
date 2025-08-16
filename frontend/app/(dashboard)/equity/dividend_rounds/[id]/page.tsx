@@ -50,7 +50,7 @@ export default function DividendRound() {
       <DashboardHeader
         title="Dividend"
         headerActions={
-          // TODO: Extract payments path to routes helper for better maintainability
+          // TODO (techdebt): Extract payments path to routes helper for better maintainability
           <Button asChild>
             <Link href={`/equity/dividend_rounds/${id}/payments`}>
               <CreditCard className="mr-2 h-4 w-4" />

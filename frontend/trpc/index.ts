@@ -91,7 +91,7 @@ export const s3Client = new S3Client({
   credentials: { accessKeyId: env.AWS_ACCESS_KEY_ID, secretAccessKey: env.AWS_SECRET_ACCESS_KEY },
 });
 
-// TODO switch all stored HTML to use JSON - we should only have to call generateHTML here
+// TODO (techdebt): switch all stored HTML to use JSON - we should only have to call generateHTML here
 export const renderTiptap = (html: string) => generateHTML(generateJSON(html, richTextExtensions), richTextExtensions);
 export const renderTiptapToText = (html: string) =>
   Node.fromJSON(getSchema(richTextExtensions), generateJSON(html, richTextExtensions)).textContent;

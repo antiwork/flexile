@@ -53,7 +53,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
       },
     });
 
-    // TODO: Shouldn't be necessary, the client invalidate doesn't work for some reason
+    // TODO (techdebt): Shouldn't be necessary, the client invalidate doesn't work for some reason
     void refetch();
   };
 

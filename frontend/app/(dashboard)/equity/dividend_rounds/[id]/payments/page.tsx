@@ -1,8 +1,8 @@
 "use client";
 
+import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { AlertTriangle, ArrowLeft, CheckCircle, DollarSign, RefreshCw, Users } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
@@ -17,6 +17,21 @@ import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 
 type Dividend = RouterOutput["dividends"]["list"][number];
+
+// Define status configuration type
+type StatusKey = "pending" | "ready" | "processing" | "completed" | "failed" | "retained";
+
+// Map backend status values to frontend status values
+const normalizeStatus = (backendStatus: Dividend["status"]): StatusKey => {
+  const statusMap: Record<Dividend["status"], StatusKey> = {
+    "Pending signup": "pending",
+    Issued: "ready",
+    Processing: "processing",
+    Paid: "completed",
+    Retained: "retained",
+  };
+  return statusMap[backendStatus] || "pending";
+};
 
 const columnHelper = createColumnHelper<Dividend>();
 
@@ -34,7 +49,8 @@ const paymentColumns = [
   columnHelper.accessor("status", {
     header: "Payment Status",
     cell: (info) => {
-      const status = info.getValue();
+      const backendStatus = info.getValue();
+      const status = normalizeStatus(backendStatus);
       const statusConfig = {
         pending: {
           color: "yellow",
@@ -68,8 +84,7 @@ const paymentColumns = [
         },
       };
 
-      const isValidStatus = (s: string): s is keyof typeof statusConfig => s in statusConfig;
-      const config = isValidStatus(status) ? statusConfig[status] : statusConfig.pending;
+      const config = statusConfig[status];
 
       return (
         <Badge variant="outline" className={config.className}>
@@ -82,8 +97,9 @@ const paymentColumns = [
     id: "actions",
     header: "Actions",
     cell: (info) => {
-      const status = info.row.original.status;
-      // TODO: Wire up these actions to TRPC mutations for actual payment processing
+      const backendStatus = info.row.original.status;
+      const status = normalizeStatus(backendStatus);
+      // TODO (techdebt): Wire up these actions to TRPC mutations for actual payment processing
       return (
         <div className="flex gap-2">
           {status === "failed" && (
@@ -129,19 +145,19 @@ export default function DividendPaymentsPage() {
   const paymentStats = {
     totalAmount: dividends.reduce((sum, d) => sum + Number(d.totalAmountInCents), 0),
     totalRecipients: dividends.length,
-    readyToPay: dividends.filter((d) => d.status === "ready").length,
-    completed: dividends.filter((d) => d.status === "completed").length,
-    failed: dividends.filter((d) => d.status === "failed").length,
-    retained: dividends.filter((d) => d.status === "retained").length,
+    readyToPay: dividends.filter((d) => normalizeStatus(d.status) === "ready").length,
+    completed: dividends.filter((d) => normalizeStatus(d.status) === "completed").length,
+    failed: dividends.filter((d) => normalizeStatus(d.status) === "failed").length,
+    retained: dividends.filter((d) => normalizeStatus(d.status) === "retained").length,
   };
 
   const completionPercentage =
     paymentStats.totalRecipients > 0 ? Math.round((paymentStats.completed / paymentStats.totalRecipients) * 100) : 0;
 
   // Filter data for different table views
-  const pendingDividends = dividends.filter((d) => d.status === "pending");
-  const readyDividends = dividends.filter((d) => d.status === "ready");
-  const failedDividends = dividends.filter((d) => d.status === "failed");
+  const pendingDividends = dividends.filter((d) => normalizeStatus(d.status) === "pending");
+  const readyDividends = dividends.filter((d) => normalizeStatus(d.status) === "ready");
+  const failedDividends = dividends.filter((d) => normalizeStatus(d.status) === "failed");
 
   const allPaymentsTable = useTable({ data: dividends, columns: paymentColumns });
   const pendingPaymentsTable = useTable({ data: pendingDividends, columns: paymentColumns });
@@ -276,9 +292,7 @@ export default function DividendPaymentsPage() {
 
               <div className="space-y-2">
                 <h4 className="font-medium">Wise Balance</h4>
-                <p className="text-2xl font-bold">
-                  {formatMoneyFromCents(Number(balances?.wise_balance_cents) || 0)}
-                </p>
+                <p className="text-2xl font-bold">{formatMoneyFromCents(Number(balances?.wise_balance_cents) || 0)}</p>
                 <Button
                   onClick={handleTransferToWise}
                   disabled={transferToWiseMutation.isPending}
