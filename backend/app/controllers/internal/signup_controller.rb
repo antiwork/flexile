@@ -82,7 +82,7 @@ class Internal::SignupController < Internal::BaseController
           confirmed_at: Time.current,
           invitation_accepted_at: Time.current
         )
-        temp_user.tos_agreements.create!(ip_address: request.remote_ip)
+        CompleteUserSetup.new(user: temp_user, ip_address: request.remote_ip).perform
 
         { success: true, user: temp_user }
       end

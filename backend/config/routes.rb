@@ -61,6 +61,15 @@ Rails.application.routes.draw do
     resources :quickbooks, controller: :quickbooks, only: [:create]
   end
 
+  namespace :api do
+    resources :oauth, only: [] do
+      collection do
+        post :oauth_login
+        post :oauth_signup
+      end
+    end
+  end
+
   scope module: :api, as: :api do
     constraints api_domain_constraint do
       namespace :v1 do

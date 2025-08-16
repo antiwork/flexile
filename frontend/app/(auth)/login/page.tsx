@@ -1,13 +1,35 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { linkClasses } from "@/components/Link";
+import { LoginMethod } from "@/db/enums";
 import { AuthPage } from "..";
 
+export const loginMethodLabels: Record<LoginMethod, string> = {
+  [LoginMethod.Email]: "your work email",
+  [LoginMethod.Google]: "Google",
+};
+
 export default function LoginPage() {
+  const [lastLoginMethod, setLastLoginMethod] = useState<LoginMethod | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const method = localStorage.getItem("lastLoginMethod");
+      if (method === LoginMethod.Email || method === LoginMethod.Google) {
+        setLastLoginMethod(method);
+      }
+    }
+  }, []);
+
   return (
     <AuthPage
       title="Welcome back"
-      description="Use your work email to log in."
+      description={
+        lastLoginMethod && loginMethodLabels[lastLoginMethod]
+          ? `You used ${loginMethodLabels[lastLoginMethod]} to log in last time.`
+          : "Use your work email to log in."
+      }
       sendOtpText="Log in"
       switcher={
         <>

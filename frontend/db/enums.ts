@@ -50,3 +50,8 @@ export const optionGrantIssueDateRelationships = [
   "executive",
   "board_member",
 ] as const;
+
+export enum LoginMethod {
+  Email = "email",
+  Google = "google",
+}
