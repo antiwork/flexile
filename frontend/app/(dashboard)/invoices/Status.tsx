@@ -107,8 +107,11 @@ export default function InvoiceStatus({
   }
 
   return (
-    <Status variant={variant} className={className} icon={Icon ? <Icon /> : undefined}>
-      {iconOnly ? null : label}
-    </Status>
+    <>
+      <span className="sr-only">{label}</span>
+      <Status aria-label={label} variant={variant} className={className} icon={Icon ? <Icon /> : undefined}>
+        {iconOnly ? null : label}
+      </Status>
+    </>
   );
 }
