@@ -11,6 +11,8 @@ scope path: :internal, module: :internal do
     end
   end
 
+  resources :oauth, only: :create
+
   namespace :demo do
     resources :companies, only: :show
   end

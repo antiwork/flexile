@@ -29,6 +29,11 @@ export enum TaxClassification {
   Partnership,
 }
 
+export enum SignInMethod {
+  Email = "email",
+  Google = "google",
+}
+
 export const invoiceStatuses = [
   "received",
   "approved",

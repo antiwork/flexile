@@ -8,7 +8,7 @@ import { AuthPage } from "..";
 export default function SignUpPage() {
   return (
     <AuthPage
-      title="Create account"
+      title="Create an account"
       description="Sign up using the account you use at work."
       sendOtpText="Sign up"
       switcher={

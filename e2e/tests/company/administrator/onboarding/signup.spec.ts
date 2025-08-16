@@ -1,8 +1,10 @@
 import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
-import { fillOtp } from "@test/helpers/auth";
+import { usersFactory } from "@test/factories/users";
+import { externalProviderMock, fillOtp } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
+import { SignInMethod } from "@/db/enums";
 import { users } from "@/db/schema";
 
 test.describe("Company administrator signup", () => {
@@ -23,7 +25,7 @@ test.describe("Company administrator signup", () => {
     await page.goto("/signup");
 
     await page.getByLabel("Work email").fill(email);
-    await page.getByRole("button", { name: "Sign up" }).click();
+    await page.getByRole("button", { name: "Sign up", exact: true }).click();
 
     await fillOtp(page);
 
@@ -71,5 +73,49 @@ test.describe("Company administrator signup", () => {
     expect(company?.city).toBe(city);
     expect(company?.state).toBe(stateCode);
     expect(company?.zipCode).toBe(zipCode);
+  });
+});
+
+test.describe("Google signup", () => {
+  test("signup with Google", async ({ page }) => {
+    await page.goto("/signup");
+    const email = "google-signup+e2e@example.com";
+
+    await externalProviderMock(page, String(SignInMethod.Google), { email });
+
+    await page.getByRole("button", { name: "Sign up with Google" }).click();
+    await page.waitForURL(/.*\/invoices.*/u);
+
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    const user = await takeOrThrow(
+      db.query.users.findFirst({
+        where: eq(users.email, email),
+        with: { companyAdministrators: { with: { company: true } } },
+      }),
+    );
+
+    if (!user) {
+      throw new Error("User should be defined after takeOrThrow");
+    }
+
+    expect(user.email).toBe(email);
+    expect(user.companyAdministrators).toHaveLength(1);
+  });
+
+  test("signup with existing user email", async ({ page }) => {
+    const { user } = await usersFactory.create();
+
+    await page.goto("/signup");
+
+    await externalProviderMock(page, String(SignInMethod.Google), { email: user.email });
+
+    await page.getByRole("button", { name: "Sign up with Google" }).click();
+
+    await page.waitForURL(/.*\/invoices.*/u);
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) });
+    expect(updatedUser?.currentSignInAt).not.toBeNull();
+    expect(updatedUser?.currentSignInAt).not.toBe(user.currentSignInAt);
   });
 });

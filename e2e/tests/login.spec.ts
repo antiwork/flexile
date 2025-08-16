@@ -1,8 +1,9 @@
 import { db } from "@test/db";
 import { usersFactory } from "@test/factories/users";
-import { fillOtp } from "@test/helpers/auth";
+import { externalProviderMock, fillOtp, login, logout } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
+import { SignInMethod } from "@/db/enums";
 import { users } from "@/db/schema";
 
 test("login", async ({ page }) => {
@@ -54,4 +55,59 @@ test("login with redirect_url", async ({ page }) => {
   await expect(page.getByText("Use your work email to log in.")).not.toBeVisible();
 
   expect(page.url()).toContain("/people");
+});
+
+test("login with Google", async ({ page }) => {
+  const { user } = await usersFactory.create();
+
+  await page.goto("/login");
+
+  await externalProviderMock(page, String(SignInMethod.Google), { email: user.email });
+
+  await page.getByRole("button", { name: "Log in with Google" }).click();
+  await page.waitForURL(/.*\/invoices.*/u);
+
+  await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+  const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) });
+  expect(updatedUser?.currentSignInAt).not.toBeNull();
+  expect(updatedUser?.currentSignInAt).not.toBe(user.currentSignInAt);
+});
+
+test("login with Google and redirect_url", async ({ page }) => {
+  const { user } = await usersFactory.create();
+
+  await page.goto("/people");
+  await page.waitForURL(/\/login\?.*redirect_url=%2Fpeople/u);
+
+  await externalProviderMock(page, String(SignInMethod.Google), { email: user.email });
+
+  await page.getByRole("button", { name: "Log in with Google" }).click();
+  await page.waitForURL(/.*\/people.*/u);
+
+  await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
+
+  await expect(page.getByText("Welcome back")).not.toBeVisible();
+  await expect(page.getByText("Use your work email to log in.")).not.toBeVisible();
+
+  expect(page.url()).toContain("/people");
+});
+
+test("login description updates with last used sign-in method", async ({ page }) => {
+  const { user } = await usersFactory.create();
+
+  await page.goto("/login");
+
+  await expect(page.getByText("Use your work email to log in.")).toBeVisible();
+
+  await externalProviderMock(page, String(SignInMethod.Google), { email: user.email });
+
+  await page.getByRole("button", { name: "Log in with Google" }).click();
+  await page.waitForURL(/.*\/invoices.*/u);
+  await logout(page);
+
+  await expect(page.getByText("you used Google to log in last time")).toBeVisible();
+
+  await login(page, user);
+  await logout(page);
+  await expect(page.getByText("you used your work email to log in last time")).toBeVisible();
 });

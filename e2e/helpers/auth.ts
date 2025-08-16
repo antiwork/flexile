@@ -16,7 +16,7 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
   await page.goto(pageURL);
 
   await page.getByLabel("Work email").fill(user.email);
-  await page.getByRole("button", { name: "Log in" }).click();
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
   await fillOtp(page);
 
   await page.waitForURL(/^(?!.*\/login$).*/u);
@@ -41,11 +41,19 @@ export const signup = async (page: Page, email: string) => {
 
   // Enter email and request OTP
   await page.getByLabel("Work email").fill(email);
-  await page.getByRole("button", { name: "Sign up" }).click();
+  await page.getByRole("button", { name: "Sign up", exact: true }).click();
 
   // Wait for OTP step and enter verification code
   await page.getByLabel("Verification code").waitFor();
 
   await fillOtp(page);
   await page.waitForURL(/^(?!.*\/(signup|login)$).*/u);
+};
+
+export const externalProviderMock = async (page: Page, provider: string, credentials: { email: string }) => {
+  await page.route(`**/api/auth/callback/${provider}`, async (route) => {
+    const body = await route.request().postDataJSON();
+    const modifiedData = new URLSearchParams({ ...body, email: credentials.email }).toString();
+    await route.continue({ postData: modifiedData });
+  });
 };
