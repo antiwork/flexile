@@ -34,7 +34,7 @@ RSpec.describe ProcessDividendPayment do
       end
 
       it "raises an error if dividend round is not ready for payment" do
-        dividend_round.update!(status: "Draft")
+        dividend_round.update!(status: "Paid")
 
         expect { service.process! }.to raise_error(
           ProcessDividendPayment::Error,
@@ -57,6 +57,11 @@ RSpec.describe ProcessDividendPayment do
         # Create some dividends for the round
         create(:dividend, dividend_round: dividend_round)
         create(:dividend, dividend_round: dividend_round)
+        
+        # Stub bank_account.stripe_setup_intent for success tests
+        allow(company).to receive_message_chain(:bank_account, :stripe_setup_intent).and_return(
+          double(payment_method: "pm_test", customer: "cus_test")
+        )
       end
 
       it "successfully processes payment and returns payment details" do
@@ -82,10 +87,6 @@ RSpec.describe ProcessDividendPayment do
       end
 
       it "creates payment intent with correct parameters" do
-        allow(company).to receive_message_chain(:bank_account, :stripe_setup_intent).and_return(
-          double(payment_method: "pm_test", customer: "cus_test")
-        )
-
         service.process!
 
         expect(Stripe::PaymentIntent).to have_received(:create).with(

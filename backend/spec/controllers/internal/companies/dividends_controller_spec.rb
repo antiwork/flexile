@@ -99,7 +99,7 @@ RSpec.describe Internal::Companies::DividendsController do
       expect(failed_dividend.status).to eq(Dividend::ISSUED)
       expect(failed_dividend.retained_reason).to be_nil
 
-      expect(InvestorDividendsPaymentJob).to have_received(:perform_async).with(company_investor.id)
+      expect(InvestorDividendsPaymentJob).to have_received(:perform_async).with(failed_dividend.company_investor_id, failed_dividend.id)
     end
 
     it "returns 404 for non-existent dividend" do

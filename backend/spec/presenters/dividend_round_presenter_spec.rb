@@ -7,7 +7,7 @@ RSpec.describe DividendRoundPresenter do
            company: company,
            external_id: "DIV_2024_Q1",
            total_amount_in_cents: 250_000, # $2,500.00
-           issued_at: 10.days.from_now,
+           issued_at: Time.zone.parse("2024-03-25T14:30:00Z"),
            number_of_shareholders: 5,
            number_of_shares: 10_000,
            status: "Issued",
@@ -70,7 +70,7 @@ RSpec.describe DividendRoundPresenter do
         id: "DIV_2024_Q1",
         total_amount_in_cents: 250_000,
         total_amount_in_usd: 2500.0,
-        issued_at: "2024-03-15T14:30:00Z",
+        issued_at: "2024-03-25T14:30:00Z",
         number_of_shareholders: 5,
         number_of_shares: 10_000,
         status: "Issued",
@@ -161,7 +161,7 @@ RSpec.describe DividendRoundPresenter do
           number_of_shares: 4_000,
           qualified_amount_cents: 80_000,
           qualified_amount_usd: 800.0,
-          non_qualified_amount_usd: 400.0, # (120_000 - 80_000) / 100
+          non_qualified_dividend_amount_in_usd: 400.0, # (120_000 - 80_000) / 100
           status: "Issued",
         })
       end
@@ -178,7 +178,7 @@ RSpec.describe DividendRoundPresenter do
           number_of_shares: 6_000,
           qualified_amount_cents: 100_000,
           qualified_amount_usd: 1000.0,
-          non_qualified_amount_usd: 300.0, # (130_000 - 100_000) / 100
+          non_qualified_dividend_amount_in_usd: 300.0, # (130_000 - 100_000) / 100
           status: "Processing",
         })
       end
@@ -250,7 +250,7 @@ RSpec.describe DividendRoundPresenter do
         dividend = dividends.find { |d| d[:investor_name] == "John Doe" }
 
         expect(dividend[:qualified_amount_usd]).to eq(0.0)
-        expect(dividend[:non_qualified_amount_usd]).to eq(1200.0)
+        expect(dividend[:non_qualified_dividend_amount_in_usd]).to eq(1200.0)
       end
     end
 
@@ -262,7 +262,7 @@ RSpec.describe DividendRoundPresenter do
         dividend = dividends.find { |d| d[:investor_name] == "John Doe" }
 
         expect(dividend[:qualified_amount_usd]).to eq(1200.0)
-        expect(dividend[:non_qualified_amount_usd]).to eq(0.0)
+        expect(dividend[:non_qualified_dividend_amount_in_usd]).to eq(0.0)
       end
     end
 

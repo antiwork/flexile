@@ -182,6 +182,60 @@ RSpec.describe DividendComputationPolicy do
     end
   end
 
+  describe "#finalize?" do
+    it "allows access for company administrators" do
+      policy = described_class.new(admin_context, dividend_computation)
+      expect(policy.finalize?).to be true
+    end
+
+    it "allows access for company lawyers" do
+      policy = described_class.new(lawyer_context, dividend_computation)
+      expect(policy.finalize?).to be true
+    end
+
+    it "denies access for company investors" do
+      policy = described_class.new(investor_context, dividend_computation)
+      expect(policy.finalize?).to be false
+    end
+
+    it "denies access for company workers" do
+      policy = described_class.new(worker_context, dividend_computation)
+      expect(policy.finalize?).to be false
+    end
+
+    it "denies access when user is nil" do
+      policy = described_class.new(nil_context, dividend_computation)
+      expect(policy.finalize?).to be false
+    end
+  end
+
+  describe "#export_csv?" do
+    it "allows access for company administrators" do
+      policy = described_class.new(admin_context, dividend_computation)
+      expect(policy.export_csv?).to be true
+    end
+
+    it "allows access for company lawyers" do
+      policy = described_class.new(lawyer_context, dividend_computation)
+      expect(policy.export_csv?).to be true
+    end
+
+    it "denies access for company investors" do
+      policy = described_class.new(investor_context, dividend_computation)
+      expect(policy.export_csv?).to be false
+    end
+
+    it "denies access for company workers" do
+      policy = described_class.new(worker_context, dividend_computation)
+      expect(policy.export_csv?).to be false
+    end
+
+    it "denies access when user is nil" do
+      policy = described_class.new(nil_context, dividend_computation)
+      expect(policy.export_csv?).to be false
+    end
+  end
+
   context "when user belongs to different company" do
     let(:other_company) { create(:company) }
     let(:other_admin_user) { create(:user) }

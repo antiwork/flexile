@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 RSpec.describe DividendComputationPresenter do
+  # Freeze time to ensure 10-day validation passes
+  around do |example|
+    travel_to(Date.new(2024, 3, 1)) do
+      example.run
+    end
+  end
+
   let(:company) { create(:company) }
   let(:dividend_computation) do
     create(:dividend_computation,

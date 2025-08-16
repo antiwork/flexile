@@ -41,5 +41,3 @@ tmp
 
 /node_modules
 
-# Ignore plans directory
-/@plans

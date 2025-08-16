@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# TODO (techdebt): Consider extracting formatting helpers into a shared module
 class BasePresenter
   def initialize(model)
     @model = model
@@ -8,7 +9,6 @@ class BasePresenter
   private
     attr_reader :model
 
-    # Common field serialization methods
     def serialize_id
       model.id
     end
@@ -29,7 +29,6 @@ class BasePresenter
       date_field&.iso8601
     end
 
-    # Currency conversion methods
     def cents_to_usd(cents_amount)
       return nil if cents_amount.nil?
       cents_amount / 100.0
@@ -39,7 +38,6 @@ class BasePresenter
       decimal_amount&.to_f
     end
 
-    # Common base fields that most models have
     def base_fields
       {
         id: serialize_id,
@@ -48,7 +46,6 @@ class BasePresenter
       }
     end
 
-    # Base fields with external_id (for models that use external_id as primary identifier)
     def base_fields_with_external_id
       base_fields.merge(id: serialize_external_id)
     end

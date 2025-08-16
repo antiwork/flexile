@@ -8,6 +8,8 @@ class DividendComputation < ApplicationRecord
 
   validates :total_amount_in_usd, presence: true
   validates :dividends_issuance_date, presence: true
+  # TODO: Restrict this validation to create only (like DividendRound)
+  # TODO: Deduplicate validation logic across models and make 10-day window configurable
   validate :issuance_date_must_be_ten_days_in_future
   validate :company_must_have_dividends_enabled
 
@@ -128,6 +130,7 @@ class DividendComputation < ApplicationRecord
       data
     end
 
+    # TODO: Deduplicate this validation logic with DividendRound and make the 10-day window configurable
     def issuance_date_must_be_ten_days_in_future
       return unless dividends_issuance_date.present?
 

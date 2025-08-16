@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ostruct"
+
 class ProcessDividendPayment
   class Error < StandardError; end
 
@@ -19,7 +21,7 @@ class ProcessDividendPayment
     payment_intent = pull_funds_from_company(total_amount_with_fees)
 
     # Step 3: Create payout to transfer money from Stripe to Wise
-    payout = create_stripe_payout(total_amount_with_fees, payment_intent)
+    payout = create_stripe_payout(payment_intent)
 
     # Step 4: Update dividend round with payment information
     update_dividend_round_payment_status(payment_intent, payout)
@@ -41,16 +43,14 @@ class ProcessDividendPayment
     def validate_prerequisites!
       raise Error, "Company does not have a bank account set up" unless company.bank_account_ready?
       raise Error, "Dividend round is not ready for payment" unless dividend_round.status == "Issued"
-      raise Error, "Dividend round has no dividends to pay" if dividend_round.dividends.empty?
+      raise Error, "Dividend round has no dividends to pay" unless dividend_round.dividends.exists?
     end
 
     def calculate_total_amount_with_fees
       dividend_amount = dividend_round.total_amount_in_cents
-      # Add processing fees (typically 2.9% + 30¢ for ACH)
-      processing_fee = (dividend_amount * 0.029).round + 30
-      transfer_fee = 500 # 5.00 fee for Wise transfer
+      fees = fees_breakdown_cents(dividend_amount)
 
-      dividend_amount + processing_fee + transfer_fee
+      dividend_amount + fees[:processing_fee] + fees[:transfer_fee]
     end
 
     def pull_funds_from_company(amount_cents)
@@ -83,7 +83,7 @@ class ProcessDividendPayment
       raise Error, "Failed to collect payment from company: #{e.message}"
     end
 
-    def create_stripe_payout(amount_cents, payment_intent)
+    def create_stripe_payout(payment_intent)
       # For development/testing, simulate payout without actually calling Stripe
       if Rails.env.development? && ENV["SKIP_STRIPE_PAYMENTS"] == "true"
         Rails.logger.info "SIMULATED: Payout of $#{dividend_round.total_amount_in_cents / 100.0} for dividend round #{dividend_round.external_id}"
@@ -122,8 +122,7 @@ class ProcessDividendPayment
     def create_dividend_consolidated_invoice
       # Calculate fees (processing fee + transfer fee)
       dividend_amount = dividend_round.total_amount_in_cents
-      processing_fee = (dividend_amount * 0.029).round + 30
-      transfer_fee = 500
+      fees = fees_breakdown_cents(dividend_amount)
 
       company.consolidated_invoices.create!(
         invoice_date: Date.current,
@@ -132,9 +131,9 @@ class ProcessDividendPayment
         period_start_date: dividend_round.issued_at,
         period_end_date: dividend_round.issued_at,
         invoice_amount_cents: dividend_amount,
-        flexile_fee_cents: processing_fee,
-        transfer_fee_cents: transfer_fee,
-        total_cents: dividend_amount + processing_fee + transfer_fee
+        flexile_fee_cents: fees[:processing_fee],
+        transfer_fee_cents: fees[:transfer_fee],
+        total_cents: dividend_amount + fees[:processing_fee] + fees[:transfer_fee]
       )
     end
 
@@ -151,5 +150,15 @@ class ProcessDividendPayment
       consolidated_invoice.mark_as_paid!(timestamp: Time.current)
 
       Rails.logger.info "Created consolidated invoice #{consolidated_invoice.id} for dividend round #{dividend_round.id}"
+    end
+
+    # TODO: Move fee policy configuration to application config or database
+    # This would allow for dynamic fee structures based on company tier, volume, etc.
+    def fees_breakdown_cents(dividend_amount)
+      # TODO: Consider making these fees configurable per company or plan type
+      {
+        processing_fee: (dividend_amount * 0.029).round + 30, # 2.9% + 30¢ for ACH
+        transfer_fee: 500 # $5.00 fee for Wise transfer
+      }
     end
 end

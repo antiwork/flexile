@@ -32,7 +32,6 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
     dividend = find_dividend_for_admin
     authorize dividend, :update?
 
-    # Mark dividend as ready for payment
     dividend.update!(status: Dividend::ISSUED)
 
     render json: {
@@ -50,10 +49,8 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
     dividend = find_dividend_for_admin
     authorize dividend, :update?
 
-    # Reset failed dividend and retry payment
     dividend.update!(status: Dividend::ISSUED, retained_reason: nil)
 
-    # Queue the payment job for this specific dividend only
     InvestorDividendsPaymentJob.perform_async(dividend.company_investor_id, dividend.id)
 
     render json: {
@@ -73,7 +70,6 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
 
   private
     def find_dividend_for_admin
-      # For admin actions, find dividend by company, not company_investor
       Current.company.dividends.find(params[:id])
     end
 end

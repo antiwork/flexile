@@ -48,23 +48,32 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   def preview
     authorize DividendComputation, :preview?
 
-    # Generate preview without saving to database
-    DividendComputationGeneration.new(
-      Current.company,
-      amount_in_usd: params[:total_amount_in_usd].to_d,
-      dividends_issuance_date: Date.parse(params[:dividends_issuance_date]),
-      return_of_capital: params[:return_of_capital] || false
-    )
+    # Validate required parameters upfront
+    required_params = [:total_amount_in_usd, :dividends_issuance_date]
+    missing_params = required_params.select { |param| params[param].blank? }
+    
+    if missing_params.any?
+      raise ActionController::ParameterMissing, "Missing required parameters: #{missing_params.join(', ')}"
+    end
+
+    # Harden parameter access with explicit conversion and validation
+    safe_params = {
+      amount_in_usd: params.require(:total_amount_in_usd).to_d,
+      dividends_issuance_date: Date.parse(params.require(:dividends_issuance_date)),
+      return_of_capital: ActiveModel::Type::Boolean.new.cast(params[:return_of_capital])
+    }
 
     # Preview mode implementation needed in DividendComputationGeneration service
-    # For now, return mock data
+    # For now, return mock data with safe parameter access
     render json: {
-      total_amount_in_usd: params[:total_amount_in_usd].to_d,
-      dividends_issuance_date: params[:dividends_issuance_date],
-      return_of_capital: params[:return_of_capital] || false,
+      total_amount_in_usd: safe_params[:amount_in_usd],
+      dividends_issuance_date: safe_params[:dividends_issuance_date].iso8601,
+      return_of_capital: safe_params[:return_of_capital],
       estimated_shareholders: Current.company.share_holdings.joins(:company_investor).distinct.count(:company_investor_id),
       estimated_processing_time: "2-3 business days",
     }
+  rescue ActionController::ParameterMissing => e
+    render json: { error: "Missing required parameters: #{e.message}" }, status: :bad_request
   rescue Date::Error => e
     render json: { error: "Invalid date format: #{e.message}" }, status: :bad_request
   rescue ArgumentError => e
@@ -75,7 +84,9 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     computation = Current.company.dividend_computations.find(params[:id])
     authorize computation, :update?
 
-    # Generate dividend round and individual dividends from computation
+    # TODO: Extract finalize orchestration into a service (techdebt)
+    # This method should be DividendFinalizationService.new(computation).process!
+    payment_result = nil
     dividend_round = nil
 
     ActiveRecord::Base.transaction do
@@ -92,8 +103,8 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       # Keep track of company investors for investor dividend rounds
       company_investors = []
 
-      # Create individual dividend records for each output
-      computation.dividend_computation_outputs.each do |output|
+      # Create individual dividend records for each output - eager load to avoid N+1
+      computation.dividend_computation_outputs.includes(:company_investor).each do |output|
         company_investor = output.company_investor
 
         # Skip if no company investor (might be convertible investment)
@@ -145,12 +156,12 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         Rails.logger.error "Payment error backtrace: #{e.backtrace.join("\n")}"
         # Continue with dividend creation but mark payment as failed
         dividend_round.update!(ready_for_payment: false)
-        { error: e.message }
+        payment_result = { error: e.message }
       rescue StandardError => e
         Rails.logger.error "Unexpected error during payment processing: #{e.class.name}: #{e.message}"
         Rails.logger.error "Unexpected error backtrace: #{e.backtrace.join("\n")}"
         dividend_round.update!(ready_for_payment: false)
-        { error: e.message }
+        payment_result = { error: e.message }
       end
     end
 
@@ -175,7 +186,8 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     computation = Current.company.dividend_computations.find(params[:id])
     authorize computation, :show?
 
-    # Generate CSV data from computation outputs
+    # TODO: Move CSV generation into presenter/service (techdebt)
+    # This should be DividendComputationCsvService.new(computation).generate
     csv_data = generate_csv_data(computation)
 
     send_data csv_data,
@@ -190,6 +202,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   end
 
   private
+    # TODO: Move CSV generation into presenter/service (techdebt)
     def generate_csv_data(computation)
       require "csv"
 

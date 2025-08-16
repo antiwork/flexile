@@ -13,6 +13,8 @@ class DividendRound < ApplicationRecord
   validates :total_amount_in_cents, presence: true, numericality: { greater_than: 0 }
   validates :status, presence: true, inclusion: { in: %w(Issued Paid) }
   validates :ready_for_payment, inclusion: { in: [true, false] }
+  # TODO: Extract shared validator/constant for the 10-day issuance date validation
+  # TODO: Make the 10-day lead time configurable
   validate :issued_at_must_be_ten_days_in_future, on: :create
   validate :company_must_have_dividends_enabled
 

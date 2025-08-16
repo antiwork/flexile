@@ -6,7 +6,6 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
   def balances
     authorize :payment_account, :index?
 
-    # Get account balances from various sources
     balances = {
       stripe_balance_cents: get_stripe_balance_cents,
       wise_balance_cents: get_wise_balance_cents,
@@ -22,12 +21,10 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
   def pull_funds
     authorize :payment_account, :update?
 
-    amount_cents = params[:amount_in_cents].to_i
-    raise ArgumentError, "Amount must be positive" if amount_cents <= 0
-
-    # Initiate ACH pull from bank via Stripe
+    amount_cents = amount_cents_param
     result = initiate_stripe_ach_pull(amount_cents)
 
+    # TODO: Extract common transfer response builder
     render json: {
       success: true,
       transfer_id: result[:transfer_id],
@@ -44,12 +41,10 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
   def transfer_to_wise
     authorize :payment_account, :update?
 
-    amount_cents = params[:amount_in_cents].to_i
-    raise ArgumentError, "Amount must be positive" if amount_cents <= 0
-
-    # Transfer funds from Stripe to Wise
+    amount_cents = amount_cents_param
     result = initiate_wise_transfer(amount_cents)
 
+    # TODO: Extract common transfer response builder
     render json: {
       success: true,
       transfer_id: result[:transfer_id],
@@ -64,6 +59,12 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
   end
 
   private
+    def amount_cents_param
+      amount_cents = params[:amount_in_cents].to_i
+      raise ArgumentError, "Amount must be positive" if amount_cents <= 0
+      amount_cents
+    end
+
     def get_stripe_balance_cents
       # TODO: Replace with actual Stripe::Balance.retrieve integration
       2_500_000

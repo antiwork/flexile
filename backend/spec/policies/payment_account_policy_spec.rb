@@ -85,4 +85,65 @@ RSpec.describe PaymentAccountPolicy do
       end
     end
   end
+
+  # TODO: Add test coverage for alias methods as suggested in code review
+  describe "#balances?" do
+    context "when user is an admin" do
+      before { admin_company_user }
+
+      it "allows access" do
+        policy = described_class.new(admin_context, :payment_account)
+        expect(policy.balances?).to be true
+      end
+    end
+
+    context "when user is neither admin nor lawyer" do
+      before { regular_company_user }
+
+      it "denies access" do
+        policy = described_class.new(regular_context, :payment_account)
+        expect(policy.balances?).to be false
+      end
+    end
+  end
+
+  describe "#pull_funds?" do
+    context "when user is an admin" do
+      before { admin_company_user }
+
+      it "allows access" do
+        policy = described_class.new(admin_context, :payment_account)
+        expect(policy.pull_funds?).to be true
+      end
+    end
+
+    context "when user is neither admin nor lawyer" do
+      before { regular_company_user }
+
+      it "denies access" do
+        policy = described_class.new(regular_context, :payment_account)
+        expect(policy.pull_funds?).to be false
+      end
+    end
+  end
+
+  describe "#transfer_to_wise?" do
+    context "when user is a lawyer" do
+      before { lawyer_company_user }
+
+      it "allows access" do
+        policy = described_class.new(lawyer_context, :payment_account)
+        expect(policy.transfer_to_wise?).to be true
+      end
+    end
+
+    context "when user is neither admin nor lawyer" do
+      before { regular_company_user }
+
+      it "denies access" do
+        policy = described_class.new(regular_context, :payment_account)
+        expect(policy.transfer_to_wise?).to be false
+      end
+    end
+  end
 end

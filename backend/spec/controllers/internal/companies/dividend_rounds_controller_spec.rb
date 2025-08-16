@@ -55,23 +55,16 @@ RSpec.describe Internal::Companies::DividendRoundsController do
   end
 
   describe "POST #process_payments" do
-    let!(:company_investor1) { create(:company_investor, company: company) }
-    let!(:company_investor2) { create(:company_investor, company: company) }
+    let!(:user1) { create(:user, tax_information_confirmed_at: 1.day.ago) }
+    let!(:user2) { create(:user, tax_information_confirmed_at: 1.day.ago) }
+    let!(:bank_account1) { create(:wise_recipient, user: user1, used_for_dividends: true) }
+    let!(:bank_account2) { create(:wise_recipient, user: user2, used_for_dividends: true) }
+    let!(:company_investor1) { create(:company_investor, company: company, user: user1) }
+    let!(:company_investor2) { create(:company_investor, company: company, user: user2) }
     let!(:dividend1) { create(:dividend, dividend_round: dividend_round, company_investor: company_investor1, status: Dividend::ISSUED) }
     let!(:dividend2) { create(:dividend, dividend_round: dividend_round, company_investor: company_investor2, status: Dividend::ISSUED) }
 
     before do
-      # Mock the user associations and tax information
-      user1 = create(:user, tax_information_confirmed_at: 1.day.ago)
-      user2 = create(:user, tax_information_confirmed_at: 1.day.ago)
-
-      allow(company_investor1).to receive(:user).and_return(user1)
-      allow(company_investor2).to receive(:user).and_return(user2)
-
-      # Mock bank accounts
-      allow(user1).to receive(:bank_accounts).and_return([double("bank_account")])
-      allow(user2).to receive(:bank_accounts).and_return([double("bank_account")])
-
       # Mock the Sidekiq job
       allow(PayAllDividendsJob).to receive(:perform_async)
     end
@@ -85,17 +78,17 @@ RSpec.describe Internal::Companies::DividendRoundsController do
       expect(json_response["success"]).to be true
       expect(json_response["dividend_round_id"]).to eq(dividend_round.id)
       expect(json_response["message"]).to eq("Payment processing initiated")
+      expect(json_response["payments_queued"]).to eq(2) # Both dividends are eligible
 
       dividend_round.reload
       expect(dividend_round.ready_for_payment).to be true
-      expect(PayAllDividendsJob).to have_received(:perform_async)
+      expect(PayAllDividendsJob).to have_received(:perform_async).with(dividend_round.id)
     end
 
     it "counts ready dividends correctly" do
       # Create dividends with different eligibility criteria
       ineligible_user = create(:user, tax_information_confirmed_at: nil)
-      ineligible_investor = create(:company_investor, company: company)
-      allow(ineligible_investor).to receive(:user).and_return(ineligible_user)
+      ineligible_investor = create(:company_investor, company: company, user: ineligible_user)
       create(:dividend, dividend_round: dividend_round, company_investor: ineligible_investor, status: Dividend::ISSUED)
 
       post :process_payments, params: { company_id: company.external_id, id: dividend_round.id }
@@ -104,7 +97,8 @@ RSpec.describe Internal::Companies::DividendRoundsController do
       json_response = response.parsed_body
 
       # Should only count eligible dividends (those with confirmed tax info and bank accounts)
-      expect(json_response["payments_queued"]).to be >= 0
+      # Only the 2 eligible dividends should be counted, not the ineligible one
+      expect(json_response["payments_queued"]).to eq(2)
     end
 
     it "returns 404 for non-existent dividend round" do

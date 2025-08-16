@@ -14,21 +14,15 @@ class InvestorDividendsPaymentJob
 
     update_dividend_tax_info
 
-    dividends_eligible_for_payment = if dividend_id
-      # Process only the specific dividend
-      company_investor
-        .dividends
-        .joins(:dividend_round)
-        .where(id: dividend_id, status: [Dividend::ISSUED, Dividend::RETAINED])
-        .where("dividends.signed_release_at IS NOT NULL OR dividend_rounds.release_document IS NULL")
-    else
-      # Process all eligible dividends (existing behavior)
-      company_investor
-        .dividends
-        .joins(:dividend_round)
-        .where(status: [Dividend::ISSUED, Dividend::RETAINED])
-        .where("dividends.signed_release_at IS NOT NULL OR dividend_rounds.release_document IS NULL")
-    end
+    # Create common scope with shared eligibility criteria
+    eligible_dividends_scope = company_investor
+      .dividends
+      .joins(:dividend_round)
+      .where(status: [Dividend::ISSUED, Dividend::RETAINED])
+      .where("dividends.signed_release_at IS NOT NULL OR dividend_rounds.release_document IS NULL")
+
+    # Conditionally add id filter when dividend_id is present
+    dividends_eligible_for_payment = dividend_id ? eligible_dividends_scope.where(id: dividend_id) : eligible_dividends_scope
 
     PayInvestorDividends.new(company_investor, dividends_eligible_for_payment).process
   end
