@@ -9,7 +9,7 @@ import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
-import { companies, companyAdministrators, companyLawyers, users } from "@/db/schema";
+import { companies, companyAdministrators, companyContractors, companyLawyers, users } from "@/db/schema";
 
 test.describe("Manage roles access", () => {
   let company: typeof companies.$inferSelect;
@@ -442,5 +442,53 @@ test.describe("Roles page invite functionality", () => {
     await page.getByPlaceholder("Search by name or enter email...").fill("invalid_name");
 
     await expect(page.getByRole("button", { name: "Add member" })).toBeDisabled();
+  });
+
+  test("should be able to invite existing user from another company as lawyer", async ({ page }) => {
+    const { company: otherCompany } = await companiesFactory.createCompletedOnboarding();
+    const { user: existingUser } = await usersFactory.create({
+      legalName: "Existing User",
+      email: "existinguser@example.com",
+    });
+    await companyContractorsFactory.create({
+      userId: existingUser.id,
+      companyId: otherCompany.id,
+      role: "Developer",
+    });
+
+    // Now try to invite this existing user as a lawyer to our current company
+    const { adminUser, company } = await companiesFactory.createCompletedOnboarding();
+    await login(page, adminUser);
+
+    await page.goto("/settings/administrator/roles");
+
+    await page.getByRole("button", { name: "Add member" }).click();
+
+    // Use the email of the user who already exists in another company
+    await page.getByPlaceholder("Search by name or enter email...").fill(existingUser.email);
+
+    await selectComboboxOption(page, "Role", "Lawyer");
+
+    await page.getByRole("button", { name: "Add member" }).click();
+
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+
+    // Check that the invited user appears in the table with the correct role
+    const invitedRow = page.getByRole("row", { name: new RegExp(existingUser.email, "u") });
+    await expect(invitedRow).toBeVisible();
+    await expect(invitedRow.getByRole("cell", { name: "Lawyer", exact: true })).toBeVisible();
+
+    // Verify the user is now a lawyer in our company
+    const lawyerRecord = await db.query.companyLawyers.findFirst({
+      where: and(eq(companyLawyers.userId, existingUser.id), eq(companyLawyers.companyId, company.id)),
+    });
+    expect(lawyerRecord).toBeTruthy();
+
+    // Verify the user still has their original role in the other company
+    const contractorRecord = await db.query.companyContractors.findFirst({
+      where: and(eq(companyContractors.userId, existingUser.id), eq(companyContractors.companyId, otherCompany.id)),
+    });
+    expect(contractorRecord).toBeTruthy();
+    expect(contractorRecord?.role).toBe("Developer");
   });
 });
