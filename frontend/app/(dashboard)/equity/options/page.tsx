@@ -103,47 +103,43 @@ export default function OptionsPage() {
         </div>
       ) : (
         <>
-          {company.flags.includes("option_exercising") && (
-            <>
-              {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (
-                <Alert className="mx-4 mb-4">
-                  <Info />
-                  <AlertDescription>
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold">
-                        You have {totalUnexercisedVestedShares.toLocaleString()} vested options available for exercise.
-                      </span>
-                      <Button size="small" onClick={openExerciseModal}>
-                        Exercise Options
-                      </Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {exerciseInProgress ? (
-                <Alert className="mx-4 mb-4">
-                  <Info />
-                  <AlertDescription>
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold">
-                        We're awaiting a payment of {formatMoneyFromCents(exerciseInProgress.totalCostCents)} to
-                        exercise {exerciseInProgress.numberOfOptions.toLocaleString()} options.
-                      </span>
-                      <MutationButton
-                        size="small"
-                        mutation={resendPaymentInstructions}
-                        param={exerciseInProgress.id}
-                        successText="Payment instructions sent!"
-                      >
-                        Resend payment instructions
-                      </MutationButton>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-            </>
+          {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (
+            <Alert className="mx-4 mb-4">
+              <Info />
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold">
+                    You have {totalUnexercisedVestedShares.toLocaleString()} vested options available for exercise.
+                  </span>
+                  <Button size="small" onClick={openExerciseModal}>
+                    Exercise Options
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
           )}
+
+          {exerciseInProgress ? (
+            <Alert className="mx-4 mb-4">
+              <Info />
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold">
+                    We're awaiting a payment of {formatMoneyFromCents(exerciseInProgress.totalCostCents)} to exercise{" "}
+                    {exerciseInProgress.numberOfOptions.toLocaleString()} options.
+                  </span>
+                  <MutationButton
+                    size="small"
+                    mutation={resendPaymentInstructions}
+                    param={exerciseInProgress.id}
+                    successText="Payment instructions sent!"
+                  >
+                    Resend payment instructions
+                  </MutationButton>
+                </div>
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
           <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
 
