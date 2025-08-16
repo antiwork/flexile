@@ -189,4 +189,104 @@ RSpec.describe DividendComputation do
       })
     end
   end
+
+  describe "#broken_down_by_investor" do
+    it "returns aggregated data for all investors" do
+      result = @dividend_computation.broken_down_by_investor
+
+      expect(result).to be_an(Array)
+      expect(result.length).to eq(7) # 5 share investors + 2 SAFE investors
+
+      expect(result.map { |r| r[:investor_name] }).to match_array([
+                                                                    "Richie Rich LLC", "Wefunder", "Seed Investor", "Series A Investor",
+                                                                    "All class Investor", "Seed & Series A Investor", "Common Investor"
+                                                                  ])
+    end
+
+    it "correctly aggregates share-based investors" do
+      result = @dividend_computation.broken_down_by_investor
+
+      seed_investor_data = result.find { |r| r[:investor_name] == "Seed Investor" }
+      expect(seed_investor_data).to include(
+        investor_name: "Seed Investor",
+        company_investor_id: @seed_investor.id,
+        investor_external_id: @seed_investor.user.external_id,
+        total_amount: 80_328.26,
+        number_of_shares: 111_406
+      )
+
+      series_a_investor_data = result.find { |r| r[:investor_name] == "Series A Investor" }
+      expect(series_a_investor_data).to include(
+        investor_name: "Series A Investor",
+        company_investor_id: @series_A_investor.id,
+        investor_external_id: @series_A_investor.user.external_id,
+        total_amount: 22_523.16,
+        number_of_shares: 33_469
+      )
+    end
+
+    it "correctly aggregates investors with multiple share classes" do
+      result = @dividend_computation.broken_down_by_investor
+
+      multi_class_investor_data = result.find { |r| r[:investor_name] == "Seed & Series A Investor" }
+      expect(multi_class_investor_data).to include(
+        investor_name: "Seed & Series A Investor",
+        company_investor_id: @seed_and_series_A_investor.id,
+        investor_external_id: @seed_and_series_A_investor.user.external_id,
+        total_amount: 8_752.98,
+        number_of_shares: 12_441
+      )
+
+      all_class_investor_data = result.find { |r| r[:investor_name] == "All class Investor" }
+      expect(all_class_investor_data).to include(
+        investor_name: "All class Investor",
+        company_investor_id: @all_class_investor.id,
+        investor_external_id: @all_class_investor.user.external_id,
+        total_amount: 17_479.75,
+        number_of_shares: 25_035
+      )
+    end
+
+    it "correctly handles SAFE investors" do
+      result = @dividend_computation.broken_down_by_investor
+
+      richie_rich_data = result.find { |r| r[:investor_name] == "Richie Rich LLC" }
+      expect(richie_rich_data).to include(
+        investor_name: "Richie Rich LLC",
+        company_investor_id: nil,
+        investor_external_id: nil,
+        total_amount: 578_982.04,
+        number_of_shares: 987_632
+      )
+
+      wefunder_data = result.find { |r| r[:investor_name] == "Wefunder" }
+      expect(wefunder_data).to include(
+        investor_name: "Wefunder",
+        company_investor_id: nil,
+        investor_external_id: nil,
+        total_amount: 291_411.52,
+        number_of_shares: 497_092
+      )
+    end
+
+    it "handles edge case with no dividend computation outputs" do
+      empty_computation = create(:dividend_computation, company: company, total_amount_in_usd: 0, dividends_issuance_date: Date.current)
+
+      result = empty_computation.broken_down_by_investor
+      expect(result).to eq([])
+    end
+  end
+
+  describe "#number_of_shareholders" do
+    it "counts total unique shareholders" do
+      # Share investors: 5 (seed, series A, seed & series A, common, all class)
+      # SAFE investors: 4 (entire_safe_owner from safe1, plus 3 partial owners from safe2)
+
+      # @safe2 (Wefunder) counts as 3 investors
+      # because it has 3 convertible_securities for different company_investors
+
+      # Total: 9
+      expect(@dividend_computation.number_of_shareholders).to eq(9)
+    end
+  end
 end
