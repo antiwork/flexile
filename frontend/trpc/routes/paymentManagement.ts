@@ -5,6 +5,12 @@ import { createRouter, protectedProcedure } from "../";
 
 // TODO (techdebt): Extract shared backend proxy/header handling into a reusable helper
 
+const getAuthHeaders = (ctx: { headers: Record<string, string | undefined> }, json?: boolean) => ({
+  "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
+  "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
+  ...(json ? { "Content-Type": "application/json" } : {}),
+});
+
 export const paymentManagementRouter = createRouter({
   getDividendPaymentStatus: protectedProcedure
     .input(
@@ -21,15 +27,20 @@ export const paymentManagementRouter = createRouter({
           `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/dividend_rounds/${input.dividendRoundId}/payment_status`,
           {
             method: "GET",
-            headers: {
-              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
-              "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-            },
+            headers: getAuthHeaders(ctx),
           },
         );
 
         if (!response.ok) {
-          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
+          let errorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "INTERNAL_SERVER_ERROR" =
+            "INTERNAL_SERVER_ERROR";
+          if (response.status === 400 || response.status === 422) {
+            errorCode = "BAD_REQUEST";
+          } else if (response.status === 401) {
+            errorCode = "UNAUTHORIZED";
+          } else if (response.status === 403) {
+            errorCode = "FORBIDDEN";
+          }
           throw new TRPCError({
             code: errorCode,
             message: `Failed to fetch payment status: ${response.statusText}`,
@@ -62,15 +73,20 @@ export const paymentManagementRouter = createRouter({
           `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/payment_accounts/balances`,
           {
             method: "GET",
-            headers: {
-              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
-              "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-            },
+            headers: getAuthHeaders(ctx),
           },
         );
 
         if (!response.ok) {
-          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
+          let errorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "INTERNAL_SERVER_ERROR" =
+            "INTERNAL_SERVER_ERROR";
+          if (response.status === 400 || response.status === 422) {
+            errorCode = "BAD_REQUEST";
+          } else if (response.status === 401) {
+            errorCode = "UNAUTHORIZED";
+          } else if (response.status === 403) {
+            errorCode = "FORBIDDEN";
+          }
           throw new TRPCError({
             code: errorCode,
             message: `Failed to fetch account balances: ${response.statusText}`,
@@ -111,12 +127,7 @@ export const paymentManagementRouter = createRouter({
           `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/payment_accounts/pull_funds`,
           {
             method: "POST",
-            headers: {
-              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
-              "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-              "Content-Type": "application/json",
-              ...ctx.headers,
-            },
+            headers: getAuthHeaders(ctx, true),
             body: JSON.stringify({
               amount_in_cents: input.amountInCents,
             }),
@@ -124,7 +135,15 @@ export const paymentManagementRouter = createRouter({
         );
 
         if (!response.ok) {
-          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
+          let errorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "INTERNAL_SERVER_ERROR" =
+            "INTERNAL_SERVER_ERROR";
+          if (response.status === 400 || response.status === 422) {
+            errorCode = "BAD_REQUEST";
+          } else if (response.status === 401) {
+            errorCode = "UNAUTHORIZED";
+          } else if (response.status === 403) {
+            errorCode = "FORBIDDEN";
+          }
           throw new TRPCError({
             code: errorCode,
             message: `Failed to pull funds: ${response.statusText}`,
@@ -158,12 +177,7 @@ export const paymentManagementRouter = createRouter({
           `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/payment_accounts/transfer_to_wise`,
           {
             method: "POST",
-            headers: {
-              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
-              "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-              "Content-Type": "application/json",
-              ...ctx.headers,
-            },
+            headers: getAuthHeaders(ctx, true),
             body: JSON.stringify({
               amount_in_cents: input.amountInCents,
             }),
@@ -171,7 +185,15 @@ export const paymentManagementRouter = createRouter({
         );
 
         if (!response.ok) {
-          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
+          let errorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "INTERNAL_SERVER_ERROR" =
+            "INTERNAL_SERVER_ERROR";
+          if (response.status === 400 || response.status === 422) {
+            errorCode = "BAD_REQUEST";
+          } else if (response.status === 401) {
+            errorCode = "UNAUTHORIZED";
+          } else if (response.status === 403) {
+            errorCode = "FORBIDDEN";
+          }
           throw new TRPCError({
             code: errorCode,
             message: `Failed to transfer to Wise: ${response.statusText}`,
@@ -205,15 +227,20 @@ export const paymentManagementRouter = createRouter({
           `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/dividends/${input.dividendId}/mark_ready`,
           {
             method: "POST",
-            headers: {
-              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
-              "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-            },
+            headers: getAuthHeaders(ctx),
           },
         );
 
         if (!response.ok) {
-          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
+          let errorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "INTERNAL_SERVER_ERROR" =
+            "INTERNAL_SERVER_ERROR";
+          if (response.status === 400 || response.status === 422) {
+            errorCode = "BAD_REQUEST";
+          } else if (response.status === 401) {
+            errorCode = "UNAUTHORIZED";
+          } else if (response.status === 403) {
+            errorCode = "FORBIDDEN";
+          }
           throw new TRPCError({
             code: errorCode,
             message: `Failed to mark dividend ready: ${response.statusText}`,
@@ -247,15 +274,20 @@ export const paymentManagementRouter = createRouter({
           `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/dividend_rounds/${input.dividendRoundId}/process_payments`,
           {
             method: "POST",
-            headers: {
-              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
-              "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-            },
+            headers: getAuthHeaders(ctx),
           },
         );
 
         if (!response.ok) {
-          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
+          let errorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "INTERNAL_SERVER_ERROR" =
+            "INTERNAL_SERVER_ERROR";
+          if (response.status === 400 || response.status === 422) {
+            errorCode = "BAD_REQUEST";
+          } else if (response.status === 401) {
+            errorCode = "UNAUTHORIZED";
+          } else if (response.status === 403) {
+            errorCode = "FORBIDDEN";
+          }
           throw new TRPCError({
             code: errorCode,
             message: `Failed to process payments: ${response.statusText}`,
@@ -289,15 +321,20 @@ export const paymentManagementRouter = createRouter({
           `${getBackendUrl()}/internal/companies/${ctx.company.externalId}/dividends/${input.dividendId}/retry_payment`,
           {
             method: "POST",
-            headers: {
-              "x-flexile-auth": `Bearer ${ctx.headers.authorization?.replace("Bearer ", "")}`,
-              "X-CSRF-Token": ctx.headers["x-csrf-token"] || "",
-            },
+            headers: getAuthHeaders(ctx),
           },
         );
 
         if (!response.ok) {
-          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
+          let errorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "INTERNAL_SERVER_ERROR" =
+            "INTERNAL_SERVER_ERROR";
+          if (response.status === 400 || response.status === 422) {
+            errorCode = "BAD_REQUEST";
+          } else if (response.status === 401) {
+            errorCode = "UNAUTHORIZED";
+          } else if (response.status === 403) {
+            errorCode = "FORBIDDEN";
+          }
           throw new TRPCError({
             code: errorCode,
             message: `Failed to retry payment: ${response.statusText}`,

@@ -39,12 +39,14 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
 
   // Get userId and JWT from NextAuth session
   const session = await getServerSession(authOptions);
-  if (session?.user) {
-    const jwt = (session.user as { jwt?: string }).jwt;
-    if (jwt) jwtToken = jwt;
-    const sessionUserId = (session.user as { id?: string | number }).id;
-    const parsedId = typeof sessionUserId === "string" ? Number(sessionUserId) : sessionUserId;
-    if (parsedId && !Number.isNaN(parsedId)) userId = parsedId as number;
+  const parsed = z
+    .object({ id: z.union([z.string(), z.number()]).optional(), jwt: z.string().optional() })
+    .safeParse(session?.user ?? null);
+  if (parsed.success) {
+    if (parsed.data.jwt) jwtToken = parsed.data.jwt;
+    const rawId = parsed.data.id;
+    const parsedId = typeof rawId === "string" ? Number.parseInt(rawId, 10) : rawId ?? null;
+    if (parsedId && !Number.isNaN(parsedId)) userId = parsedId;
   }
 
   const headers: Record<string, string> = {

@@ -82,8 +82,7 @@ export default function DividendRounds() {
       await trpcUtils.dividendRounds.list.invalidate();
       await trpcUtils.dividendComputations.list.invalidate();
     },
-    onError: (error) => {
-      console.error("Failed to finalize dividend computation:", error);
+    onError: () => {
       // TODO: Show toast notification for finalization failures
     },
   });

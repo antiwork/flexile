@@ -1,8 +1,8 @@
 "use client";
 
+import { AlertCircle, Download, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { AlertCircle, Download, Trash2 } from "lucide-react";
 import React from "react";
 
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -86,11 +86,10 @@ export default function DividendComputationReview() {
 
   const finalizeComputation = trpc.dividendComputations.finalize.useMutation({
     onSuccess: (result) => {
-      if (result?.payment_result?.error) {
-        console.error("Payment processing error:", result.payment_result.error);
-        // TODO (techdebt): Show toast notification for payment processing failures
-      }
       router.push(`/equity/dividend_rounds/${result?.id}`);
+    },
+    onError: () => {
+      // TODO: Show toast notification for finalization failures
     },
   });
 

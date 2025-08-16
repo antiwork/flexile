@@ -52,18 +52,11 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   def preview
     authorize DividendComputation, :preview?
 
-    required_params = [:total_amount_in_usd, :dividends_issuance_date]
-    missing_params = required_params.select { |param| params[param].blank? }
-
-    if missing_params.any?
-      raise ActionController::ParameterMissing, "Missing required parameters: #{missing_params.join(', ')}"
-    end
-
     safe_params = {
-      amount_in_usd: params.require(:total_amount_in_usd).to_d,
-      dividends_issuance_date: Date.parse(params.require(:dividends_issuance_date)),
-      return_of_capital: ActiveModel::Type::Boolean.new.cast(params[:return_of_capital])
-    }
+      amount_in_usd: BigDecimal(params.require(:total_amount_in_usd).to_s),
+      dividends_issuance_date: Date.iso8601(params.require(:dividends_issuance_date)),
+      return_of_capital: ActiveModel::Type::Boolean.new.cast(params[:return_of_capital]),
+    } # TODO (techdebt): extract param coercion into a strong params method
 
     render json: {
       total_amount_in_usd: safe_params[:amount_in_usd],
@@ -84,14 +77,13 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     computation = Current.company.dividend_computations.find(params[:id])
     authorize computation, :finalize?
 
-    # TODO: Extract finalize orchestration into a service (techdebt)
-    # This method should be DividendFinalizationService.new(computation).process!
+    # TODO (techdebt): Extract finalize orchestration into a service
     payment_result = nil
     dividend_round = nil
 
     ActiveRecord::Base.transaction do
       dividend_round = Current.company.dividend_rounds.create!(
-        total_amount_in_cents: (computation.total_amount_in_usd * 100).to_i,
+        total_amount_in_cents: (computation.total_amount_in_usd * 100).round,
         issued_at: computation.dividends_issuance_date,
         number_of_shareholders: computation.dividend_computation_outputs.count,
         number_of_shares: computation.dividend_computation_outputs.sum(:number_of_shares),
@@ -109,15 +101,15 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         company_investors << company_investor
 
         Rails.logger.info "Creating dividend for company_investor #{company_investor.id}"
-        Rails.logger.info "Dividend data: total_amount_in_cents=#{(output.total_amount_in_usd * 100).to_i}, number_of_shares=#{output.number_of_shares}, qualified_amount_cents=#{(output.qualified_dividend_amount_usd * 100).to_i}"
+        Rails.logger.info "Dividend data: total_amount_in_cents=#{(output.total_amount_in_usd * 100).round}, number_of_shares=#{output.number_of_shares}, qualified_amount_cents=#{(output.qualified_dividend_amount_usd * 100).round}"
 
         begin
           dividend = dividend_round.dividends.create!(
             company: dividend_round.company,
             company_investor: company_investor,
-            total_amount_in_cents: (output.total_amount_in_usd * 100).to_i,
+            total_amount_in_cents: (output.total_amount_in_usd * 100).round,
             number_of_shares: output.number_of_shares,
-            qualified_amount_cents: (output.qualified_dividend_amount_usd * 100).to_i,
+            qualified_amount_cents: (output.qualified_dividend_amount_usd * 100).round,
             status: Dividend::ISSUED
           )
           Rails.logger.info "Successfully created dividend #{dividend.id}"
@@ -139,27 +131,30 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
           payout_below_threshold_email_sent: false
         )
       end
-
-      begin
-        Rails.logger.info "About to process payment for dividend round #{dividend_round.id}"
-        payment_service = ProcessDividendPayment.new(dividend_round)
-        payment_result = payment_service.process!
-        Rails.logger.info "Dividend payment processed successfully for round #{dividend_round.id}: #{payment_result}"
-      rescue ProcessDividendPayment::Error => e
-        Rails.logger.error "Payment processing failed for dividend round #{dividend_round.id}: #{e.message}"
-        Rails.logger.error "Payment error backtrace: #{e.backtrace.join("\n")}"
-        dividend_round.update!(ready_for_payment: false)
-        payment_result = { error: e.message }
-      rescue StandardError => e
-        Rails.logger.error "Unexpected error during payment processing: #{e.class.name}: #{e.message}"
-        Rails.logger.error "Unexpected error backtrace: #{e.backtrace.join("\n")}"
-        dividend_round.update!(ready_for_payment: false)
-        payment_result = { error: e.message }
-      end
     end
 
-    dividend_round.investor_dividend_rounds.each do |investor_dividend_round|
-      investor_dividend_round.send_dividend_issued_email
+    begin
+      Rails.logger.info "About to process payment for dividend round #{dividend_round.id}"
+      payment_service = ProcessDividendPayment.new(dividend_round)
+      payment_result = payment_service.process!
+      Rails.logger.info "Dividend payment processed successfully for round #{dividend_round.id}: #{payment_result}"
+    rescue ProcessDividendPayment::Error => e
+      Rails.logger.error "Payment processing failed for dividend round #{dividend_round.id}: #{e.message}"
+      Rails.logger.error "Payment error backtrace: #{e.backtrace.join("\n")}"
+      dividend_round.update!(ready_for_payment: false)
+      payment_result = { error: e.message }
+    rescue StandardError => e
+      Rails.logger.error "Unexpected error during payment processing: #{e.class.name}: #{e.message}"
+      Rails.logger.error "Unexpected error backtrace: #{e.backtrace.join("\n")}"
+      dividend_round.update!(ready_for_payment: false)
+      payment_result = { error: e.message }
+    end
+
+    # Only send emails if payment was successful
+    if payment_result && !payment_result.key?(:error)
+      dividend_round.investor_dividend_rounds.each do |investor_dividend_round|
+        investor_dividend_round.send_dividend_issued_email
+      end
     end
 
     response_data = DividendRoundPresenter.new(dividend_round).summary
@@ -177,8 +172,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     computation = Current.company.dividend_computations.find(params[:id])
     authorize computation, :show?
 
-    # TODO: Move CSV generation into presenter/service (techdebt)
-    # This should be DividendComputationCsvService.new(computation).generate
+    # TODO (techdebt): Move CSV generation into presenter/service
     csv_data = generate_csv_data(computation)
 
     send_data csv_data,
@@ -193,7 +187,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   end
 
   private
-    # TODO: Move CSV generation into presenter/service (techdebt)
+    # TODO (techdebt): Move CSV generation into presenter/service
     def generate_csv_data(computation)
       require "csv"
 

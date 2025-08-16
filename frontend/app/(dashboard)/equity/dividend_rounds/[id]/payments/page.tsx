@@ -1,7 +1,7 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
 import { AlertTriangle, ArrowLeft, CheckCircle, DollarSign, RefreshCw, Users } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -33,6 +33,40 @@ const normalizeStatus = (backendStatus: Dividend["status"]): StatusKey => {
   return statusMap[backendStatus] || "pending";
 };
 
+// Status configuration for payment badges
+const STATUS_BADGE_MAP = {
+  pending: {
+    color: "yellow",
+    label: "Pending Setup",
+    className: "border-yellow-200 text-yellow-700 bg-yellow-50",
+  },
+  ready: {
+    color: "blue",
+    label: "Ready to Pay",
+    className: "border-blue-200 text-blue-700 bg-blue-50",
+  },
+  processing: {
+    color: "orange",
+    label: "Processing",
+    className: "border-orange-200 text-orange-700 bg-orange-50",
+  },
+  completed: {
+    color: "green",
+    label: "Completed",
+    className: "border-green-200 text-green-700 bg-green-50",
+  },
+  failed: {
+    color: "red",
+    label: "Failed",
+    className: "border-red-200 text-red-700 bg-red-50",
+  },
+  retained: {
+    color: "gray",
+    label: "Retained (Below Threshold)",
+    className: "border-gray-200 text-gray-700 bg-gray-50",
+  },
+} as const;
+
 const columnHelper = createColumnHelper<Dividend>();
 
 const paymentColumns = [
@@ -51,40 +85,7 @@ const paymentColumns = [
     cell: (info) => {
       const backendStatus = info.getValue();
       const status = normalizeStatus(backendStatus);
-      const statusConfig = {
-        pending: {
-          color: "yellow",
-          label: "Pending Setup",
-          className: "border-yellow-200 text-yellow-700 bg-yellow-50",
-        },
-        ready: {
-          color: "blue",
-          label: "Ready to Pay",
-          className: "border-blue-200 text-blue-700 bg-blue-50",
-        },
-        processing: {
-          color: "orange",
-          label: "Processing",
-          className: "border-orange-200 text-orange-700 bg-orange-50",
-        },
-        completed: {
-          color: "green",
-          label: "Completed",
-          className: "border-green-200 text-green-700 bg-green-50",
-        },
-        failed: {
-          color: "red",
-          label: "Failed",
-          className: "border-red-200 text-red-700 bg-red-50",
-        },
-        retained: {
-          color: "gray",
-          label: "Retained (Below Threshold)",
-          className: "border-gray-200 text-gray-700 bg-gray-50",
-        },
-      };
-
-      const config = statusConfig[status];
+      const config = STATUS_BADGE_MAP[status];
 
       return (
         <Badge variant="outline" className={config.className}>

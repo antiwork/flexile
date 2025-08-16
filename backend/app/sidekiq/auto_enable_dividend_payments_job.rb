@@ -2,22 +2,23 @@
 
 class AutoEnableDividendPaymentsJob
   include Sidekiq::Job
+  sidekiq_options queue: :default, retry: 0
 
   def perform
     dividend_rounds_to_enable = DividendRound.joins(:company)
                                            .where(ready_for_payment: false)
                                            .where(status: "Issued")
-                                           .where("DATE(issued_at) <= CURRENT_DATE")
+                                           .where("issued_at < CURRENT_DATE + INTERVAL '1 day'")
                                            .where(companies: { dividends_allowed: true })
 
     count = 0
     failed_count = 0
 
     # TODO (techdebt): Consider implementing batch update with per-record error handling for better performance
-    dividend_rounds_to_enable.find_each do |dividend_round|
+    dividend_rounds_to_enable.in_batches.each_record do |dividend_round|
       Rails.logger.info "Auto-enabling payment for dividend round #{dividend_round.id} (issued_at: #{dividend_round.issued_at})"
 
-      dividend_round.update!(ready_for_payment: true)
+      dividend_round.update_columns(ready_for_payment: true, updated_at: Time.current)
       count += 1
     rescue => e
       failed_count += 1
