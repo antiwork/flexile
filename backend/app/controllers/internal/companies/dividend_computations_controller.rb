@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Internal::Companies::DividendComputationsController < Internal::Companies::BaseController
+  before_action :load_dividend_computation, only: [:show]
+
   def index
     authorize DividendComputation
 
@@ -28,13 +30,15 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   end
 
   def show
-    authorize DividendComputation
-
-    dividend_computation = Current.company.dividend_computations.find(params[:id])
-    render json: DividendComputationPresenter.new(dividend_computation).props
+    authorize @dividend_computation
+    render json: DividendComputationPresenter.new(@dividend_computation).props
   end
 
   private
+    def load_dividend_computation
+      @dividend_computation = Current.company.dividend_computations.find(params[:id])
+    end
+
     def dividend_computation_params
       params.require(:dividend_computation).permit(:amount_in_usd, :dividends_issuance_date, :return_of_capital)
     end
