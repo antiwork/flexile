@@ -3,7 +3,7 @@
 import { AlertCircle, Download, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import React from "react";
+import React, { useMemo } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -68,13 +68,14 @@ const columns = [
 
 export default function DividendComputationReview() {
   const { id } = useParams<{ id: string }>();
+  const numericId = Number.parseInt(id, 10);
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const router = useRouter();
 
-  const { data: computation, isLoading } = trpc.dividendComputations.get.useQuery({
+  const { data: computation, isLoading, isError, error } = trpc.dividendComputations.get.useQuery({
     companyId: company.externalId,
-    id: Number(id),
+    id: numericId,
   });
 
   const deleteComputation = trpc.dividendComputations.delete.useMutation({
@@ -92,7 +93,19 @@ export default function DividendComputationReview() {
     },
   });
 
-  const computationOutputs: ComputationOutput[] = computation?.computation_outputs || [];
+  const computationOutputs: ComputationOutput[] = useMemo(() => {
+    const outputs = computation?.computation_outputs || [];
+    return outputs.map(output => ({
+      ...output,
+      number_of_shares: Number(output.number_of_shares ?? output.numberOfShares) ?? 0,
+      hurdle_rate: Number(output.hurdle_rate ?? output.hurdleRate) ?? undefined,
+      original_issue_price_in_usd: Number(output.original_issue_price_in_usd ?? output.originalIssuePriceInUsd) ?? undefined,
+      preferred_dividend_amount_in_usd: Number(output.preferred_dividend_amount_in_usd ?? output.preferredDividendAmountInUsd) ?? 0,
+      dividend_amount_in_usd: Number(output.dividend_amount_in_usd ?? output.dividendAmountInUsd) ?? 0,
+      qualified_dividend_amount_usd: Number(output.qualified_dividend_amount_usd ?? output.qualifiedDividendAmountUsd) ?? 0,
+      total_amount_in_usd: Number(output.total_amount_in_usd ?? output.totalAmountInUsd) ?? 0,
+    }));
+  }, [computation?.computation_outputs]);
   const table = useTable({
     columns,
     data: computationOutputs,
@@ -113,17 +126,24 @@ export default function DividendComputationReview() {
   };
 
   const handleExportCSV = async () => {
-    const csvUrl = `${getPublicBackendUrl()}/internal/companies/${company.externalId}/dividend_computations/${id}/export_csv`;
-    const res = await fetch(csvUrl, { credentials: "include" });
-    if (!res.ok) return; // TODO (techdebt): toast error
-    const blob = await res.blob();
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `dividend_computation_${id}_${new Date().toISOString().split("T")[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    URL.revokeObjectURL(link.href);
-    document.body.removeChild(link);
+    let url: string | undefined;
+    try {
+      const csvUrl = `${getPublicBackendUrl()}/internal/companies/${company.externalId}/dividend_computations/${numericId}/export_csv`;
+      const res = await fetch(csvUrl, { credentials: "include" });
+      if (!res.ok) return; // TODO (techdebt): toast error
+      const blob = await res.blob();
+      const link = document.createElement("a");
+      url = URL.createObjectURL(blob);
+      link.href = url;
+      link.download = `dividend_computation_${numericId}_${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } finally {
+      if (url) {
+        URL.revokeObjectURL(url);
+      }
+    }
   };
 
   if (isLoading) {
@@ -135,6 +155,22 @@ export default function DividendComputationReview() {
             <div className="h-32 rounded-lg bg-gray-200"></div>
             <div className="h-64 rounded-lg bg-gray-200"></div>
           </div>
+        </div>
+      </>
+    );
+  }
+
+  if (isError) {
+    return (
+      <>
+        <DashboardHeader title="Error" />
+        <div className="mx-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Failed to load dividend computation: {error?.message || "Unknown error"}
+            </AlertDescription>
+          </Alert>
         </div>
       </>
     );
@@ -155,7 +191,7 @@ export default function DividendComputationReview() {
   }
 
   // TODO (techdebt): Unify DTO field casing between snake_case and camelCase
-  const totalAmountUsd = parseFloat(computation?.total_amount_in_usd || computation?.totalAmountInUsd || "0");
+  const totalAmountUsd = Number(computation?.total_amount_in_usd ?? computation?.totalAmountInUsd) ?? 0;
   const totals = computation?.totals;
   const fees = calculatePaymentFees(totalAmountUsd);
 
@@ -302,7 +338,7 @@ export default function DividendComputationReview() {
             idleVariant="destructive"
             mutation={deleteComputation}
             loadingText="Deleting..."
-            onClick={() => deleteComputation.mutate({ companyId: company.externalId, id: Number(id) })}
+            onClick={() => deleteComputation.mutate({ companyId: company.externalId, id: numericId })}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete Computation
@@ -320,7 +356,7 @@ export default function DividendComputationReview() {
               <MutationStatusButton
                 mutation={finalizeComputation}
                 loadingText="Generating dividends..."
-                onClick={() => finalizeComputation.mutate({ companyId: company.externalId, id: Number(id) })}
+                onClick={() => finalizeComputation.mutate({ companyId: company.externalId, id: numericId })}
                 disabled={computationOutputs.length === 0}
               >
                 Approve & Generate Dividends

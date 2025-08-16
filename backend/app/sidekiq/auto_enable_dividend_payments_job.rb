@@ -15,6 +15,7 @@ class AutoEnableDividendPaymentsJob
     failed_count = 0
 
     # TODO (techdebt): Consider implementing batch update with per-record error handling for better performance
+    # Alternative approach: use in_batches with update_all for fewer DB round-trips while maintaining error isolation per batch
     dividend_rounds_to_enable.in_batches.each_record do |dividend_round|
       begin
         Rails.logger.info "Auto-enabling payment for dividend round #{dividend_round.id} (issued_at: #{dividend_round.issued_at})"
@@ -29,6 +30,6 @@ class AutoEnableDividendPaymentsJob
       end
     end
 
-    Rails.logger.info "Auto-enabled payment for #{count} dividend rounds#{failed_count.positive? ? ", #{failed_count} failed" : ""}""
+    Rails.logger.info "Auto-enabled payment for #{count} dividend rounds#{failed_count.positive? ? ", #{failed_count} failed" : ""}"
   end
 end

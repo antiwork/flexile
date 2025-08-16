@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -35,7 +36,6 @@ import { formatDate } from "@/utils/time";
 type DividendRound = RouterOutput["dividendRounds"]["list"][number];
 type DividendComputation = RouterOutput["dividendComputations"]["list"][number];
 
-// Static mapping for Tailwind classes to ensure proper JIT compilation
 const statusClassMap = {
   blue: "border-blue-200 text-blue-700 bg-blue-50",
   yellow: "border-yellow-200 text-yellow-700 bg-yellow-50",
@@ -46,7 +46,6 @@ const statusClassMap = {
 
 const getPaymentStatus = (round: DividendRound) => {
   // TODO (techdebt): Replace this local status computation with API-provided payment status
-  // Mock payment status calculation - in real app would come from API
 
   const now = new Date();
   const issueDate = new Date(round.issuedAt);
@@ -69,6 +68,7 @@ export default function DividendRounds() {
   const user = useCurrentUser();
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
+  const [finalizingId, setFinalizingId] = React.useState<number | null>(null);
   const { data: dividendRounds = [], isLoading: roundsLoading } = trpc.dividendRounds.list.useQuery({
     companyId: company.externalId,
   });
@@ -78,19 +78,20 @@ export default function DividendRounds() {
 
   const finalizeMutation = trpc.dividendComputations.finalize.useMutation({
     onSuccess: async () => {
-      // Invalidate queries instead of full page reload
+      setFinalizingId(null);
       await trpcUtils.dividendRounds.list.invalidate();
       await trpcUtils.dividendComputations.list.invalidate();
+      toast.success("Dividend computation finalized successfully");
     },
     onError: () => {
-      // TODO (techdebt): Show toast notification for finalization failures
+      setFinalizingId(null);
+      toast.error("Failed to finalize dividend computation");
     },
   });
 
   const isLoading = roundsLoading || computationsLoading;
   const canCreateDividends = user.roles.administrator || user.roles.lawyer;
 
-  // Columns for pending computations
   const computationColumns = [
     computationColumnHelper.accessor("created_at", {
       header: "Created",
@@ -145,17 +146,22 @@ export default function DividendRounds() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => router.push(`/equity/dividend_computations/${computation.id}`)}>
-                <Eye className="mr-2 h-4 w-4" />
-                Review Details
+              <DropdownMenuItem asChild>
+                <Link href={`/equity/dividend_computations/${computation.id}`}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Review Details
+                </Link>
               </DropdownMenuItem>
               {canCreateDividends && (
                 <DropdownMenuItem
-                  onClick={() => finalizeMutation.mutate({ companyId: company.externalId, id: computation.id })}
-                  disabled={finalizeMutation.isPending}
+                  onClick={() => {
+                    setFinalizingId(computation.id);
+                    finalizeMutation.mutate({ companyId: company.externalId, id: computation.id });
+                  }}
+                  disabled={finalizingId === computation.id}
                 >
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  {finalizeMutation.isPending ? "Finalizing..." : "Finalize & Create Dividends"}
+                  {finalizingId === computation.id ? "Finalizing..." : "Finalize & Create Dividends"}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -165,7 +171,6 @@ export default function DividendRounds() {
     }),
   ];
 
-  // Columns for finalized dividend rounds
   const roundColumns = [
     roundColumnHelper.accessor("issuedAt", {
       header: "Issue Date",
@@ -189,7 +194,7 @@ export default function DividendRounds() {
       cell: (info) => (
         <div className="flex items-center gap-2">
           <DollarSign className="text-muted-foreground h-4 w-4" />
-          <span className="font-medium">{formatMoneyFromCents(info.getValue())}</span>
+          <span className="font-medium">{formatMoneyFromCents(info.getValue() ?? 0)}</span>
         </div>
       ),
     }),
@@ -231,14 +236,18 @@ export default function DividendRounds() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => router.push(`/equity/dividend_rounds/${round.id}`)}>
-                <Eye className="mr-2 h-4 w-4" />
-                View Details
+              <DropdownMenuItem asChild>
+                <Link href={`/equity/dividend_rounds/${round.id}`}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </Link>
               </DropdownMenuItem>
               {canManagePayments && (
-                <DropdownMenuItem onClick={() => router.push(`/equity/dividend_rounds/${round.id}/payments`)}>
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Manage Payments
+                <DropdownMenuItem asChild>
+                  <Link href={`/equity/dividend_rounds/${round.id}/payments`}>
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Manage Payments
+                  </Link>
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -254,15 +263,17 @@ export default function DividendRounds() {
   if (isLoading) {
     return (
       <>
-        <div className="flex items-center justify-between">
-          <DashboardHeader title="Dividends" />
-          {canCreateDividends && (
-            <Button disabled className="mx-4">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Dividend
-            </Button>
-          )}
-        </div>
+        <DashboardHeader
+          title="Dividends"
+          headerActions={
+            canCreateDividends ? (
+              <Button disabled>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Dividend
+              </Button>
+            ) : undefined
+          }
+        />
         <TableSkeleton columns={5} />
       </>
     );
@@ -272,15 +283,19 @@ export default function DividendRounds() {
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <DashboardHeader title="Dividends" />
-        {canCreateDividends && (
-          <Button onClick={() => router.push("/equity/dividend_rounds/new")} className="mx-4">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Dividend
-          </Button>
-        )}
-      </div>
+      <DashboardHeader
+        title="Dividends"
+        headerActions={
+          canCreateDividends ? (
+            <Button asChild>
+              <Link href="/equity/dividend_rounds/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Dividend
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
 
       {!hasAnyData ? (
         <div className="mx-4">

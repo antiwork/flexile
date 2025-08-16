@@ -9,6 +9,8 @@ class AddAutoEnableDividendPaymentIndexes < ActiveRecord::Migration[7.1]
               name: "idx_div_rounds_auto_enable",
               if_not_exists: true,
               algorithm: :concurrently
+    # TODO (techdebt): Revisit index strategy after observing query plans; consider a partial index
+    # on dividend_rounds WHERE ready_for_payment = false AND status = 'Issued' to reduce index size if needed.
 
     add_index :companies,
               :dividends_allowed,
