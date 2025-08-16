@@ -126,7 +126,7 @@ class ProcessDividendPayment
 
       company.consolidated_invoices.create!(
         invoice_date: Date.current,
-        invoice_number: "FX-DVD-#{company.consolidated_invoices.count + 1}",
+        invoice_number: "FX-DVD-#{company.id}-#{Time.current.to_i}",
         status: ConsolidatedInvoice::SENT,
         period_start_date: dividend_round.issued_at,
         period_end_date: dividend_round.issued_at,
@@ -152,13 +152,11 @@ class ProcessDividendPayment
       Rails.logger.info "Created consolidated invoice #{consolidated_invoice.id} for dividend round #{dividend_round.id}"
     end
 
-    # TODO: Move fee policy configuration to application config or database
-    # This would allow for dynamic fee structures based on company tier, volume, etc.
+    # TODO (techdebt): Move fee policy configuration to application config or database and make configurable per company
     def fees_breakdown_cents(dividend_amount)
-      # TODO: Consider making these fees configurable per company or plan type
       {
         processing_fee: (dividend_amount * 0.029).round + 30, # 2.9% + 30¢ for ACH
-        transfer_fee: 500 # $5.00 fee for Wise transfer
+        transfer_fee: 500, # $5.00 fee for Wise transfer
       }
     end
 end

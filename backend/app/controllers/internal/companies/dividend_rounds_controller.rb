@@ -10,7 +10,6 @@ class Internal::Companies::DividendRoundsController < Internal::Companies::BaseC
 
     # Use grouped counts to reduce N+1 queries
     status_counts = dividends.group(:status).count
-    
     payment_stats = {
       total_amount_cents: dividends.sum(:total_amount_in_cents),
       total_recipients: dividends.count,

@@ -3,7 +3,7 @@
 class Internal::Companies::DividendComputationsController < Internal::Companies::BaseController
   def index
     authorize DividendComputation, :index?
-    computations = policy_scope(Current.company.dividend_computations).order(created_at: :desc)
+    computations = policy_scope(Current.company.dividend_computations).includes(:dividend_computation_outputs).order(created_at: :desc)
     render json: computations.map { |computation| DividendComputationPresenter.new(computation).summary }
   end
 
@@ -16,16 +16,20 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   def create
     authorize DividendComputation
 
+    total_amount_param = params.require(:total_amount_in_usd)
+    issuance_date_param = params.require(:dividends_issuance_date)
     service = DividendComputationGeneration.new(
       Current.company,
-      amount_in_usd: params[:total_amount_in_usd].to_d,
-      dividends_issuance_date: Date.parse(params[:dividends_issuance_date]),
-      return_of_capital: params[:return_of_capital] || false
-    )
+      amount_in_usd: BigDecimal(total_amount_param.to_s),
+      dividends_issuance_date: Date.iso8601(issuance_date_param),
+      return_of_capital: ActiveModel::Type::Boolean.new.cast(params[:return_of_capital])
+    ) # TODO (techdebt): extract param coercion into a strong params method
 
     computation = service.process
 
     render json: DividendComputationPresenter.new(computation).summary, status: :created
+  rescue ActionController::ParameterMissing => e
+    render json: { error: e.message }, status: :bad_request
   rescue Date::Error => e
     render json: { error: "Invalid date format: #{e.message}" }, status: :bad_request
   rescue ArgumentError => e
@@ -48,23 +52,19 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   def preview
     authorize DividendComputation, :preview?
 
-    # Validate required parameters upfront
     required_params = [:total_amount_in_usd, :dividends_issuance_date]
     missing_params = required_params.select { |param| params[param].blank? }
-    
+
     if missing_params.any?
       raise ActionController::ParameterMissing, "Missing required parameters: #{missing_params.join(', ')}"
     end
 
-    # Harden parameter access with explicit conversion and validation
     safe_params = {
       amount_in_usd: params.require(:total_amount_in_usd).to_d,
       dividends_issuance_date: Date.parse(params.require(:dividends_issuance_date)),
       return_of_capital: ActiveModel::Type::Boolean.new.cast(params[:return_of_capital])
     }
 
-    # Preview mode implementation needed in DividendComputationGeneration service
-    # For now, return mock data with safe parameter access
     render json: {
       total_amount_in_usd: safe_params[:amount_in_usd],
       dividends_issuance_date: safe_params[:dividends_issuance_date].iso8601,
@@ -82,7 +82,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
 
   def finalize
     computation = Current.company.dividend_computations.find(params[:id])
-    authorize computation, :update?
+    authorize computation, :finalize?
 
     # TODO: Extract finalize orchestration into a service (techdebt)
     # This method should be DividendFinalizationService.new(computation).process!
@@ -90,7 +90,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     dividend_round = nil
 
     ActiveRecord::Base.transaction do
-      # Create the dividend round
       dividend_round = Current.company.dividend_rounds.create!(
         total_amount_in_cents: (computation.total_amount_in_usd * 100).to_i,
         issued_at: computation.dividends_issuance_date,
@@ -100,14 +99,11 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         return_of_capital: computation.return_of_capital || false
       )
 
-      # Keep track of company investors for investor dividend rounds
       company_investors = []
 
-      # Create individual dividend records for each output - eager load to avoid N+1
       computation.dividend_computation_outputs.includes(:company_investor).each do |output|
         company_investor = output.company_investor
 
-        # Skip if no company investor (might be convertible investment)
         next unless company_investor
 
         company_investors << company_investor
@@ -135,7 +131,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         end
       end
 
-      # Create InvestorDividendRound records for email notifications
       company_investors.uniq.each do |company_investor|
         dividend_round.investor_dividend_rounds.create!(
           company_investor: company_investor,
@@ -145,7 +140,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         )
       end
 
-      # Process payment: Pull money from company + create Stripe payout
       begin
         Rails.logger.info "About to process payment for dividend round #{dividend_round.id}"
         payment_service = ProcessDividendPayment.new(dividend_round)
@@ -154,7 +148,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       rescue ProcessDividendPayment::Error => e
         Rails.logger.error "Payment processing failed for dividend round #{dividend_round.id}: #{e.message}"
         Rails.logger.error "Payment error backtrace: #{e.backtrace.join("\n")}"
-        # Continue with dividend creation but mark payment as failed
         dividend_round.update!(ready_for_payment: false)
         payment_result = { error: e.message }
       rescue StandardError => e
@@ -165,12 +158,10 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       end
     end
 
-    # Send dividend issuance emails to all investors (after successful transaction)
     dividend_round.investor_dividend_rounds.each do |investor_dividend_round|
       investor_dividend_round.send_dividend_issued_email
     end
 
-    # Include payment information in response
     response_data = DividendRoundPresenter.new(dividend_round).summary
     response_data[:payment_result] = payment_result if payment_result
 
@@ -207,7 +198,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       require "csv"
 
       CSV.generate(headers: true) do |csv|
-        # Header row
         csv << [
           "Investor Name",
           "Email",
@@ -221,20 +211,19 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
           "ROI to Date (%)"
         ]
 
-        # Data rows
         computation.dividend_computation_outputs.includes(company_investor: :user).each do |output|
           company_investor = output.company_investor
-          next unless company_investor # Skip if no company investor
+          next unless company_investor
 
           user = company_investor.user
           non_qualified_amount = output.total_amount_in_usd - output.qualified_dividend_amount_usd
           percentage_of_total = computation.total_amount_in_usd > 0 ? (output.total_amount_in_usd / computation.total_amount_in_usd * 100).round(4) : 0
-          investment_amount = company_investor.investment_amount_in_cents / 100.0
+          investment_amount = company_investor.investment_amount_in_cents.to_i / 100.0
           roi_percentage = company_investor&.cumulative_dividends_roi ? (company_investor.cumulative_dividends_roi * 100.0) : 0.0
 
           csv << [
-            user.name,
-            user.email,
+            user&.name.to_s,
+            user&.email.to_s,
             output.share_class || "Common",
             output.number_of_shares,
             output.total_amount_in_usd,
@@ -246,7 +235,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
           ]
         end
 
-        # Summary row
         total_shares = computation.dividend_computation_outputs.sum(:number_of_shares)
         total_qualified = computation.dividend_computation_outputs.sum(:qualified_dividend_amount_usd)
         total_non_qualified = computation.total_amount_in_usd - total_qualified

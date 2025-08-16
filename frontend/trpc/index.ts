@@ -39,36 +39,20 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
 
   // Get userId and JWT from NextAuth session
   const session = await getServerSession(authOptions);
-  console.log("🔵 TRPC createContext - session:", !!session, !!session?.user);
   if (session?.user) {
-    // Extract user ID from JWT token
-    try {
-      const jwt = session.user.jwt;
-      console.log("🔵 TRPC createContext - JWT exists:", !!jwt);
-      if (jwt) {
-        jwtToken = jwt;
-        const base64Payload = jwt.split(".")[1];
-        if (base64Payload) {
-          const payload = z
-            .object({ user_id: z.number() })
-            .safeParse(JSON.parse(Buffer.from(base64Payload, "base64").toString()));
-          console.log("🔵 TRPC createContext - JWT payload parse:", payload.success, payload.success ? payload.data : payload.error);
-          if (payload.success) userId = payload.data.user_id;
-        }
-      }
-    } catch (error) {
-      console.error("🔴 JWT parsing error:", error);
-    }
+    const jwt = (session.user as { jwt?: string }).jwt;
+    if (jwt) jwtToken = jwt;
+    const sessionUserId = (session.user as { id?: string | number }).id;
+    const parsedId = typeof sessionUserId === "string" ? Number(sessionUserId) : sessionUserId;
+    if (parsedId && !Number.isNaN(parsedId)) userId = parsedId as number;
   }
-  
-  console.log("🔵 TRPC createContext - final userId:", userId);
 
   const headers: Record<string, string> = {
     cookie,
     "user-agent": userAgent,
     accept: "application/json",
     ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
-    ...(jwtToken ? { authorization: `Bearer ${jwtToken}` } : {}),
+    ...(jwtToken ? { Authorization: `Bearer ${jwtToken}` } : {}),
   };
 
   return {
@@ -101,9 +85,7 @@ export const protectedProcedure = baseProcedure
   .use(async (opts) => {
     const { ctx, input } = opts;
     const userId = ctx.userId;
-    console.log("🔵 protectedProcedure - checking auth, userId:", userId, "input:", input);
     if (!userId) {
-      console.log("🔴 protectedProcedure - throwing UNAUTHORIZED");
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 

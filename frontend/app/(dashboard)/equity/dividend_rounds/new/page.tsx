@@ -1,7 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
-import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -18,9 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 
-// TODO (techdebt): Track policy drift - the 10-day rule is enforced here on the client
-// but may also be enforced on the server. We should ensure consistency
-// between client and server validation to avoid user experience issues.
+// TODO (techdebt): Ensure client/server 10-day issuance validation stays consistent
 const formSchema = z.object({
   totalAmountInUsd: z.number().min(0.01, "Amount must be at least $0.01"),
   dividendsIssuanceDate: z.instanceof(CalendarDate, { message: "This field is required." }).refine(
@@ -53,25 +50,21 @@ export default function NewDividendComputation() {
     },
   });
 
-  const createDividendComputation = trpc.dividendComputations.create.useMutation();
-
-  const createMutation = useMutation({
-    mutationFn: async (values: FormData) => {
-      const result = await createDividendComputation.mutateAsync({
-        companyId: company.externalId,
-        totalAmountInUsd: values.totalAmountInUsd,
-        dividendsIssuanceDate: values.dividendsIssuanceDate.toString(),
-        returnOfCapital: values.returnOfCapital,
-        investorReleaseForm: values.investorReleaseForm,
-        investorDetails: values.investorDetails || "",
-      });
-
+  const createMutation = trpc.dividendComputations.create.useMutation({
+    onSuccess: (result) => {
       router.push(`/equity/dividend_computations/${result.id}`);
     },
   });
 
   const submit = form.handleSubmit((data) => {
-    createMutation.mutate(data);
+    createMutation.mutate({
+      companyId: company.externalId,
+      totalAmountInUsd: data.totalAmountInUsd,
+      dividendsIssuanceDate: data.dividendsIssuanceDate.toString(),
+      returnOfCapital: data.returnOfCapital,
+      investorReleaseForm: data.investorReleaseForm,
+      investorDetails: data.investorDetails || "",
+    });
   });
 
   return (
@@ -121,7 +114,7 @@ export default function NewDividendComputation() {
                       {...field}
                       label="Dividend Issuance Date"
                       granularity="day"
-                      minValue={today(getLocalTimeZone())}
+                      minValue={today(getLocalTimeZone()).add({ days: 10 })}
                     />
                   </FormControl>
                   <FormMessage />

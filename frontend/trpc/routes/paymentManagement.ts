@@ -29,8 +29,9 @@ export const paymentManagementRouter = createRouter({
         );
 
         if (!response.ok) {
+          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
           throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
+            code: errorCode,
             message: `Failed to fetch payment status: ${response.statusText}`,
           });
         }
@@ -69,8 +70,9 @@ export const paymentManagementRouter = createRouter({
         );
 
         if (!response.ok) {
+          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
           throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
+            code: errorCode,
             message: `Failed to fetch account balances: ${response.statusText}`,
           });
         }
@@ -122,8 +124,9 @@ export const paymentManagementRouter = createRouter({
         );
 
         if (!response.ok) {
+          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
           throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
+            code: errorCode,
             message: `Failed to pull funds: ${response.statusText}`,
           });
         }
@@ -168,8 +171,9 @@ export const paymentManagementRouter = createRouter({
         );
 
         if (!response.ok) {
+          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
           throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
+            code: errorCode,
             message: `Failed to transfer to Wise: ${response.statusText}`,
           });
         }
@@ -209,8 +213,9 @@ export const paymentManagementRouter = createRouter({
         );
 
         if (!response.ok) {
+          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
           throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
+            code: errorCode,
             message: `Failed to mark dividend ready: ${response.statusText}`,
           });
         }
@@ -250,8 +255,9 @@ export const paymentManagementRouter = createRouter({
         );
 
         if (!response.ok) {
+          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
           throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
+            code: errorCode,
             message: `Failed to process payments: ${response.statusText}`,
           });
         }
@@ -291,8 +297,9 @@ export const paymentManagementRouter = createRouter({
         );
 
         if (!response.ok) {
+          const errorCode = response.status === 400 || response.status === 422 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR";
           throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
+            code: errorCode,
             message: `Failed to retry payment: ${response.statusText}`,
           });
         }

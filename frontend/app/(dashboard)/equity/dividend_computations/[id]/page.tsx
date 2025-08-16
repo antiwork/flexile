@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, Download, Trash2 } from "lucide-react";
+import React from "react";
 
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -12,11 +12,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { getPublicBackendUrl } from "@/utils/backend";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
-import type { RouterOutput } from "@/trpc";
 
 type ComputationOutput = {
   id: number;
@@ -315,7 +315,7 @@ export default function DividendComputationReview() {
               Export CSV
             </Button>
             <Button variant="outline" asChild>
-              <Link href={`/equity/dividend_rounds/new`}>Edit</Link>
+              <Link href="/equity/dividend_rounds/new">Edit</Link>
             </Button>
             {canApproveDividends ? (
               <MutationStatusButton

@@ -8,7 +8,7 @@ class DividendComputationPresenter < BasePresenter
 
   def summary
     common_fields.merge(
-      number_of_shareholders: @dividend_computation.dividend_computation_outputs.count
+      number_of_shareholders: @dividend_computation.dividend_computation_outputs.size
     )
   end
 

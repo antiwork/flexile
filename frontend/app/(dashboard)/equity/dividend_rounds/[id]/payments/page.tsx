@@ -1,8 +1,8 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import React, { useState } from "react";
 import { AlertTriangle, ArrowLeft, CheckCircle, DollarSign, RefreshCw, Users } from "lucide-react";
+import React, { useState } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
@@ -128,6 +128,7 @@ export default function DividendPaymentsPage() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const router = useRouter();
+  const trpcUtils = trpc.useUtils();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Fetch dividend round data
@@ -165,9 +166,22 @@ export default function DividendPaymentsPage() {
   const failedPaymentsTable = useTable({ data: failedDividends, columns: paymentColumns });
 
   // Mutations for payment actions
-  const pullFundsMutation = trpc.paymentManagement.pullFundsFromBank.useMutation();
-  const transferToWiseMutation = trpc.paymentManagement.transferToWise.useMutation();
-  const processPaymentsMutation = trpc.paymentManagement.processReadyPayments.useMutation();
+  const pullFundsMutation = trpc.paymentManagement.pullFundsFromBank.useMutation({
+    onSuccess: () => {
+      void trpcUtils.paymentManagement.getAccountBalances.invalidate();
+    },
+  });
+  const transferToWiseMutation = trpc.paymentManagement.transferToWise.useMutation({
+    onSuccess: () => {
+      void trpcUtils.paymentManagement.getAccountBalances.invalidate();
+    },
+  });
+  const processPaymentsMutation = trpc.paymentManagement.processReadyPayments.useMutation({
+    onSuccess: () => {
+      void trpcUtils.dividends.list.invalidate();
+      void trpcUtils.paymentManagement.getAccountBalances.invalidate();
+    },
+  });
 
   const handlePullFunds = () => {
     pullFundsMutation.mutate({

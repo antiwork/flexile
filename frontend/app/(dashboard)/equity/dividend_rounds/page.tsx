@@ -29,7 +29,7 @@ import {
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 
 type DividendRound = RouterOutput["dividendRounds"]["list"][number];
@@ -82,6 +82,10 @@ export default function DividendRounds() {
       await trpcUtils.dividendRounds.list.invalidate();
       await trpcUtils.dividendComputations.list.invalidate();
     },
+    onError: (error) => {
+      console.error("Failed to finalize dividend computation:", error);
+      // TODO: Show toast notification for finalization failures
+    },
   });
 
   const isLoading = roundsLoading || computationsLoading;
@@ -111,7 +115,7 @@ export default function DividendRounds() {
       cell: (info) => (
         <div className="flex items-center gap-2">
           <DollarSign className="text-muted-foreground h-4 w-4" />
-          <span className="font-medium">${info.getValue()?.toLocaleString()}</span>
+          <span className="font-medium">{formatMoney(info.getValue() || 0)}</span>
         </div>
       ),
     }),
