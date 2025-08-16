@@ -1,9 +1,10 @@
 "use client";
 
-import { AlertCircle, Download, Trash2 } from "lucide-react";
+import React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import React from "react";
+import { AlertCircle, Download, Trash2 } from "lucide-react";
+
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -68,7 +69,7 @@ export default function DividendComputationReview() {
   const router = useRouter();
 
   const { data: computation, isLoading } = trpc.dividendComputations.get.useQuery({
-    companyId: company.id,
+    companyId: company.externalId,
     id: Number(id),
   });
 
@@ -79,17 +80,17 @@ export default function DividendComputationReview() {
   });
 
   const finalizeComputation = trpc.dividendComputations.finalize.useMutation({
-    onSuccess: (result) => {
+    onSuccess: (result: any) => {
       // Show payment result if available
-      if (result.payment_result?.error) {
+      if (result?.payment_result?.error) {
         // Could show a toast notification here for payment processing failures
       }
-      router.push(`/equity/dividend_rounds/${result.id}`);
+      router.push(`/equity/dividend_rounds/${result?.id}`);
     },
   });
 
   // Move useTable hook to top level to avoid conditional hook calls
-  const computationOutputs = computation?.computation_outputs || [];
+  const computationOutputs = (computation?.computation_outputs as ComputationOutput[]) || [];
   const table = useTable({
     columns,
     data: computationOutputs,
@@ -151,8 +152,10 @@ export default function DividendComputationReview() {
     );
   }
 
-  const totalAmountUsd = parseFloat(computation.total_amount_in_usd || computation.totalAmountInUsd);
-  const totals = computation.totals;
+  const totalAmountUsd = parseFloat(
+    (computation as any)?.total_amount_in_usd || (computation as any)?.totalAmountInUsd || "0"
+  );
+  const totals = (computation as any)?.totals;
   const fees = calculatePaymentFees(totalAmountUsd);
 
   return (
@@ -217,7 +220,7 @@ export default function DividendComputationReview() {
           </Alert>
         )}
 
-        {canApproveDividends && (
+        {canApproveDividends ? (
           <Card>
             <CardHeader>
               <CardTitle>Payment Processing</CardTitle>
@@ -244,9 +247,9 @@ export default function DividendComputationReview() {
               </div>
             </CardContent>
           </Card>
-        )}
+        ) : null}
 
-        {totals && (
+        {totals ? (
           <Card>
             <CardHeader>
               <CardTitle>Computation Totals</CardTitle>
@@ -273,7 +276,7 @@ export default function DividendComputationReview() {
               </div>
             </CardContent>
           </Card>
-        )}
+        ) : null}
 
         <Card>
           <CardHeader>
@@ -298,7 +301,7 @@ export default function DividendComputationReview() {
             idleVariant="destructive"
             mutation={deleteComputation}
             loadingText="Deleting..."
-            onClick={() => deleteComputation.mutate({ companyId: company.id, id: Number(id) })}
+            onClick={() => deleteComputation.mutate({ companyId: company.externalId, id: Number(id) })}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete Computation
@@ -316,7 +319,7 @@ export default function DividendComputationReview() {
               <MutationStatusButton
                 mutation={finalizeComputation}
                 loadingText="Generating dividends..."
-                onClick={() => finalizeComputation.mutate({ companyId: company.id, id: Number(id) })}
+                onClick={() => finalizeComputation.mutate({ companyId: company.externalId, id: Number(id) })}
                 disabled={computationOutputs.length === 0}
               >
                 Approve & Generate Dividends

@@ -7,9 +7,8 @@ export const dividendComputationsRouter = createRouter({
   create: companyProcedure
     .input(
       z.object({
-        companyId: z.string(),
         totalAmountInUsd: z.number().positive().min(0.01, "Amount must be at least $0.01"),
-        dividendsIssuanceDate: z.string().date("Invalid date format"),
+        dividendsIssuanceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)"),
         returnOfCapital: z.boolean().default(false),
         investorReleaseForm: z.boolean().default(false),
         investorDetails: z.string().optional(),
@@ -65,7 +64,7 @@ export const dividendComputationsRouter = createRouter({
     .input(
       z.object({
         totalAmountInUsd: z.number().positive(),
-        dividendsIssuanceDate: z.string().date(),
+        dividendsIssuanceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)"),
         returnOfCapital: z.boolean().default(false),
         investorReleaseForm: z.boolean().default(false),
         investorDetails: z.string().optional(),

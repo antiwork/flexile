@@ -1,16 +1,17 @@
 "use client";
 
-import { ArrowLeft, DollarSign, Users, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertTriangle, ArrowLeft, CheckCircle, DollarSign, RefreshCw, Users } from "lucide-react";
+
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -36,21 +37,42 @@ const paymentColumns = [
     cell: (info) => {
       const status = info.getValue();
       const statusConfig = {
-        pending: { color: "yellow", label: "Pending Setup" },
-        ready: { color: "blue", label: "Ready to Pay" },
-        processing: { color: "orange", label: "Processing" },
-        completed: { color: "green", label: "Completed" },
-        failed: { color: "red", label: "Failed" },
-        retained: { color: "gray", label: "Retained (Below Threshold)" },
+        pending: {
+          color: "yellow",
+          label: "Pending Setup",
+          className: "border-yellow-200 text-yellow-700 bg-yellow-50",
+        },
+        ready: {
+          color: "blue",
+          label: "Ready to Pay",
+          className: "border-blue-200 text-blue-700 bg-blue-50",
+        },
+        processing: {
+          color: "orange",
+          label: "Processing",
+          className: "border-orange-200 text-orange-700 bg-orange-50",
+        },
+        completed: {
+          color: "green",
+          label: "Completed",
+          className: "border-green-200 text-green-700 bg-green-50",
+        },
+        failed: {
+          color: "red",
+          label: "Failed",
+          className: "border-red-200 text-red-700 bg-red-50",
+        },
+        retained: {
+          color: "gray",
+          label: "Retained (Below Threshold)",
+          className: "border-gray-200 text-gray-700 bg-gray-50",
+        },
       };
 
       const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
 
       return (
-        <Badge
-          variant="outline"
-          className={`border-${config.color}-200 text-${config.color}-700 bg-${config.color}-50`}
-        >
+        <Badge variant="outline" className={config.className}>
           {config.label}
         </Badge>
       );
@@ -64,18 +86,18 @@ const paymentColumns = [
 
       return (
         <div className="flex gap-2">
-          {(status as string) === "failed" && (
+          {status === "failed" && (
             <Button size="small" variant="outline">
               <RefreshCw className="mr-1 h-4 w-4" />
               Retry
             </Button>
           )}
-          {(status as string) === "ready" && (
+          {status === "ready" && (
             <Button size="small" variant="outline">
               Process Payment
             </Button>
           )}
-          {(status as string) === "pending" && (
+          {status === "pending" && (
             <Button size="small" variant="outline">
               Mark Ready
             </Button>
@@ -107,53 +129,50 @@ export default function DividendPaymentsPage() {
   const paymentStats = {
     totalAmount: dividends.reduce((sum, d) => sum + Number(d.totalAmountInCents), 0),
     totalRecipients: dividends.length,
-    readyToPay: dividends.filter((d) => (d.status as string) === "ready").length,
-    completed: dividends.filter((d) => (d.status as string) === "completed").length,
-    failed: dividends.filter((d) => (d.status as string) === "failed").length,
-    retained: dividends.filter((d) => (d.status as string) === "retained").length,
+    readyToPay: dividends.filter((d) => d.status === "ready").length,
+    completed: dividends.filter((d) => d.status === "completed").length,
+    failed: dividends.filter((d) => d.status === "failed").length,
+    retained: dividends.filter((d) => d.status === "retained").length,
   };
 
   const completionPercentage =
     paymentStats.totalRecipients > 0 ? Math.round((paymentStats.completed / paymentStats.totalRecipients) * 100) : 0;
 
-  const table = useTable({ data: dividends, columns: paymentColumns });
+  // Filter data for different table views
+  const pendingDividends = dividends.filter((d) => d.status === "pending");
+  const readyDividends = dividends.filter((d) => d.status === "ready");
+  const failedDividends = dividends.filter((d) => d.status === "failed");
+
+  // Create tables at component top level to avoid hooks violations
+  const allPaymentsTable = useTable({ data: dividends, columns: paymentColumns });
+  const pendingPaymentsTable = useTable({ data: pendingDividends, columns: paymentColumns });
+  const readyPaymentsTable = useTable({ data: readyDividends, columns: paymentColumns });
+  const failedPaymentsTable = useTable({ data: failedDividends, columns: paymentColumns });
 
   // Mutations for payment actions
   const pullFundsMutation = trpc.paymentManagement.pullFundsFromBank.useMutation();
   const transferToWiseMutation = trpc.paymentManagement.transferToWise.useMutation();
   const processPaymentsMutation = trpc.paymentManagement.processReadyPayments.useMutation();
 
-  const handlePullFunds = async () => {
-    try {
-      await pullFundsMutation.mutateAsync({
-        companyId: company.externalId,
-        amountInCents: paymentStats.totalAmount,
-      });
-    } catch (error) {
-      // Error handling could be improved with toast notifications
-    }
+  const handlePullFunds = () => {
+    pullFundsMutation.mutate({
+      companyId: company.externalId,
+      amountInCents: paymentStats.totalAmount,
+    });
   };
 
-  const handleTransferToWise = async () => {
-    try {
-      await transferToWiseMutation.mutateAsync({
-        companyId: company.externalId,
-        amountInCents: paymentStats.totalAmount,
-      });
-    } catch (error) {
-      // Error handling could be improved with toast notifications
-    }
+  const handleTransferToWise = () => {
+    transferToWiseMutation.mutate({
+      companyId: company.externalId,
+      amountInCents: paymentStats.totalAmount,
+    });
   };
 
-  const handleProcessPayments = async () => {
-    try {
-      await processPaymentsMutation.mutateAsync({
-        companyId: company.externalId,
-        dividendRoundId: Number(id),
-      });
-    } catch (error) {
-      // Error handling could be improved with toast notifications
-    }
+  const handleProcessPayments = () => {
+    processPaymentsMutation.mutate({
+      companyId: company.externalId,
+      dividendRoundId: Number(id),
+    });
   };
 
   if (isLoading) {
@@ -251,7 +270,9 @@ export default function DividendPaymentsPage() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <h4 className="font-medium">Stripe Balance</h4>
-                <p className="text-2xl font-bold">{formatMoneyFromCents(balances?.stripe_balance_cents || 0)}</p>
+                <p className="text-2xl font-bold">
+                  {formatMoneyFromCents((balances?.stripe_balance_cents as number) || 0)}
+                </p>
                 <Button onClick={handlePullFunds} disabled={pullFundsMutation.isPending} className="w-full">
                   {pullFundsMutation.isPending ? "Pulling..." : "Pull Funds from Bank"}
                 </Button>
@@ -259,7 +280,9 @@ export default function DividendPaymentsPage() {
 
               <div className="space-y-2">
                 <h4 className="font-medium">Wise Balance</h4>
-                <p className="text-2xl font-bold">{formatMoneyFromCents(balances?.wise_balance_cents || 0)}</p>
+                <p className="text-2xl font-bold">
+                  {formatMoneyFromCents((balances?.wise_balance_cents as number) || 0)}
+                </p>
                 <Button
                   onClick={handleTransferToWise}
                   disabled={transferToWiseMutation.isPending}
@@ -296,42 +319,25 @@ export default function DividendPaymentsPage() {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
                 <TabsTrigger value="overview">All Payments</TabsTrigger>
-                <TabsTrigger value="pending">
-                  Pending ({dividends.filter((d) => (d.status as string) === "pending").length})
-                </TabsTrigger>
+                <TabsTrigger value="pending">Pending ({pendingDividends.length})</TabsTrigger>
                 <TabsTrigger value="ready">Ready ({paymentStats.readyToPay})</TabsTrigger>
                 <TabsTrigger value="failed">Failed ({paymentStats.failed})</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="mt-4">
-                <DataTable table={table} />
+                <DataTable table={allPaymentsTable} />
               </TabsContent>
 
               <TabsContent value="pending" className="mt-4">
-                <DataTable
-                  table={useTable({
-                    data: dividends.filter((d) => (d.status as string) === "pending"),
-                    columns: paymentColumns,
-                  })}
-                />
+                <DataTable table={pendingPaymentsTable} />
               </TabsContent>
 
               <TabsContent value="ready" className="mt-4">
-                <DataTable
-                  table={useTable({
-                    data: dividends.filter((d) => (d.status as string) === "ready"),
-                    columns: paymentColumns,
-                  })}
-                />
+                <DataTable table={readyPaymentsTable} />
               </TabsContent>
 
               <TabsContent value="failed" className="mt-4">
-                <DataTable
-                  table={useTable({
-                    data: dividends.filter((d) => (d.status as string) === "failed"),
-                    columns: paymentColumns,
-                  })}
-                />
+                <DataTable table={failedPaymentsTable} />
               </TabsContent>
             </Tabs>
           </CardContent>
