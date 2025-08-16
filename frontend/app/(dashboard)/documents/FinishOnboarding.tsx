@@ -15,9 +15,10 @@ type OnboardingStepProps = {
   open: boolean;
   onNext: () => void;
   onBack: () => void;
+  onClose: () => void;
 };
 
-const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
+const WorkerOnboardingModal = ({ open, onNext, onClose }: OnboardingStepProps) => {
   const company = useCurrentCompany();
 
   const form = useForm({
@@ -43,7 +44,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
   });
 
   return (
-    <Dialog open={open}>
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>What will you be doing at {company.name}?</DialogTitle>
@@ -69,11 +70,11 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
   );
 };
 
-const OnboardingCompleteModal = ({ open, onNext }: OnboardingStepProps) => {
+const OnboardingCompleteModal = ({ open, onNext, onClose }: OnboardingStepProps) => {
   const company = useCurrentCompany();
 
   return (
-    <Dialog open={open}>
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogHeader className="sr-only">
         <DialogTitle>Onboarding Complete</DialogTitle>
       </DialogHeader>
@@ -123,7 +124,13 @@ export const FinishOnboarding = ({ handleComplete }: FinishOnboardingProps) => {
   return (
     <>
       {onboardingSteps.map((Step, idx) => (
-        <Step key={idx} open={idx === currentStep} onNext={goToNextStep} onBack={goToPreviousStep} />
+        <Step
+          key={idx}
+          open={idx === currentStep}
+          onNext={goToNextStep}
+          onBack={goToPreviousStep}
+          onClose={handleComplete}
+        />
       ))}
     </>
   );

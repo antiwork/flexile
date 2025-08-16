@@ -834,10 +834,10 @@ const QuickInvoicesSectionContent = () => {
     disabled: !canSubmitInvoices,
   });
 
-  const date = form.watch("date");
-  const quantity = form.watch("quantity").quantity;
-  const hourly = form.watch("quantity").hourly;
-  const rate = form.watch("rate") * 100;
+  const date = form.watch("date") ?? today(getLocalTimeZone());
+  const quantity = form.watch("quantity")?.quantity ?? 0;
+  const hourly = form.watch("quantity")?.hourly ?? isHourly;
+  const rate = (form.watch("rate") ?? 0) * 100;
   const totalAmountInCents = Math.ceil((quantity / (hourly ? 60 : 1)) * rate);
 
   const newCompanyInvoiceRoute = () => {
