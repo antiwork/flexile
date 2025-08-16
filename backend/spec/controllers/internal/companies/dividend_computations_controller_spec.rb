@@ -95,4 +95,60 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       end.to raise_error(ActiveRecord::RecordNotFound)
     end
   end
+
+  describe "POST #finalize" do
+    before do
+      dividend_computation_output
+    end
+
+    context "when user is an admin" do
+      it "successfully finalizes dividend computation" do
+        post :finalize, params: { company_id: company.external_id, id: dividend_computation.id }
+
+        expect(response).to have_http_status(:created)
+        expect(response.parsed_body["id"]).to be_present
+
+        dividend_computation.reload
+        expect(dividend_computation.dividend_round).to be_present
+        expect(dividend_computation.finalized_at).to be_present
+      end
+    end
+
+    context "when dividend computation is already finalized" do
+      it "cannot be finalized again" do
+        post :finalize, params: { company_id: company.external_id, id: dividend_computation.id }
+        expect(response).to have_http_status(:created)
+
+        post :finalize, params: { company_id: company.external_id, id: dividend_computation.id }
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+
+    context "when user is a lawyer" do
+      let(:lawyer_user) { create(:user) }
+      let(:company_lawyer) { create(:company_lawyer, company: company, user: lawyer_user) }
+
+      before do
+        allow(controller).to receive(:current_context) do
+          Current.user = lawyer_user
+          Current.company = company
+          Current.company_lawyer = company_lawyer
+          CurrentContext.new(user: lawyer_user, company: company)
+        end
+      end
+
+      it "cannot finalize distributions" do
+        post :finalize, params: { company_id: company.external_id, id: dividend_computation.id }
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+
+    context "with invalid dividend computation id" do
+      it "raises ActiveRecord::RecordNotFound" do
+        expect do
+          post :finalize, params: { company_id: company.external_id, id: 999999 }
+        end.to raise_error(ActiveRecord::RecordNotFound)
+      end
+    end
+  end
 end
