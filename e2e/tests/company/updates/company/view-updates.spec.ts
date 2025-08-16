@@ -39,7 +39,7 @@ test.describe("view company updates", () => {
 
     await login(page, user, "/updates/company");
 
-    await page.getByRole("row").getByText(companyUpdate.title).first().click();
+    await page.locator('[role="button"]').filter({ hasText: companyUpdate.title }).first().click();
 
     await withinModal(
       async (modal) => {
@@ -60,7 +60,7 @@ test.describe("view company updates", () => {
     });
 
     await login(page, user, "/updates/company");
-    await page.getByRole("row").getByText(companyUpdate.title).first().click();
+    await page.locator('[role="button"]').filter({ hasText: companyUpdate.title }).first().click();
 
     await withinModal(
       async (modal) => {

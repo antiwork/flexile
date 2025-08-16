@@ -1497,6 +1497,8 @@ export const companyUpdates = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     externalId: varchar("external_id").$default(nanoid).notNull(),
+    recipientTypes: varchar("recipient_types").array().default([]),
+    minBilledAmount: numeric("min_billed_amount"),
   },
   (table) => [
     index("index_company_updates_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

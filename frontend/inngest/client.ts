@@ -1,5 +1,6 @@
 import { EventSchemas, Inngest } from "inngest";
 import { z } from "zod";
+import { minBilledAmountSchema, recipientTypesSchema } from "@/types/recipientTypes";
 import { superjsonMiddleware } from "./middleware";
 
 export const inngest = new Inngest({
@@ -15,6 +16,13 @@ export const inngest = new Inngest({
     "quickbooks/sync-integration": {
       data: z.object({
         companyId: z.string(),
+      }),
+    },
+    "company.update.published": {
+      data: z.object({
+        updateId: z.string(),
+        recipientTypes: recipientTypesSchema.optional(),
+        minBilledAmount: minBilledAmountSchema,
       }),
     },
   }),

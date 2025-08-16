@@ -1,0 +1,193 @@
+import { and, eq, gte, isNotNull, isNull, sql } from "drizzle-orm";
+import { NonRetriableError } from "inngest";
+import { db } from "@/db";
+import {
+  companies,
+  companyAdministrators,
+  companyContractors,
+  companyInvestors,
+  companyUpdates,
+  invoices,
+  users,
+} from "@/db/schema";
+import env from "@/env";
+import { inngest } from "@/inngest/client";
+import CompanyUpdatePublished from "@/inngest/functions/emails/CompanyUpdatePublished";
+import { BATCH_SIZE, resend } from "@/trpc/email";
+import { companyLogoUrl, companyName } from "@/trpc/routes/companies";
+import { userDisplayName } from "@/trpc/routes/users";
+import { type RecipientType } from "@/types/recipientTypes";
+
+export default inngest.createFunction(
+  { id: "send-company-update-emails" },
+  { event: "company.update.published" },
+  async ({ event, step }) => {
+    const { updateId } = event.data;
+
+    const update = await step.run("fetch-update", async () => {
+      const result = await db.query.companyUpdates.findFirst({
+        where: eq(companyUpdates.externalId, updateId),
+      });
+
+      if (!result) {
+        throw new NonRetriableError(`Company update not found: ${updateId}`);
+      }
+
+      const company = await db.query.companies.findFirst({
+        where: eq(companies.id, result.companyId),
+        with: {
+          administrators: {
+            orderBy: (admins) => [admins.id],
+            limit: 1,
+            with: {
+              user: true,
+            },
+          },
+        },
+      });
+
+      if (!company) {
+        throw new NonRetriableError(`Company not found: ${result.companyId}`);
+      }
+
+      const primaryAdmin = company.administrators[0]?.user;
+      if (!primaryAdmin) {
+        throw new NonRetriableError(`Company ${company.id} has no primary admin`);
+      }
+
+      return { ...result, company, sender: primaryAdmin };
+    });
+    const { company, sender } = update;
+
+    const recipients = await step.run("fetch-recipients", async () => {
+      if (event.data.recipients) return event.data.recipients;
+
+      // Ensure admins are always included
+      const dbRecipientTypes = update.recipientTypes || ["admins"];
+      // Validate that all types are valid RecipientType values
+      const recipientTypes: RecipientType[] = dbRecipientTypes.filter(
+        (type): type is RecipientType =>
+          type === "admins" || type === "investors" || type === "active_contractors" || type === "alumni_contractors",
+      );
+
+      // Add admins if not included
+      const finalRecipientTypes = recipientTypes.includes("admins")
+        ? recipientTypes
+        : (["admins", ...recipientTypes] satisfies RecipientType[]);
+
+      const baseQuery = (
+        relationTable: typeof companyContractors | typeof companyInvestors | typeof companyAdministrators,
+      ) =>
+        db
+          .selectDistinct({ email: users.email })
+          .from(users)
+          .leftJoin(relationTable, and(eq(users.id, relationTable.userId), eq(relationTable.companyId, company.id)));
+
+      const queries: Promise<{ email: string }[]>[] = [];
+
+      // Always include admins
+      const admins = baseQuery(companyAdministrators).where(isNotNull(companyAdministrators.id));
+      queries.push(admins);
+
+      if (finalRecipientTypes.includes("investors")) {
+        const investors = baseQuery(companyInvestors).where(isNotNull(companyInvestors.id));
+        queries.push(investors);
+      }
+
+      const minBilledAmount = event.data.minBilledAmount;
+
+      if (finalRecipientTypes.includes("active_contractors")) {
+        if (minBilledAmount && minBilledAmount > 0) {
+          // Filter contractors by total billed amount
+          const activeContractors = db
+            .selectDistinct({ email: users.email })
+            .from(users)
+            .leftJoin(
+              companyContractors,
+              and(eq(users.id, companyContractors.userId), eq(companyContractors.companyId, company.id)),
+            )
+            .leftJoin(invoices, eq(invoices.companyContractorId, companyContractors.id))
+            .where(and(isNotNull(companyContractors.id), isNull(companyContractors.endedAt)))
+            .groupBy(users.email)
+            .having(
+              gte(sql`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`, BigInt(Math.round(minBilledAmount * 100))),
+            );
+          queries.push(activeContractors);
+        } else {
+          const activeContractors = baseQuery(companyContractors).where(
+            and(isNotNull(companyContractors.id), isNull(companyContractors.endedAt)),
+          );
+          queries.push(activeContractors);
+        }
+      }
+
+      if (finalRecipientTypes.includes("alumni_contractors")) {
+        if (minBilledAmount && minBilledAmount > 0) {
+          // Filter contractors by total billed amount
+          const alumniContractors = db
+            .selectDistinct({ email: users.email })
+            .from(users)
+            .leftJoin(
+              companyContractors,
+              and(eq(users.id, companyContractors.userId), eq(companyContractors.companyId, company.id)),
+            )
+            .leftJoin(invoices, eq(invoices.companyContractorId, companyContractors.id))
+            .where(and(isNotNull(companyContractors.id), isNotNull(companyContractors.endedAt)))
+            .groupBy(users.email)
+            .having(
+              gte(sql`COALESCE(SUM(${invoices.totalAmountInUsdCents}), 0)`, BigInt(Math.round(minBilledAmount * 100))),
+            );
+          queries.push(alumniContractors);
+        } else {
+          const alumniContractors = baseQuery(companyContractors).where(
+            and(isNotNull(companyContractors.id), isNotNull(companyContractors.endedAt)),
+          );
+          queries.push(alumniContractors);
+        }
+      }
+
+      if (queries.length === 0) {
+        return [];
+      }
+
+      // Execute all queries in parallel for better performance
+      const allRecipients = (await Promise.all(queries)).flat();
+
+      // De-duplicate by email
+      const uniqueEmails = new Set(allRecipients.map((r) => r.email));
+      return Array.from(uniqueEmails).map((email) => ({ email }));
+    });
+
+    const logoUrl = await step.run("get-logo-url", async () => companyLogoUrl(company.id));
+
+    const react = CompanyUpdatePublished({
+      company,
+      update,
+      senderName: userDisplayName(sender),
+
+      logoUrl,
+    });
+    const name = companyName(company);
+    const sendEmailsSteps = Array.from(
+      { length: Math.ceil((recipients ?? []).length / BATCH_SIZE) },
+      (_, batchIndex) => {
+        const start = batchIndex * BATCH_SIZE;
+        const recipientBatch = (recipients ?? []).slice(start, start + BATCH_SIZE);
+
+        return step.run(`send-update-emails-${batchIndex + 1}`, async () => {
+          const emails = recipientBatch.map((recipient) => ({
+            from: `${name} via Flexile <noreply@${env.DOMAIN}>`,
+            to: recipient.email,
+            subject: `${name}: ${update.title}`,
+            react,
+          }));
+          const response = await resend.batch.send(emails);
+          if (response.error)
+            throw new Error(`Resend error: ${response.error.message}; recipient_count=${emails.length}`);
+        });
+      },
+    );
+
+    await Promise.all(sendEmailsSteps);
+  },
+);

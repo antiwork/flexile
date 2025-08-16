@@ -2,10 +2,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Users } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import RecipientSelector from "@/app/(dashboard)/updates/company/RecipientSelector";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import { Editor as RichTextEditor } from "@/components/RichText";
@@ -13,20 +13,34 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
-import { pluralize } from "@/utils/pluralize";
+import { RECIPIENT_TYPES, type RecipientType } from "@/types/recipientTypes";
+
+const recipientTypeValues: readonly string[] = RECIPIENT_TYPES;
+const isRecipientType = (value: unknown): value is RecipientType =>
+  typeof value === "string" && recipientTypeValues.includes(value);
+
+function narrowRecipientTypes(input: unknown): RecipientType[] | undefined {
+  if (!Array.isArray(input)) return undefined;
+  const narrowed = input.filter(isRecipientType);
+  const unique = Array.from(new Set(narrowed));
+  return unique.length > 0 ? unique : undefined;
+}
 
 const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
   body: z.string().regex(/>\w/u, "This field is required."),
+  recipientTypes: z
+    .array(z.enum(["admins", "investors", "active_contractors", "alumni_contractors"]))
+    .refine((arr) => arr.includes("admins"), { message: "Admins must be included." }),
+  minBilledAmount: z.number().nonnegative().optional(),
 });
 
 interface CompanyUpdateModalProps {
   open: boolean;
   onClose: () => void;
-  updateId?: string;
+  updateId?: string | undefined;
 }
 
 const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps) => {
@@ -43,6 +57,8 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
     defaultValues: {
       title: update?.title ?? "",
       body: update?.body ?? "",
+      recipientTypes: narrowRecipientTypes(update?.recipientTypes) ?? ["admins"],
+      minBilledAmount: update?.minBilledAmount ? Number(update.minBilledAmount) : undefined,
     },
   });
 
@@ -51,11 +67,15 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       form.reset({
         title: update.title,
         body: update.body,
+        recipientTypes: narrowRecipientTypes(update.recipientTypes) ?? ["admins"],
+        minBilledAmount: update.minBilledAmount ? Number(update.minBilledAmount) : undefined,
       });
     } else if (!updateId) {
       form.reset({
         title: "",
         body: "",
+        recipientTypes: ["admins"],
+        minBilledAmount: undefined,
       });
     }
   }, [update, updateId, form]);
@@ -64,7 +84,31 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
   const [viewPreview, setViewPreview] = useState(false);
   const [previewUpdateId, setPreviewUpdateId] = useState<string | null>(null);
 
-  const recipientCount = (company.contractorCount ?? 0) + (company.investorCount ?? 0);
+  const recipientCounts = {
+    admins: company.administratorCount ?? 0,
+    investors: company.investorCount ?? 0,
+    activeContractors: company.contractorCount ?? 0,
+    alumniContractors: company.alumniContractorCount ?? 0,
+  };
+
+  const selectedRecipientTypes = form.watch("recipientTypes");
+  const selectedMinBilledAmount = form.watch("minBilledAmount");
+
+  // Get the actual unique recipient count from the server
+  const { data: recipientData, isFetching: isRecipientCountFetching } =
+    trpc.companyUpdates.getUniqueRecipientCount.useQuery(
+      {
+        companyId: company.id,
+        recipientTypes: selectedRecipientTypes,
+        minBilledAmount: selectedMinBilledAmount,
+      },
+      {
+        enabled: selectedRecipientTypes.length > 0,
+        staleTime: 10000, // Cache for 10 seconds
+      },
+    );
+
+  const recipientCount = recipientData?.uniqueCount ?? 0;
 
   const createMutation = trpc.companyUpdates.create.useMutation();
   const updateMutation = trpc.companyUpdates.update.useMutation();
@@ -72,9 +116,12 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
 
   const saveMutation = useMutation({
     mutationFn: async ({ values, preview }: { values: z.infer<typeof formSchema>; preview: boolean }) => {
+      // Ensure admins are always included and deduplicate
+      const safeRecipientTypes = Array.from(new Set<RecipientType>([...values.recipientTypes, "admins"]));
       const data = {
         companyId: company.id,
         ...values,
+        recipientTypes: safeRecipientTypes,
       };
       let id;
       if (update) {
@@ -86,7 +133,12 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       } else {
         id = await createMutation.mutateAsync(data);
       }
-      if (!preview && !update?.sentAt) await publishMutation.mutateAsync({ companyId: company.id, id });
+      if (!preview && !update?.sentAt) {
+        await publishMutation.mutateAsync({
+          companyId: company.id,
+          id,
+        });
+      }
       void trpcUtils.companyUpdates.list.invalidate();
       await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id });
       if (preview) {
@@ -124,6 +176,25 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
+                    name="recipientTypes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <RecipientSelector
+                            value={field.value}
+                            onChange={field.onChange}
+                            counts={recipientCounts}
+                            minBilledAmount={form.watch("minBilledAmount") ?? undefined}
+                            onMinBilledAmountChange={(amount) => form.setValue("minBilledAmount", amount)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="title"
                     render={({ field }) => (
                       <FormItem>
@@ -149,29 +220,6 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                       </FormItem>
                     )}
                   />
-                </div>
-
-                <div className="space-y-4">
-                  <Label>Recipients ({recipientCount.toLocaleString()})</Label>
-                  <div className="mt-2 space-y-2">
-                    {company.investorCount ? (
-                      <div className="flex items-center gap-2">
-                        <Users className="size-4" />
-                        <span>
-                          {company.investorCount.toLocaleString()} {pluralize("investor", company.investorCount)}
-                        </span>
-                      </div>
-                    ) : null}
-                    {company.contractorCount ? (
-                      <div className="flex items-center gap-2">
-                        <Users className="size-4" />
-                        <span>
-                          {company.contractorCount.toLocaleString()} active{" "}
-                          {pluralize("contractor", company.contractorCount)}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
                 </div>
               </form>
             </Form>
@@ -209,8 +257,13 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
           </DialogHeader>
           {update?.sentAt ? (
             <p>Your update will be visible in Flexile. No new emails will be sent.</p>
+          ) : isRecipientCountFetching ? (
+            <p>Calculating recipient count...</p>
           ) : (
-            <p>Your update will be emailed to {recipientCount.toLocaleString()} stakeholders.</p>
+            <p>
+              Your update will be emailed to {recipientCount.toLocaleString()}{" "}
+              {recipientCount === 1 ? "stakeholder" : "stakeholders"}.
+            </p>
           )}
           <DialogFooter>
             <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
