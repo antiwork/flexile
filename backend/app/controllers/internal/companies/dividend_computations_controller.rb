@@ -2,8 +2,8 @@
 
 class Internal::Companies::DividendComputationsController < Internal::Companies::BaseController
   def index
-    computations = Current.company.dividend_computations.order(created_at: :desc)
-    authorize computations
+    authorize DividendComputation, :index?
+    computations = policy_scope(Current.company.dividend_computations).order(created_at: :desc)
     render json: computations.map { |computation| DividendComputationPresenter.new(computation).summary }
   end
 
@@ -63,7 +63,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       dividends_issuance_date: params[:dividends_issuance_date],
       return_of_capital: params[:return_of_capital] || false,
       estimated_shareholders: Current.company.share_holdings.joins(:company_investor).distinct.count(:company_investor_id),
-      estimated_processing_time: "2-3 business days"
+      estimated_processing_time: "2-3 business days",
     }
   rescue Date::Error => e
     render json: { error: "Invalid date format: #{e.message}" }, status: :bad_request
@@ -85,25 +85,25 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         issued_at: computation.dividends_issuance_date,
         number_of_shareholders: computation.dividend_computation_outputs.count,
         number_of_shares: computation.dividend_computation_outputs.sum(:number_of_shares),
-        status: 'Issued',
+        status: "Issued",
         return_of_capital: computation.return_of_capital || false
       )
-      
+
       # Keep track of company investors for investor dividend rounds
       company_investors = []
-      
+
       # Create individual dividend records for each output
       computation.dividend_computation_outputs.each do |output|
         company_investor = output.company_investor
-        
+
         # Skip if no company investor (might be convertible investment)
         next unless company_investor
-        
+
         company_investors << company_investor
-        
+
         Rails.logger.info "Creating dividend for company_investor #{company_investor.id}"
         Rails.logger.info "Dividend data: total_amount_in_cents=#{(output.total_amount_in_usd * 100).to_i}, number_of_shares=#{output.number_of_shares}, qualified_amount_cents=#{(output.qualified_dividend_amount_usd * 100).to_i}"
-        
+
         begin
           dividend = dividend_round.dividends.create!(
             company: dividend_round.company,
@@ -123,7 +123,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
           raise e
         end
       end
-      
+
       # Create InvestorDividendRound records for email notifications
       company_investors.uniq.each do |company_investor|
         dividend_round.investor_dividend_rounds.create!(
@@ -133,7 +133,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
           payout_below_threshold_email_sent: false
         )
       end
-      
+
       # Process payment: Pull money from company + create Stripe payout
       begin
         Rails.logger.info "About to process payment for dividend round #{dividend_round.id}"
@@ -145,24 +145,24 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         Rails.logger.error "Payment error backtrace: #{e.backtrace.join("\n")}"
         # Continue with dividend creation but mark payment as failed
         dividend_round.update!(ready_for_payment: false)
-        payment_result = { error: e.message }
+        { error: e.message }
       rescue StandardError => e
         Rails.logger.error "Unexpected error during payment processing: #{e.class.name}: #{e.message}"
         Rails.logger.error "Unexpected error backtrace: #{e.backtrace.join("\n")}"
         dividend_round.update!(ready_for_payment: false)
-        payment_result = { error: e.message }
+        { error: e.message }
       end
     end
-    
+
     # Send dividend issuance emails to all investors (after successful transaction)
     dividend_round.investor_dividend_rounds.each do |investor_dividend_round|
       investor_dividend_round.send_dividend_issued_email
     end
-    
+
     # Include payment information in response
     response_data = DividendRoundPresenter.new(dividend_round).summary
     response_data[:payment_result] = payment_result if payment_result
-    
+
     render json: response_data, status: :created
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: "Failed to create dividend round: #{e.message}" }, status: :unprocessable_entity
@@ -174,14 +174,14 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   def export_csv
     computation = Current.company.dividend_computations.find(params[:id])
     authorize computation, :show?
-    
+
     # Generate CSV data from computation outputs
     csv_data = generate_csv_data(computation)
-    
+
     send_data csv_data,
               filename: "dividend_computation_#{computation.id}_#{Date.current.strftime('%Y%m%d')}.csv",
-              type: 'text/csv',
-              disposition: 'attachment'
+              type: "text/csv",
+              disposition: "attachment"
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Dividend computation not found" }, status: :not_found
   rescue StandardError => e
@@ -190,57 +190,56 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   end
 
   private
+    def generate_csv_data(computation)
+      require "csv"
 
-  def generate_csv_data(computation)
-    require 'csv'
-    
-    CSV.generate(headers: true) do |csv|
-      # Header row
-      csv << [
-        "Investor Name",
-        "Email",
-        "Share Class",
-        "Number of Shares",
-        "Total Amount (USD)",
-        "Qualified Dividend Amount (USD)",
-        "Non-Qualified Dividend Amount (USD)",
-        "Percentage of Total",
-        "Investment Amount (USD)",
-        "ROI to Date (%)"
-      ]
-      
-      # Data rows
-      computation.dividend_computation_outputs.includes(company_investor: :user).each do |output|
-        company_investor = output.company_investor
-        next unless company_investor # Skip if no company investor
-        
-        user = company_investor.user
-        non_qualified_amount = output.total_amount_in_usd - output.qualified_dividend_amount_usd
-        percentage_of_total = computation.total_amount_in_usd > 0 ? (output.total_amount_in_usd / computation.total_amount_in_usd * 100).round(4) : 0
-        investment_amount = company_investor.investment_amount_in_cents / 100.0
-        roi_percentage = company_investor&.cumulative_dividends_roi ? (company_investor.cumulative_dividends_roi * 100.0) : 0.0
-        
+      CSV.generate(headers: true) do |csv|
+        # Header row
         csv << [
-          user.name,
-          user.email,
-          output.share_class || "Common",
-          output.number_of_shares,
-          output.total_amount_in_usd,
-          output.qualified_dividend_amount_usd,
-          non_qualified_amount,
-          "#{percentage_of_total}%",
-          investment_amount,
-          "#{roi_percentage.round(2)}%",
+          "Investor Name",
+          "Email",
+          "Share Class",
+          "Number of Shares",
+          "Total Amount (USD)",
+          "Qualified Dividend Amount (USD)",
+          "Non-Qualified Dividend Amount (USD)",
+          "Percentage of Total",
+          "Investment Amount (USD)",
+          "ROI to Date (%)"
         ]
+
+        # Data rows
+        computation.dividend_computation_outputs.includes(company_investor: :user).each do |output|
+          company_investor = output.company_investor
+          next unless company_investor # Skip if no company investor
+
+          user = company_investor.user
+          non_qualified_amount = output.total_amount_in_usd - output.qualified_dividend_amount_usd
+          percentage_of_total = computation.total_amount_in_usd > 0 ? (output.total_amount_in_usd / computation.total_amount_in_usd * 100).round(4) : 0
+          investment_amount = company_investor.investment_amount_in_cents / 100.0
+          roi_percentage = company_investor&.cumulative_dividends_roi ? (company_investor.cumulative_dividends_roi * 100.0) : 0.0
+
+          csv << [
+            user.name,
+            user.email,
+            output.share_class || "Common",
+            output.number_of_shares,
+            output.total_amount_in_usd,
+            output.qualified_dividend_amount_usd,
+            non_qualified_amount,
+            "#{percentage_of_total}%",
+            investment_amount,
+            "#{roi_percentage.round(2)}%"
+          ]
+        end
+
+        # Summary row
+        total_shares = computation.dividend_computation_outputs.sum(:number_of_shares)
+        total_qualified = computation.dividend_computation_outputs.sum(:qualified_dividend_amount_usd)
+        total_non_qualified = computation.total_amount_in_usd - total_qualified
+
+        csv << []
+        csv << ["TOTALS", "", "", total_shares, computation.total_amount_in_usd, total_qualified, total_non_qualified, "100.0%", "", ""]
       end
-      
-      # Summary row
-      total_shares = computation.dividend_computation_outputs.sum(:number_of_shares)
-      total_qualified = computation.dividend_computation_outputs.sum(:qualified_dividend_amount_usd)
-      total_non_qualified = computation.total_amount_in_usd - total_qualified
-      
-      csv << []
-      csv << ["TOTALS", "", "", total_shares, computation.total_amount_in_usd, total_qualified, total_non_qualified, "100.0%", "", ""]
     end
-  end
 end

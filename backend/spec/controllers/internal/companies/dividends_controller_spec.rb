@@ -30,32 +30,32 @@ RSpec.describe Internal::Companies::DividendsController do
 
     it "marks dividend as ready for payment" do
       post :mark_ready, params: { company_id: company.external_id, id: draft_dividend.id }
-      
+
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
-      
-      expect(json_response['success']).to be true
-      expect(json_response['dividend_id']).to eq(draft_dividend.id)
-      expect(json_response['status']).to eq(Dividend::ISSUED)
-      
+
+      expect(json_response["success"]).to be true
+      expect(json_response["dividend_id"]).to eq(draft_dividend.id)
+      expect(json_response["status"]).to eq(Dividend::ISSUED)
+
       draft_dividend.reload
       expect(draft_dividend.status).to eq(Dividend::ISSUED)
     end
 
     it "returns 404 for non-existent dividend" do
       post :mark_ready, params: { company_id: company.external_id, id: 999999 }
-      
+
       expect(response).to have_http_status(:not_found)
     end
 
     it "handles update failures" do
       allow_any_instance_of(Dividend).to receive(:update!).and_raise(ActiveRecord::RecordInvalid.new(Dividend.new))
-      
+
       post :mark_ready, params: { company_id: company.external_id, id: dividend.id }
-      
+
       expect(response).to have_http_status(:unprocessable_entity)
       json_response = response.parsed_body
-      expect(json_response['error']).to include('Failed to mark dividend ready')
+      expect(json_response["error"]).to include("Failed to mark dividend ready")
     end
 
     it "authorizes the request with update action" do
@@ -67,12 +67,12 @@ RSpec.describe Internal::Companies::DividendsController do
       it "finds dividend by company rather than company_investor" do
         other_investor = create(:company_investor, company: company)
         other_dividend = create(:dividend, dividend_round: dividend_round, company_investor: other_investor)
-        
+
         post :mark_ready, params: { company_id: company.external_id, id: other_dividend.id }
-        
+
         expect(response).to have_http_status(:ok)
         json_response = response.parsed_body
-        expect(json_response['dividend_id']).to eq(other_dividend.id)
+        expect(json_response["dividend_id"]).to eq(other_dividend.id)
       end
     end
   end
@@ -86,46 +86,46 @@ RSpec.describe Internal::Companies::DividendsController do
 
     it "resets failed dividend and queues payment job" do
       post :retry_payment, params: { company_id: company.external_id, id: failed_dividend.id }
-      
+
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
-      
-      expect(json_response['success']).to be true
-      expect(json_response['dividend_id']).to eq(failed_dividend.id)
-      expect(json_response['status']).to eq(Dividend::ISSUED)
-      expect(json_response['message']).to eq('Payment retry queued')
-      
+
+      expect(json_response["success"]).to be true
+      expect(json_response["dividend_id"]).to eq(failed_dividend.id)
+      expect(json_response["status"]).to eq(Dividend::ISSUED)
+      expect(json_response["message"]).to eq("Payment retry queued")
+
       failed_dividend.reload
       expect(failed_dividend.status).to eq(Dividend::ISSUED)
       expect(failed_dividend.retained_reason).to be_nil
-      
+
       expect(InvestorDividendsPaymentJob).to have_received(:perform_async).with(company_investor.id)
     end
 
     it "returns 404 for non-existent dividend" do
       post :retry_payment, params: { company_id: company.external_id, id: 999999 }
-      
+
       expect(response).to have_http_status(:not_found)
     end
 
     it "handles update failures" do
       allow_any_instance_of(Dividend).to receive(:update!).and_raise(ActiveRecord::RecordInvalid.new(Dividend.new))
-      
+
       post :retry_payment, params: { company_id: company.external_id, id: failed_dividend.id }
-      
+
       expect(response).to have_http_status(:unprocessable_entity)
       json_response = response.parsed_body
-      expect(json_response['error']).to include('Failed to retry payment')
+      expect(json_response["error"]).to include("Failed to retry payment")
     end
 
     it "handles job queue failures" do
       allow(InvestorDividendsPaymentJob).to receive(:perform_async).and_raise(StandardError.new("Job queue error"))
-      
+
       post :retry_payment, params: { company_id: company.external_id, id: failed_dividend.id }
-      
+
       expect(response).to have_http_status(:internal_server_error)
       json_response = response.parsed_body
-      expect(json_response['error']).to eq('Failed to retry payment')
+      expect(json_response["error"]).to eq("Failed to retry payment")
     end
 
     it "authorizes the request with update action" do
@@ -138,10 +138,10 @@ RSpec.describe Internal::Companies::DividendsController do
     # Test the existing show action to ensure our new methods don't break existing functionality
     it "shows dividend details for company investor" do
       get :show, params: { company_id: company.external_id, id: dividend.id }
-      
+
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
-      expect(json_response['id']).to eq(dividend.id)
+      expect(json_response["id"]).to eq(dividend.id)
     end
 
     it "authorizes the dividend" do
@@ -152,24 +152,24 @@ RSpec.describe Internal::Companies::DividendsController do
 
   describe "POST #sign" do
     let!(:unsigned_dividend) { create(:dividend, dividend_round: dividend_round, company_investor: company_investor, signed_release_at: nil) }
-    
+
     before do
       # Create a dividend round with release document
       dividend_round.update!(release_document: "Release agreement for {{investor}} - Amount: {{amount}}")
-      
+
       # Mock the PDF creation and document services
       allow(CreatePdf).to receive(:new).and_return(double(perform: "mock_pdf_content"))
       allow_any_instance_of(ActionText::RichText).to receive(:attach)
     end
 
     it "signs the dividend release" do
-      expect {
+      expect do
         post :sign, params: { company_id: company.external_id, id: unsigned_dividend.id }
-      }.to change(Document, :count).by(1)
+      end.to change(Document, :count).by(1)
        .and change(DocumentSignature, :count).by(1)
-      
+
       expect(response).to have_http_status(:no_content)
-      
+
       unsigned_dividend.reload
       expect(unsigned_dividend.signed_release_at).to be_present
     end
@@ -179,13 +179,13 @@ RSpec.describe Internal::Companies::DividendsController do
     it "finds dividends by company scope for admin actions" do
       other_investor = create(:company_investor, company: company)
       other_dividend = create(:dividend, dividend_round: dividend_round, company_investor: other_investor)
-      
+
       # This tests that admin actions can access dividends from any investor in the company
       post :mark_ready, params: { company_id: company.external_id, id: other_dividend.id }
-      
+
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
-      expect(json_response['dividend_id']).to eq(other_dividend.id)
+      expect(json_response["dividend_id"]).to eq(other_dividend.id)
     end
   end
 end

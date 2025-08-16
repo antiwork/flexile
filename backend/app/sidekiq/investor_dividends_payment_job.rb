@@ -29,7 +29,7 @@ class InvestorDividendsPaymentJob
         .where(status: [Dividend::ISSUED, Dividend::RETAINED])
         .where("dividends.signed_release_at IS NOT NULL OR dividend_rounds.release_document IS NULL")
     end
-    
+
     PayInvestorDividends.new(company_investor, dividends_eligible_for_payment).process
   end
 

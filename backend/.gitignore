@@ -40,3 +40,6 @@ tmp
 !/app/assets/builds/.keep
 
 /node_modules
+
+# Ignore plans directory
+/@plans

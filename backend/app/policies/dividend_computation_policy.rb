@@ -10,4 +10,6 @@ class DividendComputationPolicy < ApplicationPolicy
   alias_method :update?, :index?
   alias_method :destroy?, :index?
   alias_method :preview?, :index?
+  alias_method :finalize?, :index?
+  alias_method :export_csv?, :index?
 end

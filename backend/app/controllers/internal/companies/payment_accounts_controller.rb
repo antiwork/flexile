@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "securerandom"
+
 class Internal::Companies::PaymentAccountsController < Internal::Companies::BaseController
   def balances
     authorize :payment_account, :index?
@@ -8,12 +10,12 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
     balances = {
       stripe_balance_cents: get_stripe_balance_cents,
       wise_balance_cents: get_wise_balance_cents,
-      bank_balance_cents: 0, # Would need bank API integration
+      bank_balance_cents: 0, # Bank integration not implemented yet
     }
 
     render json: balances
   rescue StandardError => e
-    Rails.logger.error "Failed to fetch account balances: #{e.message}"
+    Rails.logger.error "Failed to fetch account balances for company #{current_company.id}: #{e.class}: #{e.message}\n#{e.backtrace&.join("\n")}"
     render json: { error: "Failed to fetch account balances" }, status: :internal_server_error
   end
 
@@ -22,10 +24,10 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
 
     amount_cents = params[:amount_in_cents].to_i
     raise ArgumentError, "Amount must be positive" if amount_cents <= 0
-    
+
     # Initiate ACH pull from bank via Stripe
     result = initiate_stripe_ach_pull(amount_cents)
-    
+
     render json: {
       success: true,
       transfer_id: result[:transfer_id],
@@ -35,7 +37,7 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
   rescue ArgumentError => e
     render json: { error: e.message }, status: :bad_request
   rescue StandardError => e
-    Rails.logger.error "Failed to pull funds: #{e.message}"
+    Rails.logger.error "Failed to pull funds for company #{current_company.id}, amount: #{amount_cents}: #{e.class}: #{e.message}\n#{e.backtrace&.join("\n")}"
     render json: { error: "Failed to pull funds from bank" }, status: :internal_server_error
   end
 
@@ -44,10 +46,10 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
 
     amount_cents = params[:amount_in_cents].to_i
     raise ArgumentError, "Amount must be positive" if amount_cents <= 0
-    
+
     # Transfer funds from Stripe to Wise
     result = initiate_wise_transfer(amount_cents)
-    
+
     render json: {
       success: true,
       transfer_id: result[:transfer_id],
@@ -57,60 +59,48 @@ class Internal::Companies::PaymentAccountsController < Internal::Companies::Base
   rescue ArgumentError => e
     render json: { error: e.message }, status: :bad_request
   rescue StandardError => e
-    Rails.logger.error "Failed to transfer to Wise: #{e.message}"
+    Rails.logger.error "Failed to transfer to Wise for company #{current_company.id}, amount: #{amount_cents}: #{e.class}: #{e.message}\n#{e.backtrace&.join("\n")}"
     render json: { error: "Failed to transfer funds to Wise" }, status: :internal_server_error
   end
 
   private
+    def get_stripe_balance_cents
+      # TODO: Replace with actual Stripe::Balance.retrieve integration
+      2_500_000
+    rescue StandardError => e
+      Rails.logger.error "Failed to fetch Stripe balance: #{e.class}: #{e.message}\n#{e.backtrace&.join("\n")}"
+      0
+    end
 
-  def get_stripe_balance_cents
-    # Mock implementation - replace with actual Stripe API call
-    # In real implementation: Stripe::Balance.retrieve(stripe_account: company.stripe_account_id)
-    2500000 # $25,000
-  rescue StandardError => e
-    Rails.logger.error "Failed to fetch Stripe balance: #{e.message}"
-    0
-  end
+    def get_wise_balance_cents
+      # TODO: Replace with actual Wise API balance retrieval
+      0
+    rescue StandardError => e
+      Rails.logger.error "Failed to fetch Wise balance: #{e.class}: #{e.message}\n#{e.backtrace&.join("\n")}"
+      0
+    end
 
-  def get_wise_balance_cents
-    # Mock implementation - replace with actual Wise API call
-    # In real implementation: Wise::AccountBalance.get_balance(account_id: company.wise_account_id)
-    0
-  rescue StandardError => e
-    Rails.logger.error "Failed to fetch Wise balance: #{e.message}"
-    0
-  end
+    def initiate_stripe_ach_pull(amount_cents)
+      # TODO: Replace with actual Stripe PaymentIntent/Transfer creation for ACH pulls
 
-  def initiate_stripe_ach_pull(amount_cents)
-    # Mock implementation - replace with actual Stripe ACH pull
-    # In real implementation:
-    # transfer = Stripe::Transfer.create({
-    #   amount: amount_cents,
-    #   currency: 'usd',
-    #   destination: company.stripe_account_id,
-    #   description: "ACH pull for dividend funding"
-    # })
-    
-    {
-      transfer_id: "mock_stripe_transfer_#{SecureRandom.hex(8)}",
-      status: "pending",
-    }
-  rescue StandardError => e
-    Rails.logger.error "Stripe ACH pull failed: #{e.message}"
-    raise e
-  end
+      {
+        transfer_id: "mock_stripe_transfer_#{SecureRandom.hex(8)}",
+        status: "pending",
+      }
+    rescue StandardError => e
+      Rails.logger.error "Stripe ACH pull failed for amount #{amount_cents}: #{e.class}: #{e.message}\n#{e.backtrace&.join("\n")}"
+      raise e
+    end
 
-  def initiate_wise_transfer(amount_cents)
-    # Mock implementation - replace with actual Wise API integration
-    # In real implementation:
-    # Use Wise API to transfer funds from Stripe account to Wise balance
-    
-    {
-      transfer_id: "mock_wise_transfer_#{SecureRandom.hex(8)}",
-      status: "pending",
-    }
-  rescue StandardError => e
-    Rails.logger.error "Wise transfer failed: #{e.message}"
-    raise e
-  end
+    def initiate_wise_transfer(amount_cents)
+      # TODO: Replace with actual Wise transfer API integration
+
+      {
+        transfer_id: "mock_wise_transfer_#{SecureRandom.hex(8)}",
+        status: "pending",
+      }
+    rescue StandardError => e
+      Rails.logger.error "Wise transfer failed for amount #{amount_cents}: #{e.class}: #{e.message}\n#{e.backtrace&.join("\n")}"
+      raise e
+    end
 end

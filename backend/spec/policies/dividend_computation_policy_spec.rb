@@ -3,17 +3,17 @@
 RSpec.describe DividendComputationPolicy do
   let(:company) { create(:company) }
   let(:dividend_computation) { create(:dividend_computation, company: company) }
-  
+
   let(:admin_user) { create(:user) }
   let(:lawyer_user) { create(:user) }
   let(:investor_user) { create(:user) }
   let(:worker_user) { create(:user) }
-  
+
   let!(:admin_company_user) { create(:company_administrator, company: company, user: admin_user) }
   let!(:lawyer_company_user) { create(:company_lawyer, company: company, user: lawyer_user) }
   let!(:investor_company_user) { create(:company_investor, company: company, user: investor_user) }
   let!(:worker_company_user) { create(:company_worker, company: company, user: worker_user) }
-  
+
   let(:admin_context) { CurrentContext.new(user: admin_user, company: company) }
   let(:lawyer_context) { CurrentContext.new(user: lawyer_user, company: company) }
   let(:investor_context) { CurrentContext.new(user: investor_user, company: company) }

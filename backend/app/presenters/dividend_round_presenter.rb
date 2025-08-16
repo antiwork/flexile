@@ -28,42 +28,41 @@ class DividendRoundPresenter < BasePresenter
   end
 
   private
-
-  def dividends_summary
-    @dividend_round.dividends.includes(company_investor: :user).map do |dividend|
+    def dividends_summary
+      @dividend_round.dividends.includes(company_investor: :user).map do |dividend|
         {
           id: dividend.id,
-          investor_name: dividend.company_investor.user.name,
-          investor_email: dividend.company_investor.user.email,
+          investor_name: dividend&.company_investor&.user&.name,
+          investor_email: dividend&.company_investor&.user&.email,
           total_amount_in_cents: dividend.total_amount_in_cents,
           total_amount_in_usd: cents_to_usd(dividend.total_amount_in_cents),
           number_of_shares: dividend.number_of_shares,
-          qualified_dividend_amount_in_cents: dividend.qualified_dividend_amount_in_cents,
-          qualified_dividend_amount_in_usd: cents_to_usd(dividend.qualified_dividend_amount_in_cents),
-          non_qualified_dividend_amount_in_usd: cents_to_usd(dividend.total_amount_in_cents - dividend.qualified_dividend_amount_in_cents),
+          qualified_amount_cents: dividend.qualified_amount_cents.to_i,
+          qualified_amount_usd: cents_to_usd(dividend.qualified_amount_cents.to_i),
+          non_qualified_dividend_amount_in_usd: cents_to_usd(dividend.total_amount_in_cents - dividend.qualified_amount_cents.to_i),
           status: dividend.status || "pending",
         }
+      end
     end
-  end
 
-  def investor_dividend_rounds_summary
-    @dividend_round.investor_dividend_rounds.includes(company_investor: :user).map do |idr|
+    def investor_dividend_rounds_summary
+      @dividend_round.investor_dividend_rounds.includes(company_investor: :user).map do |idr|
         {
-          investor_name: idr.company_investor.user.name,
+          investor_name: idr&.company_investor&.user&.name,
           dividend_issued_email_sent: idr.dividend_issued_email_sent,
           sanctioned_country_email_sent: idr.sanctioned_country_email_sent,
           payout_below_threshold_email_sent: idr.payout_below_threshold_email_sent,
         }
+      end
     end
-  end
 
-  def calculate_payment_fees
-    dividend_amount = @dividend_round.total_amount_in_cents
-    processing_fee = (dividend_amount * 0.029).round + 30
-    transfer_fee = 500
-    total_with_fees = dividend_amount + processing_fee + transfer_fee
+    def calculate_payment_fees
+      dividend_amount = @dividend_round.total_amount_in_cents
+      processing_fee = (dividend_amount * 0.029).round + 30
+      transfer_fee = 500
+      total_with_fees = dividend_amount + processing_fee + transfer_fee
 
-    {
+      {
         dividend_amount_cents: dividend_amount,
         dividend_amount_usd: cents_to_usd(dividend_amount),
         processing_fee_cents: processing_fee,
@@ -72,6 +71,6 @@ class DividendRoundPresenter < BasePresenter
         transfer_fee_usd: cents_to_usd(transfer_fee),
         total_with_fees_cents: total_with_fees,
         total_with_fees_usd: cents_to_usd(total_with_fees),
-    }
-  end
+      }
+    end
 end

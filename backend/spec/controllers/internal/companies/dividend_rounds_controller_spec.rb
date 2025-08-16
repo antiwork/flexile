@@ -29,22 +29,22 @@ RSpec.describe Internal::Companies::DividendRoundsController do
 
     it "returns payment statistics for the dividend round" do
       get :payment_status, params: { company_id: company.external_id, id: dividend_round.id }
-      
+
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
-      
-      expect(json_response['total_amount_cents']).to eq(225000)
-      expect(json_response['total_recipients']).to eq(3)
-      expect(json_response['pending']).to eq(1) # dividend1 with ISSUED status
-      expect(json_response['processing']).to eq(1) # dividend2
-      expect(json_response['completed']).to eq(1) # dividend3
-      expect(json_response['failed']).to eq(1) # dividend1 has failed payment
-      expect(json_response['retained']).to eq(0)
+
+      expect(json_response["total_amount_cents"]).to eq(225000)
+      expect(json_response["total_recipients"]).to eq(3)
+      expect(json_response["pending"]).to eq(1) # dividend1 with ISSUED status
+      expect(json_response["processing"]).to eq(1) # dividend2
+      expect(json_response["completed"]).to eq(1) # dividend3
+      expect(json_response["failed"]).to eq(1) # dividend1 has failed payment
+      expect(json_response["retained"]).to eq(0)
     end
 
     it "returns 404 for non-existent dividend round" do
       get :payment_status, params: { company_id: company.external_id, id: 999999 }
-      
+
       expect(response).to have_http_status(:not_found)
     end
 
@@ -64,28 +64,28 @@ RSpec.describe Internal::Companies::DividendRoundsController do
       # Mock the user associations and tax information
       user1 = create(:user, tax_information_confirmed_at: 1.day.ago)
       user2 = create(:user, tax_information_confirmed_at: 1.day.ago)
-      
+
       allow(company_investor1).to receive(:user).and_return(user1)
       allow(company_investor2).to receive(:user).and_return(user2)
-      
+
       # Mock bank accounts
-      allow(user1).to receive(:bank_accounts).and_return([double('bank_account')])
-      allow(user2).to receive(:bank_accounts).and_return([double('bank_account')])
-      
+      allow(user1).to receive(:bank_accounts).and_return([double("bank_account")])
+      allow(user2).to receive(:bank_accounts).and_return([double("bank_account")])
+
       # Mock the Sidekiq job
       allow(PayAllDividendsJob).to receive(:perform_async)
     end
 
     it "marks round as ready for payment and queues payment job" do
       post :process_payments, params: { company_id: company.external_id, id: dividend_round.id }
-      
+
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
-      
-      expect(json_response['success']).to be true
-      expect(json_response['dividend_round_id']).to eq(dividend_round.id)
-      expect(json_response['message']).to eq('Payment processing initiated')
-      
+
+      expect(json_response["success"]).to be true
+      expect(json_response["dividend_round_id"]).to eq(dividend_round.id)
+      expect(json_response["message"]).to eq("Payment processing initiated")
+
       dividend_round.reload
       expect(dividend_round.ready_for_payment).to be true
       expect(PayAllDividendsJob).to have_received(:perform_async)
@@ -97,40 +97,40 @@ RSpec.describe Internal::Companies::DividendRoundsController do
       ineligible_investor = create(:company_investor, company: company)
       allow(ineligible_investor).to receive(:user).and_return(ineligible_user)
       create(:dividend, dividend_round: dividend_round, company_investor: ineligible_investor, status: Dividend::ISSUED)
-      
+
       post :process_payments, params: { company_id: company.external_id, id: dividend_round.id }
-      
+
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
-      
+
       # Should only count eligible dividends (those with confirmed tax info and bank accounts)
-      expect(json_response['payments_queued']).to be >= 0
+      expect(json_response["payments_queued"]).to be >= 0
     end
 
     it "returns 404 for non-existent dividend round" do
       post :process_payments, params: { company_id: company.external_id, id: 999999 }
-      
+
       expect(response).to have_http_status(:not_found)
     end
 
     it "handles update failures" do
       allow_any_instance_of(DividendRound).to receive(:update!).and_raise(ActiveRecord::RecordInvalid.new(DividendRound.new))
-      
+
       post :process_payments, params: { company_id: company.external_id, id: dividend_round.id }
-      
+
       expect(response).to have_http_status(:unprocessable_entity)
       json_response = response.parsed_body
-      expect(json_response['error']).to include('Failed to process payments')
+      expect(json_response["error"]).to include("Failed to process payments")
     end
 
     it "handles unexpected errors" do
       allow(PayAllDividendsJob).to receive(:perform_async).and_raise(StandardError.new("Job queue error"))
-      
+
       post :process_payments, params: { company_id: company.external_id, id: dividend_round.id }
-      
+
       expect(response).to have_http_status(:internal_server_error)
       json_response = response.parsed_body
-      expect(json_response['error']).to eq('Failed to process payments')
+      expect(json_response["error"]).to eq("Failed to process payments")
     end
 
     it "authorizes the request with update action" do

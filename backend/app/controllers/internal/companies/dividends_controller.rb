@@ -35,10 +35,10 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
     # Mark dividend as ready for payment
     dividend.update!(status: Dividend::ISSUED)
 
-    render json: { 
-      success: true, 
+    render json: {
+      success: true,
       dividend_id: dividend.id,
-      status: dividend.status
+      status: dividend.status,
     }
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Dividend not found" }, status: :not_found
@@ -60,7 +60,7 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
       success: true,
       dividend_id: dividend.id,
       status: dividend.status,
-      message: "Payment retry queued"
+      message: "Payment retry queued",
     }
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Dividend not found" }, status: :not_found
@@ -72,9 +72,8 @@ class Internal::Companies::DividendsController < Internal::Companies::BaseContro
   end
 
   private
-
-  def find_dividend_for_admin
-    # For admin actions, find dividend by company, not company_investor
-    Current.company.dividends.find(params[:id])
-  end
+    def find_dividend_for_admin
+      # For admin actions, find dividend by company, not company_investor
+      Current.company.dividends.find(params[:id])
+    end
 end

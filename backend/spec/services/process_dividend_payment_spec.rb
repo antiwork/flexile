@@ -7,16 +7,16 @@ RSpec.describe ProcessDividendPayment do
 
   # Mock Stripe objects
   let(:mock_payment_intent) do
-    double("Stripe::PaymentIntent", 
-           id: "pi_test_123", 
+    double("Stripe::PaymentIntent",
+           id: "pi_test_123",
            latest_charge: double(id: "ch_test_456"))
   end
   let(:mock_payout) { double("Stripe::Payout", id: "po_test_789") }
-  
+
   before do
     # Mock company bank account setup
     allow(company).to receive(:bank_account_ready?).and_return(true)
-    
+
     # Mock Stripe calls
     allow(Stripe::PaymentIntent).to receive(:create).and_return(mock_payment_intent)
     allow(Stripe::Payout).to receive(:create).and_return(mock_payout)
@@ -26,27 +26,27 @@ RSpec.describe ProcessDividendPayment do
     context "when prerequisites are not met" do
       it "raises an error if company does not have a bank account set up" do
         allow(company).to receive(:bank_account_ready?).and_return(false)
-        
+
         expect { service.process! }.to raise_error(
-          ProcessDividendPayment::Error, 
+          ProcessDividendPayment::Error,
           "Company does not have a bank account set up"
         )
       end
 
       it "raises an error if dividend round is not ready for payment" do
         dividend_round.update!(status: "Draft")
-        
+
         expect { service.process! }.to raise_error(
-          ProcessDividendPayment::Error, 
+          ProcessDividendPayment::Error,
           "Dividend round is not ready for payment"
         )
       end
 
       it "raises an error if dividend round has no dividends to pay" do
         allow(dividend_round.dividends).to receive(:empty?).and_return(true)
-        
+
         expect { service.process! }.to raise_error(
-          ProcessDividendPayment::Error, 
+          ProcessDividendPayment::Error,
           "Dividend round has no dividends to pay"
         )
       end
@@ -61,7 +61,7 @@ RSpec.describe ProcessDividendPayment do
 
       it "successfully processes payment and returns payment details" do
         result = service.process!
-        
+
         expect(result).to include(
           payment_intent_id: "pi_test_123",
           payout_id: "po_test_789",
@@ -71,11 +71,11 @@ RSpec.describe ProcessDividendPayment do
 
       it "calculates fees correctly" do
         service.process!
-        
+
         expect(Stripe::PaymentIntent).to have_received(:create).with(
           hash_including(amount: 103_430) # Base amount + processing fee + transfer fee
         )
-        
+
         expect(Stripe::Payout).to have_received(:create).with(
           hash_including(amount: 100_000) # Only dividend amount, not fees
         )
@@ -85,9 +85,9 @@ RSpec.describe ProcessDividendPayment do
         allow(company).to receive_message_chain(:bank_account, :stripe_setup_intent).and_return(
           double(payment_method: "pm_test", customer: "cus_test")
         )
-        
+
         service.process!
-        
+
         expect(Stripe::PaymentIntent).to have_received(:create).with(
           hash_including(
             payment_method_types: ["us_bank_account"],
@@ -109,7 +109,7 @@ RSpec.describe ProcessDividendPayment do
 
       it "creates payout with correct parameters" do
         service.process!
-        
+
         expect(Stripe::Payout).to have_received(:create).with(
           hash_including(
             amount: 100_000,
@@ -127,7 +127,7 @@ RSpec.describe ProcessDividendPayment do
 
       it "updates dividend round status to Paid" do
         service.process!
-        
+
         dividend_round.reload
         expect(dividend_round.status).to eq("Paid")
         expect(dividend_round.ready_for_payment).to be true
@@ -144,7 +144,7 @@ RSpec.describe ProcessDividendPayment do
 
       it "raises a ProcessDividendPayment::Error with payment failure message" do
         expect { service.process! }.to raise_error(
-          ProcessDividendPayment::Error, 
+          ProcessDividendPayment::Error,
           /Failed to collect payment from company: Payment failed/
         )
       end
@@ -153,7 +153,7 @@ RSpec.describe ProcessDividendPayment do
         expect(Rails.logger).to receive(:error).with(
           /Failed to pull funds for dividend round #{dividend_round.id}: Payment failed/
         )
-        
+
         expect { service.process! }.to raise_error(ProcessDividendPayment::Error)
       end
     end
@@ -168,7 +168,7 @@ RSpec.describe ProcessDividendPayment do
 
       it "raises a ProcessDividendPayment::Error with payout failure message" do
         expect { service.process! }.to raise_error(
-          ProcessDividendPayment::Error, 
+          ProcessDividendPayment::Error,
           /Failed to create payout: Insufficient funds/
         )
       end
@@ -177,7 +177,7 @@ RSpec.describe ProcessDividendPayment do
         expect(Rails.logger).to receive(:error).with(
           /Failed to create payout for dividend round #{dividend_round.id}: Insufficient funds/
         )
-        
+
         expect { service.process! }.to raise_error(ProcessDividendPayment::Error)
       end
     end
@@ -191,10 +191,10 @@ RSpec.describe ProcessDividendPayment do
 
       it "simulates payment without calling Stripe" do
         result = service.process!
-        
+
         expect(Stripe::PaymentIntent).not_to have_received(:create)
         expect(Stripe::Payout).not_to have_received(:create)
-        
+
         expect(result[:payment_intent_id]).to start_with("sim_pi_")
         expect(result[:payout_id]).to start_with("sim_po_")
       end
@@ -206,7 +206,7 @@ RSpec.describe ProcessDividendPayment do
         expect(Rails.logger).to receive(:info).with(
           /SIMULATED: Payout of \$1000.0 for dividend round #{dividend_round.external_id}/
         )
-        
+
         service.process!
       end
     end
@@ -222,7 +222,7 @@ RSpec.describe ProcessDividendPayment do
 
       it "handles different dividend amounts correctly" do
         dividend_round.update!(total_amount_in_cents: 50_000)
-        
+
         # 50_000 * 0.029 + 30 + 500 = 1450 + 30 + 500 = 1980
         total = service.send(:calculate_total_amount_with_fees)
         expect(total).to eq(51_980)

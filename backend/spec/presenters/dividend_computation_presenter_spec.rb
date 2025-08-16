@@ -11,12 +11,12 @@ RSpec.describe DividendComputationPresenter do
            created_at: Time.zone.parse("2024-03-15T10:00:00Z"),
            updated_at: Time.zone.parse("2024-03-15T15:30:00Z"))
   end
-  
+
   let(:user1) { create(:user, name: "John Doe") }
   let(:user2) { create(:user, name: "Jane Smith") }
   let(:company_investor1) { create(:company_investor, company: company, user: user1) }
   let(:company_investor2) { create(:company_investor, company: company, user: user2) }
-  
+
   let!(:output1) do
     create(:dividend_computation_output,
            dividend_computation: dividend_computation,
@@ -31,7 +31,7 @@ RSpec.describe DividendComputationPresenter do
            qualified_dividend_amount_usd: 2000.00,
            total_amount_in_usd: 2670.25)
   end
-  
+
   let!(:output2) do
     create(:dividend_computation_output,
            dividend_computation: dividend_computation,
@@ -46,7 +46,7 @@ RSpec.describe DividendComputationPresenter do
            qualified_dividend_amount_usd: 5500.00,
            total_amount_in_usd: 7330.25)
   end
-  
+
   let(:presenter) { described_class.new(dividend_computation) }
 
   describe "#summary" do
@@ -60,7 +60,7 @@ RSpec.describe DividendComputationPresenter do
         return_of_capital: false,
         created_at: "2024-03-15T10:00:00Z",
         updated_at: "2024-03-15T15:30:00Z",
-        number_of_outputs: 2
+        number_of_shareholders: 2,
       })
     end
 
@@ -76,7 +76,7 @@ RSpec.describe DividendComputationPresenter do
       before { dividend_computation.dividend_computation_outputs.destroy_all }
 
       it "shows zero outputs" do
-        expect(subject[:number_of_outputs]).to eq(0)
+        expect(subject[:number_of_shareholders]).to eq(0)
       end
     end
   end
@@ -91,9 +91,9 @@ RSpec.describe DividendComputationPresenter do
         dividends_issuance_date: "2024-03-15",
         return_of_capital: false,
         created_at: "2024-03-15T10:00:00Z",
-        updated_at: "2024-03-15T15:30:00Z"
+        updated_at: "2024-03-15T15:30:00Z",
       })
-      
+
       expect(subject).to have_key(:computation_outputs)
       expect(subject).to have_key(:totals)
     end
@@ -108,7 +108,7 @@ RSpec.describe DividendComputationPresenter do
 
       it "includes output details for first investor with custom name" do
         output = outputs.find { |o| o[:investor_name] == "John Doe Custom" }
-        
+
         expect(output).to include({
           id: output1.id,
           investor_name: "John Doe Custom",
@@ -119,13 +119,13 @@ RSpec.describe DividendComputationPresenter do
           preferred_dividend_amount_in_usd: 170.00,
           dividend_amount_in_usd: 2500.25,
           qualified_dividend_amount_usd: 2000.00,
-          total_amount_in_usd: 2670.25
+          total_amount_in_usd: 2670.25,
         })
       end
 
       it "includes output details for second investor using user name" do
         output = outputs.find { |o| o[:investor_name] == "Jane Smith" }
-        
+
         expect(output).to include({
           id: output2.id,
           investor_name: "Jane Smith",
@@ -136,7 +136,7 @@ RSpec.describe DividendComputationPresenter do
           preferred_dividend_amount_in_usd: 0.00,
           dividend_amount_in_usd: 7330.25,
           qualified_dividend_amount_usd: 5500.00,
-          total_amount_in_usd: 7330.25
+          total_amount_in_usd: 7330.25,
         })
       end
     end
@@ -150,7 +150,7 @@ RSpec.describe DividendComputationPresenter do
           total_preferred_dividends: 170.00,
           total_common_dividends: 9830.50, # 2500.25 + 7330.25
           total_qualified_dividends: 7500.00, # 2000.00 + 5500.00
-          grand_total: 10000.50 # 2670.25 + 7330.25
+          grand_total: 10000.50, # 2670.25 + 7330.25
         })
       end
     end
@@ -165,7 +165,7 @@ RSpec.describe DividendComputationPresenter do
           total_preferred_dividends: 0.0,
           total_common_dividends: 0.0,
           total_qualified_dividends: 0.0,
-          grand_total: 0.0
+          grand_total: 0.0,
         })
       end
     end
@@ -180,7 +180,7 @@ RSpec.describe DividendComputationPresenter do
       it "uses the investor_name" do
         outputs = presenter.detailed_view[:computation_outputs]
         external_output = outputs.find { |o| o[:investor_name] == "External Investor" }
-        
+
         expect(external_output[:investor_name]).to eq("External Investor")
       end
     end
@@ -193,7 +193,7 @@ RSpec.describe DividendComputationPresenter do
       it "handles gracefully with nil investor name" do
         outputs = presenter.detailed_view[:computation_outputs]
         unnamed_output = outputs.find { |o| o[:id] == output1.id }
-        
+
         expect(unnamed_output[:investor_name]).to be_nil
       end
     end
@@ -207,7 +207,7 @@ RSpec.describe DividendComputationPresenter do
       it "handles gracefully when user is missing" do
         outputs = presenter.detailed_view[:computation_outputs]
         output = outputs.find { |o| o[:id] == output1.id }
-        
+
         expect(output[:investor_name]).to be_nil
       end
     end
@@ -225,7 +225,7 @@ RSpec.describe DividendComputationPresenter do
       it "preserves decimal precision in output" do
         outputs = presenter.detailed_view[:computation_outputs]
         output = outputs.find { |o| o[:id] == output1.id }
-        
+
         expect(output[:preferred_dividend_amount_in_usd]).to eq(123.456789)
         expect(output[:dividend_amount_in_usd]).to eq(987.654321)
         expect(output[:qualified_dividend_amount_usd]).to eq(555.123456)

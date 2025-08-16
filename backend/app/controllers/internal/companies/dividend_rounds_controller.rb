@@ -15,7 +15,7 @@ class Internal::Companies::DividendRoundsController < Internal::Companies::BaseC
       processing: dividends.where(status: Dividend::PROCESSING).count,
       completed: dividends.where(status: Dividend::PAID).count,
       failed: dividends.joins(:dividend_payments).where(dividend_payments: { status: Payment::FAILED }).count,
-      retained: dividends.where(status: Dividend::RETAINED).count
+      retained: dividends.where(status: Dividend::RETAINED).count,
     }
     render json: payment_stats
   rescue ActiveRecord::RecordNotFound
@@ -54,8 +54,7 @@ class Internal::Companies::DividendRoundsController < Internal::Companies::BaseC
   end
 
   private
-
-  def find_dividend_round
-    Current.company.dividend_rounds.find(params[:id])
-  end
+    def find_dividend_round
+      Current.company.dividend_rounds.find(params[:id])
+    end
 end

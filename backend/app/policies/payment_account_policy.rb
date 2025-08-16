@@ -6,4 +6,7 @@ class PaymentAccountPolicy < ApplicationPolicy
   end
 
   alias_method :update?, :index?
+  alias_method :balances?, :index?
+  alias_method :pull_funds?, :index?
+  alias_method :transfer_to_wise?, :index?
 end

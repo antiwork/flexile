@@ -29,20 +29,19 @@ class DividendRound < ApplicationRecord
   end
 
   private
+    def issued_at_must_be_ten_days_in_future
+      return unless issued_at.present?
 
-  def issued_at_must_be_ten_days_in_future
-    return unless issued_at.present?
-
-    if issued_at < 10.days.from_now.to_date
-      errors.add(:issued_at, "must be at least 10 days in the future")
+      if issued_at.to_date < 10.days.from_now.to_date
+        errors.add(:issued_at, "must be at least 10 days in the future")
+      end
     end
-  end
 
-  def company_must_have_dividends_enabled
-    return unless company.present?
+    def company_must_have_dividends_enabled
+      return unless company.present?
 
-    unless company.dividends_enabled?
-      errors.add(:base, "Dividends are not enabled for this company")
+      unless company.dividends_enabled?
+        errors.add(:base, "Dividends are not enabled for this company")
+      end
     end
-  end
 end

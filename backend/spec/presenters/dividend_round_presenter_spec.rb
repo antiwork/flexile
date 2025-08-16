@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 RSpec.describe DividendRoundPresenter do
-  let(:company) { create(:company) }
+  let(:company) { create(:company, dividends_allowed: true) }
   let(:dividend_round) do
     create(:dividend_round,
            company: company,
            external_id: "DIV_2024_Q1",
            total_amount_in_cents: 250_000, # $2,500.00
-           issued_at: Time.zone.parse("2024-03-15T14:30:00Z"),
+           issued_at: 10.days.from_now,
            number_of_shareholders: 5,
            number_of_shares: 10_000,
            status: "Issued",
@@ -16,32 +16,32 @@ RSpec.describe DividendRoundPresenter do
            created_at: Time.zone.parse("2024-03-15T10:00:00Z"),
            updated_at: Time.zone.parse("2024-03-15T15:30:00Z"))
   end
-  
-  let(:user1) { create(:user, name: "John Doe", email: "john@example.com") }
-  let(:user2) { create(:user, name: "Jane Smith", email: "jane@example.com") }
+
+  let(:user1) { create(:user, legal_name: "John Doe", email: "john@example.com") }
+  let(:user2) { create(:user, legal_name: "Jane Smith", email: "jane@example.com") }
   let(:company_investor1) { create(:company_investor, company: company, user: user1) }
   let(:company_investor2) { create(:company_investor, company: company, user: user2) }
-  
+
   let!(:dividend1) do
     create(:dividend,
            dividend_round: dividend_round,
            company_investor: company_investor1,
            total_amount_in_cents: 120_000, # $1,200.00
            number_of_shares: 4_000,
-           qualified_dividend_amount_in_cents: 80_000, # $800.00
+           qualified_amount_cents: 80_000, # $800.00
            status: "Issued")
   end
-  
+
   let!(:dividend2) do
     create(:dividend,
            dividend_round: dividend_round,
            company_investor: company_investor2,
            total_amount_in_cents: 130_000, # $1,300.00
            number_of_shares: 6_000,
-           qualified_dividend_amount_in_cents: 100_000, # $1,000.00
+           qualified_amount_cents: 100_000, # $1,000.00
            status: "Processing")
   end
-  
+
   let!(:investor_dividend_round1) do
     create(:investor_dividend_round,
            dividend_round: dividend_round,
@@ -50,7 +50,7 @@ RSpec.describe DividendRoundPresenter do
            sanctioned_country_email_sent: false,
            payout_below_threshold_email_sent: false)
   end
-  
+
   let!(:investor_dividend_round2) do
     create(:investor_dividend_round,
            dividend_round: dividend_round,
@@ -59,7 +59,7 @@ RSpec.describe DividendRoundPresenter do
            sanctioned_country_email_sent: true,
            payout_below_threshold_email_sent: false)
   end
-  
+
   let(:presenter) { described_class.new(dividend_round) }
 
   describe "#summary" do
@@ -86,8 +86,8 @@ RSpec.describe DividendRoundPresenter do
           transfer_fee_cents: 500,
           transfer_fee_usd: 5.0,
           total_with_fees_cents: 257_780,
-          total_with_fees_usd: 2577.8
-        }
+          total_with_fees_usd: 2577.8,
+        },
       })
     end
 
@@ -112,7 +112,7 @@ RSpec.describe DividendRoundPresenter do
 
       it "calculates fees correctly for different amounts" do
         fees = subject[:payment_fees]
-        
+
         expect(fees[:dividend_amount_cents]).to eq(100_000)
         expect(fees[:dividend_amount_usd]).to eq(1000.0)
         expect(fees[:processing_fee_cents]).to eq(2930) # 100_000 * 0.029 + 30
@@ -133,9 +133,9 @@ RSpec.describe DividendRoundPresenter do
         id: "DIV_2024_Q1",
         total_amount_in_cents: 250_000,
         total_amount_in_usd: 2500.0,
-        status: "Issued"
+        status: "Issued",
       })
-      
+
       expect(subject).to have_key(:dividends)
       expect(subject).to have_key(:investor_dividend_rounds)
       expect(subject).to have_key(:payment_fees)
@@ -151,7 +151,7 @@ RSpec.describe DividendRoundPresenter do
 
       it "includes dividend details for first investor" do
         dividend = dividends.find { |d| d[:investor_name] == "John Doe" }
-        
+
         expect(dividend).to include({
           id: dividend1.id,
           investor_name: "John Doe",
@@ -159,16 +159,16 @@ RSpec.describe DividendRoundPresenter do
           total_amount_in_cents: 120_000,
           total_amount_in_usd: 1200.0,
           number_of_shares: 4_000,
-          qualified_dividend_amount_in_cents: 80_000,
-          qualified_dividend_amount_in_usd: 800.0,
-          non_qualified_dividend_amount_in_usd: 400.0, # (120_000 - 80_000) / 100
-          status: "Issued"
+          qualified_amount_cents: 80_000,
+          qualified_amount_usd: 800.0,
+          non_qualified_amount_usd: 400.0, # (120_000 - 80_000) / 100
+          status: "Issued",
         })
       end
 
       it "includes dividend details for second investor" do
         dividend = dividends.find { |d| d[:investor_name] == "Jane Smith" }
-        
+
         expect(dividend).to include({
           id: dividend2.id,
           investor_name: "Jane Smith",
@@ -176,10 +176,10 @@ RSpec.describe DividendRoundPresenter do
           total_amount_in_cents: 130_000,
           total_amount_in_usd: 1300.0,
           number_of_shares: 6_000,
-          qualified_dividend_amount_in_cents: 100_000,
-          qualified_dividend_amount_in_usd: 1000.0,
-          non_qualified_dividend_amount_in_usd: 300.0, # (130_000 - 100_000) / 100
-          status: "Processing"
+          qualified_amount_cents: 100_000,
+          qualified_amount_usd: 1000.0,
+          non_qualified_amount_usd: 300.0, # (130_000 - 100_000) / 100
+          status: "Processing",
         })
       end
 
@@ -203,23 +203,23 @@ RSpec.describe DividendRoundPresenter do
 
       it "includes email status for first investor" do
         investor_round = investor_rounds.find { |idr| idr[:investor_name] == "John Doe" }
-        
+
         expect(investor_round).to eq({
           investor_name: "John Doe",
           dividend_issued_email_sent: true,
           sanctioned_country_email_sent: false,
-          payout_below_threshold_email_sent: false
+          payout_below_threshold_email_sent: false,
         })
       end
 
       it "includes email status for second investor" do
         investor_round = investor_rounds.find { |idr| idr[:investor_name] == "Jane Smith" }
-        
+
         expect(investor_round).to eq({
           investor_name: "Jane Smith",
           dividend_issued_email_sent: false,
           sanctioned_country_email_sent: true,
-          payout_below_threshold_email_sent: false
+          payout_below_threshold_email_sent: false,
         })
       end
     end
@@ -243,26 +243,26 @@ RSpec.describe DividendRoundPresenter do
     end
 
     context "with zero qualified dividend amount" do
-      before { dividend1.update!(qualified_dividend_amount_in_cents: 0) }
+      before { dividend1.update!(qualified_amount_cents: 0) }
 
       it "calculates non-qualified amount correctly" do
         dividends = presenter.detailed_view[:dividends]
         dividend = dividends.find { |d| d[:investor_name] == "John Doe" }
-        
-        expect(dividend[:qualified_dividend_amount_in_usd]).to eq(0.0)
-        expect(dividend[:non_qualified_dividend_amount_in_usd]).to eq(1200.0)
+
+        expect(dividend[:qualified_amount_usd]).to eq(0.0)
+        expect(dividend[:non_qualified_amount_usd]).to eq(1200.0)
       end
     end
 
     context "with all qualified dividend amount" do
-      before { dividend1.update!(qualified_dividend_amount_in_cents: 120_000) }
+      before { dividend1.update!(qualified_amount_cents: 120_000) }
 
       it "calculates non-qualified amount as zero" do
         dividends = presenter.detailed_view[:dividends]
         dividend = dividends.find { |d| d[:investor_name] == "John Doe" }
-        
-        expect(dividend[:qualified_dividend_amount_in_usd]).to eq(1200.0)
-        expect(dividend[:non_qualified_dividend_amount_in_usd]).to eq(0.0)
+
+        expect(dividend[:qualified_amount_usd]).to eq(1200.0)
+        expect(dividend[:non_qualified_amount_usd]).to eq(0.0)
       end
     end
 
@@ -271,11 +271,11 @@ RSpec.describe DividendRoundPresenter do
 
       it "handles large amounts correctly" do
         fees = presenter.summary[:payment_fees]
-        
+
         expect(fees[:dividend_amount_usd]).to eq(10_000_000.0)
         expect(fees[:processing_fee_cents]).to eq(29_000_030) # 1B * 0.029 + 30
         expect(fees[:processing_fee_usd]).to eq(290_000.3)
-        expect(fees[:total_with_fees_usd]).to eq(10_290_005.0)
+        expect(fees[:total_with_fees_usd]).to eq(10_290_005.3)
       end
     end
 
@@ -287,7 +287,7 @@ RSpec.describe DividendRoundPresenter do
       it "handles gracefully when user is missing" do
         dividends = presenter.detailed_view[:dividends]
         dividend = dividends.find { |d| d[:id] == dividend1.id }
-        
+
         expect(dividend[:investor_name]).to be_nil
         expect(dividend[:investor_email]).to be_nil
       end
@@ -297,7 +297,7 @@ RSpec.describe DividendRoundPresenter do
   describe "private method #calculate_payment_fees" do
     it "correctly calculates all fee components" do
       fees = presenter.send(:calculate_payment_fees)
-      
+
       expect(fees).to include({
         dividend_amount_cents: 250_000,
         dividend_amount_usd: 2500.0,
@@ -306,7 +306,7 @@ RSpec.describe DividendRoundPresenter do
         transfer_fee_cents: 500,
         transfer_fee_usd: 5.0,
         total_with_fees_cents: 257_780,
-        total_with_fees_usd: 2577.8
+        total_with_fees_usd: 2577.8,
       })
     end
 
@@ -315,7 +315,7 @@ RSpec.describe DividendRoundPresenter do
 
       it "applies minimum processing fees correctly" do
         fees = presenter.send(:calculate_payment_fees)
-        
+
         expect(fees[:processing_fee_cents]).to eq(33) # 100 * 0.029 + 30 = 2.9 + 30 rounded
         expect(fees[:total_with_fees_cents]).to eq(633) # 100 + 33 + 500
       end

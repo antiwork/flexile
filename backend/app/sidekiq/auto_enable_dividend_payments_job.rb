@@ -14,7 +14,7 @@ class AutoEnableDividendPaymentsJob
     count = 0
     dividend_rounds_to_enable.find_each do |dividend_round|
       Rails.logger.info "Auto-enabling payment for dividend round #{dividend_round.id} (issued_at: #{dividend_round.issued_at})"
-      
+
       dividend_round.update!(ready_for_payment: true)
       count += 1
     end
