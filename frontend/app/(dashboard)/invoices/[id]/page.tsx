@@ -370,7 +370,7 @@ export default function InvoicePage() {
             ) : null}
 
             {invoice.expenses.length > 0 && (
-              <Card className="print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
+              <Card className="mx-4 print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
                 <CardContent>
                   <div className="flex justify-between gap-2">
                     <div>Expense</div>
@@ -397,7 +397,29 @@ export default function InvoicePage() {
               </Card>
             )}
 
-            <footer className="flex justify-between print:mt-4 print:flex print:items-start print:justify-between">
+            {invoice.attachment ? (
+              <Card className="mx-4 print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
+                <CardContent>
+                  <div className="flex justify-between gap-2">
+                    <div>Attachment</div>
+                    <div />
+                  </div>
+                  <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
+                  <div className="flex justify-between gap-2">
+                    <Link
+                      href={`/download/${invoice.attachment.key}/${invoice.attachment.filename}`}
+                      download
+                      className={cn(linkClasses, "print:text-black print:no-underline")}
+                    >
+                      <PaperClipIcon className="inline size-4 print:hidden" /> {invoice.attachment.filename}
+                    </Link>
+                    <span />
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null}
+
+            <footer className="mx-4 flex justify-between print:mt-4 print:flex print:items-start print:justify-between">
               <div className="print:mr-4 print:flex-1">
                 {invoice.notes ? (
                   <div>

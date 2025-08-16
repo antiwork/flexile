@@ -422,6 +422,16 @@ export const invoicesRouter = createRouter({
       await Promise.all(attachmentRows.map((attachment) => [attachment.recordId, attachment] as const)),
     );
 
+    const invoiceAttachmentRow = await db.query.activeStorageAttachments.findFirst({
+      where: and(
+        eq(activeStorageAttachments.recordType, "Invoice"),
+        eq(activeStorageAttachments.recordId, invoice.id),
+        eq(activeStorageAttachments.name, "attachments"),
+      ),
+      with: { blob: { columns: { key: true, filename: true } } },
+      orderBy: desc(activeStorageAttachments.id),
+    });
+
     return {
       ...pick(
         invoice,
@@ -467,6 +477,7 @@ export const invoicesRouter = createRouter({
           complianceInfo: invoice.contractor.user.userComplianceInfos[0],
         },
       },
+      attachment: invoiceAttachmentRow?.blob ?? null,
     };
   }),
 });
