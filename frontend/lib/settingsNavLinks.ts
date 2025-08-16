@@ -33,8 +33,8 @@ export const settingsNavLinks = [
     category: "company",
   },
   {
-    label: "Workspace roles",
-    route: "/settings/administrator/roles" as const,
+    label: "Workspace admins",
+    route: "/settings/administrator/admins" as const,
     icon: ShieldUser,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
     category: "company",
