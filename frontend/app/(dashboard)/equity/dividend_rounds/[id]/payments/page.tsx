@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import { FundManagement } from "@/components/FundManagement";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,58 +15,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
+import { normalizeStatus, STATUS_BADGE_MAP } from "@/utils/dividendStatus";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 
 type Dividend = RouterOutput["dividends"]["list"][number];
-
-// Define status configuration type
-type StatusKey = "pending" | "ready" | "processing" | "completed" | "failed" | "retained";
-
-// Map backend status values to frontend status values
-const normalizeStatus = (backendStatus: Dividend["status"]): StatusKey => {
-  const statusMap: Record<Dividend["status"], StatusKey> = {
-    "Pending signup": "pending",
-    Issued: "ready",
-    Processing: "processing",
-    Paid: "completed",
-    Retained: "retained",
-  };
-  return statusMap[backendStatus] || "pending";
-};
-
-// Status configuration for payment badges
-const STATUS_BADGE_MAP = {
-  pending: {
-    color: "yellow",
-    label: "Pending Setup",
-    className: "border-yellow-200 text-yellow-700 bg-yellow-50",
-  },
-  ready: {
-    color: "blue",
-    label: "Ready to Pay",
-    className: "border-blue-200 text-blue-700 bg-blue-50",
-  },
-  processing: {
-    color: "orange",
-    label: "Processing",
-    className: "border-orange-200 text-orange-700 bg-orange-50",
-  },
-  completed: {
-    color: "green",
-    label: "Completed",
-    className: "border-green-200 text-green-700 bg-green-50",
-  },
-  failed: {
-    color: "red",
-    label: "Failed",
-    className: "border-red-200 text-red-700 bg-red-50",
-  },
-  retained: {
-    color: "gray",
-    label: "Retained (Below Threshold)",
-    className: "border-gray-200 text-gray-700 bg-gray-50",
-  },
-} as const;
 
 const columnHelper = createColumnHelper<Dividend>();
 
@@ -129,7 +82,6 @@ export default function DividendPaymentsPage() {
   const { id } = useParams<{ id: string }>();
   const company = useCurrentCompany();
   const router = useRouter();
-  const trpcUtils = trpc.useUtils();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Fetch dividend round data
@@ -163,9 +115,15 @@ export default function DividendPaymentsPage() {
     const failed: Dividend[] = [];
     for (const d of dividends) {
       switch (normalizeStatus(d.status)) {
-        case "pending": pending.push(d); break;
-        case "ready": ready.push(d); break;
-        case "failed": failed.push(d); break;
+        case "pending":
+          pending.push(d);
+          break;
+        case "ready":
+          ready.push(d);
+          break;
+        case "failed":
+          failed.push(d);
+          break;
       }
     }
     return { pendingDividends: pending, readyDividends: ready, failedDividends: failed };
@@ -175,45 +133,6 @@ export default function DividendPaymentsPage() {
   const pendingPaymentsTable = useTable({ data: pendingDividends, columns: paymentColumns });
   const readyPaymentsTable = useTable({ data: readyDividends, columns: paymentColumns });
   const failedPaymentsTable = useTable({ data: failedDividends, columns: paymentColumns });
-
-  // Mutations for payment actions
-  const pullFundsMutation = trpc.paymentManagement.pullFundsFromBank.useMutation({
-    onSuccess: () => {
-      void trpcUtils.paymentManagement.getAccountBalances.invalidate();
-    },
-  });
-  const transferToWiseMutation = trpc.paymentManagement.transferToWise.useMutation({
-    onSuccess: () => {
-      void trpcUtils.paymentManagement.getAccountBalances.invalidate();
-    },
-  });
-  const processPaymentsMutation = trpc.paymentManagement.processReadyPayments.useMutation({
-    onSuccess: () => {
-      void trpcUtils.dividends.list.invalidate();
-      void trpcUtils.paymentManagement.getAccountBalances.invalidate();
-    },
-  });
-
-  const handlePullFunds = () => {
-    pullFundsMutation.mutate({
-      companyId: company.externalId,
-      amountInCents: paymentStats.totalAmount,
-    });
-  };
-
-  const handleTransferToWise = () => {
-    transferToWiseMutation.mutate({
-      companyId: company.externalId,
-      amountInCents: paymentStats.totalAmount,
-    });
-  };
-
-  const handleProcessPayments = () => {
-    processPaymentsMutation.mutate({
-      companyId: company.externalId,
-      dividendRoundId: Number(id),
-    });
-  };
 
   if (isLoading) {
     return (
@@ -299,51 +218,7 @@ export default function DividendPaymentsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Fund Management</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <h4 className="font-medium">Stripe Balance</h4>
-                <p className="text-2xl font-bold">
-                  {formatMoneyFromCents(Number(balances?.stripe_balance_cents) || 0)}
-                </p>
-                <Button onClick={handlePullFunds} disabled={pullFundsMutation.isPending} className="w-full">
-                  {pullFundsMutation.isPending ? "Pulling..." : "Pull Funds from Bank"}
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="font-medium">Wise Balance</h4>
-                <p className="text-2xl font-bold">{formatMoneyFromCents(Number(balances?.wise_balance_cents) || 0)}</p>
-                <Button
-                  onClick={handleTransferToWise}
-                  disabled={transferToWiseMutation.isPending}
-                  variant="outline"
-                  className="w-full"
-                >
-                  {transferToWiseMutation.isPending ? "Transferring..." : "Transfer to Wise"}
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="font-medium">Required</h4>
-                <p className="text-2xl font-bold">{formatMoneyFromCents(paymentStats.totalAmount)}</p>
-                <Button
-                  onClick={handleProcessPayments}
-                  disabled={paymentStats.readyToPay === 0 || processPaymentsMutation.isPending}
-                  className="w-full"
-                >
-                  {processPaymentsMutation.isPending
-                    ? "Processing..."
-                    : `Process Ready Payments (${paymentStats.readyToPay})`}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <FundManagement dividendRoundId={Number(id)} paymentStats={paymentStats} balances={balances} />
 
         <Card>
           <CardHeader>
