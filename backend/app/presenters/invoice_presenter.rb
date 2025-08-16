@@ -83,7 +83,7 @@ class InvoicePresenter
         is_trusted: company.is_trusted?,
         completed_payment_method_setup: company.bank_account_ready?,
         expenses: {
-          enabled: company.expenses_enabled?,
+          enabled: true,
           categories: company.expense_categories.map { |category| { id: category.id, name: category.name } }.sort_by { _1[:name] },
         },
       }
