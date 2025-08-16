@@ -67,7 +67,11 @@ class CreateOrUpdateInvoiceService
         invoice_year:,
       ).calculate
       if equity_calculation_result.nil?
-        error = "Something went wrong. Please contact the company administrator."
+        if contractor.equity_percentage.nonzero?
+          error = "Admin must create an equity grant before this invoice can be submitted with equity allocation."
+        else
+          error = "Something went wrong. Please contact the company administrator."
+        end
         raise ActiveRecord::Rollback
       end
 

@@ -156,7 +156,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
         expect do
           result = invoice_service.process
           expect(result[:success]).to eq(false)
-          expect(result[:error_message]).to eq("Something went wrong. Please contact the company administrator.")
+          expect(result[:error_message]).to eq("Admin must create an equity grant before this invoice can be submitted with equity allocation.")
         end.to_not change(user.invoices, :count)
       end
 

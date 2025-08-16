@@ -147,9 +147,12 @@ export const invoicesRouter = createRouter({
       });
 
       if (!equityResult) {
+        const hasEquityPercentage = companyWorker.equityPercentage > 0;
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Recipient has insufficient unvested equity",
+          message: hasEquityPercentage
+            ? "Admin must create an equity grant before this invoice can be submitted with equity allocation"
+            : "Recipient has insufficient unvested equity",
         });
       }
 
@@ -265,9 +268,12 @@ export const invoicesRouter = createRouter({
       });
 
       if (!equityResult) {
+        const hasEquityPercentage = ctx.companyContractor.equityPercentage > 0;
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Error calculating equity. Please contact the administrator.",
+          message: hasEquityPercentage
+            ? "Admin must create an equity grant before this can be processed."
+            : "Error calculating equity. Please contact the administrator.",
         });
       }
 
