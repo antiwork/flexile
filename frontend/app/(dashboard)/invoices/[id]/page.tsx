@@ -327,7 +327,7 @@ export default function InvoicePage() {
             </div>
 
             {invoice.lineItems.length > 0 ? (
-              <div className="w-full overflow-x-auto px-4">
+              <div className="w-full overflow-x-auto px-4 print:px-0">
                 <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full print:my-3 print:w-full print:border-collapse print:text-xs">
                   <TableHeader>
                     <TableRow className="print:border-b print:border-gray-300">
@@ -370,7 +370,7 @@ export default function InvoicePage() {
             ) : null}
 
             {invoice.expenses.length > 0 && (
-              <Card className="mx-4 print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
+              <Card className="mx-4 print:mx-0 print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
                 <CardContent>
                   <div className="flex justify-between gap-2">
                     <div>Expense</div>
@@ -397,8 +397,8 @@ export default function InvoicePage() {
               </Card>
             )}
 
-            <footer className="mx-4 flex justify-between gap-2 print:mt-4 print:flex print:items-start print:justify-between">
-              <div className="print:mr-4 print:flex-1">
+            <footer className="mx-4 flex justify-between gap-2 print:mx-0 print:mt-4 print:flex print:items-start print:justify-between">
+              <div className="print:flex-1">
                 {invoice.notes ? (
                   <div>
                     <b className="print:text-sm print:font-bold">Notes</b>
