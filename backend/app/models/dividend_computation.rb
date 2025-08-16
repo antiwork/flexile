@@ -9,6 +9,13 @@ class DividendComputation < ApplicationRecord
   validates :total_amount_in_usd, presence: true
   validates :dividends_issuance_date, presence: true
 
+  def total_fees_cents
+    data_for_dividend_creation.sum do |dividend_data|
+      total_amount_cents = (dividend_data[:total_amount] * 100).to_i
+      FlexileFeeCalculator.calculate_dividend_fee_cents(total_amount_cents)
+    end
+  end
+
   def to_csv
     CSV.generate(headers: true) do |csv|
       csv << ["Investor", "Share class", "Number of shares", "Hurdle rate", "Original issue price (USD)",
