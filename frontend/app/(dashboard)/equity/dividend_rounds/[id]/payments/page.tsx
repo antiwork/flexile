@@ -1,9 +1,8 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { AlertTriangle, ArrowLeft, CheckCircle, DollarSign, RefreshCw, Users } from "lucide-react";
-
+import { useParams, useRouter } from "next/navigation";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
@@ -69,7 +68,8 @@ const paymentColumns = [
         },
       };
 
-      const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+      const isValidStatus = (s: string): s is keyof typeof statusConfig => s in statusConfig;
+      const config = isValidStatus(status) ? statusConfig[status] : statusConfig.pending;
 
       return (
         <Badge variant="outline" className={config.className}>
@@ -83,7 +83,7 @@ const paymentColumns = [
     header: "Actions",
     cell: (info) => {
       const status = info.row.original.status;
-
+      // TODO: Wire up these actions to TRPC mutations for actual payment processing
       return (
         <div className="flex gap-2">
           {status === "failed" && (
@@ -143,7 +143,6 @@ export default function DividendPaymentsPage() {
   const readyDividends = dividends.filter((d) => d.status === "ready");
   const failedDividends = dividends.filter((d) => d.status === "failed");
 
-  // Create tables at component top level to avoid hooks violations
   const allPaymentsTable = useTable({ data: dividends, columns: paymentColumns });
   const pendingPaymentsTable = useTable({ data: pendingDividends, columns: paymentColumns });
   const readyPaymentsTable = useTable({ data: readyDividends, columns: paymentColumns });
@@ -197,7 +196,6 @@ export default function DividendPaymentsPage() {
       />
 
       <div className="space-y-6">
-        {/* Payment Overview Cards */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -243,7 +241,6 @@ export default function DividendPaymentsPage() {
           </Card>
         </div>
 
-        {/* Progress Bar */}
         <Card>
           <CardHeader>
             <CardTitle>Payment Progress</CardTitle>
@@ -261,7 +258,6 @@ export default function DividendPaymentsPage() {
           </CardContent>
         </Card>
 
-        {/* Fund Management */}
         <Card>
           <CardHeader>
             <CardTitle>Fund Management</CardTitle>
@@ -271,7 +267,7 @@ export default function DividendPaymentsPage() {
               <div className="space-y-2">
                 <h4 className="font-medium">Stripe Balance</h4>
                 <p className="text-2xl font-bold">
-                  {formatMoneyFromCents((balances?.stripe_balance_cents as number) || 0)}
+                  {formatMoneyFromCents(Number(balances?.stripe_balance_cents) || 0)}
                 </p>
                 <Button onClick={handlePullFunds} disabled={pullFundsMutation.isPending} className="w-full">
                   {pullFundsMutation.isPending ? "Pulling..." : "Pull Funds from Bank"}
@@ -281,7 +277,7 @@ export default function DividendPaymentsPage() {
               <div className="space-y-2">
                 <h4 className="font-medium">Wise Balance</h4>
                 <p className="text-2xl font-bold">
-                  {formatMoneyFromCents((balances?.wise_balance_cents as number) || 0)}
+                  {formatMoneyFromCents(Number(balances?.wise_balance_cents) || 0)}
                 </p>
                 <Button
                   onClick={handleTransferToWise}
@@ -310,7 +306,6 @@ export default function DividendPaymentsPage() {
           </CardContent>
         </Card>
 
-        {/* Payment Details Table */}
         <Card>
           <CardHeader>
             <CardTitle>Payment Details</CardTitle>

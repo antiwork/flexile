@@ -16,6 +16,7 @@ import { trpc } from "@/trpc/client";
 import { getPublicBackendUrl } from "@/utils/backend";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
+import type { RouterOutput } from "@/trpc";
 
 type ComputationOutput = {
   id: number;
@@ -80,8 +81,7 @@ export default function DividendComputationReview() {
   });
 
   const finalizeComputation = trpc.dividendComputations.finalize.useMutation({
-    onSuccess: (result: any) => {
-      // Show payment result if available
+    onSuccess: (result) => {
       if (result?.payment_result?.error) {
         // Could show a toast notification here for payment processing failures
       }
@@ -89,8 +89,7 @@ export default function DividendComputationReview() {
     },
   });
 
-  // Move useTable hook to top level to avoid conditional hook calls
-  const computationOutputs = (computation?.computation_outputs as ComputationOutput[]) || [];
+  const computationOutputs: ComputationOutput[] = computation?.computation_outputs || [];
   const table = useTable({
     columns,
     data: computationOutputs,
@@ -99,9 +98,8 @@ export default function DividendComputationReview() {
   // Check if user has permission to approve dividends (admin or lawyer only)
   const canApproveDividends = user.roles.administrator || user.roles.lawyer;
 
-  // Calculate estimated payment fees
   const calculatePaymentFees = (dividendAmount: number) => {
-    const processingFee = Math.round(dividendAmount * 0.029) + 0.3;
+    const processingFee = Math.round(dividendAmount * 0.0029 * 100) / 100 + 0.3;
     const transferFee = 5.0;
     return {
       dividendAmount,
@@ -152,10 +150,11 @@ export default function DividendComputationReview() {
     );
   }
 
+  // TODO: Unify DTO field casing between snake_case and camelCase
   const totalAmountUsd = parseFloat(
-    (computation as any)?.total_amount_in_usd || (computation as any)?.totalAmountInUsd || "0"
+    computation?.total_amount_in_usd || computation?.totalAmountInUsd || "0"
   );
-  const totals = (computation as any)?.totals;
+  const totals = computation?.totals;
   const fees = calculatePaymentFees(totalAmountUsd);
 
   return (

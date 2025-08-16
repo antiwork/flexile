@@ -394,14 +394,16 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     });
   };
 
-  const groupedFields = useMemo(
-    () =>
-      (Object as any).groupBy(visibleFields ?? [], (field: any, i: any) => {
-        const index = fieldGroups.findIndex((group) => group.includes(field.key));
-        return index === -1 ? `field${i}` : `group${index}`;
-      }),
-    [visibleFields],
-  );
+  const groupedFields = useMemo(() => {
+    const items = visibleFields ?? [];
+    const acc: Record<string, Field[]> = {};
+    items.forEach((field, i) => {
+      const index = fieldGroups.findIndex((group) => group.includes(field.key));
+      const bucket = index === -1 ? `field${i}` : `group${index}`;
+      (acc[bucket] ||= []).push(field);
+    });
+    return acc;
+  }, [visibleFields]);
 
   useEffect(() => {
     if (!allFields) return;
@@ -494,13 +496,13 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
           {Object.values(groupedFields).map((fieldGroup, index) => {
             if (!fieldGroup) return;
             const gridCols =
-              (fieldGroup as any).length === 3 ? "md:grid-cols-3" : (fieldGroup as any).length === 2 ? "md:grid-cols-2" : "";
+              fieldGroup.length === 3 ? "md:grid-cols-3" : fieldGroup.length === 2 ? "md:grid-cols-2" : "";
             return (
               <div key={`group-${index}`} className={cn("grid grid-cols-1 items-start gap-4", gridCols)}>
-                {(fieldGroup as any).map((field: any) => {
+                {fieldGroup.map((field) => {
                   if (field.type === "select" || field.type === "radio") {
                     const errorMessage = errors.get(field.key);
-                    const selectOptions = (field.valuesAllowed ?? []).map(({ key, name }: any) => ({
+                    const selectOptions = (field.valuesAllowed ?? []).map(({ key, name }) => ({
                       value: key,
                       label: name,
                     }));

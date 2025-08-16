@@ -50,9 +50,12 @@ export default function DividendRound() {
       <DashboardHeader
         title="Dividend"
         headerActions={
-          <Button onClick={() => router.push(`/equity/dividend_rounds/${id}/payments`)}>
-            <CreditCard className="mr-2 h-4 w-4" />
-            Manage Payments
+          // TODO: Extract payments path to routes helper for better maintainability
+          <Button asChild>
+            <Link href={`/equity/dividend_rounds/${id}/payments`}>
+              <CreditCard className="mr-2 h-4 w-4" />
+              Manage Payments
+            </Link>
           </Button>
         }
       />

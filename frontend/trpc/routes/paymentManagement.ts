@@ -3,8 +3,9 @@ import { z } from "zod";
 import { getBackendUrl } from "@/utils/backend";
 import { createRouter, protectedProcedure } from "../";
 
+// TODO: Extract shared backend proxy/header handling into a reusable helper
+
 export const paymentManagementRouter = createRouter({
-  // Get payment status for a dividend round
   getDividendPaymentStatus: protectedProcedure
     .input(
       z.object({
@@ -13,7 +14,7 @@ export const paymentManagementRouter = createRouter({
       }),
     )
     .query(async ({ input, ctx }) => {
-      if (!ctx.company) throw new TRPCError({ code: "UNAUTHORIZED", message: "Company not found" });
+      if (!ctx.company) throw new TRPCError({ code: "FORBIDDEN", message: "Company not found" });
 
       try {
         const response = await fetch(
@@ -47,7 +48,6 @@ export const paymentManagementRouter = createRouter({
       }
     }),
 
-  // Get account balances (Stripe, Wise, etc.)
   getAccountBalances: protectedProcedure
     .input(
       z.object({
@@ -55,7 +55,7 @@ export const paymentManagementRouter = createRouter({
       }),
     )
     .query(async ({ ctx }) => {
-      if (!ctx.company) throw new TRPCError({ code: "UNAUTHORIZED", message: "Company not found" });
+      if (!ctx.company) throw new TRPCError({ code: "FORBIDDEN", message: "Company not found" });
 
       try {
         const response = await fetch(
@@ -91,7 +91,6 @@ export const paymentManagementRouter = createRouter({
       }
     }),
 
-  // Pull funds from bank via Stripe ACH
   pullFundsFromBank: protectedProcedure
     .input(
       z.object({
@@ -100,7 +99,7 @@ export const paymentManagementRouter = createRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      if (!ctx.company) throw new TRPCError({ code: "UNAUTHORIZED", message: "Company not found" });
+      if (!ctx.company) throw new TRPCError({ code: "FORBIDDEN", message: "Company not found" });
 
       try {
         const response = await fetch(
@@ -138,7 +137,6 @@ export const paymentManagementRouter = createRouter({
       }
     }),
 
-  // Transfer funds to Wise
   transferToWise: protectedProcedure
     .input(
       z.object({
@@ -147,7 +145,7 @@ export const paymentManagementRouter = createRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      if (!ctx.company) throw new TRPCError({ code: "UNAUTHORIZED", message: "Company not found" });
+      if (!ctx.company) throw new TRPCError({ code: "FORBIDDEN", message: "Company not found" });
 
       try {
         const response = await fetch(
@@ -185,7 +183,6 @@ export const paymentManagementRouter = createRouter({
       }
     }),
 
-  // Mark dividend as ready for payment
   markDividendReady: protectedProcedure
     .input(
       z.object({
@@ -194,7 +191,7 @@ export const paymentManagementRouter = createRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      if (!ctx.company) throw new TRPCError({ code: "UNAUTHORIZED", message: "Company not found" });
+      if (!ctx.company) throw new TRPCError({ code: "FORBIDDEN", message: "Company not found" });
 
       try {
         const response = await fetch(
@@ -228,7 +225,6 @@ export const paymentManagementRouter = createRouter({
       }
     }),
 
-  // Process payments for ready dividends
   processReadyPayments: protectedProcedure
     .input(
       z.object({
@@ -237,7 +233,7 @@ export const paymentManagementRouter = createRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      if (!ctx.company) throw new TRPCError({ code: "UNAUTHORIZED", message: "Company not found" });
+      if (!ctx.company) throw new TRPCError({ code: "FORBIDDEN", message: "Company not found" });
 
       try {
         const response = await fetch(
@@ -271,7 +267,6 @@ export const paymentManagementRouter = createRouter({
       }
     }),
 
-  // Retry failed payment
   retryFailedPayment: protectedProcedure
     .input(
       z.object({
@@ -280,7 +275,7 @@ export const paymentManagementRouter = createRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      if (!ctx.company) throw new TRPCError({ code: "UNAUTHORIZED", message: "Company not found" });
+      if (!ctx.company) throw new TRPCError({ code: "FORBIDDEN", message: "Company not found" });
 
       try {
         const response = await fetch(

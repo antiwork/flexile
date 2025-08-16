@@ -18,6 +18,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 
+// TODO: Track policy drift - the 10-day rule is enforced here on the client
+// but may also be enforced on the server. We should ensure consistency
+// between client and server validation to avoid user experience issues.
 const formSchema = z.object({
   totalAmountInUsd: z.number().positive().min(0.01, "Amount must be at least $0.01"),
   dividendsIssuanceDate: z.instanceof(CalendarDate, { message: "This field is required." }).refine(
@@ -54,20 +57,16 @@ export default function NewDividendComputation() {
 
   const createMutation = useMutation({
     mutationFn: async (values: FormData) => {
-      try {
-        const result = await createDividendComputation.mutateAsync({
-          companyId: company.externalId,
-          totalAmountInUsd: values.totalAmountInUsd,
-          dividendsIssuanceDate: values.dividendsIssuanceDate.toString(),
-          returnOfCapital: values.returnOfCapital,
-          investorReleaseForm: values.investorReleaseForm,
-          investorDetails: values.investorDetails || "",
-        });
+      const result = await createDividendComputation.mutateAsync({
+        companyId: company.externalId,
+        totalAmountInUsd: values.totalAmountInUsd,
+        dividendsIssuanceDate: values.dividendsIssuanceDate.toString(),
+        returnOfCapital: values.returnOfCapital,
+        investorReleaseForm: values.investorReleaseForm,
+        investorDetails: values.investorDetails || "",
+      });
 
-        router.push(`/equity/dividend_computations/${result.id}`);
-      } catch (error) {
-        throw error;
-      }
+      router.push(`/equity/dividend_computations/${result.id}`);
     },
   });
 
@@ -90,8 +89,7 @@ export default function NewDividendComputation() {
         <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <h3 className="mb-2 text-sm font-medium text-amber-800">About Dividend Computations</h3>
           <p className="text-sm text-amber-700">
-            This tool will calculate dividend distributions for all eligible shareholders based on their share ownership. 
-            You'll be able to review all calculations before finalizing the dividend round.
+            This tool will calculate dividend distributions for all eligible shareholders based on their share ownership. You'll be able to review all calculations before finalizing the dividend round.
           </p>
         </div>
 
@@ -104,12 +102,7 @@ export default function NewDividendComputation() {
                 <FormItem>
                   <FormLabel>Total Dividend Amount</FormLabel>
                   <FormControl>
-                    <NumberInput
-                      {...field}
-                      prefix="$"
-                      placeholder="0.00"
-                      className="text-lg"
-                    />
+                    <NumberInput {...field} prefix="$" placeholder="0.00" className="text-lg" />
                   </FormControl>
                   <FormMessage />
                   <p className="text-sm text-muted-foreground">
@@ -125,12 +118,7 @@ export default function NewDividendComputation() {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <DatePicker 
-                      {...field} 
-                      label="Dividend Issuance Date" 
-                      granularity="day"
-                      minValue={today(getLocalTimeZone())}
-                    />
+                    <DatePicker {...field} label="Dividend Issuance Date" granularity="day" minValue={today(getLocalTimeZone())} />
                   </FormControl>
                   <FormMessage />
                   <p className="text-sm text-muted-foreground">
@@ -152,10 +140,7 @@ export default function NewDividendComputation() {
                     </p>
                   </div>
                   <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                 </FormItem>
               )}
@@ -173,10 +158,7 @@ export default function NewDividendComputation() {
                     </p>
                   </div>
                   <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                 </FormItem>
               )}
@@ -207,11 +189,7 @@ export default function NewDividendComputation() {
               <Button variant="outline" type="button" asChild>
                 <Link href="/equity/dividend_rounds">Cancel</Link>
               </Button>
-              <MutationStatusButton
-                type="submit"
-                mutation={createMutation}
-                loadingText="Creating computation..."
-              >
+              <MutationStatusButton type="submit" mutation={createMutation} loadingText="Creating computation...">
                 Create Computation
               </MutationStatusButton>
             </div>
