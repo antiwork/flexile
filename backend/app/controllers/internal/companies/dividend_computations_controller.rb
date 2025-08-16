@@ -5,6 +5,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     authorize DividendComputation
 
     dividend_computations = Current.company.dividend_computations
+      .unfinalized
       .includes(:dividend_computation_outputs)
       .order(created_at: :desc)
       .map do |computation|
@@ -32,6 +33,15 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
 
     dividend_computation = Current.company.dividend_computations.find(params[:id])
     render json: DividendComputationPresenter.new(dividend_computation).props
+  end
+
+  def finalize
+    dividend_computation = Current.company.dividend_computations.find(params[:id])
+    authorize dividend_computation
+
+    dividend_round = dividend_computation.generate_dividends
+    dividend_computation.mark_as_finalized!(dividend_round)
+    render json: { id: dividend_round.id }, status: :created
   end
 
   private

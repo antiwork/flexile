@@ -1660,6 +1660,34 @@ export const export_company_invoices_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations/:id/finalize(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const finalize_company_dividend_computation_url: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations/:id/finalize(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const finalize_company_dividend_computation_path: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/current_user_data(.:format)
  * @param {object | undefined} options
  * @returns {string} route path

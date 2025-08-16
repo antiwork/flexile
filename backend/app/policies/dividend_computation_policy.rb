@@ -14,4 +14,8 @@ class DividendComputationPolicy < ApplicationPolicy
   def show?
     index?
   end
+
+  def finalize?
+    company.equity_enabled? && company_administrator.present? && !record.finalized?
+  end
 end
