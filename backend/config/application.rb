@@ -8,6 +8,21 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+# Load environment-specific .env file so that, e.g.,
+# `.env.test` is loaded in the test environment, `.env.development`
+# in development, etc. Fallback to generic `.env` if the
+# environment-specific file is missing.
+# The order of precedence is:
+#   1. environment-specific file       (e.g. .env.test)
+#   2. machine-specific/local overrides (.env.local)
+#   3. generic fallback                (.env)
+# This mirrors the behaviour of `dotenv-rails` in typical
+# Rails projects while ensuring test env vars are picked up.
+# Use the helper provided by dotenv-rails, which automatically loads
+# `.env`, `.env.local`, `.env.#{Rails.env}`, and `.env.#{Rails.env}.local`
+# in the correct precedence order (see dotenv-rails README).
+# This avoids the ArgumentError raised when passing explicit filenames
+# to Dotenv::Rails.load.  Dotenv now recommends `Dotenv::Rails.load`.
 Dotenv::Rails.load
 
 require_relative "../lib/global_config"

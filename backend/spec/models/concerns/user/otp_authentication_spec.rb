@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe User::OtpAuthentication do
-  let(:user) { create(:user, email: "test@example.com") }
+  let(:user) { create(:user, email: "test@example.com", without_bank_account: true, without_compliance_info: true) }
 
   describe "#verify_otp" do
     context "when in test environment with ENABLE_DEFAULT_OTP=true" do

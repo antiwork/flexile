@@ -27,7 +27,30 @@ class CompanyStripeAccount < ApplicationRecord
   end
 
   def fetch_stripe_bank_account_last_four
-    stripe_setup_intent.payment_method&.us_bank_account&.last4
+    payment_method = stripe_setup_intent.payment_method
+
+    # stripe-mock may return a String ID for `payment_method` even when expand is requested.
+    # Handle both the expanded object and the string ID by retrieving the object if needed.
+    payment_method_obj =
+      case payment_method
+      when String
+        begin
+          Stripe::PaymentMethod.retrieve(payment_method)
+        rescue StandardError
+          nil
+        end
+      else
+        payment_method
+      end
+
+    Rails.logger.info(
+      "CompanyStripeAccount#fetch_stripe_bank_account_last_four payment_method_class=#{payment_method.class} " \
+      "payment_method_id=#{payment_method.is_a?(String) ? payment_method : payment_method&.id} " \
+      "resolved_type=#{payment_method_obj&.type} " \
+      "has_us_bank_account=#{payment_method_obj&.respond_to?(:us_bank_account)}"
+    ) if defined?(Rails)
+
+    payment_method_obj&.us_bank_account&.last4
   end
 
   def microdeposit_verification_required?

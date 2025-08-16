@@ -63,12 +63,53 @@ Likely caused by rails attempting to connect before Redis had fully started.
 ## Testing
 
 ```shell
-# Run Rails specs
-bundle exec rspec # Run all specs
-bundle exec rspec spec/system/roles/show_spec.rb:7 # Run a single spec
+# -----------------------------
+# 🧪 Testing (now mock-first)
+# -----------------------------
+# The entire test-suite now runs **without any external API keys**.
+# We spin-up local mocks for Stripe and stub the Wise sandbox via WebMock; the
+# front-end uses MSW (Mock Service Worker).
+#
+# • Faster – no network latency
+# • Deterministic – no flakey 3rd-party outages
+# • OSS-friendly – contributors can run `rspec` & Playwright out-of-the-box
 
-# Run Playwright end-to-end tests
+Run all specs with mocks:
+```bash
+bin/test-with-mocks
+```
+
+Run a single spec:
+```bash
+bin/test-with-mocks spec/system/roles/show_spec.rb:7
+```
+
+E2E tests (Playwright) already start MSW automatically:
+```bash
 pnpm playwright test
+```
+
+Traditional commands still work if you’ve already started `stripe-mock` (see
+below):
+```bash
+# Rails specs
+bundle exec rspec
+```
+
+### How the mocking works
+* **Backend** – `stripe-mock` Docker container on `localhost:12111`,
+  Wise HTTP calls intercepted via **WebMock** stubs.
+* **Frontend/E2E** – **MSW** intercepts browser & Node fetches.
+
+### Opt-in to real APIs
+Occasionally you may wish to hit the real Stripe/Wise sandboxes:
+```bash
+USE_STRIPE_MOCK=false USE_WISE_MOCK=false \
+STRIPE_SECRET_KEY=sk_test_... \
+WISE_API_KEY=your_token WISE_PROFILE_ID=12345 \
+bundle exec rspec
+```
+Be mindful of rate-limits & credentials.
 ```
 
 ## Services configuration

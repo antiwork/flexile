@@ -42,12 +42,12 @@ module User::OtpAuthentication
     end
 
     def otp_code_valid?(code)
-      return false if code.blank? || otp_secret_key.blank?
-
       # Accept test OTP code during local development and tests
       if !Rails.env.production? && ENV["ENABLE_DEFAULT_OTP"] == "true" && code.to_s == "000000"
         return true
       end
+
+      return false if code.blank? || otp_secret_key.blank?
 
       self.authenticate_otp(code.to_s, drift: OTP_DRIFT)
     end

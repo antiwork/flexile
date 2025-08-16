@@ -11,6 +11,8 @@ require "pundit/rspec"
 Dir[Rails.root.join("spec", "support", "**", "*.rb")].sort.each { |f| require f }
 
 BUILDING_ON_CI = !ENV["CI"].nil?
+USE_STRIPE_MOCK = BUILDING_ON_CI || ENV["USE_STRIPE_MOCK"].present?
+USE_WISE_MOCK   = BUILDING_ON_CI || ENV["USE_WISE_MOCK"].present?
 
 KnapsackPro::Adapters::RSpecAdapter.bind
 
@@ -53,7 +55,20 @@ end
 
 configure_vcr
 
-WebMock.disable_net_connect!(net_http_connect_on_start: true, allow: ["api.knapsackpro.com"])
+# Allow-list external hosts depending on mock usage
+allowed_hosts = ["api.knapsackpro.com"]
+
+# When running with stripe-mock we need to talk to the local mock server
+if USE_STRIPE_MOCK
+  allowed_hosts << /localhost:1211\d/ # 12111 & 12112
+else
+  allowed_hosts << "api.stripe.com"
+end
+
+# When NOT mocking Wise we must allow Wise sandbox
+allowed_hosts << "api.sandbox.transferwise.tech" unless USE_WISE_MOCK
+
+WebMock.disable_net_connect!(net_http_connect_on_start: true, allow: allowed_hosts)
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
@@ -118,18 +133,6 @@ RSpec.configure do |config|
       Sidekiq::Testing.fake!
     end
     example.run
-  end
-
-  config.around(:each, :allow_stripe_requests) do |example|
-    VCR.configure do |c|
-      c.ignore_hosts("api.stripe.com")
-    end
-
-    example.run
-
-    VCR.configure do |c|
-      c.unignore_hosts("api.stripe.com")
-    end
   end
 
   config.before(:each, :skip_pdf_generation) do |_|

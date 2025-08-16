@@ -19,6 +19,13 @@ export default defineConfig({
     trace: "on-first-retry",
     video: "retain-on-failure",
     screenshot: "only-on-failure",
+    /*
+     * Run browsers in headless mode so Playwright opens no visible Chrome
+     * windows during the test-suite.  This keeps the developer’s desktop
+     * uncluttered while still allowing Playwright to record videos/traces
+     * when a test fails.
+     */
+    headless: true,
     contextOptions: {
       ignoreHTTPSErrors: true,
     },

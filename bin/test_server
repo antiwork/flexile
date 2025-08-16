@@ -19,6 +19,16 @@ export RAILS_ENV=test
 export NODE_ENV=test
 export ENABLE_DEFAULT_OTP=true
 
+# ------------------------------------------------------------------------
+# Load test environment variables BEFORE running any database operations.
+# This guarantees DATABASE_URL and other critical vars are available
+# when `rails db:*` tasks execute below. Silent‐fail if the file is missing.
+# ------------------------------------------------------------------------
+if [ -f .env.test ]; then
+  # shellcheck disable=SC2046       # we intentionally split on whitespace
+  export $(grep -v '^#' .env.test | xargs)
+fi
+
 cd backend
 bundle exec rails db:drop db:create db:schema:load db:seed_test_data
 cd ..
