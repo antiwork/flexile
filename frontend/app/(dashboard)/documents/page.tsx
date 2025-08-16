@@ -1,36 +1,43 @@
 "use client";
-import { skipToken, useQueryClient } from "@tanstack/react-query";
+import { skipToken, useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, FileTextIcon, Info, Pencil, PercentIcon, Plus } from "lucide-react";
+import { CircleCheck, Download, Info } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import DocusealForm, { customCss } from "@/app/(dashboard)/documents/DocusealForm";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
+import RichText from "@/components/RichText";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
-import type { RouterOutput } from "@/trpc";
-import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
-import { assertDefined } from "@/utils/assert";
+import { type Document } from "@/models/document";
+import { DocumentType, trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { sign_company_document_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
-
-type Document = RouterOutput["documents"]["list"][number];
-type SignableDocument = Document & { docusealSubmissionId: number };
+import { NewDocument } from "./NewDocument";
 
 const typeLabels = {
   [DocumentType.ConsultingContract]: "Agreement",
@@ -38,11 +45,6 @@ const typeLabels = {
   [DocumentType.TaxDocument]: "Tax form",
   [DocumentType.ExerciseNotice]: "Exercise notice",
   [DocumentType.EquityPlanContract]: "Equity plan",
-};
-
-const templateTypeLabels = {
-  [DocumentTemplateType.ConsultingContract]: "Agreement",
-  [DocumentTemplateType.EquityPlanContract]: "Equity plan",
 };
 
 const columnFiltersSchema = z.array(z.object({ id: z.string(), value: filterValueSchema }));
@@ -80,119 +82,6 @@ function getStatus(document: Document): { variant: StatusVariant | undefined; na
   }
 }
 
-const EditTemplates = () => {
-  const isMobile = useIsMobile();
-  const company = useCurrentCompany();
-  const router = useRouter();
-
-  const [templates, { refetch: refetchTemplates }] = trpc.documents.templates.list.useSuspenseQuery({
-    companyId: company.id,
-  });
-  const filteredTemplates = useMemo(
-    () =>
-      company.id && templates.length > 1
-        ? templates.filter(
-            (template) => !template.generic || !templates.some((t) => !t.generic && t.type === template.type),
-          )
-        : templates,
-    [templates],
-  );
-  const createTemplate = trpc.documents.templates.create.useMutation({
-    onSuccess: (id) => {
-      void refetchTemplates();
-      router.push(`/document_templates/${id}`);
-    },
-  });
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        {isMobile ? (
-          <Button variant="floating-action">
-            <Plus />
-          </Button>
-        ) : (
-          <Button variant="outline" size="small">
-            <Pencil className="size-4" />
-            Edit templates
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit templates</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTemplates.map((template) => (
-                <TableRow key={template.id}>
-                  <TableCell>
-                    <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
-                      {template.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{templateTypeLabels[template.type]}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <h3 className="text-lg font-medium">Create a new template</h3>
-          <Alert className="mx-4">
-            <Info className="size-4" />
-            <AlertDescription>
-              By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
-              liabilities, or damages arising from or related to such documents. See our{" "}
-              <Link href="/terms" className="text-blue-600 hover:underline">
-                Terms of Service
-              </Link>{" "}
-              for more details.
-            </AlertDescription>
-          </Alert>
-          <div className="grid grid-cols-3 gap-4">
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Consulting agreement",
-                type: DocumentTemplateType.ConsultingContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <FileTextIcon className="size-6" />
-                <span className="mt-2 whitespace-normal">Consulting agreement</span>
-              </div>
-            </MutationButton>
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Equity grant contract",
-                type: DocumentTemplateType.EquityPlanContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <PercentIcon className="size-6" />
-                <span className="mt-2 whitespace-normal">Equity grant contract</span>
-              </div>
-            </MutationButton>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 export default function DocumentsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
@@ -215,15 +104,14 @@ export default function DocumentsPage() {
   );
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
-  const isSignable = (document: Document): document is SignableDocument =>
-    !!document.docusealSubmissionId &&
+  const isSignable = (document: Document) =>
     document.signatories.some(
       (signatory) =>
         !signatory.signedAt &&
         (signatory.id === user.id || (signatory.title === "Company Representative" && isCompanyRepresentative)),
     );
   const signDocument = signDocumentId
-    ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
+    ? documents.find((document) => document.id === signDocumentId && isSignable(document))
     : null;
   useEffect(() => {
     const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
@@ -238,8 +126,10 @@ export default function DocumentsPage() {
       [
         isCompanyRepresentative
           ? columnHelper.accessor(
-              (row) =>
-                assertDefined(row.signatories.find((signatory) => signatory.title !== "Company Representative")).name,
+              (row) => {
+                const signer = row.signatories.find((signatory) => signatory.title !== "Company Representative");
+                return signer ? signer.name : "—";
+              },
               { id: "signer", header: "Signer" },
             )
           : null,
@@ -282,14 +172,14 @@ export default function DocumentsPage() {
                     Review and sign
                   </Button>
                 ) : null}
-                {document.attachment ? (
+                {document.attachment && !isSignable(document) ? (
                   <Button variant="outline" size="small" asChild>
                     <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
                       <Download className="size-4" />
                       Download
                     </Link>
                   </Button>
-                ) : document.docusealSubmissionId && document.signatories.every((signatory) => signatory.signedAt) ? (
+                ) : document.signatories.every((signatory) => signatory.signedAt) ? (
                   <Button variant="outline" size="small" onClick={() => setDownloadDocument(document.id)}>
                     <Download className="size-4" />
                     Download
@@ -349,8 +239,10 @@ export default function DocumentsPage() {
         }),
         isCompanyRepresentative
           ? columnHelper.accessor(
-              (row) =>
-                assertDefined(row.signatories.find((signatory) => signatory.title !== "Company Representative")).name,
+              (row) => {
+                const signer = row.signatories.find((signatory) => signatory.title !== "Company Representative");
+                return signer ? signer.name : "—";
+              },
               {
                 id: "signer",
                 header: "Signer",
@@ -420,7 +312,7 @@ export default function DocumentsPage() {
               </button>
             ) : null
           ) : isCompanyRepresentative && documents.length === 0 ? (
-            <EditTemplates />
+            <NewDocument />
           ) : null
         }
       />
@@ -458,7 +350,7 @@ export default function DocumentsPage() {
           <DataTable
             table={table}
             tabsColumn="status"
-            actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
+            actions={isCompanyRepresentative ? <NewDocument /> : undefined}
             {...(isCompanyRepresentative && { searchColumn: "signer" })}
           />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
@@ -473,19 +365,36 @@ export default function DocumentsPage() {
   );
 }
 
-const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; onClose: () => void }) => {
+const SignDocumentModal = ({ document, onClose }: { document: Document; onClose: () => void }) => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [redirectUrl] = useQueryState("next");
   const router = useRouter();
-  const [{ slug, readonlyFields }] = trpc.documents.templates.getSubmitterSlug.useSuspenseQuery({
-    id: document.docusealSubmissionId,
-    companyId: company.id,
-  });
+  const [signature, setSignature] = useState(user.legalName);
   const trpcUtils = trpc.useUtils();
   const queryClient = useQueryClient();
 
-  const signDocument = trpc.documents.sign.useMutation({
+  const signDocumentMutation = useMutation({
+    mutationFn: async () => {
+      if (!signature) throw new Error("Signature is required");
+
+      const response = await request({
+        url: sign_company_document_path(company.id, document.id),
+        method: "POST",
+        jsonData: {
+          title: document.signatories.find((signatory) => signatory.id === user.id)?.title ?? "Company Representative",
+          signature,
+        },
+        assertOk: true,
+        accept: "json",
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to sign document");
+      }
+    },
+
     onSuccess: async () => {
       router.replace("/documents");
       await trpcUtils.documents.list.refetch();
@@ -498,20 +407,52 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
-        <DocusealForm
-          src={`https://docuseal.com/s/${slug}`}
-          readonlyFields={readonlyFields}
-          customCss={customCss}
-          onComplete={() => {
-            signDocument.mutate({
-              companyId: company.id,
-              id: document.id,
-              role:
-                document.signatories.find((signatory) => signatory.id === user.id)?.title ?? "Company Representative",
-            });
-          }}
-        />
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Sign Document</DialogTitle>
+          <DialogDescription>
+            You are about to sign the document <span className="font-bold-sm">{document.name}</span>.
+          </DialogDescription>
+        </DialogHeader>
+        {document.textContent ? (
+          <div className="max-h-100 overflow-y-auto rounded-md border p-2">
+            <RichText content={document.textContent} />
+          </div>
+        ) : document.attachment ? (
+          <div className="flex items-center gap-1">
+            <Download className="size-4" />
+            <a
+              className={linkClasses}
+              href={`/download/${document.attachment.key}/${document.attachment.filename}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {document.name}
+            </a>
+          </div>
+        ) : null}
+        <div className="flex flex-col gap-2">
+          <Label>Your signature</Label>
+          <Input
+            value={signature}
+            onChange={(e) => setSignature(e.target.value)}
+            className="font-signature text-xl"
+            aria-label="Signature"
+          />
+        </div>
+        <DialogFooter>
+          <div className="flex w-full flex-col gap-2">
+            {signDocumentMutation.error ? <p className="text-red-500">{signDocumentMutation.error.message}</p> : null}
+            <MutationButton
+              mutation={signDocumentMutation}
+              loadingText="Saving..."
+              disabled={!signature}
+              onClick={() => signDocumentMutation.mutate()}
+            >
+              Agree & Submit
+            </MutationButton>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

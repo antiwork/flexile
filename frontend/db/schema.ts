@@ -527,6 +527,7 @@ export const documents = pgTable(
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
     emailedAt: timestamp("emailed_at", { precision: 6, mode: "date" }),
     jsonData: jsonb("json_data"),
+    textContent: text("text_content"),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .$onUpdate(() => new Date())
