@@ -11,10 +11,6 @@ scope path: :internal, module: :internal do
     end
   end
 
-  namespace :demo do
-    resources :companies, only: :show
-  end
-
   resource :settings, only: [:update]
   namespace :settings do
     resource :dividend, only: [:show, :update], controller: "dividend"

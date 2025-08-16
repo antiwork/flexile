@@ -23,9 +23,7 @@ const NAV_PRIORITIES: Record<string, number> = {
   Equity: 3,
   Updates: 4,
   People: 5,
-  Expenses: 6,
-  Roles: 7,
-  Settings: 8,
+  Settings: 6,
 };
 
 const DEFAULT_PRIORITY = 99;

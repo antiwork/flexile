@@ -1,17 +1,7 @@
 "use client";
 
 import { skipToken } from "@tanstack/react-query";
-import {
-  BookUser,
-  ChartPie,
-  CircleDollarSign,
-  Files,
-  type LucideIcon,
-  ReceiptIcon,
-  Rss,
-  Settings,
-  Users,
-} from "lucide-react";
+import { ChartPie, Files, type LucideIcon, ReceiptIcon, Rss, Settings, Users } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
@@ -106,15 +96,6 @@ export const useNavLinks = (): NavLinkInfo[] => {
     });
   }
 
-  if (routes.has("Expenses") && company.id) {
-    navLinks.push({
-      label: "Expenses",
-      route: `/companies/${company.id}/expenses` as const,
-      icon: CircleDollarSign,
-      isActive: pathname.startsWith(`/companies/${company.id}/expenses`),
-    });
-  }
-
   if (routes.has("Documents")) {
     navLinks.push({
       label: "Documents",
@@ -131,15 +112,6 @@ export const useNavLinks = (): NavLinkInfo[] => {
       route: "/people" as const,
       icon: Users,
       isActive: pathname.startsWith("/people") || pathname.includes("/investor_entities/"),
-    });
-  }
-
-  if (routes.has("Roles")) {
-    navLinks.push({
-      label: "Roles",
-      route: "/roles" as const,
-      icon: BookUser,
-      isActive: pathname.startsWith("/roles"),
     });
   }
 
