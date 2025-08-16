@@ -25,6 +25,17 @@ RSpec.describe ApproveInvoice do
           end
         end
       end
+
+      context "when equity is selected but options are zero" do
+        before do
+          invoice.update!(equity_percentage: 10, equity_amount_in_options: 0)
+        end
+
+        it "does not create an approval or change status" do
+          expect { service.perform }.not_to change { invoice.invoice_approvals.count }
+          expect(invoice.reload.status).to eq(Invoice::RECEIVED)
+        end
+      end
     end
 
     describe "sending email" do
