@@ -57,7 +57,6 @@ function kill_process_listening_on_port {
 echo "Cleaning up existing processes..."
 kill_process_listening_on_port 3000
 kill_process_listening_on_port 3001
-kill_process_listening_on_port 8288 # inngest
 rm -f backend/tmp/pids/server.pid
 
 echo "Starting application services..."

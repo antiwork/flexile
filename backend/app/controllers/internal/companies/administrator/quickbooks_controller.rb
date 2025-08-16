@@ -74,6 +74,22 @@ class Internal::Companies::Administrator::QuickbooksController < Internal::Compa
     render json: { accounts: @quickbooks_api_client.get_expense_accounts }
   end
 
+  def sync_integration
+    authorize QuickbooksIntegration
+
+    company = Current.company
+    integration = company.quickbooks_integration
+
+    if integration.nil?
+      render json: { success: false, error: "Integration not found" }, status: :not_found
+      return
+    end
+
+    QuickbooksIntegrationSyncScheduleJob.perform_async(company.id)
+
+    render json: { success: true, message: "QuickBooks sync initiated" }
+  end
+
   private
     def oauth_params
       params.permit(:code, :state, :realmId)

@@ -35,7 +35,6 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-react": "^7.37.1",
     "globals": "^16.0.0",
-    "inngest-cli": "^1.3.2",
     "lint-staged": "^15.2.10",
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
@@ -110,7 +109,6 @@
     "drizzle-orm": "^0.41.0",
     "drizzle-zod": "^0.7.0",
     "immutable": "^5.0.3",
-    "inngest": "^3.27.0",
     "input-otp": "^1.4.2",
     "iso-3166": "^4.3.0",
     "jsonwebtoken": "^9.0.2",
@@ -156,15 +154,13 @@
   "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971",
   "pnpm": {
     "patchedDependencies": {
-      "inngest": "patches/inngest.patch",
       "next": "patches/next.patch",
       "quickbooks-node-promise": "patches/quickbooks-node-promise.patch",
       "server-only": "patches/server-only.patch",
       "playwright": "patches/playwright.patch"
     },
     "onlyBuiltDependencies": [
-      "bcrypt",
-      "inngest-cli"
+      "bcrypt"
     ]
   }
 }
