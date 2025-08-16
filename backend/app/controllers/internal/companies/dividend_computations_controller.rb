@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::Companies::DividendComputationsController < Internal::Companies::BaseController
-  before_action :load_dividend_computation, only: [:show]
+  before_action :load_dividend_computation, only: [:show, :finalize]
 
   def index
     authorize DividendComputation
@@ -36,11 +36,10 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
   end
 
   def finalize
-    dividend_computation = Current.company.dividend_computations.find(params[:id])
-    authorize dividend_computation
+    authorize @dividend_computation
 
-    dividend_round = dividend_computation.generate_dividends
-    dividend_computation.mark_as_finalized!(dividend_round)
+    dividend_round = @dividend_computation.generate_dividends
+    @dividend_computation.mark_as_finalized!(dividend_round)
     render json: { id: dividend_round.id }, status: :created
   end
 
