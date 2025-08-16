@@ -8,7 +8,7 @@ class Internal::Companies::UsersController < Internal::Companies::BaseController
 
     if params[:filter].present?
       filters = params[:filter].split(",").map(&:strip)
-      valid_filters = %w[administrators lawyers]
+      valid_filters = %w[administrators lawyers contractors investors]
       applied_filters = filters & valid_filters
 
       if applied_filters.any?
@@ -20,6 +20,10 @@ class Internal::Companies::UsersController < Internal::Companies::BaseController
             combined_users.concat(presenter.administrators_props)
           when "lawyers"
             combined_users.concat(presenter.lawyers_props)
+          when "contractors"
+            combined_users.concat(presenter.contractors_props)
+          when "investors"
+            combined_users.concat(presenter.investors_props)
           end
         end
 
