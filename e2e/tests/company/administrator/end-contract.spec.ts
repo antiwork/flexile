@@ -2,7 +2,7 @@ import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { fillDatePicker } from "@test/helpers";
-import { login } from "@test/helpers/auth";
+import { login, quickLogout } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { addDays, addYears, format } from "date-fns";
@@ -11,7 +11,7 @@ import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 test.describe("End contract", () => {
-  test("allows admin to end contractor's contract", async ({ context, page, next }) => {
+  test("allows admin to end contractor's contract", async ({ page, next }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
     const { companyContractor } = await companyContractorsFactory.create({
       companyId: company.id,
@@ -68,7 +68,7 @@ test.describe("End contract", () => {
         .filter({ hasText: `Starts on ${format(startDate, "MMM d, yyyy")}` }),
     ).toBeVisible();
 
-    await context.clearCookies();
+    await quickLogout(page);
     await login(page, contractor);
     await page.getByRole("link", { name: "sign it" }).click();
     await page.getByRole("button", { name: "Sign now" }).click();

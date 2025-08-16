@@ -7,7 +7,7 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, selectComboboxOption } from "@test/helpers";
-import { login } from "@test/helpers/auth";
+import { login, quickLogout } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -16,7 +16,7 @@ import { companyInvestors, documents, documentSignatures, equityGrants } from "@
 import { assertDefined } from "@/utils/assert";
 
 test.describe("Equity Grants", () => {
-  test("allows issuing equity grants", async ({ context, page, next }) => {
+  test("allows issuing equity grants", async ({ page, next }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       fmvPerShareInUsd: "1",
@@ -164,7 +164,7 @@ test.describe("Equity Grants", () => {
           companyDocuments.map((d) => d.id),
         ),
       );
-    await context.clearCookies();
+    await quickLogout(page);
     await login(page, contractorUser, "/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
@@ -179,7 +179,7 @@ test.describe("Equity Grants", () => {
     await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
-    await context.clearCookies();
+    await quickLogout(page);
     await login(page, projectBasedUser, "/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");

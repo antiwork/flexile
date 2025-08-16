@@ -5,7 +5,7 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
-import { login } from "@test/helpers/auth";
+import { login, quickLogout } from "@test/helpers/auth";
 import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
@@ -315,7 +315,6 @@ test.describe("One-off payments", () => {
 
   test.describe("invoice list visibility", () => {
     test("does not show one-off payments in the admin invoice list while they're not accepted by the payee", async ({
-      context,
       page,
       sentEmails: _,
     }) => {
@@ -333,7 +332,7 @@ test.describe("One-off payments", () => {
       );
       await expect(page.getByRole("dialog")).not.toBeVisible();
 
-      await context.clearCookies();
+      await quickLogout(page);
       await login(page, workerUser);
 
       await page.getByRole("link", { name: "Invoices" }).click();
@@ -357,7 +356,7 @@ test.describe("One-off payments", () => {
 
       await expect(page.getByRole("dialog")).not.toBeVisible();
 
-      await context.clearCookies();
+      await quickLogout(page);
       await login(page, adminUser);
 
       await page.getByRole("link", { name: "Invoices" }).click();

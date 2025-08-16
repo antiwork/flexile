@@ -34,7 +34,6 @@
         "equity_grants": true,
         "expenses": true,
         "dividends": true,
-        "quickbooks": true,
         "share_certificates": true
       },
       "convertible_investments": [

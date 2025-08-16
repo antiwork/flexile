@@ -3,7 +3,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
-import { login } from "@test/helpers/auth";
+import { login, quickLogout } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 
@@ -45,7 +45,7 @@ test.describe("Contractor for multiple companies", () => {
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
     await expect(page.getByRole("cell").filter({ hasText: "Alex" })).toBeVisible();
 
-    await context.clearCookies();
+    await quickLogout(page);
     await login(page, contractorUser);
     // Click company switcher in sidebar
     await page.locator('[data-slot="dropdown-menu-trigger"]').first().click();
