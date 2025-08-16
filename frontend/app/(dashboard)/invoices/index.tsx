@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-import { request } from "@/utils/request";
+import { request, ResponseError } from "@/utils/request";
 import { approve_company_invoices_path, company_invoice_path, reject_company_invoices_path } from "@/utils/routes";
 
 type Invoice = RouterOutput["invoices"]["list"][number] | RouterOutput["invoices"]["get"];
@@ -122,13 +122,20 @@ export const useApproveInvoices = (onSuccess?: () => void) => {
 
   return useMutation({
     mutationFn: async ({ approve_ids, pay_ids }: { approve_ids?: string[]; pay_ids?: string[] }) => {
-      await request({
-        method: "PATCH",
-        url: approve_company_invoices_path(company.id),
-        accept: "json",
-        jsonData: { approve_ids, pay_ids },
-        assertOk: true,
-      });
+      try {
+        await request({
+          method: "PATCH",
+          url: approve_company_invoices_path(company.id),
+          accept: "json",
+          jsonData: { approve_ids, pay_ids },
+          assertOk: true,
+        });
+      } catch (error) {
+        if (error instanceof ResponseError && error.message) {
+          throw new Error(error.message);
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       setTimeout(() => {
@@ -160,7 +167,8 @@ export const ApproveButton = ({
       param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
       successText={pay ? "Payment initiated" : "Approved!"}
       loadingText={pay ? "Sending payment..." : "Approving..."}
-      disabled={!!pay && !company.completedPaymentMethodSetup}
+      errorText={approveInvoices.error?.message || "Failed to approve"}
+      disabled={pay ? !company.completedPaymentMethodSetup : false}
     >
       {pay ? (
         <>

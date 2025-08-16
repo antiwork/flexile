@@ -160,6 +160,54 @@ RSpec.describe CreateOrUpdateInvoiceService do
         end.to_not change(user.invoices, :count)
       end
 
+      it "creates invoice with preserved equity percentage when no grant exists" do
+        contractor.update!(equity_percentage: 20)
+        equity_grant.destroy!
+
+        expect do
+          result = invoice_service.process
+          expect(result[:success]).to eq(true)
+          invoice = result[:invoice]
+          expect(invoice.equity_percentage).to eq(20)
+          expect(invoice.equity_amount_in_cents).to eq(0)
+          expect(invoice.equity_amount_in_options).to eq(0)
+          expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_cents)
+        end.to change(user.invoices, :count).by(1)
+      end
+
+      it "creates invoice with preserved equity percentage when insufficient grant shares" do
+        contractor.update!(equity_percentage: 60)
+
+        equity_grant.update!(
+          unvested_shares: 1,
+          vested_shares: equity_grant.number_of_shares - 1 - equity_grant.exercised_shares - equity_grant.forfeited_shares
+        )
+
+        expect do
+          result = invoice_service.process
+          expect(result[:success]).to eq(true)
+          invoice = result[:invoice]
+          expect(invoice.equity_percentage).to eq(60)
+          expect(invoice.equity_amount_in_cents).to eq(0)
+          expect(invoice.equity_amount_in_options).to eq(0)
+          expect(invoice.cash_amount_in_cents).to eq(expected_total_amount_in_cents)
+        end.to change(user.invoices, :count).by(1)
+      end
+
+      it "fails to create an invoice with generic error message when contractor has zero equity percentage and other issues occur" do
+        contractor.update!(equity_percentage: 0)
+        equity_grant.destroy!
+        company.update!(fmv_per_share_in_usd: nil)
+
+        allow_any_instance_of(InvoiceEquityCalculator).to receive(:calculate).and_return(nil)
+
+        expect do
+          result = invoice_service.process
+          expect(result[:success]).to eq(false)
+          expect(result[:error_message]).to eq("Something went wrong. Please contact the company administrator.")
+        end.to_not change(user.invoices, :count)
+      end
+
       include_examples "common invoice failure specs", expected_invoices_count: 1
 
       context "when invoice_expenses param exists" do

@@ -72,19 +72,23 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
   def approve
     authorize Invoice
 
-    if invoice_external_ids_for_approval.present?
-      ApproveManyInvoices.new(
-        company: Current.company,
-        approver: Current.user,
-        invoice_ids: invoice_external_ids_for_approval,
-      ).perform
-    end
-    if invoice_external_ids_for_payment.present?
-      ApproveAndPayOrChargeForInvoices.new(
-        user: Current.user,
-        company: Current.company,
-        invoice_ids: invoice_external_ids_for_payment
-      ).perform
+    begin
+      if invoice_external_ids_for_approval.present?
+        ApproveManyInvoices.new(
+          company: Current.company,
+          approver: Current.user,
+          invoice_ids: invoice_external_ids_for_approval,
+        ).perform
+      end
+      if invoice_external_ids_for_payment.present?
+        ApproveAndPayOrChargeForInvoices.new(
+          user: Current.user,
+          company: Current.company,
+          invoice_ids: invoice_external_ids_for_payment
+        ).perform
+      end
+    rescue ActiveRecord::RecordInvalid => e
+      render json: { error_message: e.record.errors.full_messages.first }, status: :unprocessable_entity
     end
   end
 

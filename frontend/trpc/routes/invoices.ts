@@ -147,19 +147,14 @@ export const invoicesRouter = createRouter({
       });
 
       if (!equityResult) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Recipient has insufficient unvested equity",
-        });
+        equityAmountInCents = BigInt(0);
+        equityAmountInOptions = 0;
+        equityPercentage = values.equityPercentage || 0;
+      } else {
+        equityAmountInCents = BigInt(equityResult.equityCents);
+        equityAmountInOptions = equityResult.equityOptions;
+        equityPercentage = equityResult.equityPercentage;
       }
-
-      if (equityResult.equityPercentage !== values.equityPercentage) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "No options would be granted" });
-      }
-
-      equityAmountInCents = BigInt(equityResult.equityCents);
-      equityAmountInOptions = equityResult.equityOptions;
-      equityPercentage = equityResult.equityPercentage;
     }
 
     const cashAmountInCents = totalAmountCents - equityAmountInCents;
@@ -267,7 +262,7 @@ export const invoicesRouter = createRouter({
       if (!equityResult) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Error calculating equity. Please contact the administrator.",
+          message: "Admin must create an equity grant before this invoice can be approved",
         });
       }
 
