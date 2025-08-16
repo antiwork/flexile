@@ -33,15 +33,17 @@ class JwtService
 
     def token_present_in_request?(request)
       authorization_header = request.headers["x-flexile-auth"]
-      authorization_header.present? && authorization_header.start_with?("Bearer ")
+      authorization_header&.start_with?("Bearer ")
     end
 
     private
       def extract_jwt_token_from_request(request)
         authorization_header = request.headers["x-flexile-auth"]
-        return nil unless authorization_header&.start_with?("Bearer ")
+        if authorization_header&.start_with?("Bearer ")
+          return authorization_header.split(" ").last
+        end
 
-        authorization_header.split(" ").last
+        nil
       end
 
       def jwt_secret
