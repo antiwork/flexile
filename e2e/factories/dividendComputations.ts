@@ -9,10 +9,9 @@ import { dividendComputationOutputs, dividendComputations } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 export const dividendComputationsFactory = {
-  create: async (overrides: Partial<typeof dividendComputations.$inferInsert> = {}) => {
-    const companyId =
-      overrides.companyId ?? (await companiesFactory.createCompletedOnboarding({ equityEnabled: true })).company.id;
-
+  // Pre-seed data for dividend computations.
+  // This is necessary because dividend computations are generated based on the share class and investor data.
+  setupInvestorsWithShareHoldings: async (companyId: bigint) => {
     const { user: investorUser1 } = await usersFactory.create();
     const { user: investorUser2 } = await usersFactory.create();
 
@@ -49,6 +48,13 @@ export const dividendComputationsFactory = {
       totalAmountInCents: 20000n,
       sharePriceUsd: "10.00",
     });
+
+    return { investor1, investor2, shareClass };
+  },
+  create: async (overrides: Partial<typeof dividendComputations.$inferInsert> = {}) => {
+    const companyId =
+      overrides.companyId ?? (await companiesFactory.createCompletedOnboarding({ equityEnabled: true })).company.id;
+    const { investor1, investor2 } = await dividendComputationsFactory.setupInvestorsWithShareHoldings(companyId);
 
     const [insertedDividendComputation] = await db
       .insert(dividendComputations)
