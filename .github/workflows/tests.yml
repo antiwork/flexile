@@ -64,56 +64,63 @@ jobs:
         timeout-minutes: 20
 
   playwright:
-    name: playwright
-    runs-on: ubicloud-standard-4
+      name: playwright
+      runs-on: ubicloud-standard-4
 
-    steps:
-      - uses: actions/checkout@v4
+      steps:
+        - uses: actions/checkout@v4
 
-      - name: Build setup
-        uses: ./.github/common/
+        - name: Generate cache key
+          id: cache-key
+          run: |
+            CACHE_FALLBACK_KEY="setup-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-"
+            CACHE_KEY="setup-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('frontend/**/*.ts', 'frontend/**/*.tsx') }}"
+            echo "key=$CACHE_KEY" >> $GITHUB_OUTPUT
+            echo "cache_fallback_key=$CACHE_FALLBACK_KEY" >> $GITHUB_OUTPUT
+            echo "Cache key: $CACHE_KEY"
+            echo "Cache Fallback key: $CACHE_FALLBACK_KEY"
 
-      - run: pnpm puppeteer browsers install chrome
+        - name: Build setup
+          uses: ./.github/common/
 
-      - run: node docker/createCertificate.js
+        - name: Restore next build
+          id: restore-cache
+          uses: actions/cache/restore@v4
+          with:
+            path: |
+              frontend/.next
+            key: ${{ steps.cache-key.outputs.key }}
+            restore-keys: |
+              ${{ steps.cache-key.outputs.cache_fallback_key }}
 
-      - name: Cache Next build
-        id: next-cache
-        uses: actions/cache@v4
-        with:
-          path: frontend/.next/cache
-          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}-${{ hashFiles('frontend/**/*.{ts,tsx}') }}
-          restore-keys: |
-            next-${{ runner.os }}-
+        - name: Install Playwright Browsers (headless shell only)
+          run: pnpm playwright install --only-shell chromium
 
-      - run: NODE_ENV=test pnpm run build-next --no-lint
-        shell: bash
+        - run: node docker/createCertificate.js
 
-      - name: Install foreman
-        run: gem install foreman
+        - run: NODE_ENV=test pnpm run build-next
+          shell: bash
 
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
+        - name: Install foreman
+          run: gem install foreman
 
-      - name: Install Playwright Browsers
-        run: pnpm playwright install --with-deps chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        - name: Cache next build
+          id: save-cache
+          uses: actions/cache/save@v4
+          with:
+            path: |
+              frontend/.next
+            key: ${{ steps.cache-key.outputs.key }}
 
-      - name: Run docker compose
-        run: docker compose -f docker/docker-compose-local-linux.yml up -d
+        - name: Run docker compose
+          run: docker compose -f docker/docker-compose-local-linux.yml up -d
 
-      - name: Run Playwright tests
-        run: pnpm playwright test
+        - name: Run Playwright tests
+          run: pnpm playwright test
 
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
+        - uses: actions/upload-artifact@v4
+          if: ${{ !cancelled() }}
+          with:
+            name: playwright-report
+            path: playwright-report/
+            retention-days: 7
