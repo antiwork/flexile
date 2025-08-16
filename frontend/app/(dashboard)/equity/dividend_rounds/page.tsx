@@ -83,7 +83,7 @@ export default function DividendRounds() {
       await trpcUtils.dividendComputations.list.invalidate();
     },
     onError: () => {
-      // TODO: Show toast notification for finalization failures
+      // TODO (techdebt): Show toast notification for finalization failures
     },
   });
 
@@ -288,7 +288,6 @@ export default function DividendRounds() {
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Pending Computations Section */}
           {dividendComputations.length > 0 && (
             <div className="mx-4">
               <div className="mb-4">
@@ -301,7 +300,6 @@ export default function DividendRounds() {
             </div>
           )}
 
-          {/* Finalized Dividend Rounds Section */}
           {dividendRounds.length > 0 && (
             <div className="mx-4">
               <div className="mb-4">

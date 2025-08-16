@@ -16,17 +16,19 @@ class AutoEnableDividendPaymentsJob
 
     # TODO (techdebt): Consider implementing batch update with per-record error handling for better performance
     dividend_rounds_to_enable.in_batches.each_record do |dividend_round|
-      Rails.logger.info "Auto-enabling payment for dividend round #{dividend_round.id} (issued_at: #{dividend_round.issued_at})"
+      begin
+        Rails.logger.info "Auto-enabling payment for dividend round #{dividend_round.id} (issued_at: #{dividend_round.issued_at})"
 
-      dividend_round.update_columns(ready_for_payment: true, updated_at: Time.current)
-      count += 1
-    rescue => e
-      failed_count += 1
-      Rails.logger.error "Failed to enable payment for dividend round #{dividend_round.id}: #{e.message}. " \
-                        "Company: #{dividend_round.company_id}, issued_at: #{dividend_round.issued_at}, " \
-                        "error_class: #{e.class.name}"
+        dividend_round.update_columns(ready_for_payment: true, updated_at: Time.current)
+        count += 1
+      rescue => e
+        failed_count += 1
+        Rails.logger.error "Failed to enable payment for dividend round #{dividend_round.id}: #{e.message}. " \
+                           "Company: #{dividend_round.company_id}, issued_at: #{dividend_round.issued_at}, " \
+                           "error_class: #{e.class.name}"
+      end
     end
 
-    Rails.logger.info "Auto-enabled payment for #{count} dividend rounds#{failed_count > 0 ? ", #{failed_count} failed" : ""}"
+    Rails.logger.info "Auto-enabled payment for #{count} dividend rounds#{failed_count.positive? ? ", #{failed_count} failed" : ""}""
   end
 end

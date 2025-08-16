@@ -212,7 +212,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
           user = company_investor.user
           non_qualified_amount = output.total_amount_in_usd - output.qualified_dividend_amount_usd
           percentage_of_total = computation.total_amount_in_usd > 0 ? (output.total_amount_in_usd / computation.total_amount_in_usd * 100).round(4) : 0
-          investment_amount = company_investor.investment_amount_in_cents.to_i / 100.0
+          investment_amount = (company_investor.investment_amount_in_cents.to_i / 100.0)
           roi_percentage = company_investor&.cumulative_dividends_roi ? (company_investor.cumulative_dividends_roi * 100.0) : 0.0
 
           csv << [
@@ -220,12 +220,12 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
             user&.email.to_s,
             output.share_class || "Common",
             output.number_of_shares,
-            output.total_amount_in_usd,
-            output.qualified_dividend_amount_usd,
-            non_qualified_amount,
+            ("%.2f" % output.total_amount_in_usd),
+            ("%.2f" % output.qualified_dividend_amount_usd),
+            ("%.2f" % non_qualified_amount),
             "#{percentage_of_total}%",
-            investment_amount,
-            "#{roi_percentage.round(2)}%"
+            ("%.2f" % investment_amount),
+            ("%.2f" % roi_percentage.round(2)) + "%"
           ]
         end
 
@@ -234,7 +234,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
         total_non_qualified = computation.total_amount_in_usd - total_qualified
 
         csv << []
-        csv << ["TOTALS", "", "", total_shares, computation.total_amount_in_usd, total_qualified, total_non_qualified, "100.0%", "", ""]
+        csv << ["TOTALS", "", "", total_shares, ("%.2f" % computation.total_amount_in_usd), ("%.2f" % total_qualified), ("%.2f" % total_non_qualified), "100.0%", "", ""]
       end
     end
 end

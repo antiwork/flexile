@@ -4,7 +4,6 @@ import { AlertCircle, Download, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
-
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -89,7 +88,7 @@ export default function DividendComputationReview() {
       router.push(`/equity/dividend_rounds/${result?.id}`);
     },
     onError: () => {
-      // TODO: Show toast notification for finalization failures
+      // TODO (techdebt): Show toast notification for finalization failures
     },
   });
 
@@ -113,16 +112,17 @@ export default function DividendComputationReview() {
     };
   };
 
-  const handleExportCSV = () => {
-    // Create a direct download link to the backend CSV export endpoint
+  const handleExportCSV = async () => {
     const csvUrl = `${getPublicBackendUrl()}/internal/companies/${company.externalId}/dividend_computations/${id}/export_csv`;
-
-    // Create a temporary anchor element and trigger download
+    const res = await fetch(csvUrl, { credentials: "include" });
+    if (!res.ok) return; // TODO (techdebt): toast error
+    const blob = await res.blob();
     const link = document.createElement("a");
-    link.href = csvUrl;
+    link.href = URL.createObjectURL(blob);
     link.download = `dividend_computation_${id}_${new Date().toISOString().split("T")[0]}.csv`;
     document.body.appendChild(link);
     link.click();
+    URL.revokeObjectURL(link.href);
     document.body.removeChild(link);
   };
 

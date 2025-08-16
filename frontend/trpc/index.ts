@@ -45,7 +45,7 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
   if (parsed.success) {
     if (parsed.data.jwt) jwtToken = parsed.data.jwt;
     const rawId = parsed.data.id;
-    const parsedId = typeof rawId === "string" ? Number.parseInt(rawId, 10) : rawId ?? null;
+    const parsedId = typeof rawId === "string" ? Number.parseInt(rawId, 10) : (rawId ?? null);
     if (parsedId && !Number.isNaN(parsedId)) userId = parsedId;
   }
 
@@ -91,7 +91,6 @@ export const protectedProcedure = baseProcedure
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 
-    // Calling opts.next in two places doesn't work, so using this slightly awkward function wrapper
     const getContext = async () => {
       if (!input?.companyId) {
         const user = assertDefined(

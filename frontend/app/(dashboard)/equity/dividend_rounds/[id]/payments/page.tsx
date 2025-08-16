@@ -157,9 +157,19 @@ export default function DividendPaymentsPage() {
     paymentStats.totalRecipients > 0 ? Math.round((paymentStats.completed / paymentStats.totalRecipients) * 100) : 0;
 
   // Filter data for different table views
-  const pendingDividends = dividends.filter((d) => normalizeStatus(d.status) === "pending");
-  const readyDividends = dividends.filter((d) => normalizeStatus(d.status) === "ready");
-  const failedDividends = dividends.filter((d) => normalizeStatus(d.status) === "failed");
+  const { pendingDividends, readyDividends, failedDividends } = React.useMemo(() => {
+    const pending: Dividend[] = [];
+    const ready: Dividend[] = [];
+    const failed: Dividend[] = [];
+    for (const d of dividends) {
+      switch (normalizeStatus(d.status)) {
+        case "pending": pending.push(d); break;
+        case "ready": ready.push(d); break;
+        case "failed": failed.push(d); break;
+      }
+    }
+    return { pendingDividends: pending, readyDividends: ready, failedDividends: failed };
+  }, [dividends]);
 
   const allPaymentsTable = useTable({ data: dividends, columns: paymentColumns });
   const pendingPaymentsTable = useTable({ data: pendingDividends, columns: paymentColumns });
