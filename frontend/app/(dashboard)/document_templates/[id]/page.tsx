@@ -90,59 +90,6 @@ export default function EditTemplatePage() {
       { name: "__payRate", type: "text", title: "Pay rate (auto-filled)", role: "Company Representative" },
       { name: "__startDate", type: "date", title: "Start date (auto-filled)", role: "Company Representative" },
     );
-  } else {
-    fields.push(
-      { name: "__name", type: "text", title: "Optionholder name (auto-filled)", role: "Company Representative" },
-      {
-        name: "__boardApprovalDate",
-        type: "date",
-        title: "Board approval date (auto-filled)",
-        role: "Company Representative",
-      },
-      {
-        name: "__quantity",
-        type: "number",
-        title: "Number of options (auto-filled)",
-        role: "Company Representative",
-      },
-      {
-        name: "__vestingCommencementDate",
-        type: "date",
-        title: "Vesting commencement date (auto-filled)",
-        role: "Company Representative",
-      },
-      { name: "__grantType", type: "text", title: "Grant type (auto-filled)", role: "Company Representative" },
-      {
-        name: "__exercisePrice",
-        type: "number",
-        title: "Exercise price per share (auto-filled)",
-        role: "Company Representative",
-      },
-      {
-        name: "__exerciseSchedule",
-        type: "text",
-        title: "Exercise schedule (auto-filled)",
-        role: "Company Representative",
-      },
-      {
-        name: "__totalExercisePrice",
-        type: "number",
-        title: "Total exercise price (auto-filled)",
-        role: "Company Representative",
-      },
-      {
-        name: "__expirationDate",
-        type: "date",
-        title: "Expiration date (auto-filled)",
-        role: "Company Representative",
-      },
-      {
-        name: "__vestingSchedule",
-        type: "text",
-        title: "Vesting schedule (auto-filled)",
-        role: "Company Representative",
-      },
-    );
   }
 
   return (

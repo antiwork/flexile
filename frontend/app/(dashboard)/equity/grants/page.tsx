@@ -1,12 +1,11 @@
 "use client";
-import { CircleAlert, CircleCheck, Info, Pencil, Plus } from "lucide-react";
+import { CircleAlert, CircleCheck, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import NewEquityGrantModal from "@/app/(dashboard)/equity/grants/NewEquityGrantModal";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
@@ -20,7 +19,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DocumentTemplateType } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -76,43 +74,25 @@ export default function GrantsPage() {
   );
 
   const table = useTable({ columns, data });
-  const [equityPlanContractTemplates] = trpc.documents.templates.list.useSuspenseQuery({
-    companyId: company.id,
-    type: DocumentTemplateType.EquityPlanContract,
-    signable: true,
-  });
 
   return (
     <>
       <DashboardHeader
         title="Equity grants"
         headerActions={
-          equityPlanContractTemplates.length > 0 ? (
-            isMobile ? (
-              <Button variant="floating-action" onClick={() => setShowNewGrantModal(true)}>
-                <Plus />
-              </Button>
-            ) : (
-              <Button onClick={() => setShowNewGrantModal(true)}>
-                <Pencil className="size-4" />
-                New option grant
-              </Button>
-            )
-          ) : null
+          isMobile ? (
+            <Button variant="floating-action" onClick={() => setShowNewGrantModal(true)}>
+              <Plus />
+            </Button>
+          ) : (
+            <Button onClick={() => setShowNewGrantModal(true)}>
+              <Pencil className="size-4" />
+              New option grant
+            </Button>
+          )
         }
       />
 
-      {equityPlanContractTemplates.length === 0 ? (
-        <Alert className="mx-4">
-          <Info />
-          <AlertDescription>
-            <Link href="/documents" className={linkClasses}>
-              Create equity plan contract templates
-            </Link>{" "}
-            before adding new option grants.
-          </AlertDescription>
-        </Alert>
-      ) : null}
       {isLoading ? (
         <TableSkeleton columns={8} />
       ) : data.length > 0 ? (

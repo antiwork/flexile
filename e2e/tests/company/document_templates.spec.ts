@@ -7,7 +7,6 @@ import { expect, test, withinModal } from "@test/index";
 test.describe("Document templates", () => {
   test("allows viewing and managing document templates", async ({ page, next }) => {
     const docusealData = { documents: [], fields: [], submitters: [], schema: [] };
-    let expectedTemplateName = "Consulting agreement"; // Initial expected name
 
     next.onFetch(async (request) => {
       if (request.url === "https://docuseal.com/embed/templates/1") {
@@ -17,22 +16,15 @@ test.describe("Document templates", () => {
       if (request.url === "https://api.docuseal.com/templates/pdf") {
         const payload: unknown = await request.json();
         if (payload && typeof payload === "object" && "name" in payload) {
-          expect(payload).toMatchObject({ name: expectedTemplateName });
+          expect(payload).toMatchObject({ name: "Consulting agreement" });
         } else {
           throw new Error("Invalid payload received from /templates/pdf");
         }
-        if (expectedTemplateName === "Consulting agreement") {
-          return Response.json({ id: 2 });
-        } else if (expectedTemplateName === "Equity grant contract") {
-          return Response.json({ id: 3 });
-        }
+        return Response.json({ id: 2 });
       }
 
       if (request.url === "https://docuseal.com/embed/templates/2") {
         return Response.json({ name: "Consulting agreement", ...docusealData });
-      }
-      if (request.url === "https://docuseal.com/embed/templates/3") {
-        return Response.json({ name: "Equity grant contract", ...docusealData });
       }
     });
 
@@ -61,26 +53,7 @@ test.describe("Document templates", () => {
     await expect(page.locator("h1").getByText(/edit consulting agreement/iu)).toBeVisible();
     await page.getByRole("link", { name: "Back to documents" }).click();
 
-    expectedTemplateName = "Equity grant contract";
-
     await page.getByRole("button", { name: "Edit templates" }).click();
-    await withinModal(
-      async (modal) => {
-        await expect(modal.locator("tbody tr")).toHaveCount(1);
-        await expect(
-          modal.getByText(
-            "By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims, liabilities, or damages arising from or related to such documents. See our Terms of Service for more details.",
-          ),
-        ).toBeVisible();
-        await modal.getByRole("button", { name: "Equity grant contract" }).click();
-      },
-      { page },
-    );
-
-    await expect(page.locator("h1").getByText(/equity grant contract/iu)).toBeVisible();
-    await page.getByRole("link", { name: "Back to documents" }).click();
-
-    await page.getByRole("button", { name: "Edit templates" }).click();
-    await withinModal(async (modal) => expect(modal.locator("tbody tr")).toHaveCount(2), { page });
+    await withinModal(async (modal) => expect(modal.locator("tbody tr")).toHaveCount(1), { page });
   });
 });

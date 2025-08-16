@@ -532,6 +532,7 @@ export const documents = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
     docusealSubmissionId: integer("docuseal_submission_id"),
+    text: text(),
   },
   (table) => [
     index("index_documents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

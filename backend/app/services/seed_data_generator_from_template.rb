@@ -708,16 +708,6 @@ class SeedDataGeneratorFromTemplate
       print_message("Created consolidated invoices.")
     end
 
-    def create_company_worker_equity_grant!(company_worker, equity_grant_data)
-      option_pool_created_at = Date.new(equity_grant_data.fetch("option_pool").fetch("year"), 1, 1)
-      Timecop.travel(option_pool_created_at) do
-        GrantStockOptions.new(
-          company_worker,
-          board_approval_date: option_pool_created_at,
-        ).process
-      end
-    end
-
     def create_user_bank_account!(user, wise_recipient_params)
       wise_recipient_params["details"]["accountHolderName"] ||= user.legal_name
       wise_recipient_params["details"]["address"] ||= {}

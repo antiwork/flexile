@@ -1,6 +1,6 @@
 import docuseal from "@docuseal/api";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, not, or, type SQLWrapper } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
@@ -28,7 +28,7 @@ export const documentsRouter = createRouter({
 
       const signable = assertDefined(
         and(
-          isNotNull(documents.docusealSubmissionId),
+          or(isNotNull(documents.docusealSubmissionId), isNotNull(documents.text)),
           isNull(documentSignatures.signedAt),
           input.userId ? undefined : eq(documentSignatures.title, "Company Representative"),
         ),
@@ -41,6 +41,7 @@ export const documentsRouter = createRouter({
         .selectDistinctOn([documents.id], {
           ...pick(documents, "id", "name", "createdAt", "docusealSubmissionId", "type"),
           attachment: pick(activeStorageBlobs, "key", "filename"),
+          hasText: isNotNull(documents.text),
         })
         .from(documents)
         .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
@@ -76,6 +77,15 @@ export const documentsRouter = createRouter({
           })),
       }));
     }),
+  get: companyProcedure.input(z.object({ id: z.bigint() })).query(async ({ ctx, input }) => {
+    const [document] = await db
+      .select(pick(documents, "text"))
+      .from(documents)
+      .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
+      .where(and(eq(documents.id, input.id), visibleDocuments(ctx.company.id, ctx.user.id)));
+    if (!document) throw new TRPCError({ code: "NOT_FOUND" });
+    return document;
+  }),
   getUrl: companyProcedure.input(z.object({ id: z.bigint() })).query(async ({ ctx, input }) => {
     const [document] = await db
       .select({ docusealSubmissionId: documents.docusealSubmissionId })

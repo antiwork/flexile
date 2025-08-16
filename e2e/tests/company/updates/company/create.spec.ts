@@ -3,6 +3,7 @@ import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyUpdatesFactory } from "@test/factories/companyUpdates";
+import { findRichTextEditor } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { withinModal } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -25,7 +26,7 @@ test.describe("company update creation", () => {
     await withinModal(
       async (modal) => {
         await modal.getByLabel("Title").fill(title);
-        await modal.locator('[contenteditable="true"]').fill(body);
+        await findRichTextEditor(modal, "Update").fill(body);
       },
       { page, title: modalTitle },
     );
@@ -183,9 +184,9 @@ test.describe("company update creation", () => {
       async (modal) => {
         await modal.getByLabel("Title").fill(title);
 
-        await modal.locator('[contenteditable="true"]').fill(content);
+        await findRichTextEditor(modal, "Update").fill(content);
 
-        await modal.locator('[contenteditable="true"]').selectText();
+        await findRichTextEditor(modal, "Update").selectText();
 
         await modal.getByRole("button", { name: "Link" }).click();
       },
