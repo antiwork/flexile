@@ -110,6 +110,29 @@ test("login description updates with last used sign-in method", async ({ page })
   await login(page, user);
   await logout(page);
   await expect(page.getByText("you used your work email to log in last time")).toBeVisible();
+
+  await externalProviderMock(page, String(SignInMethod.Github), { email: user.email });
+
+  await page.getByRole("button", { name: "Log in with GitHub" }).click();
+  await page.waitForURL(/.*\/invoices.*/u);
+  await logout(page);
+  await expect(page.getByText("you used GitHub to log in last time")).toBeVisible();
+});
+
+test("login with GitHub", async ({ page }) => {
+  const { user } = await usersFactory.create();
+
+  await page.goto("/login");
+
+  await externalProviderMock(page, String(SignInMethod.Github), { email: user.email });
+
+  await page.getByRole("button", { name: "Log in with GitHub" }).click();
+  await page.waitForURL(/.*\/invoices.*/u);
+
+  await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+  const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) });
+  expect(updatedUser?.currentSignInAt).not.toBeNull();
+  expect(updatedUser?.currentSignInAt).not.toBe(user.currentSignInAt);
 });
 
 test("login page should display OAuth error messages", async ({ page }) => {

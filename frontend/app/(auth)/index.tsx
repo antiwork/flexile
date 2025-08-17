@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { SignInMethod } from "@/db/enums";
+import githubLogoWhite from "@/images/github-mark-white.svg";
 import googleLogoLight from "@/images/google-light.svg";
 import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
@@ -196,7 +197,7 @@ export function AuthPage({
           {!sendOtp.isSuccess ? (
             <Form {...emailForm}>
               <form onSubmit={(e) => void submitEmailForm(e)} className="space-y-4">
-                <div className="mb-4 flex flex-col items-center">
+                <div className="mb-4 flex flex-col items-center gap-2">
                   {oauthError ? (
                     <p className="text-destructive mb-2">
                       {Object.prototype.hasOwnProperty.call(OAUTH_ERROR_MESSAGES, oauthError)
@@ -207,11 +208,20 @@ export function AuthPage({
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex h-12 w-full items-center justify-center gap-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-500"
+                    className="h-12 w-full bg-blue-600 text-white hover:bg-blue-500"
                     onClick={() => providerSignIn(SignInMethod.Google)}
                   >
                     <Image src={googleLogoLight} alt="Google" width={20} height={20} />
                     {sendOtpText} with Google
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-12 w-full bg-black text-white hover:bg-gray-800"
+                    onClick={() => providerSignIn(SignInMethod.Github)}
+                  >
+                    <Image src={githubLogoWhite} alt="GitHub" width={20} height={20} />
+                    {sendOtpText} with GitHub
                   </Button>
                   <div className="my-3 flex w-full items-center gap-2">
                     <div className="bg-muted h-px flex-1" />
