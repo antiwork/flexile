@@ -17,7 +17,9 @@ import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
 
 const emailSchema = z.object({ email: z.string().email() });
-const otpSchema = z.object({ otp: z.string().min(1, "Please enter the 6-digit verification code") });
+const otpSchema = z.object({
+  otp: z.string().length(6, "Please enter the 6-digit verification code"),
+});
 
 export function AuthPage({
   title,
@@ -127,8 +129,10 @@ export function AuthPage({
                           {...field}
                           maxLength={6}
                           onChange={(value) => {
-                            field.onChange(value);
-                            if (value.length === 6) setTimeout(() => void submitOtpForm(), 100);
+                            // Filter out non-numeric characters
+                            const numericValue = value.replace(/[^0-9]/gu, "");
+                            field.onChange(numericValue);
+                            if (numericValue.length === 6) setTimeout(() => void submitOtpForm(), 100);
                           }}
                           aria-label="Verification code"
                           disabled={verifyOtp.isPending || redirectInProgress}
