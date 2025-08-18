@@ -306,7 +306,8 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                     <FormMessage />
                     {estimatedValue ? (
                       <FormDescription>
-                        Estimated value: ${estimatedValue}, based on a ${data.sharePriceUsd}
+                        Estimated value of ${estimatedValue.toLocaleString()}, based on a ${data.sharePriceUsd} share
+                        price
                       </FormDescription>
                     ) : null}
                   </FormItem>
