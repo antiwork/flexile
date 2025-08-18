@@ -392,11 +392,11 @@ test.describe("Equity Grants", () => {
 
     // Test estimated value calculation with $2.50 FMV share price
     await page.getByLabel("Number of options").fill("1000");
-    await expect(page.getByText("Estimated value of $2,500.00, based on a $2.50 share price")).toBeVisible();
+    await expect(page.getByText("Estimated value of $2,500, based on a $2.50 share price")).toBeVisible();
 
     // Test with different number of shares
     await page.getByLabel("Number of options").fill("500");
-    await expect(page.getByText("Estimated value of $1,250.00, based on a $2.50 share price")).toBeVisible();
+    await expect(page.getByText("Estimated value of $1,250, based on a $2.50 share price")).toBeVisible();
 
     // Test with larger number
     await page.getByLabel("Number of options").fill("10000");
