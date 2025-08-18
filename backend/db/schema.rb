@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_16_133514) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_18_174610) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -305,10 +305,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_16_133514) do
     t.date "dividends_issuance_date", null: false
     t.string "external_id", null: false
     t.boolean "return_of_capital", null: false
-    t.bigint "dividend_round_id"
     t.datetime "finalized_at"
+    t.bigint "dividend_round_id"
     t.index ["company_id"], name: "index_dividend_computations_on_company_id"
-    t.index ["dividend_round_id"], name: "index_dividend_computations_on_dividend_round_id"
     t.index ["external_id"], name: "index_dividend_computations_on_external_id", unique: true
     t.index ["finalized_at"], name: "index_dividend_computations_on_finalized_at"
   end
@@ -973,5 +972,4 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_16_133514) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "dividend_computations", "dividend_rounds"
 end
