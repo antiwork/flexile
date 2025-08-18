@@ -17,6 +17,32 @@ class CompanyUsersPresenter
     }
   end
 
+  def filtered_users(filters)
+    return props if filters.blank?
+
+    valid_filters = %w[administrators lawyers contractors investors]
+    applied_filters = filters & valid_filters
+
+    return props if applied_filters.empty?
+
+    combined_users = []
+    applied_filters.each do |filter|
+      case filter
+      when "administrators"
+        combined_users.concat(administrators_props)
+      when "lawyers"
+        combined_users.concat(lawyers_props)
+      when "contractors"
+        combined_users.concat(contractors_props)
+      when "investors"
+        combined_users.concat(investors_props)
+      end
+    end
+
+    # Remove duplicates based on user ID and return unique users
+    combined_users.uniq { |user| user[:id] }
+  end
+
   def administrators_props
     admins = @company.company_administrators.includes(:user).order(:id)
     primary_admin = admins.first
@@ -25,15 +51,11 @@ class CompanyUsersPresenter
       user = admin.user
       roles = get_user_roles(user)
 
-      {
-        id: user.external_id,
-        email: user.email,
-        name: user.legal_name || user.preferred_name || user.email,
+      user_props(user, roles).merge(
         isAdmin: true,
         role: primary_admin&.id == admin.id ? "Owner" : "Admin",
         isOwner: primary_admin&.id == admin.id,
-        allRoles: roles,
-      }
+      )
     end.sort_by { |admin| [admin[:isOwner] ? 0 : 1, admin[:name]] }
   end
 
@@ -42,15 +64,11 @@ class CompanyUsersPresenter
       user = lawyer.user
       roles = get_user_roles(user)
 
-      {
-        id: user.external_id,
-        email: user.email,
-        name: user.legal_name || user.preferred_name || user.email,
+      user_props(user, roles).merge(
         isAdmin: roles.include?("Admin"),
         role: "Lawyer",
         isOwner: is_primary_admin?(user),
-        allRoles: roles,
-      }
+      )
     end.sort_by { |lawyer| lawyer[:name] }
   end
 
@@ -59,16 +77,12 @@ class CompanyUsersPresenter
       user = worker.user
       roles = get_user_roles(user)
 
-      {
-        id: user.external_id,
-        email: user.email,
-        name: user.legal_name || user.preferred_name || user.email,
+      user_props(user, roles).merge(
         isAdmin: roles.include?("Admin"),
         role: "Contractor",
         isOwner: is_primary_admin?(user),
         active: worker.active?,
-        allRoles: roles,
-      }
+      )
     end.sort_by { |contractor| contractor[:name] }
   end
 
@@ -77,15 +91,11 @@ class CompanyUsersPresenter
       user = investor.user
       roles = get_user_roles(user)
 
-      {
-        id: user.external_id,
-        email: user.email,
-        name: user.legal_name || user.preferred_name || user.email,
+      user_props(user, roles).merge(
         isAdmin: roles.include?("Admin"),
         role: "Investor",
         isOwner: is_primary_admin?(user),
-        allRoles: roles,
-      }
+      )
     end.sort_by { |investor| investor[:name] }
   end
 
@@ -110,6 +120,16 @@ class CompanyUsersPresenter
   end
 
   private
+    # Common method for user properties that are shared across all role types
+    def user_props(user, roles)
+      {
+        id: user.external_id,
+        email: user.email,
+        name: user.legal_name || user.preferred_name || user.email,
+        allRoles: roles,
+      }
+    end
+
     def get_user_roles(user)
       roles = []
 

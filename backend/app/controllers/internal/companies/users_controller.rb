@@ -8,32 +8,8 @@ class Internal::Companies::UsersController < Internal::Companies::BaseController
 
     if params[:filter].present?
       filters = params[:filter].split(",").map(&:strip)
-      valid_filters = %w[administrators lawyers contractors investors]
-      applied_filters = filters & valid_filters
-
-      if applied_filters.any?
-        combined_users = []
-
-        applied_filters.each do |filter|
-          case filter
-          when "administrators"
-            combined_users.concat(presenter.administrators_props)
-          when "lawyers"
-            combined_users.concat(presenter.lawyers_props)
-          when "contractors"
-            combined_users.concat(presenter.contractors_props)
-          when "investors"
-            combined_users.concat(presenter.investors_props)
-          end
-        end
-
-        # Remove duplicates based on user ID
-        unique_users = combined_users.uniq { |user| user[:id] }
-        render json: unique_users
-      else
-        # No valid filters, return all users
-        render json: presenter.props
-      end
+      filtered_result = presenter.filtered_users(filters)
+      render json: filtered_result
     else
       render json: presenter.props
     end
