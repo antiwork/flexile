@@ -340,7 +340,7 @@ test.describe("Bank account settings", () => {
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
         await expect(page.getByLabel("UK sort code")).toBeVisible();
         await expect(page.getByLabel("Account number")).toBeVisible();
-        await expect(page.getByLabel("I'd prefer to use IBAN")).toBeVisible();
+        await expect(page.getByRole("tab", { name: "Local bank account" })).toBeVisible();
         await expect(page.getByLabel("Account Type")).not.toBeVisible();
       });
 
