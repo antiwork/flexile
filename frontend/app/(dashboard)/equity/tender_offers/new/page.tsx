@@ -85,7 +85,7 @@ export default function NewBuyback() {
       />
 
       <Form {...form}>
-        <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+        <form onSubmit={(e) => void submit(e)} className="grid gap-4 px-4">
           <FormField
             control={form.control}
             name="startDate"
