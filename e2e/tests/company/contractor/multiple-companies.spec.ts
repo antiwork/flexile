@@ -25,8 +25,7 @@ test.describe("Contractor for multiple companies", () => {
     });
     await mockForm(page);
 
-    await login(page, adminUser);
-    await page.getByRole("link", { name: "People" }).click();
+    await login(page, adminUser, "/people");
     await page.getByRole("button", { name: "Add contractor" }).click();
 
     await page.getByLabel("Email").fill(contractorUser.email);
