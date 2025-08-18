@@ -17,7 +17,7 @@ import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
 
 const emailSchema = z.object({ email: z.string().email() });
-const otpSchema = z.object({ otp: z.string().length(6) });
+const otpSchema = z.object({ otp: z.string().min(1, "Please enter the 6-digit verification code") });
 
 export function AuthPage({
   title,
@@ -151,23 +151,22 @@ export function AuthPage({
                     </FormItem>
                   )}
                 />
-                <MutationStatusButton
-                  mutation={verifyOtp}
-                  type="submit"
-                  className="w-[342px]"
-                  disabled={verifyOtp.isPending || redirectInProgress}
-                >
-                  {redirectInProgress ? "Redirecting..." : verifyOtp.isPending ? "Verifying..." : "Continue"}
-                </MutationStatusButton>
                 <div className="pt-6 text-center">
-                  <Button
-                    className="text-gray-600"
-                    variant="link"
-                    onClick={() => sendOtp.reset()}
-                    disabled={verifyOtp.isPending || redirectInProgress}
-                  >
-                    Back to email
-                  </Button>
+                  {verifyOtp.isPending ? (
+                    <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                      Verifying...
+                    </div>
+                  ) : redirectInProgress ? (
+                    <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                      Redirecting...
+                    </div>
+                  ) : (
+                    <Button className="text-gray-600" variant="link" onClick={() => sendOtp.reset()}>
+                      Back to email
+                    </Button>
+                  )}
                 </div>
               </form>
             </Form>
