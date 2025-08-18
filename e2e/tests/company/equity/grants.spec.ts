@@ -59,7 +59,7 @@ test.describe("Equity Grants", () => {
     await expect(page.getByRole("button", { name: "New option grant" })).toBeVisible();
     await page.getByRole("button", { name: "New option grant" }).click();
     await expect(page.getByLabel("Number of options")).toHaveValue("10000");
-    await selectComboboxOption(page, "Recipient", contractorUser.preferredName ?? "");
+    await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
     await page.getByLabel("Number of options").fill("10");
     await selectComboboxOption(page, "Relationship to company", "Consultant");
 
@@ -107,7 +107,7 @@ test.describe("Equity Grants", () => {
     await page.getByRole("button", { name: "New option grant" }).click();
 
     // Fill in recipient (required)
-    await selectComboboxOption(page, "Recipient", projectBasedUser.preferredName ?? "");
+    await selectComboboxOption(page, "Recipient", `${projectBasedUser.preferredName} (${projectBasedUser.email})`);
 
     // Fill in number of options (required)
     await page.getByLabel("Number of options").fill("20");
@@ -320,7 +320,7 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("Estimated value: $10000.00, based on a $1")).toBeVisible();
 
     // Test form completion enables submit button only after filling in all required fields
-    await selectComboboxOption(page, "Recipient", contractorUser.preferredName ?? "");
+    await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
     await selectComboboxOption(page, "Relationship to company", "Consultant");
 
     // Fill in required grant type
