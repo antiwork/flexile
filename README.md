@@ -60,12 +60,31 @@ Likely caused by the `bin/setup` script failing silently due to lack of Postgres
 
 Likely caused by rails attempting to connect before Redis had fully started.
 
+### 3. Stripe-related rspec/playwright tests fail
+
+**Issue:** Tests that involve Stripe operations may fail due to invalid or missing customer IDs.
+
+**Resolution:**
+
+1. Generate real customer id, simplest way to do it:
+
+```bash
+stripe customers create \
+  --name "Customer Name" \
+  --email "customer@example.com" \
+  --api-key "sk_test_mock"
+```
+
+2. Update company factories (on frontend and backend) with that customer id
+
 ## Testing
 
 ```shell
 # Run Rails specs
-bundle exec rspec # Run all specs
-bundle exec rspec spec/system/roles/show_spec.rb:7 # Run a single spec
+bundle exec rspec --tag '~skip' --tag '~type:system'
+
+# Run a single spec
+bundle exec rspec spec/system/roles/show_spec.rb:7
 
 # Run Playwright end-to-end tests
 pnpm playwright test
@@ -97,12 +116,12 @@ pnpm playwright test
 4. Set permissions to **Full Access**, name it (e.g., "Flexile Development"), and copy the token immediately
 5. Add to `.env`:
    ```
-   WISE_PROFILE_ID=your_membership_number_here
+   WISE_PROFILE_ID=12345678 # Should be a number
    WISE_API_KEY=your_full_api_token_here
    ```
    </details>
 
-<details> 
+<details>
 <summary>Resend</summary>
 
 1. Create account at [resend.com](https://resend.com) and complete email verification

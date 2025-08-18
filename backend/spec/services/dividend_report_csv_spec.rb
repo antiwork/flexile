@@ -130,5 +130,44 @@ RSpec.describe DividendReportCsv do
         expect(extract(:client_name, rows, row: 2)).to eq "OtherCo"
       end
     end
+
+    context "with dividends in all statuses" do
+      let!(:paid_dividend) do
+        create(:dividend, :paid, dividend_round:, company:, total_amount_in_cents: 100_00, paid_at: Date.new(2024, 6, 2))
+      end
+      let!(:issued_dividend) do
+        create(:dividend, dividend_round:, company:, total_amount_in_cents: 200_00, status: Dividend::ISSUED)
+      end
+      let!(:pending_dividend) do
+        create(:dividend, :pending, dividend_round:, company:, total_amount_in_cents: 150_00)
+      end
+      let!(:retained_dividend) do
+        create(:dividend, :retained, dividend_round:, company:, total_amount_in_cents: 75_00)
+      end
+      let!(:processing_dividend) do
+        create(:dividend, :processing, dividend_round:, company:, total_amount_in_cents: 125_00)
+      end
+      let!(:dividend_payment) do
+        create(:dividend_payment, dividends: [paid_dividend], transfer_fee_in_cents: 300, status: Payments::Status::SUCCEEDED)
+      end
+
+      it "includes all dividends regardless of status in totals" do
+        csv = described_class.new([dividend_round]).generate
+        rows = CSV.parse(csv)
+        expect(extract(:total_dividends, rows).to_f).to eq 650.0
+        expect(extract(:number_of_investors, rows).to_i).to eq 5
+        expect(extract(:date_paid, rows)).to eq "6/2/2024"
+        expect(extract(:transfer_fees, rows).to_f).to eq 3.0
+      end
+
+      it "calculates flexile fees for all dividends" do
+        csv = described_class.new([dividend_round]).generate
+        rows = CSV.parse(csv)
+        expected_fees = [100_00, 200_00, 150_00, 75_00, 125_00].map do |amount|
+          FlexileFeeCalculator.calculate_dividend_fee_cents(amount)
+        end.sum / 100.0
+        expect(extract(:flexile_fees, rows).to_f).to eq expected_fees
+      end
+    end
   end
 end
