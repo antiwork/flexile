@@ -344,9 +344,40 @@ export default function EditTemplatePage() {
               background-color: var(--accent, #f3f4f6) !important;
               color: var(--accent-foreground, black) !important;
             }
+
+
+            /* Override existing padding classes */
+            *[class*="pr-3.5"] {
+              padding-right: 0.7rem !important;
+            }
+
+            *[class*="pl-0.5"] {
+              padding-left: 0 !important;
+            }
+
+            /* Override existing padding classes on mobile */
+            @media (max-width: 640px) {
+              *[class*="pr-3.5"] {
+              padding-right: 0 !important;
+            }}
+
+            /* Add px-4 to main container */
+            #main_container {
+              padding-left: 1rem !important;
+              padding-right: 1rem !important;
+            }
           `}
         />
       </div>
     </>
   );
 }
+
+// /* Override inline styles */
+// [style*="padding-right: 0.875rem"] {
+//   padding-right: 1rem !important;
+// }
+
+// [style*="padding-left: 0.125rem"] {
+//   padding-left: 1rem !important;
+// }

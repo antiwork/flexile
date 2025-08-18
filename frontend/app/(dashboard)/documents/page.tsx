@@ -144,7 +144,7 @@ const EditTemplates = () => {
             </TableBody>
           </Table>
           <h3 className="text-lg font-medium">Create a new template</h3>
-          <Alert className="mx-4">
+          <Alert>
             <Info className="size-4" />
             <AlertDescription>
               By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
@@ -155,7 +155,7 @@ const EditTemplates = () => {
               for more details.
             </AlertDescription>
           </Alert>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <MutationButton
               idleVariant="outline"
               className="h-auto rounded-md p-6"
