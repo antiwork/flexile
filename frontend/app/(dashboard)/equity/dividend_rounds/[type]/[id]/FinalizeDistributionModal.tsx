@@ -18,7 +18,7 @@ import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
-import { finalize_company_dividend_computation_path } from "@/utils/routes";
+import { company_dividend_rounds_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import type { DividendComputation } from "./page";
 
@@ -42,7 +42,7 @@ const FinalizeDistributionModal = ({
       const response = await request({
         method: "POST",
         accept: "json",
-        url: finalize_company_dividend_computation_path(company.id, BigInt(dividendComputation.id)),
+        url: company_dividend_rounds_path(company.id, { dividend_computation_id: dividendComputation.id }),
         assertOk: true,
       });
       return response.json();
