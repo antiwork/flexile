@@ -387,6 +387,8 @@ export const dividendComputations = pgTable(
     dividendsIssuanceDate: date("dividends_issuance_date", { mode: "string" }).notNull(),
     externalId: varchar("external_id").$default(nanoid).notNull(),
     returnOfCapital: boolean("return_of_capital").notNull(),
+    finalizedAt: timestamp("finalized_at", { precision: 6, mode: "date" }),
+    dividendRoundId: bigint("dividend_round_id", { mode: "bigint" }),
   },
   (table) => [
     index("index_dividend_computations_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

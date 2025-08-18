@@ -7,6 +7,7 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     authorize DividendComputation
 
     dividend_computations = Current.company.dividend_computations
+      .unfinalized
       .includes(:dividend_computation_outputs)
       .order(created_at: :desc)
       .map do |computation|
@@ -31,6 +32,13 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
 
   def show
     authorize @dividend_computation
+
+    if @dividend_computation.finalized?
+      json_redirect "/equity/dividend_rounds/round/#{@dividend_computation.dividend_round.id}"
+      return
+    end
+
+
     render json: DividendComputationPresenter.new(@dividend_computation).props
   end
 

@@ -5,12 +5,27 @@ class DividendComputation < ApplicationRecord
 
   belongs_to :company
   has_many :dividend_computation_outputs, dependent: :destroy
+  belongs_to :dividend_round, optional: true
 
   validates :total_amount_in_usd, presence: true
   validates :dividends_issuance_date, presence: true
+  validates :dividend_round_id, presence: true, if: :finalized?
+  validates :dividend_round_id, absence: true, unless: :finalized?
+  validates :finalized_at, presence: true, if: :finalized?
+  validates :finalized_at, absence: true, unless: :finalized?
+
+  scope :unfinalized, -> { where(finalized_at: nil) }
 
   def number_of_shareholders
     data_for_dividend_creation.map { _1[:company_investor_id] }.uniq.count
+  end
+
+  def finalized?
+    finalized_at.present?
+  end
+
+  def mark_as_finalized!(dividend_round)
+    update!(finalized_at: Time.current, dividend_round:)
   end
 
   def to_csv
@@ -110,6 +125,8 @@ class DividendComputation < ApplicationRecord
         status: Dividend::ISSUED # TODO (sharang): set `PENDING_SIGNUP` if user.encrypted_password is ""
       )
     end
+
+    dividend_round
   end
 
   def dividends_info
