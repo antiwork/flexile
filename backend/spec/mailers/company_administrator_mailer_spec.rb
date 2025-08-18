@@ -5,7 +5,6 @@ RSpec.describe CompanyAdministratorMailer do
     let(:company) { create(:company, name: "Gumroad Inc.", email: "hi@flexile.com") }
     let(:user) { create(:user, email: "admin@example.com") }
     let(:company_administrator) { create(:company_administrator, company: company, user: user) }
-
     subject(:mail) { described_class.invitation_instructions(administrator_id: company_administrator.id) }
 
     context "when company_administrator exists" do
@@ -18,20 +17,6 @@ RSpec.describe CompanyAdministratorMailer do
 
         expect(mail.body.decoded).to include(company.name)
         expect(mail.body.decoded).to include(SIGNUP_URL)
-      end
-    end
-
-    context "when company_administrator lookup fails" do
-      it "handles invalid admin_id gracefully" do
-        expect do
-          described_class.invitation_instructions(administrator_id: 999999).deliver_now
-        end.not_to change { ActionMailer::Base.deliveries.count }
-      end
-
-      it "handles nil admin_id gracefully" do
-        expect do
-          described_class.invitation_instructions(administrator_id: nil).deliver_now
-        end.not_to change { ActionMailer::Base.deliveries.count }
       end
     end
   end

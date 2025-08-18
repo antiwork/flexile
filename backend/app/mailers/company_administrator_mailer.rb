@@ -2,9 +2,7 @@
 
 class CompanyAdministratorMailer < ApplicationMailer
   def invitation_instructions(administrator_id:)
-    company_administrator = CompanyAdministrator.find_by(id: administrator_id)
-    return unless company_administrator
-
+    company_administrator = CompanyAdministrator.find(administrator_id)
     user = company_administrator.user
     @company = company_administrator.company
     @url = SIGNUP_URL
