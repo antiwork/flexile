@@ -538,19 +538,6 @@ RSpec.describe Company do
     end
   end
 
-  describe "#quickbooks_enabled?" do
-    let(:company) { create(:company) }
-
-    it "returns true if Quickbooks is enabled" do
-      Flipper.enable(:quickbooks, company)
-      expect(company.quickbooks_enabled?).to eq true
-    end
-
-    it "returns false if Quickbooks is not enabled" do
-      expect(company.quickbooks_enabled?).to eq false
-    end
-  end
-
   describe "#equity_enabled?" do
     let(:company) { build(:company) }
 

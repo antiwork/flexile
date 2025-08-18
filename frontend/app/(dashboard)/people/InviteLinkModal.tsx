@@ -36,6 +36,7 @@ const InviteLinkModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
       return inviteLinkSchema.parse(await response.json());
     },
   });
+  const inviteLink = invite ? `${window.location.origin}/invite/${invite.invite_link}` : "";
 
   const resetMutation = useMutation({
     mutationFn: async () => {
@@ -61,13 +62,13 @@ const InviteLinkModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2">
-            <Input className="text-foreground text-sm" readOnly value={invite?.invite_link ?? ""} aria-label="Link" />
+            <Input className="text-foreground text-sm" readOnly value={inviteLink} aria-label="Link" />
           </div>
           <DialogFooter>
             <Button variant="outline" size="default" onClick={() => setShowResetLinkModal(true)}>
               Reset link
             </Button>
-            <CopyButton aria-label="Copy" copyText={invite?.invite_link || ""}>
+            <CopyButton aria-label="Copy" copyText={inviteLink}>
               <Copy className="size-4" />
               <span>Copy</span>
             </CopyButton>

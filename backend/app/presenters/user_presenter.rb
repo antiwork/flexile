@@ -90,7 +90,6 @@ class UserPresenter
         flags = []
         flags.push("equity") if company.equity_enabled?
         flags.push("company_updates") if company.company_investors.exists?
-        flags.push("quickbooks") if company.quickbooks_enabled?
         flags.push("expenses") if company.expenses_enabled?
         flags.push("option_exercising") if company.json_flag?("option_exercising")
         can_view_financial_data = user.company_administrator_for?(company) || user.company_investor_for?(company)
