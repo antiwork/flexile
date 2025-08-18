@@ -49,7 +49,6 @@ export default function RecipientSelector({
   const [open, setOpen] = useState(false);
   const [filterText, setFilterText] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(0);
-  const [showMinBilled, setShowMinBilled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const company = useCurrentCompany();
@@ -215,11 +214,11 @@ export default function RecipientSelector({
               onKeyDown={handleKeyDown}
               onClick={() => setOpen(true)}
             >
-              <div className="flex flex-1 flex-wrap items-center gap-1">
+              <div className="flex flex-1 flex-wrap items-center gap-2">
                 {value.map((type) => (
                   <span
                     key={type}
-                    className="inline-flex items-center gap-1 rounded bg-gray-50 px-2 py-0.5 text-sm font-normal text-gray-900"
+                    className="inline-flex items-center gap-1 rounded bg-gray-50 px-2.5 py-1 text-sm font-normal text-gray-900"
                     style={{ backgroundColor: "rgba(29, 30, 23, 0.03)" }}
                   >
                     {getLabel(type)}
@@ -251,7 +250,7 @@ export default function RecipientSelector({
                     handleKeyDown(e);
                   }}
                   placeholder="Select recipients..."
-                  className="placeholder:text-muted-foreground min-w-[120px] flex-1 bg-transparent text-sm outline-none"
+                  className="placeholder:text-muted-foreground min-w-[120px] flex-1 bg-transparent py-0.5 text-sm outline-none"
                   onClick={(e) => {
                     e.stopPropagation();
                     setOpen(true);
@@ -274,7 +273,7 @@ export default function RecipientSelector({
                 return (
                   <DropdownMenuItem
                     key={option.value}
-                    className={`cursor-pointer justify-between ${isFocused ? "bg-gray-100" : ""}`}
+                    className={`cursor-pointer justify-between ${isFocused ? "bg-accent" : ""}`}
                     onSelect={(e) => {
                       e.preventDefault();
                       handleToggle(option.value);
@@ -298,36 +297,23 @@ export default function RecipientSelector({
       )}
 
       {hasContractors && onMinBilledAmountChange ? (
-        <div className="mt-2 space-y-3">
-          <button
-            type="button"
-            onClick={() => setShowMinBilled(!showMinBilled)}
-            className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
-          >
-            <span className="text-base">{showMinBilled ? "−" : "+"}</span>
-            Set min billed amount
-          </button>
-          {showMinBilled ? (
-            <div className="space-y-2">
-              <Label htmlFor="min-billed-amount" className="text-sm font-normal text-gray-700">
-                Contractors must've billed at least this amount
-              </Label>
-              <div className="relative">
-                <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">$</span>
-                <Input
-                  id="min-billed-amount"
-                  type="number"
-                  placeholder="0"
-                  value={minBilledAmount ?? ""}
-                  onChange={(e) => {
-                    const value = e.target.value ? parseFloat(e.target.value) : undefined;
-                    onMinBilledAmountChange(value);
-                  }}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-          ) : null}
+        <div className="mt-3 space-y-2">
+          <Label htmlFor="min-billed-amount">Min billed amount</Label>
+          <div className="relative">
+            <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">$</span>
+            <Input
+              id="min-billed-amount"
+              type="number"
+              placeholder="0"
+              value={minBilledAmount ?? ""}
+              onChange={(e) => {
+                const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                onMinBilledAmountChange(value);
+              }}
+              className="pl-8"
+            />
+          </div>
+          <p className="text-muted-foreground text-xs">Leave empty to include all contractors</p>
         </div>
       ) : null}
     </div>
