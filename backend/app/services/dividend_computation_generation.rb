@@ -47,7 +47,7 @@ class DividendComputationGeneration
           preferred_dividend_amount_in_usd: dividend_usd,
           qualified_dividend_amount_usd:,
           total_amount_in_usd: dividend_usd,
-          investment_amount_in_cents: share_holding.total_amount_cents,
+          investment_amount_cents: share_holding.total_amount_cents,
         }
         computation.dividend_computation_outputs.create!(attrs)
         @preferred_dividend_total += dividend_usd
@@ -90,7 +90,7 @@ class DividendComputationGeneration
           dividend_amount_in_usd: dividend_usd,
           qualified_dividend_amount_usd:,
           total_amount_in_usd: dividend_usd,
-          investment_amount_in_cents: convertible.amount_in_cents,
+          investment_amount_cents: convertible.amount_in_cents,
         }
         computation.dividend_computation_outputs.create!(attrs)
         @common_dividend_total += dividend_usd

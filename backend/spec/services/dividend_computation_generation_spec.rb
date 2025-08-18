@@ -94,7 +94,7 @@ RSpec.describe DividendComputationGeneration do
              dividend_amount_in_usd: 65_309.83, # ROUNDUP(977815.97 * (111406 / 1667966), 2)
              qualified_dividend_amount_usd: 71_587.08, # ROUNDUP((12 / 100) * 1.1234 * 99283, 2) + ROUNDUP(977815.97 * (99283 / 1667966), 2)
              total_amount_in_usd: 80_328.26,
-             investment_amount_in_cents: 125_031_00 # 11140600 + 1362500
+             investment_amount_cents: 125_031_00 # 11140600 + 1362500
            )).to eq(true)
 
     # Series A Investor
@@ -108,7 +108,7 @@ RSpec.describe DividendComputationGeneration do
              dividend_amount_in_usd: 19_620.62, # ROUNDUP(977815.97 * (33469 / 1667966), 2)
              qualified_dividend_amount_usd: 22_523.16, # ROUNDUP((7 / 100) * 1.2389 * 33469, 2) + ROUNDUP(977815.97 * (33469 / 1667966), 2)
              total_amount_in_usd: 22_523.16,
-             investment_amount_in_cents: 41_434_00 # 3976800 + 166600
+             investment_amount_cents: 41_434_00 # 3976800 + 166600
            )).to eq(true)
 
     # Seed and Series A investor
@@ -122,7 +122,7 @@ RSpec.describe DividendComputationGeneration do
              dividend_amount_in_usd: 4_641.79, # ROUNDUP(977815.97 * (7918 / 1667966), 2)
              qualified_dividend_amount_usd: 5_709.20, # ROUNDUP((12 / 100) * 1.1234 * 7918, 2) + ROUNDUP(977815.97 * (7918 / 1667966), 2)
              total_amount_in_usd: 5_709.20,
-             investment_amount_in_cents: 8_897_00 # 348000 + 541700
+             investment_amount_cents: 8_897_00 # 348000 + 541700
            )).to eq(true)
     expect(dividend_computation.dividend_computation_outputs.exists?(
              company_investor_id: @seed_and_series_A_investor.id,
@@ -134,7 +134,7 @@ RSpec.describe DividendComputationGeneration do
              dividend_amount_in_usd: 2_651.53, # ROUNDUP(977815.97 * (4523 / 1667966), 2)
              qualified_dividend_amount_usd: 3_043.78, # ROUNDUP((7 / 100) * 1.2389 * 4523, 2) + ROUNDUP(977815.97 * (4523 / 1667966), 2)
              total_amount_in_usd: 3_043.78,
-             investment_amount_in_cents: 5_599_00 # 363200 + 196700
+             investment_amount_cents: 5_599_00 # 363200 + 196700
            )).to eq(true)
 
     # Common Investor
@@ -148,7 +148,7 @@ RSpec.describe DividendComputationGeneration do
              dividend_amount_in_usd: 522.34, # ROUNDUP(977815.97 * (891 / 1667966), 2)
              qualified_dividend_amount_usd: 0, # No eligible shares for qualified dividends
              total_amount_in_usd: 522.34,
-             investment_amount_in_cents: 1_001_00 # 13800 + 86300
+             investment_amount_cents: 1_001_00 # 13800 + 86300
            )).to eq(true)
 
     # Investor with all share classes
@@ -162,7 +162,7 @@ RSpec.describe DividendComputationGeneration do
              dividend_amount_in_usd: 8_974.05, # ROUNDUP(977815.97 * (15308 / 1667966), 2)
              qualified_dividend_amount_usd: 11_037.70, # ROUNDUP((12 / 100) * 1.1234 * 15308, 2) + ROUNDUP(977815.97 * (15308 / 1667966), 2)
              total_amount_in_usd: 11_037.70,
-             investment_amount_in_cents: 17_205_00 # 11100000 + 6105000
+             investment_amount_cents: 17_205_00 # 11100000 + 6105000
            )).to eq(true)
     expect(dividend_computation.dividend_computation_outputs.exists?(
              company_investor_id: @all_class_investor.id,
@@ -174,7 +174,7 @@ RSpec.describe DividendComputationGeneration do
              dividend_amount_in_usd: 5_000.57, # ROUNDUP(977815.97 * (8530 / 1667966), 2)
              qualified_dividend_amount_usd: 5_740.32, # ROUNDUP((7 / 100) * 1.2389 * 8530, 2) + ROUNDUP(977815.97 * (8530 / 1667966), 2)
              total_amount_in_usd: 5_740.32,
-             investment_amount_in_cents: 10_563_00 # 2460000 + 8103000
+             investment_amount_cents: 10_563_00 # 2460000 + 8103000
            )).to eq(true)
     expect(dividend_computation.dividend_computation_outputs.exists?(
              company_investor_id: @all_class_investor.id,
@@ -186,7 +186,7 @@ RSpec.describe DividendComputationGeneration do
              dividend_amount_in_usd: 701.73, # ROUNDUP(977815.97 * (1197 / 1667966), 2)
              qualified_dividend_amount_usd: 701.73, # ROUNDUP(977815.97 * (1197 / 1667966), 2)
              total_amount_in_usd: 701.73,
-             investment_amount_in_cents: 1_345_00 # 23600 + 110900
+             investment_amount_cents: 1_345_00 # 23600 + 110900
            )).to eq(true)
 
     # SAFE 1 - "Richie Rich LLC"
@@ -200,7 +200,7 @@ RSpec.describe DividendComputationGeneration do
              dividend_amount_in_usd: 578_982.04, # ROUNDUP(977815.97 * (987632 / 1667966), 2)
              qualified_dividend_amount_usd: 578_982.04, # ROUNDUP(977815.97 * (987632 / 1667966), 2)
              total_amount_in_usd: 578_982.04,
-             investment_amount_in_cents: 1_000_000_00 # Set to the convertible.amount_in_cents
+             investment_amount_cents: 1_000_000_00 # Set to the convertible.amount_in_cents
            )).to eq(true)
 
     # SAFE 2 - "Wefunder"
@@ -214,7 +214,7 @@ RSpec.describe DividendComputationGeneration do
              dividend_amount_in_usd: 291_411.52, # ROUNDUP(977815.97 * (497092 / 1667966), 2)
              qualified_dividend_amount_usd: 291_411.52, # ROUNDUP(977815.97 * (497092 / 1667966), 2)
              total_amount_in_usd: 291_411.52,
-             investment_amount_in_cents: 2_000_000_00 # Set to the convertible.amount_in_cents
+             investment_amount_cents: 2_000_000_00 # Set to the convertible.amount_in_cents
            )).to eq(true)
 
     # Assert sum of all computed dividends
