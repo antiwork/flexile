@@ -1,0 +1,160 @@
+# Backend-specific mise configuration for Rails tasks
+# This extends the root mise.toml with Rails-specific functionality
+
+[tools]
+ruby = "3.4.3"
+
+[env]
+RAILS_ENV = "development"
+
+# === RAILS-SPECIFIC TASKS ===
+
+[tasks."rails:server"]
+alias = "s"
+description = "🚂 Start Rails server only"
+run = "bin/rails server"
+
+[tasks."rails:console"]
+alias = "c"
+description = "💻 Open Rails console"
+raw = true
+run = "bin/rails console"
+
+[tasks."rails:generate"]
+alias = "g"
+description = "⚡ Generate Rails components"
+run = "bin/rails generate"
+
+[tasks."rails:destroy"]
+alias = "d"
+description = "🗑️ Destroy Rails components"
+run = "bin/rails destroy"
+
+[tasks."rails:routes"]
+alias = "r"
+description = "🗺️ Show all Rails routes"
+run = "bin/rails routes"
+
+[tasks."rails:middleware"]
+description = "🔧 Show Rails middleware stack"
+run = "bin/rails middleware"
+
+[tasks."rails:stats"]
+description = "📊 Show code statistics"
+run = "bin/rails stats"
+
+# === DATABASE TASKS ===
+
+[tasks."db:create"]
+description = "🗄️ Create database"
+run = "bin/rails db:create"
+
+[tasks."db:drop"]
+description = "🗑️ Drop database"
+confirm = "Are you sure you want to drop the database?"
+run = "bin/rails db:drop"
+
+[tasks."db:schema:load"]
+description = "📋 Load database schema"
+run = "bin/rails db:schema:load"
+
+[tasks."db:schema:dump"]
+description = "📋 Dump database schema"
+run = "bin/rails db:schema:dump"
+
+[tasks."db:version"]
+description = "📊 Show current database version"
+run = "bin/rails db:version"
+
+[tasks."db:fixtures:load"]
+description = "📦 Load fixtures"
+run = "bin/rails db:fixtures:load"
+
+# === ASSET TASKS ===
+
+[tasks."assets:precompile"]
+description = "🎨 Precompile assets"
+run = "bin/rails assets:precompile"
+
+[tasks."assets:clean"]
+description = "🧹 Clean compiled assets"
+run = "bin/rails assets:clean"
+
+[tasks."assets:clobber"]
+description = "🗑️ Remove all compiled assets"
+run = "bin/rails assets:clobber"
+
+# === CACHE TASKS ===
+
+[tasks."cache:clear"]
+description = "🧹 Clear Rails cache"
+run = "bin/rails cache:clear"
+
+[tasks."tmp:clear"]
+description = "🧹 Clear tmp files"
+run = "bin/rails tmp:clear"
+
+[tasks."tmp:create"]
+description = "📁 Create tmp directories"
+run = "bin/rails tmp:create"
+
+# === LOG TASKS ===
+
+[tasks."log:clear"]
+description = "🧹 Clear log files"
+run = "bin/rails log:clear"
+
+[tasks."log:tail"]
+alias = "logs"
+description = "📋 Tail development log"
+run = "tail -f log/development.log"
+
+# === TESTING TASKS ===
+
+[tasks."test:system"]
+description = "🧪 Run system tests"
+run = "bin/rails test:system"
+
+[tasks."test:models"]
+description = "🧪 Run model tests"
+run = "bundle exec rspec spec/models"
+
+[tasks."test:controllers"]
+description = "🧪 Run controller tests"
+run = "bundle exec rspec spec/controllers"
+
+[tasks."test:requests"]
+description = "🧪 Run request tests"
+run = "bundle exec rspec spec/requests"
+
+[tasks."test:jobs"]
+description = "🧪 Run job tests"
+run = "bundle exec rspec spec/jobs"
+
+# === SECURITY TASKS ===
+
+[tasks."brakeman"]
+description = "🔒 Run security analysis with Brakeman"
+run = "bundle exec brakeman"
+
+[tasks."bundle:audit"]
+description = "🔍 Audit gems for security vulnerabilities"
+run = "bundle audit"
+
+# === MAINTENANCE TASKS ===
+
+[tasks."annotate"]
+description = "📝 Annotate models with schema information"
+run = "bundle exec annotate"
+
+[tasks."yard"]
+description = "📚 Generate documentation with YARD"
+run = "bundle exec yard"
+
+[tasks."rubocop:auto"]
+description = "🔧 Auto-correct RuboCop offenses"
+run = "bundle exec rubocop -a"
+
+[tasks."rubocop:safe"]
+description = "🔧 Safe auto-correct RuboCop offenses"
+run = "bundle exec rubocop -A"
