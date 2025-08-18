@@ -38,7 +38,6 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       return
     end
 
-
     render json: DividendComputationPresenter.new(@dividend_computation).props
   end
 
