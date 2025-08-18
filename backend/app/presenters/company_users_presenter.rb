@@ -52,9 +52,7 @@ class CompanyUsersPresenter
       roles = get_user_roles(user)
 
       user_props(user, roles).merge(
-        isAdmin: true,
         role: primary_admin&.id == admin.id ? "Owner" : "Admin",
-        isOwner: primary_admin&.id == admin.id,
       )
     end.sort_by { |admin| [admin[:isOwner] ? 0 : 1, admin[:name]] }
   end
@@ -65,9 +63,7 @@ class CompanyUsersPresenter
       roles = get_user_roles(user)
 
       user_props(user, roles).merge(
-        isAdmin: roles.include?("Admin"),
         role: "Lawyer",
-        isOwner: is_primary_admin?(user),
       )
     end.sort_by { |lawyer| lawyer[:name] }
   end
@@ -78,9 +74,7 @@ class CompanyUsersPresenter
       roles = get_user_roles(user)
 
       user_props(user, roles).merge(
-        isAdmin: roles.include?("Admin"),
         role: "Contractor",
-        isOwner: is_primary_admin?(user),
         active: worker.active?,
       )
     end.sort_by { |contractor| contractor[:name] }
@@ -92,9 +86,7 @@ class CompanyUsersPresenter
       roles = get_user_roles(user)
 
       user_props(user, roles).merge(
-        isAdmin: roles.include?("Admin"),
         role: "Investor",
-        isOwner: is_primary_admin?(user),
       )
     end.sort_by { |investor| investor[:name] }
   end
@@ -127,6 +119,8 @@ class CompanyUsersPresenter
         email: user.email,
         name: user.legal_name || user.preferred_name || user.email,
         allRoles: roles,
+        isOwner: is_primary_admin?(user),
+        isAdmin: roles.include?("Admin"),
       }
     end
 
