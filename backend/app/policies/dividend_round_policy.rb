@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 class DividendRoundPolicy < ApplicationPolicy
-  def index?
-    return unless company.equity_enabled?
+  def create?
+    return false unless company.equity_enabled?
+    return false unless company_administrator.present?
 
-    company_administrator.present? || company_lawyer.present?
+    true
   end
 end
