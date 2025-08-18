@@ -2,11 +2,11 @@ import { redirect } from "next/navigation";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { currentUserSchema } from "@/models/user";
 import { assertDefined } from "@/utils/assert";
-import { internal_current_user_data_url } from "@/utils/routes";
+import { current_user_data_url } from "@/utils/routes";
 
 export async function GET(req: Request) {
   const host = assertDefined(req.headers.get("Host"));
-  const response = await fetch(internal_current_user_data_url({ host }), {
+  const response = await fetch(current_user_data_url({ host }), {
     headers: {
       cookie: req.headers.get("cookie") ?? "",
       "User-Agent": req.headers.get("User-Agent") ?? "",

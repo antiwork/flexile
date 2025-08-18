@@ -6,11 +6,6 @@ class ApplicationController < ActionController::Base
 
   after_action :set_csrf_cookie
 
-  def current_user_data
-    return e401_json if Current.user.nil?
-    render json: UserPresenter.new(current_context:).logged_in_user
-  end
-
   private
     def authenticate_user_json!
       e401_json if Current.user.nil?

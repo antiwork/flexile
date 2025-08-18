@@ -71,8 +71,6 @@ Rails.application.routes.draw do
     end
   end
 
-  # Old routes for backwards compatibility. Can be removed after Jan 1, 2025
-  get "/internal/current_user_data", to: "application#current_user_data"
   resource :oauth_redirect, only: :show
 
   def spa_controller_action
