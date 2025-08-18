@@ -39,8 +39,13 @@ jobs:
         options: --entrypoint redis-server
 
       stripe-mock:
-        image: stripe/stripe-mock:latest
+        image: stripe/stripe-mock:v0.183.0  # Pin to specific version for stability
         ports: ['12111:12111']
+        options: >-
+          --health-cmd "curl -f http://localhost:12111/v1/charges || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     strategy:
       fail-fast: false

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Stripe::EventHandler do
-  include StripeHelpers
+  include StripeMockHelpers
 
   let(:stripe_payment_intent_id) { "pi_3LXaVWFSsGLfTpet0czoRTcy" }
 

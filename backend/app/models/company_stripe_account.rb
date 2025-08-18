@@ -43,12 +43,20 @@ class CompanyStripeAccount < ApplicationRecord
         payment_method
       end
 
-    Rails.logger.info(
-      "CompanyStripeAccount#fetch_stripe_bank_account_last_four payment_method_class=#{payment_method.class} " \
-      "payment_method_id=#{payment_method.is_a?(String) ? payment_method : payment_method&.id} " \
-      "resolved_type=#{payment_method_obj&.type} " \
-      "has_us_bank_account=#{payment_method_obj&.respond_to?(:us_bank_account)}"
-    ) if defined?(Rails)
+    # Use debug level logging and mask sensitive IDs in development
+    if Rails.env.development? && defined?(Rails.logger)
+      payment_method_id_masked = if payment_method.is_a?(String)
+        payment_method&.slice(0, 8).to_s + "..."
+      else
+        "object"
+      end
+
+      Rails.logger.debug(
+        "CompanyStripeAccount: payment_method resolved, " \
+        "type=#{payment_method_obj&.type}, " \
+        "id=#{payment_method_id_masked}"
+      )
+    end
 
     payment_method_obj&.us_bank_account&.last4
   end

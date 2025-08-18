@@ -13,7 +13,7 @@ namespace :test do
     ENV["USE_STRIPE_MOCK"] = "true"
     ENV["USE_WISE_MOCK"] = "true"
     ENV["STRIPE_MOCK_HOST"] = "localhost"
-    ENV["STRIPE_MOCK_PORT"] = "12111"
+    ENV["STRIPE_MOCK_PORT"] ||= "12111"  # Allow override via environment
 
     # Store original PID to handle cleanup
     original_pid = Process.pid
@@ -40,52 +40,72 @@ namespace :test do
       exit 1
     end
 
-    # Check if stripe-mock is already running
-    stripe_mock_running = system("lsof -i:12111 -sTCP:LISTEN > /dev/null 2>&1")
+    # Try to use the singleton pattern if available
+    stripe_mock_started_by_singleton = false
 
-    unless stripe_mock_running
-      # Start stripe-mock in the background
-      puts "Starting stripe-mock server..."
-      stripe_mock_pid = spawn("stripe-mock -http-port 12111 -https-port 12112")
-      Process.detach(stripe_mock_pid)
-
-      # Wait for stripe-mock to be ready with proper timeout
-      max_retries = 10
-      retries = 0
-      stripe_mock_ready = false
-
-      while retries < max_retries && !stripe_mock_ready
-        sleep 0.5
-        begin
-          uri = URI("http://localhost:12111/v1/charges")
-          response = Net::HTTP.get_response(uri)
-          # stripe-mock returns 401 (unauthorized) when it's ready but no auth provided
-          stripe_mock_ready = response.code.to_i == 401
-          puts "✅ Successfully connected to stripe-mock server" if stripe_mock_ready
-        rescue StandardError
-          retries += 1
-          puts "Waiting for stripe-mock to start (attempt #{retries}/#{max_retries})..." if (retries % 2) == 0
-        end
-      end
-
-      unless stripe_mock_ready
-        puts "Error: Failed to start stripe-mock server after #{max_retries} attempts"
-        Process.kill("TERM", stripe_mock_pid) rescue nil
-        exit 1
-      end
-    else
-      # Verify the running stripe-mock is responsive
+    if defined?(Stripe) && defined?(Stripe::StripeMock)
       begin
-        uri = URI("http://localhost:12111/v1/charges")
-        response = Net::HTTP.get_response(uri)
-        if response.code.to_i == 401
-          puts "🔌 Stripe configured to use stripe-mock server at http://localhost:12111"
-          puts "✅ Successfully connected to stripe-mock server"
-        else
-          puts "Warning: stripe-mock is running but returned unexpected status code: #{response.code}"
-        end
+        # Try to use the singleton (it will reuse existing or start new)
+        require_relative "../stripe_mock_singleton"
+        port = Stripe::StripeMock.start
+        stripe_mock_started_by_singleton = true
+        puts "✅ Using stripe-mock singleton on port #{port}"
       rescue StandardError => e
-        puts "Warning: stripe-mock is running but not responding correctly: #{e.message}"
+        puts "⚠️  Could not use singleton: #{e.message}"
+      end
+    end
+
+    # Fallback to traditional approach if singleton not available
+    unless stripe_mock_started_by_singleton
+      # Check if stripe-mock is already running
+      stripe_mock_running = system("lsof -i:#{ENV['STRIPE_MOCK_PORT']} -sTCP:LISTEN > /dev/null 2>&1")
+
+      unless stripe_mock_running
+        # Start stripe-mock in the background
+        puts "Starting stripe-mock server..."
+        port = ENV["STRIPE_MOCK_PORT"]
+        https_port = (port.to_i + 1).to_s
+        stripe_mock_pid = spawn("stripe-mock -http-port #{port} -https-port #{https_port}")
+        Process.detach(stripe_mock_pid)
+
+        # Wait for stripe-mock to be ready with proper timeout
+        max_retries = 10
+        retries = 0
+        stripe_mock_ready = false
+
+        while retries < max_retries && !stripe_mock_ready
+          sleep 0.5 * (2**[retries, 3].min)  # Exponential backoff, capped at 4 seconds
+          begin
+            uri = URI("http://localhost:#{ENV['STRIPE_MOCK_PORT']}/v1/charges")
+            response = Net::HTTP.get_response(uri)
+            # stripe-mock returns 401 (unauthorized) when it's ready but no auth provided
+            stripe_mock_ready = response.code.to_i == 401
+            puts "✅ Successfully connected to stripe-mock server" if stripe_mock_ready
+          rescue StandardError
+            retries += 1
+            puts "Waiting for stripe-mock to start (attempt #{retries}/#{max_retries})..." if (retries % 2) == 0
+          end
+        end
+
+        unless stripe_mock_ready
+          puts "Error: Failed to start stripe-mock server after #{max_retries} attempts"
+          Process.kill("TERM", stripe_mock_pid) rescue nil
+          exit 1
+        end
+      else
+        # Verify the running stripe-mock is responsive
+        begin
+          uri = URI("http://localhost:#{ENV['STRIPE_MOCK_PORT']}/v1/charges")
+          response = Net::HTTP.get_response(uri)
+          if response.code.to_i == 401
+            puts "🔌 Stripe configured to use stripe-mock server at http://localhost:#{ENV['STRIPE_MOCK_PORT']}"
+            puts "✅ Successfully connected to stripe-mock server"
+          else
+            puts "Warning: stripe-mock is running but returned unexpected status code: #{response.code}"
+          end
+        rescue StandardError => e
+          puts "Warning: stripe-mock is running but not responding correctly: #{e.message}"
+        end
       end
     end
 
@@ -93,20 +113,28 @@ namespace :test do
     rspec_command = "bundle exec rspec #{test_path}"
     puts "Running: #{rspec_command}"
 
-    # Use exec instead of system to properly handle output streaming and signals
-    # This replaces the current process with RSpec
-    if stripe_mock_pid
-      # If we started stripe-mock, register an at_exit handler to clean it up
-      at_exit do
-        if Process.pid == original_pid
+    # Use system instead of exec to maintain process control for proper cleanup
+    status = nil
+    begin
+      status = system(rspec_command)
+    ensure
+      # Clean up stripe-mock if we started it (not if singleton is managing it)
+      if stripe_mock_pid && Process.pid == original_pid && !stripe_mock_started_by_singleton
+        begin
           puts "Stopping stripe-mock server..."
-          Process.kill("TERM", stripe_mock_pid) rescue nil
+          Process.kill("TERM", stripe_mock_pid)
+          Process.waitpid2(stripe_mock_pid)  # Wait for clean shutdown
+          puts "Stopped stripe-mock"
+        rescue Errno::ESRCH, Errno::ECHILD
+          # Process already terminated
         end
       end
+
+      # Note: We don't stop the singleton here - it manages its own lifecycle
     end
 
-    # Replace current process with RSpec - avoids hanging
-    exec(rspec_command)
+    # Exit with the same status as RSpec
+    exit(status ? 0 : 1)
   end
 
   desc "Run tests with Stripe and Wise API mocks in verbose mode"

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.shared_examples_for "verifying Stripe microdeposits" do
-  include StripeHelpers
+  include StripeMockHelpers
 
   before { sign_in admin_user }
 

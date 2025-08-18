@@ -23,7 +23,14 @@ Bundler.require(*Rails.groups)
 # in the correct precedence order (see dotenv-rails README).
 # This avoids the ArgumentError raised when passing explicit filenames
 # to Dotenv::Rails.load.  Dotenv now recommends `Dotenv::Rails.load`.
-Dotenv::Rails.load
+# Guard against missing dotenv-rails gem in production
+if defined?(Dotenv::Rails)
+  begin
+    Dotenv::Rails.load
+  rescue StandardError => e
+    Rails.logger.warn("Dotenv loading failed: #{e.message}") if defined?(Rails.logger)
+  end
+end
 
 require_relative "../lib/global_config"
 require_relative "domain"

@@ -4,15 +4,30 @@ ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 
 require "rspec/rails"
-require "sidekiq/testing"
-require "faker"
+
+# Only load these when actually needed
+autoload :Faker, "faker"
+autoload :Sidekiq, "sidekiq/testing"
 require "pundit/rspec"
 
+# Load stripe-mock singleton for improved performance when running tests directly
+# This follows the official Stripe Ruby SDK pattern
+if ENV["USE_STRIPE_MOCK"]
+  require_relative "../lib/stripe_mock_singleton"
+end
+
+# Selective loading of support files based on test needs
+# Load critical support files immediately
+Dir[Rails.root.join("spec", "support", "database_cleaner.rb")].each { |f| require f }
+Dir[Rails.root.join("spec", "support", "devise.rb")].each { |f| require f }
+
+# Lazy load other support files
 Dir[Rails.root.join("spec", "support", "**", "*.rb")].sort.each { |f| require f }
 
 BUILDING_ON_CI = !ENV["CI"].nil?
 USE_STRIPE_MOCK = BUILDING_ON_CI || ENV["USE_STRIPE_MOCK"].present?
 USE_WISE_MOCK   = BUILDING_ON_CI || ENV["USE_WISE_MOCK"].present?
+STRIPE_MOCK_PORT = ENV["STRIPE_MOCK_PORT"] || "12111"
 
 KnapsackPro::Adapters::RSpecAdapter.bind
 

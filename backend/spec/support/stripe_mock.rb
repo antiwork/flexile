@@ -16,6 +16,71 @@
 module StripeMockHelpers
   # Common test data for Stripe objects
   STRIPE_TEST_DATA = {
+    charges: {
+      succeeded: {
+        id: "ch_test_succeeded",
+        object: "charge",
+        amount: 2000,
+        amount_captured: 2000,
+        amount_refunded: 0,
+        application_fee_amount: nil,
+        balance_transaction: "txn_test_transaction",
+        billing_details: {},
+        captured: true,
+        currency: "usd",
+        customer: "cus_test_customer",
+        description: "Test charge",
+        dispute: nil,
+        failure_code: nil,
+        failure_message: nil,
+        invoice: nil,
+        livemode: false,
+        metadata: {},
+        paid: true,
+        payment_intent: nil,
+        payment_method: "pm_test_card",
+        receipt_url: "https://pay.stripe.com/receipts/test",
+        refunded: false,
+        refunds: { object: "list", data: [], has_more: false, url: "/v1/charges/ch_test_succeeded/refunds" },
+        status: "succeeded",
+      },
+      failed: {
+        id: "ch_test_failed",
+        object: "charge",
+        amount: 1000,
+        currency: "usd",
+        status: "failed",
+        failure_code: "card_declined",
+        failure_message: "Your card was declined.",
+      },
+    },
+    customers: {
+      default: {
+        id: "cus_test_default",
+        object: "customer",
+        balance: 0,
+        created: Time.now.to_i,
+        currency: "usd",
+        default_source: nil,
+        delinquent: false,
+        description: "Test customer",
+        discount: nil,
+        email: "test@example.com",
+        invoice_prefix: "TEST",
+        invoice_settings: {
+          custom_fields: nil,
+          default_payment_method: nil,
+          footer: nil,
+        },
+        livemode: false,
+        metadata: {},
+        name: "Test Customer",
+        phone: nil,
+        preferred_locales: [],
+        shipping: nil,
+        tax_exempt: "none",
+      },
+    },
     payment_methods: {
       us_bank_account: {
         id: "pm_test_us_bank_account",
@@ -217,24 +282,38 @@ RSpec.configure do |config|
   config.before(:suite) do
     # Check if we should use stripe-mock
     if ENV["CI"] || ENV["USE_STRIPE_MOCK"]
-      # Point Stripe to the mock server
-      Stripe.api_base = "http://localhost:12111"
+      # Use singleton pattern for improved performance
+      # This follows the official Stripe Ruby SDK pattern
+      if defined?(Stripe::StripeMock)
+        # Start stripe-mock using singleton pattern (starts once for entire suite)
+        stripe_mock_port = Stripe::StripeMock.start
+      else
+        # Fallback: assume stripe-mock is already running on configured port
+        stripe_mock_port = ENV["STRIPE_MOCK_PORT"] || "12111"
+      end
 
-      # Set a dummy API key since we're not making real API calls
+      # Configure Stripe SDK
+      Stripe.api_base = "http://localhost:#{stripe_mock_port}"
       Stripe.api_key = "sk_test_mock"
 
       puts "🔌 Stripe configured to use stripe-mock server at #{Stripe.api_base}"
 
-      # Verify the mock server is running
+      # Verify connection (singleton already handles retries internally)
       begin
         Stripe::Account.retrieve("acct_default")
         puts "✅ Successfully connected to stripe-mock server"
-      rescue => e
-        puts "❌ Failed to connect to stripe-mock server: #{e.message}"
-        puts "Make sure stripe-mock is running on port 12111"
-        puts "You can start it with: docker run --rm -p 12111-12112:12111-12112 stripe/stripe-mock:latest"
-        exit(1) if ENV["CI"] # Fail fast in CI if stripe-mock is not available
+      rescue Stripe::APIConnectionError => e
+        puts "❌ Failed to connect to stripe-mock: #{e.message}"
+        puts "Make sure stripe-mock is running on port #{stripe_mock_port}"
+        exit(1) if ENV["CI"] # Fail fast in CI
       end
+    end
+  end
+
+  # Clean up stripe-mock after all tests complete (only if using singleton)
+  config.after(:suite) do
+    if ENV["USE_STRIPE_MOCK"] && defined?(Stripe::StripeMock)
+      Stripe::StripeMock.stop
     end
   end
 
