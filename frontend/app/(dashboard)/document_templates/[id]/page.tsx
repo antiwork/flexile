@@ -372,12 +372,3 @@ export default function EditTemplatePage() {
     </>
   );
 }
-
-// /* Override inline styles */
-// [style*="padding-right: 0.875rem"] {
-//   padding-right: 1rem !important;
-// }
-
-// [style*="padding-left: 0.125rem"] {
-//   padding-left: 1rem !important;
-// }
