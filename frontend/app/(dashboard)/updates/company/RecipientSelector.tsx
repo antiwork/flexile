@@ -310,7 +310,7 @@ export default function RecipientSelector({
 
       {hasContractors && onMinBilledAmountChange ? (
         <div className="mt-3 space-y-2">
-          <Label htmlFor="min-billed-amount">Min billed amount</Label>
+          <Label htmlFor="min-billed-amount">Contractors must've billed at least this amount</Label>
           <div className="relative">
             <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">$</span>
             <Input
@@ -325,7 +325,6 @@ export default function RecipientSelector({
               className="pl-8"
             />
           </div>
-          <p className="text-muted-foreground text-xs">Leave empty to include all contractors</p>
         </div>
       ) : null}
     </div>
