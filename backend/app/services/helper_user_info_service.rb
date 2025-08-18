@@ -19,6 +19,7 @@ class HelperUserInfoService
 
     {
       prompt: @info.join("\n"),
+      metadata: metadata,
     }
   end
 
@@ -79,8 +80,14 @@ class HelperUserInfoService
         equity_amount = Money.new(invoice.equity_amount_in_cents, "usd")
                              .format(no_cents_if_whole: false, symbol: true)
         company_name = invoice.company.display_name
-        @info << "The user has an invoice to #{company_name} (#{invoice.invoice_number}) with status #{invoice.status}. " \
+        @info << "The user has an invoice to #{company_name} (##{invoice.invoice_number}) with status #{invoice.status}. " \
                  "Total: #{total_amount}, Cash: #{cash_amount}, Equity: #{equity_amount}, Date: #{invoice.invoice_date}."
       end
+    end
+
+    def metadata
+      return {} unless user
+
+      { name: user.email }
     end
 end

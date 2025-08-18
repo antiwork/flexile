@@ -22,7 +22,8 @@ RSpec.describe HelperUserInfoService do
     it "returns information as expected" do
       result = described_class.new(email: user.email).user_info
 
-      expect(result.keys).to match_array(%i[prompt])
+      expect(result.keys).to match_array(%i[prompt metadata])
+      expect(result[:metadata]).to eq({ name: user.email })
 
       expected_prompt = [
         "The user's residence country is #{user.display_country}",
@@ -34,7 +35,7 @@ RSpec.describe HelperUserInfoService do
         "The user received a dividend of $123.45 from Acme. The status of the dividend is Issued.",
         "The user received a dividend of $23.31 from Gumroad. The status of the dividend is Paid.",
         "The user's minimum dividend payment is $100.00",
-        "The user has an invoice to Gumroad (#{invoice.invoice_number}) with status approved. Total: $500.00, Cash: $300.00, Equity: $200.00, Date: #{Date.current}."
+        "The user has an invoice to Gumroad (##{invoice.invoice_number}) with status approved. Total: $500.00, Cash: $300.00, Equity: $200.00, Date: #{Date.current}."
       ].join("\n")
 
       expect(result[:prompt]).to eq(expected_prompt)
