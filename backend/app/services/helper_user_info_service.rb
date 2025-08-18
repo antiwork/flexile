@@ -14,11 +14,11 @@ class HelperUserInfoService
       add_user_role_notes
       add_investment_notes
       add_dividend_notes
+      add_invoice_notes
     end
 
     {
       prompt: @info.join("\n"),
-      metadata: metadata,
     }
   end
 
@@ -68,30 +68,19 @@ class HelperUserInfoService
       @info << "The user's minimum dividend payment is #{Money.from_cents(user.minimum_dividend_payment_in_cents, 'usd').format(symbol: true)}"
     end
 
-    def metadata
-      return {} unless user
+    def add_invoice_notes
+      return unless user.invoices.exists?
 
-      {
-        name: user.email,
-        country: user.country_code,
-        dividends: user.dividends.map do |dividend|
-          {
-            status: dividend.status,
-            amount: dividend.total_amount_in_cents,
-            net_amount: dividend.net_amount_in_cents,
-            company: dividend.company_investor.company.display_name,
-          }
-        end,
-        invoices: user.invoices.map do |invoice|
-          {
-            status: invoice.status,
-            total_amount: invoice.total_amount_in_usd_cents,
-            cash_amount: invoice.cash_amount_in_cents,
-            equity_amount: invoice.equity_amount_in_cents,
-            company: invoice.company.display_name,
-            invoice_date: invoice.invoice_date,
-          }
-        end,
-      }
+      user.invoices.each do |invoice|
+        total_amount = Money.new(invoice.total_amount_in_usd_cents, "usd")
+                            .format(no_cents_if_whole: false, symbol: true)
+        cash_amount = Money.new(invoice.cash_amount_in_cents, "usd")
+                           .format(no_cents_if_whole: false, symbol: true)
+        equity_amount = Money.new(invoice.equity_amount_in_cents, "usd")
+                             .format(no_cents_if_whole: false, symbol: true)
+        company_name = invoice.company.display_name
+        @info << "The user has an invoice from #{company_name} with status #{invoice.status}. " \
+                 "Total: #{total_amount}, Cash: #{cash_amount}, Equity: #{equity_amount}, Date: #{invoice.invoice_date}."
+      end
     end
 end
