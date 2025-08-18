@@ -103,5 +103,20 @@ RSpec.describe Internal::Companies::DividendComputationsController do
         get :show, params: { company_id: company.external_id, id: 999999 }
       end.to raise_error(ActiveRecord::RecordNotFound)
     end
+
+    context "when dividend computation is already finalized" do
+      let(:dividend_round) { create(:dividend_round, company: company) }
+      let(:finalized_dividend_computation) do
+        computation = create(:dividend_computation, company: company)
+        computation.mark_as_finalized!(dividend_round)
+        computation
+      end
+
+      it "redirects to the dividend round page" do
+        get :show, params: { company_id: company.external_id, id: finalized_dividend_computation.id }
+        expect(response).to have_http_status(:forbidden)
+        expect(response).to json_redirect_to("/equity/dividend_rounds/round/#{dividend_round.id}")
+      end
+    end
   end
 end

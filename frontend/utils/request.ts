@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation";
+import { z } from "zod";
+
 export type RequestSettings = {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   accept: "json" | "html" | "pdf";
@@ -94,6 +97,19 @@ export const request = (settings: RequestSettings): Promise<Response> => {
         throw new ResponseError();
       },
     )
+    .catch((e: unknown) => {
+      if (e instanceof ResponseError) {
+        if (e.response?.status === 403) {
+          if (e.response && !e.response.bodyUsed) {
+            void e.response.json().then((body) => {
+              const redirectData = z.object({ redirect_path: z.string() }).safeParse(body);
+              if (redirectData.success) redirect(redirectData.data.redirect_path);
+            });
+          }
+        }
+      }
+      throw e;
+    })
     .finally(() => {
       --globalThis.__activeRequests;
     });
