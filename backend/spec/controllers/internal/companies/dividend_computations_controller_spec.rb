@@ -31,7 +31,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
 
   describe "GET #index" do
     before do
-      dividend_computation
+      dividend_computation_output
     end
 
     it "returns dividend computations for the company" do
@@ -41,6 +41,10 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       json_response = response.parsed_body
       expect(json_response).to be_an(Array)
       expect(json_response.first["id"]).to eq(dividend_computation.id)
+      expect(json_response.first["total_amount_in_usd"]).to eq("1000000.0")
+      expect(json_response.first["dividends_issuance_date"]).to eq(Time.current.strftime("%Y-%m-%d"))
+      expect(json_response.first["return_of_capital"]).to eq(false)
+      expect(json_response.first["number_of_shareholders"]).to eq(1)
     end
   end
 
@@ -80,6 +84,11 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
       expect(json_response["id"]).to eq(dividend_computation.id)
+      expect(json_response["number_of_shareholders"]).to eq(1)
+      expect(json_response["total_amount_in_usd"]).to eq("1000000.0")
+      expect(json_response["dividends_issuance_date"]).to eq(Time.current.strftime("%Y-%m-%d"))
+      expect(json_response["return_of_capital"]).to eq(false)
+
       expect(json_response["computation_outputs"]).to be_present
       computation_output = json_response["computation_outputs"].first
       expect(computation_output["investor_name"]).to eq("Matthew Smith")
