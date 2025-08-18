@@ -109,7 +109,7 @@ export default function RecipientSelector({
     }
   };
 
-  const handleRemove = (type: RecipientType, e: React.MouseEvent) => {
+  const handleRemove = (type: RecipientType, e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
     // Admins must always be selected
     if (type === "admins") return;
@@ -208,56 +208,68 @@ export default function RecipientSelector({
           }}
         >
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-left font-normal"
-              onKeyDown={handleKeyDown}
-              onClick={() => setOpen(true)}
-            >
-              <div className="flex flex-1 flex-wrap items-center gap-2">
-                {value.map((type) => (
-                  <span
-                    key={type}
-                    className="inline-flex items-center gap-1 rounded bg-gray-50 px-2.5 py-1 text-sm font-normal text-gray-900"
-                    style={{ backgroundColor: "rgba(29, 30, 23, 0.03)" }}
-                  >
-                    {getLabel(type)}
-                    {type !== "admins" && (
-                      <button
-                        type="button"
-                        onClick={(e) => handleRemove(type, e)}
-                        className="ring-offset-background focus:ring-ring ml-0.5 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
-                        aria-label={`Remove ${getLabel(type)}`}
-                      >
-                        <X className="h-3 w-3 text-gray-400 hover:text-gray-600" />
-                      </button>
-                    )}
-                  </span>
-                ))}
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={filterText}
-                  onChange={(e) => setFilterText(e.target.value)}
-                  onKeyDown={(e) => {
-                    // Don't prevent default for regular typing
-                    if (
-                      !["ArrowDown", "ArrowUp", "Enter", "Escape", "Delete", "Backspace"].includes(e.key) ||
-                      (e.key === "Backspace" && filterText)
-                    ) {
-                      return;
-                    }
-                    handleKeyDown(e);
-                  }}
-                  placeholder="Select recipients..."
-                  className="placeholder:text-muted-foreground min-w-[120px] flex-1 bg-transparent py-0.5 text-sm outline-none"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpen(true);
-                  }}
-                />
+            <Button asChild variant="outline" className="w-full justify-start text-left font-normal">
+              <div
+                role="combobox"
+                aria-expanded={open}
+                aria-haspopup="listbox"
+                tabIndex={0}
+                onKeyDown={handleKeyDown}
+                onClick={() => setOpen(true)}
+                className="flex items-center"
+              >
+                <div className="flex flex-1 flex-wrap items-center gap-2">
+                  {value.map((type) => (
+                    <span
+                      key={type}
+                      className="inline-flex items-center gap-1 rounded bg-gray-50 px-2.5 py-1 text-sm font-normal text-gray-900"
+                      style={{ backgroundColor: "rgba(29, 30, 23, 0.03)" }}
+                    >
+                      {getLabel(type)}
+                      {type !== "admins" && (
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e: React.MouseEvent<HTMLSpanElement>) => handleRemove(type, e)}
+                          onKeyDown={(e: React.KeyboardEvent<HTMLSpanElement>) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleRemove(type, e);
+                            }
+                          }}
+                          className="ring-offset-background focus:ring-ring ml-0.5 cursor-pointer rounded-full outline-none focus:ring-2 focus:ring-offset-2"
+                          aria-label={`Remove ${getLabel(type)}`}
+                        >
+                          <X className="h-3 w-3 text-gray-400 hover:text-gray-600" />
+                        </span>
+                      )}
+                    </span>
+                  ))}
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                    onKeyDown={(e) => {
+                      // Don't prevent default for regular typing
+                      if (
+                        !["ArrowDown", "ArrowUp", "Enter", "Escape", "Delete", "Backspace"].includes(e.key) ||
+                        (e.key === "Backspace" && filterText)
+                      ) {
+                        return;
+                      }
+                      handleKeyDown(e);
+                    }}
+                    placeholder="Select recipients..."
+                    className="placeholder:text-muted-foreground min-w-[120px] flex-1 bg-transparent py-0.5 text-sm outline-none"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpen(true);
+                    }}
+                  />
+                </div>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </div>
-              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]">
