@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
 class CompanyAdministratorMailer < ApplicationMailer
-  def invitation_instructions(administrator_id:, url:)
-    company_administrator = CompanyAdministrator.find(administrator_id)
+  def invitation_instructions(administrator_id:)
+    company_administrator = CompanyAdministrator.find_by(id: administrator_id)
+    return unless company_administrator
+
     user = company_administrator.user
     @company = company_administrator.company
-    @url = url
+    @url = SIGNUP_URL
 
     mail(
       to: user.email,
