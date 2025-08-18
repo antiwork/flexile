@@ -45,14 +45,13 @@ class CompanyUsersPresenter
 
   def administrators_props
     admins = @company.company_administrators.includes(:user).order(:id)
-    primary_admin = admins.first
 
     admins.map do |admin|
       user = admin.user
       roles = get_user_roles(user)
 
       user_props(user, roles).merge(
-        role: primary_admin&.id == admin.id ? "Owner" : "Admin",
+        role: is_primary_admin?(user) ? "Owner" : "Admin",
       )
     end.sort_by { |admin| [admin[:isOwner] ? 0 : 1, admin[:name]] }
   end
