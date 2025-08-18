@@ -149,7 +149,7 @@ export default function NewBuyback() {
                 <FormItem>
                   <FormLabel>Letter of transmittal</FormLabel>
                   <FormControl>
-                    <RichTextEditor {...field} toolbarItems={[]} aria-label="Letter of transmittal" />
+                    <RichTextEditor {...field} aria-label="Letter of transmittal" />
                   </FormControl>
                   <FormMessage>
                     <span className="text-xs text-gray-500">

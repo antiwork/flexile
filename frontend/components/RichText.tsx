@@ -9,14 +9,6 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 import { richTextExtensions } from "@/utils/richText";
 
-export type ToolbarItem = {
-  label: string;
-  name: string;
-  icon: React.ElementType;
-  onClick?: () => void;
-  attributes?: Record<string, unknown>;
-};
-
 const RichText = ({ content, className }: { content: string; className?: string }) => {
   const editor = useEditor({
     extensions: richTextExtensions,
@@ -44,13 +36,11 @@ export const Editor = ({
   onChange,
   className,
   id,
-  toolbarItems: propToolbarItems,
   ...props
 }: {
   value: string | null | undefined;
   onChange: (value: string | null) => void;
   className?: string;
-  toolbarItems?: ToolbarItem[];
   id?: string;
 } & React.ComponentProps<"div">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
@@ -77,7 +67,7 @@ export const Editor = ({
 
   const currentLink: unknown = editor?.getAttributes("link").href;
 
-  const toolbarItems = propToolbarItems || [
+  const toolbarItems = [
     { label: "Bold", name: "bold", icon: Bold },
     { label: "Italic", name: "italic", icon: Italic },
     { label: "Underline", name: "underline", icon: Underline },
@@ -90,7 +80,6 @@ export const Editor = ({
     },
     { label: "Bullet list", name: "bulletList", icon: List },
   ];
-
   const onToolbarClick = (item: (typeof toolbarItems)[number]) => {
     if (!editor) return;
     if (item.onClick) return item.onClick();
@@ -126,23 +115,20 @@ export const Editor = ({
         className,
       )}
     >
-      {toolbarItems.length ? (
-        <div className="border-input group-aria-invalid:border-destructive flex border-b">
-          {toolbarItems.map((item) => (
-            <button
-              type="button"
-              className={cn(linkClasses, "p-3 text-sm")}
-              key={item.label}
-              aria-label={item.label}
-              aria-pressed={editor?.isActive(item.name, item.attributes)}
-              onClick={() => onToolbarClick(item)}
-            >
-              <item.icon className="size-5" />
-            </button>
-          ))}
-        </div>
-      ) : null}
-
+      <div className="border-input group-aria-invalid:border-destructive flex border-b">
+        {toolbarItems.map((item) => (
+          <button
+            type="button"
+            className={cn(linkClasses, "p-3 text-sm")}
+            key={item.label}
+            aria-label={item.label}
+            aria-pressed={editor?.isActive(item.name, item.attributes)}
+            onClick={() => onToolbarClick(item)}
+          >
+            <item.icon className="size-5" />
+          </button>
+        ))}
+      </div>
       {editor ? <EditorContent editor={editor} /> : null}
       <Dialog open={!!addingLink} onOpenChange={() => setAddingLink(null)}>
         <DialogContent>
