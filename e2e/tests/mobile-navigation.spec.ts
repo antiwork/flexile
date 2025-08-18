@@ -11,33 +11,32 @@ test.describe("Mobile navigation", () => {
 
     await page.setViewportSize(mobileViewport);
     await login(page, user);
-    await page.goto("/");
 
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    // Check that bottom nav items are visible
+    const bottomNav = page.getByRole("navigation", { name: "Mobile navigation" });
+    await expect(bottomNav).toBeVisible();
 
-    await page.getByRole("button", { name: "Toggle Sidebar" }).click();
-    await expect(page.getByRole("link", { name: "Invoices" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Documents" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Settings" })).toBeVisible();
+    // Main nav items should be visible in bottom nav
+    await expect(bottomNav.getByRole("listitem", { name: "Invoices" })).toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "Documents" })).toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "Settings" })).toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "More" })).toBeVisible();
 
-    await page.getByRole("link", { name: "Settings" }).click();
-    await expect(page.getByRole("heading", { name: "Profile" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Invoices" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Documents" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Settings" })).not.toBeVisible();
-
-    await page.getByRole("link", { name: "Back to app" }).click();
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Profile" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Payouts" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Tax information" })).not.toBeVisible();
-
-    await page.getByRole("button", { name: "Toggle Sidebar" }).click();
-    await page.getByRole("link", { name: "Documents" }).click();
+    // Click on Documents link
+    await bottomNav.getByRole("link").filter({ hasText: "Documents" }).click();
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Invoices" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Documents" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Settings" })).not.toBeVisible();
+
+    // Navigate to Settings
+    await bottomNav.getByRole("button", { name: "Settings menu" }).click();
+    await expect(page.getByRole("link", { name: "Profile" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Tax information" })).toBeVisible();
+
+    // Click on More button to open overflow menu
+    await bottomNav.getByRole("button", { name: "More" }).click();
+
+    // Check that overflow menu items are visible
+    await expect(page.getByRole("link", { name: "Support center" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
   });
 
   test("administrator can navigate via mobile nav menu", async ({ page }) => {
@@ -47,38 +46,54 @@ test.describe("Mobile navigation", () => {
     });
 
     await page.setViewportSize(mobileViewport);
-    await login(page, adminUser, "/people");
+    await login(page, adminUser);
 
-    await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
+    // Check that bottom nav items are visible
+    const bottomNav = page.getByRole("navigation", { name: "Mobile navigation" });
+    await expect(bottomNav).toBeVisible();
 
-    await page.getByRole("button", { name: "Toggle Sidebar" }).click();
-    await expect(page.getByRole("link", { name: "Invoices" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Documents" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "People" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Equity" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Settings" })).toBeVisible();
+    // Main nav items should be visible in bottom nav (Invoices, Documents, Equity are prioritized)
+    await expect(bottomNav.getByRole("listitem", { name: "Invoices" })).toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "Documents" })).toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "Equity" })).toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "More" })).toBeVisible();
 
-    await page.getByRole("link", { name: "Invoices" }).click();
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Invoices" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Documents" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "People" })).not.toBeVisible();
-    await expect(page.getByRole("button", { name: "Equity" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Settings" })).not.toBeVisible();
+    // Navigate to Invoices
+    // Click on Documents link
+    await bottomNav.getByRole("link").filter({ hasText: "Documents" }).click();
+    await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Toggle Sidebar" }).click();
-    await page.getByRole("button", { name: "Equity" }).click();
+    // Test Equity submenu
+    await bottomNav.getByRole("button", { name: "Equity menu" }).click();
+
+    // Check that Equity submenu items are visible
+    await expect(page.getByRole("link", { name: "Dividends" })).toBeVisible();
+
+    // Navigate to Dividends
     await page.getByRole("link", { name: "Dividends" }).click();
     await expect(page.getByRole("heading", { name: "Dividends" })).toBeVisible();
 
-    await expect(page.getByRole("link", { name: "Invoices" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Documents" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "People" })).not.toBeVisible();
-    await expect(page.getByRole("button", { name: "Equity" })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Settings" })).not.toBeVisible();
+    // Verify submenu closed after navigation
+    await expect(page.getByRole("link", { name: "Dividends" })).not.toBeVisible();
 
-    await page.getByRole("button", { name: "Toggle Sidebar" }).click();
+    // Click on More button to open overflow menu
+    await bottomNav.getByRole("button", { name: "More" }).click();
+
+    // Check that overflow menu items are visible (People and Settings should be in overflow)
+    await expect(page.getByRole("link", { name: "People" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Support center" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
+
+    // Navigate to People from overflow menu
     await page.getByRole("link", { name: "People" }).click();
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
+
+    // Verify overflow menu closed after navigation
+    await expect(page.getByRole("link", { name: "Support center" })).not.toBeVisible();
+
+    // Navigate to Documents directly
+    await bottomNav.getByRole("link").filter({ hasText: "Documents" }).click();
+    await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
   });
 });
