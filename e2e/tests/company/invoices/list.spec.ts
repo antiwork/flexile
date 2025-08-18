@@ -214,7 +214,6 @@ test.describe("Invoices admin flow", () => {
       });
       expect(updatedInvoice?.status).toBe("approved");
 
-      await page.waitForTimeout(1000);
       await expect(invoiceRow).toContainText("Awaiting approval (2/3)");
     });
 

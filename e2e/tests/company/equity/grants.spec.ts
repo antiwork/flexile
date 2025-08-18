@@ -38,9 +38,7 @@ test.describe("Equity Grants", () => {
       userId: projectBasedUser.id,
     });
     await optionPoolsFactory.create({ companyId: company.id });
-    await login(page, adminUser);
-    await page.getByRole("button", { name: "Equity" }).click();
-    await page.getByRole("link", { name: "Equity grants" }).click();
+    await login(page, adminUser, "/equity/grants");
 
     // Initially, without document templates, the "New option grant" button should not be visible
     // and the alert about creating templates should be shown
@@ -171,10 +169,11 @@ test.describe("Equity Grants", () => {
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "10/15/2024");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Software development work");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
+      page.getByRole("button", { name: "Send invoice" }).click(),
+    ]);
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
@@ -185,10 +184,11 @@ test.describe("Equity Grants", () => {
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await fillDatePicker(page, "Date", "11/01/2024");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Promotional video production work");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
+      page.getByRole("button", { name: "Send invoice" }).click(),
+    ]);
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
