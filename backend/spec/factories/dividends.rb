@@ -29,6 +29,10 @@ FactoryBot.define do
       status { Dividend::PENDING_SIGNUP }
     end
 
+    trait :processing do
+      status { Dividend::PROCESSING }
+    end
+
     trait :qualified do
       qualified_amount_cents { total_amount_in_cents }
     end

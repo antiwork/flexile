@@ -4,6 +4,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, type Page, test } from "@test/index";
+import { assertDefined } from "@/utils/assert";
 
 test.describe("Role autocomplete", () => {
   const role1 = "Designer";
@@ -84,7 +85,7 @@ test.describe("Role autocomplete", () => {
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("link", { name: user.preferredName ?? "" }).click();
-    await expect(page.getByLabel("Role")).toHaveValue(contractor.role);
+    await expect(page.getByLabel("Role")).toHaveValue(assertDefined(contractor.role));
     await testAutofill(page);
   });
 });
