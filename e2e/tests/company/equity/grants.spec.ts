@@ -309,15 +309,15 @@ test.describe("Equity Grants", () => {
 
     // Test estimated value calculation using FMV share price from database
     await page.getByLabel("Number of options").fill("1000");
-    await expect(page.getByText("Estimated value of $1,000.00, based on a $1 share price")).toBeVisible();
+    await expect(page.getByText("Estimated value of $1,000, based on a $1 share price")).toBeVisible();
 
     // Test with different number of shares to verify calculation accuracy
     await page.getByLabel("Number of options").fill("2500");
-    await expect(page.getByText("Estimated value of $2,500.00, based on a $1 share price")).toBeVisible();
+    await expect(page.getByText("Estimated value of $2,500, based on a $1 share price")).toBeVisible();
 
     // Test with larger number to verify calculation scales correctly
     await page.getByLabel("Number of options").fill("10000");
-    await expect(page.getByText("Estimated value of $10,000.00, based on a $1 share price")).toBeVisible();
+    await expect(page.getByText("Estimated value of $10,000, based on a $1 share price")).toBeVisible();
 
     // Test form completion enables submit button only after filling in all required fields
     await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
