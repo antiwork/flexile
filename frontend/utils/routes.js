@@ -1173,6 +1173,24 @@ export const company_dividend_computations_path = /*#__PURE__*/ __jsr.r({"compan
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/dividend_rounds(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_rounds_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"dividend_rounds"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_rounds(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_rounds_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"dividend_rounds"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/equity_exercise_payments/:id(.:format)
  * @param {any} company_id
  * @param {any} id
@@ -1732,26 +1750,6 @@ export const export_company_invoices_url = /*#__PURE__*/ __jsr.r({"company_id":{
  * @returns {string} route path
  */
 export const export_company_invoices_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invoices"],[2,[7,"/"],[2,[6,"export"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/dividend_computations/:id/finalize(.:format)
- * @param {any} company_id
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const finalize_company_dividend_computation_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"dividend_computations"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"finalize"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/dividend_computations/:id/finalize(.:format)
- * @param {any} company_id
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const finalize_company_dividend_computation_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"dividend_computations"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"finalize"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
 
 /**
  * Generates rails route to
