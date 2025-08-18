@@ -231,7 +231,11 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                         {...field}
                         options={data.workers
                           .sort((a, b) => a.user.name.localeCompare(b.user.name))
-                          .map((worker) => ({ label: worker.user.name, value: worker.id }))}
+                          .map((worker) => ({
+                            label: `${worker.user.name} (${worker.user.email})`,
+                            value: worker.id,
+                            keywords: [worker.user.name, worker.user.email],
+                          }))}
                         placeholder="Select recipient"
                       />
                     </FormControl>
