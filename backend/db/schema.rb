@@ -293,6 +293,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_18_174610) do
     t.string "investor_name"
     t.bigint "company_investor_id"
     t.decimal "qualified_dividend_amount_usd", null: false
+    t.bigint "investment_amount_cents", null: false
     t.index ["company_investor_id"], name: "index_dividend_computation_outputs_on_company_investor_id"
     t.index ["dividend_computation_id"], name: "index_dividend_computation_outputs_on_dividend_computation_id"
   end
@@ -367,7 +368,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_18_174610) do
     t.bigint "user_compliance_info_id"
     t.bigint "qualified_amount_cents", null: false
     t.datetime "signed_release_at"
-    t.bigint "investment_amount_in_cents"
+    t.bigint "investment_amount_cents"
     t.index ["company_id"], name: "index_dividends_on_company_id"
     t.index ["company_investor_id"], name: "index_dividends_on_company_investor_id"
     t.index ["dividend_round_id"], name: "index_dividends_on_dividend_round_id"
