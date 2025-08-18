@@ -34,7 +34,7 @@ RSpec.describe HelperUserInfoService do
         "The user received a dividend of $123.45 from Acme. The status of the dividend is Issued.",
         "The user received a dividend of $23.31 from Gumroad. The status of the dividend is Paid.",
         "The user's minimum dividend payment is $100.00",
-        "The user has an invoice from Gumroad with status approved. Total: $500.00, Cash: $300.00, Equity: $200.00, Date: #{Date.current}."
+        "The user has an invoice to Gumroad (1) with status approved. Total: $500.00, Cash: $300.00, Equity: $200.00, Date: #{Date.current}."
       ].join("\n")
 
       expect(result[:prompt]).to eq(expected_prompt)
