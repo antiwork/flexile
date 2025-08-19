@@ -2,15 +2,15 @@
 
 RSpec.describe HelperUserInfoService do
   let(:user) { create(:user, minimum_dividend_payment_in_cents: 100_00) }
+  let(:gumroad) { create(:company, public_name: "Gumroad") }
+  let!(:company_worker) { create(:company_worker, user:, company: gumroad) }
+  let!(:invoice) { create(:invoice, user:, company: gumroad, company_worker: company_worker, status: "approved", total_amount_in_usd_cents: 50000, cash_amount_in_cents: 30000, equity_amount_in_cents: 20000) }
 
   before do
     acme = create(:company, public_name: "Acme")
     acme_company_investor = create(:company_investor, user:, company: acme, investment_amount_in_cents: 5_623_00)
     create(:dividend, company_investor: acme_company_investor, total_amount_in_cents: 123_45)
 
-    gumroad = create(:company, public_name: "Gumroad")
-    company_worker = create(:company_worker, user:, company: gumroad)
-    create(:invoice, user:, company: gumroad, company_worker: company_worker, status: "approved", total_amount_in_usd_cents: 50000, cash_amount_in_cents: 30000, equity_amount_in_cents: 20000)
     gumroad_company_investor = create(:company_investor, user:, company: gumroad, investment_amount_in_cents: 234_00)
     create(:dividend, :paid, company_investor: gumroad_company_investor, total_amount_in_cents: 23_31)
 
