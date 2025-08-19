@@ -60,7 +60,7 @@ const QuantityInput = ({
           hourly: true,
         });
       }}
-      aria-invalid={!isValid}
+      aria-invalid={!isValid && rawValue.length > 0}
     />
   );
 };

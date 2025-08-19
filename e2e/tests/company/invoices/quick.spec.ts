@@ -92,4 +92,30 @@ test.describe("quick invoicing", () => {
     expect(invoice.equityAmountInCents).toBe(12600n);
     expect(invoice.equityPercentage).toBe(20);
   });
+
+  test("handles cleared quantity input", async ({ page }) => {
+    await login(page, contractorUser);
+
+    const qty = page.getByLabel("Hours / Qty");
+    await qty.fill("");
+    await qty.blur();
+
+    await expect(page.getByText("Total amount$0")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Send for approval" })).toBeDisabled();
+  });
+
+  test("handles cleared date input", async ({ page }) => {
+    await login(page, contractorUser);
+
+    const dateInput = page.getByLabel("Invoice date");
+    await dateInput.click();
+
+    // Clear the date input field
+    for (let i = 0; i < 8; i++) {
+      await dateInput.press("Backspace");
+    }
+    await dateInput.blur();
+
+    await expect(page.getByRole("button", { name: "Send for approval" })).toBeDisabled();
+  });
 });
