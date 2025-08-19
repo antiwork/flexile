@@ -29,10 +29,11 @@ You can start the local app using the [`bin/dev` script](bin/dev) - or feel free
 
 Once the local services are up and running, the application will be available at `https://flexile.dev`
 
-**Development shortcuts**: 
+**Development shortcuts**:
+
 - If `ENABLE_DEFAULT_OTP=true` is set in your `.env`, you can use `000000` as the OTP for logging in or signing up.
 - Use these pre-seeded accounts (password: `password` for all):
-  - **Admin**: `hi+sahil@example.com` (Primary Administrator)  
+  - **Admin**: `hi+sahil@example.com` (Primary Administrator)
   - **Contractor**: `hi+sharang@example.com` (Software Engineer)
   - **Investor**: `hi+chris@example.com` (Investor)
   - **More accounts**: See [the seed data](backend/config/data/seed_templates/gumroad.json) for additional test users (emails are always hi+firstname@example.com)
@@ -59,12 +60,31 @@ Likely caused by the `bin/setup` script failing silently due to lack of Postgres
 
 Likely caused by rails attempting to connect before Redis had fully started.
 
+### 3. Stripe-related rspec/playwright tests fail
+
+**Issue:** Tests that involve Stripe operations may fail due to invalid or missing customer IDs.
+
+**Resolution:**
+
+1. Generate real customer id, simplest way to do it:
+
+```bash
+stripe customers create \
+  --name "Customer Name" \
+  --email "customer@example.com" \
+  --api-key "sk_test_mock"
+```
+
+2. Update company factories (on frontend and backend) with that customer id
+
 ## Testing
 
 ```shell
 # Run Rails specs
-bundle exec rspec # Run all specs
-bundle exec rspec spec/system/roles/show_spec.rb:7 # Run a single spec
+bundle exec rspec --tag '~skip' --tag '~type:system'
+
+# Run a single spec
+bundle exec rspec spec/system/roles/show_spec.rb:7
 
 # Run Playwright end-to-end tests
 pnpm playwright test
@@ -96,12 +116,12 @@ pnpm playwright test
 4. Set permissions to **Full Access**, name it (e.g., "Flexile Development"), and copy the token immediately
 5. Add to `.env`:
    ```
-   WISE_PROFILE_ID=your_membership_number_here
+   WISE_PROFILE_ID=12345678 # Should be a number
    WISE_API_KEY=your_full_api_token_here
    ```
    </details>
 
-<details> 
+<details>
 <summary>Resend</summary>
 
 1. Create account at [resend.com](https://resend.com) and complete email verification

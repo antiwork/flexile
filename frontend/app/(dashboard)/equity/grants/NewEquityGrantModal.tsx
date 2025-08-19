@@ -24,8 +24,9 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { optionGrantIssueDateRelationships, optionGrantTypes, optionGrantVestingTriggers } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
+import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
-import { company_administrator_equity_grants_url } from "@/utils/routes";
+import { company_administrator_equity_grants_path } from "@/utils/routes";
 
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 
@@ -103,7 +104,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
 
   const estimatedValue =
     data.sharePriceUsd && numberOfShares && !isNaN(Number(data.sharePriceUsd))
-      ? (Number(data.sharePriceUsd) * numberOfShares).toFixed(2)
+      ? formatMoney(Number(data.sharePriceUsd) * numberOfShares)
       : null;
 
   const isFormValid = form.formState.isValid;
@@ -165,6 +166,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
       formData.append("equity_grant[board_approval_date]", values.boardApprovalDate.toString());
       formData.append("equity_grant[vesting_trigger]", values.vestingTrigger);
       formData.append("equity_grant[vesting_commencement_date]", values.vestingCommencementDate.toString());
+      formData.append("equity_grant[contract]", values.contract);
 
       if (values.vestingTrigger === "scheduled") {
         if (!values.vestingScheduleId) return form.setError("vestingScheduleId", { message: "Must be present." });
@@ -193,7 +195,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
       }
 
       const response = await request({
-        url: company_administrator_equity_grants_url(company.id),
+        url: company_administrator_equity_grants_path(company.id),
         method: "POST",
         formData,
         accept: "json",
@@ -234,14 +236,14 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-medium">New equity grant</DialogTitle>
           <DialogDescription>Fill in the details below to create an equity grant.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={(e) => void submit(e)} className="grid gap-6">
+          <form onSubmit={(e) => void submit(e)} className="grid gap-8">
             <div className="grid gap-4">
               <h2 className="text-lg font-medium">Recipient details</h2>
               <FormField
@@ -255,7 +257,11 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                         {...field}
                         options={data.workers
                           .sort((a, b) => a.user.name.localeCompare(b.user.name))
-                          .map((worker) => ({ label: worker.user.name, value: worker.id }))}
+                          .map((worker) => ({
+                            label: `${worker.user.name} (${worker.user.email})`,
+                            value: worker.id,
+                            keywords: [worker.user.name, worker.user.email],
+                          }))}
                         placeholder="Select recipient"
                       />
                     </FormControl>
@@ -326,7 +332,8 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                     <FormMessage />
                     {estimatedValue ? (
                       <FormDescription>
-                        Estimated value: ${estimatedValue}, based on a ${data.sharePriceUsd}
+                        Estimated value of {estimatedValue}, based on a {formatMoney(Number(data.sharePriceUsd))} share
+                        price
                       </FormDescription>
                     ) : null}
                   </FormItem>
@@ -605,20 +612,16 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
 
             <NewDocumentField />
 
-            <div className="grid gap-2">
-              {form.formState.errors.root ? (
+            {form.formState.errors.root ? (
+              <div className="grid gap-2">
                 <div className="text-red text-center text-xs">
                   {form.formState.errors.root.message ?? "An error occurred"}
                 </div>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
 
             <div className="flex justify-end">
-              <MutationStatusButton
-                type="submit"
-                mutation={createEquityGrant}
-                disabled={!isFormValid || createEquityGrant.isPending}
-              >
+              <MutationStatusButton type="submit" mutation={createEquityGrant} disabled={!isFormValid}>
                 Create grant
               </MutationStatusButton>
             </div>

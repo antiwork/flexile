@@ -148,5 +148,89 @@ RSpec.describe DividendReportCsvEmailJob do
         )
       end
     end
+
+    context "with dividends in different statuses" do
+      let(:dividend_round_mixed) do
+        create(
+          :dividend_round,
+          company:,
+          issued_at: Time.current.last_month.beginning_of_month - 1.month + 2.days
+        )
+      end
+      let(:user2) { create(:user) }
+      let(:company_investor2) { create(:company_investor, company:, user: user2) }
+      let(:user3) { create(:user) }
+      let(:company_investor3) { create(:company_investor, company:, user: user3) }
+      let(:user4) { create(:user) }
+      let(:company_investor4) { create(:company_investor, company:, user: user4) }
+      let(:user5) { create(:user) }
+      let(:company_investor5) { create(:company_investor, company:, user: user5) }
+
+      let!(:paid_dividend) do
+        create(
+          :dividend,
+          :paid,
+          dividend_round: dividend_round_mixed,
+          company:,
+          company_investor:,
+          total_amount_in_cents: 100_00,
+          paid_at: Time.current.last_month.beginning_of_month + 3.days
+        )
+      end
+      let!(:issued_dividend) do
+        create(
+          :dividend,
+          dividend_round: dividend_round_mixed,
+          company:,
+          company_investor: company_investor2,
+          status: Dividend::ISSUED,
+          total_amount_in_cents: 200_00
+        )
+      end
+      let!(:pending_dividend) do
+        create(
+          :dividend,
+          :pending,
+          dividend_round: dividend_round_mixed,
+          company:,
+          company_investor: company_investor3,
+          total_amount_in_cents: 150_00
+        )
+      end
+      let!(:retained_dividend) do
+        create(
+          :dividend,
+          :retained,
+          dividend_round: dividend_round_mixed,
+          company:,
+          company_investor: company_investor4,
+          total_amount_in_cents: 75_00
+        )
+      end
+      let!(:processing_dividend) do
+        create(
+          :dividend,
+          :processing,
+          dividend_round: dividend_round_mixed,
+          company:,
+          company_investor: company_investor5,
+          total_amount_in_cents: 125_00
+        )
+      end
+
+      it "includes all dividends regardless of status in the CSV" do
+        target_year = (Time.current.last_month - 1.month).year
+        target_month = (Time.current.last_month - 1.month).month
+
+        expect do
+          described_class.new.perform(recipients, target_year, target_month)
+        end.to have_enqueued_mail(AdminMailer, :custom).with(
+          to: recipients,
+          subject: "Flexile Dividend Report CSV #{target_year}-#{target_month.to_s.rjust(2, '0')}",
+          body: "Attached",
+          attached: hash_including("DividendReport.csv" => DividendReportCsv.new([dividend_round_mixed]).generate)
+        )
+      end
+    end
   end
 end

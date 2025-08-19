@@ -1,35 +1,16 @@
 "use client";
 
-import { HelperClientProvider, useUnreadConversationsCount } from "@helperai/react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { skipToken, useQueryClient } from "@tanstack/react-query";
-import {
-  BookUser,
-  ChartPie,
-  ChevronDown,
-  ChevronRight,
-  CircleDollarSign,
-  Files,
-  LogOut,
-  MessageCircleQuestion,
-  ReceiptIcon,
-  Rss,
-  Settings,
-  Sparkles,
-  Users,
-  X,
-} from "lucide-react";
-import type { Route } from "next";
+import { ChevronDown, ChevronRight, LogOut, MessageCircleQuestion, Settings, Sparkles, X } from "lucide-react";
 import Image from "next/image";
-import Link, { type LinkProps } from "next/link";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import React from "react";
-import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
-import { useIsActionable } from "@/app/(dashboard)/invoices";
-import { useHelperSession } from "@/app/(dashboard)/support/SupportPortal";
 import { GettingStarted } from "@/components/GettingStarted";
-import { Badge } from "@/components/ui/badge";
+import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
+import { NavBadge } from "@/components/navigation/NavBadge";
+import { SupportBadge } from "@/components/Support";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,47 +31,29 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarProvider,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
-import { storageKeys } from "@/models/constants";
-import { trpc, UserDataProvider } from "@/trpc/client";
-import { request } from "@/utils/request";
-import { company_switch_path } from "@/utils/routes";
+import { useSwitchCompany } from "@/lib/companySwitcher";
+import { hasSubItems, type NavLinkInfo, useNavLinks } from "@/lib/useNavLinks";
+import { UserDataProvider } from "@/trpc/client";
+import { cn } from "@/utils";
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const pathname = usePathname();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [showTryEquity, setShowTryEquity] = React.useState(true);
   const [hovered, setHovered] = React.useState(false);
   const canShowTryEquity = user.roles.administrator && !company.equityEnabled;
   const { logout } = useUserStore();
   const isDefaultLogo = !company.logo_url || company.logo_url.includes("default-company-logo");
-
-  const { data: helperSession } = useHelperSession();
-
-  const switchCompany = async (companyId: string) => {
-    useUserStore.setState((state) => ({ ...state, pending: true }));
-    try {
-      await request({
-        method: "POST",
-        url: company_switch_path(companyId),
-        accept: "json",
-      });
-      await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
-      router.refresh();
-    } finally {
-      useUserStore.setState((state) => ({ ...state, pending: false }));
-    }
-  };
+  const { switchCompany } = useSwitchCompany();
 
   return (
     <SidebarProvider>
-      <Sidebar collapsible="offcanvas">
+      <Sidebar collapsible="offcanvas" mobileSidebar={<MobileBottomNav />}>
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -133,7 +96,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                       <DropdownMenuItem
                         key={company.id}
                         onClick={() => {
-                          void switchCompany(company.id);
+                          if (user.currentCompanyId !== company.id) void switchCompany(company.id);
                         }}
                         className="gap-3 p-2 text-sm font-medium"
                       >
@@ -214,19 +177,12 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </SidebarMenuItem>
               ) : null}
               <NavItem
-                href="/support"
-                active={pathname.startsWith("/support")}
+                route="/support"
+                isActive={pathname.startsWith("/support")}
                 icon={MessageCircleQuestion}
-                badge={
-                  helperSession ? (
-                    <HelperClientProvider host="https://help.flexile.com" session={helperSession}>
-                      <SupportUnreadCount />
-                    </HelperClientProvider>
-                  ) : null
-                }
-              >
-                Support center
-              </NavItem>
+                label="Support center"
+                badge={<SupportBadge />}
+              />
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => void signOut({ redirect: false }).then(logout)}
@@ -243,7 +199,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-          <main className="flex flex-1 flex-col not-print:overflow-y-auto">
+          <main className={cn("flex flex-1 flex-col pb-20 not-print:overflow-y-auto sm:pb-4")}>
             <div className="flex flex-col gap-2 md:gap-4">{children}</div>
           </main>
         </div>
@@ -253,118 +209,47 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 }
 
 const NavLinks = () => {
-  const user = useCurrentUser();
-  const company = useCurrentCompany();
   const pathname = usePathname();
-  const routes = new Set(
-    company.routes.flatMap((route) => [route.label, ...(route.subLinks?.map((subLink) => subLink.label) || [])]),
-  );
-  const { data: invoicesData } = trpc.invoices.list.useQuery(
-    user.currentCompanyId && user.roles.administrator
-      ? { companyId: user.currentCompanyId, status: ["received", "approved", "failed"] }
-      : skipToken,
-    { refetchInterval: 30_000 },
-  );
-  const isInvoiceActionable = useIsActionable();
-  const { data: documentsData } = trpc.documents.list.useQuery(
-    user.currentCompanyId && user.id
-      ? {
-          companyId: user.currentCompanyId,
-          userId: user.roles.administrator || user.roles.lawyer ? null : user.id,
-          signable: true,
-        }
-      : skipToken,
-    { refetchInterval: 30_000 },
-  );
-  const updatesPath = company.routes.find((route) => route.label === "Updates")?.name;
-  const equityLinks = equityNavLinks(user, company);
-
-  const [isOpen, setIsOpen] = React.useState(() => localStorage.getItem(storageKeys.EQUITY_MENU_STATE) === "open");
+  const navLinks = useNavLinks();
 
   return (
     <SidebarMenu>
-      {updatesPath ? (
-        <NavItem href="/updates/company" icon={Rss} filledIcon={Rss} active={pathname.startsWith("/updates")}>
-          Updates
-        </NavItem>
-      ) : null}
-      {routes.has("Invoices") && (
-        <NavItem
-          href="/invoices"
-          icon={ReceiptIcon}
-          active={pathname.startsWith("/invoices")}
-          badge={invoicesData?.filter(isInvoiceActionable).length}
-        >
-          Invoices
-        </NavItem>
-      )}
-      {routes.has("Expenses") && (
-        <NavItem
-          href={`/companies/${company.id}/expenses`}
-          icon={CircleDollarSign}
-          active={pathname.startsWith(`/companies/${company.id}/expenses`)}
-        >
-          Expenses
-        </NavItem>
-      )}
-      {routes.has("Documents") && (
-        <NavItem
-          href="/documents"
-          icon={Files}
-          active={pathname.startsWith("/documents") || pathname.startsWith("/document_templates")}
-          badge={documentsData?.length}
-        >
-          Documents
-        </NavItem>
-      )}
-      {routes.has("People") && (
-        <NavItem
-          href="/people"
-          icon={Users}
-          active={pathname.startsWith("/people") || pathname.includes("/investor_entities/")}
-        >
-          People
-        </NavItem>
-      )}
-      {routes.has("Roles") && (
-        <NavItem href="/roles" icon={BookUser} active={pathname.startsWith("/roles")}>
-          Roles
-        </NavItem>
-      )}
-      {routes.has("Equity") && equityLinks.length > 0 && (
-        <Collapsible
-          open={isOpen}
-          onOpenChange={(state) => {
-            setIsOpen(state);
-            localStorage.setItem(storageKeys.EQUITY_MENU_STATE, state ? "open" : "closed");
-          }}
-          className="group/collapsible"
-        >
-          <SidebarMenuItem>
-            <CollapsibleTrigger asChild>
-              <SidebarMenuButton>
-                <ChartPie />
-                <span>Equity</span>
-                <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-              </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarMenuSub>
-                {equityLinks.map((link) => (
-                  <SidebarMenuSubItem key={link.route}>
-                    <SidebarMenuSubButton asChild isActive={pathname === link.route}>
-                      <NavLink href={link.route}>{link.label}</NavLink>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                ))}
-              </SidebarMenuSub>
-            </CollapsibleContent>
-          </SidebarMenuItem>
-        </Collapsible>
-      )}
-      <NavItem href="/settings" active={pathname.startsWith("/settings")} icon={Settings}>
-        Settings
-      </NavItem>
+      {navLinks.map((link) => {
+        if (hasSubItems(link)) {
+          return (
+            <Collapsible
+              key={link.label}
+              open={!!link.isOpen}
+              onOpenChange={(open) => link.onToggle?.(open)}
+              className="group/collapsible"
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton>
+                    {link.icon ? <link.icon /> : null}
+                    <span>{link.label}</span>
+                    <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {link.subItems.map((subLink) => (
+                      <SidebarMenuSubItem key={subLink.route}>
+                        <SidebarMenuSubButton asChild isActive={pathname === subLink.route}>
+                          <Link href={{ pathname: subLink.route }}>{subLink.label}</Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
+          );
+        }
+
+        return link.route ? <NavItem key={link.label} {...link} /> : null;
+      })}
+      <NavItem route="/settings" label="Settings" icon={Settings} isActive={pathname.startsWith("/settings")} />
     </SidebarMenu>
   );
 };
@@ -377,49 +262,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-const NavItem = <T extends string>({
+const NavItem = ({
+  label,
+  className,
+  route,
   icon,
   filledIcon,
-  children,
-  className,
-  href,
-  active,
+  isActive,
   badge,
-}: {
-  children: React.ReactNode;
+}: NavLinkInfo & {
   className?: string;
-  href: Route<T>;
-  active?: boolean;
-  icon: React.ComponentType;
   filledIcon?: React.ComponentType;
-  badge?: number | React.ReactNode;
 }) => {
-  const Icon = active && filledIcon ? filledIcon : icon;
+  const Icon = isActive && filledIcon ? filledIcon : icon;
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={active ?? false} className={className}>
-        <NavLink href={href}>
-          <Icon />
-          <span>{children}</span>
+      <SidebarMenuButton asChild isActive={isActive ?? false} className={className}>
+        <Link href={{ pathname: route }}>
+          {Icon ? <Icon /> : null}
+          <span>{label}</span>
           {typeof badge === "number" ? badge > 0 ? <NavBadge count={badge} /> : null : badge}
-        </NavLink>
+        </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
-};
-
-const NavBadge = ({ count }: { count: number }) => (
-  <Badge role="status" className="ml-auto h-4 w-auto min-w-4 bg-blue-500 px-1 text-xs text-white">
-    {count > 10 ? "10+" : count}
-  </Badge>
-);
-
-const NavLink = <T extends string>(props: LinkProps<T>) => {
-  const sidebar = useSidebar();
-  return <Link onClick={() => sidebar.setOpenMobile(false)} {...props} />;
-};
-
-const SupportUnreadCount = () => {
-  const { data } = useUnreadConversationsCount();
-  return data?.count && data.count > 0 ? <NavBadge count={data.count} /> : null;
 };

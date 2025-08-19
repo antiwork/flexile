@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_18_155953) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -105,6 +105,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.decimal "conversion_share_price_usd"
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
+    t.text "exercise_notice"
     t.string "invite_link"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
     t.index ["invite_link"], name: "index_companies_on_invite_link", unique: true
@@ -130,12 +131,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.datetime "updated_at", null: false
     t.datetime "ended_at"
     t.string "external_id", null: false
+    t.integer "pay_rate_type", default: 0, null: false
     t.boolean "sent_equity_percent_selection_email", default: false, null: false
     t.integer "pay_rate_in_subunits"
     t.string "pay_rate_currency", default: "usd", null: false
     t.string "role"
     t.boolean "contract_signed_elsewhere", default: false, null: false
-    t.integer "pay_rate_type", default: 0, null: false
     t.integer "equity_percentage", default: 0, null: false
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
@@ -293,6 +294,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.string "investor_name"
     t.bigint "company_investor_id"
     t.decimal "qualified_dividend_amount_usd", null: false
+    t.bigint "investment_amount_cents", null: false
     t.index ["company_investor_id"], name: "index_dividend_computation_outputs_on_company_investor_id"
     t.index ["dividend_computation_id"], name: "index_dividend_computation_outputs_on_dividend_computation_id"
   end
@@ -364,6 +366,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.bigint "user_compliance_info_id"
     t.bigint "qualified_amount_cents", null: false
     t.datetime "signed_release_at"
+    t.bigint "investment_amount_cents"
     t.index ["company_id"], name: "index_dividends_on_company_id"
     t.index ["company_investor_id"], name: "index_dividends_on_company_investor_id"
     t.index ["dividend_round_id"], name: "index_dividends_on_dividend_round_id"
@@ -398,11 +401,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.integer "document_type", null: false
     t.integer "year", null: false
     t.datetime "deleted_at"
+    t.datetime "emailed_at"
+    t.jsonb "json_data"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "docuseal_submission_id"
-    t.string "text"
-    t.datetime "signed_at"
+    t.text "text"
     t.index ["company_id"], name: "index_documents_on_company_id"
     t.index ["docuseal_submission_id"], name: "index_documents_on_docuseal_submission_id"
     t.index ["equity_grant_id"], name: "index_documents_on_equity_grant_id"
@@ -873,7 +877,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.boolean "team_member", default: false, null: false
     t.boolean "sent_invalid_tax_id_email", default: false, null: false
     t.string "clerk_id"
-    t.bigint "signup_invite_link_id"
     t.string "otp_secret_key"
     t.integer "otp_failed_attempts_count", default: 0, null: false
     t.datetime "otp_first_failed_at"

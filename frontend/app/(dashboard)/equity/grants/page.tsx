@@ -1,11 +1,14 @@
 "use client";
-import { CircleAlert, CircleCheck, Pencil, Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { CircleAlert, CircleCheck, Info, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import NewEquityGrantModal from "@/app/(dashboard)/equity/grants/NewEquityGrantModal";
+import { useExerciseDataConfig } from "@/app/(dashboard)/equity/options";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
@@ -19,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
@@ -30,6 +33,7 @@ type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 export default function GrantsPage() {
   const isMobile = useIsMobile();
   const router = useRouter();
+  const user = useCurrentUser();
   const company = useCurrentCompany();
   const { data = [], isLoading, refetch } = trpc.equityGrants.list.useQuery({ companyId: company.id });
   const [cancellingGrantId, setCancellingGrantId] = useState<string | null>(null);
@@ -42,6 +46,11 @@ export default function GrantsPage() {
     },
   });
 
+  const exerciseDataConfig = useExerciseDataConfig();
+  const { data: exerciseData } = useQuery({
+    ...exerciseDataConfig,
+    enabled: exerciseDataConfig.enabled || !!user.roles.administrator,
+  });
   const columnHelper = createColumnHelper<EquityGrant>();
   const columns = useMemo(
     () => [
@@ -93,6 +102,18 @@ export default function GrantsPage() {
         }
       />
 
+      {exerciseData && !exerciseData.exercise_notice ? (
+        <Alert className="mx-4">
+          <Info />
+          <AlertDescription>
+            Please{" "}
+            <Link href="/settings/administrator/equity" className={linkClasses}>
+              add an exercise notice
+            </Link>{" "}
+            so investors can exercise their options.
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {isLoading ? (
         <TableSkeleton columns={8} />
       ) : data.length > 0 ? (

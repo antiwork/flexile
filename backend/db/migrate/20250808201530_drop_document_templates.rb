@@ -1,4 +1,4 @@
-class RemoveDocuseal < ActiveRecord::Migration[8.0]
+class DropDocumentTemplates < ActiveRecord::Migration[8.0]
   def change
     drop_table :document_templates do |t|
       t.references :company
@@ -11,10 +11,5 @@ class RemoveDocuseal < ActiveRecord::Migration[8.0]
       t.bigint :docuseal_id, null: false
       t.index :external_id, unique: true
     end
-
-    remove_column :documents, :json_data, :json
-    remove_column :documents, :emailed_at, :datetime
-    add_column :documents, :text, :string
-    add_column :documents, :signed_at, :datetime
   end
 end
