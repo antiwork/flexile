@@ -11,7 +11,6 @@ const QuantityInput = ({
 }: {
   value: Value;
   onChange: (value: Value) => void;
-  suffix?: string;
 } & Omit<React.ComponentProps<"input">, "value" | "onChange">) => {
   const [rawValue, setRawValue] = useState("");
   useEffect(

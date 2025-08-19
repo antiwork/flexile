@@ -908,7 +908,7 @@ const QuickInvoicesSectionContent = () => {
                     <FormItem>
                       <FormLabel>Hours / Qty</FormLabel>
                       <FormControl>
-                        <QuantityInput {...field} suffix="HH:mm" />
+                        <QuantityInput {...field} />
                       </FormControl>
                     </FormItem>
                   )}
