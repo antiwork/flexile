@@ -183,7 +183,7 @@ export function AuthPage({
                           {...field}
                           type="email"
                           placeholder="Enter your work email..."
-                          className="bg-white"
+                          className="h-[42px] bg-white"
                           required
                           disabled={sendOtp.isPending}
                         />
