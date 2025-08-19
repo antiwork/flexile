@@ -354,7 +354,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
             />
             <DialogFooter>
               <MutationButton mutation={submitMutation} disabled={state !== "signed"}>
-                Sign and submit
+                Agree & Submit
               </MutationButton>
             </DialogFooter>
           </>

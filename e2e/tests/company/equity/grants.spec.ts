@@ -7,7 +7,6 @@ import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
-import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq } from "drizzle-orm";
 import { companies, companyInvestors, equityGrants } from "@/db/schema";
@@ -209,15 +208,13 @@ test.describe("Equity Grants", () => {
     ).not.toBeNull();
   });
 
-  test("allows exercising options", async ({ page, next }) => {
+  test("allows exercising options", async ({ page }) => {
     const { company } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       conversionSharePriceUsd: "1",
       jsonData: { flags: ["option_exercising"] },
     });
     const { user } = await usersFactory.create();
-    const { mockForm } = mockDocuseal(next, {});
-    await mockForm(page);
     await companyContractorsFactory.create({ companyId: company.id, userId: user.id });
     const { companyInvestor } = await companyInvestorsFactory.create({ companyId: company.id, userId: user.id });
     await equityGrantsFactory.create({ companyInvestorId: companyInvestor.id, vestedShares: 100 });
@@ -225,6 +222,11 @@ test.describe("Equity Grants", () => {
     await login(page, user);
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Options" }).click();
+    await expect(page.getByRole("heading", { name: "Options" })).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("button", { name: "Exercise Options" })).not.toBeVisible();
+    await db.update(companies).set({ exerciseNotice: "I am exercising" }).where(eq(companies.id, company.id));
+    await page.reload();
     await expect(page.getByText("You have 100 vested options available for exercise.")).toBeVisible();
     await page.getByRole("button", { name: "Exercise Options" }).click();
     await withinModal(
@@ -236,8 +238,9 @@ test.describe("Equity Grants", () => {
         await expect(modal.getByText("Options valueBased on 2M valuation$1,0001,900%")).toBeVisible();
 
         await modal.getByRole("button", { name: "Proceed" }).click();
-        await expect(modal.getByRole("heading", { name: "Notice of Exercise" })).toBeVisible();
-        await modal.getByRole("button", { name: "Sign and submit" }).click();
+        await expect(modal.getByText("I am exercising")).toBeVisible();
+        await modal.getByRole("button", { name: "Add your signature" }).click();
+        await modal.getByRole("button", { name: "Agree & Submit" }).click();
       },
       { page },
     );
@@ -275,7 +278,7 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("Estimated value:")).not.toBeVisible();
   });
 
-  test("displays recipients with email addresses and enables email search", async ({ page, next }) => {
+  test("displays recipients with email addresses and enables email search", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       fmvPerShareInUsd: "1",
@@ -293,10 +296,6 @@ test.describe("Equity Grants", () => {
       legalName: "Jane Smith",
       preferredName: "Jane Smith",
     });
-
-    const submitters = { "Company Representative": adminUser, Signer: cooleyContractor };
-    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
-    await mockForm(page);
 
     await companyContractorsFactory.create({
       companyId: company.id,
