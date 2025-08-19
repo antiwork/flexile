@@ -1,11 +1,9 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { redirect, RedirectType } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
 import type { ReactNode } from "react";
+import { authOptions } from "@/lib/auth";
 import logo from "@/public/flexile-logo.svg";
 import { cn } from "@/utils";
 import iconClock from "./icon-clock.svg";
@@ -21,41 +19,36 @@ const Section = ({ children, className }: { children: ReactNode; className?: str
   </section>
 );
 
-export default function HomePage() {
-  const { status } = useSession();
-  useEffect(() => {
-    if (status === "authenticated") throw redirect("/dashboard", RedirectType.replace);
-  }, [status]);
+export default async function HomePage() {
+  const session = await getServerSession(authOptions);
+
+  if (session) {
+    redirect("/dashboard");
+  }
 
   return (
     <>
       <nav className="fixed top-0 right-0 left-0 z-50 m-0 box-border flex h-20 w-full items-center justify-between bg-black p-0 text-white">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4">
-          <Image src={logo} alt="Flexile" className="flex h-8 w-auto shrink-0 border-none invert md:block md:h-10" />
+          <Image
+            src={logo}
+            alt="Flexile"
+            className="flex h-8 w-auto shrink-0 border-none invert md:block md:h-10"
+            priority
+          />
           <div className="flex gap-2">
-            {status === "authenticated" ? (
-              <Link
-                href="/dashboard"
-                className={`${buttonClasses} h-10 bg-white px-8 text-sm text-black hover:bg-blue-600 hover:text-white md:h-12 md:text-base`}
-              >
-                Go to dashboard
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className={`${buttonClasses} h-10 px-8 text-sm text-white hover:bg-white hover:text-black md:h-12 md:text-base`}
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/signup/"
-                  className={`${buttonClasses} h-10 bg-white px-8 text-sm text-black hover:bg-blue-600 hover:text-white md:h-12 md:text-base`}
-                >
-                  Signup
-                </Link>
-              </>
-            )}
+            <Link
+              href="/login"
+              className={`${buttonClasses} h-10 px-8 text-sm text-white hover:bg-white hover:text-black md:h-12 md:text-base`}
+            >
+              Login
+            </Link>
+            <Link
+              href="/signup/"
+              className={`${buttonClasses} h-10 bg-white px-8 text-sm text-black hover:bg-blue-600 hover:text-white md:h-12 md:text-base`}
+            >
+              Signup
+            </Link>
           </div>
         </div>
       </nav>
@@ -78,7 +71,7 @@ export default function HomePage() {
         <Section className="py-8 md:py-16">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-16">
             <div className="flex items-center gap-8">
-              <Image src={iconClock} alt="Invoice Management" className="w-12 shrink-0" />
+              <Image src={iconClock} alt="Invoice Management" className="w-12 shrink-0" loading="eager" />
               <div>
                 <h3 className="text-xl font-medium">Invoice Management</h3>
                 <div className="text-xl text-gray-600">
@@ -87,7 +80,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-8">
-              <Image src={iconGlobe} alt="Pay Contractors" className="w-12 shrink-0" />
+              <Image src={iconGlobe} alt="Pay Contractors" className="w-12 shrink-0" loading="eager" />
               <div>
                 <h3 className="text-xl font-medium">Pay Contractors</h3>
                 <div className="text-xl text-gray-600">
@@ -96,7 +89,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-8">
-              <Image src={iconEye} alt="Equity Option" className="w-12 shrink-0" />
+              <Image src={iconEye} alt="Equity Option" className="w-12 shrink-0" loading="eager" />
               <div>
                 <h3 className="text-xl font-medium">Equity Option</h3>
                 <div className="text-xl text-gray-600">
@@ -105,7 +98,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-8">
-              <Image src={iconDiamond} alt="Contract Management" className="w-12 shrink-0" />
+              <Image src={iconDiamond} alt="Contract Management" className="w-12 shrink-0" loading="eager" />
               <div>
                 <h3 className="text-xl font-medium">Contract Management</h3>
                 <div className="text-xl text-gray-600">

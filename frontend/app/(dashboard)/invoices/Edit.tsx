@@ -66,7 +66,7 @@ const dataSchema = z.object({
     id: z.string(),
     name: z.string(),
     address: addressSchema,
-    expenses: z.object({ enabled: z.boolean(), categories: z.array(z.object({ id: z.number(), name: z.string() })) }),
+    expense_categories: z.array(z.object({ id: z.number(), name: z.string() })),
   }),
   invoice: z.object({
     id: z.string().optional(),
@@ -245,7 +245,6 @@ const Edit = () => {
     const oversizedFiles: string[] = [];
     const validFiles: File[] = [];
 
-    // Check each file for size constraints
     Array.from(files).forEach((file) => {
       if (file.size > MAX_FILE_SIZE) {
         oversizedFiles.push(file.name);
@@ -266,14 +265,13 @@ const Edit = () => {
       }
       setAlertOpen(true);
 
-      // If all files are invalid, reset the file input
       if (validFiles.length === 0) {
         e.target.value = "";
         return;
       }
     }
 
-    const expenseCategory = assertDefined(data.company.expenses.categories[0]);
+    const expenseCategory = assertDefined(data.company.expense_categories[0]);
     setShowExpenses(true);
 
     // Add each valid file as a separate expense
@@ -496,7 +494,7 @@ const Edit = () => {
                       <Plus className="inline size-4" />
                       Add line item
                     </Button>
-                    {data.company.expenses.categories.length && !showExpensesTable ? (
+                    {data.company.expense_categories.length && !showExpensesTable ? (
                       <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
                         <Upload className="inline size-4" />
                         Add expense
@@ -511,7 +509,7 @@ const Edit = () => {
               </TableRow>
             </TableFooter>
           </Table>
-          {data.company.expenses.categories.length ? (
+          {data.company.expense_categories.length ? (
             <input
               ref={uploadExpenseRef}
               type="file"
@@ -559,7 +557,7 @@ const Edit = () => {
                     <TableCell>
                       <ComboBox
                         value={expense.category_id.toString()}
-                        options={data.company.expenses.categories.map((category) => ({
+                        options={data.company.expense_categories.map((category) => ({
                           value: category.id.toString(),
                           label: category.name,
                         }))}

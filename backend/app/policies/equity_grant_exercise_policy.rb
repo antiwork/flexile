@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 class EquityGrantExercisePolicy < ApplicationPolicy
+  def new?
+    return false unless company.json_flag?("option_exercising")
+
+    (company_investor.present? && company_worker.present?) || company_administrator?
+  end
+
   def create?
     return false unless company.json_flag?("option_exercising")
 
