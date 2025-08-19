@@ -162,6 +162,10 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
   const previousForms = useRef<Form[] | null>(null);
   const uid = useId();
 
+  useEffect(() => {
+    setSelectedFormIndex(0);
+  }, [currency]);
+
   const nestedDetails = () => {
     const result = {};
     const values =

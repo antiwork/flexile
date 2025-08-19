@@ -6,7 +6,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleDollarSign, Download, Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { z } from "zod";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -26,53 +26,6 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_administrator_settings_bank_accounts_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
-
-const columnHelper = createColumnHelper<RouterOutput["consolidatedInvoices"]["list"][number]>();
-const columns = [
-  columnHelper.simple("invoiceDate", "Date", formatDate),
-  columnHelper.simple("totalContractors", "Contractors", (v) => v.toLocaleString(), "numeric"),
-  columnHelper.simple("totalCents", "Invoice total", (v) => formatMoneyFromCents(v), "numeric"),
-  columnHelper.simple("status", "Status", (status) => {
-    switch (status.toLowerCase()) {
-      case "sent":
-        return <Status variant="primary">Sent</Status>;
-      case "processing":
-        return <Status variant="primary">Payment in progress</Status>;
-      case "paid":
-        return (
-          <Status variant="success" icon={<CircleDollarSign />}>
-            Paid
-          </Status>
-        );
-      case "refunded":
-        return (
-          <Status variant="success" icon={<RefreshCw />}>
-            Refunded
-          </Status>
-        );
-      case "failed":
-        return (
-          <Status variant="critical" icon={<RefreshCw />}>
-            Failed
-          </Status>
-        );
-    }
-  }),
-  columnHelper.accessor("attachment", {
-    id: "actions",
-    header: "",
-    cell: (info) => {
-      const attachment = info.getValue();
-      return attachment ? (
-        <Button asChild variant="outline" size="small">
-          <Link href={`/download/${attachment.key}/${attachment.filename}`} download>
-            <Download className="size-4" /> Download
-          </Link>
-        </Button>
-      ) : null;
-    },
-  }),
-];
 
 const stripeAppearance = {
   variables: {
@@ -185,13 +138,70 @@ export default function Billing() {
       {isLoading ? (
         <TableSkeleton columns={5} />
       ) : data && data.length > 0 ? (
-        <DataTable table={useTable({ columns, data })} />
+        <BillingHistoryTable data={data} />
       ) : (
         <Placeholder icon={CircleDollarSign}>Invoices will appear here.</Placeholder>
       )}
     </div>
   );
 }
+
+type ConsolidatedInvoicesList = RouterOutput["consolidatedInvoices"]["list"];
+
+const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
+  const columnHelper = createColumnHelper<ConsolidatedInvoicesList[number]>();
+  const columns = useMemo(
+    () => [
+      columnHelper.simple("invoiceDate", "Date", formatDate),
+      columnHelper.simple("totalContractors", "Contractors", (v) => v.toLocaleString(), "numeric"),
+      columnHelper.simple("totalCents", "Invoice total", (v) => formatMoneyFromCents(v), "numeric"),
+      columnHelper.simple("status", "Status", (status) => {
+        switch (status.toLowerCase()) {
+          case "sent":
+            return <Status variant="primary">Sent</Status>;
+          case "processing":
+            return <Status variant="primary">Payment in progress</Status>;
+          case "paid":
+            return (
+              <Status variant="success" icon={<CircleDollarSign />}>
+                Paid
+              </Status>
+            );
+          case "refunded":
+            return (
+              <Status variant="success" icon={<RefreshCw />}>
+                Refunded
+              </Status>
+            );
+          case "failed":
+            return (
+              <Status variant="critical" icon={<RefreshCw />}>
+                Failed
+              </Status>
+            );
+        }
+      }),
+      columnHelper.accessor("attachment", {
+        id: "actions",
+        header: "",
+        cell: (info) => {
+          const attachment = info.getValue();
+          return attachment ? (
+            <Button asChild variant="outline" size="small">
+              <Link href={`/download/${attachment.key}/${attachment.filename}`} download>
+                <Download className="size-4" /> Download
+              </Link>
+            </Button>
+          ) : null;
+        },
+      }),
+    ],
+    [],
+  );
+  const table = useTable({ columns, data });
+
+  return <DataTable table={table} />;
+};
 
 const AddBankAccount = (props: React.ComponentProps<typeof Dialog>) => {
   const user = useCurrentUser();

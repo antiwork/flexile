@@ -39,7 +39,7 @@ test.describe("Equity Grants", () => {
 
     await page.getByRole("button", { name: "New option grant" }).click();
     await expect(page.getByLabel("Number of options")).toHaveValue("10000");
-    await selectComboboxOption(page, "Recipient", contractorUser.preferredName ?? "");
+    await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
 
     await page.getByLabel("Number of options").fill("1000");
     await expect(page.getByText("Estimated value: $2500.00, based on a $2.5")).toBeVisible();
@@ -92,7 +92,7 @@ test.describe("Equity Grants", () => {
     await page.getByRole("button", { name: "New option grant" }).click();
 
     // Fill in recipient (required)
-    await selectComboboxOption(page, "Recipient", projectBasedUser.preferredName ?? "");
+    await selectComboboxOption(page, "Recipient", `${projectBasedUser.preferredName} (${projectBasedUser.email})`);
 
     // Fill in number of options (required)
     await page.getByLabel("Number of options").fill("20");
@@ -275,5 +275,71 @@ test.describe("Equity Grants", () => {
     // Test that estimated value is not shown when FMV share price is missing
     await page.getByLabel("Number of options").fill("1000");
     await expect(page.getByText("Estimated value:")).not.toBeVisible();
+  });
+
+  test("displays recipients with email addresses and enables email search", async ({ page, next }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fmvPerShareInUsd: "1",
+      conversionSharePriceUsd: "1.00",
+      sharePriceInUsd: "1.00",
+    });
+
+    const { user: cooleyContractor } = await usersFactory.create({
+      email: "john.doe@cooley.com",
+      legalName: "John Doe",
+      preferredName: "John Doe",
+    });
+    const { user: regularContractor } = await usersFactory.create({
+      email: "jane.smith@company.com",
+      legalName: "Jane Smith",
+      preferredName: "Jane Smith",
+    });
+
+    const submitters = { "Company Representative": adminUser, Signer: cooleyContractor };
+    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
+    await mockForm(page);
+
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: cooleyContractor.id,
+    });
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: regularContractor.id,
+    });
+
+    await optionPoolsFactory.create({ companyId: company.id });
+    await documentTemplatesFactory.create({
+      companyId: company.id,
+      type: DocumentTemplateType.EquityPlanContract,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
+    await page.getByRole("button", { name: "New option grant" }).click();
+
+    await page.getByRole("combobox", { name: "Recipient" }).click();
+    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
+
+    await page.getByPlaceholder("Search...").fill("cooley");
+    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).not.toBeVisible();
+
+    await page.getByPlaceholder("Search...").clear();
+    await page.getByPlaceholder("Search...").fill("Jane");
+    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).not.toBeVisible();
+
+    await page.getByPlaceholder("Search...").clear();
+    await page.getByPlaceholder("Search...").fill("company.com");
+    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).not.toBeVisible();
+
+    await page.getByPlaceholder("Search...").clear();
+    await page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" }).click();
+    await expect(page.getByRole("combobox", { name: "Recipient" })).toHaveText("John Doe (john.doe@cooley.com)");
   });
 });

@@ -328,6 +328,7 @@ export const dividendComputationOutputs = pgTable(
     investorName: varchar("investor_name"),
     companyInvestorId: bigint("company_investor_id", { mode: "bigint" }),
     qualifiedDividendAmountUsd: numeric("qualified_dividend_amount_usd").notNull(),
+    investmentAmountCents: bigint("investment_amount_cents", { mode: "bigint" }).notNull(),
   },
   (table) => [
     index("index_dividend_computation_outputs_on_company_investor_id").using(
@@ -446,6 +447,7 @@ export const dividends = pgTable(
     userComplianceInfoId: bigint("user_compliance_info_id", { mode: "bigint" }),
     qualifiedAmountCents: bigint("qualified_amount_cents", { mode: "bigint" }).notNull(),
     signedReleaseAt: timestamp("signed_release_at", { precision: 6, mode: "date" }),
+    investmentAmountCents: bigint("investment_amount_cents", { mode: "bigint" }),
   },
   (table) => [
     index("index_dividends_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
