@@ -59,7 +59,7 @@ const dataSchema = z.object({
     id: z.string(),
     name: z.string(),
     address: addressSchema,
-    expenses: z.object({ enabled: z.boolean(), categories: z.array(z.object({ id: z.number(), name: z.string() })) }),
+    expense_categories: z.array(z.object({ id: z.number(), name: z.string() })),
   }),
   invoice: z.object({
     id: z.string().optional(),
@@ -222,7 +222,7 @@ const Edit = () => {
   const createNewExpenseEntries = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    const expenseCategory = assertDefined(data.company.expenses.categories[0]);
+    const expenseCategory = assertDefined(data.company.expense_categories[0]);
     setShowExpenses(true);
     setExpenses((expenses) =>
       expenses.push(
@@ -430,7 +430,7 @@ const Edit = () => {
                         <PlusIcon className="inline size-4" />
                         Add line item
                       </Button>
-                      {data.company.expenses.categories.length && !showExpensesTable ? (
+                      {data.company.expense_categories.length && !showExpensesTable ? (
                         <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
                           <ArrowUpTrayIcon className="inline size-4" />
                           Add expense
@@ -441,21 +441,17 @@ const Edit = () => {
                 </TableRow>
               </TableFooter>
             </Table>
-            {data.company.expenses.categories.length ? (
-              <>
-                <input
-                  ref={uploadExpenseRef}
-                  type="file"
-                  className="hidden"
-                  accept="application/pdf, image/*"
-                  multiple
-                  onChange={createNewExpenseEntries}
-                />
-                <input ref={fileInputRef} type="file" className="hidden" accept=".pdf" onChange={handleFileUpload} />
-              </>
-            ) : (
-              <input ref={fileInputRef} type="file" className="hidden" accept=".pdf" onChange={handleFileUpload} />
-            )}
+            {data.company.expense_categories.length ? (
+              <input
+                ref={uploadExpenseRef}
+                type="file"
+                className="hidden"
+                accept="application/pdf, image/*"
+                multiple
+                onChange={createNewExpenseEntries}
+              />
+            ) : null}
+            <input ref={fileInputRef} type="file" className="hidden" accept=".pdf" onChange={handleFileUpload} />
             {showExpensesTable ? (
               <Table>
                 <TableHeader>
@@ -487,7 +483,7 @@ const Edit = () => {
                       <TableCell>
                         <ComboBox
                           value={expense.category_id.toString()}
-                          options={data.company.expenses.categories.map((category) => ({
+                          options={data.company.expense_categories.map((category) => ({
                             value: category.id.toString(),
                             label: category.name,
                           }))}
