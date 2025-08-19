@@ -33,7 +33,7 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
     non_payable
   end
 
-  it "approves all invoices, pays failed invoices, and generates a consolidated invoice for chargeable invoices" do
+  it "approves all invoices, pays failed invoices, and generates consolidated invoices grouped by day for chargeable invoices" do
     # approves all invoices
     invoices.each do |invoice|
       expect(ApproveInvoice).to receive(:new).with(invoice:, approver: user).and_call_original
@@ -47,10 +47,13 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
     # creates a consolidated invoice for the chargeable invoices
     expect(ConsolidatedInvoiceCreation).to receive(:new).with(company_id: company.id, invoice_ids: payable_and_chargeable.map(&:id)).and_call_original
 
-    consolidated_invoice = described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id)).perform
+    created = described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id)).perform
 
-    # charges for the consolidated invoice
-    expect(ChargeConsolidatedInvoiceJob).to have_enqueued_sidekiq_job(consolidated_invoice.id)
+    # charges for each consolidated invoice created
+    expect(created).to all(be_a(ConsolidatedInvoice))
+    created_ids = created.map(&:id)
+    enqueued_ids = ChargeConsolidatedInvoiceJob.jobs.map { |j| j["args"].first }
+    expect(enqueued_ids).to match_array(created_ids)
   end
 
   describe "paying failed invoices" do

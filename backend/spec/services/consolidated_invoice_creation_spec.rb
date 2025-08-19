@@ -56,23 +56,32 @@ RSpec.describe ConsolidatedInvoiceCreation do
       let(:total_invoiced_cents) { chargeable_invoices.sum(&:cash_amount_in_cents) }
       let(:flexile_fee_cents) { chargeable_invoices.sum(&:flexile_fee_cents) }
 
-      it "creates a consolidated invoice for all approved, paid, or pending payment invoices that are not yet associated with a consolidated invoice" do
+      it "creates one consolidated invoice per day for all approved, paid, or pending payment invoices that are not yet associated with a consolidated invoice" do
+        unique_dates = chargeable_invoices.map(&:invoice_date).uniq
+        created = nil
         expect do
-          expect(described_class.new(company_id: company.id).process).to be_kind_of(ConsolidatedInvoice)
-        end.to change(ConsolidatedInvoice, :count).by(1)
+          created = described_class.new(company_id: company.id).process
+          expect(created).to all(be_a(ConsolidatedInvoice))
+        end.to change(ConsolidatedInvoice, :count).by(unique_dates.size)
           .and change(ConsolidatedInvoicesInvoice, :count).by(chargeable_invoices.size)
 
-        consolidated_invoice = ConsolidatedInvoice.last
-        expect(consolidated_invoice.status).to eq ConsolidatedInvoice::SENT
-        expect(consolidated_invoice.invoice_amount_cents).to eq(total_invoiced_cents)
-        expect(consolidated_invoice.transfer_fee_cents).to eq(0)
-        expect(consolidated_invoice.flexile_fee_cents).to eq(flexile_fee_cents)
-        expect(consolidated_invoice.total_cents).to eq(total_invoiced_cents + flexile_fee_cents)
-        expect(consolidated_invoice.period_start_date).to eq(Date.parse("2019-11-11"))
-        expect(consolidated_invoice.period_end_date).to eq(Date.parse("2023-12-12"))
-        expect(consolidated_invoice.company_id).to eq(company.id)
-        expect(consolidated_invoice.invoice_date).to eq(Date.current)
-        expect(consolidated_invoice.invoices).to match_array(chargeable_invoices)
+        # Totals across all created consolidated invoices must match totals across chargeable invoices
+        expect(created.sum(&:invoice_amount_cents)).to eq(total_invoiced_cents)
+        expect(created.sum(&:transfer_fee_cents)).to eq(0)
+        expect(created.sum(&:flexile_fee_cents)).to eq(flexile_fee_cents)
+        expect(created.sum(&:total_cents)).to eq(total_invoiced_cents + flexile_fee_cents)
+
+        created.each do |ci|
+          expect(ci.status).to eq ConsolidatedInvoice::SENT
+          expect(ci.company_id).to eq(company.id)
+          expect(ci.invoice_date).to eq(Date.current)
+          expect(ci.period_start_date).to eq(ci.period_end_date)
+          expect(ci.invoices.map(&:invoice_date).uniq).to eq([ci.period_start_date])
+        end
+
+        # All the chargeable invoices must be associated (across the group)
+        expect(created.flat_map(&:invoices)).to match_array(chargeable_invoices)
+
         # Updates status on approved or failed invoices but not paid or pending payment invoices
         (fully_approved_invoices + fully_approved_failed_invoices).each do |invoice|
           expect(invoice.reload.status).to eq(Invoice::PAYMENT_PENDING)
@@ -96,23 +105,24 @@ RSpec.describe ConsolidatedInvoiceCreation do
       let(:total_invoiced_cents) { fully_approved_invoices.sum(&:cash_amount_in_cents) }
       let(:flexile_fee_cents) { fully_approved_invoices.sum(&:flexile_fee_cents) }
 
-      it "creates a consolidated invoice for the provided invoices that are not yet associated with a consolidated invoice" do
+      it "creates one consolidated invoice per day for provided invoices that are not yet associated with a consolidated invoice" do
+        unique_dates = fully_approved_invoices.map(&:invoice_date).uniq
+        created = nil
         expect do
-          expect(described_class.new(company_id: company.id, invoice_ids: (fully_approved_invoices + already_charged).map(&:id)).process).to be_kind_of(ConsolidatedInvoice)
-        end.to change(ConsolidatedInvoice, :count).by(1)
+          created = described_class.new(company_id: company.id, invoice_ids: (fully_approved_invoices + already_charged).map(&:id)).process
+          expect(created).to all(be_a(ConsolidatedInvoice))
+        end.to change(ConsolidatedInvoice, :count).by(unique_dates.size)
           .and change(ConsolidatedInvoicesInvoice, :count).by(fully_approved_invoices.size)
 
-        consolidated_invoice = ConsolidatedInvoice.last
-        expect(consolidated_invoice.status).to eq ConsolidatedInvoice::SENT
-        expect(consolidated_invoice.invoice_amount_cents).to eq(total_invoiced_cents)
-        expect(consolidated_invoice.transfer_fee_cents).to eq(0)
-        expect(consolidated_invoice.flexile_fee_cents).to eq(flexile_fee_cents)
-        expect(consolidated_invoice.total_cents).to eq(total_invoiced_cents + flexile_fee_cents)
-        expect(consolidated_invoice.period_start_date).to eq(Date.parse("2019-11-11"))
-        expect(consolidated_invoice.period_end_date).to eq(Date.parse("2020-10-10"))
-        expect(consolidated_invoice.company_id).to eq(company.id)
-        expect(consolidated_invoice.invoice_date).to eq(Date.current)
-        expect(consolidated_invoice.invoices).to match_array(fully_approved_invoices)
+        expect(created.sum(&:invoice_amount_cents)).to eq(total_invoiced_cents)
+        expect(created.sum(&:transfer_fee_cents)).to eq(0)
+        expect(created.sum(&:flexile_fee_cents)).to eq(flexile_fee_cents)
+        expect(created.sum(&:total_cents)).to eq(total_invoiced_cents + flexile_fee_cents)
+        expect(created.map(&:company_id).uniq).to eq([company.id])
+        expect(created.map(&:invoice_date).uniq).to eq([Date.current])
+        expect(created.map(&:period_start_date).uniq.sort).to eq(unique_dates.sort)
+        expect(created.map(&:period_end_date).uniq.sort).to eq(unique_dates.sort)
+        expect(created.flat_map(&:invoices)).to match_array(fully_approved_invoices)
         # Updates status on provided, eligible invoices
         fully_approved_invoices.each do |invoice|
           expect(invoice.reload.status).to eq(Invoice::PAYMENT_PENDING)
