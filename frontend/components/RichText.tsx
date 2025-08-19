@@ -1,3 +1,4 @@
+import type { Content } from "@tiptap/core";
 import { EditorContent, isList, useEditor } from "@tiptap/react";
 import { Bold, Heading, Italic, Link, List, Underline } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 import { richTextExtensions } from "@/utils/richText";
 
-const RichText = ({ content, className }: { content: string; className?: string }) => {
+const RichText = ({ content, className }: { content: Content; className?: string }) => {
   const editor = useEditor({
     extensions: richTextExtensions,
     content,
@@ -41,7 +42,6 @@ export const Editor = ({
   value: string | null | undefined;
   onChange: (value: string | null) => void;
   className?: string;
-  id?: string;
 } & React.ComponentProps<"div">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
 
