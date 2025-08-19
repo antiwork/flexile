@@ -664,43 +664,46 @@ class SeedDataGeneratorFromTemplate
         date = date + rand(1..3).days
         Timecop.travel(date) do
           print_message("Creating consolidated invoice for #{date}")
-          consolidated_invoice = ApproveAndPayOrChargeForInvoices.new(
+          consolidated_invoices = ApproveAndPayOrChargeForInvoices.new(
             user: company.primary_admin.user,
             company:,
             invoice_ids: invoices.map(&:external_id),
           ).perform
-          return unless consolidated_invoice.present?
-          perform_with_retries do
-            consolidated_invoice.consolidated_payments.each do |consolidated_payment|
-              ProcessPaymentIntentForConsolidatedPaymentJob.perform_inline(consolidated_payment.id)
-              # Override trigger_payout_after that is set via a Stripe charge to a future timestamp, so that we can
-              # simulate the payout being sent immediately
-              if consolidated_payment.reload.trigger_payout_after.present?
-                consolidated_payment.update!(trigger_payout_after: Time.current)
+          created = Array(consolidated_invoices)
+          next if created.blank?
+          created.each do |consolidated_invoice|
+            perform_with_retries do
+              consolidated_invoice.consolidated_payments.each do |consolidated_payment|
+                ProcessPaymentIntentForConsolidatedPaymentJob.perform_inline(consolidated_payment.id)
+                # Override trigger_payout_after that is set via a Stripe charge to a future timestamp, so that we can
+                # simulate the payout being sent immediately
+                if consolidated_payment.reload.trigger_payout_after.present?
+                  consolidated_payment.update!(trigger_payout_after: Time.current)
+                end
               end
             end
-          end
-          consolidated_invoice.reload.invoices.alive.each do |invoice|
-            invoice.payments.each do |payment|
-              # Simulates WiseTransferUpdateJob
-              transfer_id = payment.wise_transfer_id
-              next unless transfer_id.present?
-              api_service = Wise::PayoutApi.new(wise_credential: payment.wise_credential)
-              api_service.get_transfer(transfer_id:)
-              api_service.simulate_transfer_funds_converted(transfer_id:)
-              api_service.simulate_transfer_outgoing_payment_sent(transfer_id:)
-              amount = api_service.get_transfer(transfer_id:)["targetValue"]
-              estimate = Time.zone.parse(api_service.delivery_estimate(transfer_id:)["estimatedDeliveryDate"])
-              payment.update!(status: Payment::SUCCEEDED, wise_transfer_amount: amount, wise_transfer_estimate: estimate)
-              invoice.mark_as_paid!(timestamp: (date.end_of_month + rand(1..5).days), payment_id: payment.id)
+            consolidated_invoice.reload.invoices.alive.each do |invoice|
+              invoice.payments.each do |payment|
+                # Simulates WiseTransferUpdateJob
+                transfer_id = payment.wise_transfer_id
+                next unless transfer_id.present?
+                api_service = Wise::PayoutApi.new(wise_credential: payment.wise_credential)
+                api_service.get_transfer(transfer_id:)
+                api_service.simulate_transfer_funds_converted(transfer_id:)
+                api_service.simulate_transfer_outgoing_payment_sent(transfer_id:)
+                amount = api_service.get_transfer(transfer_id:)["targetValue"]
+                estimate = Time.zone.parse(api_service.delivery_estimate(transfer_id:)["estimatedDeliveryDate"])
+                payment.update!(status: Payment::SUCCEEDED, wise_transfer_amount: amount, wise_transfer_estimate: estimate)
+                invoice.mark_as_paid!(timestamp: (date.end_of_month + rand(1..5).days), payment_id: payment.id)
+              end
             end
-          end
-          consolidated_invoice.reload.consolidated_payments.each do |consolidated_payment|
-            next unless consolidated_payment.status == ConsolidatedPayment::SUCCEEDED
+            consolidated_invoice.reload.consolidated_payments.each do |consolidated_payment|
+              next unless consolidated_payment.status == ConsolidatedPayment::SUCCEEDED
 
-            CreatePayoutForConsolidatedPayment.new(consolidated_payment).perform!
-            perform_with_retries do
-              ProcessPayoutForConsolidatedPaymentJob.perform_inline(consolidated_payment.id)
+              CreatePayoutForConsolidatedPayment.new(consolidated_payment).perform!
+              perform_with_retries do
+                ProcessPayoutForConsolidatedPaymentJob.perform_inline(consolidated_payment.id)
+              end
             end
           end
         end
