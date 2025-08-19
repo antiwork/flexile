@@ -11,7 +11,7 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import RichText from "@/components/RichText";
+import SignForm from "@/components/SignForm";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
@@ -203,31 +203,13 @@ export default function Dividends() {
                     conditions for the return of capital.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="border-muted my-2 max-h-100 overflow-y-auto rounded-md border px-8 py-4">
-                  <RichText
-                    content={dividendData.release_document
-                      .replaceAll("{{investor}}", user.legalName)
-                      .replaceAll("{{amount}}", formatMoneyFromCents(dividendData.total_amount_in_cents))}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <h3>Your signature</h3>
-                  {signingDividend.state === "signing" ? (
-                    <Button
-                      className="border-muted w-full hover:border-current"
-                      variant="dashed"
-                      onClick={() => setSigningDividend({ ...signingDividend, state: "signed" })}
-                    >
-                      Add your signature
-                    </Button>
-                  ) : (
-                    <div className="font-signature border-b text-xl">{user.legalName}</div>
-                  )}
-                  <div className="text-muted-foreground text-xs">
-                    By clicking the button above, you agree to using an electronic representation of your signature for
-                    all purposes within Flexile, just the same as a pen-and-paper signature.
-                  </div>
-                </div>
+                <SignForm
+                  content={dividendData.release_document
+                    .replaceAll("{{investor}}", user.legalName)
+                    .replaceAll("{{amount}}", formatMoneyFromCents(dividendData.total_amount_in_cents))}
+                  signed={signingDividend.state === "signed"}
+                  onSign={() => setSigningDividend({ ...signingDividend, state: "signed" })}
+                />
                 <DialogFooter>
                   <MutationButton
                     mutation={signDividend}
