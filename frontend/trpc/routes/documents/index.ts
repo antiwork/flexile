@@ -9,6 +9,7 @@ import env from "@/env";
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
+import { templatesRouter } from "./templates";
 
 docuseal.configure({ key: env.DOCUSEAL_TOKEN });
 
@@ -101,6 +102,7 @@ export const documentsRouter = createRouter({
     const submission = await docuseal.getSubmission(document.docusealSubmissionId);
     return assertDefined(submission.documents[0]).url;
   }),
+  // TODO set up a DocuSeal webhook instead
   sign: companyProcedure.input(z.object({ id: z.bigint(), role: z.string() })).mutation(async ({ ctx, input }) => {
     if (input.role === "Company Representative" && !ctx.companyAdministrator && !ctx.companyLawyer)
       throw new TRPCError({ code: "FORBIDDEN" });
@@ -136,4 +138,6 @@ export const documentsRouter = createRouter({
 
     return { documentId: input.id, complete: allSigned };
   }),
+
+  templates: templatesRouter,
 });

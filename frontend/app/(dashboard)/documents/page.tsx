@@ -1,36 +1,34 @@
 "use client";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { BriefcaseBusiness, CircleCheck, Download, Info, SendHorizontal } from "lucide-react";
+import { CircleCheck, Download, Info } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
+import DocusealForm, { customCss } from "@/app/(dashboard)/documents/DocusealForm";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
-import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import RichText from "@/components/RichText";
+import SignForm from "@/components/SignForm";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 
 type Document = RouterOutput["documents"]["list"][number];
-type SignableDocument = Document & { text: string };
 
 const typeLabels = {
   [DocumentType.ConsultingContract]: "Agreement",
@@ -75,10 +73,6 @@ function getStatus(document: Document): { variant: StatusVariant | undefined; na
   }
 }
 
-const inviteLawyerSchema = z.object({
-  email: z.string().email(),
-});
-
 export default function DocumentsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
@@ -101,15 +95,15 @@ export default function DocumentsPage() {
   );
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
-  const isSignable = (document: Document): document is SignableDocument =>
-    !!document.docusealSubmissionId &&
+  const isSignable = (document: Document) =>
+    (!!document.docusealSubmissionId || document.hasText) &&
     document.signatories.some(
       (signatory) =>
         !signatory.signedAt &&
         (signatory.id === user.id || (signatory.title === "Company Representative" && isCompanyRepresentative)),
     );
   const signDocument = signDocumentId
-    ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
+    ? documents.find((document) => document.id === signDocumentId && isSignable(document))
     : null;
   useEffect(() => {
     const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
@@ -296,11 +290,13 @@ export default function DocumentsPage() {
       <DashboardHeader
         title="Documents"
         headerActions={
-          user.roles.administrator && company.flags.includes("lawyers") ? (
-            <Button onClick={() => setShowInviteModal(true)}>
-              <BriefcaseBusiness className="size-4" />
-              Invite lawyer
-            </Button>
+          isMobile && table.options.enableRowSelection ? (
+            <button
+              className="text-blue-600"
+              onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
+            >
+              {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
+            </button>
           ) : null
         }
       />
@@ -348,13 +344,15 @@ export default function DocumentsPage() {
   );
 }
 
-const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; onClose: () => void }) => {
+const SignDocumentModal = ({ document, onClose }: { document: Document; onClose: () => void }) => {
+  const user = useCurrentUser();
   const company = useCurrentCompany();
   const [redirectUrl] = useQueryState("next");
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const queryClient = useQueryClient();
 
+  const [data] = trpc.documents.get.useSuspenseQuery({ companyId: company.id, id: document.id });
   const signDocument = trpc.documents.sign.useMutation({
     onSuccess: async () => {
       router.replace("/documents");
@@ -365,6 +363,14 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
       else onClose();
     },
   });
+  const [signed, setSigned] = useState(false);
+  const sign = () => {
+    signDocument.mutate({
+      companyId: company.id,
+      id: document.id,
+      role: document.signatories.find((signatory) => signatory.id === user.id)?.title ?? "Company Representative",
+    });
+  };
 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -372,21 +378,35 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
         <DialogHeader>
           <DialogTitle>{document.name}</DialogTitle>
         </DialogHeader>
-        <div className="max-h-100 overflow-y-auto rounded-md border p-2">
-          <RichText content={document.text} />
-        </div>
+        {document.docusealSubmissionId != null ? (
+          <SignWithDocuseal id={document.docusealSubmissionId} onSigned={sign} />
+        ) : (
+          <>
+            <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
+            <DialogFooter>
+              <Button onClick={sign} disabled={!signed}>
+                Agree & Submit
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
-      <DialogFooter>
-        <MutationButton
-          type="submit"
-          mutation={signDocument}
-          className="mt-4 w-full"
-          loadingText="Signing..."
-          param={{ companyId: company.id, id: document.id, role: "Company Representative" }}
-        >
-          Agree & Submit
-        </MutationButton>
-      </DialogFooter>
     </Dialog>
+  );
+};
+
+const SignWithDocuseal = ({ id, onSigned }: { id: number; onSigned: () => void }) => {
+  const company = useCurrentCompany();
+  const [{ slug, readonlyFields }] = trpc.documents.templates.getSubmitterSlug.useSuspenseQuery({
+    id,
+    companyId: company.id,
+  });
+  return (
+    <DocusealForm
+      src={`https://docuseal.com/s/${slug}`}
+      readonlyFields={readonlyFields}
+      customCss={customCss}
+      onComplete={onSigned}
+    />
   );
 };

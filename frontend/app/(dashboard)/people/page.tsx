@@ -40,74 +40,11 @@ import NewDocumentField, { schema as documentSchema } from "../documents/NewDocu
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 
-const schema = formSchema.merge(documentSchema).extend({
-  email: z.string().email(),
-  startDate: z.instanceof(CalendarDate),
-  contractSignedElsewhere: z.boolean().default(false),
-});
-
 const removeMailtoPrefix = (email: string) => email.replace(/^mailto:/iu, "");
 
 export default function PeoplePage() {
   const company = useCurrentCompany();
-  const queryClient = useQueryClient();
-  const { data: workers = [], isLoading, refetch } = trpc.contractors.list.useQuery({ companyId: company.id });
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
-
-  const lastContractor = workers[0];
-
-  const form = useForm({
-    values: {
-      email: "",
-      role: lastContractor?.role ?? "",
-      payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
-      payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
-      startDate: today(getLocalTimeZone()),
-      contractSignedElsewhere: lastContractor?.contractSignedElsewhere ?? false,
-    },
-    resolver: zodResolver(schema),
-  });
-
-  const trpcUtils = trpc.useUtils();
-  const saveMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof schema>) => {
-      const formData = new FormData();
-      formData.append("contractor[email]", values.email);
-      formData.append("contractor[started_at]", formatISO(values.startDate.toDate(getLocalTimeZone())));
-      formData.append("contractor[pay_rate_in_subunits]", values.payRateInSubunits?.toString() ?? "");
-      formData.append(
-        "contractor[pay_rate_type]",
-        values.payRateType === PayRateType.Hourly ? "hourly" : "project_based",
-      );
-      formData.append("contractor[role]", values.role);
-      formData.append("contractor[contract_signed_elsewhere]", values.contractSignedElsewhere.toString());
-      const contract = values.contractFile || values.contractText;
-      if (contract) formData.append("contractor[contract]", contract);
-
-      const response = await request({
-        url: company_workers_path(company.id),
-        method: "POST",
-        accept: "json",
-        assertOk: true,
-        formData,
-      });
-
-      if (!response.ok) {
-        const json = z.object({ error_message: z.string() }).parse(await response.json());
-        throw new Error(json.error_message);
-      }
-    },
-    onSuccess: async () => {
-      await refetch();
-      await trpcUtils.documents.list.invalidate();
-      setShowInviteModal(false);
-      form.reset();
-      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-    },
-  });
-  const submit = form.handleSubmit((values) => saveMutation.mutate(values));
-
+  const { data: workers = [], isLoading } = trpc.contractors.list.useQuery({ companyId: company.id });
   const isMobile = useIsMobile();
 
   const columnHelper = createColumnHelper<(typeof workers)[number]>();
@@ -242,12 +179,6 @@ export default function PeoplePage() {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
-  const actionsPanel = (
-    <ActionPanel
-      showInviteLinkModal={() => setShowInviteLinkModal(true)}
-      showInviteModal={() => setShowInviteModal(true)}
-    />
-  );
 
   return (
     <>
@@ -263,9 +194,7 @@ export default function PeoplePage() {
                 {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
               </button>
             ) : null}
-            {workers.length === 0 ? (
-              <ActionPanel setShowInviteLinkModal={setShowInviteLinkModal} setShowInviteModal={setShowInviteModal} />
-            ) : null}
+            {workers.length === 0 ? <ActionPanel /> : null}
           </>
         }
       />
@@ -273,17 +202,118 @@ export default function PeoplePage() {
       {isLoading ? (
         <TableSkeleton columns={4} />
       ) : workers.length > 0 ? (
-        <DataTable
-          table={table}
-          searchColumn="userName"
-          tabsColumn="status"
-          actions={
-            <ActionPanel setShowInviteLinkModal={setShowInviteLinkModal} setShowInviteModal={setShowInviteModal} />
-          }
-        />
+        <DataTable table={table} searchColumn="userName" tabsColumn="status" actions={<ActionPanel />} />
       ) : (
         <div className="mx-4">
           <Placeholder icon={Users}>Contractors will show up here.</Placeholder>
+        </div>
+      )}
+    </>
+  );
+}
+
+const inviteSchema = formSchema.merge(documentSchema).extend({
+  email: z.string().email(),
+  startDate: z.instanceof(CalendarDate),
+  contractSignedElsewhere: z.boolean().default(false),
+});
+const ActionPanel = () => {
+  const company = useCurrentCompany();
+  const queryClient = useQueryClient();
+  const trpcUtils = trpc.useUtils();
+  const isMobile = useIsMobile();
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
+
+  const { data: workers = [], refetch } = trpc.contractors.list.useQuery({ companyId: company.id });
+  const lastContractor = workers[0];
+  const inviteForm = useForm({
+    values: {
+      email: "",
+      role: lastContractor?.role ?? "",
+      payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
+      payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
+      startDate: today(getLocalTimeZone()),
+      contractSignedElsewhere: lastContractor?.contractSignedElsewhere ?? false,
+      contract: "",
+    },
+    resolver: zodResolver(inviteSchema),
+  });
+  const inviteMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof inviteSchema>) => {
+      const formData = new FormData();
+      formData.append("contractor[email]", values.email);
+      formData.append("contractor[started_at]", formatISO(values.startDate.toDate(getLocalTimeZone())));
+      formData.append("contractor[pay_rate_in_subunits]", values.payRateInSubunits?.toString() ?? "");
+      formData.append(
+        "contractor[pay_rate_type]",
+        values.payRateType === PayRateType.Hourly ? "hourly" : "project_based",
+      );
+      formData.append("contractor[role]", values.role);
+      formData.append("contractor[contract_signed_elsewhere]", values.contractSignedElsewhere.toString());
+      formData.append("contractor[contract]", values.contract);
+
+      const response = await request({
+        url: company_workers_path(company.id),
+        method: "POST",
+        accept: "json",
+        assertOk: true,
+        formData,
+      });
+
+      if (!response.ok) {
+        const json = z.object({ error_message: z.string() }).parse(await response.json());
+        throw new Error(json.error_message);
+      }
+    },
+    onSuccess: async () => {
+      await refetch();
+      await trpcUtils.documents.list.invalidate();
+      setShowInviteModal(false);
+      inviteForm.reset();
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    },
+  });
+  const submit = inviteForm.handleSubmit((values) => inviteMutation.mutate(values));
+
+  return (
+    <>
+      {isMobile ? (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="floating-action">
+              <Plus />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogTitle>Invite people to your workspace</DialogTitle>
+            <DialogDescription className="sr-only">Invite people to your workspace</DialogDescription>
+            <div className="flex flex-col gap-3">
+              <DialogClose asChild onClick={() => setShowInviteLinkModal(true)}>
+                <Button size="small" variant="outline">
+                  <LinkIcon className="size-4" />
+                  Invite link
+                </Button>
+              </DialogClose>
+              <DialogClose asChild onClick={() => setShowInviteModal(true)}>
+                <Button size="small">
+                  <Plus className="size-4" />
+                  Add contractor
+                </Button>
+              </DialogClose>
+            </div>
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <div className="flex flex-row gap-2">
+          <Button size="small" variant="outline" onClick={() => setShowInviteLinkModal(true)}>
+            <LinkIcon className="size-4" />
+            Invite link
+          </Button>
+          <Button size="small" onClick={() => setShowInviteModal(true)}>
+            <Plus className="size-4" />
+            Add contractor
+          </Button>
         </div>
       )}
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
@@ -291,10 +321,10 @@ export default function PeoplePage() {
           <DialogHeader>
             <DialogTitle>Who's joining?</DialogTitle>
           </DialogHeader>
-          <Form {...form}>
+          <Form {...inviteForm}>
             <form onSubmit={(e) => void submit(e)} className="space-y-4">
               <FormField
-                control={form.control}
+                control={inviteForm.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
@@ -313,7 +343,7 @@ export default function PeoplePage() {
               />
 
               <FormField
-                control={form.control}
+                control={inviteForm.control}
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
@@ -328,7 +358,7 @@ export default function PeoplePage() {
               <FormFields />
 
               <FormField
-                control={form.control}
+                control={inviteForm.control}
                 name="contractSignedElsewhere"
                 render={({ field }) => (
                   <FormItem>
@@ -343,12 +373,12 @@ export default function PeoplePage() {
                 )}
               />
 
-              {!form.watch("contractSignedElsewhere") && <NewDocumentField />}
+              {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField />}
               <div className="flex flex-col items-end space-y-2">
-                <MutationStatusButton mutation={saveMutation} type="submit">
+                <MutationStatusButton mutation={inviteMutation} type="submit">
                   Send invite
                 </MutationStatusButton>
-                {saveMutation.isError ? <div className="text-red text-sm">{saveMutation.error.message}</div> : null}
+                {inviteMutation.isError ? <div className="text-red text-sm">{inviteMutation.error.message}</div> : null}
               </div>
             </form>
           </Form>
@@ -356,54 +386,5 @@ export default function PeoplePage() {
       </Dialog>
       <InviteLinkModal open={showInviteLinkModal} onOpenChange={setShowInviteLinkModal} />
     </>
-  );
-}
-
-const ActionPanel = ({
-  showInviteLinkModal,
-  showInviteModal,
-}: {
-  showInviteLinkModal: () => void;
-  showInviteModal: () => void;
-}) => {
-  const isMobile = useIsMobile();
-
-  return isMobile ? (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="floating-action">
-          <Plus />
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogTitle>Invite people to your workspace</DialogTitle>
-        <DialogDescription className="sr-only">Invite people to your workspace</DialogDescription>
-        <div className="flex flex-col gap-3">
-          <DialogClose asChild onClick={showInviteLinkModal}>
-            <Button size="small" variant="outline">
-              <LinkIcon className="size-4" />
-              Invite link
-            </Button>
-          </DialogClose>
-          <DialogClose asChild onClick={showInviteModal}>
-            <Button size="small">
-              <Plus className="size-4" />
-              Add contractor
-            </Button>
-          </DialogClose>
-        </div>
-      </DialogContent>
-    </Dialog>
-  ) : (
-    <div className="flex flex-row gap-2">
-      <Button size="small" variant="outline" onClick={showInviteLinkModal}>
-        <LinkIcon className="size-4" />
-        Invite link
-      </Button>
-      <Button size="small" onClick={showInviteModal}>
-        <Plus className="size-4" />
-        Add contractor
-      </Button>
-    </div>
   );
 };
