@@ -89,10 +89,10 @@ test.describe("Manage roles access", () => {
       await expect(page.getByText(lawyerUser.legalName || "")).toBeVisible();
       await expect(page.getByText("Lawyer").nth(1)).toBeVisible();
 
-      // Check that multi-role user shows as Admin
+      // Check that multi-role user shows as "Admin, Lawyer"
       await expect(page.getByText(multiRoleUser.legalName || "")).toBeVisible();
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
+      await expect(multiRoleRow.getByRole("cell", { name: "Admin, Lawyer" })).toBeVisible();
 
       // Verify users with roles other than admin or lawyer are NOT displayed
       await expect(page.getByText(contractorUser.legalName || "")).not.toBeVisible();
