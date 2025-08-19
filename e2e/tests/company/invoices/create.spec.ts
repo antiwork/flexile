@@ -72,7 +72,7 @@ test.describe("invoice creation", () => {
   const setupExtractionRequestCapture = (page: Page): { url: string; method: string }[] => {
     const extractionRequests: { url: string; method: string }[] = [];
     page.on("request", (request) => {
-      if (request.url().includes("invoices/extract_data")) {
+      if (request.url().includes("invoices/extract-data")) {
         extractionRequests.push({
           url: request.url(),
           method: request.method(),
@@ -336,7 +336,7 @@ test.describe("invoice creation", () => {
 
     expect(extractionRequests).toHaveLength(1);
     expect(extractionRequests[0]?.method).toBe("POST");
-    expect(extractionRequests[0]?.url).toMatch(/\/internal\/companies\/[^/]+\/invoices\/extract_data/u);
+    expect(extractionRequests[0]?.url).toMatch(/\/api\/invoices\/extract-data/u);
 
     const invoiceIdInput = page.getByLabel("Invoice ID");
     await expect(invoiceIdInput).toHaveValue("1234");
@@ -387,7 +387,7 @@ test.describe("invoice creation", () => {
 
     expect(extractionRequests).toHaveLength(1);
     expect(extractionRequests[0]?.method).toBe("POST");
-    expect(extractionRequests[0]?.url).toMatch(/\/internal\/companies\/[^/]+\/invoices\/extract_data/u);
+    expect(extractionRequests[0]?.url).toMatch(/\/api\/invoices\/extract-data/u);
 
     await expect(page.getByText("This document does not appear to be an invoice")).toBeVisible();
 

@@ -1,5 +1,4 @@
 import React, { useRef, useState } from "react";
-import { request } from "@/utils/request";
 
 interface LineItem {
   description: string;
@@ -22,7 +21,6 @@ interface ApiResponse {
 }
 
 interface UsePdfExtractionProps {
-  companyId: string;
   onExtractedData: (data: { invoiceNumber?: string; invoiceDate?: string; lineItems?: LineItem[] }) => void;
 }
 
@@ -34,7 +32,7 @@ const isApiResponse = (data: unknown): data is ApiResponse => {
   return typeof (data as { success: unknown }).success === "boolean";
 };
 
-export const usePdfExtraction = ({ companyId, onExtractedData }: UsePdfExtractionProps) => {
+export const usePdfExtraction = ({ onExtractedData }: UsePdfExtractionProps) => {
   const [isExtracting, setIsExtracting] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,11 +53,9 @@ export const usePdfExtraction = ({ companyId, onExtractedData }: UsePdfExtractio
     formData.append("pdf", file);
 
     try {
-      const response = await request({
+      const response = await fetch("/api/invoices/extract-data", {
         method: "POST",
-        url: `/internal/companies/${companyId}/invoices/extract_data`,
-        formData,
-        accept: "json",
+        body: formData,
       });
 
       let result: ApiResponse;
@@ -85,15 +81,17 @@ export const usePdfExtraction = ({ companyId, onExtractedData }: UsePdfExtractio
         const extracted = result.data;
 
         onExtractedData({
-          invoiceNumber: extracted.invoice_number,
-          invoiceDate: extracted.invoice_date,
-          lineItems: extracted.line_items?.map((item) => ({
-            description: item.description ?? "",
-            quantity: item.quantity?.toString() ?? "1",
-            hourly: false,
-            pay_rate_in_subunits: (item.rate ?? 0) * 100,
-            errors: [],
-          })),
+          ...(extracted.invoice_number && { invoiceNumber: extracted.invoice_number }),
+          ...(extracted.invoice_date && { invoiceDate: extracted.invoice_date }),
+          ...(extracted.line_items && {
+            lineItems: extracted.line_items.map((item) => ({
+              description: item.description ?? "",
+              quantity: item.quantity?.toString() ?? "1",
+              hourly: false,
+              pay_rate_in_subunits: (item.rate ?? 0) * 100,
+              errors: [],
+            })),
+          }),
         });
       }
     } catch {

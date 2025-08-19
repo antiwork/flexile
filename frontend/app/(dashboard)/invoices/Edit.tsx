@@ -145,7 +145,6 @@ const Edit = () => {
   const showExpensesTable = showExpenses || expenses.size > 0;
 
   const { isExtracting, isDragOver, fileInputRef, handleFileUpload, error, clearError } = usePdfExtraction({
-    companyId: company.id,
     onExtractedData: ({ invoiceNumber: extractedInvoiceNumber, invoiceDate, lineItems: extractedLineItems }) => {
       if (extractedInvoiceNumber) {
         setInvoiceNumber(extractedInvoiceNumber);
@@ -153,7 +152,7 @@ const Edit = () => {
       if (invoiceDate) {
         setIssueDate(parseDate(invoiceDate));
       }
-      if (extractedLineItems?.length > 0) {
+      if (extractedLineItems && extractedLineItems.length > 0) {
         setLineItems(List(extractedLineItems));
       }
     },
