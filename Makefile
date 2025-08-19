@@ -1,7 +1,7 @@
 .PHONY: .setup
 
 COMPOSE_PROJECT_NAME ?= flexile
-DOCKER_COMPOSE_CMD ?= docker compose
+DOCKER_COMPOSE_CMD ?= docker-compose
 LOCAL_DETACHED ?= true
 LOCAL_DOCKER_COMPOSE_CONFIG = $(if $(and $(filter Linux,$(shell uname -s)),$(shell test ! -e /proc/sys/fs/binfmt_misc/WSLInterop && echo true)),docker-compose-local-linux.yml,docker-compose-local.yml)
 

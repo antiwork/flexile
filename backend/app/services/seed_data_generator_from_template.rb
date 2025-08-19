@@ -55,7 +55,7 @@ class SeedDataGeneratorFromTemplate
 
     print_message("Using email #{@config.fetch("email")}.")
     WiseCredential.create!(profile_id: WISE_PROFILE_ID, api_key: WISE_API_KEY)
-    ActiveRecord::Base.connection.exec_query("INSERT INTO document_templates(name, external_id, created_at, updated_at, document_type, docuseal_id, signable) VALUES('Consulting agreement', 'ex1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 592723, true), ('Equity grant contract', 'ex2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 613787, true), ('Board consent', 'ex3', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 2, 613787, true)")
+    ActiveRecord::Base.connection.exec_query("INSERT INTO document_templates(name, external_id, created_at, updated_at, document_type, docuseal_id, signable) VALUES('Consulting agreement', 'ex1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 592723, true), ('Equity grant contract', 'ex2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 613787, true), ('Board consent', 'ex3', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 2, 613787, true) ON CONFLICT (external_id) DO NOTHING")
     Wise::AccountBalance.create_usd_balance_if_needed
     top_up_wise_account_if_needed
 
@@ -110,22 +110,36 @@ class SeedDataGeneratorFromTemplate
       company = nil
       Timecop.travel(Time.zone.parse(model_attributes["created_at"])) do
         company_name = model_attributes.fetch("name")
-        result = SignUpCompany.new(
-          user_attributes: {
-            email: config.fetch("email"),
-            password: DEFAULT_PASSWORD,
-            confirmed_at: Time.current,
-          },
-          ip_address: "127.0.0.1"
-        ).perform
+        email = config.fetch("email")
+        existing_user = User.find_by(email: email)
+        if existing_user.present?
+          # Idempotent path: reuse existing user and ensure a company/admin exists
+          user = existing_user
+          if user.company_administrators.exists?
+            company = user.company_administrators.first.company
+          else
+            company = Company.create!(email: user.email, country_code: SignUpCompany::US_COUNTRY_CODE, default_currency: SignUpCompany::DEFAULT_CURRENCY)
+            user.company_administrators.create!(company:)
+          end
+          success = true
+          error_message = nil
+        else
+          result = SignUpCompany.new(
+            user_attributes: {
+              email: email,
+              password: DEFAULT_PASSWORD,
+              confirmed_at: Time.current,
+            },
+            ip_address: "127.0.0.1"
+          ).perform
 
-        user = result[:user]
-        success = result[:success]
-        error_message = result[:error_message]
+          user = result[:user]
+          success = result[:success]
+          error_message = result[:error_message]
+          company = user&.company_administrators&.first&.company if success
+        end
 
         raise Error, "An error occurred creating #{company_name} - error: #{error_message}" unless success
-
-        company = user.company_administrators.first.company
         company.update!(model_attributes)
         logo_path = Rails.root.join("config", "data", "seed_templates", template, "logo.png")
         if File.exist?(logo_path)
@@ -138,7 +152,10 @@ class SeedDataGeneratorFromTemplate
 
         if company_data.key?("share_classes")
           company_data.fetch("share_classes").each do |share_class_data|
-            company.share_classes.create!(share_class_data.fetch("model_attributes"))
+            attributes = share_class_data.fetch("model_attributes")
+            company.share_classes.find_or_create_by!(name: attributes["name"]) do |share_class|
+              share_class.assign_attributes(attributes)
+            end
           end
         end
 
@@ -219,6 +236,17 @@ class SeedDataGeneratorFromTemplate
         setup_intent_id: stripe_setup_intent.id,
         bank_account_last_four: test_bank_account.us_bank_account.last4,
       )
+    rescue Stripe::StripeError => e
+      Rails.logger.warn "Stripe operation failed during seeding: #{e.message}. Falling back to fake bank account."
+      create_fake_bank_account!(company)
+    end
+
+    def create_fake_bank_account!(company)
+      company.create_bank_account!(
+        status: CompanyStripeAccount::READY,
+        setup_intent_id: "si_fake_seed",
+        bank_account_last_four: "0000",
+      )
     end
 
     def create_convertible_investments!(company, company_data)
@@ -239,16 +267,21 @@ class SeedDataGeneratorFromTemplate
             )
 
             investment_amounts.shuffle.each_with_index do |investment_amount_in_cents, i|
+              email = "ci-investor-#{i}@#{EMAIL_DOMAIN_FOR_RANDOM_USER}"
               user_params = {
                 password: DEFAULT_PASSWORD,
-                email: "ci-investor-#{i}@#{EMAIL_DOMAIN_FOR_RANDOM_USER}",
+                email: email,
                 tax_id: Faker::Number.number(digits: 9),
                 legal_name: Faker::Name.name,
               }
               compliance_params = user_params.extract!(*User::USER_PROVIDED_TAX_ATTRIBUTES)
-              user = User.create!(**user_params)
-              user.create_compliance_info!(compliance_params)
-              company_investor = user.company_investors.create!(company:, investment_amount_in_cents: [investment_amount_in_cents, 1].max)
+              user = User.find_or_create_by!(email: email) do |new_user|
+                new_user.assign_attributes(user_params)
+              end
+              user.create_compliance_info!(compliance_params) unless user.compliance_info.present?
+              company_investor = user.company_investors.find_or_create_by!(company: company) do |ci|
+                ci.investment_amount_in_cents = [investment_amount_in_cents, 1].max
+              end
               convertible_investment.convertible_securities.create!(
                 company_investor:,
                 issued_at: Time.current,
@@ -387,7 +420,7 @@ class SeedDataGeneratorFromTemplate
       return if company_users_data.none?
       company_users_data.each do |company_user_data|
         user = create_user!(company, company_user_data.fetch("model_attributes"))
-        company.company_administrators.create!(user:)
+        company.company_administrators.find_or_create_by!(user: user)
       end
       print_message("Created other administrators.")
     end
@@ -397,7 +430,7 @@ class SeedDataGeneratorFromTemplate
 
       company_users_data.each do |company_user_data|
         user = create_user!(company, company_user_data.fetch("model_attributes"))
-        company.company_lawyers.create!(user:)
+        company.company_lawyers.find_or_create_by!(user: user)
       end
       print_message("Created #{company_users_data.count} #{"lawyer account".pluralize(company_users_data.count)}.")
     end
@@ -415,40 +448,69 @@ class SeedDataGeneratorFromTemplate
 
     def create_user!(company, user_attributes)
       email_identifier = user_attributes.dig("preferred_name") || user_attributes.fetch("legal_name").split.first
+      email = generate_email(email_identifier)
       Timecop.travel(user_attributes.dig("created_at")) do
-        User.create!(
-          user_attributes.reverse_merge(
-            confirmed_at: Time.current,
-            password: DEFAULT_PASSWORD,
-            email: generate_email(email_identifier),
-            invited_by: company&.administrators&.first!,
-          )
+        user = User.find_or_initialize_by(email: email)
+        attrs = user_attributes.reverse_merge(
+          confirmed_at: Time.current,
+          password: DEFAULT_PASSWORD,
+          email: email,
+          invited_by: company&.administrators&.first!,
         )
+        if user.new_record?
+          user.assign_attributes(attrs)
+        else
+          # Do not reset password or email on existing users
+          attrs = attrs.except(:password, "password", :email, "email")
+          user.assign_attributes(attrs)
+        end
+        user.save!
+        user
       end
     end
 
     def create_company_investor_and_data!(company, user, company_user_data)
+      print_message("Creating company investor data for #{user.email}")
+
+      print_message("  Creating user compliance info...")
       user_compliance_info = create_user_compliance_info!(
         user,
         company_user_data.fetch("user_compliance_info_attributes")
       )
-      company_investor = company.company_investors.create!(
-        user:,
-        company:,
-        **company_user_data.fetch("company_investor_attributes"),
-      )
+
+      print_message("  Creating company investor...")
+      company_investor = company.company_investors.find_or_create_by!(user: user) do |ci|
+        ci.assign_attributes(company_user_data.fetch("company_investor_attributes"))
+      end
+
+      print_message("  Creating user bank account...")
       create_user_bank_account!(user, company_user_data.fetch("wise_recipient_attributes"))
+
+      print_message("  Finding share class...")
       share_class = company.share_classes.find_by!(
         name: company_user_data.fetch("share_holding_data").fetch("share_class").fetch("name")
       )
-      share_holding = company_investor.share_holdings.create!(
-        share_class:,
-        **company_user_data.fetch("share_holding_data").fetch("model_attributes").reverse_merge(
-          share_holder_name: user.legal_name,
-        )
+
+      print_message("  Creating share holding...")
+      share_holding_attributes = company_user_data.fetch("share_holding_data").fetch("model_attributes").reverse_merge(
+        share_holder_name: user.legal_name,
       )
+      share_holding = company_investor.share_holdings.find_or_create_by!(
+        share_class: share_class,
+        name: share_holding_attributes["name"]
+      ) do |sh|
+        sh.assign_attributes(share_holding_attributes)
+      end
+
+      print_message("  Finding equity buyback round...")
+      equity_buyback_round = company.equity_buyback_rounds.last
+      if equity_buyback_round.nil?
+        print_message("  Warning: No equity buyback rounds found, skipping equity buybacks")
+        return
+      end
+
       common_attrs = {
-        equity_buyback_round: company.equity_buyback_rounds.last!,
+        equity_buyback_round: equity_buyback_round,
         company_investor:,
         paid_at: 1.day.ago,
         share_class: share_holding.share_class.name,
@@ -582,6 +644,15 @@ class SeedDataGeneratorFromTemplate
               confirm_tax_info: user_attributes.dig("tax_id").present?,
             ).process
             raise Error, error_message if error_message.present?
+
+            # If the template provides explicit compliance info (e.g., tax_id_status: "verified"), persist it
+            if company_worker_data.key?("user_compliance_info_attributes")
+              print_message("  Creating user compliance info for contractor...")
+              create_user_compliance_info!(
+                contractor,
+                company_worker_data.fetch("user_compliance_info_attributes")
+              )
+            end
 
             document = contractor.documents.unsigned_contracts.reload.first
             document.signatures.where(user: contractor).update!(signed_at: Time.current)
@@ -742,9 +813,15 @@ class SeedDataGeneratorFromTemplate
         raise Error, "Unsupported recipient type: #{wise_recipient_params["type"]}"
       end
 
-      result = Recipient::CreateService.new(user:, params: wise_recipient_params).process
-      if !result[:success]
-        raise Error, "Error creating bank account for #{user.email}: #{result.inspect}"
+      begin
+        perform_with_retries do
+          result = Recipient::CreateService.new(user:, params: wise_recipient_params).process
+          if !result[:success]
+            raise Error, "Error creating bank account for #{user.email}: #{result.inspect}"
+          end
+        end
+      rescue => e
+        Rails.logger.warn "Wise API operation failed during seeding for user #{user.email}: #{e.message}. Skipping bank account creation."
       end
     end
 

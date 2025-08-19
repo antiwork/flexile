@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "flexile-(development|production)-(public|private).s3.amazonaws.com",
       },
+      {
+        protocol: "https",
+        hostname: "minio.flexile.dev",
+        port: "",
+      },
     ],
   },
 };

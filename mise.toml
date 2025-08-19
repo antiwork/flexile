@@ -8,7 +8,7 @@ ENABLE_DEFAULT_OTP = "true"
 AWS_REGION = "us-east-1"
 AWS_ACCESS_KEY_ID = "minioadmin"
 AWS_SECRET_ACCESS_KEY = "minioadmin123"
-AWS_ENDPOINT_URL = "http://localhost:9000"
+AWS_ENDPOINT_URL = "https://minio.flexile.dev"
 S3_PRIVATE_BUCKET = "flexile-development-private"
 S3_PUBLIC_BUCKET = "flexile-development-public"
 DOCUSEAL_TOKEN = "dummy"
@@ -52,7 +52,7 @@ if [ ! -f .env ]; then
     echo "SIDEKIQ_REDIS_URL=redis://localhost:6389/1" >> .env
     echo "S3_PRIVATE_BUCKET=flexile-development-private" >> .env
     echo "S3_PUBLIC_BUCKET=flexile-development-public" >> .env
-    echo "AWS_ENDPOINT_URL=http://localhost:9000" >> .env
+    echo "AWS_ENDPOINT_URL=https://minio.flexile.dev" >> .env
     echo "AWS_ACCESS_KEY_ID=minioadmin" >> .env
     echo "AWS_SECRET_ACCESS_KEY=minioadmin123" >> .env
     echo "AWS_REGION=us-east-1" >> .env
@@ -209,7 +209,7 @@ run = """
 echo "🐳 Starting Docker services..."
 mkdir -p docker/tmp/postgres docker/tmp/redis docker/tmp/minio
 node docker/createCertificate.js
-COMPOSE_PROJECT_NAME=flexile docker compose -f docker/docker-compose-local-linux.yml up -d
+COMPOSE_PROJECT_NAME=flexile docker-compose -f docker/docker-compose-local-linux.yml up -d
 echo "⏳ Waiting for MinIO to be ready..."
 sleep 5
 echo "✅ Docker services started!"
@@ -220,20 +220,20 @@ description = "🐳 Stop Docker services"
 run = """
 #!/usr/bin/env bash
 echo "🐳 Stopping Docker services..."
-COMPOSE_PROJECT_NAME=flexile docker compose -f docker/docker-compose-local-linux.yml down
+COMPOSE_PROJECT_NAME=flexile docker-compose -f docker/docker-compose-local-linux.yml down
 echo "✅ Docker services stopped!"
 """
 
 [tasks."docker:logs"]
 description = "📋 Show Docker service logs"
-run = "COMPOSE_PROJECT_NAME=flexile docker compose -f docker/docker-compose-local-linux.yml logs -f"
+run = "COMPOSE_PROJECT_NAME=flexile docker-compose -f docker/docker-compose-local-linux.yml logs -f"
 
 [tasks."docker:reset"]
 description = "🔄 Reset Docker services (stop, remove volumes, start)"
 run = """
 #!/usr/bin/env bash
 echo "🔄 Resetting Docker services..."
-COMPOSE_PROJECT_NAME=flexile docker compose -f docker/docker-compose-local-linux.yml down -v
+COMPOSE_PROJECT_NAME=flexile docker-compose -f docker/docker-compose-local-linux.yml down -v
 mise run docker:up
 mise run minio:setup
 echo "✅ Docker services reset!"
@@ -289,8 +289,8 @@ mc anonymous set download local/flexile-development-public
 mc anonymous set none local/flexile-development-private
 
 echo "✅ MinIO setup complete!"
-echo "📊 MinIO Console: http://localhost:9001 (minioadmin/minioadmin123)"
-echo "🔗 MinIO API: http://localhost:9000"
+echo "📊- **MinIO Console**: https://minio-console.flexile.dev (minioadmin/minioadmin123)"
+echo "🔗- **MinIO API**: https://minio.flexile.dev"
 """
 
 [tasks."minio:buckets"]
@@ -390,8 +390,8 @@ fi
 rm -f /tmp/test-file.txt /tmp/downloaded-file.txt
 
 echo "🔗 Access URLs:"
-echo "Private: http://localhost:9000/flexile-development-private/test-file.txt (requires auth)"
-echo "Public: http://localhost:9000/flexile-development-public/test-file.txt"
+echo "Private: https://minio.flexile.dev/flexile-development-private/test-file.txt (requires auth)"
+echo "Public: https://minio.flexile.dev/flexile-development-public/test-file.txt"
 """
 
 # === DATABASE TASKS ===
@@ -403,6 +403,7 @@ run = "bin/rails db:prepare"
 
 [tasks."db:reset"]
 description = "🔄 Reset database with fresh seed data"
+env = { SEED_DISABLE_FAST_MODE = "true" }
 dir = "backend"
 run = "bin/rails db:reset"
 
