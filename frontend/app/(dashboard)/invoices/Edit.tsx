@@ -94,12 +94,14 @@ const dataSchema = z.object({
         attachment: z.object({ name: z.string(), url: z.string() }),
       }),
     ),
-    attachment: z
-      .object({
-        name: z.string(),
-        url: z.string(),
-      })
-      .nullable(),
+    attachments: z
+      .array(
+        z.object({
+          name: z.string(),
+          url: z.string(),
+        }),
+      )
+      .default([]),
   }),
 });
 type Data = z.infer<typeof dataSchema>;
@@ -161,8 +163,8 @@ const Edit = () => {
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const uploadDocumentRef = useRef<HTMLInputElement>(null);
-  const [document, setDocument] = useState<{ name: string; url: string; blob?: File } | null>(
-    data.invoice.attachment ?? null,
+  const [documents, setDocuments] = useState<{ name: string; url: string; blob?: File }[]>(
+    data.invoice.attachments ?? null,
   );
   const showExpensesTable = showExpenses || expenses.size > 0;
   const actionColumnClass = "w-12";
@@ -206,8 +208,8 @@ const Edit = () => {
 
       if (notes.length) formData.append("invoice[notes]", notes);
 
-      if (document?.blob) {
-        formData.append("invoice[attachment]", document.blob);
+      for (const document of documents) {
+        if (document.blob) formData.append("invoice[attachments][]", document.blob);
       }
 
       await request({
@@ -293,19 +295,20 @@ const Edit = () => {
   };
 
   const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files) return;
 
     const MAX_FILE_SIZE = 10 * 1024 * 1024;
-    if (file.size > MAX_FILE_SIZE) {
-      setAlertTitle("File Size Exceeded");
-      setAlertMessage("File size exceeds the maximum limit of 10MB. Please select a smaller file.");
-      setAlertOpen(true);
-      e.target.value = "";
-      return;
-    }
-
-    setDocument({ name: file.name, url: URL.createObjectURL(file), blob: file });
+    Array.from(files).forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        setAlertTitle("File Size Exceeded");
+        setAlertMessage("File size exceeds the maximum limit of 10MB. Please select a smaller file.");
+        setAlertOpen(true);
+        e.target.value = "";
+        return;
+      }
+      setDocuments((documents) => [...documents, { name: file.name, url: URL.createObjectURL(file), blob: file }]);
+    });
   };
 
   const parseQuantity = (value: string | null | undefined) => {
@@ -500,10 +503,12 @@ const Edit = () => {
                         Add expense
                       </Button>
                     ) : null}
-                    <Button variant="link" onClick={addDocument} disabled={document !== null}>
-                      <Upload className="inline size-4" />
-                      Add document
-                    </Button>
+                    {documents.length === 0 ? (
+                      <Button variant="link" onClick={addDocument} disabled={documents.length !== 0}>
+                        <Upload className="inline size-4" />
+                        Add document
+                      </Button>
+                    ) : null}
                   </div>
                 </TableCell>
               </TableRow>
@@ -523,7 +528,8 @@ const Edit = () => {
             ref={uploadDocumentRef}
             type="file"
             className="hidden"
-            accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"
+            accept="application/pdf"
+            multiple
             onChange={handleDocumentUpload}
           />
           {showExpensesTable ? (
@@ -603,7 +609,7 @@ const Edit = () => {
               </TableFooter>
             </Table>
           ) : null}
-          {document ? (
+          {documents.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -612,19 +618,37 @@ const Edit = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {documents.map((document, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <a href={document.url} download>
+                        <PaperClipIcon className="inline size-4" /> {document.name}
+                      </a>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="link"
+                        aria-label="Remove"
+                        onClick={() =>
+                          setDocuments((documents) => documents.filter((doc) => doc.name !== document.name))
+                        }
+                      >
+                        <TrashIcon className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableFooter>
                 <TableRow>
-                  <TableCell>
-                    <a href={document.url} download>
-                      <PaperClipIcon className="inline size-4" /> {document.name}
-                    </a>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="link" aria-label="Remove" onClick={() => setDocument(null)}>
-                      <TrashIcon className="size-4" />
+                  <TableCell colSpan={2}>
+                    <Button variant="link" onClick={() => uploadDocumentRef.current?.click()}>
+                      <PlusIcon className="inline size-4" />
+                      Add document
                     </Button>
                   </TableCell>
                 </TableRow>
-              </TableBody>
+              </TableFooter>
             </Table>
           ) : null}
 

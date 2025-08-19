@@ -422,7 +422,7 @@ export const invoicesRouter = createRouter({
       await Promise.all(expenseAttachmentRows.map((attachment) => [attachment.recordId, attachment] as const)),
     );
 
-    const documentAttachmentRow = await db.query.activeStorageAttachments.findFirst({
+    const documentAttachmentRow = await db.query.activeStorageAttachments.findMany({
       where: and(
         eq(activeStorageAttachments.recordType, "Invoice"),
         eq(activeStorageAttachments.recordId, invoice.id),
@@ -463,7 +463,7 @@ export const invoicesRouter = createRouter({
         const attachment = expenseAttachments.get(expense.id);
         return { ...expense, attachment: attachment?.blob };
       }),
-      attachment: documentAttachmentRow?.blob ?? null,
+      attachments: documentAttachmentRow.map((row) => row.blob),
       lineItems: invoice.lineItems,
       id: invoice.externalId,
       approvals: invoice.approvals.map((approval) => ({

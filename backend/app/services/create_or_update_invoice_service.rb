@@ -56,8 +56,6 @@ class CreateOrUpdateInvoiceService
       expenses_to_remove = existing_expenses - keep_expenses
       expenses_to_remove.each(&:mark_for_destruction)
 
-      invoice.attachments.each(&:purge_later)
-
       services_in_cents = invoice.total_amount_in_usd_cents - expenses_in_cents
       invoice_year = invoice.invoice_date.year
       equity_calculation_result = InvoiceEquityCalculator.new(
@@ -78,8 +76,15 @@ class CreateOrUpdateInvoiceService
       invoice.equity_amount_in_options = equity_options
       invoice.flexile_fee_cents = invoice.calculate_flexile_fee_cents
 
-      if invoice_attachment.present?
-        invoice.attachments.attach(invoice_attachment)
+      if invoice_attachments.present?
+        invoice.attachments.each do |attachment|
+          unless invoice_attachments.include?(attachment.signed_id)
+            attachment.purge_later
+          end
+        end
+        invoice.attachments.attach(invoice_attachments)
+      else
+        invoice.attachments.each(&:purge_later)
       end
 
       unless invoice.save
@@ -107,8 +112,8 @@ class CreateOrUpdateInvoiceService
       params.permit(invoice: [:invoice_date, :invoice_number, :notes, :equity_percentage])[:invoice]
     end
 
-    def invoice_attachment
-      params.permit(invoice: [:attachment]).dig(:invoice, :attachment)
+    def invoice_attachments
+      params.permit(invoice: [attachments: []]).dig(:invoice, :attachments)
     end
 
     def invoice_line_items_params

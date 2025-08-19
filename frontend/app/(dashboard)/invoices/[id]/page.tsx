@@ -397,26 +397,28 @@ export default function InvoicePage() {
               </Card>
             )}
 
-            {invoice.attachment ? (
+            {invoice.attachments.length > 0 && (
               <Card className="border-none print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
                 <CardContent className="px-0">
                   <div className="text-muted-foreground px-4 text-sm font-medium">Documents</div>
-                  <>
-                    <Separator className="my-2 h-[0.5px] print:my-1.5 print:border-t print:border-gray-200" />
-                    <div className="flex justify-between gap-2 px-4 text-sm">
-                      <Link
-                        href={`/download/${invoice.attachment.key}/${invoice.attachment.filename}`}
-                        download
-                        className={cn(linkClasses, "print:text-black print:no-underline")}
-                      >
-                        <Paperclip className="inline size-4 print:hidden" />
-                        {invoice.attachment.filename}
-                      </Link>
-                    </div>
-                  </>
+                  {invoice.attachments.map((attachment, index) => (
+                    <Fragment key={index}>
+                      <Separator className="my-2 h-[0.5px] print:my-1.5 print:border-t print:border-gray-200" />
+                      <div className="flex justify-between gap-2 px-4 text-sm">
+                        <Link
+                          href={`/download/${attachment.key}/${attachment.filename}`}
+                          download
+                          className={cn(linkClasses, "print:text-black print:no-underline")}
+                        >
+                          <Paperclip className="inline size-4 print:hidden" />
+                          {attachment.filename}
+                        </Link>
+                      </div>
+                    </Fragment>
+                  ))}
                 </CardContent>
               </Card>
-            ) : null}
+            )}
 
             <footer className="flex justify-between print:mt-4 print:flex print:items-start print:justify-between">
               <div className="ml-4 print:flex-1">
