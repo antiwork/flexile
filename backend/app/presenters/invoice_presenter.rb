@@ -7,7 +7,7 @@ class InvoicePresenter
            :invoice_date, :payment_expected_by, :paid_at, :bill_from, :bill_to, :created_at,
            :contractor_role, :total_amount_in_usd, :cash_amount_in_cents, :equity_amount_in_cents,
            :description, :invoice_line_items, :invoice_expenses,
-           :status, :rejected?, :rejected_by, :rejected_at, :attachment, :notes, :payable?, :user_id,
+           :status, :rejected?, :rejected_by, :rejected_at, :attachments, :notes, :payable?, :user_id,
            :tax_requirements_met?, to: :invoice, allow_nil: true
 
   def initialize(invoice)
@@ -41,7 +41,7 @@ class InvoicePresenter
       {
         invoice: {
           id: external_id,
-          attachments: invoice.attachments.map do |attachment|
+          attachments: attachments.map do |attachment|
             { name: attachment.filename, url: Rails.application.routes.url_helpers.rails_blob_path(attachment, disposition: "attachment"), signed_id: attachment.signed_id }
           end,
           bill_address: AddressPresenter.new(invoice).props,

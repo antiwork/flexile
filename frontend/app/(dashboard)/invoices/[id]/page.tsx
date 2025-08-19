@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { CircleAlert, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { Fragment, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
@@ -370,55 +370,68 @@ export default function InvoicePage() {
             ) : null}
 
             {invoice.expenses.length > 0 && (
-              <Card className="mx-4 print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
-                <CardContent>
-                  <div className="flex justify-between gap-2">
-                    <div>Expense</div>
-                    <div>Amount</div>
-                  </div>
-                  {invoice.expenses.map((expense, i) => (
-                    <Fragment key={i}>
-                      <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
-                      <div className="flex justify-between gap-2">
-                        <Link
-                          href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
-                          download
-                          className={cn(linkClasses, "print:text-black print:no-underline")}
-                        >
-                          <PaperClipIcon className="inline size-4 print:hidden" />
-                          {expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name} –{" "}
-                          {expense.description}
-                        </Link>
-                        <span>{formatMoneyFromCents(expense.totalAmountInCents)}</span>
-                      </div>
-                    </Fragment>
-                  ))}
-                </CardContent>
-              </Card>
+              <div className="w-full overflow-x-auto">
+                <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full print:my-3 print:w-full print:border-collapse print:text-xs">
+                  <TableHeader>
+                    <TableRow className="print:border-b print:border-gray-300">
+                      <PrintTableHeader className="w-[70%] print:text-left">Expense</PrintTableHeader>
+                      <PrintTableHeader className="w-[10%] text-right print:text-right">Amount</PrintTableHeader>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoice.expenses.map((expense, i) => (
+                      <TableRow key={i}>
+                        <PrintTableCell className="w-[70%] align-top print:align-top">
+                          <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">
+                            <Link
+                              href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
+                              download
+                              className={cn(linkClasses, "print:text-black print:no-underline")}
+                            >
+                              <PaperClipIcon className="inline size-4 print:hidden" />
+                              {
+                                expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name
+                              } – {expense.description}
+                            </Link>
+                          </div>
+                        </PrintTableCell>
+                        <PrintTableCell className="w-[10%] text-right align-top tabular-nums print:text-right print:align-top">
+                          {formatMoneyFromCents(expense.totalAmountInCents)}
+                        </PrintTableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
 
             {invoice.attachments.length ? (
-              <Card className="mx-4 print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
-                <CardContent>
-                  <div className="flex justify-between gap-2">
-                    <div>Attachments</div>
-                    <div />
-                  </div>
-                  <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
-                  {invoice.attachments.map((attachment, index) => (
-                    <div key={index} className="flex justify-between gap-2">
-                      <Link
-                        href={`/download/${attachment.key}/${attachment.filename}`}
-                        download
-                        className={cn(linkClasses, "print:text-black print:no-underline")}
-                      >
-                        <PaperClipIcon className="inline size-4 print:hidden" /> {attachment.filename}
-                      </Link>
-                      <span />
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+              <div className="w-full overflow-x-auto">
+                <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full print:my-3 print:w-full print:border-collapse print:text-xs">
+                  <TableHeader>
+                    <TableRow className="print:border-b print:border-gray-300">
+                      <PrintTableHeader className="w-[100%] print:text-left">Attachments</PrintTableHeader>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoice.attachments.map((attachment, index) => (
+                      <TableRow key={index}>
+                        <PrintTableCell className="w-[100%] align-top print:align-top">
+                          <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">
+                            <Link
+                              href={`/download/${attachment.key}/${attachment.filename}`}
+                              download
+                              className={cn(linkClasses, "print:text-black print:no-underline")}
+                            >
+                              <PaperClipIcon className="inline size-4 print:hidden" /> {attachment.filename}
+                            </Link>
+                          </div>
+                        </PrintTableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             ) : null}
 
             <footer className="flex justify-between px-4 print:mt-4 print:flex print:items-start print:justify-between">

@@ -92,7 +92,7 @@ type Data = z.infer<typeof dataSchema>;
 
 type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: string[] | null };
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
-type InvoiceFormAttachment = Data["invoice"]["attachment"] & { blob?: File | null };
+type InvoiceFormAttachment = Data["invoice"]["attachments"][number] & { blob?: File | null };
 
 const Edit = () => {
   const user = useCurrentUser();
@@ -411,10 +411,12 @@ const Edit = () => {
                         Add expense
                       </Button>
                     ) : null}
-                    <Button variant="link" onClick={() => uploadAttachmentRef.current?.click()}>
-                      <ArrowUpTrayIcon className="inline size-4" />
-                      Add attachment
-                    </Button>
+                    {!attachments.length ? (
+                      <Button variant="link" onClick={() => uploadAttachmentRef.current?.click()}>
+                        <ArrowUpTrayIcon className="inline size-4" />
+                        Add attachment
+                      </Button>
+                    ) : null}
                   </div>
                 </TableCell>
               </TableRow>
@@ -550,6 +552,16 @@ const Edit = () => {
                   </TableRow>
                 ))}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={2}>
+                    <Button variant="link" onClick={() => uploadAttachmentRef.current?.click()}>
+                      <PlusIcon className="inline size-4" />
+                      Add attachment
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
             </Table>
           ) : null}
 
