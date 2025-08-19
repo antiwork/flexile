@@ -119,3 +119,47 @@ test.describe("Google signup", () => {
     expect(updatedUser?.currentSignInAt).not.toBe(user.currentSignInAt);
   });
 });
+
+test.describe("GitHub signup", () => {
+  test("signup with GitHub", async ({ page }) => {
+    await page.goto("/signup");
+    const email = "github-signup+e2e@example.com";
+
+    await externalProviderMock(page, String(SignInMethod.GitHub), { email });
+
+    await page.getByRole("button", { name: "Sign up with GitHub" }).click();
+    await page.waitForURL(/.*\/invoices.*/u);
+
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    const user = await takeOrThrow(
+      db.query.users.findFirst({
+        where: eq(users.email, email),
+        with: { companyAdministrators: { with: { company: true } } },
+      }),
+    );
+
+    if (!user) {
+      throw new Error("User should be defined after takeOrThrow");
+    }
+
+    expect(user.email).toBe(email);
+    expect(user.companyAdministrators).toHaveLength(1);
+  });
+
+  test("signup with existing user email", async ({ page }) => {
+    const { user } = await usersFactory.create();
+
+    await page.goto("/signup");
+
+    await externalProviderMock(page, String(SignInMethod.GitHub), { email: user.email });
+
+    await page.getByRole("button", { name: "Sign up with GitHub" }).click();
+
+    await page.waitForURL(/.*\/invoices.*/u);
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) });
+    expect(updatedUser?.currentSignInAt).not.toBeNull();
+    expect(updatedUser?.currentSignInAt).not.toBe(user.currentSignInAt);
+  });
+});
