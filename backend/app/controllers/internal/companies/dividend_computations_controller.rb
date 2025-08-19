@@ -26,7 +26,10 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
       return_of_capital: dividend_computation_params[:return_of_capital]
     ).process
 
+
     render json: { id: dividend_computation.id }, status: :created
+  rescue DividendComputationGeneration::NoEligibleInvestorsError, DividendComputationGeneration::InsufficientFundsError => e
+    render json: { error_message: e.message }, status: :unprocessable_entity
   end
 
   def show
