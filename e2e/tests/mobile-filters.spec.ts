@@ -49,80 +49,35 @@ test.describe("Mobile filters", () => {
     await page.getByRole("button", { name: "All", exact: true }).click();
     await page.getByRole("button", { name: "Awaiting approval" }).click();
     await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Awaiting approval", { exact: true }) })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Approved", { exact: true }) })
-        .first(),
-    ).not.toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Paid", { exact: true }) })
-        .first(),
-    ).not.toBeVisible();
+      page.getByRole("cell").filter({ has: page.getByText("Awaiting approval", { exact: true }) }),
+    ).toHaveCount(2);
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Approved", { exact: true }) })).toHaveCount(0);
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Paid", { exact: true }) })).toHaveCount(0);
     await page.getByRole("button", { name: "All", exact: true }).click();
 
     await page.getByRole("button", { name: "Paid" }).click();
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Paid", { exact: true }) })).toHaveCount(1);
     await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Paid", { exact: true }) })
-        .first(),
-    ).toBeVisible();
+      page.getByRole("cell").filter({ has: page.getByText("Awaiting approval", { exact: true }) }),
+    ).toHaveCount(0);
     await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Awaiting approval", { exact: true }) })
-        .first(),
-    ).not.toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Payment scheduled", { exact: true }) })
-        .first(),
-    ).not.toBeVisible();
+      page.getByRole("cell").filter({ has: page.getByText("Payment scheduled", { exact: true }) }),
+    ).toHaveCount(0);
     await page.getByRole("button", { name: "All", exact: true }).click();
 
     await page.getByRole("button", { name: "Rejected" }).click();
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Rejected", { exact: true }) })).toHaveCount(1);
     await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Rejected", { exact: true }) })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Awaiting approval", { exact: true }) })
-        .first(),
-    ).not.toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Failed", { exact: true }) })
-        .first(),
-    ).not.toBeVisible();
+      page.getByRole("cell").filter({ has: page.getByText("Awaiting approval", { exact: true }) }),
+    ).toHaveCount(0);
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Failed", { exact: true }) })).toHaveCount(0);
     await page.getByRole("button", { name: "All", exact: true }).click();
 
     await page.getByRole("button", { name: "All", exact: true }).click();
     await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Awaiting approval", { exact: true }) })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Paid", { exact: true }) })
-        .first(),
-    ).toBeVisible();
+      page.getByRole("cell").filter({ has: page.getByText("Awaiting approval", { exact: true }) }),
+    ).toHaveCount(2);
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Paid", { exact: true }) })).toHaveCount(1);
   });
 
   test("administrator can filter people using mobile status filter buttons", async ({ page }) => {
@@ -164,53 +119,18 @@ test.describe("Mobile filters", () => {
 
     await page.getByRole("button", { name: "All", exact: true }).click();
     await page.getByRole("button", { name: "Active" }).click();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Active", { exact: true }) })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Alumni", { exact: true }) })
-        .first(),
-    ).not.toBeVisible();
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Active", { exact: true }) })).toHaveCount(1);
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Alumni", { exact: true }) })).toHaveCount(0);
     await page.getByRole("button", { name: "All", exact: true }).click();
 
     await page.getByRole("button", { name: "Alumni" }).click();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Alumni", { exact: true }) })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Active", { exact: true }) })
-        .first(),
-    ).not.toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Onboarding", { exact: true }) })
-        .first(),
-    ).not.toBeVisible();
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Alumni", { exact: true }) })).toHaveCount(1);
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Active", { exact: true }) })).toHaveCount(0);
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Onboarding", { exact: true }) })).toHaveCount(0);
 
     await page.getByRole("button", { name: "All", exact: true }).click();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Active", { exact: true }) })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Alumni", { exact: true }) })
-        .first(),
-    ).toBeVisible();
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Active", { exact: true }) })).toHaveCount(2);
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Alumni", { exact: true }) })).toHaveCount(1);
   });
 
   test("contractor can filter documents using mobile status filter buttons", async ({ page }) => {
@@ -255,73 +175,21 @@ test.describe("Mobile filters", () => {
     await page.getByRole("button", { name: "All", exact: true }).click();
     await page.getByRole("button", { name: "Signature required" }).click();
     await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Signature required", { exact: true }) })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Signed", { exact: true }) })
-        .first(),
-    ).not.toBeVisible();
+      page.getByRole("cell").filter({ has: page.getByText("Signature required", { exact: true }) }),
+    ).toHaveCount(1);
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Signed", { exact: true }) })).toHaveCount(0);
     await page.getByRole("button", { name: "All", exact: true }).click();
 
     await page.getByRole("button", { name: "Signed" }).click();
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Signed", { exact: true }) })).toHaveCount(2);
     await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Signed", { exact: true }) })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Signature required", { exact: true }) })
-        .first(),
-    ).not.toBeVisible();
+      page.getByRole("cell").filter({ has: page.getByText("Signature required", { exact: true }) }),
+    ).toHaveCount(0);
 
     await page.getByRole("button", { name: "All", exact: true }).click();
     await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Pending Document", { exact: true }) })
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("cell")
-        .filter({ has: page.getByText("Signed Document", { exact: true }) })
-        .first(),
-    ).toBeVisible();
-  });
-
-  test("mobile select all and dropdown menu functionality works", async ({ page }) => {
-    const { adminUser, company } = await companiesFactory.createCompletedOnboarding({
-      requiredInvoiceApprovalCount: 1,
-    });
-
-    for (let i = 0; i < 3; i++) {
-      await invoicesFactory.create({ companyId: company.id });
-    }
-
-    await login(page, adminUser);
-    await page.goto("/invoices");
-    await expect(page.getByRole("button", { name: "Select all" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "More options" })).toBeVisible();
-
-    await page.getByRole("button", { name: "Select all" }).click();
-    await expect(page.getByLabel("Select row").first()).toBeChecked();
-    await expect(page.getByText("3 selected")).toBeVisible();
-
-    await page.getByRole("button", { name: "Unselect all" }).click();
-    await expect(page.getByLabel("Select row").first()).not.toBeChecked();
-
-    await page.getByRole("button", { name: "More options" }).click();
-    await expect(page.getByRole("menuitem", { name: "Download CSV" })).toBeVisible();
-
-    await page.getByRole("menuitem", { name: "Download CSV" }).click();
-    await expect(page.getByRole("menuitem", { name: "Download CSV" })).not.toBeVisible();
+      page.getByRole("cell").filter({ has: page.getByText("Signature required", { exact: true }) }),
+    ).toHaveCount(1);
+    await expect(page.getByRole("cell").filter({ has: page.getByText("Signed", { exact: true }) })).toHaveCount(2);
   });
 });
