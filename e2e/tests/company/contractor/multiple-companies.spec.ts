@@ -4,11 +4,10 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
-import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 
 test.describe("Contractor for multiple companies", () => {
-  test("contractor accepts invitation from second company and signs contract", async ({ page, next }) => {
+  test("contractor accepts invitation from second company and signs contract", async ({ page }) => {
     const { user: contractorUser } = await usersFactory.create({
       preferredName: "Alex",
       invitationCreatedAt: new Date("2023-01-01"),
@@ -20,10 +19,6 @@ test.describe("Contractor for multiple companies", () => {
     const { company: secondCompany } = await companiesFactory.create({ name: "Second Company" });
     const { user: adminUser } = await usersFactory.create({ email: "admin@example.com" });
     await companyAdministratorsFactory.create({ companyId: secondCompany.id, userId: adminUser.id });
-    const { mockForm } = mockDocuseal(next, {
-      submitters: () => ({ "Company Representative": adminUser, Signer: contractorUser }),
-    });
-    await mockForm(page);
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "People" }).click();

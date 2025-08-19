@@ -17,11 +17,14 @@ class CreateConsultingContract
       year: Date.current.year,
       company: company_worker.company,
     }.compact
-    attributes[contract.is_a?(String) ? :text : attachment] = contract
     company_worker.user.documents.unsigned_contracts.each(&:mark_deleted!)
     document = company_worker.user.documents.build(attributes)
-    document.signatures.build(user: company_administrator.user, title: "Company Representative")
-    document.signatures.build(user: company_worker.user, title: "Signer")
+    if contract.is_a?(String)
+      document.text = contract
+    else
+      document.attachments.attach(contract)
+    end
+    document.signatures.build(user: company_worker.user, title: "Signer", signed_at: contract.is_a?(String) ? nil : Time.current)
     document.save!
     document
   end

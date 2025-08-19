@@ -6,13 +6,11 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
-import { mockDocuseal as mockDocusealHelper } from "@test/helpers/docuseal";
 import { expect, type Page, test, withinModal } from "@test/index";
 import { addMonths, format } from "date-fns";
-import { desc, eq } from "drizzle-orm";
-import type { NextFixture } from "next/experimental/testmode/playwright";
+import { eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
-import { companies, companyContractors, users } from "@/db/schema";
+import { companies, users } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("New Contractor", () => {
@@ -51,42 +49,11 @@ test.describe("New Contractor", () => {
     return { email, date };
   };
 
-  const getCreatedContractor = async () => {
-    const contractor = assertDefined(
-      await db.query.companyContractors.findFirst({
-        with: { user: true },
-        where: eq(companyContractors.companyId, company.id),
-        orderBy: desc(companyContractors.createdAt),
-      }),
-    );
-    return contractor;
-  };
-
-  const mockDocuseal = (next: NextFixture, companyValues: Record<string, unknown>) =>
-    mockDocusealHelper(next, {
-      submitters: async () => ({ "Company Representative": user, Signer: (await getCreatedContractor()).user }),
-      validateValues: async (role, values) => {
-        if (role === "Company Representative") {
-          return expect(values).toMatchObject(companyValues);
-        }
-        const contractor = await getCreatedContractor();
-        return expect(values).toMatchObject({
-          __signerEmail: contractor.user.email,
-          __signerName: contractor.user.legalName,
-        });
-      },
-    });
-
-  test("allows inviting a contractor", async ({ page, next }) => {
-    const { mockForm } = mockDocuseal(next, {
-      __payRate: "99 per hour",
-      __role: "Hourly Role 1",
-    });
+  test("allows inviting a contractor", async ({ page }) => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
 
-    await mockForm(page);
     await page.getByRole("button", { name: "Send invite" }).click();
     await withinModal(
       async (modal) => {
@@ -115,12 +82,7 @@ test.describe("New Contractor", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
-  test("allows inviting a project-based contractor", async ({ page, next }) => {
-    const { mockForm } = mockDocuseal(next, {
-      __payRate: "1,000 per project",
-      __role: "Project-based Role",
-    });
-    await mockForm(page);
+  test("allows inviting a project-based contractor", async ({ page }) => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Project-based Role");
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
