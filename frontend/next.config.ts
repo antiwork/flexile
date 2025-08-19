@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     typedRoutes: true,
     testProxy: true,
     serverActions: {
-      allowedOrigins: [process.env.DOMAIN, process.env.APP_DOMAIN].filter((x): x is string => Boolean(x)),
+      allowedOrigins: [process.env.DOMAIN, process.env.APP_DOMAIN].filter((x) => x),
     },
   },
   images: {
@@ -25,7 +25,11 @@ const nextConfig: NextConfig = {
     ],
   },
   typescript: {
-    // ignoreBuildErrors: process.env.NODE_ENV === "test",
+    // https://nextjs.org/docs/app/api-reference/config/next-config-js/typescript
+    // Skips running `tsc` and dangerously allow production builds to successfully complete even if
+    // your project has type errors.
+    // Do not set this to true without having a lint check before CI build/deploy step
+    ignoreBuildErrors: process.env.NODE_ENV === "test",
   },
 };
 
