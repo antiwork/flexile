@@ -53,7 +53,7 @@ export default function Equity() {
     });
   };
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     values: {
       sharePriceInUsd: Number(company.sharePriceInUsd),
