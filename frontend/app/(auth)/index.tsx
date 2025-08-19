@@ -151,20 +151,18 @@ export function AuthPage({
                           </InputOTPGroup>
                         </InputOTP>
                       </FormControl>
-                      <FormMessage />
+                      {/* Reserve space for error message to prevent layout shift */}
+                      <div className="min-h-5 text-center text-sm">
+                        <FormMessage />
+                      </div>
                     </FormItem>
                   )}
                 />
-                <div className="pt-6 text-center">
-                  {verifyOtp.isPending ? (
+                <div className="pt-5 text-center">
+                  {verifyOtp.isPending || redirectInProgress ? (
                     <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
-                      Verifying...
-                    </div>
-                  ) : redirectInProgress ? (
-                    <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
-                      Redirecting...
+                      Verifying your code...
                     </div>
                   ) : (
                     <Button className="text-gray-600" variant="link" onClick={() => sendOtp.reset()}>
