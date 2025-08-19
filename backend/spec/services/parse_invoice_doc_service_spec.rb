@@ -50,6 +50,88 @@ RSpec.describe ParseInvoiceDocService do
   end
 
   describe "#process" do
+    describe "PDF to image conversion" do
+      it "converts PDF to PNG format with correct settings" do
+        image_mock = double("MiniMagick::Image")
+        expect(MiniMagick::Image).to receive(:read).with(file).and_return(image_mock)
+        expect(image_mock).to receive(:format).with("png")
+        expect(image_mock).to receive(:quality).with(300)
+        expect(image_mock).to receive(:resize).with("2048x2048>")
+        expect(image_mock).to receive(:to_blob).and_return("fake_image_data")
+        expect(Base64).to receive(:strict_encode64).with("fake_image_data").and_return("base64_data")
+
+        service.process
+      end
+
+      it "handles PDF conversion errors with descriptive message" do
+        allow(MiniMagick::Image).to receive(:read).and_raise(StandardError.new("Corrupt file"))
+
+        expect { service.process }.to raise_error("Failed to convert PDF to image: Corrupt file")
+      end
+    end
+
+    describe "company expense categories integration" do
+      let!(:travel_category) { create(:expense_category, company:, name: "Travel") }
+      let!(:office_category) { create(:expense_category, company:, name: "Office Supplies") }
+
+      it "includes all company expense categories in the prompt" do
+        expect_any_instance_of(OpenAI::Client).to receive(:chat) do |_, args|
+          user_message = args[:parameters][:messages].find { |m| m[:role] == "user" }
+          prompt_text = user_message[:content].find { |c| c[:type] == "text" }[:text]
+
+          expect(prompt_text).to include("#{travel_category.id}: #{travel_category.name}")
+          expect(prompt_text).to include("#{office_category.id}: #{office_category.name}")
+          openai_response
+        end
+
+        service.process
+      end
+
+      context "when company has no expense categories" do
+        let(:company_without_categories) { create(:company) }
+        let(:service_without_categories) { described_class.new(file:, company: company_without_categories) }
+
+        it "handles companies with no expense categories gracefully" do
+          expect_any_instance_of(OpenAI::Client).to receive(:chat) do |_, args|
+            user_message = args[:parameters][:messages].find { |m| m[:role] == "user" }
+            prompt_text = user_message[:content].find { |c| c[:type] == "text" }[:text]
+
+            expect(prompt_text).to include("No categories available")
+            openai_response
+          end
+
+          service_without_categories.process
+        end
+      end
+    end
+
+    describe "data structure and format validation" do
+      it "returns standardized success response structure" do
+        result = service.process
+
+        expect(result).to be_a(Hash)
+        expect(result).to have_key(:success)
+        expect(result).to have_key(:data)
+        expect(result[:success]).to be true
+      end
+
+      it "ensures data contains all required sections" do
+        result = service.process
+
+        expect(result[:data]).to have_key(:invoice)
+        expect(result[:data]).to have_key(:invoice_line_items)
+        expect(result[:data]).to have_key(:invoice_expenses)
+      end
+
+      it "handles different data types correctly" do
+        result = service.process
+        line_item = result[:data][:invoice_line_items].first
+
+        expect(line_item[:quantity]).to be_a(Numeric)
+        expect(line_item[:pay_rate_in_subunits]).to be_a(Numeric)
+        expect(line_item[:hourly]).to be_in([true, false])
+      end
+    end
     context "with valid PDF file and OpenAI response" do
       it "returns success with sanitized data" do
         result = service.process
@@ -229,10 +311,12 @@ RSpec.describe ParseInvoiceDocService do
       before do
         allow_any_instance_of(OpenAI::Client).to receive(:chat).and_return(invalid_json_response)
       end
+
+      it "raises JSON parse error" do
+        expect { service.process }.to raise_error(JSON::ParserError)
+      end
     end
   end
-
-
 
   describe "OpenAI integration" do
     it "calls OpenAI API with correct model and gets response" do
@@ -249,6 +333,43 @@ RSpec.describe ParseInvoiceDocService do
 
       result = service.process
       expect(result[:success]).to be true
+    end
+
+    it "builds proper message structure with system and user roles" do
+      expect_any_instance_of(OpenAI::Client).to receive(:chat) do |_, args|
+        messages = args[:parameters][:messages]
+
+        expect(messages.size).to eq(2)
+        expect(messages[0][:role]).to eq("system")
+        expect(messages[1][:role]).to eq("user")
+
+        expect(messages[0][:content]).to include("expert invoice data extraction assistant")
+        expect(messages[0][:content]).to include("ALL monetary amounts must be in CENTS")
+
+        openai_response
+      end
+
+      service.process
+    end
+
+    it "includes base64 image data in user message" do
+      expect_any_instance_of(OpenAI::Client).to receive(:chat) do |_, args|
+        user_message = args[:parameters][:messages].find { |m| m[:role] == "user" }
+
+        expect(user_message[:content]).to be_an(Array)
+
+        text_content = user_message[:content].find { |c| c[:type] == "text" }
+        expect(text_content).to be_present
+        expect(text_content[:text]).to include("analyze this invoice image")
+
+        image_content = user_message[:content].find { |c| c[:type] == "image_url" }
+        expect(image_content).to be_present
+        expect(image_content[:image_url][:url]).to start_with("data:image/png;base64,")
+
+        openai_response
+      end
+
+      service.process
     end
 
     it "includes company expense categories in the prompt" do
