@@ -59,13 +59,33 @@ test.describe("Contractor Invite Link Joining flow", () => {
     expect(contractor.contractSignedElsewhere).toBe(true);
   });
 
-  test("invite link flow with oauth sign up", async ({ page }) => {
+  test("invite link flow with google oauth sign up", async ({ page }) => {
     const { company } = await companiesFactory.createCompletedOnboarding({ inviteLink: faker.string.alpha(10) });
     await page.goto(`/invite/${company.inviteLink}`);
 
     const email = faker.internet.email().toLowerCase();
     await externalProviderMock(page, String(SignInMethod.Google), { email });
     await page.getByRole("button", { name: "Sign up with Google" }).click();
+
+    await expect(page).toHaveURL(/documents/iu);
+    await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
+
+    const contractor = await db.query.companyContractors
+      .findFirst({ with: { user: true }, where: eq(companyContractors.companyId, company.id) })
+      .then(takeOrThrow);
+
+    expect(contractor.user.email).toBe(email);
+    expect(contractor.role).toBe(null);
+    expect(contractor.contractSignedElsewhere).toBe(true);
+  });
+
+  test("invite link flow with github oauth sign up", async ({ page }) => {
+    const { company } = await companiesFactory.createCompletedOnboarding({ inviteLink: faker.string.alpha(10) });
+    await page.goto(`/invite/${company.inviteLink}`);
+
+    const email = faker.internet.email().toLowerCase();
+    await externalProviderMock(page, String(SignInMethod.Github), { email });
+    await page.getByRole("button", { name: "Sign up with GitHub" }).click();
 
     await expect(page).toHaveURL(/documents/iu);
     await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
