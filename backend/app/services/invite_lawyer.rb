@@ -8,16 +8,16 @@ class InviteLawyer
   end
 
   def perform
-    user = User.find_or_initialize_by(email: @email)
-    company_lawyer = user.company_lawyers.find_or_initialize_by(company: @company)
+    user = User.find_or_initialize_by(email:)
+    company_lawyer = user.company_lawyers.find_or_initialize_by(company:)
     return { success: false, field: "email", error_message: "User is already a lawyer for this company." } if company_lawyer.persisted?
 
     if user.persisted?
-      user.invited_by = @current_user
+      user.invited_by = current_user
       user.save
       company_lawyer.save
     else
-      user.invite!(@current_user) { |u| u.skip_invitation = true }
+      user.invite!(current_user) { |u| u.skip_invitation = true }
       company_lawyer.save if user.persisted?
     end
 
