@@ -80,6 +80,19 @@ const statusNames = {
   failed: "Failed",
 };
 
+const getInvoiceFilterStatus = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
+  if (
+    (invoice.status === "received" || invoice.status === "approved") &&
+    invoice.approvals.length < company.requiredInvoiceApprovals
+  ) {
+    return "Awaiting approval";
+  }
+  if (invoice.status === "approved" && invoice.approvals.length >= company.requiredInvoiceApprovals) {
+    return "Approved";
+  }
+  return statusNames[invoice.status];
+};
+
 type Invoice = RouterOutput["invoices"]["list"][number];
 
 export default function InvoicesPage() {
@@ -101,10 +114,12 @@ export default function InvoicesPage() {
   const isPayNowDisabled = useCallback(
     (invoice: Invoice) => {
       const payable = isPayable(invoice);
-      return payable && !company.completedPaymentMethodSetup;
+      // return payable && !company.completedPaymentMethodSetup;
+      return payable;
     },
     [isPayable, company.completedPaymentMethodSetup],
   );
+
   const actionConfig = useMemo(
     (): ActionConfig<Invoice> => ({
       entityName: "invoices",
@@ -215,7 +230,7 @@ export default function InvoicesPage() {
         (value) => (value ? formatMoneyFromCents(value) : "N/A"),
         "numeric",
       ),
-      columnHelper.accessor((row) => statusNames[row.status], {
+      columnHelper.accessor((row) => getInvoiceFilterStatus(row, company), {
         id: "status",
         header: "Status",
         cell: (info) => (
@@ -224,7 +239,7 @@ export default function InvoicesPage() {
           </div>
         ),
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
         },
       }),
       columnHelper.accessor(isActionable, {
@@ -301,10 +316,10 @@ export default function InvoicesPage() {
         },
       }),
 
-      columnHelper.accessor((row) => statusNames[row.status], {
+      columnHelper.accessor((row) => getInvoiceFilterStatus(row, company), {
         id: "status",
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
           hidden: true,
         },
       }),
