@@ -40,7 +40,7 @@ class DividendComputationGeneration
     def validate_sufficient_funds
       if @preferred_dividend_total > @amount_in_usd
         raise InsufficientFundsError,
-              "Sorry, you cannot distribute $#{@amount_in_usd} as preferred investors require a return of at least $#{@preferred_dividend_total}."
+              "Sorry, you cannot distribute $#{@amount_in_usd} as preferred investors require a payout of at least $#{@preferred_dividend_total}."
       end
     end
 
