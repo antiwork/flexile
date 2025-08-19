@@ -75,6 +75,17 @@ RSpec.describe DividendComputationGeneration do
       )
     end
 
+    it "raises error when company has no eligible investors" do
+      # Don't call seed_data - this creates an empty company with no share holdings or convertible investments
+
+      expect do
+        described_class.new(company, amount_in_usd: 10_000, return_of_capital: false).process
+      end.to raise_error(
+        DividendComputationGeneration::NoEligibleInvestorsError,
+        "Sorry, we couldn't find any eligible investors to receive dividends. Please make sure your company has investors with shares or convertible securities before creating a dividend distribution."
+      )
+    end
+
     it "generates only preferred dividends when amount equals preferred dividend requirement" do
       seed_data
 
