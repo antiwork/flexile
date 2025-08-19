@@ -107,9 +107,37 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     head :no_content
   end
 
+  def extract_data
+    authorize Invoice
+
+    pdf_file = params[:pdf]
+    unless pdf_file.present?
+      render json: { success: false, error: "No PDF file provided" }, status: :bad_request
+      return
+    end
+
+    unless valid_pdf_file?(pdf_file)
+      render json: { success: false, error: "Invalid PDF file. File must be a PDF under 10MB." }, status: :bad_request
+      return
+    end
+
+    result = ExtractInvoiceDataService.new(pdf_file).call
+    render json: result
+  rescue StandardError => e
+    Rails.logger.error "PDF extraction failed: #{e.class} - #{e.message}"
+    render json: { success: false, error: "Unable to process PDF file" }, status: :internal_server_error
+  end
+
   private
     def load_invoice!
       @invoice = Current.user.invoices.alive.find_by!(external_id: params[:id])
+    end
+
+    def valid_pdf_file?(file)
+      return false unless file.respond_to?(:content_type) && file.respond_to?(:size)
+      return false unless file.content_type == "application/pdf"
+      return false unless file.size <= 10.megabytes
+      true
     end
 
     def authorize_invoices_for_rejection

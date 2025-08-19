@@ -1,3 +1,5 @@
+import path from "path";
+import type { Page } from "@playwright/test";
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
@@ -47,6 +49,38 @@ test.describe("invoice creation", () => {
       })
     ).companyContractor;
   });
+
+  const importFromPdf = async (page: Page, filePath: string) => {
+    const importButton = page.getByRole("button", { name: "Import from PDF" });
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await importButton.click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(filePath);
+  };
+
+  const expectExtractionInProgress = async (page: Page) => {
+    await expect(page.getByRole("button", { name: "Extracting..." })).toBeVisible();
+    await expect(page.getByText("Extracting invoice data")).toBeVisible();
+    await expect(page.getByText("This may take a few seconds...")).toBeVisible();
+  };
+
+  const expectExtractionComplete = async (page: Page) => {
+    await expect(page.getByRole("button", { name: "Import from PDF" })).toBeVisible();
+    await expect(page.getByText("Extracting invoice data")).not.toBeVisible();
+  };
+
+  const setupExtractionRequestCapture = (page: Page): { url: string; method: string }[] => {
+    const extractionRequests: { url: string; method: string }[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("invoices/extract_data")) {
+        extractionRequests.push({
+          url: request.url(),
+          method: request.method(),
+        });
+      }
+    });
+    return extractionRequests;
+  };
 
   test("considers the invoice year when calculating equity", async ({ page }) => {
     const companyInvestor = (await companyInvestorsFactory.create({ userId: contractorUser.id, companyId: company.id }))
@@ -122,7 +156,7 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser, "/invoices/new");
 
     await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[type="file"]').setInputFiles({
+    await page.locator('input[type="file"][accept="application/pdf, image/*"]').setInputFiles({
       name: "receipt.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("test expense receipt"),
@@ -155,21 +189,27 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser, "/invoices/new");
 
     await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
-      name: "receipt1.pdf",
-      mimeType: "application/pdf",
-      buffer: Buffer.from("first expense receipt"),
-    });
+    await page
+      .locator('input[type="file"][accept="application/pdf, image/*"]')
+      .first()
+      .setInputFiles({
+        name: "receipt1.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("first expense receipt"),
+      });
 
     await page.getByLabel("Merchant").fill("Office Supplies Inc");
     await page.getByLabel("Amount").fill("25.50");
 
     await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
-      name: "receipt2.pdf",
-      mimeType: "application/pdf",
-      buffer: Buffer.from("second expense receipt"),
-    });
+    await page
+      .locator('input[type="file"][accept="application/pdf, image/*"]')
+      .first()
+      .setInputFiles({
+        name: "receipt2.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("second expense receipt"),
+      });
 
     const merchantInputs = page.getByLabel("Merchant");
     await merchantInputs.nth(1).fill("Travel Agency");
@@ -276,5 +316,87 @@ test.describe("invoice creation", () => {
       .then(takeOrThrow);
 
     expect(Number(lineItem.quantity)).toBe(2.5);
+  });
+
+  test("uploads PDF and auto-fills invoice form with AI-extracted data", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    await expect(page.getByRole("heading", { name: "New invoice" })).toBeVisible();
+
+    const importButton = page.getByRole("button", { name: "Import from PDF" });
+    await expect(importButton).toBeVisible();
+
+    const extractionRequests = setupExtractionRequestCapture(page);
+
+    await importFromPdf(page, path.join(process.cwd(), "e2e/fixtures/Invoice1234.pdf"));
+
+    await expectExtractionInProgress(page);
+
+    await expectExtractionComplete(page);
+
+    expect(extractionRequests).toHaveLength(1);
+    expect(extractionRequests[0]?.method).toBe("POST");
+    expect(extractionRequests[0]?.url).toMatch(/\/internal\/companies\/[^/]+\/invoices\/extract_data/u);
+
+    const invoiceIdInput = page.getByLabel("Invoice ID");
+    await expect(invoiceIdInput).toHaveValue("1234");
+
+    const descriptionField = page.getByPlaceholder("Description").first();
+    const actualDescription = await descriptionField.inputValue();
+    expect(actualDescription.toLowerCase().trim()).toContain("mobile optimization");
+
+    const quantityField = page.getByRole("textbox", { name: "Hours / Qty" }).first();
+    await expect(quantityField).toHaveValue("5");
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    const invoice = await db.query.invoices
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
+      .then(takeOrThrow);
+
+    expect(invoice.invoiceNumber).toBe("1234");
+    expect(invoice.totalAmountInUsdCents).toBe(60000n);
+
+    const lineItems = await db.query.invoiceLineItems.findMany({
+      where: eq(invoiceLineItems.invoiceId, invoice.id),
+    });
+
+    expect(lineItems).toHaveLength(2);
+    expect(lineItems[0]?.description.toLowerCase().trim()).toContain("mobile optimization");
+    expect(Number(lineItems[0]?.quantity)).toBe(5);
+    expect(lineItems[0]?.payRateInSubunits).toBe(10000);
+    expect(lineItems[1]?.description.toLowerCase().trim()).toContain("ai pdf parsing");
+    expect(lineItems[1]?.payRateInSubunits).toBe(5000);
+    expect(Number(lineItems[1]?.quantity)).toBe(2);
+  });
+
+  test("rejects non-invoice PDFs with appropriate error message", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    const importButton = page.getByRole("button", { name: "Import from PDF" });
+    await expect(importButton).toBeVisible();
+
+    const extractionRequests = setupExtractionRequestCapture(page);
+
+    await importFromPdf(page, path.join(process.cwd(), "e2e/fixtures/not-an-invoice.pdf"));
+
+    await expectExtractionInProgress(page);
+
+    await expectExtractionComplete(page);
+
+    expect(extractionRequests).toHaveLength(1);
+    expect(extractionRequests[0]?.method).toBe("POST");
+    expect(extractionRequests[0]?.url).toMatch(/\/internal\/companies\/[^/]+\/invoices\/extract_data/u);
+
+    await expect(page.getByText("This document does not appear to be an invoice")).toBeVisible();
+
+    const invoiceIdInput = page.getByLabel("Invoice ID");
+    const initialInvoiceId = await invoiceIdInput.inputValue();
+
+    expect(initialInvoiceId).toBeTruthy();
+
+    const descriptionField = page.getByPlaceholder("Description").first();
+    await expect(descriptionField).toHaveValue("");
   });
 });

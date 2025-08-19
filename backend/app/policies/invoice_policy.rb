@@ -44,4 +44,8 @@ class InvoicePolicy < ApplicationPolicy
   def destroy?
     new? && Invoice::DELETABLE_STATES.include?(record.status)
   end
+
+  def extract_data?
+    company_worker.present?
+  end
 end
