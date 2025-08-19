@@ -1,6 +1,10 @@
 import NextBundleAnalyzer from "@next/bundle-analyzer";
 import type { NextConfig } from "next";
 
+// Get domain from environment or use default
+const flexileDomain = process.env.FLEXILE_DOMAIN || "flexile.dev";
+const minioDomain = process.env.FLEXILE_MINIO_DOMAIN || `minio.${flexileDomain}`;
+
 const nextConfig: NextConfig = {
   webpack: (config) => {
     Object.assign(config.resolve.alias, {
@@ -24,8 +28,14 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "minio.flexile.dev",
+        hostname: minioDomain.replace(/\./g, '\\.'), // Escape dots for regex pattern
         port: "",
+      },
+      // Add support for localhost MinIO
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "9000",
       },
     ],
   },

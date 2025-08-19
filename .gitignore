@@ -1,4 +1,5 @@
 # Temporary files
+diff.md
 tmp
 *.tsbuildinfo
 /test-results/

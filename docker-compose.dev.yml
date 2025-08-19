@@ -1,0 +1,235 @@
+# Docker Compose configuration for Flexile development environment
+# Includes Rails, Next.js, PostgreSQL, Redis, MinIO, and Nginx
+
+x-common-variables: &common-variables
+  FLEXILE_DOMAIN: ${FLEXILE_DOMAIN:-flexile.dev}
+  DOMAIN: ${FLEXILE_DOMAIN:-flexile.dev}
+  APP_DOMAIN: ${FLEXILE_APP_DOMAIN:-app.flexile.dev}
+  API_DOMAIN: ${FLEXILE_API_DOMAIN:-api.flexile.dev}
+  RAILS_ENV: development
+  NODE_ENV: development
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16.3
+    container_name: flexile-db
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-scripts:/docker-entrypoint-initdb.d:ro
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-username}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-password}
+      POSTGRES_DB: ${DATABASE_NAME:-flexile_development}
+      POSTGRES_HOST_AUTH_METHOD: md5
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-username}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - flexile-network
+
+  # Redis Cache & Sidekiq
+  redis:
+    image: redis:7.4.2-alpine
+    container_name: flexile-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6389:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - flexile-network
+
+  # MinIO S3-compatible storage
+  minio:
+    image: minio/minio:latest
+    container_name: flexile-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_REGION_NAME: ${MINIO_REGION_NAME:-us-east-1}
+      MINIO_BROWSER_REDIRECT_URL: https://${FLEXILE_MINIO_CONSOLE_DOMAIN:-minio-console.flexile.dev}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - flexile-network
+
+  # Rails Backend Application
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.rails.dev
+      args:
+        RUBY_VERSION: 3.4.3
+    container_name: flexile-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app:delegated
+      - bundle_cache:/usr/local/bundle
+      - rails_cache:/app/tmp/cache
+    environment:
+      <<: *common-variables
+      DATABASE_URL: postgresql://${DATABASE_USER:-username}:${DATABASE_PASSWORD:-password}@db:5432/${DATABASE_NAME:-flexile_development}
+      REDIS_URL: redis://redis:6379/0
+      SIDEKIQ_REDIS_URL: redis://redis:6379/1
+      AWS_ENDPOINT_URL: https://${FLEXILE_MINIO_DOMAIN:-minio.flexile.dev}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      S3_PRIVATE_BUCKET: ${S3_PRIVATE_BUCKET:-flexile-development-private}
+      S3_PUBLIC_BUCKET: ${S3_PUBLIC_BUCKET:-flexile-development-public}
+      BOOTSNAP_CACHE_DIR: /tmp/bootsnap-cache
+      RUBY_YJIT_ENABLE: 1
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
+      RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-5}
+    ports:
+      - "3000:3000"
+      - "3002:3001"  # Debug port
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        until nc -z db 5432; do sleep 1; done &&
+        echo 'Database is ready!' &&
+        bundle check || bundle install &&
+        bundle exec rails db:prepare &&
+        bundle exec rails server -b 0.0.0.0 -p 3000
+      "
+    networks:
+      - flexile-network
+
+  # Sidekiq Background Jobs
+  sidekiq:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.rails.dev
+      args:
+        RUBY_VERSION: 3.4.3
+    container_name: flexile-sidekiq
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - redis
+    volumes:
+      - ./backend:/app:delegated
+      - bundle_cache:/usr/local/bundle
+    environment:
+      <<: *common-variables
+      DATABASE_URL: postgresql://${DATABASE_USER:-username}:${DATABASE_PASSWORD:-password}@db:5432/${DATABASE_NAME:-flexile_development}
+      REDIS_URL: redis://redis:6379/0
+      SIDEKIQ_REDIS_URL: redis://redis:6379/1
+      AWS_ENDPOINT_URL: https://${FLEXILE_MINIO_DOMAIN:-minio.flexile.dev}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    command: bundle exec sidekiq
+    networks:
+      - flexile-network
+
+  # Next.js Frontend Application
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.nextjs.dev
+      args:
+        NODE_VERSION: 22
+    container_name: flexile-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app/frontend:delegated
+      - ./package.json:/app/package.json:ro
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml:ro
+      - ./patches:/app/patches:ro
+      - pnpm_cache:/pnpm-store
+      - nextjs_cache:/app/frontend/.next
+    environment:
+      <<: *common-variables
+      NEXT_PUBLIC_API_URL: https://${FLEXILE_API_DOMAIN:-api.flexile.dev}
+      NEXT_PUBLIC_DOMAIN: ${FLEXILE_DOMAIN:-flexile.dev}
+      NEXTAUTH_URL: https://${FLEXILE_DOMAIN:-flexile.dev}
+      API_SECRET_TOKEN: ${API_SECRET_TOKEN:-sample-api-token}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-sample-nextauth-secret}
+      DATABASE_URL: postgresql://${DATABASE_USER:-username}:${DATABASE_PASSWORD:-password}@db:5432/${DATABASE_NAME:-flexile_development}
+    ports:
+      - "3001:3001"
+    networks:
+      - flexile-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:1.29-alpine
+    container_name: flexile-nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    volumes:
+      - ./docker/flexile_dev.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certificates:/etc/ssl/certs:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      FLEXILE_DOMAIN: ${FLEXILE_DOMAIN:-flexile.dev}
+    command: >
+      sh -c "
+        echo 'Waiting for services...' &&
+        sleep 5 &&
+        nginx -g 'daemon off;'
+      "
+    networks:
+      - flexile-network
+
+# Named volumes for persistent data
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  bundle_cache:
+    driver: local
+  pnpm_cache:
+    driver: local
+  rails_cache:
+    driver: local
+  nextjs_cache:
+    driver: local
+
+# Custom network for service communication
+networks:
+  flexile-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16

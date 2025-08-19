@@ -1,0 +1,54 @@
+# Git
+.git
+.gitignore
+
+# Node modules
+node_modules
+**/node_modules
+.pnpm-store
+frontend/.next
+
+# Ruby/Rails
+backend/tmp
+backend/log
+backend/vendor/bundle
+backend/.bundle
+
+# Docker
+docker
+Dockerfile*
+docker-compose*.yml
+
+# Development
+.env
+.env.*
+*.log
+.DS_Store
+.vscode
+.windsurf
+
+# Test
+e2e
+cypress
+playwright-report
+
+# Documentation
+*.md
+docs
+
+# Build artifacts
+dist
+build
+coverage
+.turbo
+
+# Certificates
+certificates
+*.pem
+*.key
+
+# Cache
+.cache
+*.cache
+tmp
+temp

@@ -10,9 +10,9 @@ server {
 # Main application server
 server {
   listen 443 ssl;
-  server_name flexile.dev app.flexile.dev;
-  ssl_certificate /etc/ssl/certs/flexile.dev/localhost.pem;
-  ssl_certificate_key /etc/ssl/certs/flexile.dev/localhost-key.pem;
+  server_name ${FLEXILE_DOMAIN} ${FLEXILE_APP_DOMAIN};
+  ssl_certificate /etc/ssl/certs/${FLEXILE_DOMAIN}/localhost.pem;
+  ssl_certificate_key /etc/ssl/certs/${FLEXILE_DOMAIN}/localhost-key.pem;
   client_max_body_size 10M;
 
   resolver 127.0.0.11 ipv6=off;
@@ -45,9 +45,9 @@ server {
 # API server
 server {
   listen 443 ssl;
-  server_name api.flexile.dev;
-  ssl_certificate /etc/ssl/certs/api.flexile.dev/localhost.pem;
-  ssl_certificate_key /etc/ssl/certs/api.flexile.dev/localhost-key.pem;
+  server_name ${FLEXILE_API_DOMAIN};
+  ssl_certificate /etc/ssl/certs/${FLEXILE_API_DOMAIN}/localhost.pem;
+  ssl_certificate_key /etc/ssl/certs/${FLEXILE_API_DOMAIN}/localhost-key.pem;
   client_max_body_size 10M;
 
   resolver 127.0.0.11 ipv6=off;
@@ -70,9 +70,9 @@ server {
 # MinIO S3 API
 server {
   listen 443 ssl;
-  server_name minio.flexile.dev;
-  ssl_certificate /etc/ssl/certs/minio.flexile.dev/localhost.pem;
-  ssl_certificate_key /etc/ssl/certs/minio.flexile.dev/localhost-key.pem;
+  server_name ${FLEXILE_MINIO_DOMAIN};
+  ssl_certificate /etc/ssl/certs/${FLEXILE_MINIO_DOMAIN}/localhost.pem;
+  ssl_certificate_key /etc/ssl/certs/${FLEXILE_MINIO_DOMAIN}/localhost-key.pem;
   client_max_body_size 50M;
 
   resolver 127.0.0.11 ipv6=off;
@@ -94,9 +94,9 @@ server {
 # MinIO Console
 server {
   listen 443 ssl;
-  server_name minio-console.flexile.dev;
-  ssl_certificate /etc/ssl/certs/minio-console.flexile.dev/localhost.pem;
-  ssl_certificate_key /etc/ssl/certs/minio-console.flexile.dev/localhost-key.pem;
+  server_name ${FLEXILE_MINIO_CONSOLE_DOMAIN};
+  ssl_certificate /etc/ssl/certs/${FLEXILE_MINIO_CONSOLE_DOMAIN}/localhost.pem;
+  ssl_certificate_key /etc/ssl/certs/${FLEXILE_MINIO_CONSOLE_DOMAIN}/localhost-key.pem;
   client_max_body_size 50M;
 
   resolver 127.0.0.11 ipv6=off;

@@ -1,0 +1,75 @@
+# syntax=docker/dockerfile:1.4
+# Rails Development Dockerfile
+# Optimized for development speed with BuildKit cache mounts
+
+ARG RUBY_VERSION=3.4.3
+FROM ruby:${RUBY_VERSION}
+
+# Install dependencies
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    postgresql-client \
+    git \
+    curl \
+    vim \
+    nodejs \
+    npm \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Create non-root user for security
+RUN groupadd -g 1001 rails && \
+    useradd -m -u 1001 -g rails rails && \
+    chown -R rails:rails /app
+
+# Configure bundler for optimal development
+ENV BUNDLE_PATH="/usr/local/bundle" \
+    BUNDLE_BIN="/usr/local/bundle/bin" \
+    BUNDLE_JOBS="4" \
+    BUNDLE_RETRY="3" \
+    PATH="${BUNDLE_BIN}:${PATH}"
+
+# Copy Gemfile for dependency installation
+COPY --chown=rails:rails backend/Gemfile backend/Gemfile.lock ./
+
+# Install gems with BuildKit cache mount for faster rebuilds
+RUN --mount=type=cache,id=bundle-cache,target=/usr/local/bundle/cache,uid=1001,gid=1001 \
+    bundle config set --local deployment 'false' && \
+    bundle config set --local without 'production' && \
+    bundle install --jobs 4 --retry 3 && \
+    # Ensure proper ownership
+    chown -R rails:rails /usr/local/bundle
+
+# Install foreman for process management
+RUN gem install foreman
+
+# Switch to non-root user
+USER rails
+
+# Copy application code (will be overridden by volume mount in development)
+COPY --chown=rails:rails backend/ ./
+
+# Create necessary directories
+RUN mkdir -p tmp/pids tmp/cache tmp/sockets log storage
+
+# Expose ports for Rails server and debugging
+EXPOSE 3000 3001
+
+# Development environment variables
+ENV RAILS_ENV=development \
+    RAILS_LOG_TO_STDOUT=true \
+    RAILS_SERVE_STATIC_FILES=true \
+    WEB_CONCURRENCY=1 \
+    RUBY_YJIT_ENABLE=1
+
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Default command for development
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-p", "3000"]

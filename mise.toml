@@ -165,6 +165,168 @@ cd ..
 foreman start -f Procfile.test -e .env.test
 """
 
+# === DOCKER DEVELOPMENT ===
+
+[tasks."docker:dev"]
+alias = "docker:start"
+description = "🐳 Start Docker development environment"
+run = "./bin/dev-docker start"
+
+[tasks."docker:stop"]
+description = "🛑 Stop Docker development environment"
+run = "./bin/dev-docker stop"
+
+[tasks."docker:restart"]
+description = "🔄 Restart Docker development environment"
+run = "./bin/dev-docker restart"
+
+[tasks."docker:logs"]
+description = "📋 Show Docker logs"
+run = "./bin/dev-docker logs"
+
+[tasks."docker:console"]
+description = "📟 Open Rails console in Docker"
+run = "./bin/dev-docker console"
+
+[tasks."docker:migrate"]
+description = "🗄️ Run database migrations in Docker"
+run = "./bin/dev-docker migrate"
+
+[tasks."docker:reset"]
+description = "💣 Reset Docker environment (deletes volumes)"
+run = "./bin/dev-docker reset"
+
+[tasks."docker:status"]
+description = "📊 Show Docker service status"
+run = "./bin/dev-docker status"
+
+[tasks."docker:rebuild"]
+description = "🔨 Rebuild Docker images"
+run = "./bin/dev-docker rebuild"
+
+[tasks."docker:setup"]
+description = "🚀 Initial Docker setup (configure + certificates)"
+run = "./bin/dev-docker setup"
+
+# === ALL-IN-ONE CONTAINER ===
+
+[tasks."docker:all-in-one:build"]
+description = "🏗️ Build the all-in-one container"
+run = """
+#!/usr/bin/env bash
+echo "🏗️ Building Flexile all-in-one container..."
+docker build -f docker/Dockerfile.all-in-one -t flexile-all-in-one:latest .
+echo "✅ All-in-one container built successfully!"
+"""
+
+[tasks."docker:all-in-one:run"]
+alias = "docker:aio"
+description = "🚀 Run the all-in-one container"
+run = """
+#!/usr/bin/env bash
+echo "🚀 Starting Flexile all-in-one container..."
+
+# Stop any existing container
+docker stop flexile-aio 2>/dev/null || true
+docker rm flexile-aio 2>/dev/null || true
+
+# Run the container
+docker run -d \
+  --name flexile-aio \
+  -p 80:80 \
+  -p 443:443 \
+  -p 3000:3000 \
+  -p 3001:3001 \
+  -p 5432:5432 \
+  -p 6379:6379 \
+  -p 9000:9000 \
+  -p 9001:9001 \
+  -v flexile-aio-postgres:/var/lib/postgresql/data \
+  -v flexile-aio-redis:/var/lib/redis \
+  -v flexile-aio-minio:/var/lib/minio \
+  -v $(pwd):/app:cached \
+  --add-host flexile.dev:127.0.0.1 \
+  --add-host app.flexile.dev:127.0.0.1 \
+  --add-host api.flexile.dev:127.0.0.1 \
+  --add-host minio.flexile.dev:127.0.0.1 \
+  --add-host minio-console.flexile.dev:127.0.0.1 \
+  flexile-all-in-one:latest
+
+echo "⏳ Waiting for services to start..."
+sleep 10
+
+echo "📊 Container status:"
+docker ps --filter name=flexile-aio --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+echo ""
+echo "✅ All-in-one container started!"
+echo ""
+echo "🌐 Access points:"
+echo "  - Application: https://flexile.dev or https://app.flexile.dev"
+echo "  - API: https://api.flexile.dev"
+echo "  - MinIO Console: https://minio-console.flexile.dev (minioadmin/minioadmin123)"
+echo "  - MinIO API: https://minio.flexile.dev"
+echo ""
+echo "💡 Tips:"
+echo "  - View logs: mise docker:all-in-one:logs"
+echo "  - Shell access: mise docker:all-in-one:shell"
+echo "  - Stop container: mise docker:all-in-one:stop"
+"""
+
+[tasks."docker:all-in-one:stop"]
+description = "🛑 Stop the all-in-one container"
+run = """
+#!/usr/bin/env bash
+echo "🛑 Stopping Flexile all-in-one container..."
+docker stop flexile-aio
+echo "✅ Container stopped"
+"""
+
+[tasks."docker:all-in-one:logs"]
+description = "📋 Show all-in-one container logs"
+run = """
+#!/usr/bin/env bash
+echo "📋 All-in-one container logs (Ctrl+C to exit):"
+docker logs -f flexile-aio
+"""
+
+[tasks."docker:all-in-one:shell"]
+description = "🐚 Open shell in all-in-one container"
+raw = true
+run = "docker exec -it flexile-aio /bin/bash"
+
+[tasks."docker:all-in-one:status"]
+description = "📊 Check all-in-one container service status"
+run = """
+#!/usr/bin/env bash
+echo "📊 All-in-one container service status:"
+docker exec flexile-aio supervisorctl status
+echo ""
+echo "🏥 Health check:"
+docker exec flexile-aio /usr/local/bin/health-check.sh
+"""
+
+[tasks."docker:all-in-one:restart"]
+description = "🔄 Restart all-in-one container services"
+run = """
+#!/usr/bin/env bash
+echo "🔄 Restarting services in all-in-one container..."
+docker exec flexile-aio supervisorctl restart all
+echo "✅ Services restarted"
+"""
+
+[tasks."docker:all-in-one:clean"]
+description = "🧹 Remove all-in-one container and volumes"
+confirm = "This will delete the all-in-one container and all its data. Are you sure?"
+run = """
+#!/usr/bin/env bash
+echo "🧹 Cleaning up all-in-one container..."
+docker stop flexile-aio 2>/dev/null || true
+docker rm flexile-aio 2>/dev/null || true
+docker volume rm flexile-aio-postgres flexile-aio-redis flexile-aio-minio 2>/dev/null || true
+echo "✅ All-in-one container cleaned up"
+"""
+
 # === DEPENDENCY MANAGEMENT ===
 
 [tasks."deps:install"]
@@ -199,11 +361,11 @@ echo "🔍 Auditing frontend dependencies..."
 cd frontend && pnpm audit && cd ..
 """
 
-# === DOCKER SERVICES ===
+# === LEGACY DOCKER SERVICES (for compatibility) ===
 
 [tasks."docker:up"]
 alias = "services"
-description = "🐳 Start Docker services (PostgreSQL, Redis, Nginx, MinIO)"
+description = "🐳 Start Docker services (PostgreSQL, Redis, Nginx, MinIO) - Legacy"
 run = """
 #!/usr/bin/env bash
 echo "🐳 Starting Docker services..."
@@ -216,27 +378,12 @@ echo "✅ Docker services started!"
 """
 
 [tasks."docker:down"]
-description = "🐳 Stop Docker services"
+description = "🐳 Stop Docker services - Legacy"
 run = """
 #!/usr/bin/env bash
 echo "🐳 Stopping Docker services..."
 COMPOSE_PROJECT_NAME=flexile docker-compose -f docker/docker-compose-local-linux.yml down
 echo "✅ Docker services stopped!"
-"""
-
-[tasks."docker:logs"]
-description = "📋 Show Docker service logs"
-run = "COMPOSE_PROJECT_NAME=flexile docker-compose -f docker/docker-compose-local-linux.yml logs -f"
-
-[tasks."docker:reset"]
-description = "🔄 Reset Docker services (stop, remove volumes, start)"
-run = """
-#!/usr/bin/env bash
-echo "🔄 Resetting Docker services..."
-COMPOSE_PROJECT_NAME=flexile docker-compose -f docker/docker-compose-local-linux.yml down -v
-mise run docker:up
-mise run minio:setup
-echo "✅ Docker services reset!"
 """
 
 # === MINIO S3 STORAGE ===

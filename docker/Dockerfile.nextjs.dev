@@ -1,0 +1,77 @@
+# syntax=docker/dockerfile:1.4
+# Next.js Development Dockerfile
+# Optimized for development with pnpm and HMR support
+
+ARG NODE_VERSION=22
+FROM node:${NODE_VERSION}-alpine
+
+# Install dependencies for building native modules
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    git \
+    curl
+
+# Enable pnpm via corepack
+RUN corepack enable && \
+    corepack prepare pnpm@latest --activate
+
+# Set pnpm environment variables
+ENV PNPM_HOME="/pnpm" \
+    PATH="$PNPM_HOME:$PATH"
+
+# Create app directory
+WORKDIR /app
+
+# Create non-root user for security
+RUN addgroup -g 1001 nodejs && \
+    adduser -D -u 1001 -G nodejs nextjs && \
+    chown -R nextjs:nodejs /app
+
+# Configure pnpm for optimal caching
+RUN pnpm config set store-dir /pnpm-store && \
+    pnpm config set package-import-method copy
+
+# Copy package files for dependency installation
+COPY --chown=nextjs:nodejs package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
+COPY --chown=nextjs:nodejs patches/ ./patches/
+
+# Install dependencies (without BuildKit for compatibility)
+RUN pnpm fetch --frozen-lockfile && \
+    pnpm install --frozen-lockfile --prefer-offline && \
+    # Store node_modules for development
+    pnpm store prune
+
+# Copy frontend package files
+COPY --chown=nextjs:nodejs frontend/package.json* ./frontend/
+
+# Switch to non-root user
+USER nextjs
+
+# Copy application code (will be overridden by volume mount in development)
+COPY --chown=nextjs:nodejs . .
+
+# Create Next.js build directories
+RUN mkdir -p frontend/.next frontend/public
+
+# Expose Next.js development port
+EXPOSE 3001
+
+# Development environment variables for Docker
+ENV NODE_ENV=development \
+    NEXT_TELEMETRY_DISABLED=1 \
+    WATCHPACK_POLLING=true \
+    CHOKIDAR_USEPOLLING=true \
+    CHOKIDAR_INTERVAL=1000 \
+    NODE_OPTIONS="--max-old-space-size=2048"
+
+# Set working directory to frontend
+WORKDIR /app/frontend
+
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:3001/api/health || exit 1
+
+# Development command with hostname binding for Docker
+CMD ["pnpm", "dev", "--hostname", "0.0.0.0", "--port", "3001"]
