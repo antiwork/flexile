@@ -72,7 +72,7 @@ test.describe("Company administrator settings - payment details", () => {
     await page.getByRole("button", { name: "Link your bank account" }).click();
 
     const stripeFrame = page.frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']");
-    await stripeFrame.getByRole("button", { name: "Enter bank details manually instead" }).click();
+    await stripeFrame.getByRole("button", { name: /Enter bank details manually/u }).click();
 
     const bankFrame = page.frameLocator("[src^='https://js.stripe.com/v3/linked-accounts-inner']");
     await bankFrame.getByLabel("Routing number").fill("110000000");
