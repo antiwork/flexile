@@ -346,7 +346,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
         ) : (
           <>
             <SignForm
-              content={exerciseData.exercise_notice ?? ""}
+              content={assertDefined(exerciseData.exercise_notice)}
               signed={state === "signed"}
               onSign={() => setState("signed")}
             />

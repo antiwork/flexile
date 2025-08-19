@@ -1,5 +1,5 @@
 "use client";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { CircleAlert, CircleCheck, Info, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
@@ -33,6 +33,7 @@ type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 export default function GrantsPage() {
   const isMobile = useIsMobile();
   const router = useRouter();
+  const user = useCurrentUser();
   const company = useCurrentCompany();
   const { data = [], isLoading, refetch } = trpc.equityGrants.list.useQuery({ companyId: company.id });
   const [cancellingGrantId, setCancellingGrantId] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export default function GrantsPage() {
     },
   });
 
-  const { data: exerciseData } = useSuspenseQuery(useExerciseDataConfig());
+  const { data: exerciseData } = useQuery({ ...useExerciseDataConfig(), enabled: !!user.roles.administrator });
   const columnHelper = createColumnHelper<EquityGrant>();
   const columns = useMemo(
     () => [
@@ -97,11 +98,11 @@ export default function GrantsPage() {
         }
       />
 
-      {company.flags.includes("option_exercising") && !exerciseData.exercise_notice ? (
+      {company.flags.includes("option_exercising") && exerciseData && !exerciseData.exercise_notice ? (
         <Alert className="mx-4">
           <Info />
           <AlertDescription>
-            Please
+            Please{" "}
             <Link href="/settings/administrator/equity" className={linkClasses}>
               add an exercise notice
             </Link>{" "}

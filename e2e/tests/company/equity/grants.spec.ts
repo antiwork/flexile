@@ -10,7 +10,7 @@ import { login, logout } from "@test/helpers/auth";
 import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq } from "drizzle-orm";
-import { companyInvestors, equityGrants } from "@/db/schema";
+import { companies, companyInvestors, equityGrants } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("Equity Grants", () => {
@@ -333,5 +333,32 @@ test.describe("Equity Grants", () => {
     await page.getByPlaceholder("Search...").clear();
     await page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" }).click();
     await expect(page.getByRole("combobox", { name: "Recipient" })).toHaveText("John Doe (john.doe@cooley.com)");
+  });
+
+  test("shows exercise notice alert when no exercise notice is present", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({ equityEnabled: true });
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
+    await expect(page.getByRole("heading", { name: "Equity grants" })).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("alert", { name: "exercise notice" })).not.toBeVisible();
+    await db
+      .update(companies)
+      .set({ jsonData: { flags: ["option_exercising"] } })
+      .where(eq(companies.id, company.id));
+    await page.reload();
+    await expect(
+      page.getByRole("alert", { name: "Please add an exercise notice so investors can exercise their options." }),
+    ).not.toBeVisible();
+    await page.getByRole("link", { name: "add an exercise notice" }).click();
+    await findRichTextEditor(page, "Exercise notice").fill("This is an exercise notice");
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await page.goBack();
+    await expect(page.getByRole("heading", { name: "Equity grants" })).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await expect(
+      page.getByRole("alert", { name: "Please add an exercise notice so investors can exercise their options." }),
+    ).not.toBeVisible();
   });
 });
