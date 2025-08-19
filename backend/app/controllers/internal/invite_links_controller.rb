@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Internal::InviteLinksController < ApplicationController
+class Internal::InviteLinksController < Internal::BaseController
   before_action :authenticate_user_json!
 
   def accept
