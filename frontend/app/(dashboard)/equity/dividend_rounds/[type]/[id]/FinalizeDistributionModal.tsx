@@ -100,31 +100,9 @@ const FinalizeDistributionModal = ({
 
           <Separator />
 
-          <div className="flex justify-between">
-            <div>
-              <div>Processing fees:</div>
-              <div className="mt-1 text-sm text-gray-500">$0.50 + 1.5%, up to $15/investor</div>
-            </div>
-            <span>
-              {/* TODO(naz) */}
-              {formatMoney(
-                Math.min(0.5 + Number(dividendComputation.total_amount_in_usd) * 0.015, 15) *
-                  dividendComputation.number_of_shareholders,
-              )}
-            </span>
-          </div>
-
-          <Separator />
-
           <div className="mb-2 flex justify-between font-medium">
             <span>Total cost:</span>
-            <span>
-              {formatMoney(
-                Number(dividendComputation.total_amount_in_usd) +
-                  Math.min(0.5 + Number(dividendComputation.total_amount_in_usd) * 0.015, 15) *
-                    dividendComputation.number_of_shareholders,
-              )}
-            </span>
+            <span>{formatMoney(dividendComputation.total_amount_in_usd)}</span>
           </div>
         </div>
 
