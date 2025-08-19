@@ -88,8 +88,6 @@ class CompanyUsersPresenter
     end
 
     def format_role_display(roles)
-      return "" if roles.empty?
-
       sorted_roles = roles.sort_by { |role| role == "Admin" ? 0 : 1 }
       sorted_roles.join(", ")
     end

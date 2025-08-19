@@ -221,7 +221,7 @@ export default function RolesPage() {
       // Second: Role priority (Owner > Admin > Lawyer)
       const getRolePriority = (role: string): number => {
         if (role === "Owner") return 0;
-        if (role.startsWith("Admin")) return 1; // Handles both "Admin" and "Admin, Lawyer"
+        if (role.startsWith("Admin")) return 1;
         if (role === "Lawyer") return 2;
         return 3;
       };
