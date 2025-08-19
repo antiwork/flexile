@@ -4,8 +4,7 @@ RSpec.describe CreateDividendRound do
   let(:company) { create(:company, equity_enabled: true) }
   let(:company_investor) { create(:company_investor, company: company) }
   let(:dividend_computation) { create(:dividend_computation, company: company) }
-  let(:service) { described_class.new(dividend_computation) }
-  def create_dividend_computation_output(dividend_computation)
+  let(:dividend_computation_output) do
     create(:dividend_computation_output,
            dividend_computation: dividend_computation,
            company_investor: company_investor,
@@ -16,11 +15,12 @@ RSpec.describe CreateDividendRound do
            qualified_dividend_amount_usd: 0,
            total_amount_in_usd: 1000)
   end
+  let(:service) { described_class.new(dividend_computation) }
 
   describe "#process" do
     context "when dividend computation has valid data" do
       before do
-        create_dividend_computation_output(dividend_computation)
+        dividend_computation_output
       end
 
       it "successfully generates dividends and marks computation as finalized" do
@@ -63,7 +63,7 @@ RSpec.describe CreateDividendRound do
 
     context "when unexpected errors occur" do
       before do
-        create_dividend_computation_output(dividend_computation)
+        dividend_computation_output
       end
 
       it "rolls back transaction when database operation fails" do
