@@ -230,29 +230,28 @@ const ViewList = () => {
   const mobileColumns = useMemo(
     () => [
       columnHelper.display({
-        id: "titleSummary",
+        id: "update",
         cell: (info) => {
           const update = info.row.original;
           return (
-            <div className="flex w-3xs flex-col gap-1 text-base">
-              <div className="truncate font-medium">{update.title}</div>
-              <div className="truncate leading-5 font-[350] text-gray-600">{update.summary}</div>
+            <div className="flex flex-col gap-1">
+              <div className="flex">
+                <div className="w-3xs truncate text-base font-medium">{update.title}</div>
+                <div className="flex-1 text-right font-[350] text-gray-600">
+                  {update.sentAt ? formatDate(update.sentAt) : "-"}
+                </div>
+              </div>
+              <div
+                className="truncate text-base leading-5 font-[350] text-gray-600"
+                style={{ width: "calc(100vw - 40px)" }}
+              >
+                {update.summary}
+              </div>
             </div>
           );
         },
         meta: {
           cellClassName: "w-full",
-        },
-      }),
-      columnHelper.display({
-        id: "publishedOn",
-        cell: (info) => {
-          const update = info.row.original;
-          return (
-            <div className="flex h-full">
-              <div className="font-[350] text-gray-600">{update.sentAt ? formatDate(update.sentAt) : "-"}</div>
-            </div>
-          );
         },
       }),
     ],
