@@ -13,7 +13,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
         invoice_date: date.to_s,
         invoice_number: "INV-123",
         notes: "Tax ID: 123efjo32r",
-        attachment: nil,
       },
     }
   end

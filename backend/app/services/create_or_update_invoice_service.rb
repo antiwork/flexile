@@ -56,11 +56,15 @@ class CreateOrUpdateInvoiceService
       expenses_to_remove = existing_expenses - keep_expenses
       expenses_to_remove.each(&:mark_for_destruction)
 
-      if params[:invoice]&.key?(:attachment)
-        invoice.attachments.each(&:purge_later)
-        if invoice_attachment.is_a?(ActionDispatch::Http::UploadedFile)
-          invoice.attachments.attach(invoice_attachment)
+      if invoice_attachments.present?
+        invoice.attachments.each do |attachment|
+          unless invoice_attachments.include?(attachment.signed_id)
+            attachment.purge_later
+          end
         end
+        invoice.attachments.attach(invoice_attachments)
+      else
+        invoice.attachments.each(&:purge_later)
       end
 
       services_in_cents = invoice.total_amount_in_usd_cents - expenses_in_cents
@@ -108,8 +112,8 @@ class CreateOrUpdateInvoiceService
       params.permit(invoice: [:invoice_date, :invoice_number, :notes, :equity_percentage])[:invoice]
     end
 
-    def invoice_attachment
-      params.dig(:invoice, :attachment)
+    def invoice_attachments
+      params.dig(:invoice, :attachments)
     end
 
     def invoice_line_items_params
