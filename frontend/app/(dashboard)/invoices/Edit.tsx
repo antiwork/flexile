@@ -414,7 +414,7 @@ const Edit = () => {
                     {!attachments.length ? (
                       <Button variant="link" onClick={() => uploadAttachmentRef.current?.click()}>
                         <ArrowUpTrayIcon className="inline size-4" />
-                        Add attachment
+                        Add document
                       </Button>
                     ) : null}
                   </div>
@@ -557,7 +557,7 @@ const Edit = () => {
                   <TableCell colSpan={2}>
                     <Button variant="link" onClick={() => uploadAttachmentRef.current?.click()}>
                       <PlusIcon className="inline size-4" />
-                      Add attachment
+                      Add document
                     </Button>
                   </TableCell>
                 </TableRow>

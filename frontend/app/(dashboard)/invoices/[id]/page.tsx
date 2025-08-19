@@ -410,7 +410,7 @@ export default function InvoicePage() {
                 <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full print:my-3 print:w-full print:border-collapse print:text-xs">
                   <TableHeader>
                     <TableRow className="print:border-b print:border-gray-300">
-                      <PrintTableHeader className="w-[100%] print:text-left">Attachments</PrintTableHeader>
+                      <PrintTableHeader className="w-[100%] print:text-left">Documents</PrintTableHeader>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

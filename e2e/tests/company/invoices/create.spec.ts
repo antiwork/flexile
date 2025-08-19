@@ -293,7 +293,7 @@ test.describe("invoice creation", () => {
 
     const [attachmentChooser] = await Promise.all([
       page.waitForEvent("filechooser"),
-      page.getByRole("button", { name: "Add attachment" }).click(),
+      page.getByRole("button", { name: "Add document" }).click(),
     ]);
     await attachmentChooser.setFiles({
       name: "invoice.pdf",
@@ -317,7 +317,7 @@ test.describe("invoice creation", () => {
 
     const [attachmentChooser] = await Promise.all([
       page.waitForEvent("filechooser"),
-      page.getByRole("button", { name: "Add attachment" }).click(),
+      page.getByRole("button", { name: "Add document" }).click(),
     ]);
     await attachmentChooser.setFiles({
       name: "invoice.pdf",
