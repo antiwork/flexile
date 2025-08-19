@@ -1,11 +1,14 @@
 "use client";
-import { CircleAlert, CircleCheck, Pencil, Plus } from "lucide-react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { CircleAlert, CircleCheck, Info, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import NewEquityGrantModal from "@/app/(dashboard)/equity/grants/NewEquityGrantModal";
+import { useExerciseDataConfig } from "@/app/(dashboard)/equity/options";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
@@ -42,6 +45,7 @@ export default function GrantsPage() {
     },
   });
 
+  const { data: exerciseData } = useSuspenseQuery(useExerciseDataConfig());
   const columnHelper = createColumnHelper<EquityGrant>();
   const columns = useMemo(
     () => [
@@ -93,6 +97,18 @@ export default function GrantsPage() {
         }
       />
 
+      {company.flags.includes("option_exercising") && !exerciseData.exercise_notice ? (
+        <Alert className="mx-4">
+          <Info />
+          <AlertDescription>
+            Please
+            <Link href="/settings/administrator/equity" className={linkClasses}>
+              add an exercise notice
+            </Link>{" "}
+            so investors can exercise their options.
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {isLoading ? (
         <TableSkeleton columns={8} />
       ) : data.length > 0 ? (
