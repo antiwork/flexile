@@ -30,8 +30,12 @@ test.describe("quick invoicing", () => {
     });
   });
 
-  test("allows submitting a quick invoice", async ({ page }) => {
+  test("allows submitting a quick invoice on valid inputs", async ({ page }) => {
     await login(page, contractorUser);
+    await expect(page.getByRole("button", { name: "Send for approval" })).toBeVisible();
+    await page.getByLabel("Hours / Qty").fill("");
+    await page.getByLabel("Hours / Qty").blur();
+    await expect(page.getByRole("button", { name: "Send for approval" })).toBeDisabled();
     await page.getByLabel("Hours / Qty").fill("10:30");
     await expect(page.getByLabel("Rate")).toHaveValue("60");
     await page.getByLabel("Rate").fill("50");

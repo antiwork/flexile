@@ -799,7 +799,7 @@ const InvoiceBulkActionsBar = ({
 
 const quickInvoiceSchema = z.object({
   rate: z.number().min(0.01),
-  quantity: z.object({ quantity: z.number().min(0.01), hourly: z.boolean() }),
+  quantity: z.object({ quantity: z.number().min(0.01), hourly: z.boolean() }).nullable(),
   date: z.instanceof(CalendarDate, { message: "This field is required." }),
 });
 
@@ -834,9 +834,9 @@ const QuickInvoicesSectionContent = () => {
     disabled: !canSubmitInvoices,
   });
 
+  const { quantity = 0, hourly = 0 } = form.watch("quantity") ?? {};
+
   const date = form.watch("date");
-  const quantity = form.watch("quantity").quantity;
-  const hourly = form.watch("quantity").hourly;
   const rate = form.watch("rate") * 100;
   const totalAmountInCents = Math.ceil((quantity / (hourly ? 60 : 1)) * rate);
 
@@ -908,7 +908,7 @@ const QuickInvoicesSectionContent = () => {
                     <FormItem>
                       <FormLabel>Hours / Qty</FormLabel>
                       <FormControl>
-                        <QuantityInput {...field} />
+                        <QuantityInput {...field} suffix="HH:mm" />
                       </FormControl>
                     </FormItem>
                   )}
