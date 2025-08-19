@@ -60,6 +60,16 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       }
     end
 
+    before do
+      # Ensure we have eligible investors
+      share_class = create(:share_class, company: company, name: "Common")
+      create(:share_holding,
+             company_investor: company_investor,
+             share_class: share_class,
+             number_of_shares: 1000,
+             originally_acquired_at: 70.days.ago)
+    end
+
     it "creates a new dividend computation" do
       post :create, params: valid_params
 
