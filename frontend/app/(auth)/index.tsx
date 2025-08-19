@@ -158,7 +158,7 @@ export function AuthPage({
                     </FormItem>
                   )}
                 />
-                <div className="pt-5 text-center">
+                <div className="text-center">
                   {verifyOtp.isPending || redirectInProgress ? (
                     <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
