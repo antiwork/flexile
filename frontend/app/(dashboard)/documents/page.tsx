@@ -410,18 +410,18 @@ export default function DocumentsPage() {
       <DashboardHeader
         title="Documents"
         headerActions={
-          isMobile ? (
-            table.options.enableRowSelection ? (
+          <>
+            {isMobile && table.options.enableRowSelection ? (
               <button
                 className="text-blue-600"
                 onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
               >
                 {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
               </button>
-            ) : null
-          ) : isCompanyRepresentative && documents.length === 0 ? (
-            <EditTemplates />
-          ) : null
+            ) : null}
+
+            {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
+          </>
         }
       />
 
