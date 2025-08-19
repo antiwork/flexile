@@ -72,6 +72,8 @@ gem "faker", "~> 3.1"
 
 gem "prawn", "~> 2.5", require: false
 
+gem "pdf-reader", "~> 2.11"
+
 gem "httparty", "~> 0.21"
 
 gem "devise", "~> 4.8"

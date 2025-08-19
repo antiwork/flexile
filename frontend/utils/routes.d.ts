@@ -2036,6 +2036,30 @@ export const oauth_redirect_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/invoices/pdf_parser/parse(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const parse_company_invoices_pdf_parser_index_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/invoices/pdf_parser/parse(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const parse_company_invoices_pdf_parser_index_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /people(.:format)
  * @param {object | undefined} options
  * @returns {string} route path

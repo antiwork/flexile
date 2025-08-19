@@ -16,12 +16,13 @@ import {
 } from "@/db/schema";
 import env from "@/env";
 import { MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
-import { companyProcedure, createRouter } from "@/trpc";
+import { companyProcedure, createRouter, protectedProcedure } from "@/trpc";
 import { sendEmail } from "@/trpc/email";
 import { calculateInvoiceEquity } from "@/trpc/routes/equityCalculations";
 import OneOffInvoiceCreated from "@/trpc/routes/OneOffInvoiceCreated";
 import { latestUserComplianceInfo, simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
+import { request } from "@/utils/request";
 
 const requiresAcceptanceByPayee = (
   invoice: Pick<typeof invoices.$inferSelect, "createdById" | "userId" | "acceptedAt">,
@@ -469,4 +470,26 @@ export const invoicesRouter = createRouter({
       },
     };
   }),
+
+  parsePdf: protectedProcedure
+    .input(
+      z.object({
+        file: z.instanceof(File),
+        companyId: z.string(),
+      })
+    )
+    .mutation(async ({ input: { file, companyId } }) => {
+      const formData = new FormData();
+      formData.append("pdf_file", file);
+
+      const response = await request({
+        url: `/internal/companies/${companyId}/invoices/pdf_parser/parse`,
+        method: "POST",
+        accept: "json",
+        formData,
+        assertOk: true,
+      });
+
+      return response.json();
+    }),
 });

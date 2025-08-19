@@ -35,6 +35,8 @@ import {
 } from "@/utils/routes";
 import QuantityInput from "./QuantityInput";
 import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
+import { DragDropZone } from "@/components/DragDropZone";
+import { useToast } from "@/components/ui/toast";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -142,6 +144,11 @@ const Edit = () => {
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const showExpensesTable = showExpenses || expenses.size > 0;
 
+  // PDF parsing state
+  const [isParsingPdf, setIsParsingPdf] = useState(false);
+  const parsePdfMutation = trpc.invoices.parsePdf.useMutation();
+  const { showToast } = useToast();
+
   const validate = () => {
     setErrorField(null);
     if (invoiceNumber.length === 0) setErrorField("invoiceNumber");
@@ -202,6 +209,59 @@ const Edit = () => {
         pay_rate_in_subunits: payRateInSubunits ?? 0,
       }),
     );
+
+  const handlePdfDrop = async (file: File) => {
+    setIsParsingPdf(true);
+    try {
+      const result = await parsePdfMutation.mutateAsync({
+        file,
+        companyId: company.id,
+      });
+
+      if (result.data) {
+        const parsedData = result.data;
+
+        // Update invoice number if found
+        if (parsedData.invoice_number) {
+          setInvoiceNumber(parsedData.invoice_number);
+        }
+
+        // Update invoice date if found
+        if (parsedData.invoice_date) {
+          try {
+            const parsedDate = parseDate(parsedData.invoice_date);
+            setIssueDate(parsedDate);
+          } catch (e) {
+            console.warn("Could not parse invoice date:", parsedData.invoice_date);
+          }
+        }
+
+        // Update notes if found
+        if (parsedData.notes) {
+          setNotes(parsedData.notes);
+        }
+
+        // Update line items if found
+        if (parsedData.line_items && parsedData.line_items.length > 0) {
+          const newLineItems = parsedData.line_items.map((item: any) => ({
+            description: item.description || "",
+            quantity: item.quantity?.toString() || "1",
+            hourly: false, // Default to project-based
+            pay_rate_in_subunits: item.unit_price ? Math.round(item.unit_price * 100) : (payRateInSubunits ?? 0),
+          }));
+
+          setLineItems(List(newLineItems));
+        }
+
+        showToast("success", "PDF parsed successfully! Invoice form has been updated.");
+      }
+    } catch (error) {
+      console.error("Failed to parse PDF:", error);
+      showToast("error", "Failed to parse PDF. Please try again or fill the form manually.");
+    } finally {
+      setIsParsingPdf(false);
+    }
+  };
 
   const createNewExpenseEntries = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -288,6 +348,16 @@ const Edit = () => {
           </AlertDescription>
         </Alert>
       ) : null}
+
+      {/* PDF Drag & Drop Zone */}
+      <div className="mx-4 mb-6">
+        <DragDropZone
+          onFileDrop={handlePdfDrop}
+          loading={isParsingPdf}
+          disabled={submit.isPending}
+          className="max-w-2xl"
+        />
+      </div>
 
       <section>
         <div className="grid gap-4">

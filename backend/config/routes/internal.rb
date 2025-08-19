@@ -74,6 +74,14 @@ scope path: :internal, module: :internal do
         get :microdeposit_verification_details
       end
     end
+
+    namespace :invoices do
+      resources :pdf_parser, only: [] do
+        collection do
+          post :parse
+        end
+      end
+    end
     resources :quickbooks, only: :update do
       collection do
         get :connect

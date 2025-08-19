@@ -2031,6 +2031,24 @@ export const oauth_redirect_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/invoices/pdf_parser/parse(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const parse_company_invoices_pdf_parser_index_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invoices"],[2,[7,"/"],[2,[6,"pdf_parser"],[2,[7,"/"],[2,[6,"parse"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/invoices/pdf_parser/parse(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const parse_company_invoices_pdf_parser_index_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invoices"],[2,[7,"/"],[2,[6,"pdf_parser"],[2,[7,"/"],[2,[6,"parse"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /people(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
