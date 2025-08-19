@@ -18,12 +18,9 @@ end
 
 Rails.application.routes.draw do
   namespace :admin, constraints: admin_constraint do
-    resources :impersonations, only: [:create] do
-      collection do
-        post :exchange
-      end
+    resource :impersonation, only: [:create, :destroy] do
+      post :exchange, on: :collection
     end
-    resource :impersonation, only: [:destroy]
     resources :company_workers
     resources :company_administrators
     resources :companies
@@ -97,4 +94,3 @@ Rails.application.routes.draw do
     "application#main_vue"
   end
 end
-
