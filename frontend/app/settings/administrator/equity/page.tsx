@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -26,7 +26,7 @@ export default function Equity() {
   const utils = trpc.useUtils();
   const queryClient = useQueryClient();
   const [localEquityEnabled, setLocalEquityEnabled] = useState(company.equityEnabled);
-  const { data: exerciseData } = useSuspenseQuery(useExerciseDataConfig());
+  const { data: exerciseData } = useQuery(useExerciseDataConfig());
 
   // Separate mutation for the toggle
   const updateEquityEnabled = trpc.companies.update.useMutation({
@@ -55,11 +55,11 @@ export default function Equity() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      ...(company.sharePriceInUsd ? { sharePriceInUsd: Number(company.sharePriceInUsd) } : {}),
-      ...(company.exercisePriceInUsd ? { fmvPerShareInUsd: Number(company.exercisePriceInUsd) } : {}),
-      ...(company.conversionSharePriceUsd ? { conversionSharePriceUsd: Number(company.conversionSharePriceUsd) } : {}),
-      exerciseNotice: exerciseData.exercise_notice,
+    values: {
+      sharePriceInUsd: Number(company.sharePriceInUsd),
+      fmvPerShareInUsd: Number(company.exercisePriceInUsd),
+      conversionSharePriceUsd: Number(company.conversionSharePriceUsd),
+      exerciseNotice: exerciseData?.exercise_notice ?? null,
     },
   });
 
@@ -148,7 +148,7 @@ export default function Equity() {
                   </FormItem>
                 )}
               />
-              {company.flags.includes("option_exercising") && (
+              {exerciseData ? (
                 <FormField
                   control={form.control}
                   name="exerciseNotice"
@@ -161,7 +161,7 @@ export default function Equity() {
                     </FormItem>
                   )}
                 />
-              )}
+              ) : null}
               <MutationStatusButton
                 type="submit"
                 className="w-fit"

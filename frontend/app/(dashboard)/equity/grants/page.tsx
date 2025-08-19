@@ -46,7 +46,11 @@ export default function GrantsPage() {
     },
   });
 
-  const { data: exerciseData } = useQuery({ ...useExerciseDataConfig(), enabled: !!user.roles.administrator });
+  const exerciseDataConfig = useExerciseDataConfig();
+  const { data: exerciseData } = useQuery({
+    ...exerciseDataConfig,
+    enabled: exerciseDataConfig.enabled || !!user.roles.administrator,
+  });
   const columnHelper = createColumnHelper<EquityGrant>();
   const columns = useMemo(
     () => [
@@ -98,7 +102,7 @@ export default function GrantsPage() {
         }
       />
 
-      {company.flags.includes("option_exercising") && exerciseData && !exerciseData.exercise_notice ? (
+      {exerciseData && !exerciseData.exercise_notice ? (
         <Alert className="mx-4">
           <Info />
           <AlertDescription>

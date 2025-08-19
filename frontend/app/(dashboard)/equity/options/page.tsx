@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
 import { CircleCheck, Info } from "lucide-react";
@@ -200,7 +200,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
     }
     return a.issuedAt.getTime() - b.issuedAt.getTime();
   });
-  const { data: exerciseData } = useSuspenseQuery(useExerciseDataConfig());
+  const { data: exerciseData } = useQuery(useExerciseDataConfig());
 
   const maxExercisableOptions = [...selectedGrants].reduce((total, [grant]) => total + grant.vestedShares, 0);
 
@@ -234,6 +234,8 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
       onClose();
     },
   });
+
+  if (!exerciseData?.exercise_notice) return;
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -346,7 +348,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
         ) : (
           <>
             <SignForm
-              content={assertDefined(exerciseData.exercise_notice)}
+              content={exerciseData.exercise_notice}
               signed={state === "signed"}
               onSign={() => setState("signed")}
             />
