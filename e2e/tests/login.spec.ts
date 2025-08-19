@@ -55,3 +55,32 @@ test("login with redirect_url", async ({ page }) => {
 
   expect(page.url()).toContain("/people");
 });
+
+test("OTP input validation and auto-submit behavior", async ({ page }) => {
+  const { user } = await usersFactory.create();
+  const email = user.email;
+
+  await page.goto("/login");
+
+  await page.getByLabel("Work email").fill(email);
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+
+  const otpField = page.getByLabel("Verification code");
+
+  // Test that non-numeric characters are filtered out
+  await otpField.fill("abc123");
+  await expect(otpField).toHaveValue("123");
+
+  // Test that only 6 digits trigger auto-submit
+  await otpField.fill("12345"); // 5 digits - should not auto-submit
+  await expect(page.getByText("Verifying...")).not.toBeVisible();
+
+  // Fill with 6 digits - should trigger auto-submit
+  await otpField.fill("000000");
+
+  // Should show "Verifying your code..." status
+  await expect(page.getByText("Verifying your code...")).toBeVisible();
+
+  // Wait for redirect
+  await page.waitForURL(/.*\/invoices.*/u);
+});

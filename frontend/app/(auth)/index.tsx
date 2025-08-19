@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSession, signIn } from "next-auth/react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -16,7 +17,9 @@ import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
 
 const emailSchema = z.object({ email: z.string().email() });
-const otpSchema = z.object({ otp: z.string().length(6) });
+const otpSchema = z.object({
+  otp: z.string().length(6, "Please enter the 6-digit verification code"),
+});
 
 export function AuthPage({
   title,
@@ -35,6 +38,7 @@ export function AuthPage({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [redirectInProgress, setRedirectInProgress] = useState(false);
   const sendOtp = useMutation({
     mutationFn: async (values: { email: string }) => {
       const response = await request({
@@ -66,6 +70,7 @@ export function AuthPage({
       if (!session?.user.email) throw new Error("Invalid verification code");
 
       const redirectUrl = searchParams.get("redirect_url");
+      setRedirectInProgress(true);
       router.replace(
         // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
         redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard",
@@ -124,11 +129,13 @@ export function AuthPage({
                           {...field}
                           maxLength={6}
                           onChange={(value) => {
-                            field.onChange(value);
-                            if (value.length === 6) setTimeout(() => void submitOtpForm(), 100);
+                            // Filter out non-numeric characters
+                            const numericValue = value.replace(/[^0-9]/gu, "");
+                            field.onChange(numericValue);
+                            if (numericValue.length === 6) setTimeout(() => void submitOtpForm(), 100);
                           }}
                           aria-label="Verification code"
-                          disabled={verifyOtp.isPending}
+                          disabled={verifyOtp.isPending || redirectInProgress}
                           autoFocus
                           required
                         >
@@ -144,27 +151,24 @@ export function AuthPage({
                           </InputOTPGroup>
                         </InputOTP>
                       </FormControl>
-                      <FormMessage />
+                      {/* Reserve space for error message to prevent layout shift */}
+                      <div className="min-h-5 text-center text-sm">
+                        <FormMessage />
+                      </div>
                     </FormItem>
                   )}
                 />
-                <MutationStatusButton
-                  mutation={verifyOtp}
-                  type="submit"
-                  className="w-[342px]"
-                  loadingText="Verifying..."
-                >
-                  Continue
-                </MutationStatusButton>
-                <div className="pt-6 text-center">
-                  <Button
-                    className="text-gray-600"
-                    variant="link"
-                    onClick={() => sendOtp.reset()}
-                    disabled={verifyOtp.isPending}
-                  >
-                    Back to email
-                  </Button>
+                <div className="text-center">
+                  {verifyOtp.isPending || redirectInProgress ? (
+                    <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                      Verifying your code...
+                    </div>
+                  ) : (
+                    <Button className="text-gray-600" variant="link" onClick={() => sendOtp.reset()}>
+                      Back to email
+                    </Button>
+                  )}
                 </div>
               </form>
             </Form>
@@ -184,6 +188,7 @@ export function AuthPage({
                           type="email"
                           placeholder="Enter your work email..."
                           className="bg-white"
+                          style={{ height: "42px" }}
                           required
                           disabled={sendOtp.isPending}
                         />
