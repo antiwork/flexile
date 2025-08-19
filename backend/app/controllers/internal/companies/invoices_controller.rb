@@ -107,12 +107,10 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     head :no_content
   end
 
-
   private
     def load_invoice!
       @invoice = Current.user.invoices.alive.find_by!(external_id: params[:id])
     end
-
 
     def authorize_invoices_for_rejection
       all_invoices_belong_to_company = invoice_external_ids_for_rejection.all? do |invoice_external_id|
