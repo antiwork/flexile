@@ -11,7 +11,6 @@ export const companyUpdatesFactory = {
         companyId: BigInt(faker.number.int({ min: 1, max: 1000 })),
         title: faker.lorem.sentence(),
         body: `<p>${faker.lorem.paragraphs(2, "<br/>")}</p>`,
-        videoUrl: null,
         sentAt: null,
         ...overrides,
       })
@@ -20,12 +19,6 @@ export const companyUpdatesFactory = {
 
     return { companyUpdate: insertedUpdate };
   },
-
-  createWithYouTubeVideo: async (videoUrl: string, overrides: Partial<typeof companyUpdates.$inferInsert> = {}) =>
-    companyUpdatesFactory.create({
-      videoUrl,
-      ...overrides,
-    }),
 
   createPublished: async (overrides: Partial<typeof companyUpdates.$inferInsert> = {}) =>
     companyUpdatesFactory.create({

@@ -59,7 +59,7 @@ test.describe("Equity Grants", () => {
     await expect(page.getByRole("button", { name: "New option grant" })).toBeVisible();
     await page.getByRole("button", { name: "New option grant" }).click();
     await expect(page.getByLabel("Number of options")).toHaveValue("10000");
-    await selectComboboxOption(page, "Recipient", contractorUser.preferredName ?? "");
+    await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
     await page.getByLabel("Number of options").fill("10");
     await selectComboboxOption(page, "Relationship to company", "Consultant");
 
@@ -107,7 +107,7 @@ test.describe("Equity Grants", () => {
     await page.getByRole("button", { name: "New option grant" }).click();
 
     // Fill in recipient (required)
-    await selectComboboxOption(page, "Recipient", projectBasedUser.preferredName ?? "");
+    await selectComboboxOption(page, "Recipient", `${projectBasedUser.preferredName} (${projectBasedUser.email})`);
 
     // Fill in number of options (required)
     await page.getByLabel("Number of options").fill("20");
@@ -167,8 +167,7 @@ test.describe("Equity Grants", () => {
         ),
       );
     await logout(page);
-    await login(page, contractorUser);
-    await page.goto("/invoices");
+    await login(page, contractorUser, "/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "10/15/2024");
@@ -182,8 +181,7 @@ test.describe("Equity Grants", () => {
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
     await logout(page);
-    await login(page, projectBasedUser);
-    await page.goto("/invoices");
+    await login(page, projectBasedUser, "/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await fillDatePicker(page, "Date", "11/01/2024");
@@ -311,18 +309,18 @@ test.describe("Equity Grants", () => {
 
     // Test estimated value calculation using FMV share price from database
     await page.getByLabel("Number of options").fill("1000");
-    await expect(page.getByText("Estimated value: $1000.00, based on a $1")).toBeVisible();
+    await expect(page.getByText("Estimated value of $1,000, based on a $1 share price")).toBeVisible();
 
     // Test with different number of shares to verify calculation accuracy
     await page.getByLabel("Number of options").fill("2500");
-    await expect(page.getByText("Estimated value: $2500.00, based on a $1")).toBeVisible();
+    await expect(page.getByText("Estimated value of $2,500, based on a $1 share price")).toBeVisible();
 
     // Test with larger number to verify calculation scales correctly
     await page.getByLabel("Number of options").fill("10000");
-    await expect(page.getByText("Estimated value: $10000.00, based on a $1")).toBeVisible();
+    await expect(page.getByText("Estimated value of $10,000, based on a $1 share price")).toBeVisible();
 
     // Test form completion enables submit button only after filling in all required fields
-    await selectComboboxOption(page, "Recipient", contractorUser.preferredName ?? "");
+    await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
     await selectComboboxOption(page, "Relationship to company", "Consultant");
 
     // Fill in required grant type
@@ -394,15 +392,15 @@ test.describe("Equity Grants", () => {
 
     // Test estimated value calculation with $2.50 FMV share price
     await page.getByLabel("Number of options").fill("1000");
-    await expect(page.getByText("Estimated value: $2500.00, based on a $2.5")).toBeVisible();
+    await expect(page.getByText("Estimated value of $2,500, based on a $2.50 share price")).toBeVisible();
 
     // Test with different number of shares
     await page.getByLabel("Number of options").fill("500");
-    await expect(page.getByText("Estimated value: $1250.00, based on a $2.5")).toBeVisible();
+    await expect(page.getByText("Estimated value of $1,250, based on a $2.50 share price")).toBeVisible();
 
     // Test with larger number
     await page.getByLabel("Number of options").fill("10000");
-    await expect(page.getByText("Estimated value: $25000.00, based on a $2.5")).toBeVisible();
+    await expect(page.getByText("Estimated value of $25,000, based on a $2.50 share price")).toBeVisible();
   });
 
   test("handles missing FMV share price gracefully", async ({ page, next }) => {
@@ -441,5 +439,71 @@ test.describe("Equity Grants", () => {
     // Test that estimated value is not shown when FMV share price is missing
     await page.getByLabel("Number of options").fill("1000");
     await expect(page.getByText("Estimated value:")).not.toBeVisible();
+  });
+
+  test("displays recipients with email addresses and enables email search", async ({ page, next }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fmvPerShareInUsd: "1",
+      conversionSharePriceUsd: "1.00",
+      sharePriceInUsd: "1.00",
+    });
+
+    const { user: cooleyContractor } = await usersFactory.create({
+      email: "john.doe@cooley.com",
+      legalName: "John Doe",
+      preferredName: "John Doe",
+    });
+    const { user: regularContractor } = await usersFactory.create({
+      email: "jane.smith@company.com",
+      legalName: "Jane Smith",
+      preferredName: "Jane Smith",
+    });
+
+    const submitters = { "Company Representative": adminUser, Signer: cooleyContractor };
+    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
+    await mockForm(page);
+
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: cooleyContractor.id,
+    });
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: regularContractor.id,
+    });
+
+    await optionPoolsFactory.create({ companyId: company.id });
+    await documentTemplatesFactory.create({
+      companyId: company.id,
+      type: DocumentTemplateType.EquityPlanContract,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
+    await page.getByRole("button", { name: "New option grant" }).click();
+
+    await page.getByRole("combobox", { name: "Recipient" }).click();
+    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
+
+    await page.getByPlaceholder("Search...").fill("cooley");
+    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).not.toBeVisible();
+
+    await page.getByPlaceholder("Search...").clear();
+    await page.getByPlaceholder("Search...").fill("Jane");
+    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).not.toBeVisible();
+
+    await page.getByPlaceholder("Search...").clear();
+    await page.getByPlaceholder("Search...").fill("company.com");
+    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).not.toBeVisible();
+
+    await page.getByPlaceholder("Search...").clear();
+    await page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" }).click();
+    await expect(page.getByRole("combobox", { name: "Recipient" })).toHaveText("John Doe (john.doe@cooley.com)");
   });
 });

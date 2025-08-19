@@ -50,8 +50,8 @@ importers:
         specifier: ^0.3.1
         version: 0.3.1
       '@helperai/react':
-        specifier: ^0.8.2
-        version: 0.8.2(@ai-sdk/react@1.2.12(react@19.0.0)(zod@3.24.2))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: ^0.8.4
+        version: 0.8.4(@ai-sdk/react@1.2.12(react@19.0.0)(zod@3.24.2))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@heroicons/react':
         specifier: ^2.1.5
         version: 2.2.0(react@19.0.0)
@@ -988,8 +988,8 @@ packages:
   '@helperai/client@0.3.1':
     resolution: {integrity: sha512-8X87Dl24GHwD051xu5oB9kYS1Kx/euxr1OT7t3O+1GU9KKZHEUM3tWBTE1MMfrUP2Pf0n9+OOohvEex+MX/80A==}
 
-  '@helperai/react@0.8.2':
-    resolution: {integrity: sha512-UggGOvGXNvezlKCwAhNSsBDY7+0gqHs3Bcjtf4pe1xvlb7EZoxtlCaaOLhOst1UT6WqI43Af7CGUMarIFVGjbg==}
+  '@helperai/react@0.8.4':
+    resolution: {integrity: sha512-soPjF+JMbD5GerABzMtMBXah9sNV536PEkiySlxClT705e2SW8BnoUYykEyHoiEhtepUb3MaS5htbOJgwpGmdA==}
     peerDependencies:
       '@ai-sdk/react': '>=0.0.0'
       react: '>=18'
@@ -7536,7 +7536,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@helperai/react@0.8.2(@ai-sdk/react@1.2.12(react@19.0.0)(zod@3.24.2))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@helperai/react@0.8.4(@ai-sdk/react@1.2.12(react@19.0.0)(zod@3.24.2))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@ai-sdk/react': 1.2.12(react@19.0.0)(zod@3.24.2)
       '@helperai/client': 0.3.1

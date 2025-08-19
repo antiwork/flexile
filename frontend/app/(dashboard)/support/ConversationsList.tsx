@@ -1,7 +1,7 @@
 "use client";
 
 import { useConversations, useCreateConversation } from "@helperai/react";
-import { CircleCheck, Paperclip, SendIcon, X } from "lucide-react";
+import { CircleCheck, Paperclip, Plus, SendIcon, X } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { helperTools } from "@/app/(dashboard)/support/tools";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -14,12 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import { useIsMobile } from "@/utils/use-mobile";
 
 interface ConversationsListProps {
   onSelectConversation: (slug: string) => void;
 }
 
 export const ConversationsList = ({ onSelectConversation }: ConversationsListProps) => {
+  const isMobile = useIsMobile();
   const { data: conversationsData, isLoading: loading, refetch } = useConversations();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [subject, setSubject] = useState("");
@@ -67,14 +69,24 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleContactSupportClick = () => {
+    setIsModalOpen(true);
+  };
+
   return (
     <>
       <DashboardHeader
         title="Support center"
         headerActions={
-          <Button onClick={() => setIsModalOpen(true)} size="small">
-            Contact support
-          </Button>
+          isMobile ? (
+            <Button variant="floating-action" onClick={handleContactSupportClick}>
+              <Plus />
+            </Button>
+          ) : (
+            <Button onClick={handleContactSupportClick} size="small">
+              Contact support
+            </Button>
+          )
         }
       />
 

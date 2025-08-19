@@ -280,7 +280,7 @@ const Edit = () => {
       />
 
       {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
-        <Alert variant="warning">
+        <Alert className="mx-4" variant="warning">
           <CircleAlert />
           <AlertDescription>
             This invoice includes rates above your default of {formatMoneyFromCents(payRateInSubunits)}/

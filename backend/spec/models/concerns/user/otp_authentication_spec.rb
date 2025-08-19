@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
-RSpec.describe User::OtpAuthentication, type: :model do
+RSpec.describe User::OtpAuthentication do
   let(:user) { create(:user, email: "test@example.com") }
 
   describe "#verify_otp" do

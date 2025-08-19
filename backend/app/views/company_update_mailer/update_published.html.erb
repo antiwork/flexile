@@ -1,0 +1,58 @@
+<!-- BEGIN: Email preview text -->
+<div style="display: none; max-height: 0; overflow: hidden;">
+  <%= @props[:title] %> update from <%= @props[:sender_name] %>
+</div>
+<div style="display: none; max-height: 0; overflow: hidden;">
+  <!-- https://www.litmus.com/blog/the-little-known-preview-text-hack-you-may-want-to-use-in-every-email/ -->
+  &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279;
+  &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279;
+  &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279;
+  &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279; &#847; &zwnj; &nbsp; &#8199; &#65279;
+</div>
+<!-- END: Email preview text -->
+
+<header style="margin-top: 0; margin-bottom: 32px">
+<% if @company.logo_url.present? %>
+      <img src="<%= @company.logo_url %>" alt="<%= @company.name %> logo" style="max-width: 32px; vertical-align: middle; margin-right: 8px;">
+      <% end %>
+      <span style="display: inline-block; vertical-align: middle; line-height: 32px;"><strong><%= @company.name %></strong></span>
+</header>
+
+<h1><%= @props[:title] %></h1>
+<% if @props[:revenue] || @props[:net_income] %>
+  <dl>
+    <% if @props.dig(:revenue, :amount_cents) %>
+      <dt>Revenue</dt>
+      <dd><%= number_to_currency(@props[:revenue][:amount_cents] / 100.0, precision: 2) %></dd>
+    <% end %>
+    <% if @props.dig(:net_income, :amount_cents) %>
+      <dt>Net income</dt>
+      <dd><%= number_to_currency(@props[:net_income][:amount_cents] / 100.0, precision: 2) %></dd>
+    <% end %>
+  </dl>
+<% end %>
+
+<%== sanitize @props[:body] %>
+
+<% if @props[:video_url].present? %>
+  <p>
+    <a href="<%= @props[:video_url] %>" target="_blank">
+      <% if @video_thumbnail_url %>
+        <img alt="video thumbnail" style="width: 100%; border: 1px solid black; border-radius: 16px" src="<%= @video_thumbnail_url %>">
+      <% else %>
+        Watch the video
+      <% end %>
+    </a>
+  </p>
+<% end %>
+
+<p>
+  Best,<br>
+  <%= @props[:sender_name] %>
+</p>
+
+<% content_for :footer do %>
+  Company updates are still in beta. A way to unsubscribe is coming soon!
+  <br>
+  <br>
+<% end %>

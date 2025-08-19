@@ -12,5 +12,6 @@ FactoryBot.define do
     qualified_dividend_amount_usd { 0 }
     dividend_amount_in_usd { 1034.12 }
     total_amount_in_usd { 1034.12 }
+    investment_amount_cents { number_of_shares * 1000 }
   end
 end

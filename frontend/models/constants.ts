@@ -206,5 +206,6 @@ export { c as countryInfos };
 export const storageKeys = {
   DOCUMENTS_COLUMN_FILTERS: "documentsColumnFilters",
   EQUITY_MENU_STATE: "equity-menu-state",
+  SETTINGS_MENU_STATE: "settings-menu-state",
   GETTING_STARTED_STATUS: "getting-started-status",
 };
