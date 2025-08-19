@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: minioDomain.replace(/\./g, '\\.'), // Escape dots for regex pattern
+        hostname: minioDomain.replace(/\./gu, "\\."), // Escape dots for regex pattern
         port: "",
       },
       // Add support for localhost MinIO

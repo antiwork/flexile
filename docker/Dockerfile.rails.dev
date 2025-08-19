@@ -1,30 +1,28 @@
 # syntax=docker/dockerfile:1.4
 # Rails Development Dockerfile
-# Optimized for development speed with BuildKit cache mounts
+# Optimized for development speed with Alpine and BuildKit cache mounts
 
 ARG RUBY_VERSION=3.4.3
-FROM ruby:${RUBY_VERSION}
+FROM ruby:${RUBY_VERSION}-alpine AS base
 
-# Install dependencies
-RUN apt-get update -qq && \
-    apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    postgresql-client \
+# Install dependencies with Alpine optimization
+RUN apk add --no-cache \
+    postgresql-dev \
+    build-base \
+    nodejs \
+    yarn \
     git \
     curl \
     vim \
-    nodejs \
-    npm \
-    netcat-openbsd \
-    && rm -rf /var/lib/apt/lists/*
+    bash \
+    && rm -rf /var/cache/apk/*
 
 # Set working directory
 WORKDIR /app
 
-# Create non-root user for security
-RUN groupadd -g 1001 rails && \
-    useradd -m -u 1001 -g rails rails && \
+# Create non-root user for security (Alpine syntax)
+RUN addgroup -g 1001 -S rails && \
+    adduser -S -u 1001 -G rails rails && \
     chown -R rails:rails /app
 
 # Configure bundler for optimal development
@@ -38,12 +36,10 @@ ENV BUNDLE_PATH="/usr/local/bundle" \
 COPY --chown=rails:rails backend/Gemfile backend/Gemfile.lock ./
 
 # Install gems with BuildKit cache mount for faster rebuilds
-RUN --mount=type=cache,id=bundle-cache,target=/usr/local/bundle/cache,uid=1001,gid=1001 \
-    bundle config set --local deployment 'false' && \
+RUN --mount=type=cache,id=bundle,target=/usr/local/bundle/cache \
+    bundle config set --local path '/usr/local/bundle' && \
     bundle config set --local without 'production' && \
-    bundle install --jobs 4 --retry 3 && \
-    # Ensure proper ownership
-    chown -R rails:rails /usr/local/bundle
+    bundle install --jobs 4 --retry 3
 
 # Install foreman for process management
 RUN gem install foreman
