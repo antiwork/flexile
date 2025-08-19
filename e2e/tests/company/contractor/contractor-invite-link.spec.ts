@@ -59,7 +59,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     expect(contractor.contractSignedElsewhere).toBe(true);
   });
 
-  test("invite link flow with oauth sign up", async ({ page }) => {
+  test("invite link flow with Google sign up", async ({ page }) => {
     const { company } = await companiesFactory.createCompletedOnboarding({ inviteLink: faker.string.alpha(10) });
     await page.goto(`/invite/${company.inviteLink}`);
 
