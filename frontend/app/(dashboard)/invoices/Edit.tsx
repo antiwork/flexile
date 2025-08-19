@@ -1,11 +1,11 @@
 "use client";
 
-import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { PlusIcon } from "@heroicons/react/16/solid";
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useRef, useState } from "react";
@@ -165,6 +165,7 @@ const Edit = () => {
     data.invoice.attachment ?? null,
   );
   const showExpensesTable = showExpenses || expenses.size > 0;
+  const actionColumnClass = "w-12";
 
   const validate = () => {
     setErrorField(null);
@@ -435,7 +436,7 @@ const Edit = () => {
                 <TableHead>Hours / Qty</TableHead>
                 <TableHead>Rate</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead />
+                <TableHead className={actionColumnClass} />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -475,7 +476,7 @@ const Edit = () => {
                     />
                   </TableCell>
                   <TableCell>{formatMoneyFromCents(lineItemTotal(item))}</TableCell>
-                  <TableCell>
+                  <TableCell className={actionColumnClass}>
                     <Button
                       variant="link"
                       aria-label="Remove"
@@ -492,18 +493,18 @@ const Edit = () => {
                 <TableCell colSpan={5}>
                   <div className="flex gap-3">
                     <Button variant="link" onClick={addLineItem}>
-                      <PlusIcon className="inline size-4" />
+                      <Plus className="inline size-4" />
                       Add line item
                     </Button>
                     {data.company.expenses.categories.length && !showExpensesTable ? (
                       <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
-                        <ArrowUpTrayIcon className="inline size-4" />
+                        <Upload className="inline size-4" />
                         Add expense
                       </Button>
                     ) : null}
                     <Button variant="link" onClick={addDocument} disabled={document !== null}>
-                      <PlusIcon className="inline size-4" />
-                      Add Document
+                      <Upload className="inline size-4" />
+                      Add document
                     </Button>
                   </div>
                 </TableCell>
@@ -527,30 +528,6 @@ const Edit = () => {
             accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"
             onChange={handleDocumentUpload}
           />
-          {document ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Document</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <a href={document.url} download>
-                      <PaperClipIcon className="inline size-4" /> {document.name}
-                    </a>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="link" aria-label="Remove" onClick={() => setDocument(null)}>
-                      <TrashIcon className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          ) : null}
           {showExpensesTable ? (
             <Table>
               <TableHeader>
@@ -559,7 +536,7 @@ const Edit = () => {
                   <TableHead>Merchant</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Amount</TableHead>
-                  <TableHead />
+                  <TableHead className={actionColumnClass} />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -626,6 +603,30 @@ const Edit = () => {
                   </TableCell>
                 </TableRow>
               </TableFooter>
+            </Table>
+          ) : null}
+          {document ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Document</TableHead>
+                  <TableHead className={actionColumnClass} />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>
+                    <a href={document.url} download>
+                      <PaperClipIcon className="inline size-4" /> {document.name}
+                    </a>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="link" aria-label="Remove" onClick={() => setDocument(null)}>
+                      <TrashIcon className="size-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
             </Table>
           ) : null}
 
