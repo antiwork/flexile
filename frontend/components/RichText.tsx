@@ -32,23 +32,23 @@ export const Editor = ({
   value,
   onChange,
   className,
+  id,
   ...props
 }: {
-  value: string | null;
-  onChange: (value: string) => void;
+  value: string | null | undefined;
+  onChange: (value: string | null) => void;
   className?: string;
 } & React.ComponentProps<"div">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
-  const id = React.useId();
 
   const editor = useEditor({
     extensions: richTextExtensions,
-    content: value,
+    content: value ?? "",
     editable: true,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    onUpdate: ({ editor }) => onChange(editor.isEmpty ? null : editor.getHTML()),
     editorProps: {
       attributes: {
-        id,
+        ...(id ? { id } : {}),
         class: cn(className, "prose p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none"),
       },
     },
@@ -57,7 +57,7 @@ export const Editor = ({
 
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value, false);
+      editor.commands.setContent(value ?? "", false);
     }
   }, [value, editor]);
 
@@ -86,6 +86,19 @@ export const Editor = ({
       commands.toggleList(item.name, "listItem", false, item.attributes);
     else commands.toggleNode(item.name, "paragraph", item.attributes);
     commands.run();
+  };
+
+  const handleInsertLink = () => {
+    if (!addingLink?.url) return;
+    editor?.chain().focus().extendMarkRange("link").setLink({ href: addingLink.url }).run();
+    setAddingLink(null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleInsertLink();
+    }
   };
 
   return (
@@ -124,6 +137,7 @@ export const Editor = ({
               id="link-url"
               value={addingLink?.url ?? ""}
               onChange={(e) => setAddingLink({ url: e.target.value })}
+              onKeyDown={handleKeyDown}
               type="url"
               placeholder="https://example.com"
               required
@@ -140,14 +154,7 @@ export const Editor = ({
             >
               {currentLink ? "Unlink" : "Cancel"}
             </Button>
-            <Button
-              type="submit"
-              onClick={() => {
-                if (!addingLink?.url) return;
-                editor?.chain().focus().extendMarkRange("link").setLink({ href: addingLink.url }).run();
-                setAddingLink(null);
-              }}
-            >
+            <Button type="submit" onClick={handleInsertLink}>
               Insert
             </Button>
           </DialogFooter>

@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
-RSpec.describe Internal::EmailOtpController, type: :controller do
+RSpec.describe Internal::EmailOtpController do
   describe "POST #create" do
     let(:user) { create(:user) }
     let(:api_token) { GlobalConfig.get("API_SECRET_TOKEN", Rails.application.secret_key_base) }
@@ -15,7 +13,7 @@ RSpec.describe Internal::EmailOtpController, type: :controller do
 
         expect(response).to have_http_status(:ok)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["message"]).to eq("OTP sent successfully")
       end
     end
@@ -26,7 +24,7 @@ RSpec.describe Internal::EmailOtpController, type: :controller do
 
         expect(response).to have_http_status(:not_found)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("User not found")
       end
 
@@ -43,7 +41,7 @@ RSpec.describe Internal::EmailOtpController, type: :controller do
 
         expect(response).to have_http_status(:bad_request)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("Email is required")
       end
     end
@@ -54,7 +52,7 @@ RSpec.describe Internal::EmailOtpController, type: :controller do
 
         expect(response).to have_http_status(:bad_request)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("Email is required")
       end
     end
@@ -70,7 +68,7 @@ RSpec.describe Internal::EmailOtpController, type: :controller do
 
         expect(response).to have_http_status(:too_many_requests)
 
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response["error"]).to eq("Too many login attempts. Please wait before trying again.")
         expect(json_response["retry_after"]).to eq(10.minutes.to_i)
       end

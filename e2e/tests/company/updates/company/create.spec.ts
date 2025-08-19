@@ -3,6 +3,7 @@ import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyUpdatesFactory } from "@test/factories/companyUpdates";
+import { findRichTextEditor } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { withinModal } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -25,7 +26,7 @@ test.describe("company update creation", () => {
     await withinModal(
       async (modal) => {
         await modal.getByLabel("Title").fill(title);
-        await modal.locator('[contenteditable="true"]').fill(body);
+        await findRichTextEditor(modal, "Update").fill(body);
       },
       { page, title: modalTitle },
     );
@@ -35,8 +36,7 @@ test.describe("company update creation", () => {
     const title = "Published Update";
     const content = "This will be published";
 
-    await login(page, adminUser);
-    await page.goto("/updates/company");
+    await login(page, adminUser, "/updates/company");
 
     await page.getByRole("button", { name: "New update" }).click();
     await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
@@ -67,8 +67,7 @@ test.describe("company update creation", () => {
     const title = "Test Update";
     const content = "Test content";
 
-    await login(page, adminUser);
-    await page.goto("/updates/company");
+    await login(page, adminUser, "/updates/company");
 
     await page.getByRole("button", { name: "New update" }).click();
     await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
@@ -98,8 +97,7 @@ test.describe("company update creation", () => {
   });
 
   test("prevents submission with validation errors", async ({ page }) => {
-    await login(page, adminUser);
-    await page.goto("/updates/company");
+    await login(page, adminUser, "/updates/company");
 
     await page.getByRole("button", { name: "New update" }).click();
     await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
@@ -144,8 +142,7 @@ test.describe("company update creation", () => {
       body: "<p>Original content</p>",
     });
 
-    await login(page, adminUser);
-    await page.goto("/updates/company");
+    await login(page, adminUser, "/updates/company");
 
     await page.getByRole("row").filter({ hasText: "Original Title" }).click();
     await expect(page.getByRole("dialog", { name: "Edit company update" })).toBeVisible();
@@ -170,5 +167,39 @@ test.describe("company update creation", () => {
     });
     expect(updatedRecord?.title).toBe("Updated Title");
     expect(updatedRecord?.sentAt).not.toBeNull();
+  });
+
+  test("allows inserting link with Enter key in rich text editor", async ({ page }) => {
+    const title = "Test Update with Link";
+    const content = "Check out this link";
+    const linkUrl = "https://example.com";
+
+    await login(page, adminUser);
+    await page.goto("/updates/company");
+
+    await page.getByRole("button", { name: "New update" }).click();
+    await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
+
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Title").fill(title);
+
+        await findRichTextEditor(modal, "Update").fill(content);
+
+        await findRichTextEditor(modal, "Update").selectText();
+
+        await modal.getByRole("button", { name: "Link" }).click();
+      },
+      { page, title: "New company update" },
+    );
+
+    await expect(page.getByRole("dialog", { name: "Insert Link" })).toBeVisible();
+
+    await page.getByLabel("URL").fill(linkUrl);
+    await page.getByLabel("URL").press("Enter");
+
+    await expect(page.getByRole("dialog", { name: "Insert Link" })).not.toBeVisible();
+
+    await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
   });
 });

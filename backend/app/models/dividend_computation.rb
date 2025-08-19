@@ -9,6 +9,10 @@ class DividendComputation < ApplicationRecord
   validates :total_amount_in_usd, presence: true
   validates :dividends_issuance_date, presence: true
 
+  def number_of_shareholders
+    data_for_dividend_creation.map { _1[:company_investor_id] }.uniq.count
+  end
+
   def to_csv
     CSV.generate(headers: true) do |csv|
       csv << ["Investor", "Share class", "Number of shares", "Hurdle rate", "Original issue price (USD)",
@@ -23,19 +27,50 @@ class DividendComputation < ApplicationRecord
     end
   end
 
-  def to_per_investor_csv
+  def broken_down_by_investor
     share_dividends, safe_dividends = dividends_info
 
+    company_investor_ids = share_dividends.keys
+    company_investors_by_id = CompanyInvestor.includes(:user).where(id: company_investor_ids).index_by(&:id)
+
+    aggregated_data = []
+
+    share_dividends.each do |company_investor_id, info|
+      company_investor = company_investors_by_id[company_investor_id]
+      aggregated_data << {
+        investor_name: company_investor.user.legal_name,
+        company_investor_id: company_investor_id,
+        investor_external_id: company_investor.user.external_id,
+        total_amount: info[:total_amount],
+        number_of_shares: info[:number_of_shares],
+      }
+    end
+
+    safe_dividends.each do |investor_name, info|
+      aggregated_data << {
+        investor_name: investor_name,
+        # SAFEs are identified by their entity name
+        company_investor_id: nil,
+        investor_external_id: nil,
+        total_amount: info[:total_amount],
+        number_of_shares: info[:number_of_shares],
+      }
+    end
+
+    aggregated_data
+  end
+
+
+  def to_per_investor_csv
     CSV.generate(headers: true) do |csv|
       csv << ["Investor", "Investor ID", "Number of shares", "Amount (USD)"]
-      share_dividends.each do |investor_id, details|
-        csv << [CompanyInvestor.find(investor_id).user.legal_name,
-                investor_id,
-                details[:number_of_shares],
-                details[:total_amount]]
-      end
-      safe_dividends.each do |investor_name, details|
-        csv << [investor_name, nil, details[:number_of_shares], details[:total_amount]]
+      broken_down_by_investor.each do |investor_data|
+        csv << [
+          investor_data[:investor_name],
+          investor_data[:company_investor_id],
+          investor_data[:number_of_shares],
+          investor_data[:total_amount]
+        ]
       end
     end
   end
@@ -71,13 +106,14 @@ class DividendComputation < ApplicationRecord
         total_amount_in_cents: (dividend_attrs[:total_amount] * 100.to_d).to_i,
         qualified_amount_cents: (dividend_attrs[:qualified_dividends_amount] * 100.to_d).to_i,
         number_of_shares: dividend_attrs[:number_of_shares],
+        investment_amount_cents: dividend_attrs[:investment_amount_cents],
         status: Dividend::ISSUED # TODO (sharang): set `PENDING_SIGNUP` if user.encrypted_password is ""
       )
     end
   end
 
   def dividends_info
-    share_dividends = Hash.new { |h, k| h[k] = { number_of_shares: 0, total_amount: 0.to_d, qualified_dividends_amount: 0.to_d } }
+    share_dividends = Hash.new { |h, k| h[k] = { number_of_shares: 0, total_amount: 0.to_d, qualified_dividends_amount: 0.to_d, investment_amount_cents: 0 } }
     safe_dividends = Hash.new { |h, k| h[k] = { number_of_shares: 0, total_amount: 0.to_d, qualified_dividends_amount: 0.to_d } }
 
     dividend_computation_outputs.find_each do |output|
@@ -89,6 +125,7 @@ class DividendComputation < ApplicationRecord
         share_dividends[output.company_investor_id][:number_of_shares] += output.number_of_shares
         share_dividends[output.company_investor_id][:total_amount] += output.total_amount_in_usd
         share_dividends[output.company_investor_id][:qualified_dividends_amount] += output.qualified_dividend_amount_usd
+        share_dividends[output.company_investor_id][:investment_amount_cents] += output.investment_amount_cents.to_i
       end
     end
 
@@ -106,6 +143,7 @@ class DividendComputation < ApplicationRecord
           total_amount: info[:total_amount],
           qualified_dividends_amount: info[:qualified_dividends_amount],
           number_of_shares: info[:number_of_shares],
+          investment_amount_cents: info[:investment_amount_cents],
         }
       end
 
@@ -119,6 +157,7 @@ class DividendComputation < ApplicationRecord
             qualified_dividends_amount: (info[:qualified_dividends_amount] / investment_in_usd * security_in_usd).round(2),
             total_amount: (info[:total_amount] / investment_in_usd * security_in_usd).round(2),
             number_of_shares: nil,
+            investment_amount_cents: security.principal_value_in_cents,
           }
         end
       end

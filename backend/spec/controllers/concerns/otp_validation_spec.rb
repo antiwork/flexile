@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
-RSpec.describe OtpValidation, type: :controller do
+RSpec.describe OtpValidation do
   controller(ApplicationController) do
     include OtpValidation
 
@@ -37,19 +35,19 @@ RSpec.describe OtpValidation, type: :controller do
     it "returns true when both email and otp_code are present" do
       post :test_validate_otp_params, params: { email: "test@example.com", otp_code: "123456" }
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)["success"]).to be true
+      expect(response.parsed_body["success"]).to be true
     end
 
     it "renders error when email is blank" do
       post :test_validate_otp_params, params: { email: "", otp_code: "123456" }
       expect(response).to have_http_status(:bad_request)
-      expect(JSON.parse(response.body)["error"]).to eq("Email is required")
+      expect(response.parsed_body["error"]).to eq("Email is required")
     end
 
     it "renders error when otp_code is blank" do
       post :test_validate_otp_params, params: { email: "test@example.com", otp_code: "" }
       expect(response).to have_http_status(:bad_request)
-      expect(JSON.parse(response.body)["error"]).to eq("OTP code is required")
+      expect(response.parsed_body["error"]).to eq("OTP code is required")
     end
   end
 
@@ -57,13 +55,13 @@ RSpec.describe OtpValidation, type: :controller do
     it "returns user when found" do
       post :test_find_user_by_email, params: { email: user.email }
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)["user_found"]).to be true
+      expect(response.parsed_body["user_found"]).to be true
     end
 
     it "renders error when user not found" do
       post :test_find_user_by_email, params: { email: "nonexistent@example.com" }
       expect(response).to have_http_status(:not_found)
-      expect(JSON.parse(response.body)["error"]).to eq("User not found")
+      expect(response.parsed_body["error"]).to eq("User not found")
     end
   end
 
@@ -71,14 +69,14 @@ RSpec.describe OtpValidation, type: :controller do
     it "returns true when user is not rate limited" do
       post :test_check_otp_rate_limit, params: { user_id: user.id }
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)["passed"]).to be true
+      expect(response.parsed_body["passed"]).to be true
     end
 
     it "renders error when user is rate limited" do
       allow_any_instance_of(User).to receive(:otp_rate_limited?).and_return(true)
       post :test_check_otp_rate_limit, params: { user_id: user.id }
       expect(response).to have_http_status(:too_many_requests)
-      expect(JSON.parse(response.body)["error"]).to eq("Too many login attempts. Please wait before trying again.")
+      expect(response.parsed_body["error"]).to eq("Too many login attempts. Please wait before trying again.")
     end
   end
 end

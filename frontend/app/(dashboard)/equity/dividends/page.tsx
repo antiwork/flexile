@@ -1,8 +1,9 @@
 "use client";
-import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
+import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleCheck, Info } from "lucide-react";
 import Link from "next/link";
-import React, { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import DividendStatusIndicator from "@/app/(dashboard)/equity/DividendStatusIndicator";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -25,12 +26,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { useCurrentCompany, useCurrentUser } from "@/global";
+import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
-import { company_dividend_path, sign_company_dividend_path } from "@/utils/routes";
+import { company_dividend_path, company_switch_path, sign_company_dividend_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 
 type Dividend = RouterOutput["dividends"]["list"][number];
@@ -38,6 +39,39 @@ const columnHelper = createColumnHelper<Dividend>();
 export default function Dividends() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+
+  const companyIdParam = searchParams.get("company_id");
+
+  const switchCompany = async (companyId: string) => {
+    useUserStore.setState((state) => ({ ...state, pending: true }));
+    try {
+      await request({
+        method: "POST",
+        url: company_switch_path(companyId),
+        accept: "json",
+      });
+      await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
+      router.replace("/equity/dividends");
+    } finally {
+      useUserStore.setState((state) => ({ ...state, pending: false }));
+    }
+  };
+
+  useEffect(() => {
+    if (!companyIdParam) return;
+    if (companyIdParam !== company.externalId) {
+      const targetCompany = user.companies.find((c) => c.externalId === companyIdParam);
+      if (targetCompany && targetCompany.id !== company.id) {
+        void switchCompany(targetCompany.id);
+      } else {
+        router.replace("/equity/dividends");
+      }
+    }
+  }, [companyIdParam, company.externalId, company.id, user.companies, user.email]);
+
   const {
     data = [],
     refetch,

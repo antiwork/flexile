@@ -5,7 +5,6 @@ import { pick, truncate } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
 import { companyInvestors, companyUpdates } from "@/db/schema";
-import { inngest } from "@/inngest/client";
 import { type CompanyContext, companyProcedure, createRouter, renderTiptapToText } from "@/trpc";
 import { isActive } from "@/trpc/routes/contractors";
 import { assertDefined } from "@/utils/assert";
@@ -67,10 +66,6 @@ export const companyUpdatesRouter = createRouter({
       .values({
         ...pick(input, ["title", "body"]),
         companyId: ctx.company.id,
-        period: null,
-        periodStartedOn: null,
-        showRevenue: false,
-        showNetIncome: false,
       })
       .returning();
     return assertDefined(update).externalId;
@@ -83,10 +78,6 @@ export const companyUpdatesRouter = createRouter({
       .set({
         ...pick(input, ["title", "body"]),
         companyId: ctx.company.id,
-        period: null,
-        periodStartedOn: null,
-        showRevenue: false,
-        showNetIncome: false,
       })
       .where(byId(ctx, input.id))
       .returning();
@@ -104,13 +95,6 @@ export const companyUpdatesRouter = createRouter({
 
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
 
-    await inngest.send({
-      name: "company.update.published",
-      data: {
-        updateId: update.externalId,
-      },
-    });
-
     return update.externalId;
   }),
   sendTestEmail: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
@@ -118,13 +102,6 @@ export const companyUpdatesRouter = createRouter({
     if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
     const update = await db.query.companyUpdates.findFirst({ where: byId(ctx, input.id) });
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
-    await inngest.send({
-      name: "company.update.published",
-      data: {
-        updateId: update.externalId,
-        recipients: [ctx.user],
-      },
-    });
   }),
   delete: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
     const hasInvestors = await checkHasInvestors(ctx.company.id);

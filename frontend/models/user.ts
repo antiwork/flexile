@@ -31,6 +31,7 @@ const companySchema = z.object({
   investorCount: z.number().nullable(),
   primaryAdminName: z.string().nullable(),
   isTrusted: z.boolean(),
+  externalId: z.string(),
   checklistItems: z.array(
     z.object({
       key: z.string(),
@@ -45,7 +46,7 @@ export const currentUserSchema = z.object({
   id: z.string(),
   name: z.string(),
   address: addressSchema,
-  currentCompanyId: z.string(),
+  currentCompanyId: z.string().nullable(),
   onboardingPath: z.string().nullable(),
   companies: z.array(companySchema),
   email: z.string(),

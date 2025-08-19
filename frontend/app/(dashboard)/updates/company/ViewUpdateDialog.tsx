@@ -31,10 +31,10 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
             )}
           </DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-8">
           {isLoading ? (
             <>
-              <SkeletonList>
+              <SkeletonList count={4}>
                 <div className="flex flex-col gap-5">
                   <Skeleton className="h-6 max-w-60" />
                   <div className="flex flex-col gap-2">
@@ -44,7 +44,6 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
                   </div>
                 </div>
               </SkeletonList>
-              <Skeleton className="aspect-video" />
               <Skeleton className="h-4 max-w-40" />
             </>
           ) : isError ? (

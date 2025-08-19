@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
-RSpec.describe UserMailer, type: :mailer do
+RSpec.describe UserMailer do
   let(:user) { create(:user) }
 
   describe "#otp_code" do

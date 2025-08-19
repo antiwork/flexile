@@ -1,39 +1,26 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import {
-  BriefcaseBusiness,
-  CircleCheck,
-  Download,
-  FileTextIcon,
-  Info,
-  Pencil,
-  PercentIcon,
-  Plus,
-  SendHorizontal,
-} from "lucide-react";
+import { CircleCheck, Download, FileTextIcon, Info, Pencil, Plus } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DocusealForm, { customCss } from "@/app/(dashboard)/documents/DocusealForm";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
-import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
+import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
+import SignForm from "@/components/SignForm";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
@@ -44,7 +31,6 @@ import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 
 type Document = RouterOutput["documents"]["list"][number];
-type SignableDocument = Document & { docusealSubmissionId: number };
 
 const typeLabels = {
   [DocumentType.ConsultingContract]: "Agreement",
@@ -101,6 +87,7 @@ const EditTemplates = () => {
 
   const [templates, { refetch: refetchTemplates }] = trpc.documents.templates.list.useSuspenseQuery({
     companyId: company.id,
+    type: DocumentTemplateType.ConsultingContract,
   });
   const filteredTemplates = useMemo(
     () =>
@@ -185,21 +172,6 @@ const EditTemplates = () => {
                 <span className="mt-2 whitespace-normal">Consulting agreement</span>
               </div>
             </MutationButton>
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Equity grant contract",
-                type: DocumentTemplateType.EquityPlanContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <PercentIcon className="size-6" />
-                <span className="mt-2 whitespace-normal">Equity grant contract</span>
-              </div>
-            </MutationButton>
           </div>
         </div>
       </DialogContent>
@@ -207,17 +179,13 @@ const EditTemplates = () => {
   );
 };
 
-const inviteLawyerSchema = z.object({
-  email: z.string().email(),
-});
-
 export default function DocumentsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const [showInviteModal, setShowInviteModal] = useState(false);
   const isCompanyRepresentative = !!user.roles.administrator || !!user.roles.lawyer;
   const userId = isCompanyRepresentative ? null : user.id;
   const canSign = user.address.street_address || isCompanyRepresentative;
+  const isMobile = useIsMobile();
 
   const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(
     user.roles.worker ? !user.roles.worker.role : false,
@@ -226,17 +194,6 @@ export default function DocumentsPage() {
   const currentYear = new Date().getFullYear();
   const { data: documents = [], isLoading } = trpc.documents.list.useQuery({ companyId: company.id, userId });
 
-  const inviteLawyerForm = useForm({ resolver: zodResolver(inviteLawyerSchema) });
-  const inviteLawyer = trpc.lawyers.invite.useMutation({
-    onSuccess: () => {
-      setShowInviteModal(false);
-      inviteLawyerForm.reset();
-    },
-  });
-  const submitInviteLawyer = inviteLawyerForm.handleSubmit(async ({ email }) =>
-    inviteLawyer.mutateAsync({ companyId: company.id, email }),
-  );
-
   const columnHelper = createColumnHelper<Document>();
   const [downloadDocument, setDownloadDocument] = useState<bigint | null>(null);
   const { data: downloadUrl } = trpc.documents.getUrl.useQuery(
@@ -244,15 +201,15 @@ export default function DocumentsPage() {
   );
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
-  const isSignable = (document: Document): document is SignableDocument =>
-    !!document.docusealSubmissionId &&
+  const isSignable = (document: Document) =>
+    (!!document.docusealSubmissionId || document.hasText) &&
     document.signatories.some(
       (signatory) =>
         !signatory.signedAt &&
         (signatory.id === user.id || (signatory.title === "Company Representative" && isCompanyRepresentative)),
     );
   const signDocument = signDocumentId
-    ? documents.find((document): document is SignableDocument => document.id === signDocumentId && isSignable(document))
+    ? documents.find((document) => document.id === signDocumentId && isSignable(document))
     : null;
   useEffect(() => {
     const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
@@ -262,14 +219,14 @@ export default function DocumentsPage() {
     if (downloadUrl) window.location.href = downloadUrl;
   }, [downloadUrl]);
 
-  const columns = useMemo(
+  const desktopColumns = useMemo(
     () =>
       [
         isCompanyRepresentative
           ? columnHelper.accessor(
               (row) =>
                 assertDefined(row.signatories.find((signatory) => signatory.title !== "Company Representative")).name,
-              { header: "Signer" },
+              { id: "signer", header: "Signer" },
             )
           : null,
         columnHelper.simple("name", "Document"),
@@ -287,6 +244,7 @@ export default function DocumentsPage() {
             Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
         }),
         columnHelper.accessor((row) => getStatus(row).name, {
+          id: "status",
           header: "Status",
           meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
           cell: (info) => {
@@ -328,14 +286,94 @@ export default function DocumentsPage() {
           },
         }),
       ].filter((column) => !!column),
-    [userId],
+    [documents, isCompanyRepresentative, isSignable, canSign, setSignDocumentId, setDownloadDocument],
   );
+
+  const mobileColumns = useMemo(
+    () =>
+      [
+        columnHelper.display({
+          id: "documentNameSigner",
+          cell: (info) => (
+            <div className="flex flex-col gap-1">
+              <div className="text-base font-medium">{info.row.original.name}</div>
+              {isCompanyRepresentative ? (
+                <div className="text-sm font-normal">
+                  {
+                    info.row.original.signatories.find((signatory) => signatory.title !== "Company Representative")
+                      ?.name
+                  }
+                </div>
+              ) : null}
+            </div>
+          ),
+          meta: {
+            cellClassName: "w-full",
+          },
+        }),
+
+        columnHelper.display({
+          id: "statusSentOn",
+          cell: (info) => {
+            const document = info.row.original;
+            const { variant } = getStatus(info.row.original);
+
+            return (
+              <div className="flex h-full flex-col items-end justify-between">
+                <div className="flex h-5 w-4 items-center justify-center">
+                  <Status variant={variant} />
+                </div>
+                <div className="text-gray-600">{formatDate(document.createdAt)}</div>
+              </div>
+            );
+          },
+        }),
+
+        columnHelper.accessor((row) => getStatus(row).name, {
+          id: "status",
+          meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))], hidden: true },
+        }),
+        isCompanyRepresentative
+          ? columnHelper.accessor(
+              (row) =>
+                assertDefined(row.signatories.find((signatory) => signatory.title !== "Company Representative")).name,
+              {
+                id: "signer",
+                header: "Signer",
+                meta: { hidden: true },
+              },
+            )
+          : null,
+
+        columnHelper.accessor("createdAt", {
+          id: "createdAt",
+          header: "Date",
+          cell: (info) => formatDate(info.getValue()),
+          meta: {
+            filterOptions: [...new Set(documents.map((document) => document.createdAt.getFullYear().toString()))],
+            hidden: true,
+          },
+          filterFn: (row, _, filterValue) =>
+            Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
+        }),
+
+        columnHelper.accessor((row) => typeLabels[row.type], {
+          header: "Type",
+          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))], hidden: true },
+        }),
+      ].filter((column) => !!column),
+    [documents, isCompanyRepresentative],
+  );
+
+  const columns = isMobile ? mobileColumns : desktopColumns;
+
   const storedColumnFilters = columnFiltersSchema.safeParse(
     JSON.parse(localStorage.getItem(storageKeys.DOCUMENTS_COLUMN_FILTERS) ?? "{}"),
   );
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
-    storedColumnFilters.data ?? [{ id: "Status", value: ["Signature required"] }],
+    storedColumnFilters.data ?? [{ id: "status", value: ["Signature required"] }],
   );
+
   const table = useTable({
     columns,
     data: documents,
@@ -358,15 +396,18 @@ export default function DocumentsPage() {
       <DashboardHeader
         title="Documents"
         headerActions={
-          <>
-            {isCompanyRepresentative && documents.length === 0 ? <EditTemplates /> : null}
-            {user.roles.administrator && company.flags.includes("lawyers") ? (
-              <Button onClick={() => setShowInviteModal(true)}>
-                <BriefcaseBusiness className="size-4" />
-                Invite lawyer
-              </Button>
-            ) : null}
-          </>
+          isMobile ? (
+            table.options.enableRowSelection ? (
+              <button
+                className="text-blue-600"
+                onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
+              >
+                {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
+              </button>
+            ) : null
+          ) : isCompanyRepresentative && documents.length === 0 ? (
+            <EditTemplates />
+          ) : null
         }
       />
 
@@ -402,8 +443,9 @@ export default function DocumentsPage() {
         <>
           <DataTable
             table={table}
+            tabsColumn="status"
             actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
-            {...(isCompanyRepresentative && { searchColumn: "Signer" })}
+            {...(isCompanyRepresentative && { searchColumn: "signer" })}
           />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
         </>
@@ -412,57 +454,20 @@ export default function DocumentsPage() {
           <Placeholder icon={CircleCheck}>No documents yet.</Placeholder>
         </div>
       )}
-
-      <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Who's joining?</DialogTitle>
-          </DialogHeader>
-          <Form {...inviteLawyerForm}>
-            <form onSubmit={(e) => void submitInviteLawyer(e)}>
-              <FormField
-                control={inviteLawyerForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <MutationStatusButton
-                type="submit"
-                mutation={inviteLawyer}
-                className="mt-4 w-full"
-                loadingText="Inviting..."
-              >
-                <SendHorizontal className="size-5" />
-                Invite
-              </MutationStatusButton>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
       {forceWorkerOnboarding ? <FinishOnboarding handleComplete={() => setForceWorkerOnboarding(false)} /> : null}
     </>
   );
 }
 
-const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; onClose: () => void }) => {
+const SignDocumentModal = ({ document, onClose }: { document: Document; onClose: () => void }) => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [redirectUrl] = useQueryState("next");
   const router = useRouter();
-  const [{ slug, readonlyFields }] = trpc.documents.templates.getSubmitterSlug.useSuspenseQuery({
-    id: document.docusealSubmissionId,
-    companyId: company.id,
-  });
   const trpcUtils = trpc.useUtils();
   const queryClient = useQueryClient();
 
+  const [data] = trpc.documents.get.useSuspenseQuery({ companyId: company.id, id: document.id });
   const signDocument = trpc.documents.sign.useMutation({
     onSuccess: async () => {
       router.replace("/documents");
@@ -473,24 +478,50 @@ const SignDocumentModal = ({ document, onClose }: { document: SignableDocument; 
       else onClose();
     },
   });
+  const [signed, setSigned] = useState(false);
+  const sign = () => {
+    signDocument.mutate({
+      companyId: company.id,
+      id: document.id,
+      role: document.signatories.find((signatory) => signatory.id === user.id)?.title ?? "Company Representative",
+    });
+  };
 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
-        <DocusealForm
-          src={`https://docuseal.com/s/${slug}`}
-          readonlyFields={readonlyFields}
-          customCss={customCss}
-          onComplete={() => {
-            signDocument.mutate({
-              companyId: company.id,
-              id: document.id,
-              role:
-                document.signatories.find((signatory) => signatory.id === user.id)?.title ?? "Company Representative",
-            });
-          }}
-        />
+        <DialogHeader>
+          <DialogTitle>{document.name}</DialogTitle>
+        </DialogHeader>
+        {document.docusealSubmissionId != null ? (
+          <SignWithDocuseal id={document.docusealSubmissionId} onSigned={sign} />
+        ) : (
+          <>
+            <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
+            <DialogFooter>
+              <Button onClick={sign} disabled={!signed}>
+                Agree & Submit
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
+  );
+};
+
+const SignWithDocuseal = ({ id, onSigned }: { id: number; onSigned: () => void }) => {
+  const company = useCurrentCompany();
+  const [{ slug, readonlyFields }] = trpc.documents.templates.getSubmitterSlug.useSuspenseQuery({
+    id,
+    companyId: company.id,
+  });
+  return (
+    <DocusealForm
+      src={`https://docuseal.com/s/${slug}`}
+      readonlyFields={readonlyFields}
+      customCss={customCss}
+      onComplete={onSigned}
+    />
   );
 };

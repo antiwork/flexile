@@ -358,12 +358,8 @@ class SeedDataGeneratorFromTemplate
           result = CreateOrUpdateCompanyUpdate.new(
             company:,
             company_update_params: {
-              period: :month,
-              period_started_on:,
               title: "#{period_started_on.strftime("%B %Y")} update",
               body:,
-              show_net_income: true,
-              show_revenue: true,
             }
           ).perform!
           company_update = result[:company_update]
@@ -710,16 +706,6 @@ class SeedDataGeneratorFromTemplate
         end
       end
       print_message("Created consolidated invoices.")
-    end
-
-    def create_company_worker_equity_grant!(company_worker, equity_grant_data)
-      option_pool_created_at = Date.new(equity_grant_data.fetch("option_pool").fetch("year"), 1, 1)
-      Timecop.travel(option_pool_created_at) do
-        GrantStockOptions.new(
-          company_worker,
-          board_approval_date: option_pool_created_at,
-        ).process
-      end
     end
 
     def create_user_bank_account!(user, wise_recipient_params)
