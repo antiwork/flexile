@@ -18,7 +18,7 @@ class CreateDividendRound
     end
   rescue ActiveRecord::RecordInvalid => e
     { success: false, error: e.record.errors.full_messages.to_sentence }
-  rescue StandardError => e
+  rescue => e
     { success: false, error: e.message }
   end
 end
