@@ -129,7 +129,8 @@ test.describe("Dividend Computations", () => {
         await expect(modal.getByRole("heading", { name: "Distribution details" })).toBeVisible();
         await expect(modal.getByText("Please confirm all details are accurate")).toBeVisible();
         await expect(modal.getByText("Dividends")).toBeVisible();
-        await expect(modal.getByText(formatMoney(dividendComputation.totalAmountInUsd))).toBeVisible();
+        const totalCostRow = modal.getByText("Total cost:").locator("..");
+        await expect(totalCostRow.getByText(formatMoney(dividendComputation.totalAmountInUsd))).toBeVisible();
         await modal.getByLabel("I've reviewed all information and confirm it's correct.").click();
         await expect(modal.getByRole("button", { name: "Finalize distribution" })).toBeEnabled();
         await modal.getByRole("button", { name: "Finalize distribution" }).click();
