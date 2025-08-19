@@ -42,13 +42,13 @@ test.describe("Equity Grants", () => {
     await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
 
     await page.getByLabel("Number of options").fill("1000");
-    await expect(page.getByText("Estimated value: $2500.00, based on a $2.5")).toBeVisible();
+    await expect(page.getByText("Estimated value of $2,500, based on a $2.50 share price")).toBeVisible();
 
     await page.getByLabel("Number of options").fill("500");
-    await expect(page.getByText("Estimated value: $1250.00, based on a $2.5")).toBeVisible();
+    await expect(page.getByText("Estimated value of $1,250, based on a $2.50 share price")).toBeVisible();
 
     await page.getByLabel("Number of options").fill("10000");
-    await expect(page.getByText("Estimated value: $25000.00, based on a $2.5")).toBeVisible();
+    await expect(page.getByText("Estimated value of $25,000, based on a $2.50 share price")).toBeVisible();
 
     await page.getByLabel("Number of options").fill("10");
     await selectComboboxOption(page, "Relationship to company", "Consultant");
@@ -307,12 +307,6 @@ test.describe("Equity Grants", () => {
     await companyContractorsFactory.create({
       companyId: company.id,
       userId: regularContractor.id,
-    });
-
-    await optionPoolsFactory.create({ companyId: company.id });
-    await documentTemplatesFactory.create({
-      companyId: company.id,
-      type: DocumentTemplateType.EquityPlanContract,
     });
 
     await login(page, adminUser);
