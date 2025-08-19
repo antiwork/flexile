@@ -27,6 +27,7 @@ import {
 } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
+import { formatMoney } from "@/utils/formatMoney";
 
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 
@@ -104,7 +105,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
 
   const estimatedValue =
     data.sharePriceUsd && numberOfShares && !isNaN(Number(data.sharePriceUsd))
-      ? (Number(data.sharePriceUsd) * numberOfShares).toFixed(2)
+      ? formatMoney(Number(data.sharePriceUsd) * numberOfShares)
       : null;
 
   const isFormValid = form.formState.isValid;
@@ -231,7 +232,11 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                         {...field}
                         options={data.workers
                           .sort((a, b) => a.user.name.localeCompare(b.user.name))
-                          .map((worker) => ({ label: worker.user.name, value: worker.id }))}
+                          .map((worker) => ({
+                            label: `${worker.user.name} (${worker.user.email})`,
+                            value: worker.id,
+                            keywords: [worker.user.name, worker.user.email],
+                          }))}
                         placeholder="Select recipient"
                       />
                     </FormControl>
@@ -302,7 +307,8 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                     <FormMessage />
                     {estimatedValue ? (
                       <FormDescription>
-                        Estimated value: ${estimatedValue}, based on a ${data.sharePriceUsd}
+                        Estimated value of {estimatedValue}, based on a {formatMoney(Number(data.sharePriceUsd))} share
+                        price
                       </FormDescription>
                     ) : null}
                   </FormItem>

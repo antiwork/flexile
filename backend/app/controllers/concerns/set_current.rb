@@ -21,20 +21,11 @@ module SetCurrent
       user = JwtService.user_from_request(request)
     end
 
-    # Handle invite links for authenticated users
-    invited_company = nil
-    if user && cookies["invitation_token"].present?
-      invite_link = CompanyInviteLink.find_by(token: cookies["invitation_token"])
-      invited_company = invite_link&.company
-      AcceptCompanyInviteLink.new(user:, token: invite_link.token).perform if invite_link
-      cookies.delete("invitation_token")
-    end
-
     Current.user = user
 
     if Current.user.present?
-      company = invited_company || company_from_param || company_from_user
-      if company.nil?
+      company = company_from_param || company_from_user
+      if company.nil? && !cookies["invitation_token"].present?
         ApplicationRecord.transaction do
           company = user.all_companies.first
           if company.nil?

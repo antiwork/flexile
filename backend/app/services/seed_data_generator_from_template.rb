@@ -358,12 +358,8 @@ class SeedDataGeneratorFromTemplate
           result = CreateOrUpdateCompanyUpdate.new(
             company:,
             company_update_params: {
-              period: :month,
-              period_started_on:,
               title: "#{period_started_on.strftime("%B %Y")} update",
               body:,
-              show_net_income: true,
-              show_revenue: true,
             }
           ).perform!
           company_update = result[:company_update]

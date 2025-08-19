@@ -66,6 +66,8 @@ export default function Dividends() {
       const targetCompany = user.companies.find((c) => c.externalId === companyIdParam);
       if (targetCompany && targetCompany.id !== company.id) {
         void switchCompany(targetCompany.id);
+      } else {
+        router.replace("/equity/dividends");
       }
     }
   }, [companyIdParam, company.externalId, company.id, user.companies, user.email]);

@@ -181,14 +181,14 @@ export default function SettingsPage() {
         </form>
       </Form>
       <StripeMicrodepositVerification />
-      {company.flags.includes("quickbooks") ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Integrations</CardTitle>
-          </CardHeader>
-          <CardContent>{company.flags.includes("quickbooks") ? <QuickbooksIntegration /> : null}</CardContent>
-        </Card>
-      ) : null}
+      <Card>
+        <CardHeader>
+          <CardTitle>Integrations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <QuickbooksIntegration />
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Internal::Companies::AdministratorsController, type: :controller do
+RSpec.describe Internal::Companies::AdministratorsController do
   let(:company) { create(:company) }
   let(:admin_user) { create(:user) }
   let(:company_administrator) { create(:company_administrator, company: company, user: admin_user) }
@@ -65,7 +65,7 @@ RSpec.describe Internal::Companies::AdministratorsController, type: :controller 
 
             expect(response).to have_http_status(:unprocessable_entity)
 
-            json_response = JSON.parse(response.body)
+            json_response = response.parsed_body
             expect(json_response["success"]).to be false
             expect(json_response["field"]).to eq("email")
             expect(json_response["error_message"]).to eq("User is already an administrator for this company.")
@@ -85,7 +85,7 @@ RSpec.describe Internal::Companies::AdministratorsController, type: :controller 
 
           expect(response).to have_http_status(:unprocessable_entity)
 
-          json_response = JSON.parse(response.body)
+          json_response = response.parsed_body
           expect(json_response["success"]).to be false
           expect(json_response["field"]).to eq("email")
         end
@@ -103,7 +103,7 @@ RSpec.describe Internal::Companies::AdministratorsController, type: :controller 
 
           expect(response).to have_http_status(:unprocessable_entity)
 
-          json_response = JSON.parse(response.body)
+          json_response = response.parsed_body
           expect(json_response["success"]).to be false
           expect(json_response["field"]).to eq("email")
         end

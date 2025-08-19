@@ -1135,6 +1135,44 @@ export const company_dividend_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":tr
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations/:id(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_computation_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"dividend_computations"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations/:id(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_computation_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"dividend_computations"],[2,[7,"/"],[2,[3,"id"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_computations_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"dividend_computations"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_computations(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_computations_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"dividend_computations"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/equity_exercise_payments/:id(.:format)
  * @param {any} company_id
  * @param {any} id
@@ -1189,21 +1227,21 @@ export const company_invitations_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/invite_links(.:format)
+ * /internal/companies/:company_id/invite_link(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const company_invite_links_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invite_links"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]], true);
+export const company_invite_link_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invite_link"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]], true);
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/invite_links(.:format)
+ * /internal/companies/:company_id/invite_link(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const company_invite_links_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invite_links"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]);
+export const company_invite_link_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invite_link"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]);
 
 /**
  * Generates rails route to
@@ -2099,21 +2137,21 @@ export const resend_company_equity_grant_exercise_path = /*#__PURE__*/ __jsr.r({
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/invite_links/reset(.:format)
+ * /internal/companies/:company_id/invite_link/reset(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const reset_company_invite_links_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invite_links"],[2,[7,"/"],[2,[6,"reset"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]], true);
+export const reset_company_invite_link_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invite_link"],[2,[7,"/"],[2,[6,"reset"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]], true);
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/invite_links/reset(.:format)
+ * /internal/companies/:company_id/invite_link/reset(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const reset_company_invite_links_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invite_links"],[2,[7,"/"],[2,[6,"reset"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
+export const reset_company_invite_link_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invite_link"],[2,[7,"/"],[2,[6,"reset"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
 
 /**
  * Generates rails route to
@@ -2352,22 +2390,6 @@ export const verify_and_create_signup_index_url = /*#__PURE__*/ __jsr.r({"format
  * @returns {string} route path
  */
 export const verify_and_create_signup_index_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"signup"],[2,[7,"/"],[2,[6,"verify_and_create"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
-
-/**
- * Generates rails route to
- * /internal/invite_links/verify(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const verify_invite_links_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"invite_links"],[2,[7,"/"],[2,[6,"verify"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
-
-/**
- * Generates rails route to
- * /internal/invite_links/verify(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const verify_invite_links_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"invite_links"],[2,[7,"/"],[2,[6,"verify"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
 
 /**
  * Generates rails route to
