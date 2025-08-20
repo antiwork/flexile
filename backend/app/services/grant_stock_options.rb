@@ -5,16 +5,16 @@ class GrantStockOptions
                 number_of_shares:, issue_date_relationship:, option_grant_type:, option_expiry_months:,
                 vesting_trigger:, vesting_schedule_params:, voluntary_termination_exercise_months:,
                 involuntary_termination_exercise_months:, termination_with_cause_exercise_months:,
-                death_exercise_months:, disability_exercise_months:, retirement_exercise_months:)
+                death_exercise_months:, disability_exercise_months:, retirement_exercise_months:, contract:)
     @company_worker = company_worker
     @option_pool = option_pool
     @company = company_worker.company
     @board_approval_date = board_approval_date
     @vesting_commencement_date = vesting_commencement_date
-    @number_of_shares = number_of_shares
+    @number_of_shares = number_of_shares&.to_i
     @issue_date_relationship = issue_date_relationship
     @option_grant_type = option_grant_type
-    @option_expiry_months = option_expiry_months
+    @option_expiry_months = option_expiry_months&.to_i
     @vesting_trigger = vesting_trigger
     @vesting_schedule_params = vesting_schedule_params || {}
     @voluntary_termination_exercise_months = voluntary_termination_exercise_months
@@ -23,6 +23,7 @@ class GrantStockOptions
     @death_exercise_months = death_exercise_months
     @disability_exercise_months = disability_exercise_months
     @retirement_exercise_months = retirement_exercise_months
+    @contract = contract
   end
 
   def process
@@ -31,7 +32,7 @@ class GrantStockOptions
     return { success: false, error: "Cannot grant stock options for #{user.display_name} because they are an alum" } if company_worker.alumni?
     return { success: false, error: "Please set the company's conversion share price first" } if company.conversion_share_price_usd.nil?
     return { success: false, error: "Please set the company's current FMV (409A valuation) first" } if company.fmv_per_share_in_usd.nil?
-    return { success: false, error: "Equity contract not appropriate for #{user.display_name} from country #{ISO3166::Country[user.country_code]}" } unless EquityContractCountrySupport.new(user).supported?
+    return { success: false, error: "Equity contract missing" } unless contract.present?
 
     company_investor =
       user.company_investors.find_or_create_by!(company:) do |investor|
@@ -55,33 +56,37 @@ class GrantStockOptions
     exercise_price_usd = company.fmv_per_share_in_usd
     share_price_usd = company.conversion_share_price_usd
 
-    equity_grant_creation_result = EquityGrantCreation.new(company_investor:, option_pool:, option_grant_type:, share_price_usd:,
-                                                           exercise_price_usd:, number_of_shares: @number_of_shares,
-                                                           vested_shares: 0, period_started_at:, period_ended_at:,
-                                                           issue_date_relationship:, option_expiry_months:,
-                                                           board_approval_date:, vesting_trigger:, vesting_schedule:,
-                                                           voluntary_termination_exercise_months:,
-                                                           involuntary_termination_exercise_months:,
-                                                           termination_with_cause_exercise_months:,
-                                                           death_exercise_months:, disability_exercise_months:,
-                                                           retirement_exercise_months:)
-                                                      .process
-    if equity_grant_creation_result.success?
-      company_administrator = company.primary_admin
-
-      equity_grant = equity_grant_creation_result.equity_grant
-      document = company_worker.user.documents.build(equity_grant:,
-                                                     company:,
-                                                     name: "Equity Incentive Plan #{Date.current.year}",
-                                                     year: Date.current.year,
-                                                     document_type: :equity_plan_contract)
-      document.signatures.build(user:, title: "Signer")
-      document.signatures.build(user: company_administrator.user, title: "Company Representative")
-      document.save!
-      CompanyWorkerMailer.equity_grant_issued(equity_grant.id).deliver_later
-      { success: true, document_id: document.id }
-    else
-      { success: false, error: equity_grant_creation_result.error }
+    ActiveRecord::Base.transaction do
+      equity_grant_creation_result = EquityGrantCreation.new(company_investor:, option_pool:, option_grant_type:, share_price_usd:,
+                                                             exercise_price_usd:, number_of_shares: @number_of_shares,
+                                                             vested_shares: 0, period_started_at:, period_ended_at:,
+                                                             issue_date_relationship:, option_expiry_months:,
+                                                             board_approval_date:, vesting_trigger:, vesting_schedule:,
+                                                             voluntary_termination_exercise_months:,
+                                                             involuntary_termination_exercise_months:,
+                                                             termination_with_cause_exercise_months:,
+                                                             death_exercise_months:, disability_exercise_months:,
+                                                             retirement_exercise_months:)
+                                                        .process
+      if equity_grant_creation_result.success?
+        equity_grant = equity_grant_creation_result.equity_grant
+        document = company_worker.user.documents.build(equity_grant:,
+                                                       company:,
+                                                       name: "Equity Incentive Plan #{Date.current.year}",
+                                                       year: Date.current.year,
+                                                       document_type: :equity_plan_contract)
+        if contract.is_a?(String)
+          document.text = contract
+        else
+          document.attachments.attach(contract)
+        end
+        document.signatures.build(user:, title: "Signer", signed_at: contract.is_a?(String) ? nil : Time.current)
+        document.save!
+        CompanyWorkerMailer.equity_grant_issued(equity_grant.id).deliver_later
+        { success: true }
+      else
+        { success: false, error: equity_grant_creation_result.error }
+      end
     end
   end
 
@@ -90,5 +95,5 @@ class GrantStockOptions
                 :issue_date_relationship, :option_expiry_months, :vesting_trigger, :vesting_schedule_params,
                 :voluntary_termination_exercise_months, :involuntary_termination_exercise_months,
                 :termination_with_cause_exercise_months, :death_exercise_months, :disability_exercise_months,
-                :retirement_exercise_months
+                :retirement_exercise_months, :contract
 end
