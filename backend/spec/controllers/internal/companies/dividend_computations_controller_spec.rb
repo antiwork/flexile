@@ -81,6 +81,38 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(dividend_computation.dividends_issuance_date).to eq(Date.parse("2024-01-15"))
       expect(dividend_computation.return_of_capital).to eq(true)
     end
+
+    context "when there are no eligible investors" do
+      before do
+        ShareHolding.destroy_all
+      end
+
+      it "returns unprocessable_entity" do
+        post :create, params: valid_params
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = response.parsed_body
+        expect(json_response["error_message"]).to include("we couldn't find any eligible investors")
+      end
+    end
+
+    context "when there are insufficient funds" do
+      let(:invalid_params) do
+        valid_params.deep_merge(
+          dividend_computation: {
+            amount_in_usd: 10,
+          }
+        )
+      end
+
+      it "returns unprocessable_entity" do
+        post :create, params: invalid_params
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = response.parsed_body
+        expect(json_response["error_message"]).to include("preferred investors require a payout of at least $19.63")
+      end
+    end
   end
 
   describe "GET #show" do
