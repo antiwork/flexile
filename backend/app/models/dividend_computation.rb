@@ -95,7 +95,7 @@ class DividendComputation < ApplicationRecord
     end
   end
 
-  def generate_dividends
+  def finalize_and_create_dividend_round
     data = data_for_dividend_creation
 
     dividend_round = company.dividend_rounds.create!(
@@ -119,6 +119,7 @@ class DividendComputation < ApplicationRecord
       )
     end
 
+    mark_as_finalized!
     dividend_round
   end
 

@@ -11,8 +11,7 @@ class CreateDividendRound
     return { success: false, error: "Dividend computation is already finalized" } if @dividend_computation.finalized?
 
     ApplicationRecord.transaction do
-      dividend_round = @dividend_computation.generate_dividends
-      dividend_computation.mark_as_finalized!
+      dividend_round = @dividend_computation.finalize_and_create_dividend_round
 
       { success: true, dividend_round: }
     end

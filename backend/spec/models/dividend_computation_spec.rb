@@ -129,10 +129,10 @@ RSpec.describe DividendComputation do
     end
   end
 
-  describe "#generate_dividends" do
+  describe "#finalize_and_create_dividend_round" do
     it "generates records as expected" do
       expect do
-        @dividend_computation.generate_dividends
+        @dividend_computation.finalize_and_create_dividend_round
       end.to change { company.dividends.count }.by(9) # 1 record per investor
          .and change { company.dividend_rounds.count }.by(1)
 
