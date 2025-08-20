@@ -39,9 +39,9 @@ test.describe("Company equity settings", () => {
     const valuationPriceInput = page.getByLabel("Current 409A valuation (USD per share)");
     const conversionPriceInput = page.getByLabel("Conversion share price (USD)");
 
-    await expect(sharePriceInput).toHaveValue("");
-    await expect(valuationPriceInput).toHaveValue("");
-    await expect(conversionPriceInput).toHaveValue("");
+    await expect(sharePriceInput).toHaveValue("0.00");
+    await expect(valuationPriceInput).toHaveValue("0.00");
+    await expect(conversionPriceInput).toHaveValue("0.00");
 
     await sharePriceInput.fill("20");
     await conversionPriceInput.fill("18.123456789");

@@ -20,6 +20,7 @@ RSpec.describe GrantStockOptions do
   let(:death_exercise_months) { nil }
   let(:disability_exercise_months) { nil }
   let(:retirement_exercise_months) { nil }
+  let(:contract) { "Contract" }
   subject(:service) do
     described_class.new(company_worker, option_pool:, board_approval_date:, vesting_commencement_date:,
                                         number_of_shares:, issue_date_relationship:,
@@ -28,7 +29,7 @@ RSpec.describe GrantStockOptions do
                                         involuntary_termination_exercise_months:,
                                         termination_with_cause_exercise_months:,
                                         death_exercise_months:, disability_exercise_months:,
-                                        retirement_exercise_months:)
+                                        retirement_exercise_months:, contract:)
   end
 
   describe "#process" do
@@ -90,7 +91,7 @@ RSpec.describe GrantStockOptions do
           service.process
         end.to change { CompanyInvestor.count }.by(0)
                          .and change { Document.equity_plan_contract.count }.by(1)
-                                                                            .and change { DocumentSignature.count }.by(2)
+                                                                            .and change { DocumentSignature.count }.by(1)
            .and change { EquityGrant.count }.by(1)
 
         equity_grant = EquityGrant.last
@@ -117,12 +118,12 @@ RSpec.describe GrantStockOptions do
         expect(contract.year).to eq(Date.current.year)
         expect(contract.equity_grant).to eq(equity_grant)
         expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
+        expect(contract.attachments.size).to eq 0
+        expect(contract.text).to eq("Contract")
 
-        expect(contract.signatures.count).to eq(2)
-        expect(contract.signatures.first.user).to eq(user)
-        expect(contract.signatures.first.title).to eq("Signer")
-        expect(contract.signatures.last.user).to eq(administrator.user)
-        expect(contract.signatures.last.title).to eq("Company Representative")
+        expect(contract.signatures.sole.user).to eq(user)
+        expect(contract.signatures.sole.title).to eq("Signer")
+        expect(contract.signatures.sole.signed_at).to be_nil
       end
     end
 
@@ -162,7 +163,7 @@ RSpec.describe GrantStockOptions do
         end.to change { CompanyInvestor.count }.by(1)
            .and change { EquityGrant.count }.by(1)
                   .and change { Document.equity_plan_contract.count }.by(1)
-                                                                     .and change { DocumentSignature.count }.by(2)
+                                                                     .and change { DocumentSignature.count }.by(1)
         investor = CompanyInvestor.last
         expect(investor.company).to eq(company)
         expect(investor.user).to eq(user)
@@ -181,23 +182,12 @@ RSpec.describe GrantStockOptions do
         expect(contract.year).to eq(Date.current.year)
         expect(contract.equity_grant).to eq(equity_grant)
         expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
+        expect(contract.attachments.size).to eq 0
+        expect(contract.text).to eq("Contract")
 
-        expect(contract.signatures.count).to eq(2)
-        expect(contract.signatures.first.user).to eq(user)
-        expect(contract.signatures.first.title).to eq("Signer")
-        expect(contract.signatures.last.user).to eq(administrator.user)
-        expect(contract.signatures.last.title).to eq("Company Representative")
-      end
-
-      it "does not grant options and returns an error when the user's residence country " \
-         "is unsupported by our contracts" do
-        company_worker.user.update!(country_code: "CN")
-
-        expect do
-          result = service.process
-          expect(result).to eq(success: false, error: "Equity contract not appropriate for #{user.display_name} from country China")
-        end.to change { CompanyInvestor.count }.by(0)
-           .and change { EquityGrant.count }.by(0)
+        expect(contract.signatures.sole.user).to eq(user)
+        expect(contract.signatures.sole.title).to eq("Signer")
+        expect(contract.signatures.sole.signed_at).to be_nil
       end
     end
 
@@ -217,7 +207,7 @@ RSpec.describe GrantStockOptions do
 
         expect do
           result = service.process
-          expect(result).to eq(success: true, document_id: Document.last.id)
+          expect(result).to eq(success: true)
         end.to change { EquityGrant.count }.by(1)
                          .and have_enqueued_mail(CompanyWorkerMailer, :equity_grant_issued)
 
@@ -241,11 +231,29 @@ RSpec.describe GrantStockOptions do
           expect do
             result = service.process
             equity_grant = EquityGrant.last
-            expect(result).to eq(success: true, document_id: Document.last.id)
+            expect(result).to eq(success: true)
             expect(equity_grant.vesting_schedule).to have_attributes(vesting_schedule_params.except(:vesting_schedule_id).to_h.symbolize_keys)
           end.to change { VestingSchedule.count }.by(1)
         end
       end
+    end
+  end
+
+  context "when given a PDF contract" do
+    let(:contract) { Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/sample.pdf"), "application/pdf") }
+
+    it "attaches the file to the contract and assumes it's signed" do
+      service.process
+      contract = Document.equity_plan_contract.last
+      expect(contract.company).to eq(company)
+      expect(contract.year).to eq(Date.current.year)
+      expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
+      expect(contract.attachments.size).to eq 1
+      expect(contract.text).to be_nil
+
+      expect(contract.signatures.sole.user).to eq(user)
+      expect(contract.signatures.sole.title).to eq("Signer")
+      expect(contract.signatures.sole.signed_at).to be_present
     end
   end
 end
