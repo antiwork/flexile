@@ -12,18 +12,18 @@ class Admin::ImpersonationController < Admin::ApplicationController
     begin
       # This will raise InvalidSignature for invalid tokens
       located = GlobalID::Locator.locate_signed(token, purpose: :impersonate)
-      
+
       if located.nil?
         # Token is expired or invalid format
         return render json: { error: "Invalid or expired impersonation token" }, status: :unauthorized
       end
-      
+
       user = located
     rescue ActiveSupport::MessageVerifier::InvalidSignature
       # Token signature is invalid
       return render json: { error: "Invalid or expired impersonation token" }, status: :unauthorized
     rescue => e
-      Rails.logger.error "Impersonation error: #{e.message}"
+      Rails.logger.error "Impersonation error: #{e.class}: #{e.message}"
       return render json: { error: "Invalid or expired impersonation token" }, status: :unauthorized
     end
 

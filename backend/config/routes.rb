@@ -37,14 +37,14 @@ Rails.application.routes.draw do
       end
     end
 
+    # Admin impersonation route
+    post "impersonate", to: "impersonation#create"
+
     mount Sidekiq::Web, at: "/sidekiq"
     mount Flipper::UI.app(Flipper) => "/flipper"
 
     root to: "users#index"
   end
-
-  # Admin impersonation route (removed constraint to test basic functionality)
-  post "/admin/impersonate", to: "admin/impersonation#create"
 
   devise_for(:users, skip: :all)
 
