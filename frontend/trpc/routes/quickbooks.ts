@@ -42,7 +42,8 @@ export const quickbooksRouter = createRouter({
       expenseAccounts: [],
       bankAccounts: [],
     };
-    if (integration.status !== "active" && integration.status !== "initialized") return data;
+
+    if (!["active", "initialized"].includes(integration.status)) return data;
 
     const qbo = getQuickbooksClient(integration);
     const [expenseAccounts, bankAccounts] = await Promise.all([

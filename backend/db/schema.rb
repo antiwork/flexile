@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_18_155953) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -105,7 +105,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.decimal "conversion_share_price_usd"
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
+    t.text "exercise_notice"
+    t.string "invite_link"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
+    t.index ["invite_link"], name: "index_companies_on_invite_link", unique: true
   end
 
   create_table "company_administrators", force: :cascade do |t|
@@ -172,18 +175,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.index ["external_id"], name: "index_company_investors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_investors_on_user_id_and_company_id", unique: true
     t.index ["user_id"], name: "index_company_investors_on_user_id"
-  end
-
-  create_table "company_invite_links", force: :cascade do |t|
-    t.bigint "company_id", null: false
-    t.bigint "document_template_id"
-    t.string "token", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_id", "document_template_id"], name: "idx_on_company_id_document_template_id_57bbad7c26", unique: true
-    t.index ["company_id"], name: "index_company_invite_links_on_company_id"
-    t.index ["document_template_id"], name: "index_company_invite_links_on_document_template_id"
-    t.index ["token"], name: "index_company_invite_links_on_token", unique: true
   end
 
   create_table "company_lawyers", force: :cascade do |t|
@@ -303,6 +294,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.string "investor_name"
     t.bigint "company_investor_id"
     t.decimal "qualified_dividend_amount_usd", null: false
+    t.bigint "investment_amount_cents", null: false
     t.index ["company_investor_id"], name: "index_dividend_computation_outputs_on_company_investor_id"
     t.index ["dividend_computation_id"], name: "index_dividend_computation_outputs_on_dividend_computation_id"
   end
@@ -374,6 +366,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.bigint "user_compliance_info_id"
     t.bigint "qualified_amount_cents", null: false
     t.datetime "signed_release_at"
+    t.bigint "investment_amount_cents"
     t.index ["company_id"], name: "index_dividends_on_company_id"
     t.index ["company_investor_id"], name: "index_dividends_on_company_investor_id"
     t.index ["dividend_round_id"], name: "index_dividends_on_dividend_round_id"
@@ -426,6 +419,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "docuseal_submission_id"
+    t.text "text"
     t.index ["company_id"], name: "index_documents_on_company_id"
     t.index ["docuseal_submission_id"], name: "index_documents_on_docuseal_submission_id"
     t.index ["equity_grant_id"], name: "index_documents_on_equity_grant_id"
@@ -899,7 +893,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.string "otp_secret_key"
     t.integer "otp_failed_attempts_count", default: 0, null: false
     t.datetime "otp_first_failed_at"
-    t.bigint "signup_invite_link_id"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -908,7 +901,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_12_170245) do
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
     t.index ["invited_by_type", "invited_by_id"], name: "index_users_on_invited_by"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
-    t.index ["signup_invite_link_id"], name: "index_users_on_signup_invite_link_id"
   end
 
   create_table "versions", force: :cascade do |t|
