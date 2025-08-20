@@ -152,6 +152,10 @@ test.describe("Dividend Computations", () => {
       });
 
     await expect(issuedRow).toBeVisible();
+
+    // Going back to an already finalized dividend computation should redirect to not found
+    await page.goto(`/equity/dividend_rounds/draft/${dividendComputation.id}`);
+    await expect(page.getByText("Page not found")).toBeVisible();
   });
 
   test("lawyer cannot finalize distribution - read-only access", async ({ page }) => {
