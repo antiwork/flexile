@@ -28,8 +28,8 @@ class DividendComputationGeneration
       total_amount_in_usd: amount_in_usd, dividends_issuance_date:, return_of_capital:
     )
 
-    save_preferred_dividends
-    save_common_dividends
+    save_preferred_dividend_computations
+    save_common_dividend_computations
 
     computation
   end
@@ -97,7 +97,7 @@ class DividendComputationGeneration
         qualified_dividend_amount_usd = roundup(available_amount * (share_holding.qualified_shares.to_d / eligible_fully_diluted_shares.to_d))
 
         attrs = {
-          type: :share_holding_update,
+          type: :share_holding,
           company_investor_id: share_holding.company_investor_id,
           share_class: share_holding.share_class.name,
           number_of_shares: share_holding.total_shares,
@@ -129,15 +129,15 @@ class DividendComputationGeneration
       end
     end
 
-    def save_preferred_dividends
+    def save_preferred_dividend_computations
       @preferred_dividend_outputs.each do |attrs|
         computation.dividend_computation_outputs.create!(attrs)
       end
     end
 
-    def save_common_dividends
+    def save_common_dividend_computations
       @common_dividend_outputs.each do |attrs|
-        if attrs[:type] == :share_holding_update
+        if attrs[:type] == :share_holding
           find_attrs = {
             company_investor_id: attrs[:company_investor_id],
             share_class: attrs[:share_class],
@@ -148,9 +148,9 @@ class DividendComputationGeneration
           output.qualified_dividend_amount_usd += attrs[:qualified_dividend_amount_usd]
           output.total_amount_in_usd += attrs[:total_amount_in_usd]
           output.save!
-        elsif attrs[:type] == :convertible_investment
-          create_attrs = attrs.except(:type)
-          computation.dividend_computation_outputs.create!(create_attrs)
+        else attrs[:type] == :convertible_investment
+             create_attrs = attrs.except(:type)
+             computation.dividend_computation_outputs.create!(create_attrs)
         end
       end
     end
