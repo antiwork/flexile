@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { z } from "zod";
 import MutationButton from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -45,13 +46,13 @@ const FinalizeDistributionModal = ({
         url: company_dividend_rounds_path(company.id, { dividend_computation_id: dividendComputation.id }),
         assertOk: true,
       });
-      return response.json();
+      return z.object({ id: z.number() }).parse(await response.json());
     },
-    onSuccess: (result: { id: number }) => {
+    onSuccess: ({ id }) => {
       onOpenChange(false);
-      router.push(`/equity/dividend_rounds/round/${result.id}`);
-      queryClient.invalidateQueries({ queryKey: ["dividendComputations", company.id] });
-      utils.dividendRounds.list.invalidate({ companyId: company.id });
+      router.push(`/equity/dividend_rounds/round/${id}`);
+      void queryClient.invalidateQueries({ queryKey: ["dividendComputations", company.id] });
+      void utils.dividendRounds.list.invalidate({ companyId: company.id });
     },
   });
 
