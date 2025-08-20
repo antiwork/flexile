@@ -582,8 +582,6 @@ class SeedDataGeneratorFromTemplate
             ).process
             raise Error, error_message if error_message.present?
 
-            document = contractor.documents.unsigned_contracts.reload.first
-            document.signatures.where(user: contractor).update!(signed_at: Time.current)
             user_legal_params = user_attributes.slice("street_address", "city", "state", "zip_code")
             error_message = UpdateUser.new(
               user: contractor,

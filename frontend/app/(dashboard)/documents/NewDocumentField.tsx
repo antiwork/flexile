@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatFileSize } from "@/utils";
 
 export const schema = z.object({
-  contract: z.string().min(1).or(z.instanceof(File)),
+  contract: z.string().or(z.instanceof(File)),
 });
 
 export default function NewDocumentField() {

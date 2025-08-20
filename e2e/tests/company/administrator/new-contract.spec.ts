@@ -4,9 +4,9 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
-import { fillDatePicker } from "@test/helpers";
+import { fillDatePicker, findRichTextEditor } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
-import { expect, type Page, test, withinModal } from "@test/index";
+import { expect, type Page, test } from "@test/index";
 import { addMonths, format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
@@ -53,17 +53,9 @@ test.describe("New Contractor", () => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
-
+    await page.getByRole("tab", { name: "Write" }).click();
+    await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
     await page.getByRole("button", { name: "Send invite" }).click();
-    await withinModal(
-      async (modal) => {
-        await modal.getByRole("button", { name: "Sign now" }).click();
-        await modal.getByRole("link", { name: "Type" }).click();
-        await modal.getByPlaceholder("Type signature here...").fill("Admin Admin");
-        await modal.getByRole("button", { name: "Complete" }).click();
-      },
-      { page },
-    );
 
     const row = page.getByRole("row").filter({ hasText: email });
     await expect(row).toContainText(email);
@@ -75,10 +67,10 @@ test.describe("New Contractor", () => {
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
     await page.getByRole("link", { name: "sign it" }).click();
-    await page.getByRole("button", { name: "Sign now" }).click();
-    await page.getByRole("link", { name: "Type" }).click();
-    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-    await page.getByRole("button", { name: "Complete" }).click();
+    await expect(page.getByText("This is a contract you must sign")).toBeVisible();
+    await page.getByRole("button", { name: "Add your signature" }).click();
+    await expect(page.getByText(assertDefined(newUser.legalName))).toBeVisible();
+    await page.getByRole("button", { name: "Agree & Submit" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
@@ -87,17 +79,12 @@ test.describe("New Contractor", () => {
     await page.getByLabel("Role").fill("Project-based Role");
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("1000");
-
+    await page.getByLabel("Contract", { exact: true }).setInputFiles({
+      name: "contract.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("very signed contract"),
+    });
     await page.getByRole("button", { name: "Send invite" }).click();
-    await withinModal(
-      async (modal) => {
-        await modal.getByRole("button", { name: "Sign now" }).click();
-        await modal.getByRole("link", { name: "Type" }).click();
-        await modal.getByPlaceholder("Type signature here...").fill("Admin Admin");
-        await modal.getByRole("button", { name: "Complete" }).click();
-      },
-      { page },
-    );
 
     const row = page.getByRole("row").filter({ hasText: email });
     await expect(row).toContainText(email);
@@ -108,32 +95,7 @@ test.describe("New Contractor", () => {
     await logout(page);
     const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
     await login(page, newUser);
-    await page.getByRole("link", { name: "sign it" }).click();
-    await page.getByRole("button", { name: "Sign now" }).click();
-    await page.getByRole("link", { name: "Type" }).click();
-    await page.getByPlaceholder("Type signature here...").fill("Flexy Bob");
-    await page.getByRole("button", { name: "Complete" }).click();
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-  });
-
-  test("allows inviting a contractor with contract signed elsewhere", async ({ page }) => {
-    const { email } = await fillForm(page);
-    await page.getByLabel("Role").fill("Contract Signed Elsewhere Role");
-
-    await page.getByLabel("Already signed contract elsewhere").check({ force: true });
-
-    await page.getByRole("button", { name: "Send invite" }).click();
-
-    const row = page.getByRole("row").filter({ hasText: email });
-    await expect(row).toContainText(email);
-    await expect(row).toContainText("Contract Signed Elsewhere Role");
-    await expect(row).toContainText("Invited");
-
-    await logout(page);
-    const [deletedUser] = await db.delete(users).where(eq(users.email, email)).returning();
-    const { user: newUser } = await usersFactory.create({ id: assertDefined(deletedUser).id });
-    await login(page, newUser);
-
+    await expect(page.getByText("You have an unsigned contract")).not.toBeVisible();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
@@ -157,31 +119,6 @@ test.describe("New Contractor", () => {
   // TODO: write these tests after the most important tests are done
   // TODO: write test - allows reactivating an alumni contractor
   // TODO: write test - excludes equity paragraphs when equity compensation is disabled
-  test("allows adding a contractor with custom start date using date picker", async ({ page }) => {
-    const workerEmail = faker.internet.email().toLowerCase();
-    const targetDay = 15;
-    const targetDate = new Date();
-    targetDate.setDate(targetDay);
-
-    await login(page, user, "/people");
-    await page.getByRole("button", { name: "Add contractor" }).click();
-
-    await expect(page.getByText("Who's joining?")).toBeVisible();
-    await page.getByLabel("Email").fill(workerEmail);
-
-    // Test the actual date picker calendar interaction
-    await page.getByRole("button", { name: "Calendar" }).click();
-
-    // Wait for calendar to be visible
-    await expect(page.getByRole("grid")).toBeVisible();
-
-    // Click on the specific date
-    await page.getByRole("gridcell", { name: targetDay.toString() }).first().click();
-
-    // Verify the date was selected in the input
-    await expect(page.getByRole("group", { name: "Start date" })).toContainText(targetDay.toString());
-  });
-
   // TODO: write test - includes equity paragraphs when equity compensation is enabled
   // TODO: write test - pre-fills form with last-used hourly contractor values
   // TODO: write test - pre-fills form with last-used project-based contractor values
