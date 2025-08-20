@@ -65,7 +65,6 @@ export const dividendComputationsFactory = {
         dividendsIssuanceDate: today(getLocalTimeZone()).add({ days: 15 }).toString(),
         returnOfCapital: false,
         finalizedAt: null,
-        dividendRoundId: null,
         ...overrides,
       })
       .returning();

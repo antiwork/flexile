@@ -5,15 +5,8 @@ class DividendComputation < ApplicationRecord
 
   belongs_to :company
   has_many :dividend_computation_outputs, dependent: :destroy
-  belongs_to :dividend_round, optional: true
-
   validates :total_amount_in_usd, presence: true
   validates :dividends_issuance_date, presence: true
-  validates :dividend_round_id, presence: true, if: :finalized?
-  validates :dividend_round_id, absence: true, unless: :finalized?
-  validates :finalized_at, presence: true, if: :finalized?
-  validates :finalized_at, absence: true, unless: :finalized?
-
   scope :unfinalized, -> { where(finalized_at: nil) }
 
   def number_of_shareholders
@@ -21,11 +14,11 @@ class DividendComputation < ApplicationRecord
   end
 
   def finalized?
-    finalized_at.present?
+    finalized_at
   end
 
-  def mark_as_finalized!(dividend_round)
-    update!(finalized_at: Time.current, dividend_round:)
+  def mark_as_finalized!
+    update!(finalized_at: Time.current)
   end
 
   def to_csv

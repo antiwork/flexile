@@ -12,7 +12,7 @@ class CreateDividendRound
 
     ApplicationRecord.transaction do
       dividend_round = @dividend_computation.generate_dividends
-      dividend_computation.mark_as_finalized!(dividend_round)
+      dividend_computation.mark_as_finalized!
 
       { success: true, dividend_round: }
     end

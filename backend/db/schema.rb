@@ -307,7 +307,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_18_160001) do
     t.string "external_id", null: false
     t.boolean "return_of_capital", null: false
     t.datetime "finalized_at"
-    t.bigint "dividend_round_id"
     t.index ["company_id"], name: "index_dividend_computations_on_company_id"
     t.index ["external_id"], name: "index_dividend_computations_on_external_id", unique: true
   end

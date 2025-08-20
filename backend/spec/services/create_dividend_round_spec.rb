@@ -28,7 +28,6 @@ RSpec.describe CreateDividendRound do
         dividend_computation.reload
 
         expect(dividend_computation.finalized_at).to be_present
-        expect(dividend_computation.dividend_round).to be_present
         expect(result[:success]).to be true
         expect(result[:dividend_round]).to be_present
       end
@@ -36,7 +35,7 @@ RSpec.describe CreateDividendRound do
 
     context "when dividend computation is already finalized" do
       it "prevents processing and returns error" do
-        dividend_computation.mark_as_finalized!(create(:dividend_round, company: company))
+        dividend_computation.mark_as_finalized!
         result = service.process
 
         expect(result[:success]).to be false
@@ -54,7 +53,6 @@ RSpec.describe CreateDividendRound do
           dividend_computation_without_outputs.reload
 
           expect(dividend_computation_without_outputs.finalized_at).to be_nil
-          expect(dividend_computation_without_outputs.dividend_round).to be_nil
           expect(result[:success]).to be false
           expect(result[:error]).to include("Number of shareholders must be greater than 0")
         end
@@ -72,7 +70,6 @@ RSpec.describe CreateDividendRound do
         dividend_computation.reload
 
         expect(dividend_computation.finalized_at).to be_nil
-        expect(dividend_computation.dividend_round).to be_nil
         expect(result[:success]).to be false
         expect(result[:error]).to include("Database connection failed")
       end

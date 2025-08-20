@@ -46,6 +46,15 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(json_response.first["return_of_capital"]).to eq(false)
       expect(json_response.first["number_of_shareholders"]).to eq(1)
     end
+
+    it "does not include finalised dividend computations" do
+      finalized_computation = create(:dividend_computation, company: company, finalized_at: Time.current)
+      get :index, params: { company_id: company.external_id }
+
+      expect(response).to have_http_status(:ok)
+      computation_ids = response.parsed_body.map { |comp| comp["id"] }
+      expect(computation_ids).not_to include(finalized_computation.id)
+    end
   end
 
   describe "POST #create" do
