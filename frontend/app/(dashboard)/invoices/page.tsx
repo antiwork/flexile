@@ -299,9 +299,6 @@ export default function InvoicesPage() {
             </div>
           );
         },
-        meta: {
-          cellClassName: "inline-block",
-        },
       }),
 
       columnHelper.accessor((row) => statusNames[row.status], {
