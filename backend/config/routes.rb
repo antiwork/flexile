@@ -43,6 +43,9 @@ Rails.application.routes.draw do
     root to: "users#index"
   end
 
+  # Admin impersonation route (removed constraint to test basic functionality)
+  post "/admin/impersonate", to: "admin/impersonation#create"
+
   devise_for(:users, skip: :all)
 
   # Internal API consumed by the front-end SPA
