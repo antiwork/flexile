@@ -41,16 +41,6 @@ module Admin
       render json: { jwt: jwt, user_id: user.id, impersonator_id: Current.user.id, expires_at: expires_at.iso8601 }
     end
 
-    def destroy
-      admin = Current.user
-      unless admin&.team_member?
-        return render json: { error: "Unauthorized" }, status: :unauthorized
-      end
-
-      jwt = JwtService.generate_token(admin)
-      render json: { jwt: jwt, user_id: admin.id }
-    end
-
     private
       def require_team_member
         return if Current.user&.team_member?
@@ -58,4 +48,3 @@ module Admin
       end
   end
 end
-

@@ -18,7 +18,7 @@ end
 
 Rails.application.routes.draw do
   namespace :admin, constraints: admin_constraint do
-    resource :impersonation, only: [:create, :destroy] do
+    resource :impersonation, only: [:create] do
       post :exchange, on: :collection
     end
     resources :company_workers

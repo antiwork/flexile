@@ -94,20 +94,4 @@ RSpec.describe Admin::ImpersonationsController, type: :controller do
       expect(json["error"]).to eq("Unauthorized")
     end
   end
-
-  describe "DELETE #destroy" do
-    it "returns a JWT for the admin to stop impersonation" do
-      delete :destroy, params: { id: 0 }, format: :json
-      expect(response).to have_http_status(:ok)
-      expect(json["jwt"]).to be_present
-      expect(json["user_id"]).to eq(team_member.id)
-    end
-
-    it "returns 401 when requester is not admin" do
-      allow(JwtService).to receive(:user_from_request).and_return(nil)
-      delete :destroy, params: { id: 0 }, format: :json
-      expect(response).to have_http_status(:unauthorized)
-      expect(json["error"]).to eq("Unauthorized")
-    end
-  end
 end
