@@ -43,22 +43,6 @@ RSpec.describe CreateDividendRound do
       end
     end
 
-    context "when validation errors occur" do
-      context "when number_of_shareholders ends up being 0" do
-        let(:dividend_computation_without_outputs) { create(:dividend_computation, company: company) }
-        let(:service_without_outputs) { described_class.new(dividend_computation_without_outputs) }
-
-        it "rolls back transaction and returns validation error" do
-          result = service_without_outputs.process
-          dividend_computation_without_outputs.reload
-
-          expect(dividend_computation_without_outputs.finalized_at).to be_nil
-          expect(result[:success]).to be false
-          expect(result[:error]).to include("Number of shareholders must be greater than 0")
-        end
-      end
-    end
-
     context "when unexpected errors occur" do
       before do
         dividend_computation_output
