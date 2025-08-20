@@ -144,12 +144,10 @@ class DividendComputationGeneration
             number_of_shares: attrs[:number_of_shares],
           }
           output = computation.dividend_computation_outputs.find_by(find_attrs)
-          if output
-            output.dividend_amount_in_usd = attrs[:dividend_amount_in_usd]
-            output.qualified_dividend_amount_usd += attrs[:qualified_dividend_amount_usd]
-            output.total_amount_in_usd += attrs[:total_amount_in_usd]
-            output.save!
-          end
+          output.dividend_amount_in_usd = attrs[:dividend_amount_in_usd]
+          output.qualified_dividend_amount_usd += attrs[:qualified_dividend_amount_usd]
+          output.total_amount_in_usd += attrs[:total_amount_in_usd]
+          output.save!
         elsif attrs[:type] == :convertible_investment
           create_attrs = attrs.except(:type)
           computation.dividend_computation_outputs.create!(create_attrs)
