@@ -1,17 +1,22 @@
 # frozen_string_literal: true
 
-module OtpValidation
+module LoginValidation
   extend ActiveSupport::Concern
 
   private
-    def validate_otp_params(email, otp_code)
+    def validate_login_params(email, otp_code, password)
       if email.blank?
         render json: { error: "Email is required" }, status: :bad_request
         return false
       end
 
-      if otp_code.blank?
-        render json: { error: "OTP code is required" }, status: :bad_request
+      if otp_code.blank? && password.blank?
+        render json: { error: "OTP code or password is required" }, status: :bad_request
+        return false
+      end
+
+      if otp_code.present? && password.present?
+        render json: { error: "Only one of OTP code or password is allowed" }, status: :bad_request
         return false
       end
 
@@ -43,6 +48,16 @@ module OtpValidation
     def verify_user_otp(user, otp_code)
       unless user.verify_otp(otp_code)
         render json: { error: "Invalid verification code, please try again." }, status: :unauthorized
+        return false
+      end
+
+      true
+    end
+
+    def verify_user_password(user, password)
+      # These return the same error message because we don't want to leak information about the user's account.
+      unless user.encrypted_password.present? && user.valid_password?(password)
+        render json: { error: "Password is incorrect or has not been set up. If you don\'t know your password, log in with email to receive an OTP instead." }, status: :unauthorized
         return false
       end
 

@@ -11,6 +11,56 @@ const otpLoginSchema = z.object({
   otp: z.string().length(6),
 });
 
+const passwordLoginSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+});
+
+const authResponseSchema = z.object({
+  user: z.object({
+    id: z.number(),
+    email: z.string(),
+    name: z.string().nullable(),
+    legal_name: z.string().nullable(),
+    preferred_name: z.string().nullable(),
+  }),
+  jwt: z.string(),
+});
+
+const loginUser = async (
+  origin: string,
+  validatedData: z.infer<typeof otpLoginSchema> | z.infer<typeof passwordLoginSchema>,
+) => {
+  const response = await fetch(`${origin}/internal/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: validatedData.email,
+      otp_code: "otp" in validatedData ? validatedData.otp : undefined,
+      password: "password" in validatedData ? validatedData.password : undefined,
+      token: env.API_SECRET_TOKEN,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      z.object({ error: z.string() }).safeParse(await response.json()).data?.error ||
+        "Authentication failed, please try again.",
+    );
+  }
+
+  const data = authResponseSchema.parse(await response.json());
+
+  return {
+    ...data.user,
+    id: data.user.id.toString(),
+    name: data.user.name ?? "",
+    legalName: data.user.legal_name ?? "",
+    preferredName: data.user.preferred_name ?? "",
+    jwt: data.jwt,
+  };
+};
+
 const isTestEnv = process.env.RAILS_ENV === "test" || process.env.NODE_ENV === "test";
 const ExternalProvider = (provider: Provider) => {
   if (!isTestEnv) return provider;
@@ -52,51 +102,21 @@ export const authOptions = {
       },
       async authorize(credentials, req) {
         const validation = otpLoginSchema.safeParse(credentials);
-
         if (!validation.success) throw new Error("Invalid email or OTP");
-
-        try {
-          const response = await fetch(`${assertDefined(req.headers?.origin)}/internal/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: validation.data.email,
-              otp_code: validation.data.otp,
-              token: env.API_SECRET_TOKEN,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error(
-              z.object({ error: z.string() }).safeParse(await response.json()).data?.error ||
-                "Authentication failed, please try again.",
-            );
-          }
-
-          const data = z
-            .object({
-              user: z.object({
-                id: z.number(),
-                email: z.string(),
-                name: z.string().nullable(),
-                legal_name: z.string().nullable(),
-                preferred_name: z.string().nullable(),
-              }),
-              jwt: z.string(),
-            })
-            .parse(await response.json());
-
-          return {
-            ...data.user,
-            id: data.user.id.toString(),
-            name: data.user.name ?? "",
-            legalName: data.user.legal_name ?? "",
-            preferredName: data.user.preferred_name ?? "",
-            jwt: data.jwt,
-          };
-        } catch {
-          return null;
-        }
+        return loginUser(assertDefined(String(req.headers?.origin)), validation.data);
+      },
+    }),
+    CredentialsProvider({
+      id: "password",
+      name: "Email Password",
+      credentials: {
+        email: { label: "Email", type: "email", placeholder: "Enter your email" },
+        password: { label: "Password", type: "password", placeholder: "Your password" },
+      },
+      async authorize(credentials, req) {
+        const validation = passwordLoginSchema.safeParse(credentials);
+        if (!validation.success) throw new Error("Invalid email or password");
+        return loginUser(assertDefined(String(req.headers?.origin)), validation.data);
       },
     }),
     ExternalProvider(
@@ -141,18 +161,7 @@ export const authOptions = {
           return false;
         }
 
-        const data = z
-          .object({
-            user: z.object({
-              id: z.number(),
-              email: z.string(),
-              name: z.string().nullable(),
-              legal_name: z.string().nullable(),
-              preferred_name: z.string().nullable(),
-            }),
-            jwt: z.string(),
-          })
-          .parse(await response.json());
+        const data = authResponseSchema.parse(await response.json());
 
         user.jwt = data.jwt;
         user.legalName = data.user.legal_name ?? "";

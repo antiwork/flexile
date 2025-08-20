@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSession, signIn } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -18,7 +18,10 @@ import googleLogoLight from "@/images/google-light.svg";
 import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
 
-const emailSchema = z.object({ email: z.string().email() });
+const emailSchema = z.object({
+  email: z.string().email(),
+  password: z.string().optional(),
+});
 const otpSchema = z.object({
   otp: z.string().length(6, "Please enter the 6-digit verification code"),
 });
@@ -35,28 +38,34 @@ export function AuthPage({
   switcher,
   sendOtpUrl,
   sendOtpText,
-  onVerifyOtp,
+  onSignUp,
 }: {
   title: string;
   description: string;
   switcher: React.ReactNode;
   sendOtpUrl: string;
   sendOtpText: string;
-  onVerifyOtp?: (data: { email: string; otp: string }) => Promise<void>;
+  onSignUp?: (data: { email: string; otp?: string; password?: string }) => Promise<void>;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const oauthError = searchParams.get("error");
   const [redirectInProgress, setRedirectInProgress] = useState(false);
+  const [isPasswordAuth, setIsPasswordAuth] = useState(false);
+
+  // Initialize state from localStorage after component mounts, as we can't use localStorage in useState directly with SSR.
+  useEffect(() => {
+    setIsPasswordAuth(localStorage.getItem("last_sign_in_method") === SignInMethod.Password);
+  }, []);
+
   const sendOtp = useMutation({
-    mutationFn: async (values: { email: string }) => {
+    mutationFn: async (values: { email: string; password?: string | undefined }) => {
       const response = await request({
         url: sendOtpUrl,
         method: "POST",
         accept: "json",
         jsonData: values,
       });
-
       if (!response.ok) {
         throw new Error(
           z.object({ error: z.string() }).safeParse(await response.json()).data?.error ||
@@ -66,37 +75,55 @@ export function AuthPage({
     },
   });
 
+  const authenticateUser = async () => {
+    const session = await getSession();
+    if (!session?.user.email) throw new Error("Invalid authentication credentials");
+
+    const redirectUrl = searchParams.get("redirect_url");
+    setRedirectInProgress(true);
+    router.replace(
+      // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
+      redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard",
+    );
+  };
+
+  const verifyPassword = useMutation({
+    mutationFn: async (values: { email: string; password?: string | undefined }) => {
+      await onSignUp?.({ email: values.email, password: values.password || "" });
+      const result = await signIn("password", { email: values.email, password: values.password, redirect: false });
+      if (result?.error) throw new Error(result.error || "Invalid email or password");
+      await authenticateUser();
+    },
+  });
+
   const verifyOtp = useMutation({
     mutationFn: async (values: { otp: string }) => {
       const email = emailForm.getValues("email");
-      await onVerifyOtp?.({ email, otp: values.otp });
-
+      await onSignUp?.({ email, otp: values.otp });
       const result = await signIn("otp", { email, otp: values.otp, redirect: false });
-
       if (result?.error) throw new Error("Invalid verification code");
-
-      const session = await getSession();
-      if (!session?.user.email) throw new Error("Invalid verification code");
-
-      const redirectUrl = searchParams.get("redirect_url");
-      setRedirectInProgress(true);
-      router.replace(
-        // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
-        redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard",
-      );
+      await authenticateUser();
     },
   });
+
   const emailForm = useForm({
     resolver: zodResolver(emailSchema),
   });
   const submitEmailForm = emailForm.handleSubmit(async (values) => {
     try {
-      await sendOtp.mutateAsync(values);
-      localStorage.setItem("last_sign_in_method", SignInMethod.Email);
+      await (isPasswordAuth ? verifyPassword : sendOtp).mutateAsync(values);
+      localStorage.setItem("last_sign_in_method", isPasswordAuth ? SignInMethod.Password : SignInMethod.Email);
     } catch (error) {
-      emailForm.setError("email", {
-        message: error instanceof Error ? error.message : "Failed to send verification code",
-      });
+      if (isPasswordAuth) {
+        emailForm.setError("email", { message: "" });
+        emailForm.setError("password", {
+          message: error instanceof Error ? error.message : "Failed to authenticate",
+        });
+      } else {
+        emailForm.setError("email", {
+          message: error instanceof Error ? error.message : "Failed to authenticate",
+        });
+      }
     }
   });
 
@@ -196,7 +223,7 @@ export function AuthPage({
           {!sendOtp.isSuccess ? (
             <Form {...emailForm}>
               <form onSubmit={(e) => void submitEmailForm(e)} className="space-y-4">
-                <div className="mb-4 flex flex-col items-center">
+                <div className="mb-4 flex flex-col items-center gap-4">
                   {oauthError ? (
                     <p className="text-destructive mb-2">
                       {Object.prototype.hasOwnProperty.call(OAUTH_ERROR_MESSAGES, oauthError)
@@ -207,11 +234,19 @@ export function AuthPage({
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex h-12 w-full items-center justify-center gap-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-500"
+                    className="flex h-12 w-full items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-500"
                     onClick={() => providerSignIn(SignInMethod.Google)}
                   >
                     <Image src={googleLogoLight} alt="Google" width={20} height={20} />
                     {sendOtpText} with Google
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex h-12 w-full items-center justify-center gap-2 bg-white text-gray-900 hover:bg-gray-100"
+                    onClick={() => setIsPasswordAuth((prev) => !prev)}
+                  >
+                    {sendOtpText} with {isPasswordAuth ? "email" : "password"}
                   </Button>
                   <div className="my-3 flex w-full items-center gap-2">
                     <div className="bg-muted h-px flex-1" />
@@ -240,14 +275,51 @@ export function AuthPage({
                     </FormItem>
                   )}
                 />
-                <MutationStatusButton
-                  mutation={sendOtp}
-                  type="submit"
-                  className="w-full bg-white text-gray-900 hover:bg-gray-100"
-                  loadingText="Sending..."
-                >
-                  {sendOtpText}
-                </MutationStatusButton>
+                {isPasswordAuth ? (
+                  <FormField
+                    control={emailForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="password"
+                            placeholder="Your password"
+                            className="bg-white"
+                            style={{ height: "42px" }}
+                            required
+                            disabled={sendOtp.isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : null}
+                {isPasswordAuth ? (
+                  <MutationStatusButton
+                    mutation={verifyPassword}
+                    type="submit"
+                    className="h-12 w-full bg-white text-gray-900 hover:bg-gray-100"
+                    loadingText="Logging in..."
+                    idleVariant="outline"
+                    disabled={redirectInProgress}
+                  >
+                    {redirectInProgress ? "Redirecting..." : sendOtpText}
+                  </MutationStatusButton>
+                ) : (
+                  <MutationStatusButton
+                    mutation={sendOtp}
+                    type="submit"
+                    className="h-12 w-full bg-white text-gray-900 hover:bg-gray-100"
+                    loadingText="Sending..."
+                    idleVariant="outline"
+                  >
+                    {sendOtpText}
+                  </MutationStatusButton>
+                )}
 
                 <div className="pt-6 text-center text-gray-600">{switcher}</div>
               </form>

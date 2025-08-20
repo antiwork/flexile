@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::EmailOtpController < Internal::BaseController
-  include OtpValidation
+  include LoginValidation
 
   def create
     email = params[:email]

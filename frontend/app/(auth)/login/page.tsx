@@ -7,6 +7,7 @@ import { AuthPage } from "..";
 
 const signInMethodLabels: Record<SignInMethod, string> = {
   [SignInMethod.Email]: "your work email",
+  [SignInMethod.Password]: "your work email and password",
   [SignInMethod.Google]: "Google",
 };
 

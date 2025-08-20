@@ -49,7 +49,7 @@ RSpec.describe Internal::SignupController do
     let!(:temp_user) { User.create!(email: email, otp_secret_key: User.otp_random_secret) }
     let(:valid_otp) { temp_user.otp_code }
 
-    context "with valid parameters" do
+    context "with valid OTP" do
       it "completes user signup and returns JWT" do
         post :verify_and_create, params: {
           email: email,
@@ -83,6 +83,40 @@ RSpec.describe Internal::SignupController do
       end
     end
 
+    context "with valid password" do
+      it "completes user signup and returns JWT" do
+        new_user_email = "newuser+2@example.com"
+        post :verify_and_create, params: {
+          email: new_user_email,
+          password: "password",
+          token: api_token,
+        }
+        expect(response).to have_http_status(:created)
+        json_response = response.parsed_body
+        expect(json_response["jwt"]).to be_present
+        expect(json_response["user"]["email"]).to eq(new_user_email)
+
+        new_user = User.find_by(email: new_user_email)
+        expect(new_user.confirmed_at).to be_present
+        expect(new_user.invitation_accepted_at).to be_present
+        expect(new_user.tos_agreements).to exist
+      end
+    end
+
+    context "with password that is less than 6 characters long" do
+      it "returns bad request" do
+        post :verify_and_create, params: {
+          email: email,
+          password: "test",
+          token: api_token,
+        }
+
+        expect(response).to have_http_status(:bad_request)
+        json_response = response.parsed_body
+        expect(json_response["error"]).to eq("Password must be at least 6 characters long")
+      end
+    end
+
     context "with invalid email" do
       it "returns not found" do
         post :verify_and_create, params: {
@@ -103,7 +137,7 @@ RSpec.describe Internal::SignupController do
 
         expect(response).to have_http_status(:bad_request)
         json_response = response.parsed_body
-        expect(json_response["error"]).to eq("Email and OTP code are required")
+        expect(json_response["error"]).to eq("Email is required")
       end
     end
   end

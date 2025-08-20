@@ -20,7 +20,7 @@ export default function SignUpPage() {
         </>
       }
       sendOtpUrl="/internal/signup/send_otp"
-      onVerifyOtp={async (data) => {
+      onSignUp={async (data) => {
         const response = await request({
           url: "/internal/signup/verify_and_create",
           method: "POST",
@@ -28,6 +28,7 @@ export default function SignUpPage() {
           jsonData: {
             email: data.email,
             otp_code: data.otp,
+            password: data.password,
           },
         });
 

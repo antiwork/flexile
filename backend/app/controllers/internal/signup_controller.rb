@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::SignupController < Internal::BaseController
-  include OtpValidation, UserDataSerialization, JwtAuthenticatable
+  include LoginValidation, UserDataSerialization, JwtAuthenticatable
 
   def send_otp
     email = params[:email]
@@ -30,14 +30,24 @@ class Internal::SignupController < Internal::BaseController
   def verify_and_create
     email = params[:email]
     otp_code = params[:otp_code]
+    password = params[:password]
 
-    return unless validate_signup_params(email, otp_code)
+    return unless validate_login_params(email, otp_code, password)
+    if password.present? && password.length < 6
+      render json: { error: "Password must be at least 6 characters long" }, status: :bad_request
+      return false
+    end
 
-    temp_user = find_temp_user(email)
-    return unless temp_user
+    if otp_code.present?
+      temp_user = find_temp_user(email)
+      return unless temp_user
 
-    return unless check_otp_rate_limit(temp_user)
-    return unless verify_user_otp(temp_user, otp_code)
+      return unless check_otp_rate_limit(temp_user)
+      return unless verify_user_otp(temp_user, otp_code)
+    else
+      temp_user = User.new(email: email, password: password)
+      temp_user.save!(validate: false) # Skip validations for temp user
+    end
 
     # Check again if user was created in the meantime
     existing_user = User.find_by(email: email)
@@ -57,15 +67,6 @@ class Internal::SignupController < Internal::BaseController
   end
 
   private
-    def validate_signup_params(email, otp_code)
-      if email.blank? || otp_code.blank?
-        render json: { error: "Email and OTP code are required" }, status: :bad_request
-        return false
-      end
-
-      true
-    end
-
     def find_temp_user(email)
       temp_user = User.find_by(email: email)
       unless temp_user

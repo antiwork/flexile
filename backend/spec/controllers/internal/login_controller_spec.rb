@@ -7,8 +7,11 @@ RSpec.describe Internal::LoginController do
     let(:valid_otp) { user.otp_code }
     let(:invalid_otp) { "999999" }
     let(:expired_otp) { "123456" }
+    let(:valid_password) { "password" }
+    let(:invalid_password) { "invalid" }
+    let(:user_with_password) { create(:user, password: valid_password) }
 
-    context "with valid parameters" do
+    context "with valid OTP code" do
       it "returns a JWT token and user data" do
         post :create, params: { email: user.email, otp_code: valid_otp, token: api_token }
 
@@ -61,6 +64,44 @@ RSpec.describe Internal::LoginController do
       end
     end
 
+    context "with valid password" do
+      it "returns a JWT token and user data" do
+        post :create, params: { email: user_with_password.email, password: valid_password, token: api_token }
+
+        expect(response).to have_http_status(:ok)
+
+        json_response = response.parsed_body
+        expect(json_response["jwt"]).to be_present
+        expect(json_response["user"]["id"]).to eq(user_with_password.id)
+        expect(json_response["user"]["email"]).to eq(user_with_password.email)
+        expect(json_response["user"]["name"]).to eq(user_with_password.name)
+        expect(json_response["user"]["legal_name"]).to eq(user_with_password.legal_name)
+        expect(json_response["user"]["preferred_name"]).to eq(user_with_password.preferred_name)
+      end
+    end
+
+    context "with invalid password" do
+      it "returns unauthorized" do
+        post :create, params: { email: user_with_password.email, password: invalid_password, token: api_token }
+
+        expect(response).to have_http_status(:unauthorized)
+
+        json_response = response.parsed_body
+        expect(json_response["error"]).to eq("Password is incorrect or has not been set up. If you don\'t know your password, log in with email to receive an OTP instead.")
+      end
+    end
+
+    context "with password for account where password is not set" do
+      it "returns unauthorized" do
+        post :create, params: { email: user.email, password: valid_password, token: api_token }
+
+        expect(response).to have_http_status(:unauthorized)
+
+        json_response = response.parsed_body
+        expect(json_response["error"]).to eq("Password is incorrect or has not been set up. If you don\'t know your password, log in with email to receive an OTP instead.")
+      end
+    end
+
     context "with missing parameters" do
       it "returns bad request when email is missing" do
         post :create, params: { otp_code: valid_otp, token: api_token }
@@ -71,13 +112,13 @@ RSpec.describe Internal::LoginController do
         expect(json_response["error"]).to eq("Email is required")
       end
 
-      it "returns bad request when otp_code is missing" do
+      it "returns bad request when otp_code and password are missing" do
         post :create, params: { email: user.email, token: api_token }
 
         expect(response).to have_http_status(:bad_request)
 
         json_response = response.parsed_body
-        expect(json_response["error"]).to eq("OTP code is required")
+        expect(json_response["error"]).to eq("OTP code or password is required")
       end
 
       it "returns bad request when all parameters are missing" do
@@ -106,7 +147,16 @@ RSpec.describe Internal::LoginController do
         expect(response).to have_http_status(:bad_request)
 
         json_response = response.parsed_body
-        expect(json_response["error"]).to eq("OTP code is required")
+        expect(json_response["error"]).to eq("OTP code or password is required")
+      end
+
+      it "returns bad request when password is empty string" do
+        post :create, params: { email: user.email, password: "", token: api_token }
+
+        expect(response).to have_http_status(:bad_request)
+
+        json_response = response.parsed_body
+        expect(json_response["error"]).to eq("OTP code or password is required")
       end
     end
 

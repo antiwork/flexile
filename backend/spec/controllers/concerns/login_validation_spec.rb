@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-RSpec.describe OtpValidation do
+RSpec.describe LoginValidation do
   controller(ApplicationController) do
-    include OtpValidation
+    include LoginValidation
 
-    def test_validate_otp_params
-      result = validate_otp_params(params[:email], params[:otp_code])
+    def test_validate_login_params
+      result = validate_login_params(params[:email], params[:otp_code], params[:password])
       render json: { success: result } if result
     end
 
@@ -25,29 +25,41 @@ RSpec.describe OtpValidation do
 
   before do
     routes.draw do
-      post "test_validate_otp_params" => "anonymous#test_validate_otp_params"
+      post "test_validate_login_params" => "anonymous#test_validate_login_params"
       post "test_find_user_by_email" => "anonymous#test_find_user_by_email"
       post "test_check_otp_rate_limit" => "anonymous#test_check_otp_rate_limit"
     end
   end
 
-  describe "#validate_otp_params" do
+  describe "#validate_login_params" do
     it "returns true when both email and otp_code are present" do
-      post :test_validate_otp_params, params: { email: "test@example.com", otp_code: "123456" }
+      post :test_validate_login_params, params: { email: "test@example.com", otp_code: "123456" }
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["success"]).to be true
+    end
+
+    it "returns true when both email and password are present" do
+      post :test_validate_login_params, params: { email: "test@example.com", password: "hunter2" }
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body["success"]).to be true
     end
 
     it "renders error when email is blank" do
-      post :test_validate_otp_params, params: { email: "", otp_code: "123456" }
+      post :test_validate_login_params, params: { email: "", otp_code: "123456" }
       expect(response).to have_http_status(:bad_request)
       expect(response.parsed_body["error"]).to eq("Email is required")
     end
 
-    it "renders error when otp_code is blank" do
-      post :test_validate_otp_params, params: { email: "test@example.com", otp_code: "" }
+    it "renders error when otp_code and password are blank" do
+      post :test_validate_login_params, params: { email: "test@example.com", otp_code: "" }
       expect(response).to have_http_status(:bad_request)
-      expect(response.parsed_body["error"]).to eq("OTP code is required")
+      expect(response.parsed_body["error"]).to eq("OTP code or password is required")
+    end
+
+    it "renders error when both otp_code and password are present" do
+      post :test_validate_login_params, params: { email: "test@example.com", otp_code: "123456", password: "hunter2" }
+      expect(response).to have_http_status(:bad_request)
+      expect(response.parsed_body["error"]).to eq("Only one of OTP code or password is allowed")
     end
   end
 

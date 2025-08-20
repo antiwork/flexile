@@ -2,11 +2,12 @@ import { db } from "@test/db";
 import { usersFactory } from "@test/factories/users";
 import { externalProviderMock, fillOtp, login, logout } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
+import bcrypt from "bcrypt";
 import { eq } from "drizzle-orm";
 import { SignInMethod } from "@/db/enums";
 import { users } from "@/db/schema";
 
-test("login", async ({ page }) => {
+test("login with OTP", async ({ page }) => {
   const { user } = await usersFactory.create();
   const email = user.email;
 
@@ -33,7 +34,7 @@ test("login", async ({ page }) => {
   expect(updatedUser?.currentSignInAt).not.toBe(user.currentSignInAt);
 });
 
-test("login with redirect_url", async ({ page }) => {
+test("login with OTP and redirect_url", async ({ page }) => {
   const { user } = await usersFactory.create();
   const email = user.email;
 
@@ -47,6 +48,55 @@ test("login with redirect_url", async ({ page }) => {
   await fillOtp(page);
 
   // No need to click the button as it should auto-submit
+  await page.waitForURL(/.*\/people.*/u);
+
+  await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
+
+  await expect(page.getByText("Welcome back")).not.toBeVisible();
+  await expect(page.getByText("Use your work email to log in.")).not.toBeVisible();
+
+  expect(page.url()).toContain("/people");
+});
+
+test("login with password", async ({ page }) => {
+  const password = "hunter2";
+  const { user } = await usersFactory.create({ encryptedPassword: await bcrypt.hash(password, 10) });
+  const email = user.email;
+
+  await page.goto("/login");
+  await page.getByRole("button", { name: "Log in with password" }).click();
+
+  await page.getByLabel("Work email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+
+  await page.waitForURL(/.*\/invoices.*/u);
+
+  await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+  await expect(page.getByText("Welcome back")).not.toBeVisible();
+  await expect(page.getByText("Check your email for a code")).not.toBeVisible();
+
+  const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) });
+  expect(updatedUser?.currentSignInAt).not.toBeNull();
+  expect(updatedUser?.currentSignInAt).not.toBe(user.currentSignInAt);
+});
+
+test("login with password and redirect_url", async ({ page }) => {
+  const password = "hunter2";
+  const { user } = await usersFactory.create({ encryptedPassword: await bcrypt.hash(password, 10) });
+  const email = user.email;
+
+  await page.goto("/people");
+
+  await page.waitForURL(/\/login\?.*redirect_url=%2Fpeople/u);
+
+  await page.getByRole("button", { name: "Log in with password" }).click();
+
+  await page.getByLabel("Work email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+
   await page.waitForURL(/.*\/people.*/u);
 
   await expect(page.getByRole("heading", { name: "People" })).toBeVisible();

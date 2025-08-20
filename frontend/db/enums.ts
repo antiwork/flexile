@@ -31,6 +31,7 @@ export enum TaxClassification {
 
 export enum SignInMethod {
   Email = "email",
+  Password = "password",
   Google = "google",
 }
 
