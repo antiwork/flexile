@@ -288,41 +288,30 @@ test.describe("invoice creation", () => {
     expect(Number(lineItem.quantity)).toBe(2.5);
   });
 
-  test("shows attachment row after upload and allows removal", async ({ page }) => {
+  test("allows uploading multiple attachments", async ({ page }) => {
     await login(page, contractorUser, "/invoices/new");
 
-    const [attachmentChooser] = await Promise.all([
+    await page.getByPlaceholder("Description").fill("Development work");
+    await page.getByLabel("Hours / Qty").fill("02:00");
+
+    const [firstAttachmentChooser] = await Promise.all([
       page.waitForEvent("filechooser"),
       page.getByRole("button", { name: "Add document" }).click(),
     ]);
-    await attachmentChooser.setFiles({
+    await firstAttachmentChooser.setFiles({
       name: "invoice.pdf",
       mimeType: "application/pdf",
-      buffer: Buffer.from("test invoice attachment"),
+      buffer: Buffer.from("first invoice attachment"),
     });
 
-    await expect(page.getByRole("link", { name: "invoice.pdf" })).toBeVisible();
-
-    const attachmentRow = page.getByRole("row").filter({ has: page.getByRole("link", { name: "invoice.pdf" }) });
-    await attachmentRow.getByRole("button", { name: "Remove" }).click();
-
-    await expect(page.getByRole("link", { name: "invoice.pdf" })).not.toBeVisible();
-  });
-
-  test("submits invoice successfully with an attachment selected", async ({ page }) => {
-    await login(page, contractorUser, "/invoices/new");
-
-    await page.getByPlaceholder("Description").fill("Consulting services");
-    await page.getByLabel("Hours / Qty").fill("01:00");
-
-    const [attachmentChooser] = await Promise.all([
+    const [secondAttachmentChooser] = await Promise.all([
       page.waitForEvent("filechooser"),
       page.getByRole("button", { name: "Add document" }).click(),
     ]);
-    await attachmentChooser.setFiles({
-      name: "invoice.pdf",
+    await secondAttachmentChooser.setFiles({
+      name: "contract.pdf",
       mimeType: "application/pdf",
-      buffer: Buffer.from("test invoice attachment"),
+      buffer: Buffer.from("second contract attachment"),
     });
 
     await page.getByRole("button", { name: "Send invoice" }).click();
@@ -332,7 +321,7 @@ test.describe("invoice creation", () => {
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
 
-    const attachment = await db.query.activeStorageAttachments.findFirst({
+    const attachments = await db.query.activeStorageAttachments.findMany({
       where: and(
         eq(activeStorageAttachments.recordType, "Invoice"),
         eq(activeStorageAttachments.recordId, invoice.id),
@@ -341,6 +330,59 @@ test.describe("invoice creation", () => {
       with: { blob: { columns: { filename: true } } },
       orderBy: desc(activeStorageAttachments.id),
     });
-    expect(attachment?.blob.filename).toBe("invoice.pdf");
+
+    expect(attachments).toHaveLength(2);
+    const filenames = attachments.map((a) => a.blob.filename);
+    expect(filenames).toContain("invoice.pdf");
+    expect(filenames).toContain("contract.pdf");
+  });
+
+  test("allows removing one attachment while keeping others", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    await page.getByPlaceholder("Description").fill("Development work");
+    await page.getByLabel("Hours / Qty").fill("01:30");
+
+    const [firstAttachmentChooser] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      page.getByRole("button", { name: "Add document" }).click(),
+    ]);
+    await firstAttachmentChooser.setFiles({
+      name: "keep-me.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("keep this attachment"),
+    });
+
+    const [secondAttachmentChooser] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      page.getByRole("button", { name: "Add document" }).click(),
+    ]);
+    await secondAttachmentChooser.setFiles({
+      name: "remove-me.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("remove this attachment"),
+    });
+
+    const attachmentRow = page.getByRole("row").filter({ hasText: "remove-me.pdf" });
+    await attachmentRow.getByRole("button", { name: "Remove" }).click();
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    const invoice = await db.query.invoices
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
+      .then(takeOrThrow);
+
+    const attachments = await db.query.activeStorageAttachments.findMany({
+      where: and(
+        eq(activeStorageAttachments.recordType, "Invoice"),
+        eq(activeStorageAttachments.recordId, invoice.id),
+        eq(activeStorageAttachments.name, "attachments"),
+      ),
+      with: { blob: { columns: { filename: true } } },
+    });
+
+    expect(attachments).toHaveLength(1);
+    expect(attachments[0]?.blob.filename).toBe("keep-me.pdf");
   });
 });

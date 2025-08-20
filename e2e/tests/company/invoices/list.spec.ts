@@ -1,4 +1,5 @@
 import { db } from "@test/db";
+import { attachmentsFactory } from "@test/factories/attachments";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
@@ -440,5 +441,35 @@ test.describe("Invoices contractor flow", () => {
       });
       expect(remainingInvoices.length).toBe(2);
     });
+  });
+
+  test("shows attachment on invoice detail page", async ({ page }) => {
+    const { company, user: adminUser } = await setupCompany();
+    const { companyContractor } = await companyContractorsFactory.create({
+      companyId: company.id,
+    });
+
+    const { invoice } = await invoicesFactory.create({
+      companyId: company.id,
+      companyContractorId: companyContractor.id,
+      totalAmountInUsdCents: BigInt(150_00),
+    });
+
+    await attachmentsFactory.create({
+      recordId: invoice.id,
+      recordType: "Invoice",
+      blobOverrides: { filename: "contract.pdf" },
+    });
+
+    await attachmentsFactory.create({
+      recordId: invoice.id,
+      recordType: "Invoice",
+      blobOverrides: { filename: "contract2.pdf" },
+    });
+
+    await login(page, adminUser, `/invoices/${invoice.externalId}`);
+
+    await expect(page.getByRole("link", { name: "contract.pdf" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "contract2.pdf" })).toBeVisible();
   });
 });

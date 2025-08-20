@@ -257,6 +257,56 @@ RSpec.describe CreateOrUpdateInvoiceService do
         end
       end
 
+      context "when invoice attachments are provided" do
+        let(:params) do
+          ActionController::Parameters.new({
+            **invoice_params,
+            **invoice_line_item_params,
+            invoice: {
+              **invoice_params[:invoice],
+              attachments: [fixture_file_upload("sample.pdf", "application/pdf")],
+            },
+          })
+        end
+
+        it "attaches files to the invoice" do
+          expect do
+            result = invoice_service.process
+            expect(result[:success]).to be(true)
+            invoice = result[:invoice]
+            expect(invoice.attachments.count).to eq(1)
+            expect(invoice.attachments.first.filename.to_s).to eq("sample.pdf")
+          end.to change { user.invoices.count }.by(1)
+        end
+      end
+
+      context "when multiple attachments are provided" do
+        let(:params) do
+          ActionController::Parameters.new({
+            **invoice_params,
+            **invoice_line_item_params,
+            invoice: {
+              **invoice_params[:invoice],
+              attachments: [
+                fixture_file_upload("sample.pdf", "application/pdf"),
+                fixture_file_upload("contract.pdf", "application/pdf")
+              ],
+            },
+          })
+        end
+
+        it "attaches all files to the invoice" do
+          expect do
+            result = invoice_service.process
+            expect(result[:success]).to be(true)
+            invoice = result[:invoice]
+            expect(invoice.attachments.count).to eq(2)
+            filenames = invoice.attachments.map { |a| a.filename.to_s }
+            expect(filenames).to contain_exactly("sample.pdf", "contract.pdf")
+          end.to change { user.invoices.count }.by(1)
+        end
+      end
+
       context "and is in the notice period" do
         before do
           contractor.update!(ended_at: 1.day.ago)
@@ -464,6 +514,74 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expected_options = 18 # (expected_equity_cents / (company.share_price_in_usd * 100)).round
             expect(invoice.equity_amount_in_options).to eq(expected_options)
           end.to change { user.invoices.count }.by(0)
+        end
+      end
+
+
+
+      context "when removing existing attachments" do
+        it "removes existing attachments when not included in params" do
+          expect(invoice.attachments.count).to eq(1)
+          expect(invoice.attachments.first.filename.to_s).to eq("invoice.pdf")
+          expect do
+            result = invoice_service.process
+            expect(result[:success]).to be(true)
+            invoice.reload
+            expect(invoice.attachments.count).to eq(0)
+          end.to_not change { user.invoices.count }
+        end
+      end
+
+      context "when adding new attachments to existing invoice" do
+        let(:params) do
+          ActionController::Parameters.new({
+            **invoice_params,
+            **invoice_line_item_params,
+            invoice: {
+              **invoice_params[:invoice],
+              attachments: [fixture_file_upload("contract.pdf", "application/pdf")],
+            },
+          })
+        end
+
+        it "replaces existing attachments with new ones" do
+          expect(invoice.attachments.count).to eq(1)
+          expect(invoice.attachments.first.filename.to_s).to eq("invoice.pdf")
+          expect do
+            result = invoice_service.process
+            expect(result[:success]).to be(true)
+            invoice.reload
+            expect(invoice.attachments.count).to eq(1)
+            expect(invoice.attachments.first.filename.to_s).to eq("contract.pdf")
+          end.to_not change { user.invoices.count }
+        end
+      end
+
+      context "when keeping existing attachments" do
+        let(:params) do
+          ActionController::Parameters.new({
+            **invoice_params,
+            **invoice_line_item_params,
+            invoice: {
+              **invoice_params[:invoice],
+              attachments: [invoice.attachments.first.signed_id, fixture_file_upload("contract.pdf", "application/pdf")],
+            },
+          })
+        end
+
+        it "keeps existing attachments and adds new ones" do
+          expect(invoice.attachments.count).to eq(1)
+          filenames = invoice.attachments.map { |a| a.filename.to_s }
+          expect(filenames).to eq(["invoice.pdf"])
+
+          expect do
+            result = invoice_service.process
+            expect(result[:success]).to be(true)
+            invoice.reload
+            expect(invoice.attachments.count).to eq(2)
+            filenames = invoice.attachments.map { |a| a.filename.to_s }
+            expect(filenames).to contain_exactly("invoice.pdf", "contract.pdf")
+          end.to_not change { user.invoices.count }
         end
       end
 
