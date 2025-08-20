@@ -211,10 +211,11 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
 };
 
 const ViewList = () => {
+  const isMobile = useIsMobile();
   const { updates } = useData();
   const [selectedUpdateId, setSelectedUpdateId] = useState<string | null>(null);
   const columnHelper = createColumnHelper<(typeof updates)[number]>();
-  const columns = useMemo(
+  const desktopColumns = useMemo(
     () => [
       columnHelper.simple("title", "Title"),
       columnHelper.accessor("summary", {
@@ -225,6 +226,39 @@ const ViewList = () => {
     ],
     [],
   );
+
+  const mobileColumns = useMemo(
+    () => [
+      columnHelper.display({
+        id: "update",
+        cell: (info) => {
+          const update = info.row.original;
+          return (
+            <div className="flex flex-col gap-1">
+              <div className="flex">
+                <div className="w-3xs truncate text-base font-medium">{update.title}</div>
+                <div className="flex-1 text-right font-[350] text-gray-600">
+                  {update.sentAt ? formatDate(update.sentAt) : "-"}
+                </div>
+              </div>
+              <div
+                className="truncate text-base leading-5 font-[350] text-gray-600"
+                style={{ width: "calc(100vw - 40px)" }}
+              >
+                {update.summary}
+              </div>
+            </div>
+          );
+        },
+        meta: {
+          cellClassName: "w-full",
+        },
+      }),
+    ],
+    [],
+  );
+
+  const columns = isMobile ? mobileColumns : desktopColumns;
   const table = useTable({ columns, data: updates });
   const handleRowClick = (row: { id: string }) => setSelectedUpdateId(row.id);
 

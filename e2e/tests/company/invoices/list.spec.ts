@@ -429,7 +429,7 @@ test.describe("Invoices contractor flow", () => {
       await deletableInvoiceRow.click({ button: "right" });
       await expect(page.getByRole("menuitem", { name: "Delete" })).toBeVisible();
       await page.getByRole("menuitem", { name: "Delete" }).click();
-      await page.getByRole("dialog").waitFor();
+      await expect(page.getByRole("dialog")).toBeVisible();
       await page.getByRole("button", { name: "Delete" }).click();
 
       await expect(page.locator("tbody tr")).toHaveCount(2);

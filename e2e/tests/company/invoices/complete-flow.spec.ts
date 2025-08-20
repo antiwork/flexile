@@ -96,7 +96,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.getByRole("cell", { name: "CUSTOM-3" }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Delete" }).click();
-    await page.getByRole("dialog").waitFor();
+    await expect(page.getByRole("dialog")).toBeVisible();
     await page.getByRole("button", { name: "Delete" }).click();
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).not.toBeVisible();
 

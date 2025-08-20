@@ -63,6 +63,15 @@
   </p>
 <% end %>
 
-<%= link_to "Sign and accept your grant",
-            "#{PROTOCOL}://#{DOMAIN}/stock_options_contracts/#{Document.equity_plan_contract.find_by(equity_grant: @equity_grant).id}",
-            class: "button" %>
+<% if @document.signatures.all?(&:signed_at) %>
+  <p>This grant has already been executed and no action is required on your part.</p>
+  <% if @document.live_attachment.present? %>
+  <%= link_to "Download agreement",
+              rails_blob_url(@document.live_attachment, disposition: "attachment"),
+              class: "button" %>
+  <% end %>
+<% else %>
+  <%= link_to "Sign and accept your grant",
+              "#{PROTOCOL}://#{DOMAIN}/stock_options_contracts/#{@document.id}",
+              class: "button" %>
+<% end %>
