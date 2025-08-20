@@ -1,15 +1,11 @@
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { currentUserSchema } from "@/models/user";
 import { assertDefined } from "@/utils/assert";
-import { internal_current_user_data_url } from "@/utils/routes";
 
 export const getRedirectUrl = async (req: Request) => {
   const host = assertDefined(req.headers.get("Host"));
-  // Temporary fix for development - force HTTP
-  const url =
-    process.env.NODE_ENV === "development"
-      ? "http://localhost:3000/internal/current_user_data"
-      : internal_current_user_data_url({ host });
+  // Use the NextAuth proxy route to ensure proper authentication
+  const url = `http://${host}/internal/current_user_data`;
   const response = await fetch(url, {
     headers: {
       cookie: req.headers.get("cookie") ?? "",

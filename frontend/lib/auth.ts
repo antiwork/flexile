@@ -32,21 +32,21 @@ export const authOptions = {
         if (!validation.success) throw new Error("Invalid email or OTP");
 
         try {
+          const formData = new URLSearchParams({
+            email: validation.data.email,
+            otp_code: validation.data.otp,
+            token: env.API_SECRET_TOKEN,
+          });
+
           const response = await fetch(`${assertDefined(req.headers?.origin)}/internal/login`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: validation.data.email,
-              otp_code: validation.data.otp,
-              token: env.API_SECRET_TOKEN,
-            }),
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString(),
           });
 
           if (!response.ok) {
-            throw new Error(
-              z.object({ error: z.string() }).safeParse(await response.json()).data?.error ||
-                "Authentication failed, please try again.",
-            );
+            const errorData = z.object({ error: z.string() }).safeParse(await response.json());
+            throw new Error(errorData.data?.error || "Authentication failed, please try again.");
           }
 
           const data = z
@@ -91,25 +91,25 @@ export const authOptions = {
         token.legalName = user.legalName ?? "";
         token.preferredName = user.preferredName ?? "";
       }
-      
+
       // Handle session updates for impersonation
       if (trigger === "update" && session) {
         token.impersonationJwt = session.user?.impersonationJwt;
       }
-      
+
       return token;
     },
     session({ session, token }) {
-      return { 
-        ...session, 
-        user: { 
-          ...session.user, 
-          ...token, 
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          ...token,
           id: token.sub,
           // Support for impersonation tokens
           impersonationJwt: token.impersonationJwt || null,
           isImpersonating: !!token.impersonationJwt,
-        } 
+        },
       };
     },
   },
