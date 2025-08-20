@@ -1,8 +1,9 @@
 "use client";
 
 import { useConversations, useCreateConversation } from "@helperai/react";
-import { CircleCheck, Paperclip, Plus, SendIcon, X } from "lucide-react";
+import { CircleCheck, Paperclip, Plus, SendIcon, Upload, X } from "lucide-react";
 import React, { useRef, useState } from "react";
+import { useDropzone } from "react-dropzone";
 import { helperTools } from "@/app/(dashboard)/support/tools";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -64,6 +65,23 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
       fileInputRef.current.value = "";
     }
   };
+
+  const onDrop = (acceptedFiles: File[]) => {
+    setAttachments((prev) => [...prev, ...acceptedFiles]);
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "image/*": [],
+      "application/pdf": [".pdf"],
+      "application/msword": [".doc"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "text/plain": [".txt"],
+    },
+    multiple: true,
+    noClick: true,
+  });
 
   const removeAttachment = (index: number) => {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
@@ -141,7 +159,8 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
           <DialogHeader>
             <DialogTitle>How can we help you today?</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div {...getRootProps()} className="space-y-4">
+            <input {...getInputProps()} />
             <div className="relative">
               <Input
                 id="subject"
@@ -150,26 +169,39 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                 placeholder="Subject"
                 className="mt-1"
               />
-              <Textarea
-                id="message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Tell us about your issue or question..."
-                className="mt-4 min-h-40 resize-none pr-12"
-                rows={4}
-              />
-              <div className="absolute right-2 bottom-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="small"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="h-8 w-8 p-0"
-                >
-                  <Paperclip className="size-4" />
-                </Button>
+              <div className="relative">
+                <Textarea
+                  id="message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Tell us about your issue or question..."
+                  className="mt-4 min-h-40 resize-none pr-12"
+                  rows={4}
+                />
+                <div className="absolute right-2 bottom-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="small"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="h-8 w-8 p-0"
+                    title="Attach files"
+                  >
+                    <Paperclip className="size-4" />
+                  </Button>
+                </div>
               </div>
             </div>
+
+            {isDragActive ? (
+              <div className="absolute inset-0 z-10 mb-0 flex items-center justify-center rounded-lg border-2 border-dashed border-blue-400 bg-blue-50/90">
+                <div className="text-center">
+                  <Upload className="mx-auto h-12 w-12 text-blue-400" />
+                  <p className="mt-2 text-sm font-medium text-blue-600">Drop files here to attach</p>
+                  <p className="text-xs text-blue-500">Supports images, PDF, DOC, DOCX, and TXT files</p>
+                </div>
+              </div>
+            ) : null}
 
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2">
@@ -183,6 +215,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                       type="button"
                       onClick={() => removeAttachment(index)}
                       className="cursor-pointer text-gray-500 hover:text-gray-700"
+                      title="Remove file"
                     >
                       <X className="size-3" />
                     </button>
