@@ -534,6 +534,7 @@ export const documents = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
     docusealSubmissionId: integer("docuseal_submission_id"),
+    text: text(),
   },
   (table) => [
     index("index_documents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -1644,6 +1645,7 @@ export const companies = pgTable(
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
     jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
     inviteLink: varchar("invite_link"),
+    exerciseNotice: text("exercise_notice"),
   },
   (table) => [
     index("index_companies_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),

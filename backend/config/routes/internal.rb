@@ -11,6 +11,8 @@ scope path: :internal, module: :internal do
     end
   end
 
+  resources :oauth, only: :create
+
   resource :settings, only: [:update]
   namespace :settings do
     resource :dividend, only: [:show, :update], controller: "dividend"
@@ -56,7 +58,7 @@ scope path: :internal, module: :internal do
         post :remove_role
       end
     end
-    resources :equity_grant_exercises, only: :create do
+    resources :equity_grant_exercises, only: [:new, :create] do
       member do
         post :resend
       end
