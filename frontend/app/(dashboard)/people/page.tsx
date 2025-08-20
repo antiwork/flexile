@@ -220,7 +220,6 @@ const inviteSchema = formSchema.merge(documentSchema).extend({
 const ActionPanel = () => {
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
-  const trpcUtils = trpc.useUtils();
   const isMobile = useIsMobile();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
@@ -268,7 +267,6 @@ const ActionPanel = () => {
     },
     onSuccess: async () => {
       await refetch();
-      await trpcUtils.documents.list.invalidate();
       setShowInviteModal(false);
       inviteForm.reset();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });

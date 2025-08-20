@@ -331,7 +331,7 @@ export default function DocumentsPage() {
         <TableSkeleton columns={6} />
       ) : documents.length > 0 ? (
         <>
-          <DataTable table={table} {...(isCompanyRepresentative && { searchColumn: "Signer" })} />
+          <DataTable table={table} {...(isCompanyRepresentative && { searchColumn: "signer" })} />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
         </>
       ) : (

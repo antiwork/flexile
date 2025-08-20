@@ -466,7 +466,6 @@ const DetailsTab = ({
   const updateContractor = trpc.contractors.update.useMutation({
     onSuccess: async () => {
       await trpcUtils.contractors.list.invalidate();
-      await trpcUtils.documents.list.invalidate();
       await trpcUtils.contractors.get.invalidate({ userId });
     },
   });

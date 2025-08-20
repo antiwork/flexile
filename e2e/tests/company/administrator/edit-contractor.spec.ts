@@ -74,6 +74,7 @@ test.describe("Edit contractor", () => {
     await page.getByLabel("Role").fill("Stuff-doer");
     await page.getByLabel("Rate").fill("107");
     await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(page.getByRole("button", { name: "Save changes" })).not.toBeDisabled();
 
     const updatedContractor = await db.query.companyContractors.findFirst({
       where: eq(users.id, companyContractor.id),
@@ -107,6 +108,7 @@ test.describe("Edit contractor", () => {
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("2000");
     await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(page.getByRole("button", { name: "Save changes" })).not.toBeDisabled();
 
     const updatedContractor = await db.query.companyContractors.findFirst({
       where: eq(users.id, companyContractor.id),
