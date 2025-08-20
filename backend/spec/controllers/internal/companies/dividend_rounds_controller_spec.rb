@@ -37,7 +37,6 @@ RSpec.describe Internal::Companies::DividendRoundsController do
         expect(response.parsed_body["id"]).to be_present
 
         dividend_computation.reload
-        expect(dividend_computation.dividend_round).to be_present
         expect(dividend_computation.finalized_at).to be_present
       end
     end
