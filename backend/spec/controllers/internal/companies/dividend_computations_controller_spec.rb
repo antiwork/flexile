@@ -104,19 +104,12 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       end.to raise_error(ActiveRecord::RecordNotFound)
     end
 
-    context "when dividend computation is already finalized" do
-      let(:dividend_round) { create(:dividend_round, company: company) }
-      let(:finalized_dividend_computation) do
-        computation = create(:dividend_computation, company: company)
-        computation.mark_as_finalized!(dividend_round)
-        computation
-      end
-
-      it "redirects to the dividend round page" do
-        get :show, params: { company_id: company.external_id, id: finalized_dividend_computation.id }
-        expect(response).to have_http_status(:forbidden)
-        expect(response).to json_redirect_to("/equity/dividend_rounds/round/#{dividend_round.id}")
-      end
+    it "returns not found when dividend computation is finalized" do
+      dividend_computation.mark_as_finalized!
+      get :show, params: { company_id: company.external_id, id: dividend_computation.id }
+      expect(response).to have_http_status(:not_found)
+      json_response = response.parsed_body
+      expect(json_response["error"]).to eq("Dividend computation is finalized")
     end
   end
 end
