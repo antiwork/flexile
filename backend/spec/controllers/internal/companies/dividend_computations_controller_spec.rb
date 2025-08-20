@@ -116,6 +116,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
     it "returns not found when dividend computation is finalized" do
       dividend_computation.mark_as_finalized!
       get :show, params: { company_id: company.external_id, id: dividend_computation.id }
+
       expect(response).to have_http_status(:not_found)
       json_response = response.parsed_body
       expect(json_response["error"]).to eq("Dividend computation is finalized")
