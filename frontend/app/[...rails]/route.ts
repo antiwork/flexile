@@ -19,6 +19,7 @@ async function handler(req: Request) {
     default:
       url.port = process.env.RAILS_ENV === "test" ? "3100" : "3000";
       url.protocol = "http";
+      url.hostname = "localhost";
   }
 
   const session = await getServerSession(authOptions);
@@ -27,12 +28,12 @@ async function handler(req: Request) {
 
   if (session?.user) {
     // Check for impersonation JWT in cookies first
-    const cookies = req.headers.get('cookie');
+    const cookies = req.headers.get("cookie");
     const impersonationJwt = cookies?.match(/impersonation_jwt=([^;]+)/u)?.[1];
-    const isImpersonating = cookies?.includes('is_impersonating=true');
-    
+    const isImpersonating = cookies?.includes("is_impersonating=true");
+
     // Use impersonation JWT if available, otherwise use original session JWT
-    const activeJwt = (isImpersonating && impersonationJwt) ? impersonationJwt : session.user.jwt;
+    const activeJwt = isImpersonating && impersonationJwt ? impersonationJwt : session.user.jwt;
     headers.set("x-flexile-auth", `Bearer ${activeJwt}`);
   }
 
