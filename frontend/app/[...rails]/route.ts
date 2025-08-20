@@ -25,7 +25,16 @@ async function handler(req: Request) {
 
   const headers = new Headers(req.headers);
 
-  if (session?.user) headers.set("x-flexile-auth", `Bearer ${session.user.jwt}`);
+  if (session?.user) {
+    // Check for impersonation JWT in cookies first
+    const cookies = req.headers.get('cookie');
+    const impersonationJwt = cookies?.match(/impersonation_jwt=([^;]+)/u)?.[1];
+    const isImpersonating = cookies?.includes('is_impersonating=true');
+    
+    // Use impersonation JWT if available, otherwise use original session JWT
+    const activeJwt = (isImpersonating && impersonationJwt) ? impersonationJwt : session.user.jwt;
+    headers.set("x-flexile-auth", `Bearer ${activeJwt}`);
+  }
 
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/v1/")) {
     url.searchParams.set("token", env.API_SECRET_TOKEN);

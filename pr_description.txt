@@ -1,0 +1,47 @@
+## Walkthrough
+
+Adds admin user impersonation: new controller with create/destroy, signed-token generation via a rake task, session tracking and Current.user swap, JWT cookie issuance and cookie-aware JwtService, routes, docs, and tests.
+
+## Changes
+
+| Cohort / File(s) | Summary |
+|---|---|
+| **Admin Impersonation Controller**<br>`backend/app/controllers/admin/impersonation_controller.rb` | New controller with `create`/`destroy` actions to start/stop impersonation using signed tokens; manages `session` keys, `Current.user`, logs, and sets `auth_token` cookie via `JwtService`. |
+| **JWT Cookie Support**<br>`backend/app/services/jwt_service.rb` | JWT extraction now checks `request.cookies["auth_token"]` as a fallback to the `x-flexile-auth` Bearer header; header takes precedence. |
+| **Routing**<br>`backend/config/routes.rb` | Adds admin-scoped routes: `GET /admin/impersonate` -> `impersonation#create` and `DELETE /admin/impersonate` -> `impersonation#destroy`. |
+| **Rake Task**<br>`backend/lib/tasks/impersonation.rake` | New `impersonation:generate_url[email]` task to emit signed 5-minute impersonation URLs; validates email and host config and prints guidance/errors. |
+| **Documentation**<br>`backend/docs/admin_impersonation.md` | New admin-facing doc describing the impersonation workflow, security constraints, setup requirements, and troubleshooting. |
+| **Controller Specs**<br>`backend/spec/controllers/admin/impersonation_controller_spec.rb` | Tests create/destroy flows: valid/invalid/expired tokens, missing user, session state, and presence of `auth_token` cookie. |
+| **Auth Concern Specs**<br>`backend/spec/controllers/concerns/jwt_authenticatable_spec.rb` | Adds cookie-based JWT tests (valid, expired) and precedence when both header and cookie are present. |
+| **Rake Task Specs**<br>`backend/spec/lib/tasks/impersonation_rake_spec.rb` | Tests URL generation output, error cases for missing user/email/host, and expected messages. |
+
+## Implementation Details
+
+### Console Command
+```bash
+rails impersonation:generate_url[user@example.com]
+```
+
+Outputs:
+```
+Impersonation URL for John Doe (user@example.com):
+https://flexile.co/admin/impersonate?token=AbCdEf...
+
+Note: URL expires in 5 minutes  
+Only accessible by team members
+```
+
+### Security Features
+- Admin-only access (`team_member: true` constraint)
+- 5-minute token expiration via Rails signed IDs
+- JWT cookie authentication for browser sessions
+- Session-based impersonation tracking
+- Audit logging for start/stop events
+
+### Usage Flow
+1. Admin generates URL via console command
+2. Admin pastes URL in browser
+3. System validates token and switches to target user
+4. Admin can stop impersonation via DELETE to `/admin/impersonate`
+
+This provides a simple, secure alternative to complex web UI approaches for debugging user issues.

@@ -38,6 +38,7 @@ import { useSwitchCompany } from "@/lib/companySwitcher";
 import { hasSubItems, type NavLinkInfo, useNavLinks } from "@/lib/useNavLinks";
 import { UserDataProvider } from "@/trpc/client";
 import { cn } from "@/utils";
+import { useImpersonation } from "@/utils/impersonation";
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
@@ -142,6 +143,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
+              <ImpersonationBanner />
               {company.checklistItems.length > 0 ? <GettingStarted /> : null}
               {canShowTryEquity && showTryEquity ? (
                 <SidebarMenuItem>
@@ -284,6 +286,51 @@ const NavItem = ({
           {typeof badge === "number" ? badge > 0 ? <NavBadge count={badge} /> : null : badge}
         </Link>
       </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+};
+
+const ImpersonationBanner = () => {
+  const { stopImpersonation } = useImpersonation();
+  const [isImpersonating, setIsImpersonating] = React.useState(false);
+
+  // Check for impersonation state from cookies/localStorage
+  React.useEffect(() => {
+    const checkImpersonationState = () => {
+      if (typeof window !== "undefined") {
+        const hasImpersonationCookie = document.cookie.includes("is_impersonating=true");
+        const hasLocalStorageFlag = localStorage.getItem("is_impersonating") === "true";
+        setIsImpersonating(hasImpersonationCookie || hasLocalStorageFlag);
+      }
+    };
+
+    checkImpersonationState();
+
+    // Check periodically in case cookies change
+    const interval = setInterval(checkImpersonationState, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!isImpersonating) {
+    return null;
+  }
+
+  return (
+    <SidebarMenuItem>
+      <div className="mb-2 rounded-lg border border-amber-300 bg-amber-100 p-3">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-amber-800">
+            <div className="font-medium">Impersonating User</div>
+            <div className="text-xs text-amber-700">Customer support session</div>
+          </div>
+          <button
+            onClick={stopImpersonation}
+            className="rounded border border-amber-400 bg-amber-200 px-2 py-1 text-xs text-amber-800 transition-colors hover:bg-amber-300"
+          >
+            Stop
+          </button>
+        </div>
+      </div>
     </SidebarMenuItem>
   );
 };

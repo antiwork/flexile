@@ -84,16 +84,33 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
-      if (!user) return token;
-      token.jwt = user.jwt;
-      token.legalName = user.legalName ?? "";
-      token.preferredName = user.preferredName ?? "";
+      if (user) {
+        token.jwt = user.jwt;
+        token.legalName = user.legalName ?? "";
+        token.preferredName = user.preferredName ?? "";
+      }
+      
+      // Handle session updates for impersonation
+      if (trigger === "update" && session) {
+        token.impersonationJwt = session.user?.impersonationJwt;
+      }
+      
       return token;
     },
     session({ session, token }) {
-      return { ...session, user: { ...session.user, ...token, id: token.sub } };
+      return { 
+        ...session, 
+        user: { 
+          ...session.user, 
+          ...token, 
+          id: token.sub,
+          // Support for impersonation tokens
+          impersonationJwt: token.impersonationJwt || null,
+          isImpersonating: !!token.impersonationJwt,
+        } 
+      };
     },
   },
   pages: {
@@ -101,3 +118,5 @@ export const authOptions = {
   },
   secret: env.NEXTAUTH_SECRET,
 } satisfies NextAuthOptions;
+
+// Note: Impersonation helper functions moved to @/lib/auth-helpers to avoid server-only imports in client code

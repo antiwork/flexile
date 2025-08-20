@@ -8,6 +8,8 @@ declare module "next-auth" {
     legalName?: string;
     preferredName?: string;
     jwt: string;
+    impersonationJwt?: string;
+    isImpersonating?: boolean;
   }
 
   interface Session {
@@ -18,6 +20,8 @@ declare module "next-auth" {
       legalName?: string;
       preferredName?: string;
       jwt: string;
+      impersonationJwt?: string;
+      isImpersonating?: boolean;
     };
   }
 }
@@ -27,5 +31,6 @@ declare module "next-auth/jwt" {
     jwt?: string;
     legalName?: string;
     preferredName?: string;
+    impersonationJwt?: string;
   }
 }

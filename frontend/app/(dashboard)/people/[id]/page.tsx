@@ -46,6 +46,7 @@ import { MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
+import { useImpersonation } from "@/utils/impersonation";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
@@ -97,6 +98,10 @@ export default function ContractorPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [endDate, setEndDate] = useState<DateValue | null>(today(getLocalTimeZone()));
   const [issuePaymentModalOpen, setIssuePaymentModalOpen] = useState(false);
+  const [impersonateModalOpen, setImpersonateModalOpen] = useState(false);
+  const [impersonationToken, setImpersonationToken] = useState("");
+  const { startImpersonation, isLoading: isImpersonating, error: impersonationError } = useImpersonation();
+
   const issuePaymentForm = useForm({
     defaultValues: {
       equityType: "fixed",
@@ -181,6 +186,27 @@ export default function ContractorPage() {
   const issuePaymentValues = issuePaymentForm.watch();
   const submitIssuePayment = issuePaymentForm.handleSubmit((values) => issuePaymentMutation.mutateAsync(values));
 
+  // Impersonation logic
+  const generateImpersonationToken = () => {
+    // For now, use email as a simple token - in production this would come from the rake task
+    const token = btoa(`${user.email}:${Date.now()}`);
+    setImpersonationToken(token);
+    setImpersonateModalOpen(true);
+  };
+
+  const handleImpersonation = async () => {
+    if (!impersonationToken) return;
+
+    try {
+      await startImpersonation(impersonationToken);
+      setImpersonateModalOpen(false);
+      // Redirect to dashboard as the impersonated user
+      router.push("/");
+    } catch (error) {
+      // Error is handled by state
+    }
+  };
+
   return (
     <>
       <DashboardHeader
@@ -191,6 +217,8 @@ export default function ContractorPage() {
               contractor={contractor}
               setIssuePaymentModalOpen={setIssuePaymentModalOpen}
               setEndModalOpen={setEndModalOpen}
+              onImpersonate={generateImpersonationToken}
+              canImpersonate={currentUser.roles.administrator}
             />
           ) : null
         }
@@ -366,6 +394,45 @@ export default function ContractorPage() {
           </DialogContent>
         </Dialog>
 
+        <Dialog open={impersonateModalOpen} onOpenChange={setImpersonateModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Impersonate {user.displayName}</DialogTitle>
+              <DialogDescription>
+                You are about to log in as this user for customer support purposes. This action will be logged.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4">
+              <div>
+                <label className="text-sm font-medium">Impersonation Token</label>
+                <Input
+                  value={impersonationToken}
+                  onChange={(e) => setImpersonationToken(e.target.value)}
+                  placeholder="Enter impersonation token"
+                  className="mt-1"
+                />
+                <small className="mt-1 block text-gray-600">
+                  Generate this token using: rails impersonation:generate_url[{user.email}]
+                </small>
+              </div>
+              {impersonationError ? (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>{impersonationError}</AlertDescription>
+                </Alert>
+              ) : null}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setImpersonateModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleImpersonation} disabled={isImpersonating || !impersonationToken}>
+                {isImpersonating ? "Starting..." : "Start Impersonation"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {tabs.length > 1 ? <Tabs links={tabs.map((tab) => ({ label: tab.label, route: `?tab=${tab.tab}` }))} /> : null}
 
         {(() => {
@@ -393,10 +460,14 @@ const ActionPanel = ({
   contractor,
   setIssuePaymentModalOpen,
   setEndModalOpen,
+  onImpersonate,
+  canImpersonate,
 }: {
   contractor: { endedAt: Date | null };
   setIssuePaymentModalOpen: Dispatch<SetStateAction<boolean>>;
   setEndModalOpen: Dispatch<SetStateAction<boolean>>;
+  onImpersonate: () => void;
+  canImpersonate: boolean;
 }) => {
   const isMobile = useIsMobile();
   const handleIssuePaymentClick = () => {
@@ -420,6 +491,11 @@ const ActionPanel = ({
           <DialogClose asChild onClick={handleIssuePaymentClick}>
             <Button>Issue payment</Button>
           </DialogClose>
+          {canImpersonate ? (
+            <DialogClose asChild onClick={onImpersonate}>
+              <Button variant="outline">Impersonate</Button>
+            </DialogClose>
+          ) : null}
           {contractor.endedAt && !isFuture(contractor.endedAt) ? (
             <Status className="justify-center" variant="critical">
               Alumni
@@ -435,6 +511,11 @@ const ActionPanel = ({
   ) : (
     <div className="flex items-center gap-3">
       <Button onClick={handleIssuePaymentClick}>Issue payment</Button>
+      {canImpersonate ? (
+        <Button variant="outline" onClick={onImpersonate}>
+          Impersonate
+        </Button>
+      ) : null}
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
         <Status variant="critical">Alumni</Status>
       ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
