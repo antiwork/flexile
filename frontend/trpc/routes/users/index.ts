@@ -4,7 +4,6 @@ import { z } from "zod";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { createRouter, protectedProcedure } from "@/trpc";
-import { settings_tax_url } from "@/utils/routes";
 import { latestUserComplianceInfo, userDisplayEmail, userDisplayName, withRoles } from "./helpers";
 
 export type User = typeof users.$inferSelect;
@@ -55,15 +54,6 @@ export const usersRouter = createRouter({
       displayName: userDisplayName(user),
       hasBankAccount,
     };
-  }),
-
-  updateTaxSettings: protectedProcedure.input(z.object({ data: z.unknown() })).mutation(async ({ ctx, input }) => {
-    const response = await fetch(settings_tax_url({ host: ctx.host }), {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...ctx.headers },
-      body: JSON.stringify(input.data),
-    });
-    if (!response.ok) throw new TRPCError({ code: "BAD_REQUEST", message: await response.text() });
   }),
 
   getContractorInfo: protectedProcedure.query(({ ctx }) => {

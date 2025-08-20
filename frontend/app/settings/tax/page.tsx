@@ -23,7 +23,6 @@ import { Label } from "@/components/ui/label";
 import { BusinessType, TaxClassification } from "@/db/enums";
 import { useCurrentUser } from "@/global";
 import { countries } from "@/models/constants";
-import { trpc } from "@/trpc/client";
 import { getTinName } from "@/utils/legal";
 import { request } from "@/utils/request";
 import { settings_tax_path } from "@/utils/routes";
@@ -85,7 +84,6 @@ const formSchema = formValuesSchema
 
 export default function TaxPage() {
   const user = useCurrentUser();
-  const updateTaxSettings = trpc.users.updateTaxSettings.useMutation();
   const queryClient = useQueryClient();
 
   const { data } = useSuspenseQuery({
@@ -151,12 +149,17 @@ export default function TaxPage() {
   const saveMutation = useMutation({
     mutationFn: async (signature: string) => {
       const formValues = form.getValues();
-      const transformedData = {
-        ...formValues,
-        birth_date: formValues.birth_date ? formValues.birth_date.toString() : null,
-        signature,
-      };
-      await updateTaxSettings.mutateAsync({ data: transformedData });
+      await request({
+        accept: "json",
+        method: "PATCH",
+        url: settings_tax_path(),
+        jsonData: {
+          ...formValues,
+          birth_date: formValues.birth_date?.toString(),
+          signature,
+        },
+        assertOk: true,
+      });
 
       setIsTaxInfoConfirmed(true);
       if (form.getFieldState("tax_id").isDirty) setTaxIdStatus(null);
