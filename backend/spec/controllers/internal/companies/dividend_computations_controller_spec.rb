@@ -53,6 +53,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
 
       expect(response).to have_http_status(:ok)
       computation_ids = response.parsed_body.map { |comp| comp["id"] }
+      expect(computation_ids).to include(dividend_computation.id)
       expect(computation_ids).not_to include(finalized_computation.id)
     end
   end
