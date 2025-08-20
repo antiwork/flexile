@@ -50,6 +50,16 @@ class Admin::ImpersonationController < Admin::ApplicationController
       }
     )
 
+    redirect_url = if user.administrator?
+                     "/invoices"
+                   elsif user.lawyer?
+                     "/documents"
+                   elsif user.worker?
+                     "/invoices"
+                   else
+                     "/equity"
+                   end
+
     render json: {
       token: jwt_token,
       user: {
@@ -57,6 +67,7 @@ class Admin::ImpersonationController < Admin::ApplicationController
         email: user.email,
         display_name: user.display_name,
       },
+      redirect_url: redirect_url,
     }, status: :ok
   end
 end

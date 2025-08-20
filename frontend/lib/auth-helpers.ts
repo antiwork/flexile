@@ -2,46 +2,53 @@
 
 // Helper functions for impersonation token management
 export async function setImpersonationToken(impersonationJwt: string) {
-  try {
-    if (!impersonationJwt) {
-      throw new Error("Impersonation JWT is required");
-    }
-
-    // Store the impersonation JWT in both localStorage and cookies
-    localStorage.setItem("impersonation_jwt", impersonationJwt);
-    localStorage.setItem("is_impersonating", "true");
-
-    // Set HTTP-only cookie for server-side access
-    document.cookie = `impersonation_jwt=${impersonationJwt}; path=/; max-age=900; samesite=lax`; // 15 minutes
-    document.cookie = `is_impersonating=true; path=/; max-age=900; samesite=lax`;
-
-    // Force a page refresh to reload the session with the new JWT
-    window.location.reload();
-  } catch (error) {
-    throw error;
+  if (!impersonationJwt) {
+    throw new Error("Impersonation JWT is required");
   }
+
+  // Store the impersonation JWT in both localStorage and cookies
+  localStorage.setItem("impersonation_jwt", impersonationJwt);
+  localStorage.setItem("is_impersonating", "true");
+
+  // Set HTTP-only cookie for server-side access
+  document.cookie = `impersonation_jwt=${impersonationJwt}; path=/; max-age=900; samesite=lax`; // 15 minutes
+  document.cookie = `is_impersonating=true; path=/; max-age=900; samesite=lax`;
+
+  // Force a page refresh to reload the session with the new JWT
+  window.location.reload();
 }
 
 export async function clearImpersonationToken() {
-  try {
-    // Remove impersonation JWT from localStorage
-    localStorage.removeItem("impersonation_jwt");
-    localStorage.removeItem("is_impersonating");
+  // Remove impersonation JWT from localStorage
+  localStorage.removeItem("impersonation_jwt");
+  localStorage.removeItem("is_impersonating");
 
-    // Clear cookies
-    document.cookie = "impersonation_jwt=; path=/; max-age=0";
-    document.cookie = "is_impersonating=; path=/; max-age=0";
+  // Clear cookies
+  document.cookie = "impersonation_jwt=; path=/; max-age=0";
+  document.cookie = "is_impersonating=; path=/; max-age=0";
 
-    // Force a page refresh to reload the session without impersonation
-    window.location.reload();
-  } catch (error) {
-    throw error;
-  }
+  // Force a page refresh to reload the session without impersonation
+  window.location.reload();
+}
+
+interface SessionData {
+  user?: {
+    jwt?: string;
+  };
 }
 
 export function getActiveJwt(session: unknown) {
   try {
-    const sessionData = session as { user?: { jwt?: string } };
+    if (!session || typeof session !== 'object') {
+      return null;
+    }
+    
+    // Type guard to check if session has the expected structure
+    if (!('user' in session) || !session.user || typeof session.user !== 'object') {
+      return null;
+    }
+    
+    const sessionData = session as SessionData;
     if (!sessionData?.user) {
       return null;
     }
