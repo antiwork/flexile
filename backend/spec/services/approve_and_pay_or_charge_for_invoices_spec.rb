@@ -47,10 +47,16 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
     # creates a consolidated invoice for the chargeable invoices
     expect(ConsolidatedInvoiceCreation).to receive(:new).with(company_id: company.id, invoice_ids: payable_and_chargeable.map(&:id)).and_call_original
 
-    consolidated_invoice = described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id)).perform
+    consolidated_invoices = described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id)).perform
 
-    # charges for the consolidated invoice
-    expect(ChargeConsolidatedInvoiceJob).to have_enqueued_sidekiq_job(consolidated_invoice.id)
+    # charges for the consolidated invoices (could be multiple if invoices span multiple days)
+    if consolidated_invoices.is_a?(Array)
+      consolidated_invoices.each do |ci|
+        expect(ChargeConsolidatedInvoiceJob).to have_enqueued_sidekiq_job(ci.id)
+      end
+    else
+      expect(ChargeConsolidatedInvoiceJob).to have_enqueued_sidekiq_job(consolidated_invoices.id)
+    end
   end
 
   describe "paying failed invoices" do

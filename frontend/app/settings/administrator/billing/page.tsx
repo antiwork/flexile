@@ -136,7 +136,7 @@ export default function Billing() {
         </AlertDescription>
       </Alert>
       {isLoading ? (
-        <TableSkeleton columns={5} />
+        <TableSkeleton columns={6} />
       ) : data && data.length > 0 ? (
         <BillingHistoryTable data={data} />
       ) : (
@@ -153,6 +153,7 @@ const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
   const columns = useMemo(
     () => [
       columnHelper.simple("invoiceDate", "Date", formatDate),
+      columnHelper.simple("periodStartDate", "Period", formatDate),
       columnHelper.simple("totalContractors", "Contractors", (v) => v.toLocaleString(), "numeric"),
       columnHelper.simple("totalCents", "Invoice total", (v) => formatMoneyFromCents(v), "numeric"),
       columnHelper.simple("status", "Status", (status) => {

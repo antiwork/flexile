@@ -20,9 +20,13 @@ class ApproveAndPayOrChargeForInvoices
     end
     return if chargeable_invoice_ids.empty?
 
-    consolidated_invoice = ConsolidatedInvoiceCreation.new(company_id: company.id, invoice_ids: chargeable_invoice_ids).process
-    ChargeConsolidatedInvoiceJob.perform_async(consolidated_invoice.id)
-    consolidated_invoice
+    consolidated_invoices = ConsolidatedInvoiceCreation.new(company_id: company.id, invoice_ids: chargeable_invoice_ids).process
+    if consolidated_invoices.is_a?(Array)
+      consolidated_invoices.each { |ci| ChargeConsolidatedInvoiceJob.perform_async(ci.id) }
+    else
+      ChargeConsolidatedInvoiceJob.perform_async(consolidated_invoices.id)
+    end
+    consolidated_invoices
   end
 
   private

@@ -29,6 +29,8 @@ export const consolidatedInvoicesRouter = createRouter({
       .select({
         id: consolidatedInvoices.id,
         invoiceDate: consolidatedInvoices.invoiceDate,
+        periodStartDate: consolidatedInvoices.periodStartDate,
+        periodEndDate: consolidatedInvoices.periodEndDate,
         totalCents: consolidatedInvoices.totalCents,
         status: consolidatedInvoices.status,
         totalContractors: sql<number>`count(distinct invoices.user_id)`,
