@@ -270,7 +270,7 @@ RSpec.describe DividendComputation do
     end
 
     it "handles edge case with no dividend computation outputs" do
-      empty_computation = create(:dividend_computation, company: company, total_amount_in_usd: 0, dividends_issuance_date: Date.current)
+      empty_computation = create(:dividend_computation, company: company, total_amount_in_usd: 100, dividends_issuance_date: Date.current)
 
       result = empty_computation.broken_down_by_investor
       expect(result).to eq([])

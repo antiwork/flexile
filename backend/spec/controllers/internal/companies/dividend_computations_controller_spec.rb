@@ -70,6 +70,16 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       }
     end
 
+    before do
+      # Ensure we have eligible investors
+      share_class = create(:share_class, company: company, name: "Common")
+      create(:share_holding,
+             company_investor: company_investor,
+             share_class: share_class,
+             number_of_shares: 1000,
+             originally_acquired_at: 70.days.ago)
+    end
+
     it "creates a new dividend computation" do
       post :create, params: valid_params
 
@@ -80,6 +90,38 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(dividend_computation.total_amount_in_usd).to eq(100_000)
       expect(dividend_computation.dividends_issuance_date).to eq(Date.parse("2024-01-15"))
       expect(dividend_computation.return_of_capital).to eq(true)
+    end
+
+    context "when there are no eligible investors" do
+      before do
+        ShareHolding.destroy_all
+      end
+
+      it "returns unprocessable_entity" do
+        post :create, params: valid_params
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = response.parsed_body
+        expect(json_response["error_message"]).to include("we couldn't find any eligible investors")
+      end
+    end
+
+    context "when there are insufficient funds" do
+      let(:invalid_params) do
+        valid_params.deep_merge(
+          dividend_computation: {
+            amount_in_usd: 10,
+          }
+        )
+      end
+
+      it "returns unprocessable_entity" do
+        post :create, params: invalid_params
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = response.parsed_body
+        expect(json_response["error_message"]).to include("preferred investors require a payout of at least $19.63")
+      end
     end
   end
 
