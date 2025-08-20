@@ -71,7 +71,7 @@ RSpec.describe DividendComputationGeneration do
         described_class.new(company, amount_in_usd: insufficient_amount, return_of_capital: false).process
       end.to raise_error(
         DividendComputationGeneration::InsufficientFundsError,
-        "Sorry, you cannot distribute $20000.0 as preferred investors require a return of at least $22184.03."
+        "Sorry, you cannot distribute $20000.0 as preferred investors require a payout of at least $22184.03."
       )
     end
 
