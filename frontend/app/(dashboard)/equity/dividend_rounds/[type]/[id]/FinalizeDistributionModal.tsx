@@ -88,7 +88,7 @@ const FinalizeDistributionModal = ({
 
           <div className="flex justify-between">
             <span>Shareholders:</span>
-            <span>{dividendComputation.number_of_shareholders}</span>
+            <span>{dividendComputation.number_of_shareholders.toLocaleString()}</span>
           </div>
 
           <Separator />
