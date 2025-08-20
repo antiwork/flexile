@@ -6,7 +6,7 @@ class DividendComputation < ApplicationRecord
   belongs_to :company
   has_many :dividend_computation_outputs, dependent: :destroy
 
-  validates :total_amount_in_usd, presence: true
+  validates :total_amount_in_usd, presence: true, numericality: { greater_than: 0 }
   validates :dividends_issuance_date, presence: true
 
   def number_of_shareholders

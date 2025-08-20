@@ -29,6 +29,8 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     render json: { id: dividend_computation.id }, status: :created
   rescue DividendComputationGeneration::NoEligibleInvestorsError, DividendComputationGeneration::InsufficientFundsError => e
     render json: { error_message: e.message }, status: :unprocessable_entity
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error_message: e.message }, status: :unprocessable_entity
   end
 
   def show
