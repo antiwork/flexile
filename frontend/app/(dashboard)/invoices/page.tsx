@@ -299,6 +299,9 @@ export default function InvoicesPage() {
             </div>
           );
         },
+        meta: {
+          cellClassName: "inline-block",
+        },
       }),
 
       columnHelper.accessor((row) => statusNames[row.status], {
@@ -406,31 +409,31 @@ export default function InvoicesPage() {
         title="Invoices"
         headerActions={
           isMobile ? (
-            <div className="flex items-center">
-              {data.length > 0 ? (
+            data.length > 0 ? (
+              <div className="flex items-center">
                 <button
                   className="p-2 text-blue-600"
                   onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
                 >
                   {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
                 </button>
-              ) : null}
-              {user.roles.administrator ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="p-2">
-                    <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <a href={export_company_invoices_path(company.id)} className="flex h-11 items-center gap-2">
-                        <Download className="size-4" />
-                        Download CSV
-                      </a>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : null}
-            </div>
+                {user.roles.administrator ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="p-2">
+                      <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <a href={export_company_invoices_path(company.id)} className="flex h-11 items-center gap-2">
+                          <Download className="size-4" />
+                          Download CSV
+                        </a>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
+              </div>
+            ) : null
           ) : user.roles.worker ? (
             <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
               <Link href="/invoices/new" inert={!canSubmitInvoices}>
