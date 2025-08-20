@@ -49,3 +49,14 @@ export const md5Checksum = async (file: File) => {
   md5.update(await file.arrayBuffer());
   return btoa(String.fromCharCode(...(await md5.digest())));
 };
+
+export const formatFileSize = (size: number) => {
+  const units = ["byte", "kilobyte", "megabyte", "gigabyte", "terabyte", "petabyte"];
+  const i = size === 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
+  return (size / 1024 ** i).toLocaleString([], {
+    notation: "compact",
+    style: "unit",
+    unit: `${units[i]}`,
+    unitDisplay: "narrow",
+  });
+};

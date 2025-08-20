@@ -537,8 +537,6 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_expense_categories!(company, categories)
-      return unless company.expenses_enabled?
-
       categories.each do |category|
         company.expense_categories.create!(name: category["name"])
       end
@@ -708,16 +706,6 @@ class SeedDataGeneratorFromTemplate
       print_message("Created consolidated invoices.")
     end
 
-    def create_company_worker_equity_grant!(company_worker, equity_grant_data)
-      option_pool_created_at = Date.new(equity_grant_data.fetch("option_pool").fetch("year"), 1, 1)
-      Timecop.travel(option_pool_created_at) do
-        GrantStockOptions.new(
-          company_worker,
-          board_approval_date: option_pool_created_at,
-        ).process
-      end
-    end
-
     def create_user_bank_account!(user, wise_recipient_params)
       wise_recipient_params["details"]["accountHolderName"] ||= user.legal_name
       wise_recipient_params["details"]["address"] ||= {}
@@ -786,9 +774,7 @@ class SeedDataGeneratorFromTemplate
                 number_of_options: equity_grant_data.fetch("equity_grant_exercise").fetch("model_attributes").fetch("number_of_options"),
               }
             ],
-            company_investor:,
-            company_worker:,
-            submission_id: "submission"
+            company_investor:
           )
         end
       end
