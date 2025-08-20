@@ -148,9 +148,8 @@ class DividendComputationGeneration
           output.qualified_dividend_amount_usd += attrs[:qualified_dividend_amount_usd]
           output.total_amount_in_usd += attrs[:total_amount_in_usd]
           output.save!
-        else attrs[:type] == :convertible_investment
-             create_attrs = attrs.except(:type)
-             computation.dividend_computation_outputs.create!(create_attrs)
+        else
+          computation.dividend_computation_outputs.create!(attrs.except(:type))
         end
       end
     end
