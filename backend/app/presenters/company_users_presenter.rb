@@ -7,23 +7,13 @@ class CompanyUsersPresenter
     @company = company
   end
 
-  def props
-    {
-      administrators: administrators_props,
-      lawyers: lawyers_props,
-      contractors: contractors_props,
-      investors: investors_props,
-      all_users: all_users_props,
-    }
-  end
-
-  def filtered_users(filters)
-    return props if filters.blank?
+  def users(filters = nil)
+    return all_users_props if filters.blank?
 
     valid_filters = %w[administrators lawyers contractors investors]
-    applied_filters = filters & valid_filters
+    applied_filters = filters.split(",").map(&:strip) & valid_filters
 
-    return props if applied_filters.empty?
+    return all_users_props if applied_filters.empty?
 
     combined_users = []
     applied_filters.each do |filter|
@@ -48,9 +38,8 @@ class CompanyUsersPresenter
 
     admins.map do |admin|
       user = admin.user
-      roles = get_user_roles(user)
 
-      user_props(user, roles).merge(
+      user_props(user).merge(
         role: is_primary_admin?(user) ? "Owner" : "Admin",
       )
     end.sort_by { |admin| [admin[:isOwner] ? 0 : 1, admin[:name]] }
@@ -59,9 +48,8 @@ class CompanyUsersPresenter
   def lawyers_props
     @company.company_lawyers.includes(:user).order(:id).map do |lawyer|
       user = lawyer.user
-      roles = get_user_roles(user)
 
-      user_props(user, roles).merge(
+      user_props(user).merge(
         role: "Lawyer",
       )
     end.sort_by { |lawyer| lawyer[:name] }
@@ -70,9 +58,8 @@ class CompanyUsersPresenter
   def contractors_props
     @company.company_workers.includes(:user).order(:id).map do |worker|
       user = worker.user
-      roles = get_user_roles(user)
 
-      user_props(user, roles).merge(
+      user_props(user).merge(
         role: "Contractor",
         active: worker.active?,
       )
@@ -82,9 +69,8 @@ class CompanyUsersPresenter
   def investors_props
     @company.company_investors.includes(:user).order(:id).map do |investor|
       user = investor.user
-      roles = get_user_roles(user)
 
-      user_props(user, roles).merge(
+      user_props(user).merge(
         role: "Investor",
       )
     end.sort_by { |investor| investor[:name] }
@@ -98,12 +84,7 @@ class CompanyUsersPresenter
       role_users.each do |user|
         next if seen.include?(user[:id])
         seen.add(user[:id])
-        all_users << {
-          id: user[:id],
-          email: user[:email],
-          name: user[:name],
-          allRoles: user[:allRoles],
-        }
+        all_users << user
       end
     end
 
@@ -112,7 +93,9 @@ class CompanyUsersPresenter
 
   private
     # Common method for user properties that are shared across all role types
-    def user_props(user, roles)
+    def user_props(user)
+      roles = get_user_roles(user)
+
       {
         id: user.external_id,
         email: user.email,

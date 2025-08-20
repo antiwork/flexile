@@ -173,24 +173,6 @@ export const companiesRouter = createRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
 
-      // If no roles specified, extract all_users from the full response
-      if (!input.roles || input.roles.length === 0) {
-        const data = z
-          .object({
-            all_users: z.array(
-              z.object({
-                id: z.string(),
-                email: z.string(),
-                name: z.string(),
-                allRoles: z.array(z.string()),
-              }),
-            ),
-          })
-          .parse(await response.json());
-
-        return data.all_users;
-      }
-      // If roles specified, return the filtered response directly
       return z
         .array(
           z.object({

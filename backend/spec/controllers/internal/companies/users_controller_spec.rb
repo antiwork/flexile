@@ -28,11 +28,8 @@ RSpec.describe Internal::Companies::UsersController do
         expect(response).to have_http_status(:ok)
 
         json_response = response.parsed_body
-        expect(json_response).to have_key("administrators")
-        expect(json_response).to have_key("lawyers")
-        expect(json_response).to have_key("contractors")
-        expect(json_response).to have_key("investors")
-        expect(json_response).to have_key("all_users")
+        expect(json_response).to be_an(Array)
+        expect(json_response.length).to be >= 1
       end
     end
 
@@ -126,11 +123,8 @@ RSpec.describe Internal::Companies::UsersController do
         expect(response).to have_http_status(:ok)
 
         json_response = response.parsed_body
-        expect(json_response).to have_key("administrators")
-        expect(json_response).to have_key("lawyers")
-        expect(json_response).to have_key("contractors")
-        expect(json_response).to have_key("investors")
-        expect(json_response).to have_key("all_users")
+        expect(json_response).to be_an(Array)
+        expect(json_response.length).to be >= 1
       end
     end
   end

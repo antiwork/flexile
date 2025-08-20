@@ -5,14 +5,7 @@ class Internal::Companies::UsersController < Internal::Companies::BaseController
     authorize CompanyAdministrator
 
     presenter = CompanyUsersPresenter.new(company: Current.company)
-
-    if params[:filter].present?
-      filters = params[:filter].split(",").map(&:strip)
-      filtered_result = presenter.filtered_users(filters)
-      render json: filtered_result
-    else
-      render json: presenter.props
-    end
+    render json: presenter.users(params[:filter])
   end
 
   def add_role

@@ -19,7 +19,6 @@ import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 
-// Define the form schema
 const investorSchema = z.object({
   investors: z
     .array(
@@ -34,7 +33,6 @@ const investorSchema = z.object({
 
 type InvestorFormData = z.infer<typeof investorSchema>;
 
-// Separate component for investor search input
 const InvestorSearchInput = ({
   fieldIndex,
   form,
@@ -76,7 +74,7 @@ const InvestorSearchInput = ({
             onChange={(e) => {
               const value = e.target.value;
               form.setValue(`investors.${fieldIndex}.searchTerm`, value);
-              field.onChange(""); // Use field.onChange to trigger validation
+              field.onChange("");
               setIsPopoverOpen(true);
             }}
             placeholder={isLoading ? "Loading investors..." : "Type to search investors..."}
@@ -94,7 +92,7 @@ const InvestorSearchInput = ({
                   key={user.value}
                   value={user.value}
                   onSelect={(value) => {
-                    field.onChange(value); // Use field.onChange to trigger validation
+                    field.onChange(value);
                     form.setValue(`investors.${fieldIndex}.searchTerm`, "");
                     setIsPopoverOpen(false);
                   }}
@@ -116,7 +114,6 @@ const AddCapTablePage = () => {
   const { data: users, isLoading } = trpc.companies.listCompanyUsers.useQuery({ companyId: company.id });
   const [mutationError, setMutationError] = useState<string | null>(null);
 
-  // Use React Hook Form with field array
   const form = useForm<InvestorFormData>({
     resolver: zodResolver(investorSchema),
     defaultValues: {
@@ -132,7 +129,7 @@ const AddCapTablePage = () => {
   const utils = trpc.useUtils();
   const createCapTableMutation = trpc.capTable.create.useMutation({
     onSuccess: async () => {
-      setMutationError(null); // Clear any previous errors
+      setMutationError(null);
       await utils.capTable.show.invalidate({ companyId: company.id, newSchema: false });
       await utils.capTable.show.invalidate({ companyId: company.id, newSchema: true });
       router.push("/equity/investors");
@@ -142,10 +139,8 @@ const AddCapTablePage = () => {
     },
   });
 
-  // Watch the entire investors array for live updates
   const investorsWatch = form.watch("investors");
 
-  // Clear investors error when form data changes (only clear custom errors, not Zod validation errors)
   React.useEffect(() => {
     if (
       form.formState.errors.investors?.message &&
@@ -186,10 +181,8 @@ const AddCapTablePage = () => {
   );
 
   const handleFinalizeCapTable = (data: InvestorFormData) => {
-    // Clear any previous mutation errors when starting new submission
     setMutationError(null);
 
-    // Zod validation handles all field validation, so we can directly use the data
     const investorsData = data.investors.map((inv) => ({
       userId: inv.userId,
       shares: inv.shares,
@@ -198,7 +191,6 @@ const AddCapTablePage = () => {
     createCapTableMutation.mutate({ companyId: company.id, investors: investorsData });
   };
 
-  // Create table data with add row marker
   const tableData = useMemo(
     () => [...fields.map((field, index) => ({ ...field, _index: index })), { _isAddRow: true }],
     [fields],
@@ -353,7 +345,6 @@ const AddCapTablePage = () => {
           }
         />
 
-        {/* Show form validation errors and mutation errors */}
         {(form.formState.errors.investors &&
           "message" in form.formState.errors.investors &&
           form.formState.errors.investors.message) ||

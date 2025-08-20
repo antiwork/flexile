@@ -10,7 +10,7 @@ class Internal::Companies::Administrator::CapTablesController < Internal::Compan
     ).perform
 
     if result[:success]
-      render json: { success: true }, status: :created
+      head :created
     else
       render json: { success: false, errors: result[:errors] }, status: :unprocessable_entity
     end

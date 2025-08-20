@@ -15,7 +15,7 @@ class CreateCapTable
     validate_data
     return { success: false, errors: @errors } if @errors.any?
 
-    ActiveRecord::Base.transaction do
+    ApplicationRecord.transaction do
       create_share_class_if_needed
       create_investors_and_holdings
     end
@@ -27,7 +27,7 @@ class CreateCapTable
   rescue ActiveRecord::RecordInvalid => e
     @errors << e.message
     { success: false, errors: @errors }
-  rescue StandardError => e
+  rescue => e
     @errors << "Unexpected error: #{e.message}"
     { success: false, errors: @errors }
   end
