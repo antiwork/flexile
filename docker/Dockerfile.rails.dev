@@ -1,28 +1,30 @@
 # syntax=docker/dockerfile:1.4
-# Rails Development Dockerfile
-# Optimized for development speed with Alpine and BuildKit cache mounts
+# Rails Development Dockerfile with BuildKit cache mounts
 
 ARG RUBY_VERSION=3.4.3
-FROM ruby:${RUBY_VERSION}-alpine AS base
+# FROM ruby:${RUBY_VERSION}-alpine AS base
+FROM ruby:${RUBY_VERSION} AS base
 
-# Install dependencies with Alpine optimization
-RUN apk add --no-cache \
-    postgresql-dev \
-    build-base \
-    nodejs \
-    yarn \
+# Install dependencies
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    postgresql-client \
     git \
     curl \
     vim \
-    bash \
-    && rm -rf /var/cache/apk/*
+    nodejs \
+    npm \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
-# Create non-root user for security (Alpine syntax)
-RUN addgroup -g 1001 -S rails && \
-    adduser -S -u 1001 -G rails rails && \
+# Create non-root user for security
+RUN groupadd -g 1001 rails && \
+    useradd -m -u 1001 -g rails rails && \
     chown -R rails:rails /app
 
 # Configure bundler for optimal development
@@ -37,6 +39,7 @@ COPY --chown=rails:rails backend/Gemfile backend/Gemfile.lock ./
 
 # Install gems with BuildKit cache mount for faster rebuilds
 RUN --mount=type=cache,id=bundle,target=/usr/local/bundle/cache \
+    gem install bundler:2.3.11 && \
     bundle config set --local path '/usr/local/bundle' && \
     bundle config set --local without 'production' && \
     bundle install --jobs 4 --retry 3
@@ -63,9 +66,9 @@ ENV RAILS_ENV=development \
     WEB_CONCURRENCY=1 \
     RUBY_YJIT_ENABLE=1
 
-# Health check for container orchestration
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/health || exit 1
+# Health check disabled for development
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+#     CMD curl -s http://localhost:3000/ -o /dev/null || exit 1
 
 # Default command for development
 CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-p", "3000"]

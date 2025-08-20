@@ -16,6 +16,9 @@ backend/.bundle
 
 # Docker
 docker
+!docker/all-in-one/
+!docker/scripts/
+!docker/flexile_dev.conf
 Dockerfile*
 docker-compose*.yml
 

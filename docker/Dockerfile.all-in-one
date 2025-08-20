@@ -142,8 +142,10 @@ RUN mkdir -p /app/backend /app/frontend /app/certificates /app/docker \
 COPY backend /app/backend
 COPY frontend /app/frontend
 COPY docker /app/docker
+COPY patches /app/patches
 COPY Procfile.dev /app/
-COPY .env* /app/
+COPY package.json /app/
+COPY pnpm-lock.yaml /app/
 
 # Set working directory
 WORKDIR /app
@@ -158,12 +160,25 @@ RUN cd /app/backend && \
 
 # Install Node dependencies
 RUN cd /app/frontend && \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --ignore-scripts
+
+# Fix for prepare script that requires git - temporarily modify package.json
+RUN cd /app && \
+    cp package.json package.json.bak && \
+    sed 's/"prepare".*/"prepare": "echo Skipping git hooks in Docker"/g' package.json.bak > package.json
+
+# Rebuild packages that need building
+RUN cd /app/frontend && \
+    pnpm rebuild bcrypt inngest-cli
+
+# Restore original package.json
+RUN cd /app && \
+    mv package.json.bak package.json
 
 # Copy configuration files
 COPY docker/all-in-one/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/all-in-one/nginx.conf /etc/nginx/nginx.conf
-COPY docker/flexile_dev.conf /etc/nginx/sites-available/default
+COPY docker/all-in-one/flexile_all_in_one.conf /etc/nginx/sites-available/default
 COPY docker/all-in-one/init.sh /usr/local/bin/init.sh
 COPY docker/all-in-one/health-check.sh /usr/local/bin/health-check.sh
 

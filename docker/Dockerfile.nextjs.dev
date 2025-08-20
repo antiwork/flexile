@@ -41,9 +41,9 @@ COPY --chown=nextjs:nodejs patches/ ./patches/
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm fetch --frozen-lockfile
 
-# Install dependencies with cache
+# Install dependencies with cache (skip prepare script)
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --prefer-offline
+    pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
 
 # Copy frontend package files
 COPY --chown=nextjs:nodejs frontend/package.json* ./frontend/
@@ -60,20 +60,21 @@ RUN mkdir -p frontend/.next frontend/public
 # Expose Next.js development port
 EXPOSE 3001
 
+# Stay in root directory /app for pnpm workspace commands
+WORKDIR /app
+
 # Development environment variables for Docker
 ENV NODE_ENV=development \
     NEXT_TELEMETRY_DISABLED=1 \
     WATCHPACK_POLLING=true \
     CHOKIDAR_USEPOLLING=true \
     CHOKIDAR_INTERVAL=1000 \
-    NODE_OPTIONS="--max-old-space-size=2048"
+    NODE_OPTIONS="--max-old-space-size=2048" \
+    TZ=UTC
 
-# Set working directory to frontend
-WORKDIR /app/frontend
+# Health check disabled for development
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+#     CMD curl -s http://localhost:3001/ -o /dev/null || exit 1
 
-# Health check for container orchestration
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:3001/api/health || exit 1
-
-# Development command with hostname binding for Docker
-CMD ["pnpm", "dev", "--hostname", "0.0.0.0", "--port", "3001"]
+# Development command matching Procfile.dev pattern
+CMD ["sh", "-c", "pnpm next dev frontend -H 0.0.0.0 -p 3001"]

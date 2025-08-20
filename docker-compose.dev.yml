@@ -93,19 +93,17 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app:delegated
+      - ./frontend:/frontend:delegated  # Mount frontend for js-routes access
       - bundle_cache:/usr/local/bundle
       - rails_cache:/app/tmp/cache
+    env_file:
+      - .env
     environment:
       <<: *common-variables
       DATABASE_URL: postgresql://${DATABASE_USER:-username}:${DATABASE_PASSWORD:-password}@db:5432/${DATABASE_NAME:-flexile_development}
       REDIS_URL: redis://redis:6379/0
       SIDEKIQ_REDIS_URL: redis://redis:6379/1
       AWS_ENDPOINT_URL: https://${FLEXILE_MINIO_DOMAIN:-minio.flexile.dev}
-      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
-      AWS_REGION: ${AWS_REGION:-us-east-1}
-      S3_PRIVATE_BUCKET: ${S3_PRIVATE_BUCKET:-flexile-development-private}
-      S3_PUBLIC_BUCKET: ${S3_PUBLIC_BUCKET:-flexile-development-public}
       BOOTSNAP_CACHE_DIR: /tmp/bootsnap-cache
       RUBY_YJIT_ENABLE: 1
       WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
@@ -140,14 +138,14 @@ services:
     volumes:
       - ./backend:/app:delegated
       - bundle_cache:/usr/local/bundle
+    env_file:
+      - .env
     environment:
       <<: *common-variables
       DATABASE_URL: postgresql://${DATABASE_USER:-username}:${DATABASE_PASSWORD:-password}@db:5432/${DATABASE_NAME:-flexile_development}
       REDIS_URL: redis://redis:6379/0
       SIDEKIQ_REDIS_URL: redis://redis:6379/1
       AWS_ENDPOINT_URL: https://${FLEXILE_MINIO_DOMAIN:-minio.flexile.dev}
-      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
     command: bundle exec sidekiq
     networks:
       - flexile-network
@@ -170,13 +168,13 @@ services:
       - ./patches:/app/patches:ro
       - pnpm_cache:/pnpm-store
       - nextjs_cache:/app/frontend/.next
+    env_file:
+      - .env
     environment:
       <<: *common-variables
       NEXT_PUBLIC_API_URL: https://${FLEXILE_API_DOMAIN:-api.flexile.dev}
       NEXT_PUBLIC_DOMAIN: ${FLEXILE_DOMAIN:-flexile.dev}
       NEXTAUTH_URL: https://${FLEXILE_DOMAIN:-flexile.dev}
-      API_SECRET_TOKEN: ${API_SECRET_TOKEN:-sample-api-token}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-sample-nextauth-secret}
       DATABASE_URL: postgresql://${DATABASE_USER:-username}:${DATABASE_PASSWORD:-password}@db:5432/${DATABASE_NAME:-flexile_development}
     ports:
       - "3001:3001"
