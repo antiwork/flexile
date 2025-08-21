@@ -82,10 +82,7 @@ class InvoicePresenter
         address: AddressPresenter.new(company).props,
         is_trusted: company.is_trusted?,
         completed_payment_method_setup: company.bank_account_ready?,
-        expenses: {
-          enabled: company.expenses_enabled?,
-          categories: company.expense_categories.map { |category| { id: category.id, name: category.name } }.sort_by { _1[:name] },
-        },
+        expense_categories: company.expense_categories.map { |category| { id: category.id, name: category.name } }.sort_by { _1[:name] },
       }
     end
 

@@ -908,6 +908,30 @@ export const company_dividend_computations_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/dividend_rounds(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_rounds_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/dividend_rounds(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_dividend_rounds_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/equity_exercise_payments/:id(.:format)
  * @param {any} company_id
  * @param {any} id
@@ -1952,6 +1976,30 @@ export const new_company_company_update_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/equity_grant_exercises/new(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const new_company_equity_grant_exercise_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/equity_grant_exercises/new(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const new_company_equity_grant_exercise_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/invoices/new(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -2011,6 +2059,26 @@ export const new_rails_conductor_inbound_email_source_url: ((
  * @returns {string} route path
  */
 export const new_rails_conductor_inbound_email_source_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/oauth(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const oauth_index_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/oauth(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const oauth_index_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
