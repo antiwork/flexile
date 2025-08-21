@@ -170,7 +170,6 @@ export default function DataTable<T extends RowData>({
     [table.getState().columnFilters],
   );
 
-  const rowClasses = `px-1 py-2 md:px-0 ${isMobile ? "min-h-16" : ""}`;
   const cellClasses = (column: Column<T> | null, type?: "header" | "footer") => {
     const numeric = column?.columnDef.meta?.numeric;
     return cn(
@@ -389,7 +388,7 @@ export default function DataTable<T extends RowData>({
               const rowContent = (
                 <TableRow
                   key={row.id}
-                  className={`${rowClasses} ${onRowClicked ? "cursor-pointer" : ""}`}
+                  className={`${onRowClicked ? "cursor-pointer" : ""}`}
                   data-state={isSelected ? "selected" : undefined}
                   onClick={() => onRowClicked?.(row.original)}
                 >
@@ -452,17 +451,17 @@ export default function DataTable<T extends RowData>({
         {data.footers.length > 0 && (
           <TableFooter>
             {data.footers.map((footerGroup) => (
-              <TableRow key={footerGroup.id} className={rowClasses}>
+              <TableRow key={footerGroup.id}>
                 {selectable ? <TableCell className={cellClasses(null, "footer")} /> : null}
                 {footerGroup.headers.map((header) => (
                   <TableCell key={header.id} className={cellClasses(header.column, "footer")} colSpan={header.colSpan}>
                     {header.isPlaceholder ? null : (
                       <>
-                        {typeof header.column.columnDef.header === "string" && (
+                        {typeof header.column.columnDef.header === "string" && header.column.columnDef.footer ? (
                           <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
                             {header.column.columnDef.header}
                           </div>
-                        )}
+                        ) : null}
                         {flexRender(header.column.columnDef.footer, header.getContext())}
                       </>
                     )}
