@@ -144,7 +144,8 @@ RSpec.describe InvoiceEquityCalculator do
           termination_with_cause_exercise_months: 0,
           death_exercise_months: 12,
           disability_exercise_months: 12,
-          retirement_exercise_months: 12
+          retirement_exercise_months: 12,
+          contract: "Contract"
         ).process
       end
       let(:calculator_insufficient) do
