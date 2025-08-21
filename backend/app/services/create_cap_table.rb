@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class CreateCapTable
-  attr_reader :errors, :company
-
   def initialize(company:, investors_data:)
     @company = company
     @investors_data = investors_data
@@ -11,6 +9,11 @@ class CreateCapTable
 
   def perform
     return { success: false, errors: ["Company must have equity enabled"] } unless company.equity_enabled?
+    # Check if company already has cap table data (same logic as ProcessCapTableUpload#validate_no_existing_cap_table!)
+    existing_cap_table_errors = validate_no_existing_cap_table
+    if existing_cap_table_errors.any?
+      return { success: false, errors: ["Company already has cap table data: #{existing_cap_table_errors.to_sentence}"] }
+    end
 
     validate_data
     return { success: false, errors: @errors } if @errors.any?
@@ -33,13 +36,27 @@ class CreateCapTable
   end
 
   private
-    attr_reader :investors_data
+    attr_reader :errors, :company, :investors_data
+
+    def validate_no_existing_cap_table
+      errors = []
+      errors << "option pools" if company.option_pools.exists?
+      errors << "share classes" if company.share_classes.exists?
+      errors << "investors" if company.company_investors.exists?
+      errors << "share holdings" if company.share_holdings.exists?
+      errors
+    end
 
     def validate_data
       total_shares = 0
       investors_data.each_with_index do |investor_data, index|
         user = User.find_by(external_id: investor_data[:userId])
         shares = investor_data[:shares].to_i
+
+        if user.nil?
+          @errors << "Investor #{index + 1}: User not found"
+          next
+        end
 
         if company.company_investors.exists?(user: user)
           @errors << "Investor #{index + 1}: User is already an investor in this company"
@@ -55,16 +72,16 @@ class CreateCapTable
     end
 
     def create_share_class_if_needed
-      return if company.share_classes.exists?(name: "Common")
+      return if company.share_classes.exists?(name: ShareClass::DEFAULT_NAME)
 
       company.share_classes.create!(
-        name: "Common",
-        original_issue_price_in_dollars: company.share_price_in_usd || 0.01
+        name: ShareClass::DEFAULT_NAME,
+        original_issue_price_in_dollars: nil
       )
     end
 
     def create_investors_and_holdings
-      share_class = company.share_classes.find_by!(name: "Common")
+      share_class = company.share_classes.find_by!(name: ShareClass::DEFAULT_NAME)
       share_price = company.share_price_in_usd || 0.01
 
       investors_data.each do |investor_data|
@@ -88,7 +105,7 @@ class CreateCapTable
           number_of_shares: shares,
           share_price_usd: share_price,
           total_amount_in_cents: investment_amount_cents,
-          share_holder_name: user.legal_name || user.preferred_name || user.email
+          share_holder_name: option_holder_name(user)
         )
       end
     end
@@ -99,8 +116,25 @@ class CreateCapTable
     end
 
     def generate_share_name(user)
-      base_name = user.legal_name&.first&.upcase || user.preferred_name&.first&.upcase || "I"
-      existing_count = company.share_holdings.where("name LIKE ?", "#{base_name}-%").count
-      "#{base_name}-#{existing_count + 1}"
+      # Use same logic as EquityGrantCreation#next_grant_name
+      preceding_holding = company.share_holdings.order(id: :desc).first
+      return "#{company.name.first(3).upcase}-1" if preceding_holding.nil?
+
+      preceding_holding_digits = preceding_holding.name.scan(/\d+\z/).last
+      preceding_holding_number = preceding_holding_digits.to_i
+
+      next_holding_number = preceding_holding_number + 1
+      preceding_holding.name.reverse.sub(preceding_holding_digits.reverse, next_holding_number.to_s.reverse).reverse
+    end
+
+    def option_holder_name(user)
+      # Use same logic as EquityGrantCreation#option_holder_name
+      return user.legal_name unless user.business_entity?
+
+      if ISO3166::Country[:IN] == ISO3166::Country[user.country_code]
+        user.legal_name
+      else
+        user.business_name
+      end
     end
 end

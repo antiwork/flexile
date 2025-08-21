@@ -2,7 +2,7 @@
 
 class Internal::Companies::Administrator::CapTablesController < Internal::Companies::BaseController
   def create
-    authorize Current.company
+    authorize :cap_table
 
     result = CreateCapTable.new(
       company: Current.company,
