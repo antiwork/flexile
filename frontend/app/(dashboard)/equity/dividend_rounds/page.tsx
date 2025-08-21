@@ -57,7 +57,6 @@ export default function DividendRounds() {
     select: (computations) =>
       computations.map((computation) => ({
         ...computation,
-        id: computation.id,
         type: "draft" as const,
         status: "Draft",
         totalAmountInUsd: Number(computation.total_amount_in_usd),
