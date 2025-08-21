@@ -143,7 +143,7 @@ test.describe("End contract", () => {
     await fillDatePicker(page, "End date", format(endDate, "MM/dd/yyyy"));
     await page.getByRole("button", { name: "Yes, end contract" }).click();
 
-    // Verify date displays correctly in Pacific Time (should not shift to Aug 11)
+    // Verify date displays correctly in Pacific Time (should not shift to the previous day)
     await expect(page.getByRole("row").getByText(`Ended on ${expectedDisplay}`)).toBeVisible();
     await page.getByRole("link", { name: contractor.preferredName }).click();
     await expect(page.getByText(`Contract ended on ${expectedDisplay}`)).toBeVisible();
