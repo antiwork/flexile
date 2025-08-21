@@ -1,40 +1,33 @@
 "use client";
 import { utc } from "@date-fns/utc";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { isFuture, isPast } from "date-fns";
-import Link from "next/link";
+import { InboxIcon, LucideCircleDollarSign, Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
-import NumberInput from "@/components/NumberInput";
-import SignForm from "@/components/SignForm";
+import MutationButton from "@/components/MutationButton";
+import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatServerDate } from "@/utils/time";
-import { VESTED_SHARES_CLASS } from "..";
-type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
+import { formatMoneyFromCents } from "@/utils/formatMoney";
+import PlaceTenderOfferBidModal from "./PlaceBidModal";
 
-const formSchema = z.object({
-  shareClass: z.string().min(1, "This field is required"),
-  numberOfShares: z.number().min(1),
-  pricePerShare: z.number().min(0),
-});
+type TenderOffer = RouterOutput["tenderOffers"]["get"];
+type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
+type ActiveModal = "place-bid" | "cancel-bid" | null;
+
+type CancelBidModalProps = {
+  onClose: () => void;
+  bid: Bid;
+  data: TenderOffer;
+};
 
 export default function BuybackView() {
   const { id } = useParams<{ id: string }>();
@@ -52,62 +45,17 @@ export default function BuybackView() {
     tenderOfferId: id,
     investorId: user.roles.administrator ? undefined : investorId,
   });
-  const { data: ownShareHoldings } = trpc.shareHoldings.sumByShareClass.useQuery(
-    { companyId: company.id, investorId },
-    { enabled: !!investorId },
-  );
-  const { data: ownTotalVestedShares } = trpc.equityGrants.sumVestedShares.useQuery(
-    { companyId: company.id, investorId },
-    { enabled: !!investorId },
-  );
-
-  const holdings = useMemo(
-    () =>
-      ownShareHoldings
-        ? ownTotalVestedShares
-          ? [...ownShareHoldings, { className: VESTED_SHARES_CLASS, count: ownTotalVestedShares }]
-          : ownShareHoldings
-        : [],
-    [ownShareHoldings, ownTotalVestedShares],
-  );
-
-  const form = useForm({
-    defaultValues: { shareClass: holdings[0]?.className ?? "", pricePerShare: 0, numberOfShares: 0 },
-    resolver: zodResolver(formSchema),
-  });
-  const pricePerShare = form.watch("pricePerShare");
-  const [signed, setSigned] = useState(false);
-  const [cancelingBid, setCancelingBid] = useState<Bid | null>(null);
-  const maxShares = holdings.find((h) => h.className === form.watch("shareClass"))?.count || 0;
-
-  const createMutation = trpc.tenderOffers.bids.create.useMutation({
-    onSuccess: async () => {
-      form.reset();
-      await refetchBids();
-    },
-  });
-  const destroyMutation = trpc.tenderOffers.bids.destroy.useMutation({
-    onSuccess: async () => {
-      setCancelingBid(null);
-      await refetchBids();
-    },
-  });
-
-  const submit = form.handleSubmit(async (values) => {
-    if (values.numberOfShares > maxShares)
-      return form.setError("numberOfShares", {
-        message: `Number of shares must be between 1 and ${maxShares.toLocaleString()}`,
-      });
-    await createMutation.mutateAsync({
-      companyId: company.id,
-      tenderOfferId: id,
-      numberOfShares: Number(values.numberOfShares),
-      sharePriceCents: Math.round(Number(values.pricePerShare) * 100),
-      shareClass: values.shareClass,
-    });
-  });
 
   const columnHelper = createColumnHelper<Bid>();
+
+  const [selectedBid, setSelectedBid] = useState<Bid | null>(null);
+  const [activeModal, setActiveModal] = useState<ActiveModal>(null);
+
+  const handleBidAction = (bid: Bid | null, action?: "cancel-bid") => {
+    setSelectedBid(bid);
+    setActiveModal(action || null);
+  };
+
   const columns = useMemo(
     () =>
       [
@@ -123,8 +71,12 @@ export default function BuybackView() {
               id: "actions",
               cell: (info) =>
                 info.row.original.companyInvestor.user.id === user.id ? (
-                  <Button onClick={() => setCancelingBid(info.row.original)}>
-                    <TrashIcon className="size-4" />
+                  <Button
+                    className="size-9"
+                    variant="outline"
+                    onClick={() => handleBidAction(info.row.original, "cancel-bid")}
+                  >
+                    <Trash2 className="size-4" />
                   </Button>
                 ) : null,
             })
@@ -133,170 +85,108 @@ export default function BuybackView() {
     [],
   );
 
-  const bidsTable = useTable({ data: bids, columns });
+  const bidsTable = useTable({
+    data: bids,
+    columns,
+  });
 
   return (
     <>
-      <DashboardHeader title={`Buyback details ("Sell Elections")`} />
-      <div className="px-4 pb-4">
-        {user.roles.investor?.investedInAngelListRuv ? (
-          <Alert className="mx-4" variant="destructive">
-            <ExclamationTriangleIcon />
-            <AlertDescription>
-              Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV
-              itself. Please contact them for more information about this process.
-            </AlertDescription>
-          </Alert>
-        ) : null}
+      <DashboardHeader
+        title={`Buyback details ("Sell Elections")`}
+        headerActions={
+          isOpen ? (
+            <Button size="small" onClick={() => setActiveModal("place-bid")}>
+              Place bid
+            </Button>
+          ) : null
+        }
+      />
 
-        <h2 className="text-xl font-medium">Details</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Start date</Label>
-            <p>{formatServerDate(data.startsAt)}</p>
-          </div>
-          <div>
-            <Label>End date</Label>
-            <p>{formatServerDate(data.endsAt)}</p>
-          </div>
-          <div>
-            <Label>Starting valuation</Label>
-            <p>{formatMoney(data.minimumValuation)}</p>
-          </div>
-          <div>
-            {data.attachment ? (
-              <Button asChild>
-                <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
-                  <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-                  Download buyback documents
-                </Link>
-              </Button>
-            ) : null}
-          </div>
+      {user.roles.investor?.investedInAngelListRuv ? (
+        <Alert className="mx-4" variant="destructive">
+          <ExclamationTriangleIcon />
+          <AlertDescription>
+            Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV itself.
+            Please contact them for more information about this process.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {isLoading ? (
+        <TableSkeleton columns={columns.length} />
+      ) : bids.length > 0 ? (
+        <DataTable table={bidsTable} />
+      ) : user.roles.administrator ? (
+        <div className="mx-4">
+          <Placeholder icon={InboxIcon}>
+            Investors can place bids now. Activity will appear here as it happens.
+          </Placeholder>
         </div>
-
-        {(isOpen && holdings.length) || user.roles.administrator ? (
-          <>
-            <Separator />
-            <h2 className="text-xl font-medium">Letter of transmittal</h2>
-            <div>
-              <div>
-                THIS DOCUMENT AND THE INFORMATION REFERENCED HEREIN OR PROVIDED TO YOU IN CONNECTION WITH THIS OFFER TO
-                PURCHASE CONSTITUTES CONFIDENTIAL INFORMATION REGARDING {company.name?.toUpperCase()} (THE "COMPANY").
-                BY OPENING OR READING THIS DOCUMENT, YOU HEREBY AGREE TO MAINTAIN THE CONFIDENTIALITY OF SUCH
-                INFORMATION AND NOT TO DISCLOSE IT TO ANY PERSON (OTHER THAN TO YOUR LEGAL, FINANCIAL AND TAX ADVISORS,
-                AND THEN ONLY IF THEY HAVE SIMILARLY AGREED TO MAINTAIN THE CONFIDENTIALITY OF SUCH INFORMATION), AND
-                SUCH INFORMATION SHALL BE SUBJECT TO THE CONFIDENTIALITY OBLIGATIONS UNDER [THE NON-DISCLOSURE AGREEMENT
-                INCLUDED] ON THE PLATFORM (AS DEFINED BELOW) AND ANY OTHER AGREEMENT YOU HAVE WITH THE COMPANY,
-                INCLUDING ANY "INVENTION AND NON-DISCLOSURE AGREEMENT", "CONFIDENTIALITY, INVENTION AND NON-SOLICITATION
-                AGREEMENT" OR OTHER NONDISCLOSURE AGREEMENT. BY YOU ACCEPTING TO RECEIVE THIS OFFER TO PURCHASE, YOU
-                ACKNOWLEDGE AND AGREE TO THE FOREGOING RESTRICTIONS.
-              </div>
-              <Separator />
-              <article aria-label="Letter of transmittal" className="flex flex-col gap-4">
-                <SignForm content={data.letterOfTransmittal} signed={signed} onSign={() => setSigned(true)} />
-              </article>
-            </div>
-
-            <Separator />
-            <h2 className="text-xl font-medium">Submit a bid ("Sell Order")</h2>
-            <Form {...form}>
-              <form onSubmit={(e) => void submit(e)} className="grid gap-4">
-                <FormField
-                  control={form.control}
-                  name="shareClass"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Share class</FormLabel>
-                      <FormControl>
-                        <ComboBox
-                          {...field}
-                          options={holdings.map((holding) => ({
-                            value: holding.className,
-                            label: `${holding.className} (${holding.count.toLocaleString()} shares)`,
-                          }))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="numberOfShares"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of shares</FormLabel>
-                      <FormControl>
-                        <NumberInput {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="pricePerShare"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Price per share</FormLabel>
-                      <FormControl>
-                        <NumberInput {...field} decimal prefix="$" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {company.fullyDilutedShares ? (
-                  <div>
-                    <strong>Implied company valuation:</strong>{" "}
-                    {formatMoney(company.fullyDilutedShares * pricePerShare)}
-                  </div>
-                ) : null}
-                <div>
-                  <strong>Total amount:</strong> {formatMoney(form.getValues("numberOfShares") * pricePerShare)}
-                </div>
-                <MutationStatusButton type="submit" mutation={createMutation} className="justify-self-end">
-                  Submit bid
-                </MutationStatusButton>
-              </form>
-            </Form>
-          </>
-        ) : null}
-
-        {isLoading ? <TableSkeleton columns={5} /> : bids.length > 0 ? <DataTable table={bidsTable} /> : null}
-
-        {cancelingBid ? (
-          <Dialog open onOpenChange={() => setCancelingBid(null)}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Cancel bid?</DialogTitle>
-              </DialogHeader>
-              <p>Are you sure you want to cancel this bid?</p>
-              <p>
-                Share class: {cancelingBid.shareClass}
-                <br />
-                Number of shares: {cancelingBid.numberOfShares.toLocaleString()}
-                <br />
-                Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
-              </p>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setCancelingBid(null)}>
-                  No, keep bid
-                </Button>
-                <MutationButton
-                  mutation={destroyMutation}
-                  param={{ companyId: company.id, id: cancelingBid.id }}
-                  loadingText="Canceling..."
-                >
-                  Yes, cancel bid
-                </MutationButton>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        ) : null}
-      </div>
+      ) : (
+        <div className="mx-4">
+          <Placeholder icon={LucideCircleDollarSign}>Place your first bid to participate in the data.</Placeholder>
+        </div>
+      )}
+      {activeModal === "place-bid" ? (
+        <PlaceTenderOfferBidModal
+          onClose={() => {
+            setActiveModal(null);
+            void refetchBids();
+          }}
+          tenderOfferId={id}
+          data={data}
+        />
+      ) : null}
+      {activeModal === "cancel-bid" && selectedBid ? (
+        <CancelTenderOfferBidModal
+          onClose={() => {
+            handleBidAction(null);
+            void refetchBids();
+          }}
+          data={data}
+          bid={selectedBid}
+        />
+      ) : null}
     </>
   );
 }
+
+const CancelTenderOfferBidModal = ({ onClose, bid }: CancelBidModalProps) => {
+  const company = useCurrentCompany();
+
+  const destroyMutation = trpc.tenderOffers.bids.destroy.useMutation({
+    onSuccess: () => {
+      onClose();
+    },
+  });
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Cancel bid?</DialogTitle>
+        </DialogHeader>
+        <p>Are you sure you want to cancel this bid?</p>
+        <p>
+          Share class: {bid.shareClass}
+          <br />
+          Number of shares: {bid.numberOfShares.toLocaleString()}
+          <br />
+          Bid price: {formatMoneyFromCents(bid.sharePriceCents)}
+        </p>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            No, keep bid
+          </Button>
+          <MutationButton
+            mutation={destroyMutation}
+            param={{ id: bid.id, companyId: company.id }}
+            loadingText="Canceling..."
+          >
+            Yes, cancel bid
+          </MutationButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
