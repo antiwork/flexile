@@ -10,16 +10,6 @@ if [[ "$OSTYPE" != "darwin"* && "$OSTYPE" != "linux-gnu"* ]]; then
     exit 1
 fi
 
-# Add flexile.dev to /etc/hosts if not present
-echo "🌐 Checking /etc/hosts for flexile.dev..."
-if ! grep -q "flexile.dev" /etc/hosts; then
-    echo "Adding flexile.dev to /etc/hosts (requires sudo)..."
-    sudo sh -c 'echo "127.0.0.1 flexile.dev" >> /etc/hosts'
-    echo "✅ Added flexile.dev to /etc/hosts"
-else
-    echo "✅ flexile.dev already in /etc/hosts"
-fi
-
 # Generate SSL certificates
 echo "🔒 Setting up SSL certificates..."
 if [ ! -f ".certs/flexile.dev.crt" ] || [ ! -f ".certs/flexile.dev.key" ]; then

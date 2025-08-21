@@ -14,7 +14,7 @@ WORKDIR /workspaces/flexile
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
-COPY frontend/package.json ./frontend/
+COPY patches ./patches
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile

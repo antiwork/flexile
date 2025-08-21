@@ -13,9 +13,8 @@ if [ ! -f "docker-compose.dev.yml" ]; then
 fi
 
 echo "This script will:"
-echo "1. Set up your host machine (add hosts entry, generate certificates)"
-echo "2. Create environment file from template"
-echo "3. Start the dev container services"
+echo "1. Create environment file from template"
+echo "2. Start the dev container services"
 echo ""
 
 read -p "Continue? (y/N) " -n 1 -r
