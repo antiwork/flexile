@@ -17,7 +17,12 @@ class InvoiceEquityCalculator
       return
     end
     equity_percentage = company_worker.equity_percentage
-    equity_amount_in_cents = ((service_amount_cents * equity_percentage) / 100.to_d).round
+    equity_amount_in_cents =
+      if !company.equity_enabled?
+        0
+      else
+        ((service_amount_cents * equity_percentage) / 100.to_d).round
+      end
     equity_amount_in_options =
       if equity_percentage.zero? || !company.equity_enabled?
         0
@@ -28,8 +33,14 @@ class InvoiceEquityCalculator
     if equity_percentage.nonzero? && (!unvested_grant.present? || (equity_amount_in_options > 0 && unvested_grant.unvested_shares < equity_amount_in_options))
       return
     end
-    # Only set to zero if there's actually no equity intended
-    if equity_amount_in_options <= 0
+    # Return indicator when equity percentage is too small to result in whole shares
+    # This allows frontend to show notice suggesting user adjust to 0% or higher percentage
+    if equity_percentage.nonzero? && company.equity_enabled? && equity_amount_in_options <= 0
+      return { equity_percentage_too_small: true, suggested_minimum_percentage: ((share_price_usd * 100) / service_amount_cents * 100).ceil }
+    end
+
+    # When equity is disabled, set all equity values to zero
+    if !company.equity_enabled?
       equity_percentage = 0
       equity_amount_in_cents = 0
       equity_amount_in_options = 0

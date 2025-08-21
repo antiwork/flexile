@@ -30,16 +30,16 @@ RSpec.describe InvoiceEquityCalculator do
     context "and computed equity component is too low to make up a whole share" do
       let(:share_price_usd) { 14.90 }
 
-      it "returns zero for all equity values when calculation results in zero shares" do
+      it "returns equity_percentage_too_small indicator with suggested minimum percentage" do
         company_worker.update!(equity_percentage: 1)
         result = calculator.calculate
 
         # Equity portion = $720 * 1% = $7.20
         # Shares = $7.20 / $14.9 = 0.4832214765100671 = 0 (rounded)
-        # Since this results in 0 shares (not insufficient grant), set equity to zero
-        expect(result[:equity_cents]).to eq(0)
-        expect(result[:equity_options]).to eq(0)
-        expect(result[:equity_percentage]).to eq(0)
+        # Since this results in 0 shares, indicate equity percentage is too small
+        expect(result[:equity_percentage_too_small]).to eq(true)
+        # Suggested minimum: (14.90 * 100) / 72000 * 100 = 2.07% → ceil = 3%
+        expect(result[:suggested_minimum_percentage]).to eq(3)
       end
     end
 
@@ -90,6 +90,10 @@ RSpec.describe InvoiceEquityCalculator do
   end
 
   context "when equity compensation is not enabled" do
+    before do
+      company.update!(equity_enabled: false)
+    end
+
     it "returns zero equity values" do
       result = calculator.calculate
       expect(result[:equity_cents]).to eq(0)
