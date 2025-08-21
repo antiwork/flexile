@@ -42,7 +42,7 @@ services:
       context: .
       dockerfile: ./infra/rails.Dockerfile
     env_file:
-      - .env.development
+      - .env
     environment:
       DATABASE_URL: postgres://username:password@postgres:5432/flexile_development
       REDIS_URL: redis://redis:6379/0
@@ -68,7 +68,7 @@ services:
       context: .
       dockerfile: ./infra/next.Dockerfile
     env_file:
-      - .env.development
+      - .env
     environment:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
@@ -91,7 +91,7 @@ services:
       context: .
       dockerfile: ./infra/next.Dockerfile
     env_file:
-      - .env.development
+      - .env
     environment:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
@@ -112,7 +112,7 @@ services:
       context: .
       dockerfile: ./infra/rails.Dockerfile
     env_file:
-      - .env.development
+      - .env
     environment:
       DATABASE_URL: postgres://username:password@postgres:5432/flexile_development
       REDIS_URL: redis://redis:6379/0
