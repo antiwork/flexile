@@ -21,7 +21,6 @@ import { investorsRouter } from "./routes/investors";
 import { invoicesRouter } from "./routes/invoices";
 import { lawyersRouter } from "./routes/lawyers";
 import { optionPoolsRouter } from "./routes/optionPools";
-import { quickbooksRouter } from "./routes/quickbooks";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
 import { supportRouter } from "./routes/support";
 import { tenderOffersRouter } from "./routes/tenderOffers";
@@ -32,7 +31,6 @@ import { createCallerFactory, createRouter } from "./";
 export const appRouter = createRouter({
   users: usersRouter,
   contractors: contractorsRouter,
-  quickbooks: quickbooksRouter,
   invoices: invoicesRouter,
   consolidatedInvoices: consolidatedInvoicesRouter,
   documents: documentsRouter,

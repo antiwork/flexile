@@ -123,7 +123,6 @@
     "nuqs": "^2.1.1",
     "pg": "^8.13.1",
     "puppeteer": "^24.0.0",
-    "quickbooks-node-promise": "^3.3.11",
     "react": "^19.0.0-rc.1",
     "react-aria-components": "^1.8.0",
     "react-dom": "^19.0.0-rc.1",
@@ -159,7 +158,6 @@
     "patchedDependencies": {
       "inngest": "patches/inngest.patch",
       "next": "patches/next.patch",
-      "quickbooks-node-promise": "patches/quickbooks-node-promise.patch",
       "server-only": "patches/server-only.patch",
       "playwright": "patches/playwright.patch"
     },
