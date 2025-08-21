@@ -25,6 +25,9 @@ const nextConfig: NextConfig = {
     ],
   },
 };
+if (process.env.NODE_ENV === "development") {
+  nextConfig.images.remotePatterns.push({ hostname: "flexile.dev" });
+}
 
 const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
