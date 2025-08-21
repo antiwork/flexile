@@ -55,8 +55,10 @@ class SeedDataGeneratorFromTemplate
 
     print_message("Using email #{@config.fetch("email")}.")
     WiseCredential.create!(profile_id: WISE_PROFILE_ID, api_key: WISE_API_KEY)
-    Wise::AccountBalance.create_usd_balance_if_needed
-    top_up_wise_account_if_needed
+    if WISE_API_KEY != "dummy"
+      Wise::AccountBalance.create_usd_balance_if_needed
+      top_up_wise_account_if_needed
+    end
 
     create_users!(data.fetch("users"))
 
@@ -170,6 +172,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_bank_account!(company)
+      return if Stripe.api_key == "dummy"
       stripe_setup_intent = company.create_stripe_setup_intent
       # https://docs.stripe.com/testing#test-account-numbers
       test_bank_account = Stripe::PaymentMethod.create(
@@ -536,8 +539,6 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_expense_categories!(company, categories)
-      return unless company.expenses_enabled?
-
       categories.each do |category|
         company.expense_categories.create!(name: category["name"])
       end
@@ -706,6 +707,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_user_bank_account!(user, wise_recipient_params)
+      return if WISE_API_KEY == "dummy"
       wise_recipient_params["details"]["accountHolderName"] ||= user.legal_name
       wise_recipient_params["details"]["address"] ||= {}
       wise_recipient_params["details"]["address"]["country"] ||= user.country_code
@@ -828,18 +830,5 @@ class SeedDataGeneratorFromTemplate
     ensure
       temp_file.close
       temp_file.unlink
-    end
-
-    def create_temporary_pdf_file
-      temp_file = Tempfile.new(["sample", ".pdf"])
-
-      Prawn::Document.generate(temp_file.path) do
-        text "This is a sample PDF file created for testing purposes."
-        text "Generated at: #{Time.current}"
-      end
-
-      temp_file.close
-      temp_file.open # Reopen in read mode
-      temp_file
     end
 end

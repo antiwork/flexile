@@ -6,6 +6,8 @@ import { expect, test } from "@test/index";
 import { and, eq, isNull } from "drizzle-orm";
 import { companyStripeAccounts, users } from "@/db/schema";
 
+// allow green builds on OSS PRs that don't have a stripe sandbox key, but fail on CI if something changes on Stripe's end
+test.skip(() => process.env.STRIPE_SECRET_KEY === "dummy");
 test.describe("Company administrator settings - payment details", () => {
   test("allows connecting a bank account", async ({ page }) => {
     const { company } = await companiesFactory.create({ stripeCustomerId: null }, { withoutBankAccount: true });
