@@ -193,7 +193,7 @@ export default function DataTable<T extends RowData>({
       {filterable || actions ? (
         <div className="mx-4 grid gap-2 md:flex md:justify-between">
           <div className="flex min-w-0 flex-col gap-3 md:flex-row">
-            <div className="flex gap-2">
+            <div className="flex h-9 gap-2">
               {table.options.enableGlobalFilter !== false ? (
                 <div className="relative w-full md:w-60">
                   <SearchIcon className="absolute top-2.5 left-2.5 size-4" />
