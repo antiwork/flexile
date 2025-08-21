@@ -62,6 +62,9 @@ class Internal::Companies::Administrator::QuickbooksController < Internal::Compa
       company.attributes = company_params[:company]
     end
     if @quickbooks_integration.update(quickbooks_integration_params) && company.save
+      # Trigger QuickBooks integration sync via Sidekiq
+      QuickbooksIntegrationSyncScheduleJob.perform_async(company.id)
+
       render json: { success: true, quickbooks_integration: @quickbooks_integration.as_json }
     else
       render json: { success: false }
