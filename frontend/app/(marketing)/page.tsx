@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import type { ReactNode } from "react";
+import { Badge } from "@/components/ui/badge";
 import { authOptions } from "@/lib/auth";
 import logo from "@/public/flexile-logo.svg";
 import { cn } from "@/utils";
@@ -65,6 +66,17 @@ export default async function HomePage() {
             >
               Get started
             </Link>
+          </div>
+        </Section>
+
+        <Section className="py-8 md:py-16">
+          <div className="flex justify-center">
+            <div className="inline-flex items-center rounded-full bg-gray-800 text-white">
+              <span className="px-3 py-1 text-sm font-medium">flexile</span>
+              <Badge className="rounded-l-none bg-blue-600 px-3 py-1 text-white hover:bg-blue-600">
+                Trusted by 25+ companies
+              </Badge>
+            </div>
           </div>
         </Section>
 
