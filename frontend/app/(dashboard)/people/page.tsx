@@ -34,7 +34,7 @@ import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
 import { DocumentTemplateType, PayRateType, trpc } from "@/trpc/client";
-import { formatDate } from "@/utils/time";
+import { formatDate, formatServerDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
@@ -121,11 +121,11 @@ export default function PeoplePage() {
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
         cell: (info) =>
           info.row.original.endedAt ? (
-            <Status variant="critical">Ended on {formatDate(info.row.original.endedAt)}</Status>
+            <Status variant="critical">Ended on {formatDate(formatServerDate(info.row.original.endedAt))}</Status>
           ) : info.row.original.startedAt <= new Date() ? (
-            <Status variant="success">Started on {formatDate(info.row.original.startedAt)}</Status>
+            <Status variant="success">Started on {formatDate(formatServerDate(info.row.original.startedAt))}</Status>
           ) : info.row.original.user.onboardingCompleted ? (
-            <Status variant="success">Starts on {formatDate(info.row.original.startedAt)}</Status>
+            <Status variant="success">Starts on {formatDate(formatServerDate(info.row.original.startedAt))}</Status>
           ) : info.row.original.user.invitationAcceptedAt ? (
             <Status variant="primary">In Progress</Status>
           ) : (
