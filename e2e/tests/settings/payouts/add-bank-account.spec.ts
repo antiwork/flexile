@@ -35,6 +35,8 @@ async function fillOutUsdBankAccountForm(
   await page.getByLabel("ZIP code").fill(formValues.zipCode);
 }
 
+// allow green builds on OSS PRs that don't have a wise sandbox key, but fail on CI if something changes on Wise's end
+test.skip(() => process.env.WISE_API_KEY === "dummy");
 test.describe("Bank account settings", () => {
   let company: typeof companies.$inferSelect;
   let onboardingUser: typeof users.$inferSelect;
