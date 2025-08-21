@@ -31,7 +31,7 @@ RSpec.describe Internal::Companies::DividendRoundsController do
   describe "POST #create" do
     context "when user is an admin" do
       it "successfully creates dividend round from computation" do
-        post :create, params: { company_id: company.external_id, dividend_computation_id: dividend_computation.id }
+        post :create, params: { company_id: company.external_id, dividend_computation_id: dividend_computation.external_id }
 
         expect(response).to have_http_status(:created)
         expect(response.parsed_body["id"]).to be_present
@@ -55,7 +55,7 @@ RSpec.describe Internal::Companies::DividendRoundsController do
       end
 
       it "cannot create dividend rounds" do
-        post :create, params: { company_id: company.external_id, dividend_computation_id: dividend_computation.id }
+        post :create, params: { company_id: company.external_id, dividend_computation_id: dividend_computation.external_id }
         expect(response).to have_http_status(:forbidden)
       end
     end
