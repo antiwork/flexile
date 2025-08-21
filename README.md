@@ -4,6 +4,26 @@ Contractor payments.
 
 ## Setup
 
+### Option 1: Dev Container (Recommended)
+
+The easiest way to get started is with the dev container setup that provides a complete, isolated development environment:
+
+```bash
+# Quick start - sets up everything automatically
+./.devcontainer/quickstart.sh
+```
+
+This will:
+
+- Set up SSL certificates for `flexile.dev`
+- Add the domain to your `/etc/hosts`
+- Start all services (Rails, Next.js, PostgreSQL, Redis, Nginx)
+- Make the app available at `https://flexile.dev`
+
+For more details, see [.devcontainer/README.md](.devcontainer/README.md).
+
+### Option 2: Local Development
+
 You'll need:
 
 - [Docker](https://docs.docker.com/engine/install/)

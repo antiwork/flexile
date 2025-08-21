@@ -1,0 +1,157 @@
+version: "3.9"
+
+services:
+  workspace:
+    image: mcr.microsoft.com/devcontainers/base:ubuntu
+    volumes:
+      - .:/workspaces/flexile:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+      - node_modules:/workspaces/flexile/node_modules
+      - frontend_node_modules:/workspaces/flexile/frontend/node_modules
+      - bundle_cache:/workspaces/flexile/backend/vendor/bundle
+    working_dir: /workspaces/flexile
+    command: sleep infinity
+    networks: [ appnet ]
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flexile_development
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U username -d flexile_development" ]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+    networks: [ appnet ]
+
+  redis:
+    image: redis:7.4.2
+    command: [ "redis-server", "--appendonly", "yes" ]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks: [ appnet ]
+
+  rails:
+    build:
+      context: .
+      dockerfile: ./infra/rails.Dockerfile
+    env_file:
+      - .env.development
+    environment:
+      DATABASE_URL: postgres://username:password@postgres:5432/flexile_development
+      REDIS_URL: redis://redis:6379/0
+      RAILS_ENV: development
+      RAILS_LOG_TO_STDOUT: "1"
+    volumes:
+      - .:/workspaces/flexile:cached
+      - bundle_cache:/workspaces/flexile/backend/vendor/bundle
+    working_dir: /workspaces/flexile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: bash -lc "cd backend && bundle install && bin/rails db:prepare && bin/rails s -b 0.0.0.0 -p 3000"
+    ports:
+      - "3000:3000"
+    networks: [ appnet ]
+
+  next:
+    build:
+      context: .
+      dockerfile: ./infra/next.Dockerfile
+    env_file:
+      - .env.development
+    environment:
+      NODE_ENV: development
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_API_ORIGIN: https://flexile.dev
+      TZ: UTC
+    volumes:
+      - .:/workspaces/flexile:cached
+      - node_modules:/workspaces/flexile/node_modules
+      - frontend_node_modules:/workspaces/flexile/frontend/node_modules
+    working_dir: /workspaces/flexile
+    command: bash -lc "pnpm install && pnpm next dev frontend -H 0.0.0.0 -p 3001"
+    ports:
+      - "3001:3001"
+    depends_on:
+      - rails
+    networks: [ appnet ]
+
+  inngest:
+    build:
+      context: .
+      dockerfile: ./infra/next.Dockerfile
+    env_file:
+      - .env.development
+    environment:
+      NODE_ENV: development
+      NEXT_TELEMETRY_DISABLED: "1"
+    volumes:
+      - .:/workspaces/flexile:cached
+      - node_modules:/workspaces/flexile/node_modules
+      - frontend_node_modules:/workspaces/flexile/frontend/node_modules
+    working_dir: /workspaces/flexile
+    command: bash -lc "pnpm install && pnpm inngest-cli dev --no-discovery -u http://next:3001/api/inngest -p 8288"
+    ports:
+      - "8288:8288"
+    depends_on:
+      - next
+    networks: [ appnet ]
+
+  sidekiq:
+    build:
+      context: .
+      dockerfile: ./infra/rails.Dockerfile
+    env_file:
+      - .env.development
+    environment:
+      DATABASE_URL: postgres://username:password@postgres:5432/flexile_development
+      REDIS_URL: redis://redis:6379/0
+      RAILS_ENV: development
+    volumes:
+      - .:/workspaces/flexile:cached
+      - bundle_cache:/workspaces/flexile/backend/vendor/bundle
+    working_dir: /workspaces/flexile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: bash -lc "cd backend && bundle install && bundle exec sidekiq -q default -q mailers"
+    networks: [ appnet ]
+
+  nginx:
+    image: nginx:1.27
+    depends_on:
+      - next
+      - rails
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./infra/nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./.certs/flexile.dev.crt:/etc/ssl/certs/flexile.dev.crt:ro
+      - ./.certs/flexile.dev.key:/etc/ssl/private/flexile.dev.key:ro
+    networks: [ appnet ]
+
+volumes:
+  pgdata:
+  redis_data:
+  node_modules:
+  frontend_node_modules:
+  bundle_cache:
+
+
+networks:
+  appnet:
+    driver: bridge
