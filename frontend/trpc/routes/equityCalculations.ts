@@ -52,7 +52,9 @@ export const calculateInvoiceEquity = async ({
     equityEnabled = company?.equityEnabled ?? true;
   }
 
-  let equityAmountInCents = Decimal.mul(serviceAmountCents, equityPercentage).div(100).round().toNumber();
+  const equityAmountInCents = equityEnabled
+    ? Decimal.mul(serviceAmountCents, equityPercentage).div(100).round().toNumber()
+    : 0;
   let equityAmountInOptions = 0;
 
   if (equityPercentage !== 0 && equityEnabled && sharePriceUsd !== 0) {
@@ -78,11 +80,9 @@ export const calculateInvoiceEquity = async ({
     };
   }
 
-  // When equity is disabled, set all equity values to zero
+  // When equity is disabled, override equity percentage for return value
   if (!equityEnabled) {
     equityPercentage = 0;
-    equityAmountInCents = 0;
-    equityAmountInOptions = 0;
   }
 
   return {
