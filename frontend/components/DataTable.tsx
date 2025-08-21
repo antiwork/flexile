@@ -170,7 +170,7 @@ export default function DataTable<T extends RowData>({
     [table.getState().columnFilters],
   );
 
-  const rowClasses = `px-1 py-2 md:px-0 ${isMobile ? "min-h-16 flex" : ""}`;
+  const rowClasses = `px-1 py-2 md:px-0 ${isMobile ? "min-h-16" : ""}`;
   const cellClasses = (column: Column<T> | null, type?: "header" | "footer") => {
     const numeric = column?.columnDef.meta?.numeric;
     return cn(
@@ -347,7 +347,7 @@ export default function DataTable<T extends RowData>({
         </div>
       ) : null}
 
-      <ShadcnTable className="caption-top not-print:max-md:grid">
+      <ShadcnTable className="h-full caption-top">
         <TableHeader className="not-print:max-md:hidden">
           {data.headers.map((headerGroup) => (
             <TableRow key={headerGroup.id}>
