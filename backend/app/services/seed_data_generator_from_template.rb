@@ -54,8 +54,8 @@ class SeedDataGeneratorFromTemplate
     SidekiqJobForcePerformInline.apply
 
     print_message("Using email #{@config.fetch("email")}.")
-    WiseCredential.create!(profile_id: WISE_PROFILE_ID.presence, api_key: WISE_API_KEY.presence)
-    if WISE_PROFILE_ID != "dummy"
+    WiseCredential.create!(profile_id: WISE_PROFILE_ID, api_key: WISE_API_KEY)
+    if WISE_API_KEY != "dummy"
       Wise::AccountBalance.create_usd_balance_if_needed
       top_up_wise_account_if_needed
     end
@@ -174,7 +174,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_bank_account!(company)
-      return unless Stripe.api_key.present?
+      return if Stripe.api_key == "dummy"
       stripe_setup_intent = company.create_stripe_setup_intent
       # https://docs.stripe.com/testing#test-account-numbers
       test_bank_account = Stripe::PaymentMethod.create(
@@ -711,7 +711,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_user_bank_account!(user, wise_recipient_params)
-      return if WISE_PROFILE_ID == "dummy"
+      return if WISE_API_KEY == "dummy"
       wise_recipient_params["details"]["accountHolderName"] ||= user.legal_name
       wise_recipient_params["details"]["address"] ||= {}
       wise_recipient_params["details"]["address"]["country"] ||= user.country_code
