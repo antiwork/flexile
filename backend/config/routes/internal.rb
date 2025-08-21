@@ -94,6 +94,7 @@ scope path: :internal, module: :internal do
       end
     end
     resources :dividend_computations, only: [:index, :create, :show]
+    resources :dividend_rounds, only: [:create]
   end
 
   resources :wise_account_requirements, only: :create
