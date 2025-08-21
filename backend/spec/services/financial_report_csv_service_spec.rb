@@ -11,7 +11,7 @@ RSpec.describe FinancialReportCsvService do
            company: company,
            invoice_date: Date.new(2024, 6, 1),
            invoice_amount_cents: 70000,
-           flexile_fee_usd: 45.0,
+           flexile_fee_cents: 4500,
            transfer_fee_cents: 125,
            status: "sent",
            created_at: 1.week.ago)
@@ -21,9 +21,9 @@ RSpec.describe FinancialReportCsvService do
     create(:invoice,
            user: user,
            consolidated_invoice: consolidated_invoice,
-           cash_amount_in_usd: 300.0,
-           equity_amount_in_usd: 0.0,
-           total_amount_in_usd: 300.0,
+           cash_amount_in_cents: 30000,
+           equity_amount_in_cents: 0,
+           total_amount_in_usd_cents: 30000,
            status: Invoice::RECEIVED)
   end
 
