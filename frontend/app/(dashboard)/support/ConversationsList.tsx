@@ -159,8 +159,8 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
           <DialogHeader>
             <DialogTitle>How can we help you today?</DialogTitle>
           </DialogHeader>
-          <div {...getRootProps()} className="space-y-4">
-            <input {...getInputProps()} />
+          <div {...getRootProps()} className="space-y-4" data-testid="support-file-dropzone">
+            <input {...getInputProps()} data-testid="support-file-dropzone-input" />
             <div className="relative">
               <Input
                 id="subject"
