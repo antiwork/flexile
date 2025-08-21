@@ -15,8 +15,6 @@ RSpec.describe Invoice do
     it { is_expected.to have_many_attached(:attachments) }
     it { is_expected.to have_many(:consolidated_invoices_invoices) }
     it { is_expected.to have_many(:consolidated_invoices) }
-    it { is_expected.to have_many(:integration_records) }
-    it { is_expected.to have_one(:quickbooks_journal_entry) }
   end
 
   describe "validations" do
@@ -340,54 +338,8 @@ RSpec.describe Invoice do
         end
       end
     end
-
-    describe "#sync_with_quickbooks" do
-      let(:invoice) { create(:invoice) }
-
-      [Invoice::RECEIVED, Invoice::PROCESSING, Invoice::REJECTED, Invoice::PAID].each do |status|
-        context "when an invoice is being marked as #{status}" do
-          let(:status) { status }
-
-          it "does not schedule a Quickbooks data sync job" do
-            expect do
-              invoice.update!(status:)
-            end.to_not change { QuickbooksDataSyncJob.jobs.size }
-          end
-        end
-      end
-
-      context "when an invoice is partially approved" do
-        before { create(:invoice_approval, invoice:) }
-
-        it "does not schedule a Quickbooks data sync job" do
-          expect do
-            invoice.update!(status: Invoice::APPROVED)
-          end.to_not change { QuickbooksDataSyncJob.jobs.size }
-        end
-      end
-
-      context "when an invoice is fully approved" do
-        before do
-          create(:invoice_approval, invoice:)
-          invoice.update!(status: Invoice::APPROVED)
-        end
-
-        it "schedules a QuickBooks data sync job" do
-          expect do
-            create(:invoice_approval, invoice:)
-            invoice.update!(status: Invoice::APPROVED)
-          end.to change { QuickbooksDataSyncJob.jobs.size }.by(1)
-
-          expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(invoice.company_id, "Invoice", invoice.id)
-        end
-      end
-    end
   end
 
-  describe "delegations" do
-    it { is_expected.to delegate_method(:integration_external_id).to(:quickbooks_integration_record) }
-    it { is_expected.to delegate_method(:sync_token).to(:quickbooks_integration_record) }
-  end
 
   describe "#attachment" do
     it "returns the last attachment" do
@@ -903,11 +855,6 @@ RSpec.describe Invoice do
     end
   end
 
-  describe "#quickbooks_entity" do
-    it "returns the QuickBooks entity name" do
-      expect(build(:invoice).quickbooks_entity).to eq("Bill")
-    end
-  end
 
   describe "#create_or_update_integration_record!", :freeze_time do
     let(:company) { create(:company) }
