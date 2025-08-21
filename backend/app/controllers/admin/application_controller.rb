@@ -14,11 +14,23 @@ module Admin
     before_action :authenticate_admin
 
     def authenticate_user
-      raise ActionController::RoutingError, "Not Found" if Current.user.nil?
+      if Current.user.nil?
+        if request.format.json?
+          render json: { error: "Unauthorized" }, status: :unauthorized
+        else
+          raise ActionController::RoutingError, "Not Found"
+        end
+      end
     end
 
     def authenticate_admin
-      raise ActionController::RoutingError, "Not Found" unless Current.user.team_member?
+      unless Current.user.team_member?
+        if request.format.json?
+          render json: { error: "Unauthorized" }, status: :unauthorized
+        else
+          raise ActionController::RoutingError, "Not Found"
+        end
+      end
     end
 
     # Override this value to specify the number of elements to display at a time
