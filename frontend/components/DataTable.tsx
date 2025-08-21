@@ -455,13 +455,13 @@ export default function DataTable<T extends RowData>({
                 {selectable ? <TableCell className={cellClasses(null, "footer")} /> : null}
                 {footerGroup.headers.map((header) => (
                   <TableCell key={header.id} className={cellClasses(header.column, "footer")} colSpan={header.colSpan}>
-                    {header.isPlaceholder ? null : (
+                    {header.isPlaceholder || !header.column.columnDef.footer ? null : (
                       <>
-                        {typeof header.column.columnDef.header === "string" && header.column.columnDef.footer ? (
+                        {typeof header.column.columnDef.header === "string" && (
                           <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
                             {header.column.columnDef.header}
                           </div>
-                        ) : null}
+                        )}
                         {flexRender(header.column.columnDef.footer, header.getContext())}
                       </>
                     )}
