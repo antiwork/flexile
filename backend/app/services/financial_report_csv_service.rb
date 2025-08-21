@@ -1,5 +1,42 @@
 # frozen_string_literal: true
 
+# Usage:
+=begin
+# Get data for the last month
+invoices = ConsolidatedInvoice.includes(:company, :consolidated_payments, invoices: :payments)
+                              .where("created_at > ?", Time.current.last_month.beginning_of_month)
+                              .order(created_at: :asc)
+
+dividends = Dividend.includes(:dividend_payments, company_investor: :user)
+                    .paid
+                    .references(:dividend_payments)
+                    .merge(DividendPayment.successful)
+                    .where("dividend_payments.created_at > ?", Time.current.last_month.beginning_of_month)
+                    .order(created_at: :asc)
+
+target_year = Time.current.last_month.year
+target_month = Time.current.last_month.month
+start_date = Date.new(target_year, target_month, 1)
+end_date = start_date.end_of_month
+
+dividend_rounds = DividendRound.includes(:dividends, :company, dividends: [:dividend_payments, company_investor: :user])
+                               .joins(:dividends)
+                               .where("dividend_rounds.issued_at >= ? AND dividend_rounds.issued_at <= ?",
+                                      start_date, end_date)
+                               .distinct
+                               .order(issued_at: :asc)
+
+# Generate all CSV reports
+service = FinancialReportCsvService.new(invoices, dividends, dividend_rounds)
+attached = service.generate_all
+
+# Send email with all three CSV attachments
+AdminMailer.custom(to: ["solson@earlygrowth.com", "sahil@gumroad.com"],
+                   subject: "Financial report #{target_year}-#{target_month.to_s.rjust(2, '0')}",
+                   body: "Attached",
+                   attached: attached).deliver_now
+=end
+
 class FinancialReportCsvService
   def initialize(consolidated_invoices, dividends, dividend_rounds)
     @consolidated_invoices = consolidated_invoices

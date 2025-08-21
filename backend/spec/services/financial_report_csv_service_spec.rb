@@ -31,7 +31,7 @@ RSpec.describe FinancialReportCsvService do
     create(:dividend_round,
            company: company,
            issued_at: Date.new(2024, 6, 1),
-           status: "completed")
+           status: "Paid")
   end
 
   let(:dividend) do
@@ -145,7 +145,7 @@ RSpec.describe FinancialReportCsvService do
       round_row = rows[2]
       expect(round_row[0]).to eq("Round Summary")
       expect(round_row[3]).to eq("TestCo")
-      expect(round_row[18]).to eq("completed")
+      expect(round_row[18]).to eq("Paid")
       expect(round_row[19]).to eq("1")
     end
 
