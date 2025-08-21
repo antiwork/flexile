@@ -77,7 +77,7 @@ const StripeMicrodepositVerification = () => {
       <Alert className="mx-4">
         <AlertTitle>Verify your bank account to enable contractor payments</AlertTitle>
         <AlertDescription>
-          <p className="mt-1">
+          <p className="mb-1">
             To ensure seamless payments to your contractors, we need to confirm your bank account details.
           </p>
           <Button onClick={() => setShowVerificationModal(true)}>Verify bank account</Button>
