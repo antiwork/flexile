@@ -610,33 +610,6 @@ export const company_administrator_equity_grants_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
-/**
- * Generates rails route to
- * /internal/companies/:company_id/administrator/quickbooks/:id(.:format)
- * @param {any} company_id
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_administrator_quickbook_url: ((
-  company_id: RequiredRouteParameter,
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/administrator/quickbooks/:id(.:format)
- * @param {any} company_id
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_administrator_quickbook_path: ((
-  company_id: RequiredRouteParameter,
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
@@ -1126,33 +1099,6 @@ export const company_leave_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
-/**
- * Generates rails route to
- * /internal/companies/:company_id/quickbooks/:id(.:format)
- * @param {any} company_id
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_quickbook_url: ((
-  company_id: RequiredRouteParameter,
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/quickbooks/:id(.:format)
- * @param {any} company_id
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_quickbook_path: ((
-  company_id: RequiredRouteParameter,
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
@@ -1298,53 +1244,6 @@ export const company_workers_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
-/**
- * Generates rails route to
- * /internal/companies/:company_id/administrator/quickbooks/connect(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const connect_company_administrator_quickbooks_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/administrator/quickbooks/connect(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const connect_company_administrator_quickbooks_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/quickbooks/connect(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const connect_company_quickbooks_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/quickbooks/connect(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const connect_company_quickbooks_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
