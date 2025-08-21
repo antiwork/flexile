@@ -9,7 +9,7 @@ class CreateCapTable
 
   def perform
     return { success: false, errors: ["Company must have equity enabled"] } unless company.equity_enabled?
-    # Check if company already has cap table data (same logic as ProcessCapTableUpload#validate_no_existing_cap_table!)
+    # Check if company already has cap table data
     existing_cap_table_errors = validate_no_existing_cap_table
     if existing_cap_table_errors.any?
       return { success: false, errors: ["Company already has cap table data: #{existing_cap_table_errors.to_sentence}"] }
