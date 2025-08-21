@@ -2,24 +2,21 @@ import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
-import { documentTemplatesFactory } from "@test/factories/documentTemplates";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
-import { fillDatePicker, selectComboboxOption } from "@test/helpers";
+import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
 import { addMonths, format } from "date-fns";
 import { and, eq } from "drizzle-orm";
-import { DocumentTemplateType } from "@/db/enums";
 import { equityGrants, vestingEvents, vestingSchedules } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe.configure({ mode: "serial" });
 
 test.describe("Equity Grant Vesting Events", () => {
-  test("displays vesting events in the equity grant details modal", async ({ page, next }) => {
+  test("displays vesting events in the equity grant details modal", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       fmvPerShareInUsd: "1",
@@ -28,10 +25,6 @@ test.describe("Equity Grant Vesting Events", () => {
     });
 
     const { user: contractorUser } = await usersFactory.create();
-    const { mockForm } = mockDocuseal(next, {
-      submitters: () => ({ "Company Representative": adminUser, Signer: contractorUser }),
-    });
-    await mockForm(page);
 
     await companyContractorsFactory.create({
       companyId: company.id,
@@ -42,11 +35,6 @@ test.describe("Equity Grant Vesting Events", () => {
       companyId: company.id,
       authorizedShares: 100000n,
       issuedShares: 0n,
-    });
-
-    await documentTemplatesFactory.create({
-      companyId: company.id,
-      type: DocumentTemplateType.EquityPlanContract,
     });
 
     // Create a vesting schedule (4 year vesting with 1 year cliff, monthly vesting)
@@ -237,7 +225,7 @@ test.describe("Equity Grant Vesting Events", () => {
     await expect(modalContent.getByText("33,000").first()).toBeVisible();
   });
 
-  test("handles equity grants with invoice-based vesting", async ({ page, next }) => {
+  test("handles equity grants with invoice-based vesting", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       fmvPerShareInUsd: "1",
@@ -246,9 +234,6 @@ test.describe("Equity Grant Vesting Events", () => {
     });
 
     const { user: contractorUser } = await usersFactory.create();
-    const submitters = { "Company Representative": adminUser, Signer: contractorUser };
-    const { mockForm } = mockDocuseal(next, { submitters: () => submitters });
-    await mockForm(page);
 
     await companyContractorsFactory.create({
       companyId: company.id,
@@ -260,11 +245,6 @@ test.describe("Equity Grant Vesting Events", () => {
       authorizedShares: 50000n,
       issuedShares: 0n,
     });
-    await documentTemplatesFactory.create({
-      companyId: company.id,
-      type: DocumentTemplateType.EquityPlanContract,
-    });
-
     await login(page, adminUser);
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Equity grants" }).click();
@@ -286,6 +266,8 @@ test.describe("Equity Grant Vesting Events", () => {
     await page.locator('input[name="deathExerciseMonths"]').fill("12");
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
+    await page.getByRole("tab", { name: "Write" }).click();
+    await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
 
     await page.getByRole("button", { name: "Create grant" }).click();
 

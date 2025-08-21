@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class DividendComputationGeneration
+  class InsufficientFundsError < StandardError; end
+  class NoEligibleInvestorsError < StandardError; end
+
   DEFAULT_SHARE_HOLDING_DAYS = 60
   MAX_PREFERRED_SHARE_HOLDING_DAYS = 90
   private_constant :DEFAULT_SHARE_HOLDING_DAYS, :MAX_PREFERRED_SHARE_HOLDING_DAYS
@@ -13,14 +16,20 @@ class DividendComputationGeneration
   end
 
   def process
-    @computation = company.dividend_computations.create!(
-      total_amount_in_usd: amount_in_usd, dividends_issuance_date:, return_of_capital:
-    )
     @preferred_dividend_total = 0.to_d
     @common_dividend_total = 0.to_d
 
-    generate_preferred_dividends
-    generate_common_dividends
+    prepare_preferred_dividends
+    prepare_common_dividends
+    validate_sufficient_funds
+    validate_has_eligible_investors
+
+    @computation = company.dividend_computations.create!(
+      total_amount_in_usd: amount_in_usd, dividends_issuance_date:, return_of_capital:
+    )
+
+    save_preferred_dividend_computations
+    save_common_dividend_computations
 
     computation
   end
@@ -28,7 +37,25 @@ class DividendComputationGeneration
   private
     attr_reader :company, :amount_in_usd, :dividends_issuance_date, :computation, :return_of_capital
 
-    def generate_preferred_dividends
+    def validate_sufficient_funds
+      if @preferred_dividend_total > @amount_in_usd
+        raise InsufficientFundsError,
+              "Sorry, you cannot distribute $#{@amount_in_usd} as preferred investors require a payout of at least $#{@preferred_dividend_total}."
+      end
+    end
+
+    def validate_has_eligible_investors
+      total_outputs = @preferred_dividend_outputs.size + @common_dividend_outputs.size
+
+      if total_outputs == 0
+        raise NoEligibleInvestorsError,
+              "Sorry, we couldn't find any eligible investors to receive dividends. Please make sure your company has investors with shares or convertible securities before creating a dividend distribution."
+      end
+    end
+
+    def prepare_preferred_dividends
+      @preferred_dividend_outputs = []
+
       shares_per_class_per_investor.each do |share_holding|
         hurdle_rate = share_holding.share_class.hurdle_rate
         original_issue_price_in_usd = share_holding.share_class.original_issue_price_in_dollars
@@ -49,15 +76,17 @@ class DividendComputationGeneration
           total_amount_in_usd: dividend_usd,
           investment_amount_cents: share_holding.total_amount_cents,
         }
-        computation.dividend_computation_outputs.create!(attrs)
+        @preferred_dividend_outputs << attrs
         @preferred_dividend_total += dividend_usd
       end
 
       # I'm assuming that SAFEs don't have hurdle rates to keep things simple as that is also the current state
     end
 
-    def generate_common_dividends
+    def prepare_common_dividends
+      @common_dividend_outputs = []
       available_amount = @amount_in_usd - @preferred_dividend_total
+      return if available_amount == 0
 
       eligible_fully_diluted_shares =
         company.convertible_investments.sum(:implied_shares) + company.share_holdings.sum(:number_of_shares)
@@ -66,23 +95,26 @@ class DividendComputationGeneration
         dividend_usd =
           roundup(available_amount * (share_holding.total_shares.to_d / eligible_fully_diluted_shares.to_d))
         qualified_dividend_amount_usd = roundup(available_amount * (share_holding.qualified_shares.to_d / eligible_fully_diluted_shares.to_d))
+
         attrs = {
+          type: :share_holding,
           company_investor_id: share_holding.company_investor_id,
           share_class: share_holding.share_class.name,
           number_of_shares: share_holding.total_shares,
+          dividend_amount_in_usd: dividend_usd,
+          qualified_dividend_amount_usd:,
+          total_amount_in_usd: dividend_usd,
         }
-        output = computation.dividend_computation_outputs.find_by(attrs)
-        output.dividend_amount_in_usd = dividend_usd
-        output.qualified_dividend_amount_usd += qualified_dividend_amount_usd
-        output.total_amount_in_usd += dividend_usd
-        output.save!
+        @common_dividend_outputs << attrs
         @common_dividend_total += dividend_usd
       end
 
       company.convertible_investments.find_each do |convertible|
         dividend_usd = roundup(available_amount * (convertible.implied_shares.to_d / eligible_fully_diluted_shares.to_d))
         qualified_dividend_amount_usd = dividends_issuance_date - DEFAULT_SHARE_HOLDING_DAYS > convertible.issued_at ? dividend_usd : 0
+
         attrs = {
+          type: :convertible_investment,
           investor_name: convertible.entity_name,
           share_class: convertible.identifier,
           number_of_shares: convertible.implied_shares,
@@ -92,8 +124,33 @@ class DividendComputationGeneration
           total_amount_in_usd: dividend_usd,
           investment_amount_cents: convertible.amount_in_cents,
         }
-        computation.dividend_computation_outputs.create!(attrs)
+        @common_dividend_outputs << attrs
         @common_dividend_total += dividend_usd
+      end
+    end
+
+    def save_preferred_dividend_computations
+      @preferred_dividend_outputs.each do |attrs|
+        computation.dividend_computation_outputs.create!(attrs)
+      end
+    end
+
+    def save_common_dividend_computations
+      @common_dividend_outputs.each do |attrs|
+        if attrs[:type] == :share_holding
+          find_attrs = {
+            company_investor_id: attrs[:company_investor_id],
+            share_class: attrs[:share_class],
+            number_of_shares: attrs[:number_of_shares],
+          }
+          output = computation.dividend_computation_outputs.find_by(find_attrs)
+          output.dividend_amount_in_usd = attrs[:dividend_amount_in_usd]
+          output.qualified_dividend_amount_usd += attrs[:qualified_dividend_amount_usd]
+          output.total_amount_in_usd += attrs[:total_amount_in_usd]
+          output.save!
+        else
+          computation.dividend_computation_outputs.create!(attrs.except(:type))
+        end
       end
     end
 
