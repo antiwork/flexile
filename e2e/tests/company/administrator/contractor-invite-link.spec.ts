@@ -31,7 +31,9 @@ test.describe("Contractor Invite Link", () => {
     let updatedCompany = await db.query.companies.findFirst({ where: eq(companies.id, company.id) });
     const link = updatedCompany?.inviteLink;
     expect(link).toBeDefined();
-    await expect(page.getByRole("textbox", { name: "Link" })).toHaveValue(link ?? "");
+    await expect(page.getByRole("textbox", { name: "Link" })).toHaveValue(
+      `${new URL(page.url()).origin}/invite/${link}`,
+    );
 
     await page.getByRole("button", { name: "Reset link" }).click();
     await expect(page.getByText("Reset Invite Link")).toBeVisible();
