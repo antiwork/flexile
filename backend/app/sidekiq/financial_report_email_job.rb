@@ -7,19 +7,20 @@ class FinancialReportEmailJob
   def perform(recipients)
     return unless Rails.env.production?
 
+    # Get consolidated invoices for the last month
     invoices = ConsolidatedInvoice.includes(:company, :consolidated_payments, invoices: :payments)
                                   .where("created_at > ?", Time.current.last_month.beginning_of_month)
                                   .order(created_at: :asc)
-    consolidated_invoices_csv = ConsolidatedInvoiceCsv.new(invoices).generate
 
+    # Get dividends for the last month
     dividends = Dividend.includes(:dividend_payments, company_investor: :user)
                         .paid
                         .references(:dividend_payments)
                         .merge(DividendPayment.successful)
                         .where("dividend_payments.created_at > ?", Time.current.last_month.beginning_of_month)
                         .order(created_at: :asc)
-    dividend_payments_csv = DividendPaymentCsv.new(dividends).generate
 
+    # Get dividend rounds for the last month
     target_year = Time.current.last_month.year
     target_month = Time.current.last_month.month
     start_date = Date.new(target_year, target_month, 1)
@@ -31,13 +32,17 @@ class FinancialReportEmailJob
                                           start_date, end_date)
                                    .distinct
                                    .order(issued_at: :asc)
-    dividend_report_csv = DividendReportCsv.new(dividend_rounds).generate
 
+    # Generate the new CSV reports
+    invoices_csv = FinancialReportInvoicesCsv.new(invoices).generate
+    dividends_csv = FinancialReportDividendsCsv.new(dividends, dividend_rounds).generate
+    grouped_csv = FinancialReportGroupedCsv.new(invoices, dividends).generate
     subject = "Financial report #{target_year}-#{target_month.to_s.rjust(2, '0')}"
+
     attached = {
-      "ConsolidatedInvoices.csv" => consolidated_invoices_csv,
-      "DividendPayments.csv" => dividend_payments_csv,
-      "DividendReport.csv" => dividend_report_csv,
+      "invoices.csv" => invoices_csv,
+      "dividends.csv" => dividends_csv,
+      "grouped.csv" => grouped_csv,
     }
 
     AdminMailer.custom(to: recipients, subject: subject, body: "Attached", attached: attached).deliver_later

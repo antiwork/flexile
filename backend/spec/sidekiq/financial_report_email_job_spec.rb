@@ -8,24 +8,23 @@ RSpec.describe FinancialReportEmailJob do
       allow(Rails.env).to receive(:production?).and_return(true)
     end
 
-    it "sends email with all three CSV attachments" do
+    it "sends email with invoices, dividends, and grouped CSV attachments" do
       company = create(:company, name: "TestCo")
 
       create(:consolidated_invoice, company: company, created_at: 1.week.ago)
 
-      dividend = create(:dividend, company: company)
+      dividend_round = create(:dividend_round, company: company, issued_at: 1.week.ago)
+      dividend = create(:dividend, company: company, dividend_round: dividend_round)
       create(:dividend_payment, dividend: dividend, status: Payment::SUCCEEDED, created_at: 1.week.ago)
-
-      create(:dividend_round, company: company, issued_at: 1.week.ago)
 
       expect(AdminMailer).to receive(:custom).with(
         to: recipients,
         subject: match(/Financial report \d{4}-\d{2}/),
         body: "Attached",
         attached: hash_including(
-          "ConsolidatedInvoices.csv" => kind_of(String),
-          "DividendPayments.csv" => kind_of(String),
-          "DividendReport.csv" => kind_of(String)
+          "invoices.csv" => kind_of(String),
+          "dividends.csv" => kind_of(String),
+          "grouped.csv" => kind_of(String)
         )
       ).and_return(double(deliver_later: true))
 
