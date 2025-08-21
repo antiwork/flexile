@@ -46,7 +46,7 @@ const FinalizeDistributionModal = ({
         url: company_dividend_rounds_path(company.id, { dividend_computation_id: dividendComputation.id }),
         assertOk: true,
       });
-      return z.object({ id: z.number() }).parse(await response.json());
+      return z.object({ id: z.string() }).parse(await response.json());
     },
     onSuccess: ({ id }) => {
       onOpenChange(false);

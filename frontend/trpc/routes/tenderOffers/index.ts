@@ -13,8 +13,9 @@ const dataSchema = createInsertSchema(tenderOffers)
     startsAt: true,
     endsAt: true,
     minimumValuation: true,
+    letterOfTransmittal: true,
   })
-  .extend({ attachmentKey: z.string() });
+  .extend({ attachmentKey: z.string(), letterOfTransmittal: z.string() });
 
 export const tenderOffersRouter = createRouter({
   create: companyProcedure.input(dataSchema.required()).mutation(async ({ ctx, input }) => {
@@ -34,6 +35,7 @@ export const tenderOffersRouter = createRouter({
           startsAt: input.startsAt,
           endsAt: input.endsAt,
           minimumValuation: input.minimumValuation,
+          letterOfTransmittal: input.letterOfTransmittal,
         })
         .returning();
       if (!tenderOffer) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -66,7 +68,7 @@ export const tenderOffersRouter = createRouter({
       throw new TRPCError({ code: "FORBIDDEN" });
 
     const tenderOffer = await db.query.tenderOffers.findFirst({
-      columns: { id: true, startsAt: true, endsAt: true, minimumValuation: true },
+      columns: { id: true, startsAt: true, endsAt: true, minimumValuation: true, letterOfTransmittal: true },
       where: and(eq(tenderOffers.externalId, input.id), eq(tenderOffers.companyId, ctx.company.id)),
     });
 
@@ -81,7 +83,7 @@ export const tenderOffersRouter = createRouter({
     });
 
     return {
-      ...pick(tenderOffer, ["startsAt", "endsAt", "minimumValuation"]),
+      ...pick(tenderOffer, ["startsAt", "endsAt", "minimumValuation", "letterOfTransmittal"]),
       attachment: attachment?.blob,
     };
   }),

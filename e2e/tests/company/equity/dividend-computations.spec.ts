@@ -40,7 +40,7 @@ test.describe("Dividend Computations", () => {
     );
 
     await expect(page.getByRole("dialog")).not.toBeVisible();
-    await expect(page).toHaveURL(/\/equity\/dividend_rounds\/draft\/\d+/u);
+    await expect(page).toHaveURL(/\/equity\/dividend_rounds\/draft\/.+/u);
     await expect(page.getByRole("heading", { name: "Dividend" })).toBeVisible();
     await expect(page.getByText("Dividend distribution is still a draft")).toBeVisible();
     await page.getByRole("link", { name: "Dividends" }).first().click();
@@ -138,7 +138,7 @@ test.describe("Dividend Computations", () => {
       { page },
     );
 
-    await expect(page).toHaveURL(/\/equity\/dividend_rounds\/round\/\d+/u);
+    await expect(page).toHaveURL(/\/equity\/dividend_rounds\/round\/.+/u);
     await page.getByRole("link", { name: "Dividends" }).first().click();
     await expect(draftRow).not.toBeVisible();
 
@@ -154,7 +154,7 @@ test.describe("Dividend Computations", () => {
     await expect(issuedRow).toBeVisible();
 
     // Going back to an already finalized dividend computation should redirect to not found
-    await page.goto(`/equity/dividend_rounds/draft/${dividendComputation.id}`);
+    await page.goto(`/equity/dividend_rounds/draft/${dividendComputation.externalId}`);
     await expect(page.getByText("Page not found")).toBeVisible();
   });
 
