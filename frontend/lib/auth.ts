@@ -56,7 +56,7 @@ export const authOptions = {
         if (!validation.success) throw new Error("Invalid email or OTP");
 
         try {
-          const response = await fetch(`${assertDefined(req.headers?.origin)}/internal/login`, {
+          const response = await fetch(`http://localhost:3001/internal/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

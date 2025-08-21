@@ -17,12 +17,12 @@ echo "1. Create environment file from template"
 echo "2. Start the dev container services"
 echo ""
 
-read -p "Continue? (y/N) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 0
-fi
+# read -p "Continue? (y/N) " -n 1 -r
+# echo
+# if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+#     echo "Aborted."
+#     exit 0
+# fi
 
 # Run host setup
 echo ""

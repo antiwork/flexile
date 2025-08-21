@@ -75,6 +75,7 @@ services:
       NEXT_PUBLIC_API_ORIGIN: https://flexile.dev
       RAILS_INTERNAL_HOST: rails
       TZ: UTC
+      DATABASE_URL: postgres://username:password@postgres:5432/flexile_development
     volumes:
       - .:/workspaces/flexile:cached
       - node_modules:/workspaces/flexile/node_modules
