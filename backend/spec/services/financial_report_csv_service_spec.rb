@@ -14,13 +14,13 @@ RSpec.describe FinancialReportCsvService do
            flexile_fee_cents: 4500,
            transfer_fee_cents: 125,
            status: "sent",
-           created_at: 1.week.ago)
+           created_at: 1.week.ago,
+           invoices: [invoice])
   end
 
   let(:invoice) do
     create(:invoice,
            user: user,
-           consolidated_invoice: consolidated_invoice,
            cash_amount_in_cents: 30000,
            equity_amount_in_cents: 0,
            total_amount_in_usd_cents: 30000,
@@ -63,7 +63,9 @@ RSpec.describe FinancialReportCsvService do
   let(:dividend_rounds) { [dividend_round] }
 
   before do
+    # Create invoice first, then consolidated_invoice with the invoice
     invoice
+    consolidated_invoice
     dividend_payment
   end
 
