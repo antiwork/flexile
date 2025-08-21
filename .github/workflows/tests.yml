@@ -41,12 +41,6 @@ jobs:
           - 6389:6379
         options: --entrypoint redis-server
 
-    strategy:
-      fail-fast: false
-      matrix:
-        ci_node_total: [2]
-        ci_node_index: [0, 1]
-
     steps:
       - uses: actions/checkout@v4
 
@@ -59,11 +53,7 @@ jobs:
       - name: Run tests
         env:
           RUBY_YJIT_ENABLE: 1
-          KNAPSACK_PRO_TEST_SUITE_TOKEN_RSPEC: ${{ secrets.KNAPSACK_PRO_TEST_SUITE_TOKEN_RSPEC }}
-          KNAPSACK_PRO_CI_NODE_TOTAL: ${{ matrix.ci_node_total }}
-          KNAPSACK_PRO_CI_NODE_INDEX: ${{ matrix.ci_node_index }}
-          KNAPSACK_PRO_LOG_LEVEL: info
-        run: cd backend && bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --tag ~type:system --format progress]"
+        run: cd backend && bundle exec rspec --format RSpec::Github::Formatter --tag ~skip --tag ~type:system --format progress
         timeout-minutes: 20
 
   playwright:
