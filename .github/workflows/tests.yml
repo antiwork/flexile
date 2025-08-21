@@ -11,11 +11,11 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'dummy' }}
   RAILS_ENV: test
-  WISE_API_KEY: dummy
-  WISE_PROFILE_ID: 0
-  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: dummy
-  STRIPE_SECRET_KEY: dummy
+  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY || 'dummy' }}
+  WISE_API_KEY: ${{ secrets.WISE_API_KEY || 'dummy' }}
+  WISE_PROFILE_ID: ${{ secrets.WISE_PROFILE_ID || 0 }}
 
 jobs:
   rspec:
