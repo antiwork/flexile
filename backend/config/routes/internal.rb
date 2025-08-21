@@ -11,6 +11,8 @@ scope path: :internal, module: :internal do
     end
   end
 
+  resources :oauth, only: :create
+
   namespace :demo do
     resources :companies, only: :show
   end
@@ -60,7 +62,7 @@ scope path: :internal, module: :internal do
         post :remove_role
       end
     end
-    resources :equity_grant_exercises, only: :create do
+    resources :equity_grant_exercises, only: [:new, :create] do
       member do
         post :resend
       end
@@ -91,6 +93,8 @@ scope path: :internal, module: :internal do
         post :sign
       end
     end
+    resources :dividend_computations, only: [:index, :create, :show]
+    resources :dividend_rounds, only: [:create]
   end
 
   resources :wise_account_requirements, only: :create
