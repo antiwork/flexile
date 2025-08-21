@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_18_155953) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_21_091952) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -307,6 +307,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_18_155953) do
     t.date "dividends_issuance_date", null: false
     t.string "external_id", null: false
     t.boolean "return_of_capital", null: false
+    t.datetime "finalized_at"
     t.index ["company_id"], name: "index_dividend_computations_on_company_id"
     t.index ["external_id"], name: "index_dividend_computations_on_external_id", unique: true
   end
@@ -367,9 +368,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_18_155953) do
     t.bigint "qualified_amount_cents", null: false
     t.datetime "signed_release_at"
     t.bigint "investment_amount_cents"
+    t.string "external_id", null: false
     t.index ["company_id"], name: "index_dividends_on_company_id"
     t.index ["company_investor_id"], name: "index_dividends_on_company_investor_id"
     t.index ["dividend_round_id"], name: "index_dividends_on_dividend_round_id"
+    t.index ["external_id"], name: "index_dividends_on_external_id", unique: true
     t.index ["user_compliance_info_id"], name: "index_dividends_on_user_compliance_info_id"
   end
 
@@ -812,6 +815,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_18_155953) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.integer "accepted_price_cents"
+    t.text "letter_of_transmittal", null: false
     t.index ["company_id"], name: "index_tender_offers_on_company_id"
     t.index ["external_id"], name: "index_tender_offers_on_external_id", unique: true
   end
