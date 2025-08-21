@@ -1,6 +1,6 @@
 # Flexile
 
-Contractor payments as easy as 1-2-3.
+Contractor payments.
 
 ## Setup
 

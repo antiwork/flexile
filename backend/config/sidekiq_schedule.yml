@@ -54,7 +54,8 @@ consolidated_invoice_csv_email_job:
   description: Sends Steven invoice data for accounting
   args:
     - - "solson@earlygrowth.com"
-      - "raul@gumroad.com"
+      - "howard@antiwork.com"
+      - "sahil@gumroad.com"
 
 dividend_payment_csv_email_job:
   cron: "0 16 1,15 * *" # The 1st & 15th days of every month at UTC 16:00
@@ -62,7 +63,8 @@ dividend_payment_csv_email_job:
   description: Sends dividend payment data for accounting
   args:
     - - "solson@earlygrowth.com"
-      - "raul@gumroad.com"
+      - "howard@antiwork.com"
+      - "sahil@gumroad.com"
 
 stripe_balance_top_up_job:
   cron: "0 19 * * 1" # UTC 19:00 Monday
@@ -81,6 +83,7 @@ dividend_report_csv_email_job:
   args:
     - - "solson@earlygrowth.com"
       - "howard@antiwork.com"
+      - "sahil@gumroad.com"
 
 vesting_report_csv_email_job:
   cron: "0 16 1 * *" # The 1st day of every month at UTC 16:00
