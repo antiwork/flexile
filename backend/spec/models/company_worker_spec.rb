@@ -4,9 +4,7 @@ RSpec.describe CompanyWorker do
   describe "associations" do
     it { is_expected.to belong_to(:company) }
     it { is_expected.to belong_to(:user) }
-    it { is_expected.to have_many(:integration_records) }
     it { is_expected.to have_many(:invoices) }
-    it { is_expected.to have_one(:quickbooks_integration_record) }
   end
 
   describe "validations" do
@@ -156,31 +154,25 @@ RSpec.describe CompanyWorker do
       context "when rate is unchanged" do
         let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits }
 
-        it "does not schedule a QuickBooks data sync job" do
+        it "does not trigger any side effects" do
           expect do
             company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
-          end.to_not change { QuickbooksDataSyncJob.jobs.size }
+          end.to_not change { company_worker.reload.updated_at }
         end
       end
 
       context "when rate changes" do
         let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits + 1 }
 
-        it "schedules a QuickBooks data sync job" do
+        it "updates the pay rate successfully" do
           expect do
             company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
-          end.to change { QuickbooksDataSyncJob.jobs.size }.by(1)
-
-          expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker.company_id, "CompanyWorker", company_worker.id)
+          end.to change { company_worker.reload.pay_rate_in_subunits }.to(new_pay_rate_in_subunits)
         end
       end
     end
   end
 
-  describe "delegations" do
-    it { is_expected.to delegate_method(:integration_external_id).to(:quickbooks_integration_record) }
-    it { is_expected.to delegate_method(:sync_token).to(:quickbooks_integration_record) }
-  end
 
   describe "#active?" do
     it "return `true` when the contract hasn't ended" do
