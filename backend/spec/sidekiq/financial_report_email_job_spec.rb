@@ -15,7 +15,7 @@ RSpec.describe FinancialReportEmailJob do
 
       dividend_round = create(:dividend_round, company: company, issued_at: 1.week.ago)
       dividend = create(:dividend, company: company, dividend_round: dividend_round)
-      create(:dividend_payment, dividend: dividend, status: Payment::SUCCEEDED, created_at: 1.week.ago)
+      create(:dividend_payment, dividends: [dividend], status: Payment::SUCCEEDED, created_at: 1.week.ago)
 
       expect(AdminMailer).to receive(:custom).with(
         to: recipients,
