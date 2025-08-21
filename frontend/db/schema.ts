@@ -449,7 +449,7 @@ export const dividends = pgTable(
     qualifiedAmountCents: bigint("qualified_amount_cents", { mode: "bigint" }).notNull(),
     signedReleaseAt: timestamp("signed_release_at", { precision: 6, mode: "date" }),
     investmentAmountCents: bigint("investment_amount_cents", { mode: "bigint" }),
-    externalId: varchar("external_id").$default(nanoid),
+    externalId: varchar("external_id").$default(nanoid).notNull(),
   },
   (table) => [
     index("index_dividends_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -465,6 +465,7 @@ export const dividends = pgTable(
       "btree",
       table.userComplianceInfoId.asc().nullsLast().op("int8_ops"),
     ),
+    uniqueIndex("index_dividends_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
   ],
 );
 
