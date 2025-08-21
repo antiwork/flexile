@@ -95,7 +95,7 @@ const StripeMicrodepositVerification = () => {
             </p>
           ) : (
             <p>
-              Check your {microdepositVerificationDetails.bank_account_number || ""} bank account for
+              Check your {microdepositVerificationDetails.bank_account_number || ""} bank account for{" "}
               <strong>two deposits</strong> from Stripe on {arrivalDate}. The transactions' description will read
               "ACCTVERIFY".
             </p>
@@ -150,7 +150,7 @@ const StripeMicrodepositVerification = () => {
                 </div>
               )}
 
-              <DialogFooter>
+              <DialogFooter className="mt-6">
                 <MutationStatusButton type="submit" loadingText="Submitting..." mutation={microdepositVerification}>
                   Submit
                 </MutationStatusButton>
