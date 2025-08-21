@@ -36,7 +36,6 @@ group :development, :test do
   gem "factory_bot_rails", "~> 6.4.0" # Remove the patch version after a new version fixes https://github.com/thoughtbot/factory_bot_rails/issues/433
   gem "pry", "~> 0.14"
   gem "rspec-rails", "~> 7.0"
-  gem "knapsack_pro", "~> 8.0"
 end
 
 group :development do
