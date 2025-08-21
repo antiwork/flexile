@@ -30,7 +30,7 @@ RSpec.describe FinancialReportCsvService do
   let(:dividend_round) do
     create(:dividend_round,
            company: company,
-           issued_at: Date.new(2024, 6, 1),
+           issued_at: Date.new(2024, 6, 4),
            status: "Paid")
   end
 
