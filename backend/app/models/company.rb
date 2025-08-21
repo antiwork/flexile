@@ -83,7 +83,7 @@ class Company < ApplicationRecord
   has_many :company_stripe_accounts
   has_many :bank_accounts, class_name: "CompanyStripeAccount"
   has_one :bank_account, -> { alive.order(created_at: :desc) }, class_name: "CompanyStripeAccount"
-  has_one_attached :logo, service: (Rails.env.test? ? :test_public : :amazon_public)
+  has_one_attached :logo, service: public_bucket
   has_one_attached :full_logo
 
   validates :name, presence: true, on: :update, if: :name_changed?
@@ -172,14 +172,6 @@ class Company < ApplicationRecord
 
   def contractor_payment_processing_time_in_days
     is_trusted? ? 2 : 10 # estimated max number of business days for a contractor to receive payment after a consolidated invoice is charged
-  end
-
-  def quickbooks_enabled?
-    Flipper.enabled?(:quickbooks, self)
-  end
-
-  def expenses_enabled?
-    Flipper.enabled?(:expenses, self)
   end
 
   def find_company_worker!(user:)

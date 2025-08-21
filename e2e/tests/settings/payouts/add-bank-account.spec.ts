@@ -35,6 +35,8 @@ async function fillOutUsdBankAccountForm(
   await page.getByLabel("ZIP code").fill(formValues.zipCode);
 }
 
+// allow green builds on OSS PRs that don't have a wise sandbox key, but fail on CI if something changes on Wise's end
+test.skip(() => process.env.WISE_API_KEY === "dummy");
 test.describe("Bank account settings", () => {
   let company: typeof companies.$inferSelect;
   let onboardingUser: typeof users.$inferSelect;
@@ -468,6 +470,21 @@ test.describe("Bank account settings", () => {
         await expect(page.getByLabel("I'd prefer to use PrivatBank card")).toBeVisible();
         await expect(page.getByLabel("Account Type")).not.toBeVisible();
       });
+    });
+
+    test("resets the default form when switching from USD to another currency", async ({ page }) => {
+      await page.getByRole("link", { name: "Settings" }).click();
+      await page.getByRole("link", { name: "Payouts" }).click();
+      await page.getByRole("button", { name: "Add bank account" }).click();
+
+      await page.getByRole("tab", { name: "SWIFT" }).click();
+
+      await expect(page.getByLabel("SWIFT / BIC code")).toBeVisible();
+      await expect(page.getByLabel("IBAN / Account number")).toBeVisible();
+      await expect(page.getByLabel("Routing number")).not.toBeVisible();
+
+      await selectComboboxOption(page, "Currency", "KRW (South Korean Won)");
+      await expect(page.getByLabel("Account number (KRW accounts only)")).toBeVisible();
     });
 
     test.describe("when the user is from Germany", () => {
