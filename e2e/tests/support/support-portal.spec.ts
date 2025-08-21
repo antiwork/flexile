@@ -2,7 +2,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 
-test.describe.only("Support Portal Page", () => {
+test.describe("Support Portal Page", () => {
   test("should show the support portal", async ({ page }) => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding();
     await login(page, adminUser, "/support");
