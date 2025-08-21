@@ -1087,52 +1087,6 @@ RSpec.describe Invoice do
     end
   end
 
-  describe "#serialize" do
-    let(:company) { create(:company) }
-    let!(:integration) { create(:quickbooks_integration, company:) }
-    let(:contractor) { create(:company_worker, company:) }
-    let(:quickbooks_vendor) { create(:integration_record, integratable: contractor, integration:) }
-    let(:invoice) { create(:invoice, company:, user: contractor.user, total_amount_in_usd_cents: 106000) }
-    let(:invoice_line_item) { invoice.invoice_line_items.first }
-
-    it "returns the serialized object" do
-      expense = create(:invoice_expense, invoice:)
-      expense.expense_category.update!(expense_account_id: 5)
-      expect(JSON.parse(invoice.serialize(namespace: "Quickbooks")).deep_symbolize_keys).to eq(
-        {
-          DocNumber: invoice.invoice_number,
-          TxnDate: invoice.invoice_date.iso8601,
-          VendorRef: {
-            value: contractor.integration_external_id,
-          },
-          Line: [
-            {
-              Description: "Inv ##{invoice.invoice_number} - #{invoice_line_item.description}",
-              DetailType: "AccountBasedExpenseLineDetail",
-              Amount: 60.0,
-              AccountBasedExpenseLineDetail: {
-                AccountRef: {
-                  value: integration.consulting_services_expense_account_id,
-                },
-              },
-              LineNum: 1,
-            },
-            {
-              Description: "Inv ##{invoice.invoice_number} - #{expense.description}",
-              DetailType: "AccountBasedExpenseLineDetail",
-              Amount: 1000.0,
-              AccountBasedExpenseLineDetail: {
-                AccountRef: {
-                  value: "5",
-                },
-              },
-              LineNum: 2,
-            }
-          ],
-        }
-      )
-    end
-  end
 
   describe "#mark_as_paid!", :freeze_time do
     let(:invoice) { create(:invoice) }

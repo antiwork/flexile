@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_21_091952) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_21_211619) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,7 +19,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_091952) do
   create_enum "equity_grants_issue_date_relationship", ["employee", "consultant", "investor", "founder", "officer", "executive", "board_member"]
   create_enum "equity_grants_option_grant_type", ["iso", "nso"]
   create_enum "equity_grants_vesting_trigger", ["scheduled", "invoice_paid"]
-  create_enum "integration_status", ["initialized", "active", "out_of_sync", "deleted"]
   create_enum "invoices_invoice_type", ["services", "other"]
 
   create_table "active_storage_attachments", force: :cascade do |t|
@@ -571,36 +570,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_091952) do
     t.datetime "updated_at", null: false
     t.string "expense_account_id"
     t.index ["company_id"], name: "index_expense_categories_on_company_id"
-  end
-
-  create_table "integration_records", force: :cascade do |t|
-    t.bigint "integration_id", null: false
-    t.string "integratable_type"
-    t.bigint "integratable_id"
-    t.string "integration_external_id", null: false
-    t.string "sync_token"
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.datetime "deleted_at"
-    t.jsonb "json_data"
-    t.boolean "quickbooks_journal_entry", default: false, null: false
-    t.index ["integratable_type", "integratable_id"], name: "index_integration_records_on_integratable"
-    t.index ["integration_id"], name: "index_integration_records_on_integration_id"
-  end
-
-  create_table "integrations", force: :cascade do |t|
-    t.bigint "company_id", null: false
-    t.string "type", null: false
-    t.enum "status", default: "initialized", null: false, enum_type: "integration_status"
-    t.jsonb "configuration"
-    t.text "sync_error"
-    t.datetime "last_sync_at"
-    t.datetime "deleted_at"
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.string "account_id", null: false
-    t.index ["company_id", "type"], name: "unique_active_integration_types", unique: true, where: "(deleted_at IS NULL)"
-    t.index ["company_id"], name: "index_integrations_on_company_id"
   end
 
   create_table "investor_dividend_rounds", force: :cascade do |t|
