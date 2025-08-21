@@ -10,7 +10,7 @@ concurrency:
 
 env:
   RAILS_ENV: test
-  WISE_API_KEY: dummy
+  WISE_API_KEY: 0
   WISE_PROFILE_ID: dummy
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: dummy
   STRIPE_SECRET_KEY: dummy
