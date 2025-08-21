@@ -17,6 +17,8 @@ async function handler(req: Request) {
       url.hostname = `flexile-pipeline-pr-${process.env.VERCEL_GIT_PULL_REQUEST_ID}.herokuapp.com`;
       break;
     default:
+      // In Docker, use service name; otherwise use localhost for local dev
+      url.hostname = process.env.DOCKER_ENV === "true" ? "backend" : "localhost";
       url.port = process.env.RAILS_ENV === "test" ? "3100" : "3000";
       url.protocol = "http";
   }

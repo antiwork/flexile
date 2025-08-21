@@ -75,26 +75,43 @@ generate_certificates() {
 setup_minio() {
     print_message "$BLUE" "🪣 Setting up MinIO buckets..."
     
-    # Wait for MinIO to be healthy
+    # Wait for MinIO to be healthy using minio-client sidecar
     local max_attempts=30
     local attempt=1
+    local backoff=2
     
     while [ $attempt -le $max_attempts ]; do
-        if $DOCKER_COMPOSE -f "$COMPOSE_FILE" exec -T minio mc alias set local http://localhost:9000 minioadmin minioadmin123 &>/dev/null; then
+        if $DOCKER_COMPOSE -f "$COMPOSE_FILE" exec minio-client mc ready local &>/dev/null; then
+            print_message "$GREEN" "  MinIO is ready!"
             break
         fi
         print_message "$YELLOW" "  Waiting for MinIO to be ready... ($attempt/$max_attempts)"
-        sleep 2
+        sleep $backoff
+        # Exponential backoff with max 10 seconds
+        backoff=$((backoff < 10 ? backoff * 2 : 10))
         ((attempt++))
     done
     
+    if [ $attempt -gt $max_attempts ]; then
+        print_message "$RED" "❌ MinIO failed to become ready after $max_attempts attempts"
+        exit 1
+    fi
+    
+    # Set up MinIO alias and create buckets using minio-client sidecar
+    if ! $DOCKER_COMPOSE -f "$COMPOSE_FILE" exec minio-client mc alias set local http://minio:9000 minioadmin minioadmin123; then
+        print_message "$RED" "❌ Failed to set MinIO alias"
+        exit 1
+    fi
+    
     # Create buckets
-    $DOCKER_COMPOSE -f "$COMPOSE_FILE" exec -T minio sh -c "
-        mc alias set local http://localhost:9000 minioadmin minioadmin123 &&
+    if ! $DOCKER_COMPOSE -f "$COMPOSE_FILE" exec minio-client sh -c "
         mc mb --ignore-existing local/flexile-development-private &&
         mc mb --ignore-existing local/flexile-development-public &&
         mc anonymous set public local/flexile-development-public
-    " || true
+    "; then
+        print_message "$RED" "❌ Failed to create MinIO buckets"
+        exit 1
+    fi
     
     print_message "$GREEN" "✅ MinIO buckets configured"
 }

@@ -332,7 +332,7 @@ GEM
       activerecord
       kaminari-core (= 1.2.2)
     kaminari-core (1.2.2)
-    knapsack_pro (8.0.1)
+    knapsack_pro (8.3.3)
       rake
     language_server-protocol (3.17.0.4)
     lint_roller (1.1.0)
@@ -769,4 +769,4 @@ RUBY VERSION
    ruby 3.4.3p32
 
 BUNDLED WITH
-   2.3.11
+   2.6.7

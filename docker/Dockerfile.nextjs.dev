@@ -18,8 +18,8 @@ RUN corepack enable && \
     corepack prepare pnpm@latest --activate
 
 # Set pnpm environment variables
-ENV PNPM_HOME="/pnpm" \
-    PATH="$PNPM_HOME:$PATH"
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 
 # Create app directory
 WORKDIR /app
@@ -38,15 +38,15 @@ COPY --chown=nextjs:nodejs package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
 COPY --chown=nextjs:nodejs patches/ ./patches/
 
 # pnpm fetch optimization (80% faster installs) with BuildKit cache mounts
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm-store \
     pnpm fetch --frozen-lockfile
 
 # Install dependencies with cache (skip prepare script)
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm-store \
     pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
 
 # Copy frontend package files
-COPY --chown=nextjs:nodejs frontend/package.json* ./frontend/
+# Frontend uses root package.json - no separate frontend package.json
 
 # Switch to non-root user
 USER nextjs

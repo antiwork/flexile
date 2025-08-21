@@ -4,20 +4,17 @@ ruby = "3.4.3"
 
 # Environment variables for development
 [env]
-ENABLE_DEFAULT_OTP = "true"
-AWS_REGION = "us-east-1"
-AWS_ACCESS_KEY_ID = "minioadmin"
-AWS_SECRET_ACCESS_KEY = "minioadmin123"
-AWS_ENDPOINT_URL = "https://minio.flexile.dev"
-S3_PRIVATE_BUCKET = "flexile-development-private"
-S3_PUBLIC_BUCKET = "flexile-development-public"
-DOCUSEAL_TOKEN = "dummy"
-QUICKBOOKS_WEBHOOK_SECRET = "dummy"
-RESEND_API_KEY = "dummy"
-API_SECRET_TOKEN = "sample-api-token"
-NEXTAUTH_SECRET = "sample-nextauth-secret"
-RAILS_ENV = "development"
-NODE_ENV = "development"
+# Load variables from .env file first (includes DOMAIN, FLEXILE_DOMAIN, etc.)
+_.file = '.env'
+
+# Development-specific overrides
+
+# Derived environment variables that depend on .env values
+# These use lazy evaluation to access .env variables
+AWS_ENDPOINT_URL = { value = "https://minio.{{env.FLEXILE_DOMAIN}}", tools = true }
+FLEXILE_API_DOMAIN = { value = "api.{{env.FLEXILE_DOMAIN}}", tools = true }
+FLEXILE_MINIO_DOMAIN = { value = "minio.{{env.FLEXILE_DOMAIN}}", tools = true }
+FLEXILE_MINIO_CONSOLE_DOMAIN = { value = "minio-console.{{env.FLEXILE_DOMAIN}}", tools = true }
 
 # === MAIN DEVELOPMENT TASKS ===
 
@@ -41,25 +38,12 @@ corepack enable
 cd backend && bundle install && gem install foreman && cd ..
 cd frontend && pnpm install && cd ..
 
-# Setup environment
-echo "⚙️ Setting up environment..."
+# Check environment
+echo "⚙️ Checking environment..."
 if [ ! -f .env ]; then
-  if [ -f .env.test ]; then
-    cp .env.test .env
-  else
-    echo "DATABASE_URL=postgresql://username:password@127.0.0.1:5432/flexile_development" > .env
-    echo "REDIS_URL=redis://localhost:6389/0" >> .env
-    echo "SIDEKIQ_REDIS_URL=redis://localhost:6389/1" >> .env
-    echo "S3_PRIVATE_BUCKET=flexile-development-private" >> .env
-    echo "S3_PUBLIC_BUCKET=flexile-development-public" >> .env
-    echo "AWS_ENDPOINT_URL=https://minio.flexile.dev" >> .env
-    echo "AWS_ACCESS_KEY_ID=minioadmin" >> .env
-    echo "AWS_SECRET_ACCESS_KEY=minioadmin123" >> .env
-    echo "AWS_REGION=us-east-1" >> .env
-  fi
-  echo "ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=$(openssl rand -hex 32)" >> .env
-  echo "ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=$(openssl rand -hex 32)" >> .env
-  echo "ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=$(openssl rand -hex 32)" >> .env
+  echo "❌ .env file not found. Please create .env file with required variables."
+  echo "💡 You can copy .env.test as a starting point if available."
+  exit 1
 fi
 
 # Link frontend env
@@ -97,23 +81,27 @@ eval "$(mise env --shell bash)"
 echo "📦 Installing Node.js dependencies..."
 pnpm install
 
-# Generate SSL certificates
-echo "🔐 Generating SSL certificates..."
-mkdir -p certificates
-NODE_EXTRA_CA_CERTS_FILE="$(node docker/createCertificate.js)"
+# Generate SSL certificates if CREATE_CERTS is enabled
+if [ "${CREATE_CERTS:-true}" = "true" ]; then
+  echo "🔐 Generating SSL certificates..."
+  mkdir -p certificates
+  NODE_EXTRA_CA_CERTS_FILE="$(node docker/createCertificate.js)"
 
-# Generate combined SSL certificates
-mkdir -p tmp
-default_cert_file=$(ruby -ropenssl -e 'puts OpenSSL::X509::DEFAULT_CERT_FILE')
-combined_cert_file="tmp/combined_ca_certs.pem"
+  # Generate combined SSL certificates
+  mkdir -p tmp
+  default_cert_file=$(ruby -ropenssl -e 'puts OpenSSL::X509::DEFAULT_CERT_FILE')
+  combined_cert_file="tmp/combined_ca_certs.pem"
 
-if [ -f "$default_cert_file" ] && [ -f "$NODE_EXTRA_CA_CERTS_FILE" ]; then
-  cat "$default_cert_file" "$NODE_EXTRA_CA_CERTS_FILE" > "$combined_cert_file"
-  echo "Combined certificates created at $combined_cert_file"
-  export SSL_CERT_FILE="$(pwd)/$combined_cert_file"
-  export NODE_EXTRA_CA_CERTS="$(pwd)/$combined_cert_file"
+  if [ -f "$default_cert_file" ] && [ -f "$NODE_EXTRA_CA_CERTS_FILE" ]; then
+    cat "$default_cert_file" "$NODE_EXTRA_CA_CERTS_FILE" > "$combined_cert_file"
+    echo "Combined certificates created at $combined_cert_file"
+    export SSL_CERT_FILE="$(pwd)/$combined_cert_file"
+    export NODE_EXTRA_CA_CERTS="$(pwd)/$combined_cert_file"
+  else
+    echo "Warning: Could not create combined cert file. Using default certificates."
+  fi
 else
-  echo "Warning: Could not create combined cert file. Using default certificates."
+  echo "⏭️  Skipping SSL certificate generation (CREATE_CERTS=false)"
 fi
 
 # Prepare backend
@@ -167,46 +155,227 @@ foreman start -f Procfile.test -e .env.test
 
 # === DOCKER DEVELOPMENT ===
 
+[tasks."docker:configure"]
+description = "🔧 Generate Docker configuration from templates"
+run = """
+#!/usr/bin/env bash
+set -e
+echo "🔧 Generating Docker configuration from templates..."
+
+# Source environment variables
+if [ ! -f .env ]; then
+  echo "❌ .env file not found. Please run 'mise run setup' first."
+  exit 1
+fi
+
+# Load .env variables (safely)
+set -a
+source .env
+set +a
+
+# Set derived domains if not set
+export FLEXILE_APP_DOMAIN="${APP_DOMAIN:-app.${FLEXILE_DOMAIN}}"
+export FLEXILE_API_DOMAIN="${FLEXILE_API_DOMAIN:-api.${FLEXILE_DOMAIN}}"
+export FLEXILE_MINIO_DOMAIN="${FLEXILE_MINIO_DOMAIN:-minio.${FLEXILE_DOMAIN}}"
+export FLEXILE_MINIO_CONSOLE_DOMAIN="${FLEXILE_MINIO_CONSOLE_DOMAIN:-minio-console.${FLEXILE_DOMAIN}}"
+
+# Process nginx template
+echo "🌐 Processing nginx configuration template..."
+envsubst '${FLEXILE_DOMAIN} ${FLEXILE_APP_DOMAIN} ${FLEXILE_API_DOMAIN} ${FLEXILE_MINIO_DOMAIN} ${FLEXILE_MINIO_CONSOLE_DOMAIN}' \
+  < docker/flexile_dev.conf.template > docker/flexile_dev_docker.conf
+
+echo "✅ Docker configuration generated successfully!"
+echo "📄 Generated: docker/flexile_dev_docker.conf"
+echo "🏷️  Domains configured:"
+echo "   - Main: ${FLEXILE_DOMAIN}"
+echo "   - App: ${FLEXILE_APP_DOMAIN:-${APP_DOMAIN}}"
+echo "   - API: ${FLEXILE_API_DOMAIN}"
+echo "   - MinIO: ${FLEXILE_MINIO_DOMAIN}"
+echo "   - MinIO Console: ${FLEXILE_MINIO_CONSOLE_DOMAIN}"
+"""
+
 [tasks."docker:dev"]
 alias = "docker:start"
 description = "🐳 Start Docker development environment"
-run = "./bin/dev-docker start"
+depends = ["docker:configure"]
+run = """
+#!/usr/bin/env bash
+set -e
+echo "🚀 Starting Flexile Docker development environment..."
+
+# Check Docker
+if ! docker info &> /dev/null; then
+  echo "❌ Docker daemon is not running. Please start Docker."
+  exit 1
+fi
+
+# Detect docker-compose command
+if docker compose version &> /dev/null; then
+  DOCKER_COMPOSE="docker compose"
+elif command -v docker-compose &> /dev/null; then
+  DOCKER_COMPOSE="docker-compose"
+else
+  echo "❌ Docker Compose not found. Please install Docker Compose."
+  exit 1
+fi
+
+# Start services
+$DOCKER_COMPOSE -f docker-compose.dev.yml up -d --build
+
+# Setup MinIO buckets
+echo "🪣 Setting up MinIO buckets..."
+sleep 5  # Wait for MinIO to start
+
+# Create buckets using direct docker exec
+docker exec flexile-minio sh -c "
+  mc alias set local http://localhost:9000 minioadmin minioadmin123 2>/dev/null || true &&
+  mc mb --ignore-existing local/flexile-development-private &&
+  mc mb --ignore-existing local/flexile-development-public &&
+  mc anonymous set download local/flexile-development-public
+" || echo "⚠️  MinIO setup will be retried later"
+
+echo "✅ Development environment started successfully!"
+echo ""
+echo "🌐 Services available at:"
+echo "   Main App: https://{{env.FLEXILE_DOMAIN}}"
+echo "   API: https://api.{{env.FLEXILE_DOMAIN}}"
+echo "   MinIO: https://minio.{{env.FLEXILE_DOMAIN}}"
+echo "   MinIO Console: https://minio-console.{{env.FLEXILE_DOMAIN}}"
+echo ""
+echo "   Direct ports:"
+echo "   Rails: http://localhost:3000"
+echo "   Next.js: http://localhost:3001"
+echo "   PostgreSQL: localhost:5432"
+echo "   Redis: localhost:6389"
+"""
 
 [tasks."docker:stop"]
 description = "🛑 Stop Docker development environment"
-run = "./bin/dev-docker stop"
+run = """
+#!/usr/bin/env bash
+echo "🛑 Stopping Docker services..."
+
+if docker compose version &> /dev/null; then
+  DOCKER_COMPOSE="docker compose"
+elif command -v docker-compose &> /dev/null; then
+  DOCKER_COMPOSE="docker-compose"
+else
+  echo "❌ Docker Compose not found"
+  exit 1
+fi
+
+$DOCKER_COMPOSE -f docker-compose.dev.yml down
+echo "✅ Services stopped"
+"""
 
 [tasks."docker:restart"]
 description = "🔄 Restart Docker development environment"
-run = "./bin/dev-docker restart"
+depends = ["docker:configure"]
+run = """
+#!/usr/bin/env bash
+echo "🔄 Restarting Docker services..."
+mise run docker:stop
+mise run docker:dev
+"""
 
 [tasks."docker:logs"]
 description = "📋 Show Docker logs"
-run = "./bin/dev-docker logs"
+run = """
+#!/usr/bin/env bash
+if [ -n "$1" ]; then
+  docker logs -f "flexile-$1"
+else
+  if docker compose version &> /dev/null; then
+    docker compose -f docker-compose.dev.yml logs -f
+  elif command -v docker-compose &> /dev/null; then
+    docker-compose -f docker-compose.dev.yml logs -f
+  fi
+fi
+"""
 
 [tasks."docker:console"]
 description = "📟 Open Rails console in Docker"
-run = "./bin/dev-docker console"
+raw = true
+run = "docker exec -it flexile-backend bundle exec rails console"
 
 [tasks."docker:migrate"]
 description = "🗄️ Run database migrations in Docker"
-run = "./bin/dev-docker migrate"
+run = """
+#!/usr/bin/env bash
+echo "🗄️ Running database migrations..."
+docker exec flexile-backend bundle exec rails db:migrate
+echo "✅ Migrations completed"
+"""
 
 [tasks."docker:reset"]
 description = "💣 Reset Docker environment (deletes volumes)"
-run = "./bin/dev-docker reset"
+confirm = "This will delete all Docker volumes and data. Are you sure?"
+run = """
+#!/usr/bin/env bash
+echo "🔄 Resetting Docker environment..."
+
+if docker compose version &> /dev/null; then
+  DOCKER_COMPOSE="docker compose"
+elif command -v docker-compose &> /dev/null; then
+  DOCKER_COMPOSE="docker-compose"
+else
+  echo "❌ Docker Compose not found"
+  exit 1
+fi
+
+$DOCKER_COMPOSE -f docker-compose.dev.yml down -v --remove-orphans
+echo "✅ Environment reset complete"
+"""
 
 [tasks."docker:status"]
 description = "📊 Show Docker service status"
-run = "./bin/dev-docker status"
+run = """
+#!/usr/bin/env bash
+echo "📊 Service Status:"
+if docker compose version &> /dev/null; then
+  docker compose -f docker-compose.dev.yml ps
+elif command -v docker-compose &> /dev/null; then
+  docker-compose -f docker-compose.dev.yml ps
+fi
+"""
 
 [tasks."docker:rebuild"]
 description = "🔨 Rebuild Docker images"
-run = "./bin/dev-docker rebuild"
+run = """
+#!/usr/bin/env bash
+SERVICE=${1:-""}
+if [ -n "$SERVICE" ]; then
+  echo "🔨 Rebuilding $SERVICE service..."
+  if docker compose version &> /dev/null; then
+    docker compose -f docker-compose.dev.yml build --no-cache "$SERVICE"
+  elif command -v docker-compose &> /dev/null; then
+    docker-compose -f docker-compose.dev.yml build --no-cache "$SERVICE"
+  fi
+else
+  echo "🔨 Rebuilding all services..."
+  if docker compose version &> /dev/null; then
+    docker compose -f docker-compose.dev.yml build --no-cache
+  elif command -v docker-compose &> /dev/null; then
+    docker-compose -f docker-compose.dev.yml build --no-cache
+  fi
+fi
+echo "✅ Rebuild complete"
+"""
 
 [tasks."docker:setup"]
 description = "🚀 Initial Docker setup (configure + certificates)"
-run = "./bin/dev-docker setup"
+depends = ["docker:configure"]
+run = """
+#!/usr/bin/env bash
+echo "🚀 Initial Docker setup..."
+if [ "${CREATE_CERTS:-true}" = "true" ]; then
+  echo "🔐 Generating SSL certificates..."
+  node docker/createCertificate.js
+else
+  echo "⏭️  Skipping SSL certificate generation (CREATE_CERTS=false)"
+fi
+echo "✅ Setup complete. Run 'mise run docker:dev' to start services."
+"""
 
 # === ALL-IN-ONE CONTAINER ===
 
@@ -245,11 +414,11 @@ docker run -d \
   -v flexile-aio-redis:/var/lib/redis \
   -v flexile-aio-minio:/var/lib/minio \
   -v $(pwd):/app:cached \
-  --add-host flexile.dev:127.0.0.1 \
-  --add-host app.flexile.dev:127.0.0.1 \
-  --add-host api.flexile.dev:127.0.0.1 \
-  --add-host minio.flexile.dev:127.0.0.1 \
-  --add-host minio-console.flexile.dev:127.0.0.1 \
+  --add-host {{env.FLEXILE_DOMAIN}}:127.0.0.1 \
+  --add-host {{env.APP_DOMAIN}}:127.0.0.1 \
+  --add-host api.{{env.FLEXILE_DOMAIN}}:127.0.0.1 \
+  --add-host minio.{{env.FLEXILE_DOMAIN}}:127.0.0.1 \
+  --add-host minio-console.{{env.FLEXILE_DOMAIN}}:127.0.0.1 \
   flexile-all-in-one:latest
 
 echo "⏳ Waiting for services to start..."
@@ -262,10 +431,10 @@ echo ""
 echo "✅ All-in-one container started!"
 echo ""
 echo "🌐 Access points:"
-echo "  - Application: https://flexile.dev or https://app.flexile.dev"
-echo "  - API: https://api.flexile.dev"
-echo "  - MinIO Console: https://minio-console.flexile.dev (minioadmin/minioadmin123)"
-echo "  - MinIO API: https://minio.flexile.dev"
+echo "  - Application: https://{{env.FLEXILE_DOMAIN}} or https://{{env.APP_DOMAIN}}"
+echo "  - API: https://api.{{env.FLEXILE_DOMAIN}}"
+echo "  - MinIO Console: https://minio-console.{{env.FLEXILE_DOMAIN}} (minioadmin/minioadmin123)"
+echo "  - MinIO API: https://minio.{{env.FLEXILE_DOMAIN}}"
 echo ""
 echo "💡 Tips:"
 echo "  - View logs: mise docker:all-in-one:logs"
@@ -370,8 +539,25 @@ run = """
 #!/usr/bin/env bash
 echo "🐳 Starting Docker services..."
 mkdir -p docker/tmp/postgres docker/tmp/redis docker/tmp/minio
-node docker/createCertificate.js
-COMPOSE_PROJECT_NAME=flexile docker-compose -f docker/docker-compose-local-linux.yml up -d
+if [ "${CREATE_CERTS:-true}" = "true" ]; then
+  node docker/createCertificate.js
+else
+  echo "⏭️  Skipping SSL certificate generation (CREATE_CERTS=false)"
+fi
+
+# Detect docker-compose command
+if command -v docker-compose &> /dev/null; then
+  DOCKER_COMPOSE_CMD="docker-compose"
+  echo "📦 Using docker-compose (standalone)"
+elif docker compose version &> /dev/null; then
+  DOCKER_COMPOSE_CMD="docker compose"
+  echo "📦 Using docker compose (plugin)"
+else
+  echo "❌ Neither docker-compose nor docker compose plugin found. Please install Docker Compose."
+  exit 1
+fi
+
+COMPOSE_PROJECT_NAME=flexile $DOCKER_COMPOSE_CMD -f docker/docker-compose-local-linux.yml up -d
 echo "⏳ Waiting for MinIO to be ready..."
 sleep 5
 echo "✅ Docker services started!"
@@ -382,7 +568,20 @@ description = "🐳 Stop Docker services - Legacy"
 run = """
 #!/usr/bin/env bash
 echo "🐳 Stopping Docker services..."
-COMPOSE_PROJECT_NAME=flexile docker-compose -f docker/docker-compose-local-linux.yml down
+
+# Detect docker-compose command
+if command -v docker-compose &> /dev/null; then
+  DOCKER_COMPOSE_CMD="docker-compose"
+  echo "📦 Using docker-compose (standalone)"
+elif docker compose version &> /dev/null; then
+  DOCKER_COMPOSE_CMD="docker compose"
+  echo "📦 Using docker compose (plugin)"
+else
+  echo "❌ Neither docker-compose nor docker compose plugin found. Please install Docker Compose."
+  exit 1
+fi
+
+COMPOSE_PROJECT_NAME=flexile $DOCKER_COMPOSE_CMD -f docker/docker-compose-local-linux.yml down
 echo "✅ Docker services stopped!"
 """
 
@@ -436,8 +635,8 @@ mc anonymous set download local/flexile-development-public
 mc anonymous set none local/flexile-development-private
 
 echo "✅ MinIO setup complete!"
-echo "📊- **MinIO Console**: https://minio-console.flexile.dev (minioadmin/minioadmin123)"
-echo "🔗- **MinIO API**: https://minio.flexile.dev"
+echo "📊- **MinIO Console**: https://minio-console.{{env.FLEXILE_DOMAIN}} (minioadmin/minioadmin123)"
+echo "🔗- **MinIO API**: https://minio.{{env.FLEXILE_DOMAIN}}"
 """
 
 [tasks."minio:buckets"]
@@ -537,8 +736,8 @@ fi
 rm -f /tmp/test-file.txt /tmp/downloaded-file.txt
 
 echo "🔗 Access URLs:"
-echo "Private: https://minio.flexile.dev/flexile-development-private/test-file.txt (requires auth)"
-echo "Public: https://minio.flexile.dev/flexile-development-public/test-file.txt"
+echo "Private: https://minio.{{env.FLEXILE_DOMAIN}}/flexile-development-private/test-file.txt (requires auth)"
+echo "Public: https://minio.{{env.FLEXILE_DOMAIN}}/flexile-development-public/test-file.txt"
 """
 
 # === DATABASE TASKS ===
@@ -823,7 +1022,7 @@ echo -e "${YELLOW}📡 Testing Backend Connectivity...${NC}"
 curl -f http://localhost:3000 -o /dev/null -s || { echo -e "${RED}❌ Rails backend not running${NC}"; exit 1; }
 echo -e "${GREEN}✅ Rails backend: RUNNING${NC}"
 
-curl -f http://flexile.dev:3001 -o /dev/null -s || { echo -e "${RED}❌ Frontend not running${NC}"; exit 1; }
+curl -f http://{{env.FLEXILE_DOMAIN}}:3001 -o /dev/null -s || { echo -e "${RED}❌ Frontend not running${NC}"; exit 1; }
 echo -e "${GREEN}✅ Frontend: RUNNING${NC}"
 
 # Generate unique test email
@@ -833,7 +1032,7 @@ echo -e "${YELLOW}📧 Using test email: ${TEST_EMAIL}${NC}"
 
 # Step 1: Send OTP
 echo -e "${YELLOW}📤 Step 1: Sending OTP...${NC}"
-OTP_RESPONSE=$(curl -s -w "HTTPSTATUS:%{http_code}" -X POST http://flexile.dev:3001/internal/signup/send_otp \\
+OTP_RESPONSE=$(curl -s -w "HTTPSTATUS:%{http_code}" -X POST http://{{env.FLEXILE_DOMAIN}}:3001/internal/signup/send_otp \\
     -H "Content-Type: application/json" \\
     -d "{\\"email\\": \\"${TEST_EMAIL}\\"}")
 
@@ -844,7 +1043,7 @@ OTP_BODY=$(echo $OTP_RESPONSE | sed -E 's/HTTPSTATUS:[0-9]{3}$//')
 
 # Step 2: Create User
 echo -e "${YELLOW}📥 Step 2: Creating user...${NC}"
-CREATE_RESPONSE=$(curl -s -w "HTTPSTATUS:%{http_code}" -X POST http://flexile.dev:3001/internal/signup/verify_and_create \\
+CREATE_RESPONSE=$(curl -s -w "HTTPSTATUS:%{http_code}" -X POST http://{{env.FLEXILE_DOMAIN}}:3001/internal/signup/verify_and_create \\
     -H "Content-Type: application/json" \\
     -d "{\\"email\\": \\"${TEST_EMAIL}\\", \\"otp_code\\": \\"000000\\"}")
 
@@ -858,17 +1057,25 @@ echo -e "${GREEN}✅ User API flow test complete${NC}"
 
 [tasks."user:list"]
 description = "👥 List all users in the system"
-dir = "backend"
-run = """
-bin/rails runner "
-puts '👥 Users in system:'
-puts '=' * 50
+run = '''
+if [ -n "$DOCKER_ENV" ]; then
+  echo "🐳 Running in Docker environment..."
+  echo 'puts "👥 Users in system:"
+puts "=" * 50
 User.all.each_with_index do |user, i|
-  puts \\"#{i+1}. #{user.email} (ID: #{user.id}) - Created: #{user.created_at.strftime('%Y-%m-%d %H:%M')}\\"
+  puts "#{i+1}. #{user.email} (ID: #{user.id}) - Created: #{user.created_at.strftime('\''%Y-%m-%d %H:%M'\'')}"
 end
-puts '\\nTotal users: ' + User.count.to_s
-"
-"""
+puts "\nTotal users: #{User.count}"' | docker exec -i flexile-backend bin/rails runner -
+else
+  echo "💻 Running in local environment..."
+  cd backend && echo 'puts "👥 Users in system:"
+puts "=" * 50
+User.all.each_with_index do |user, i|
+  puts "#{i+1}. #{user.email} (ID: #{user.id}) - Created: #{user.created_at.strftime('\''%Y-%m-%d %H:%M'\'')}"
+end
+puts "\nTotal users: #{User.count}"' | bin/rails runner -
+fi
+'''
 
 [tasks."user:create"]
 description = "➕ Create a new user interactively"

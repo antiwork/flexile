@@ -15,8 +15,10 @@ backend/vendor/bundle
 backend/.bundle
 
 # Docker
-docker
-!docker/all-in-one/
+# docker  # Commented out to allow docker/ directory in build context
+!docker/Dockerfile*
+!docker/**/Dockerfile*
+!docker/*.yml
 !docker/scripts/
 !docker/flexile_dev.conf
 Dockerfile*

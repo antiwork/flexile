@@ -13,11 +13,18 @@ const nextConfig: NextConfig = {
     });
     return config;
   },
+  // Considering various scenarios I thought and seen devs facing added this
+  // This might not be enough will probably need to edit /etc/hosts
+  // https://github.com/vercel/next.js/discussions/77429#discussioncomment-12711620
+  allowedDevOrigins: ["flexile.dev", "app.flexile.dev", "localhost:3001", "127.0.0.1:3001"],
   experimental: {
     typedRoutes: true,
     testProxy: true,
     serverActions: {
-      allowedOrigins: [process.env.DOMAIN, process.env.APP_DOMAIN].filter((x) => x),
+      allowedOrigins: [
+        process.env.FLEXILE_DOMAIN ?? process.env.DOMAIN,
+        process.env.FLEXILE_APP_DOMAIN ?? process.env.APP_DOMAIN,
+      ].filter((x): x is string => Boolean(x)),
     },
   },
   images: {
@@ -28,7 +35,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: minioDomain.replace(/\./gu, "\\."), // Escape dots for regex pattern
+        hostname: minioDomain,
         port: "",
       },
       // Add support for localhost MinIO

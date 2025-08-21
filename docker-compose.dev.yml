@@ -67,13 +67,20 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
     networks:
       - flexile-network
+
+  # MinIO Client for bucket operations
+  minio-client:
+    image: minio/mc:latest
+    container_name: flexile-minio-client
+    restart: unless-stopped
+    depends_on:
+      minio:
+        condition: service_started
+    networks:
+      - flexile-network
+    entrypoint: ["sleep", "infinity"]
 
   # Rails Backend Application
   backend:
@@ -90,7 +97,7 @@ services:
       redis:
         condition: service_healthy
       minio:
-        condition: service_healthy
+        condition: service_started
     volumes:
       - ./backend:/app:delegated
       - ./frontend:/frontend:delegated  # Mount frontend for js-routes access
@@ -103,7 +110,7 @@ services:
       DATABASE_URL: postgresql://${DATABASE_USER:-username}:${DATABASE_PASSWORD:-password}@db:5432/${DATABASE_NAME:-flexile_development}
       REDIS_URL: redis://redis:6379/0
       SIDEKIQ_REDIS_URL: redis://redis:6379/1
-      AWS_ENDPOINT_URL: https://${FLEXILE_MINIO_DOMAIN:-minio.flexile.dev}
+      AWS_ENDPOINT_URL: http://minio:9000
       BOOTSNAP_CACHE_DIR: /tmp/bootsnap-cache
       RUBY_YJIT_ENABLE: 1
       WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
@@ -145,7 +152,7 @@ services:
       DATABASE_URL: postgresql://${DATABASE_USER:-username}:${DATABASE_PASSWORD:-password}@db:5432/${DATABASE_NAME:-flexile_development}
       REDIS_URL: redis://redis:6379/0
       SIDEKIQ_REDIS_URL: redis://redis:6379/1
-      AWS_ENDPOINT_URL: https://${FLEXILE_MINIO_DOMAIN:-minio.flexile.dev}
+      AWS_ENDPOINT_URL: http://minio:9000
     command: bundle exec sidekiq
     networks:
       - flexile-network
@@ -161,6 +168,7 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+# Removed memory limits for development - Next.js with HMR needs flexible memory
     volumes:
       - ./frontend:/app/frontend:delegated
       - ./package.json:/app/package.json:ro
@@ -176,6 +184,7 @@ services:
       NEXT_PUBLIC_DOMAIN: ${FLEXILE_DOMAIN:-flexile.dev}
       NEXTAUTH_URL: https://${FLEXILE_DOMAIN:-flexile.dev}
       DATABASE_URL: postgresql://${DATABASE_USER:-username}:${DATABASE_PASSWORD:-password}@db:5432/${DATABASE_NAME:-flexile_development}
+      DOCKER_ENV: "true"
     ports:
       - "3001:3001"
     networks:
