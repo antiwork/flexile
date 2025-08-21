@@ -21,7 +21,7 @@ class DividendComputationPresenter
 
   def details
     {
-      id: dividend_computation.id,
+      id: dividend_computation.external_id,
       total_amount_in_usd: dividend_computation.total_amount_in_usd,
       dividends_issuance_date: dividend_computation.dividends_issuance_date,
       return_of_capital: dividend_computation.return_of_capital,
