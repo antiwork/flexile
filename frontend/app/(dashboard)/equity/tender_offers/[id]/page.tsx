@@ -71,11 +71,7 @@ export default function BuybackView() {
               id: "actions",
               cell: (info) =>
                 info.row.original.companyInvestor.user.id === user.id ? (
-                  <Button
-                    className="size-9"
-                    variant="outline"
-                    onClick={() => handleBidAction(info.row.original, "cancel-bid")}
-                  >
+                  <Button variant="outline" onClick={() => handleBidAction(info.row.original, "cancel-bid")}>
                     <Trash2 className="size-4" />
                   </Button>
                 ) : null,
@@ -85,10 +81,7 @@ export default function BuybackView() {
     [],
   );
 
-  const bidsTable = useTable({
-    data: bids,
-    columns,
-  });
+  const bidsTable = useTable({ data: bids, columns });
 
   return (
     <>
