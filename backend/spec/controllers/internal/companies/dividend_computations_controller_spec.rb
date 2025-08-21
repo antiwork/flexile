@@ -40,7 +40,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
       expect(json_response).to be_an(Array)
-      expect(json_response.first["id"]).to eq(dividend_computation.id)
+      expect(json_response.first["id"]).to eq(dividend_computation.external_id)
       expect(json_response.first["total_amount_in_usd"]).to eq("1000000.0")
       expect(json_response.first["dividends_issuance_date"]).to eq(Time.current.strftime("%Y-%m-%d"))
       expect(json_response.first["return_of_capital"]).to eq(false)
@@ -53,8 +53,8 @@ RSpec.describe Internal::Companies::DividendComputationsController do
 
       expect(response).to have_http_status(:ok)
       computation_ids = response.parsed_body.map { |comp| comp["id"] }
-      expect(computation_ids).to include(dividend_computation.id)
-      expect(computation_ids).not_to include(finalized_computation.id)
+      expect(computation_ids).to include(dividend_computation.external_id)
+      expect(computation_ids).not_to include(finalized_computation.external_id)
     end
   end
 
@@ -86,7 +86,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(response).to have_http_status(:created)
       json_response = response.parsed_body
       expect(json_response["id"]).to be_present
-      dividend_computation = DividendComputation.find(json_response["id"])
+      dividend_computation = DividendComputation.find_by(external_id: json_response["id"])
       expect(dividend_computation.total_amount_in_usd).to eq(100_000)
       expect(dividend_computation.dividends_issuance_date).to eq(Date.parse("2024-01-15"))
       expect(dividend_computation.return_of_capital).to eq(true)
@@ -131,11 +131,11 @@ RSpec.describe Internal::Companies::DividendComputationsController do
     end
 
     it "returns dividend computation details with computation outputs" do
-      get :show, params: { company_id: company.external_id, id: dividend_computation.id }
+      get :show, params: { company_id: company.external_id, id: dividend_computation.external_id }
 
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
-      expect(json_response["id"]).to eq(dividend_computation.id)
+      expect(json_response["id"]).to eq(dividend_computation.external_id)
       expect(json_response["number_of_shareholders"]).to eq(1)
       expect(json_response["total_amount_in_usd"]).to eq("1000000.0")
       expect(json_response["dividends_issuance_date"]).to eq(Time.current.strftime("%Y-%m-%d"))
@@ -158,7 +158,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
 
     it "returns not found when dividend computation is finalized" do
       dividend_computation.mark_as_finalized!
-      get :show, params: { company_id: company.external_id, id: dividend_computation.id }
+      get :show, params: { company_id: company.external_id, id: dividend_computation.external_id }
 
       expect(response).to have_http_status(:not_found)
       json_response = response.parsed_body
