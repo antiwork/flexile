@@ -20,6 +20,7 @@ class CompanyWorkerMailer < ApplicationMailer
     @equity_grant = EquityGrant.find(equity_grant_id)
     @company = @equity_grant.option_pool.company
     @user = @equity_grant.company_investor.user
+    @document = Document.equity_plan_contract.find_by(equity_grant: @equity_grant)
 
     mail(to: @user.email, reply_to: @company.email,
          subject: "🔴 Action needed: sign your Incentive Plan to receive stock options")

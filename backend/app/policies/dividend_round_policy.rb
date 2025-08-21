@@ -6,4 +6,10 @@ class DividendRoundPolicy < ApplicationPolicy
 
     company_administrator.present? || company_lawyer.present?
   end
+
+  def create?
+    return false unless company.equity_enabled?
+
+    company_administrator.present?
+  end
 end

@@ -38,6 +38,7 @@ class Internal::Companies::Administrator::EquityGrantsController < Internal::Com
         :retirement_exercise_months,
         :board_approval_date,
         :vesting_commencement_date,
+        :contract
       )
     end
 
