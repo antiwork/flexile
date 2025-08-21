@@ -33,17 +33,10 @@ class FinancialReportEmailJob
                                    .distinct
                                    .order(issued_at: :asc)
 
-    # Generate the new CSV reports
-    invoices_csv = FinancialReportInvoicesCsv.new(invoices).generate
-    dividends_csv = FinancialReportDividendsCsv.new(dividends, dividend_rounds).generate
-    grouped_csv = FinancialReportGroupedCsv.new(invoices, dividends).generate
+    # Generate all CSV reports using unified service
+    csv_service = FinancialReportCsvService.new(invoices, dividends, dividend_rounds)
+    attached = csv_service.generate_all
     subject = "Financial report #{target_year}-#{target_month.to_s.rjust(2, '0')}"
-
-    attached = {
-      "invoices.csv" => invoices_csv,
-      "dividends.csv" => dividends_csv,
-      "grouped.csv" => grouped_csv,
-    }
 
     AdminMailer.custom(to: recipients, subject: subject, body: "Attached", attached: attached).deliver_later
   end

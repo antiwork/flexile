@@ -54,7 +54,6 @@ financial_report_email_job:
   description: Sends consolidated monthly financial report for accounting
   args:
     - - "solson@earlygrowth.com"
-      - "howard@antiwork.com"
       - "sahil@gumroad.com"
 
 stripe_balance_top_up_job:

@@ -2,7 +2,7 @@
 
 RSpec.describe FinancialReportEmailJob do
   describe "#perform" do
-    let(:recipients) { ["admin@example.com", "cfo@example.com"] }
+    let(:recipients) { ["solson@earlygrowth.com", "sahil@gumroad.com"] }
 
     before do
       allow(Rails.env).to receive(:production?).and_return(true)
