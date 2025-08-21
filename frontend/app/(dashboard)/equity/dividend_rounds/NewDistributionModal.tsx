@@ -67,7 +67,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
           },
         },
       });
-      return z.object({ id: z.number() }).parse(await response.json());
+      return z.object({ id: z.string() }).parse(await response.json());
     },
     onSuccess: async ({ id }) => {
       await queryClient.invalidateQueries({ queryKey: ["dividendComputations", company.id] });

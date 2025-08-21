@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { companyInvestors, dividends } from "@/db/schema";
+import { companyInvestors, dividendRounds, dividends } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "./users";
 
@@ -11,7 +11,7 @@ export const dividendsRouter = createRouter({
     .input(
       z.object({
         investorId: z.string().optional(),
-        dividendRoundId: z.number().optional(),
+        dividendRoundId: z.string().optional(),
       }),
     )
     .query(async ({ input, ctx }) => {
@@ -27,7 +27,9 @@ export const dividendsRouter = createRouter({
         input.investorId
           ? eq(dividends.companyInvestorId, byExternalId(companyInvestors, input.investorId))
           : undefined,
-        input.dividendRoundId ? eq(dividends.dividendRoundId, BigInt(input.dividendRoundId)) : undefined,
+        input.dividendRoundId
+          ? eq(dividends.dividendRoundId, byExternalId(dividendRounds, input.dividendRoundId))
+          : undefined,
       );
       const rows = await db.query.dividends.findMany({
         columns: {
