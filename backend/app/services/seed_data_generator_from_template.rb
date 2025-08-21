@@ -55,9 +55,12 @@ class SeedDataGeneratorFromTemplate
 
     print_message("Using email #{@config.fetch("email")}.")
     WiseCredential.create!(profile_id: WISE_PROFILE_ID, api_key: WISE_API_KEY)
+    if WISE_API_KEY != "dummy"
+      Wise::AccountBalance.create_usd_balance_if_needed
+      top_up_wise_account_if_needed
+    end
+
     ActiveRecord::Base.connection.exec_query("INSERT INTO document_templates(name, external_id, created_at, updated_at, document_type, docuseal_id, signable) VALUES('Consulting agreement', 'ex1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 592723, true), ('Equity grant contract', 'ex2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 613787, true), ('Board consent', 'ex3', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 2, 613787, true)")
-    Wise::AccountBalance.create_usd_balance_if_needed
-    top_up_wise_account_if_needed
 
     create_users!(data.fetch("users"))
 
@@ -171,6 +174,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_bank_account!(company)
+      return if Stripe.api_key == "dummy"
       stripe_setup_intent = company.create_stripe_setup_intent
       # https://docs.stripe.com/testing#test-account-numbers
       test_bank_account = Stripe::PaymentMethod.create(
@@ -707,6 +711,7 @@ class SeedDataGeneratorFromTemplate
     end
 
     def create_user_bank_account!(user, wise_recipient_params)
+      return if WISE_API_KEY == "dummy"
       wise_recipient_params["details"]["accountHolderName"] ||= user.legal_name
       wise_recipient_params["details"]["address"] ||= {}
       wise_recipient_params["details"]["address"]["country"] ||= user.country_code
@@ -829,18 +834,5 @@ class SeedDataGeneratorFromTemplate
     ensure
       temp_file.close
       temp_file.unlink
-    end
-
-    def create_temporary_pdf_file
-      temp_file = Tempfile.new(["sample", ".pdf"])
-
-      Prawn::Document.generate(temp_file.path) do
-        text "This is a sample PDF file created for testing purposes."
-        text "Generated at: #{Time.current}"
-      end
-
-      temp_file.close
-      temp_file.open # Reopen in read mode
-      temp_file
     end
 end
