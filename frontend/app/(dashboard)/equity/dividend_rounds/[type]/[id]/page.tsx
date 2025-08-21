@@ -4,19 +4,20 @@ import { useQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { Circle, Info } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import DividendStatusIndicator from "@/app/(dashboard)/equity/DividendStatusIndicator";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_dividend_computation_path } from "@/utils/routes";
+import FinalizeDistributionModal from "./FinalizeDistributionModal";
 
 export default function DividendRoundPage() {
   const { id, type } = useParams<{ id: string; type: "draft" | "round" }>();
@@ -37,7 +38,7 @@ const DividendRound = ({ id }: { id: string }) => {
 
   const { data: dividends = [], isLoading } = trpc.dividends.list.useQuery({
     companyId: company.id,
-    dividendRoundId: Number(id),
+    dividendRoundId: id,
   });
 
   const columnHelper = createColumnHelper<Dividend>();
@@ -95,7 +96,7 @@ const DividendRound = ({ id }: { id: string }) => {
 };
 
 const dividendComputationSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   total_amount_in_usd: z.string(),
   dividends_issuance_date: z.string(),
   return_of_capital: z.boolean(),
@@ -111,11 +112,14 @@ const dividendComputationSchema = z.object({
   ),
 });
 
-type DividendComputation = z.infer<typeof dividendComputationSchema>;
+export type DividendComputation = z.infer<typeof dividendComputationSchema>;
 type DividendComputationOutput = DividendComputation["computation_outputs"][number];
 const DividendComputation = ({ id }: { id: string }) => {
   const company = useCurrentCompany();
   const router = useRouter();
+  const [finalizeDistributionModalOpen, setFinalizeDistributionModalOpen] = useState(false);
+  const user = useCurrentUser();
+  const isAdmin = !!user.roles.administrator;
 
   const { data: dividendComputation, isLoading } = useQuery({
     queryKey: ["dividend-computation", id],
@@ -123,11 +127,12 @@ const DividendComputation = ({ id }: { id: string }) => {
       const response = await request({
         method: "GET",
         accept: "json",
-        url: company_dividend_computation_path(company.id, BigInt(id)),
+        url: company_dividend_computation_path(company.id, id),
         assertOk: true,
       });
       return dividendComputationSchema.parse(await response.json());
     },
+    throwOnError: true,
   });
 
   const computationOutputs = dividendComputation?.computation_outputs ?? [];
@@ -181,14 +186,27 @@ const DividendComputation = ({ id }: { id: string }) => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !dividendComputation) {
     return <TableSkeleton columns={5} />;
   }
 
   return (
     <>
       <DistributionDraftNotice />
-      <DataTable table={table} onRowClicked={onRowClicked} searchColumn="investor" />
+      <DataTable
+        table={table}
+        actions={
+          isAdmin ? (
+            <FinalizeDistributionModal
+              open={finalizeDistributionModalOpen}
+              onOpenChange={setFinalizeDistributionModalOpen}
+              dividendComputation={dividendComputation}
+            />
+          ) : null
+        }
+        onRowClicked={onRowClicked}
+        searchColumn="investor"
+      />
     </>
   );
 };
