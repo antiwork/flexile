@@ -7,14 +7,11 @@ class Internal::Companies::DividendComputationsController < Internal::Companies:
     authorize DividendComputation
 
     dividend_computations = Current.company.dividend_computations
-      .unfinalized
-      .includes(:dividend_computation_outputs)
-      .order(created_at: :desc)
-      .map do |computation|
-      DividendComputationPresenter.new(computation).index_props
-    end
+                                   .unfinalized
+                                   .includes(:dividend_computation_outputs)
+                                   .order(created_at: :desc)
 
-    render json: dividend_computations
+    render json: DividendComputationPresenter.index_props(dividend_computations)
   end
 
   def create
