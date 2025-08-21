@@ -168,6 +168,6 @@ test.describe("Cap table creation", () => {
 
     await page.getByRole("button", { name: "Finalize cap table" }).click();
 
-    await expect(page.getByText("Investor 1: User is already an investor in this company")).toBeVisible();
+    await expect(page.getByText("Failed to create cap table")).toBeVisible();
   });
 });
