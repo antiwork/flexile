@@ -124,7 +124,7 @@ test.describe("Onboarding checklist", () => {
     await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/u);
     await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/u);
 
-    await wiseRecipientsFactory.create({ userId: contractorUser.id, usedForDividends: true });
+    await wiseRecipientsFactory.create({ userId: contractorUser.id });
     await page.reload();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
@@ -168,7 +168,7 @@ test.describe("Onboarding checklist", () => {
     await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/u);
     await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/u);
 
-    await wiseRecipientsFactory.create({ userId: investorUser.id });
+    await wiseRecipientsFactory.create({ userId: investorUser.id, usedForDividends: true });
     await page.reload();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
