@@ -177,7 +177,7 @@ export default function DataTable<T extends RowData>({
       numeric && "md:text-right print:text-right",
       numeric && type !== "header" && "tabular-nums",
       !numeric && "print:text-wrap",
-      isMobile && "align-top",
+      isMobile && "align-top py-4",
     );
   };
   const searchColumn = searchColumnName ? table.getColumn(searchColumnName) : null;
