@@ -55,7 +55,7 @@ RSpec.describe FinancialReportCsvService do
            transfer_id: "cde456",
            total_transaction_cents: 11900,
            transfer_fee_in_cents: 600,
-           created_at: 1.week.ago)
+           created_at: Date.new(2024, 6, 3))
   end
 
   let(:consolidated_invoices) { [consolidated_invoice] }
