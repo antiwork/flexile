@@ -15,7 +15,7 @@ const abcWhyte = localFont({
 
 export const metadata: Metadata = {
   title: "Flexile",
-  description: "Contractor payments as easy as 1-2-3",
+  description: "Contractor payments",
   icons: {
     icon: [
       {
