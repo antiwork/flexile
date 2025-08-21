@@ -2240,34 +2240,6 @@ export const send_otp_signup_index_path: ((
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/company_updates/:id/send_test_email_async(.:format)
- * @param {any} company_id
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const send_test_email_async_company_company_update_url: ((
-  company_id: RequiredRouteParameter,
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/company_updates/:id/send_test_email_async(.:format)
- * @param {any} company_id
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const send_test_email_async_company_company_update_path: ((
-  company_id: RequiredRouteParameter,
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /internal/companies/:company_id/company_updates/:id/send_test_email(.:format)
  * @param {any} company_id
  * @param {any} id

@@ -52,7 +52,6 @@ scope path: :internal, module: :internal do
       member do
         post :send_test_email
         post :send_emails
-        post :send_test_email_async
       end
     end
     resources :workers, only: [:create]
