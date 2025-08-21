@@ -46,6 +46,7 @@ services:
     environment:
       DATABASE_URL: postgres://username:password@postgres:5432/flexile_development
       REDIS_URL: redis://redis:6379/0
+      SIDEKIQ_REDIS_URL: redis://redis:6379/1
       RAILS_ENV: development
       RAILS_LOG_TO_STDOUT: "1"
     volumes:
@@ -115,6 +116,7 @@ services:
     environment:
       DATABASE_URL: postgres://username:password@postgres:5432/flexile_development
       REDIS_URL: redis://redis:6379/0
+      SIDEKIQ_REDIS_URL: redis://redis:6379/1
       RAILS_ENV: development
     volumes:
       - .:/workspaces/flexile:cached
