@@ -9,7 +9,19 @@ class CompanyAdministratorPolicy < ApplicationPolicy
     show?
   end
 
+  def create?
+    show?
+  end
+
   def index?
+    show?
+  end
+
+  def administrators?
+    show?
+  end
+
+  def lawyers?
     show?
   end
 
