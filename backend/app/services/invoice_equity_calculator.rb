@@ -39,11 +39,9 @@ class InvoiceEquityCalculator
       return { equity_percentage_too_small: true, suggested_minimum_percentage: ((share_price_usd * 100) / service_amount_cents * 100).ceil }
     end
 
-    # When equity is disabled, set all equity values to zero
+    # When equity is disabled, override equity_percentage to 0 for return value
     if !company.equity_enabled?
       equity_percentage = 0
-      equity_amount_in_cents = 0
-      equity_amount_in_options = 0
     end
 
     {
