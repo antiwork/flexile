@@ -1,9 +1,11 @@
 "use client";
+import { useQuery } from "@tanstack/react-query";
 import { CircleAlert, CircleCheck, Info, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import NewEquityGrantModal from "@/app/(dashboard)/equity/grants/NewEquityGrantModal";
+import { useExerciseDataConfig } from "@/app/(dashboard)/equity/options";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
@@ -20,8 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DocumentTemplateType } from "@/db/enums";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
@@ -32,6 +33,7 @@ type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 export default function GrantsPage() {
   const isMobile = useIsMobile();
   const router = useRouter();
+  const user = useCurrentUser();
   const company = useCurrentCompany();
   const { data = [], isLoading, refetch } = trpc.equityGrants.list.useQuery({ companyId: company.id });
   const [cancellingGrantId, setCancellingGrantId] = useState<string | null>(null);
@@ -44,6 +46,11 @@ export default function GrantsPage() {
     },
   });
 
+  const exerciseDataConfig = useExerciseDataConfig();
+  const { data: exerciseData } = useQuery({
+    ...exerciseDataConfig,
+    enabled: exerciseDataConfig.enabled || !!user.roles.administrator,
+  });
   const columnHelper = createColumnHelper<EquityGrant>();
   const columns = useMemo(
     () => [
@@ -76,40 +83,34 @@ export default function GrantsPage() {
   );
 
   const table = useTable({ columns, data });
-  const [equityPlanContractTemplates] = trpc.documents.templates.list.useSuspenseQuery({
-    companyId: company.id,
-    type: DocumentTemplateType.EquityPlanContract,
-    signable: true,
-  });
 
   return (
     <>
       <DashboardHeader
         title="Equity grants"
         headerActions={
-          equityPlanContractTemplates.length > 0 ? (
-            isMobile ? (
-              <Button variant="floating-action" onClick={() => setShowNewGrantModal(true)}>
-                <Plus />
-              </Button>
-            ) : (
-              <Button onClick={() => setShowNewGrantModal(true)}>
-                <Pencil className="size-4" />
-                New option grant
-              </Button>
-            )
-          ) : null
+          isMobile ? (
+            <Button variant="floating-action" onClick={() => setShowNewGrantModal(true)}>
+              <Plus />
+            </Button>
+          ) : (
+            <Button onClick={() => setShowNewGrantModal(true)}>
+              <Pencil className="size-4" />
+              New option grant
+            </Button>
+          )
         }
       />
 
-      {equityPlanContractTemplates.length === 0 ? (
+      {exerciseData && !exerciseData.exercise_notice ? (
         <Alert className="mx-4">
           <Info />
           <AlertDescription>
-            <Link href="/documents" className={linkClasses}>
-              Create equity plan contract templates
+            Please{" "}
+            <Link href="/settings/administrator/equity" className={linkClasses}>
+              add an exercise notice
             </Link>{" "}
-            before adding new option grants.
+            so investors can exercise their options.
           </AlertDescription>
         </Alert>
       ) : null}

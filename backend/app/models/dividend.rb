@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Dividend < ApplicationRecord
+  include ExternalId
+
   belongs_to :company
   belongs_to :dividend_round
   belongs_to :company_investor

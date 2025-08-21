@@ -168,7 +168,7 @@ AdminMailer.custom(
 ## Processing Dividends
 
 ```ruby
-dividend_computation.generate_dividends
+dividend_computation.finalize_and_create_dividend_round
 ```
 
 > Note: After generating dividends, call `dividend_round.send_dividend_emails` to send emails to investors.

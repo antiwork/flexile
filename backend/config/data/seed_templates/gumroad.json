@@ -32,7 +32,6 @@
       "feature_flags": {
         "company_updates": true,
         "equity_grants": true,
-        "expenses": true,
         "dividends": true,
         "share_certificates": true
       },
@@ -109,7 +108,8 @@
         }
       },
       "tender_offer": {
-        "minimum_valuation": 99000000
+        "minimum_valuation": 99000000,
+        "letter_of_transmittal": "<h1>Letter of transmittal</h1>"
       },
       "equity_buyback_rounds": [
         {
