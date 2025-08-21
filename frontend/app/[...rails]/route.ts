@@ -19,6 +19,10 @@ async function handler(req: Request) {
     default:
       url.port = process.env.RAILS_ENV === "test" ? "3100" : "3000";
       url.protocol = "http";
+      // Use Rails container hostname in Docker environment
+      if (process.env.RAILS_INTERNAL_HOST) {
+        url.hostname = process.env.RAILS_INTERNAL_HOST;
+      }
   }
 
   const session = await getServerSession(authOptions);

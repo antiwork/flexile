@@ -73,6 +73,7 @@ services:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
       NEXT_PUBLIC_API_ORIGIN: https://flexile.dev
+      RAILS_INTERNAL_HOST: rails
       TZ: UTC
     volumes:
       - .:/workspaces/flexile:cached
