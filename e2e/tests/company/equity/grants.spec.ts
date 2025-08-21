@@ -212,7 +212,7 @@ test.describe("Equity Grants", () => {
     const { company } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       conversionSharePriceUsd: "1",
-      jsonData: { flags: ["option_exercising"] },
+      optionExercisingEnabled: true,
     });
     const { user } = await usersFactory.create();
     await companyContractorsFactory.create({ companyId: company.id, userId: user.id });
@@ -342,10 +342,7 @@ test.describe("Equity Grants", () => {
     await expect(page.getByRole("heading", { name: "Equity grants" })).toBeVisible();
     await page.waitForLoadState("networkidle");
     await expect(page.getByRole("alert", { name: "exercise notice" })).not.toBeVisible();
-    await db
-      .update(companies)
-      .set({ jsonData: { flags: ["option_exercising"] } })
-      .where(eq(companies.id, company.id));
+    await db.update(companies).set({ optionExercisingEnabled: true }).where(eq(companies.id, company.id));
     await page.reload();
     await expect(
       page.getByRole("alert", { name: "Please add an exercise notice so investors can exercise their options." }),

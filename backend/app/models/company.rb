@@ -190,10 +190,6 @@ class Company < ApplicationRecord
     email.split("@").last
   end
 
-  def json_flag?(flag)
-    json_data&.dig("flags")&.include?(flag)
-  end
-
   def checklist_items(user)
     [
       user.company_administrator_for?(self) && ADMIN_CHECKLIST_ITEMS,
