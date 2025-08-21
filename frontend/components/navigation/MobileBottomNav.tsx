@@ -75,7 +75,7 @@ const SheetOverlay = ({ open }: { open: boolean }) =>
     <div
       className={cn(
         "pointer-events-none fixed inset-0 z-35 bg-black/50 transition-opacity duration-200",
-        open ? "opacity-100" : "opacity-0",
+        open ? "pointer-events-auto opacity-100" : "opacity-0",
       )}
       aria-hidden="true"
     />,
@@ -421,7 +421,7 @@ export function MobileBottomNav() {
     <nav
       role="navigation"
       aria-label="Mobile navigation"
-      className="bg-background border-border fixed right-0 bottom-0 left-0 z-60 h-15 border-t"
+      className="bg-background border-border pointer-events-auto fixed right-0 bottom-0 left-0 z-60 h-15 border-t"
     >
       <ul role="list" className="flex items-center justify-around">
         {mainItems.map((item) => (

@@ -10,11 +10,15 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
 import { richTextExtensions } from "@/utils/richText";
 
-const RichText = ({ content }: { content: Content }) => {
+const RichText = ({ content, className }: { content: Content; className?: string }) => {
   const editor = useEditor({
     extensions: richTextExtensions,
     content,
-    editorProps: { attributes: { class: "prose" } },
+    editorProps: {
+      attributes: {
+        class: cn(className, "prose"),
+      },
+    },
     editable: false,
     immediatelyRender: false,
   });
@@ -32,23 +36,23 @@ export const Editor = ({
   value,
   onChange,
   className,
+  id,
   ...props
 }: {
-  value: string | null;
-  onChange: (value: string) => void;
+  value: string | null | undefined;
+  onChange: (value: string | null) => void;
   className?: string;
 } & React.ComponentProps<"div">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
-  const id = React.useId();
 
   const editor = useEditor({
     extensions: richTextExtensions,
-    content: value,
+    content: value ?? "",
     editable: true,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    onUpdate: ({ editor }) => onChange(editor.isEmpty ? null : editor.getHTML()),
     editorProps: {
       attributes: {
-        id,
+        ...(id ? { id } : {}),
         class: cn(className, "prose p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none"),
       },
     },
@@ -57,7 +61,7 @@ export const Editor = ({
 
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value, false);
+      editor.commands.setContent(value ?? "", false);
     }
   }, [value, editor]);
 

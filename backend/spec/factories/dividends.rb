@@ -13,6 +13,7 @@ FactoryBot.define do
     withheld_tax_cents { 0 }
     withholding_percentage { 0 }
     qualified_amount_cents { 0 }
+    investment_amount_cents { number_of_shares * 1000 }
 
     trait :retained do
       retained_reason { Dividend::RETAINED_REASONS.sample }

@@ -6,6 +6,8 @@ import { expect, test } from "@test/index";
 import { and, eq, isNull } from "drizzle-orm";
 import { companyStripeAccounts, users } from "@/db/schema";
 
+// allow green builds on OSS PRs that don't have a stripe sandbox key, but fail on CI if something changes on Stripe's end
+test.skip(() => process.env.STRIPE_SECRET_KEY === "dummy");
 test.describe("Company administrator settings - payment details", () => {
   test("allows connecting a bank account", async ({ page }) => {
     const { company } = await companiesFactory.create({ stripeCustomerId: null }, { withoutBankAccount: true });
@@ -72,7 +74,7 @@ test.describe("Company administrator settings - payment details", () => {
     await page.getByRole("button", { name: "Link your bank account" }).click();
 
     const stripeFrame = page.frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']");
-    await stripeFrame.getByRole("button", { name: "Enter bank details manually instead" }).click();
+    await stripeFrame.getByRole("button", { name: /Enter bank details manually/u }).click();
 
     const bankFrame = page.frameLocator("[src^='https://js.stripe.com/v3/linked-accounts-inner']");
     await bankFrame.getByLabel("Routing number").fill("110000000");
