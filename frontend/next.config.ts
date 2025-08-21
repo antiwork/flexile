@@ -25,10 +25,8 @@ const nextConfig: NextConfig = {
     ],
   },
   typescript: {
-    // https://nextjs.org/docs/app/api-reference/config/next-config-js/typescript
-    // Skips running `tsc` and dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // Do not set this to true without having a lint check before CI build/deploy step
+    // Unlike what the name implies, this skips the TS run entirely which speeds up the build,
+    // and it's already covered by autofix on CI
     ignoreBuildErrors: process.env.NODE_ENV === "test",
   },
 };
