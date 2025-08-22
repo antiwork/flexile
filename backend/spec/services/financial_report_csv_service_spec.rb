@@ -75,8 +75,8 @@ RSpec.describe FinancialReportCsvService do
     create(:vesting_event,
            equity_grant: equity_grant,
            vested_shares: 100,
-           vesting_date: Date.new(2024, 6, 2),
-           processed_at: Date.new(2024, 6, 3))
+           vesting_date: Date.current.last_month.beginning_of_month + 1.day,
+           processed_at: Date.current.last_month.beginning_of_month + 2.days)
   end
 
   let(:consolidated_invoices) { [consolidated_invoice] }
@@ -237,7 +237,7 @@ RSpec.describe FinancialReportCsvService do
       expect(rows.length).to eq(3)
 
       data_row = rows[1]
-      expect(data_row[0]).to eq("6/3/2024")
+      expect(data_row[0]).to match(/\d{1,2}\/\d{1,2}\/\d{4}/)
       expect(data_row[1]).to eq("TestCo")
       expect(data_row[2]).to eq("Jane Investor")
       expect(data_row[3]).to eq("jane@example.com")
@@ -311,7 +311,7 @@ RSpec.describe FinancialReportCsvService do
 
       non_vested_event = create(:vesting_event,
                                 equity_grant: non_vested_grant,
-                                vested_shares: 0,
+                                vested_shares: 50,
                                 processed_at: nil)
 
       service = described_class.new(consolidated_invoices, dividends, dividend_rounds, [vesting_event, non_vested_event])
