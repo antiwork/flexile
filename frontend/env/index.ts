@@ -20,7 +20,6 @@ const env = z
     ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: z.string(),
     DOMAIN: z.string(),
     DOCUSEAL_TOKEN: z.string(),
-    DOCUSEAL_USER_EMAIL: z.string(),
     SLACK_WEBHOOK_URL: z.string(),
     SLACK_WEBHOOK_CHANNEL: z.string(),
     SLACK_TOKEN: z.string(),
