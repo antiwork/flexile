@@ -78,4 +78,40 @@ test.describe("Contractor Invite Link Joining flow", () => {
     expect(contractor.role).toBe(null);
     expect(contractor.contractSignedElsewhere).toBe(true);
   });
+
+  test("invite link finish onboarding required fields", async ({ page }) => {
+    const { company } = await companiesFactory.createCompletedOnboarding({ inviteLink: faker.string.alpha(10) });
+    await page.goto(`/invite/${company.inviteLink}`);
+
+    const email = faker.internet.email().toLowerCase();
+    await page.getByLabel("Work email").fill(email);
+    await page.getByRole("button", { name: "Sign up", exact: true }).click();
+    await fillOtp(page);
+
+    await expect(page).toHaveURL(/documents/iu);
+    await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
+    await expect(page.getByLabel("Role")).toBeVisible();
+    await expect(page.getByLabel("Rate")).toBeVisible();
+
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await expect(page.getByText("required")).toBeVisible();
+
+    await page.getByLabel("Role").fill("Hourly Role 1");
+    await page.getByLabel("Rate").fill("99");
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await page.goto(`/invoices`);
+    await expect(page).toHaveURL(/invoices/iu);
+    await page.goto("/documents");
+
+    await expect(page.getByText(/What will you be doing at/iu)).not.toBeVisible();
+
+    const contractor = await db.query.companyContractors
+      .findFirst({ with: { user: true }, where: eq(companyContractors.companyId, company.id) })
+      .then(takeOrThrow);
+
+    expect(contractor.user.email).toBe(email);
+    expect(contractor.role).toBe("Hourly Role 1");
+  });
 });

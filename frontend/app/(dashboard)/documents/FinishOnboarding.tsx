@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -19,6 +20,7 @@ type OnboardingStepProps = {
 
 const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
   const company = useCurrentCompany();
+  const queryClient = useQueryClient();
 
   const form = useForm({
     resolver: zodResolver(
@@ -30,14 +32,18 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
       }),
     ),
     defaultValues: {
-      role: "",
       payRateType: PayRateType.Hourly,
       payRateInSubunits: 100,
       startedAt: today(getLocalTimeZone()),
     },
   });
 
-  const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({ onSuccess: onNext });
+  const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      onNext();
+    },
+  });
   const submit = form.handleSubmit((values) => {
     updateContractor.mutate({ companyId: company.id, ...values, startedAt: values.startedAt.toString() });
   });
