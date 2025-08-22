@@ -168,11 +168,6 @@ export default function DocumentsPage() {
                       Download
                     </Link>
                   </Button>
-                ) : document.docusealSubmissionId && document.signatories.every((signatory) => signatory.signedAt) ? (
-                  <Button variant="outline" size="small" onClick={() => setDownloadDocument(document.id)}>
-                    <Download className="size-4" />
-                    Download
-                  </Button>
                 ) : null}
               </>
             );
