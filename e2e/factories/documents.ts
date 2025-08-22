@@ -28,7 +28,6 @@ export const documentsFactory = {
         name: "Consulting Agreement",
         type: DocumentType.ConsultingContract,
         year: new Date().getFullYear(),
-        docusealSubmissionId: 1,
         ...overrides,
       })
       .returning();

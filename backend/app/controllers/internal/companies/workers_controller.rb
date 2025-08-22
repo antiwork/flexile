@@ -25,6 +25,6 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
 
   private
     def worker_params
-      params.require(:contractor).permit(:email, :started_at, :pay_rate_in_subunits, :role, :pay_rate_type, :contract_signed_elsewhere)
+      params.require(:contractor).permit(:email, :started_at, :pay_rate_in_subunits, :role, :pay_rate_type, :contract_signed_elsewhere, :contract)
     end
 end
