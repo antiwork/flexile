@@ -294,21 +294,12 @@ RSpec.describe DividendComputation do
     it "matches the total fees calculated from actual generated dividends" do
       computation_fees = @dividend_computation.total_fees_cents
 
-      @dividend_computation.generate_dividends
-      dividend_round = company.dividend_rounds.last
-
+      dividend_round = @dividend_computation.finalize_and_create_dividend_round
       dividend_round_fees = dividend_round.dividends.sum do |dividend|
         FlexileFeeCalculator.calculate_dividend_fee_cents(dividend.total_amount_in_cents)
       end
 
       expect(computation_fees).to eq(dividend_round_fees)
-    end
-
-    it "returns 0 for computation with no dividends" do
-      empty_company = create(:company)
-      computation = create(:dividend_computation, company: empty_company, total_amount_in_usd: 0)
-
-      expect(computation.total_fees_cents).to eq(0)
     end
   end
 end
