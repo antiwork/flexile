@@ -20,12 +20,6 @@ RSpec.describe Internal::Companies::DividendComputationsController do
            total_amount_in_usd: 1000)
   end
 
-  def expected_fees_for_computation(dividend_computation)
-    dividend_computation.dividend_computation_outputs.map do |output|
-      FlexileFeeCalculator.calculate_dividend_fee_cents(output.total_amount_in_usd * 100)
-    end.sum
-  end
-
   before do
     allow(controller).to receive(:current_context) do
       Current.user = admin_user
@@ -51,7 +45,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(json_response.first["dividends_issuance_date"]).to eq(Time.current.strftime("%Y-%m-%d"))
       expect(json_response.first["return_of_capital"]).to eq(false)
       expect(json_response.first["number_of_shareholders"]).to eq(1)
-      expect(json_response.first["total_fees_cents"]).to eq(expected_fees_for_computation(dividend_computation))
+      expect(json_response.first["total_fees_cents"]).to eq(dividend_computation.total_fees_cents)
     end
 
     it "does not include finalised dividend computations" do
@@ -97,7 +91,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(dividend_computation.total_amount_in_usd).to eq(100_000)
       expect(dividend_computation.dividends_issuance_date).to eq(Date.parse("2024-01-15"))
       expect(dividend_computation.return_of_capital).to eq(true)
-      expect(dividend_computation.total_fees_cents).to eq(expected_fees_for_computation(dividend_computation))
+      expect(dividend_computation.total_fees_cents).to eq(FlexileFeeCalculator.calculate_dividend_fee_cents(1000 * 111.22 * 100))
     end
 
     context "when there are no eligible investors" do
@@ -148,7 +142,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(json_response["total_amount_in_usd"]).to eq("1000000.0")
       expect(json_response["dividends_issuance_date"]).to eq(Time.current.strftime("%Y-%m-%d"))
       expect(json_response["return_of_capital"]).to eq(false)
-      expect(json_response["total_fees_cents"]).to eq(expected_fees_for_computation(dividend_computation))
+      expect(json_response["total_fees_cents"]).to eq(dividend_computation.total_fees_cents)
 
       expect(json_response["computation_outputs"]).to be_present
       computation_output = json_response["computation_outputs"].first
