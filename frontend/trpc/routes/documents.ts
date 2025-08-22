@@ -9,7 +9,6 @@ import env from "@/env";
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
-import { templatesRouter } from "./templates";
 
 docuseal.configure({ key: env.DOCUSEAL_TOKEN });
 
@@ -137,6 +136,4 @@ export const documentsRouter = createRouter({
 
     return { documentId: input.id, complete: allSigned };
   }),
-
-  templates: templatesRouter,
 });
