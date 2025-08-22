@@ -31,6 +31,7 @@ tmp
 .idea
 
 certificates/
+.certs/
 
 certificates/flexile.dev
 certificates/api.flexile.dev
