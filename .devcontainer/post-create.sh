@@ -25,33 +25,17 @@ fi
 echo "🔒 Setting up SSL certificates..."
 bash .devcontainer/setup-certs.sh
 
-# Enable corepack for pnpm
-echo "📦 Enabling corepack for pnpm..."
-corepack enable
-
-# Install Node.js dependencies
-echo "📦 Installing Node.js dependencies..."
-pnpm install
-
-# Install Ruby gems
-echo "💎 Installing Ruby gems..."
-cd backend
-bundle install
-cd ..
-
-# Setup database
-echo "🗄️ Setting up database..."
-cd backend
-bin/rails db:prepare
-cd ..
+echo "Starting services..."
+docker compose -f docker-compose.dev.yml up -d
 
 echo "✨ Dev container setup complete!"
-echo ""
-echo "🚀 To start Flexile, run:"
-echo "  docker compose -f docker-compose.dev.yml up"
-echo ""
 echo "🌐 Application will be available at: https://flexile.dev"
 echo "🔧 Rails server: http://localhost:3000"
 echo "⚡ Next.js server: http://localhost:3001"
 echo "🎯 Inngest dashboard: http://localhost:8288"
+echo ""
+echo "Useful commands:"
+echo "  📊 View logs: docker compose -f docker-compose.dev.yml logs -f"
+echo "  🔄 Restart: docker compose -f docker-compose.dev.yml restart [service]"
+echo "  🛑 Stop: docker compose -f docker-compose.dev.yml down"
 echo ""
