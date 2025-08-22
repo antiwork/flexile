@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { useQueryClient } from "@tanstack/react-query";
 import { Info } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useState } from "react";
@@ -23,6 +24,7 @@ type OnboardingStepProps = {
 const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
   const company = useCurrentCompany();
   const [selfInvite, setSelfInvite] = useQueryState("self_invite");
+  const queryClient = useQueryClient();
 
   const form = useForm({
     resolver: zodResolver(
@@ -34,7 +36,6 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
       }),
     ),
     defaultValues: {
-      role: "",
       payRateType: PayRateType.Hourly,
       payRateInSubunits: 100,
       startedAt: today(getLocalTimeZone()),
@@ -42,7 +43,8 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
   });
 
   const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       setSelfInvite(null);
       onNext();
     },

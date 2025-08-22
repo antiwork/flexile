@@ -81,7 +81,6 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await expect(page.getByLabel("Rate")).toBeVisible();
 
     await completeContractorOnboarding(page, "Hourly Role 1", "99");
-
     await verifyContractorRecord(company.id, adminUser.id, "Hourly Role 1");
   });
 
@@ -117,7 +116,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await expect(page.getByLabel("Rate")).toBeVisible();
 
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByText("Please enter your role")).toBeVisible();
+    await expect(page.getByLabel("Role")).toHaveAttribute("aria-invalid", "true");
 
     await completeContractorOnboarding(page, "Test Admin Role", "100");
     await verifyContractorRecord(company.id, adminUser.id, "Test Admin Role");
