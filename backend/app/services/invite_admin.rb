@@ -21,7 +21,7 @@ class InviteAdmin
     end
 
     if @user.errors.blank? && company_admin.errors.blank?
-      CompanyAdministratorMailer.invitation_instructions(administrator_id: company_admin.id, url: SIGNUP_URL).deliver_later
+      CompanyAdministratorMailer.invitation_instructions(administrator_id: company_admin.id).deliver_later
       return { success: true }
     end
 
