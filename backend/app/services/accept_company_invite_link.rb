@@ -23,7 +23,11 @@ class AcceptCompanyInviteLink
     )
 
     if company_worker.save
-      { success: true, company: }
+      {
+        success: true,
+        company: company,
+        self_invite: @user.company_administrator_for?(company),
+      }
     else
       { success: false, error: company_worker.errors.full_messages.to_sentence }
     end

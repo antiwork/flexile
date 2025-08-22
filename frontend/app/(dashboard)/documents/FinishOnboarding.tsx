@@ -1,10 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { Info } from "lucide-react";
+import { useQueryState } from "nuqs";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import FormFields from "@/app/(dashboard)/people/FormFields";
 import { MutationStatusButton } from "@/components/MutationButton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
@@ -19,6 +22,7 @@ type OnboardingStepProps = {
 
 const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
   const company = useCurrentCompany();
+  const [selfInvite, setSelfInvite] = useQueryState("self_invite");
 
   const form = useForm({
     resolver: zodResolver(
@@ -26,7 +30,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
         startedAt: z.instanceof(CalendarDate),
         payRateInSubunits: z.number(),
         payRateType: z.nativeEnum(PayRateType),
-        role: z.string(),
+        role: z.string().min(1, "Please enter your role"),
       }),
     ),
     defaultValues: {
@@ -37,20 +41,34 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
     },
   });
 
-  const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({ onSuccess: onNext });
+  const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({
+    onSuccess: () => {
+      setSelfInvite(null);
+      onNext();
+    },
+  });
   const submit = form.handleSubmit((values) => {
     updateContractor.mutate({ companyId: company.id, ...values, startedAt: values.startedAt.toString() });
   });
 
   return (
     <Dialog open={open}>
-      <DialogContent>
+      <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>What will you be doing at {company.name}?</DialogTitle>
           <DialogDescription>
             Set the type of work you'll be doing, your rate, and when you'd like to start.
           </DialogDescription>
         </DialogHeader>
+        {selfInvite === "true" && (
+          <Alert>
+            <Info className="size-4" />
+            <AlertDescription>
+              You're inviting yourself! Complete this form to invite yourself as a contractor for your own company in
+              order to submit invoices.
+            </AlertDescription>
+          </Alert>
+        )}
         <Form {...form}>
           <form onSubmit={(e) => void submit(e)} className="space-y-4">
             <FormFields />

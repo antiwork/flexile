@@ -14,7 +14,7 @@ import { PayRateType, trpc } from "@/trpc/client";
 export const schema = z.object({
   payRateType: z.nativeEnum(PayRateType),
   payRateInSubunits: z.number().nullable(),
-  role: z.string(),
+  role: z.string().min(1, "Please enter your role"),
 });
 
 const defaultRoles = ["Software Engineer", "Designer", "Product Manager", "Data Analyst"];

@@ -10,8 +10,17 @@ export default function AcceptInvitationPage() {
   const { token } = useParams<{ token: string }>();
   const { data: response } = useQuery({
     queryKey: ["accept_invite_link", token],
-    queryFn: async () =>
-      request({ url: accept_invite_links_path(), method: "POST", accept: "json", jsonData: { token } }),
+    queryFn: async () => {
+      const res = await request({
+        url: accept_invite_links_path(),
+        method: "POST",
+        accept: "json",
+        jsonData: { token },
+      });
+
+      const data = res.status === 200 ? await res.json() : null;
+      return { status: res.status, ok: res.ok, data };
+    },
     gcTime: 0,
   });
 
@@ -28,7 +37,12 @@ export default function AcceptInvitationPage() {
     document.cookie = `${INVITATION_TOKEN_COOKIE_NAME}=${token}; path=/; max-age=${INVITATION_TOKEN_COOKIE_MAX_AGE}`;
     throw redirect(`/signup?${new URLSearchParams({ redirect_url: `/invite/${token}` })}`);
   }
-  if (response.ok) throw redirect("/dashboard");
+  if (response.ok) {
+    if (response.data?.self_invite) {
+      throw redirect("/documents?self_invite=true");
+    }
+    throw redirect("/dashboard");
+  }
 
   return (
     <div className="flex flex-col items-center">
