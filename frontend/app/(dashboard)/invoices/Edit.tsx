@@ -99,6 +99,7 @@ const dataSchema = z.object({
         z.object({
           name: z.string(),
           url: z.string(),
+          signed_id: z.string().optional(),
         }),
       )
       .default([]),
@@ -108,6 +109,7 @@ type Data = z.infer<typeof dataSchema>;
 
 type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: string[] | null };
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
+type InvoiceFormDocument = Data["invoice"]["attachments"][number] & { errors?: string[] | null; blob?: File | null };
 
 const Edit = () => {
   const user = useCurrentUser();
@@ -163,9 +165,7 @@ const Edit = () => {
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const uploadDocumentRef = useRef<HTMLInputElement>(null);
-  const [documents, setDocuments] = useState<{ name: string; url: string; blob?: File }[]>(
-    data.invoice.attachments ?? null,
-  );
+  const [documents, setDocuments] = useState<InvoiceFormDocument[]>(data.invoice.attachments);
   const showExpensesTable = showExpenses || expenses.size > 0;
   const actionColumnClass = "w-12";
 
@@ -175,7 +175,8 @@ const Edit = () => {
     return (
       errorField === null &&
       lineItems.every((lineItem) => !lineItem.errors?.length) &&
-      expenses.every((expense) => !expense.errors?.length)
+      expenses.every((expense) => !expense.errors?.length) &&
+      documents.every((document) => !document.errors?.length)
     );
   };
 
@@ -208,8 +209,9 @@ const Edit = () => {
 
       if (notes.length) formData.append("invoice[notes]", notes);
 
-      for (const document of documents) {
-        if (document.blob) formData.append("invoice[attachments][]", document.blob);
+      for (const file of documents) {
+        if (file.blob) formData.append("invoice[attachments][]", file.blob);
+        else if (file.signed_id) formData.append("invoice[attachments][]", file.signed_id);
       }
 
       await request({
