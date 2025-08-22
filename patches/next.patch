@@ -1,5 +1,5 @@
 diff --git a/dist/experimental/testmode/fetch.js b/dist/experimental/testmode/fetch.js
-index cae9ec8cd4e4e266df599ea6a6d3a16af8ac6feb..a338b2452992e4a80cbacf6cdc3ad90ed1aaac2b 100644
+index 71b25d5fb743920f0d41767bf82b0b26d58ecd98..5a5e9b9edf951c723d6cbcbbac68e073a2beab9d 100644
 --- a/dist/experimental/testmode/fetch.js
 +++ b/dist/experimental/testmode/fetch.js
 @@ -65,7 +65,7 @@ async function buildProxyRequest(testData, request) {
@@ -11,45 +11,6 @@ index cae9ec8cd4e4e266df599ea6a6d3a16af8ac6feb..a338b2452992e4a80cbacf6cdc3ad90e
              cache,
              credentials,
              integrity,
-@@ -109,10 +109,10 @@ async function handleFetch(originalFetch, request) {
-     const proxyResponse = await resp.json();
-     const { api } = proxyResponse;
-     switch(api){
-+        case 'unhandled':
-         case 'continue':
-             return originalFetch(request);
-         case 'abort':
--        case 'unhandled':
-             throw Object.defineProperty(new Error(`Proxy request aborted [${request.method} ${request.url}]`), "__NEXT_ERROR_CODE", {
-                 value: "E145",
-                 enumerable: false,
-diff --git a/dist/experimental/testmode/playwright/next-fixture.js b/dist/experimental/testmode/playwright/next-fixture.js
-index e6e42b96dbe6621eb4990923e770382441c55667..cecba31bab2432505f86dab61e9a2a8ad7ee5e65 100644
---- a/dist/experimental/testmode/playwright/next-fixture.js
-+++ b/dist/experimental/testmode/playwright/next-fixture.js
-@@ -44,6 +44,7 @@ class NextFixtureImpl {
-             if (this.options.fetchLoopback) {
-                 return fetch(req.clone());
-             }
-+            if (this.fetchHandlers.length) return "continue";
-             return undefined;
-         });
-     }
-diff --git a/dist/experimental/testmode/playwright/step.js b/dist/experimental/testmode/playwright/step.js
-index 3eb6f598ab095f1aebea73e4c92af55e7db98c97..7117074dec201a260a081b9d34b0f274773184b8 100644
---- a/dist/experimental/testmode/playwright/step.js
-+++ b/dist/experimental/testmode/playwright/step.js
-@@ -13,10 +13,6 @@ function isWithRunAsStep(testInfo) {
-     return '_runAsStep' in testInfo;
- }
- async function step(testInfo, props, handler) {
--    if (isWithRunAsStep(testInfo)) {
--        return testInfo._runAsStep(props, ({ complete })=>handler(complete));
--    }
--    // Fallback to the `test.step()`.
-     let result;
-     let reportedError;
-     try {
 diff --git a/image-types/global.d.ts b/image-types/global.d.ts
 index 661c316e89b3c1aa5913b8afebdbf3e6299eccd7..290d6b3774ac9cb71bf6ba5f458e8054de901669 100644
 --- a/image-types/global.d.ts

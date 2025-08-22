@@ -2,12 +2,10 @@
 
 set -e
 
-# Hack until next typegen in next 15.5
-[ "$CI" = "true" ] && pnpm next dev frontend &
+[ "$CI" = "true" ] && pnpm next typegen frontend
 pnpm next lint frontend --fix --max-warnings 0
 pnpm tsc -p e2e/tsconfig.json
 pnpm tsc -p frontend
-pnpm eslint --fix --max-warnings 0
 pnpm prettier --write '**/*.{css,md,json}' --check '!docker'
 pnpm svgo --multipass backend/app/assets/**/*.svg
 pnpm svgo --multipass frontend/**/*.svg
