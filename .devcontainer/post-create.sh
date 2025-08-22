@@ -47,9 +47,11 @@ cd ..
 
 echo "✨ Dev container setup complete!"
 echo ""
+echo "🚀 To start Flexile, run:"
+echo "  docker compose -f docker-compose.dev.yml up"
+echo ""
 echo "🌐 Application will be available at: https://flexile.dev"
 echo "🔧 Rails server: http://localhost:3000"
 echo "⚡ Next.js server: http://localhost:3001"
 echo "🎯 Inngest dashboard: http://localhost:8288"
 echo ""
-echo "To start the application, run: docker compose -f docker-compose.dev.yml up"
