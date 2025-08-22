@@ -2,7 +2,6 @@ services:
   workspace:
     image: mcr.microsoft.com/devcontainers/base:ubuntu
     environment:
-      SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
       NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
       - .:/workspaces/flexile:cached
@@ -53,7 +52,6 @@ services:
       SIDEKIQ_REDIS_URL: redis://redis:6379/1
       RAILS_ENV: development
       RAILS_LOG_TO_STDOUT: "1"
-      SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
       NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
       - .:/workspaces/flexile:cached
@@ -84,7 +82,6 @@ services:
       RAILS_INTERNAL_HOST: rails:3000
       NEXT_INTERNAL_HOST: next:3001
       TZ: UTC
-      SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
       NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
       - .:/workspaces/flexile:cached
@@ -109,7 +106,6 @@ services:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
       NEXT_INTERNAL_HOST: next:3001
-      SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
       NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
       - .:/workspaces/flexile:cached
@@ -135,7 +131,6 @@ services:
       REDIS_URL: redis://redis:6379/0
       SIDEKIQ_REDIS_URL: redis://redis:6379/1
       RAILS_ENV: development
-      SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
       NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
       - .:/workspaces/flexile:cached
