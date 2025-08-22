@@ -4,9 +4,11 @@ import { assertDefined } from "@/utils/assert";
 import { internal_current_user_data_path } from "@/utils/routes";
 
 export const getRedirectUrl = async (req: Request) => {
-  const host = assertDefined(req.headers.get("Host"));
-  // Use localhost HTTP URL to go through Next.js route handler
-  const url = new URL(internal_current_user_data_path(), 'http://localhost:3001');
+  // Use internal Next.js host when running in containerized environment
+  const baseUrl = process.env.NEXT_INTERNAL_HOST
+    ? `http://${process.env.NEXT_INTERNAL_HOST}`
+    : assertDefined(req.headers.get("Host"));
+  const url = new URL(internal_current_user_data_path(), baseUrl);
   const response = await fetch(url.toString(), {
     headers: {
       cookie: req.headers.get("cookie") ?? "",

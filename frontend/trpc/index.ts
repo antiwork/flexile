@@ -26,7 +26,9 @@ import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 
 export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) => {
-  const host = assertDefined(req.headers.get("Host"));
+  const host = process.env.NEXT_INTERNAL_HOST
+    ? `http://${process.env.NEXT_INTERNAL_HOST}`
+    : assertDefined(req.headers.get("Host"));
   const cookie = req.headers.get("cookie") ?? "";
   const userAgent = req.headers.get("user-agent") ?? "";
   const ipAddress = req.headers.get("x-real-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "";
