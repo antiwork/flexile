@@ -28,7 +28,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
         startedAt: z.instanceof(CalendarDate),
         payRateInSubunits: z.number(),
         payRateType: z.nativeEnum(PayRateType),
-        role: z.string(),
+        role: z.string().min(1),
       }),
     ),
     defaultValues: {
