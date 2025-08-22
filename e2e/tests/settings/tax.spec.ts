@@ -8,20 +8,17 @@ import { userComplianceInfosFactory } from "@test/factories/userComplianceInfos"
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { mockDocuseal } from "@test/helpers/docuseal";
 import { expect, test } from "@test/index";
-import { and, desc, eq, isNull } from "drizzle-orm";
-import { BusinessType, DocumentType, TaxClassification } from "@/db/enums";
-import { companies, documents, users } from "@/db/schema";
-import { assertDefined } from "@/utils/assert";
+import { eq } from "drizzle-orm";
+import { BusinessType, TaxClassification } from "@/db/enums";
+import { companies, users } from "@/db/schema";
 
 test.describe("Tax settings", () => {
   let company: typeof companies.$inferSelect;
-  let adminUser: typeof users.$inferSelect;
   let user: typeof users.$inferSelect;
 
-  test.beforeEach(async ({ page, next }) => {
-    ({ company, adminUser } = await companiesFactory.createCompletedOnboarding());
+  test.beforeEach(async () => {
+    ({ company } = await companiesFactory.createCompletedOnboarding());
 
     user = (
       await usersFactory.create(
@@ -33,10 +30,6 @@ test.describe("Tax settings", () => {
         { withoutComplianceInfo: true },
       )
     ).user;
-    const { mockForm } = mockDocuseal(next, {
-      submitters: () => ({ "Company Representative": adminUser, Signer: user }),
-    });
-    await mockForm(page);
   });
 
   test.describe("as a contractor", () => {
@@ -50,13 +43,10 @@ test.describe("Tax settings", () => {
       });
     });
 
-    test("allows editing tax information", async ({ page, sentEmails }) => {
+    test("allows editing tax information", async ({ page }) => {
       await login(page, user, "/settings/tax");
       await expect(
         page.getByText("These details will be included in your invoices and applicable tax forms."),
-      ).toBeVisible();
-      await expect(
-        page.getByText(`Changes to your tax information may trigger a new contract with ${company.name}`),
       ).toBeVisible();
       await expect(page.getByText("Confirm your tax information")).toBeVisible();
       await expect(page.getByLabel("Individual")).toBeChecked();
@@ -140,19 +130,6 @@ test.describe("Tax settings", () => {
       expect(updatedUser.userComplianceInfos[0]?.businessType).toBe(BusinessType.LLC);
       expect(updatedUser.userComplianceInfos[0]?.taxClassification).toBe(TaxClassification.Partnership);
       expect(updatedUser.userComplianceInfos[0]?.deletedAt).toBeNull();
-
-      const document = await db.query.documents.findFirst({
-        where: and(eq(documents.companyId, company.id), eq(documents.type, DocumentType.ConsultingContract)),
-        orderBy: desc(documents.createdAt),
-      });
-
-      expect(sentEmails).toEqual([
-        expect.objectContaining({
-          to: adminUser.email,
-          subject: `Caro has updated their tax information`,
-          html: expect.stringContaining(`documents?sign=${assertDefined(document).id}`),
-        }),
-      ]);
     });
 
     test("allows confirming tax information", async ({ page }) => {
@@ -269,7 +246,7 @@ test.describe("Tax settings", () => {
         await page.getByRole("button", { name: "Save", exact: true }).click();
       });
 
-      test("allows US citizen in Australia to set a 4-digit postal code", async ({ page, sentEmails }) => {
+      test("allows US citizen in Australia to set a 4-digit postal code", async ({ page }) => {
         await db.update(users).set({ countryCode: "AU", citizenshipCountryCode: "US" }).where(eq(users.id, user.id));
 
         await login(page, user, "/settings/tax");
@@ -302,23 +279,6 @@ test.describe("Tax settings", () => {
         expect(updatedUser.userComplianceInfos[0]?.taxInformationConfirmedAt).not.toBeNull();
         expect(updatedUser.userComplianceInfos[0]?.deletedAt).toBeNull();
         expect(updatedUser.userComplianceInfos[0]?.zipCode).toBe("1234");
-
-        const document = await db.query.documents.findFirst({
-          where: and(
-            eq(documents.companyId, company.id),
-            eq(documents.type, DocumentType.ConsultingContract),
-            isNull(documents.deletedAt),
-          ),
-          orderBy: desc(documents.createdAt),
-        });
-
-        expect(sentEmails).toEqual([
-          expect.objectContaining({
-            to: adminUser.email,
-            subject: `Caro has updated their tax information`,
-            html: expect.stringContaining(`documents?sign=${assertDefined(document).id}`),
-          }),
-        ]);
       });
     });
 
@@ -328,7 +288,7 @@ test.describe("Tax settings", () => {
       await expect(page.getByLabel("Tax ID (SSN or ITIN)")).toHaveValue("");
     });
 
-    test("preserves foreign tax ID format", async ({ page, sentEmails }) => {
+    test("preserves foreign tax ID format", async ({ page }) => {
       await db.update(users).set({ countryCode: "DE", citizenshipCountryCode: "DE" }).where(eq(users.id, user.id));
 
       await login(page, user, "/settings/tax");
@@ -366,7 +326,6 @@ test.describe("Tax settings", () => {
       expect(updatedUser.userComplianceInfos[0]?.taxInformationConfirmedAt).not.toBeNull();
       expect(updatedUser.userComplianceInfos[0]?.deletedAt).toBeNull();
       expect(updatedUser.userComplianceInfos[0]?.taxId).toBe("DE123456789");
-      expect(sentEmails.length).toBe(1);
     });
 
     test("formats US tax IDs correctly", async ({ page }) => {
@@ -453,7 +412,7 @@ test.describe("Tax settings", () => {
       await expect(page.getByLabel("Tax ID (SSN or ITIN)")).toHaveValue("123-45-6789");
     });
 
-    test("allows legal names with two spaces", async ({ page, sentEmails: _ }) => {
+    test("allows legal names with two spaces", async ({ page }) => {
       await login(page, user, "/settings/tax");
 
       await page.getByLabel("Full legal name (must match your ID)").fill("John Middle Doe");
@@ -467,7 +426,7 @@ test.describe("Tax settings", () => {
       expect(updatedUser.legalName).toBe("John Middle Doe");
     });
 
-    test("allows changing birth_date and verifies it is saved", async ({ page, sentEmails: _ }) => {
+    test("allows changing birth_date and verifies it is saved", async ({ page }) => {
       await login(page, user, "/settings/tax");
 
       // Fill in required fields
@@ -521,7 +480,6 @@ test.describe("Tax settings", () => {
       await login(page, user, "/settings/tax");
 
       await expect(page.getByText("These details will be included in your applicable tax forms.")).toBeVisible();
-      await expect(page.getByText("Changes to your tax information may trigger a new contract.")).not.toBeVisible();
     });
 
     test("allows editing tax information", async ({ page }) => {
