@@ -23,7 +23,6 @@ import { customAlphabet } from "nanoid";
 import { deterministicEncryptedString, encryptedJson, encryptedString } from "@/lib/encryptedField";
 import {
   BusinessType,
-  DocumentTemplateType,
   DocumentType,
   invoiceStatuses,
   optionGrantIssueDateRelationships,
@@ -491,34 +490,6 @@ export const dividendsDividendPayments = pgTable(
   ],
 );
 
-export const documentTemplates = pgTable(
-  "document_templates",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }),
-    name: varchar().notNull(),
-    type: integer("document_type").$type<DocumentTemplateType>().notNull(),
-    externalId: varchar("external_id").$default(nanoid).notNull(),
-    docusealId: bigint("docuseal_id", { mode: "bigint" }).notNull(),
-    signable: boolean("signable").notNull().default(false),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("index_document_templates_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    uniqueIndex("index_document_templates_on_external_id").using(
-      "btree",
-      table.externalId.asc().nullsLast().op("text_ops"),
-    ),
-    uniqueIndex("index_document_templates_on_docuseal_id").using(
-      "btree",
-      table.docusealId.asc().nullsLast().op("int8_ops"),
-    ),
-  ],
-);
-
 export const documents = pgTable(
   "documents",
   {
@@ -536,7 +507,6 @@ export const documents = pgTable(
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .$onUpdate(() => new Date())
       .notNull(),
-    docusealSubmissionId: integer("docuseal_submission_id"),
     text: text(),
   },
   (table) => [
@@ -545,10 +515,6 @@ export const documents = pgTable(
     index("index_documents_on_user_compliance_info_id").using(
       "btree",
       table.userComplianceInfoId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_documents_on_docuseal_submission_id").using(
-      "btree",
-      table.docusealSubmissionId.asc().nullsLast().op("int4_ops"),
     ),
   ],
 );

@@ -1,31 +1,28 @@
 "use client";
-import { skipToken, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, FileTextIcon, Info, Pencil, Plus } from "lucide-react";
+import { CircleCheck, Download, Info } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import DocusealForm, { customCss } from "@/app/(dashboard)/documents/DocusealForm";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
-import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import SignForm from "@/components/SignForm";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
-import { DocumentTemplateType, DocumentType, trpc } from "@/trpc/client";
+import { DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
@@ -38,11 +35,6 @@ const typeLabels = {
   [DocumentType.TaxDocument]: "Tax form",
   [DocumentType.ExerciseNotice]: "Exercise notice",
   [DocumentType.EquityPlanContract]: "Equity plan",
-};
-
-const templateTypeLabels = {
-  [DocumentTemplateType.ConsultingContract]: "Agreement",
-  [DocumentTemplateType.EquityPlanContract]: "Equity plan",
 };
 
 const columnFiltersSchema = z.array(z.object({ id: z.string(), value: filterValueSchema }));
@@ -80,105 +72,6 @@ function getStatus(document: Document): { variant: StatusVariant | undefined; na
   }
 }
 
-const EditTemplates = () => {
-  const isMobile = useIsMobile();
-  const company = useCurrentCompany();
-  const router = useRouter();
-
-  const [templates, { refetch: refetchTemplates }] = trpc.documents.templates.list.useSuspenseQuery({
-    companyId: company.id,
-    type: DocumentTemplateType.ConsultingContract,
-  });
-  const filteredTemplates = useMemo(
-    () =>
-      company.id && templates.length > 1
-        ? templates.filter(
-            (template) => !template.generic || !templates.some((t) => !t.generic && t.type === template.type),
-          )
-        : templates,
-    [templates],
-  );
-  const createTemplate = trpc.documents.templates.create.useMutation({
-    onSuccess: (id) => {
-      void refetchTemplates();
-      router.push(`/document_templates/${id}`);
-    },
-  });
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        {isMobile ? (
-          <Button variant="floating-action">
-            <Plus />
-          </Button>
-        ) : (
-          <Button variant="outline" size="small">
-            <Pencil className="size-4" />
-            Edit templates
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit templates</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTemplates.map((template) => (
-                <TableRow key={template.id}>
-                  <TableCell>
-                    <Link href={`/document_templates/${template.id}`} className="after:absolute after:inset-0">
-                      {template.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{templateTypeLabels[template.type]}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <h3 className="text-lg font-medium">Create a new template</h3>
-          <Alert className="mx-4">
-            <Info className="size-4" />
-            <AlertDescription>
-              By creating a custom document template, you acknowledge that Flexile shall not be liable for any claims,
-              liabilities, or damages arising from or related to such documents. See our{" "}
-              <Link href="/terms" className="text-blue-600 hover:underline">
-                Terms of Service
-              </Link>{" "}
-              for more details.
-            </AlertDescription>
-          </Alert>
-          <div className="grid grid-cols-3 gap-4">
-            <MutationButton
-              idleVariant="outline"
-              className="h-auto rounded-md p-6"
-              mutation={createTemplate}
-              param={{
-                companyId: company.id,
-                name: "Consulting agreement",
-                type: DocumentTemplateType.ConsultingContract,
-              }}
-            >
-              <div className="flex flex-col items-center">
-                <FileTextIcon className="size-6" />
-                <span className="mt-2 whitespace-normal">Consulting agreement</span>
-              </div>
-            </MutationButton>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 export default function DocumentsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
@@ -195,14 +88,10 @@ export default function DocumentsPage() {
   const { data: documents = [], isLoading } = trpc.documents.list.useQuery({ companyId: company.id, userId });
 
   const columnHelper = createColumnHelper<Document>();
-  const [downloadDocument, setDownloadDocument] = useState<bigint | null>(null);
-  const { data: downloadUrl } = trpc.documents.getUrl.useQuery(
-    downloadDocument ? { companyId: company.id, id: downloadDocument } : skipToken,
-  );
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
   const isSignable = (document: Document) =>
-    (!!document.docusealSubmissionId || document.hasText) &&
+    document.hasText &&
     document.signatories.some(
       (signatory) =>
         !signatory.signedAt &&
@@ -215,9 +104,6 @@ export default function DocumentsPage() {
     const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
     if (canSign && document && isSignable(document)) setSignDocumentId(document.id);
   }, [documents, signDocumentParam]);
-  useEffect(() => {
-    if (downloadUrl) window.location.href = downloadUrl;
-  }, [downloadUrl]);
 
   const desktopColumns = useMemo(
     () =>
@@ -275,18 +161,13 @@ export default function DocumentsPage() {
                       Download
                     </Link>
                   </Button>
-                ) : document.docusealSubmissionId && document.signatories.every((signatory) => signatory.signedAt) ? (
-                  <Button variant="outline" size="small" onClick={() => setDownloadDocument(document.id)}>
-                    <Download className="size-4" />
-                    Download
-                  </Button>
                 ) : null}
               </>
             );
           },
         }),
       ].filter((column) => !!column),
-    [documents, isCompanyRepresentative, isSignable, canSign, setSignDocumentId, setDownloadDocument],
+    [documents, isCompanyRepresentative, isSignable, canSign, setSignDocumentId],
   );
 
   const mobileColumns = useMemo(
@@ -396,17 +277,13 @@ export default function DocumentsPage() {
       <DashboardHeader
         title="Documents"
         headerActions={
-          isMobile ? (
-            table.options.enableRowSelection ? (
-              <button
-                className="text-blue-600"
-                onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
-              >
-                {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
-              </button>
-            ) : null
-          ) : isCompanyRepresentative && documents.length === 0 ? (
-            <EditTemplates />
+          isMobile && table.options.enableRowSelection ? (
+            <button
+              className="text-blue-600"
+              onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
+            >
+              {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
+            </button>
           ) : null
         }
       />
@@ -441,12 +318,7 @@ export default function DocumentsPage() {
         <TableSkeleton columns={6} />
       ) : documents.length > 0 ? (
         <>
-          <DataTable
-            table={table}
-            tabsColumn="status"
-            actions={isCompanyRepresentative ? <EditTemplates /> : undefined}
-            {...(isCompanyRepresentative && { searchColumn: "signer" })}
-          />
+          <DataTable table={table} tabsColumn="status" {...(isCompanyRepresentative && { searchColumn: "signer" })} />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
         </>
       ) : (
@@ -493,35 +365,13 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
         <DialogHeader>
           <DialogTitle>{document.name}</DialogTitle>
         </DialogHeader>
-        {document.docusealSubmissionId != null ? (
-          <SignWithDocuseal id={document.docusealSubmissionId} onSigned={sign} />
-        ) : (
-          <>
-            <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
-            <DialogFooter>
-              <Button onClick={sign} disabled={!signed}>
-                Agree & Submit
-              </Button>
-            </DialogFooter>
-          </>
-        )}
+        <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
+        <DialogFooter>
+          <Button onClick={sign} disabled={!signed}>
+            Agree & Submit
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-};
-
-const SignWithDocuseal = ({ id, onSigned }: { id: number; onSigned: () => void }) => {
-  const company = useCurrentCompany();
-  const [{ slug, readonlyFields }] = trpc.documents.templates.getSubmitterSlug.useSuspenseQuery({
-    id,
-    companyId: company.id,
-  });
-  return (
-    <DocusealForm
-      src={`https://docuseal.com/s/${slug}`}
-      readonlyFields={readonlyFields}
-      customCss={customCss}
-      onComplete={onSigned}
-    />
   );
 };
