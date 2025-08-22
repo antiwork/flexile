@@ -56,7 +56,11 @@ export const authOptions = {
         if (!validation.success) throw new Error("Invalid email or OTP");
 
         try {
-          const response = await fetch(`http://localhost:3001/internal/login`, {
+          // Use internal Next.js host when running in containerized environment
+          const baseUrl = process.env.NEXT_INTERNAL_HOST
+            ? `http://${process.env.NEXT_INTERNAL_HOST}`
+            : assertDefined(req.headers?.origin);
+          const response = await fetch(`${baseUrl}/internal/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -131,7 +135,11 @@ export const authOptions = {
       if (account.type !== "oauth" && !isTestEnv) return true;
 
       try {
-        const response = await fetch(`${process.env.NEXTAUTH_URL}/internal/oauth`, {
+        // Use internal Next.js host when running in containerized environment
+        const baseUrl = process.env.NEXT_INTERNAL_HOST
+          ? `http://${process.env.NEXT_INTERNAL_HOST}`
+          : process.env.NEXTAUTH_URL;
+        const response = await fetch(`${baseUrl}/internal/oauth`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: user.email, token: env.API_SECRET_TOKEN }),

@@ -21,7 +21,9 @@ async function handler(req: Request) {
       url.protocol = "http";
       // Use Rails container hostname in Docker environment
       if (process.env.RAILS_INTERNAL_HOST) {
-        url.hostname = process.env.RAILS_INTERNAL_HOST;
+        const [hostname, port] = process.env.RAILS_INTERNAL_HOST.split(":");
+        url.hostname = hostname || "localhost";
+        if (port) url.port = port;
       }
   }
 

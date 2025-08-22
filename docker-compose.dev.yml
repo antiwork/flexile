@@ -79,7 +79,8 @@ services:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
       NEXT_PUBLIC_API_ORIGIN: https://flexile.dev
-      RAILS_INTERNAL_HOST: rails
+      RAILS_INTERNAL_HOST: rails:3000
+      NEXT_INTERNAL_HOST: next:3001
       TZ: UTC
       SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
       NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
@@ -104,6 +105,7 @@ services:
     environment:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_INTERNAL_HOST: next:3001
       SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
       NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
