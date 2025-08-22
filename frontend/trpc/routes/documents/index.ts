@@ -102,7 +102,6 @@ export const documentsRouter = createRouter({
     const submission = await docuseal.getSubmission(document.docusealSubmissionId);
     return assertDefined(submission.documents[0]).url;
   }),
-  // TODO set up a DocuSeal webhook instead
   sign: companyProcedure.input(z.object({ id: z.bigint(), role: z.string() })).mutation(async ({ ctx, input }) => {
     if (input.role === "Company Representative" && !ctx.companyAdministrator && !ctx.companyLawyer)
       throw new TRPCError({ code: "FORBIDDEN" });
