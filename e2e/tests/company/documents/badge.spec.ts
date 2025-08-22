@@ -25,21 +25,21 @@ test.describe("Document badge counter", () => {
     });
 
     const { document: doc1 } = await documentsFactory.create(
-      { companyId: company.id, name: "Document 1 Requiring Signature" },
+      { companyId: company.id, name: "Document 1 Requiring Signature", text: "doc" },
       { signatures: [{ userId: adminUser.id, title: "Company Representative" }] },
     );
 
     const { document: doc2 } = await documentsFactory.create(
-      { companyId: company.id, name: "Document 2 Requiring Signature" },
+      { companyId: company.id, name: "Document 2 Requiring Signature", text: "doc" },
       { signatures: [{ userId: otherAdmin.id, title: "Company Representative" }] },
     );
 
     await documentsFactory.create(
-      { companyId: company.id, name: "Document 3 Requiring Signature" },
+      { companyId: company.id, name: "Document 3 Requiring Signature", text: "doc" },
       { signatures: [{ userId: contractorUser.id, title: "Signer" }] },
     );
     await documentsFactory.create(
-      { companyId: company.id, name: "Document Already Signed" },
+      { companyId: company.id, name: "Document Already Signed", text: "doc" },
       { signatures: [{ userId: otherAdmin.id, title: "Company Representative" }], signed: true },
     );
 

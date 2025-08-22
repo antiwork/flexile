@@ -43,7 +43,7 @@ RSpec.describe InviteWorker do
 
     contract = user.documents.consulting_contract.first
     expect(contract.company).to eq(company)
-    expect(contract.signatories).to match_array([user, company_administrator.user])
+    expect(contract.signatories.sole).to eq user
   end
 
   context "when a user with the same email address already exists" do

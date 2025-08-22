@@ -2,6 +2,8 @@
 
 set -e
 
+# Hack until next typegen in next 15.5
+[ "$CI" = "true" ] && pnpm next dev frontend &
 pnpm next lint frontend --fix --max-warnings 0
 pnpm tsc -p e2e/tsconfig.json
 pnpm tsc -p frontend
