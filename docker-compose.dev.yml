@@ -40,7 +40,7 @@ services:
   rails:
     build:
       context: .
-      dockerfile: ./infra/rails.Dockerfile
+      dockerfile: ./backend/Dockerfile
     env_file:
       - .env
     environment:
@@ -66,16 +66,16 @@ services:
   next:
     build:
       context: .
-      dockerfile: ./infra/next.Dockerfile
+      dockerfile: ./frontend/Dockerfile
     env_file:
       - .env
     environment:
+      DATABASE_URL: postgres://username:password@postgres:5432/flexile_development
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
       NEXT_PUBLIC_API_ORIGIN: https://flexile.dev
       RAILS_INTERNAL_HOST: rails
       TZ: UTC
-      DATABASE_URL: postgres://username:password@postgres:5432/flexile_development
     volumes:
       - .:/workspaces/flexile:cached
       - node_modules:/workspaces/flexile/node_modules
@@ -91,7 +91,7 @@ services:
   inngest:
     build:
       context: .
-      dockerfile: ./infra/next.Dockerfile
+      dockerfile: ./frontend/Dockerfile
     env_file:
       - .env
     environment:
@@ -112,7 +112,7 @@ services:
   sidekiq:
     build:
       context: .
-      dockerfile: ./infra/rails.Dockerfile
+      dockerfile: ./backend/Dockerfile
     env_file:
       - .env
     environment:
@@ -141,7 +141,7 @@ services:
       - "443:443"
       - "80:80"
     volumes:
-      - ./infra/nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./.devcontainer/nginx.dev.conf:/etc/nginx/nginx.conf:ro
       - ./.certs/flexile.dev.crt:/etc/ssl/certs/flexile.dev.crt:ro
       - ./.certs/flexile.dev.key:/etc/ssl/private/flexile.dev.key:ro
     networks: [ appnet ]
