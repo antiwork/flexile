@@ -91,7 +91,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(dividend_computation.total_amount_in_usd).to eq(100_000)
       expect(dividend_computation.dividends_issuance_date).to eq(Date.parse("2024-01-15"))
       expect(dividend_computation.return_of_capital).to eq(true)
-      expect(dividend_computation.total_fees_cents).to eq(FlexileFeeCalculator.calculate_dividend_fee_cents(1000 * 111.22 * 100))
+      expect(dividend_computation.total_fees_cents).to eq(FlexileFeeCalculator.calculate_dividend_fee_cents(1000 * 111.22 * 100)) # dividend.total_amount_in_cents = number_of_shares * share_price_usd * 100
     end
 
     context "when there are no eligible investors" do
