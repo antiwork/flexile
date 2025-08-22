@@ -36,15 +36,15 @@ echo "✅ Docker is ready"
 # Create environment file if it doesn't exist
 echo ""
 echo "📝 Setting up environment file..."
-if [ ! -f ".env.development" ]; then
-    if [ -f ".devcontainer/env.development.template" ]; then
-        cp .devcontainer/env.development.template .env.development
-        echo "✅ Created .env.development from template"
+if [ ! -f ".env" ]; then
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+        echo "✅ Created .env from template"
     else
-        echo "⚠️  .devcontainer/env.development.template not found. You'll need to create .env.development manually."
+        echo "⚠️  .env.example not found. You'll need to create .env manually."
     fi
 else
-    echo "✅ .env.development already exists"
+    echo "✅ .env already exists"
 fi
 
 # Start dev container services

@@ -39,7 +39,7 @@ VS Code will automatically run the setup and start all services.
 
 ```bash
 # Create environment file first
-cp .devcontainer/env.development.template .env.development
+cp .env.example .env
 
 # Start all services
 docker compose -f docker-compose.dev.yml up -d --build
@@ -138,7 +138,7 @@ If you see SSL/TLS errors:
 ### Database Connection Issues
 
 1. Ensure PostgreSQL is healthy: `docker compose -f docker-compose.dev.yml ps postgres`
-2. Check database URL in `.env.development`
+2. Check database URL in `.env`
 3. Recreate the database: `cd backend && bin/rails db:drop db:create db:migrate`
 
 ### Port Conflicts
@@ -164,7 +164,7 @@ docker compose -f docker-compose.dev.yml up -d --build
 
 ## Environment Variables
 
-Key environment variables in `.env.development`:
+Key environment variables in `.env`:
 
 - `DATABASE_URL`: PostgreSQL connection string
 - `REDIS_URL`: Redis connection string

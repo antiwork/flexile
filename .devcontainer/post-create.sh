@@ -5,15 +5,15 @@ set -e
 echo "🚀 Setting up Flexile development environment in dev container..."
 
 # Copy environment file if it doesn't exist
-if [ ! -f ".env.development" ]; then
-    echo "📝 Creating .env.development from template..."
-    cp .devcontainer/env.development.template .env.development
+if [ ! -f ".env" ]; then
+    echo "📝 Creating .env from template..."
+    cp .env.example .env
     echo "✅ Environment file created"
 fi
 
 # Create symlink for frontend
 echo "🔗 Creating symlink for frontend .env..."
-ln -sf /workspaces/flexile/.env.development /workspaces/flexile/frontend/.env
+ln -sf /workspaces/flexile/.env /workspaces/flexile/frontend/.env
 
 # Add flexile.dev to /etc/hosts if not present
 if ! grep -q "flexile.dev" /etc/hosts; then
