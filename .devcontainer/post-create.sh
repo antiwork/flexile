@@ -46,6 +46,24 @@ mkcert -key-file ./.certs/flexile.dev.key -cert-file ./.certs/flexile.dev.crt fl
 chmod 644 .certs/flexile.dev.crt
 chmod 600 .certs/flexile.dev.key
 
+# Create combined certificate file for SSL environment variables
+echo "🔗 Creating combined certificate file..."
+mkdir -p tmp
+default_cert_file=$(ruby -ropenssl -e 'puts OpenSSL::X509::DEFAULT_CERT_FILE' 2>/dev/null || echo "/etc/ssl/certs/ca-certificates.crt")
+mkcert_ca_file="$(mkcert -CAROOT)/rootCA.pem"
+combined_cert_file="tmp/combined_ca_certs.pem"
+
+if [ -f "$default_cert_file" ] && [ -f "$mkcert_ca_file" ]; then
+  cat "$default_cert_file" "$mkcert_ca_file" > "$combined_cert_file"
+  echo "✅ Combined certificates created at $combined_cert_file"
+else
+  echo "⚠️  Warning: Could not create combined cert file. Using default certificates."
+  if [ -f "$mkcert_ca_file" ]; then
+    cp "$mkcert_ca_file" "$combined_cert_file"
+    echo "✅ Using mkcert CA certificate"
+  fi
+fi
+
 # Enable corepack for pnpm
 echo "📦 Enabling corepack for pnpm..."
 corepack enable

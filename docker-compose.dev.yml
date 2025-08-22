@@ -1,6 +1,9 @@
 services:
   workspace:
     image: mcr.microsoft.com/devcontainers/base:ubuntu
+    environment:
+      SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
+      NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
       - .:/workspaces/flexile:cached
       - /var/run/docker.sock:/var/run/docker.sock
@@ -49,6 +52,8 @@ services:
       SIDEKIQ_REDIS_URL: redis://redis:6379/1
       RAILS_ENV: development
       RAILS_LOG_TO_STDOUT: "1"
+      SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
+      NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
       - .:/workspaces/flexile:cached
       - bundle_cache:/workspaces/flexile/backend/vendor/bundle
@@ -76,6 +81,8 @@ services:
       NEXT_PUBLIC_API_ORIGIN: https://flexile.dev
       RAILS_INTERNAL_HOST: rails
       TZ: UTC
+      SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
+      NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
       - .:/workspaces/flexile:cached
       - node_modules:/workspaces/flexile/node_modules
@@ -97,6 +104,8 @@ services:
     environment:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
+      SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
+      NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
       - .:/workspaces/flexile:cached
       - node_modules:/workspaces/flexile/node_modules
@@ -120,6 +129,8 @@ services:
       REDIS_URL: redis://redis:6379/0
       SIDEKIQ_REDIS_URL: redis://redis:6379/1
       RAILS_ENV: development
+      SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
+      NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
       - .:/workspaces/flexile:cached
       - bundle_cache:/workspaces/flexile/backend/vendor/bundle
