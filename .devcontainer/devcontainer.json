@@ -45,6 +45,10 @@
     }
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "runServices": [
+    "postgres",
+    "redis"
+  ],
   "overrideCommand": false,
   "remoteUser": "vscode",
   "updateRemoteUserUID": true
