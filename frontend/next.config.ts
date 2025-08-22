@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  typescript: {
+    // Unlike what the name implies, this skips the TS run entirely which speeds up the build,
+    // and it's already covered by autofix on CI
+    ignoreBuildErrors: process.env.NODE_ENV === "test",
+  },
 };
 if (process.env.NODE_ENV === "development") {
   nextConfig.images.remotePatterns.push({ hostname: "flexile.dev" });

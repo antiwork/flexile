@@ -67,7 +67,7 @@ test.describe("Company equity settings", () => {
     });
 
     // Navigate to root page and verify Equity button is visible
-    await page.goto("/dashboard");
+    await page.goto("/invoices");
     await expect(page.getByRole("button", { name: "Equity" })).toBeVisible();
     await page.getByRole("button", { name: "Equity" }).click();
     await expect(page.getByRole("link", { name: "Investors" })).toBeVisible();

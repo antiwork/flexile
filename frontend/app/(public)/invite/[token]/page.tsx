@@ -28,7 +28,7 @@ export default function AcceptInvitationPage() {
     document.cookie = `${INVITATION_TOKEN_COOKIE_NAME}=${token}; path=/; max-age=${INVITATION_TOKEN_COOKIE_MAX_AGE}`;
     throw redirect(`/signup?${new URLSearchParams({ redirect_url: `/invite/${token}` })}`);
   }
-  if (response.ok) throw redirect("/dashboard");
+  if (response.ok) throw redirect("/invoices");
 
   return (
     <div className="flex flex-col items-center">
