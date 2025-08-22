@@ -26,11 +26,17 @@ dividend_rounds = DividendRound.includes(:dividends, :company, dividends: [:divi
                                .distinct
                                .order(issued_at: :asc)
 
+# Get vesting events for the last month
+vesting_events = VestingEvent.not_cancelled.processed
+                             .joins(equity_grant: { company_investor: [:user, :company] })
+                             .where(processed_at: start_date..end_date)
+                             .includes(equity_grant: { company_investor: [:user, :company] })
+
 # Generate all CSV reports
-service = FinancialReportCsvService.new(invoices, dividends, dividend_rounds)
+service = FinancialReportCsvService.new(invoices, dividends, dividend_rounds, vesting_events)
 attached = service.generate_all
 
-# Send email with all three CSV attachments
+# Send email with all four CSV attachments
 AdminMailer.custom(to: ["solson@earlygrowth.com", "sahil@gumroad.com"],
                    subject: "Financial report #{target_year}-#{target_month.to_s.rjust(2, '0')}",
                    body: "Attached",
@@ -38,10 +44,11 @@ AdminMailer.custom(to: ["solson@earlygrowth.com", "sahil@gumroad.com"],
 =end
 
 class FinancialReportCsvService
-  def initialize(consolidated_invoices, dividends, dividend_rounds)
+  def initialize(consolidated_invoices, dividends, dividend_rounds, vesting_events = [])
     @consolidated_invoices = consolidated_invoices
     @dividends = dividends
     @dividend_rounds = dividend_rounds
+    @vesting_events = vesting_events
   end
 
   def generate_all
@@ -49,6 +56,7 @@ class FinancialReportCsvService
       "invoices.csv" => generate_invoices_csv,
       "dividends.csv" => generate_dividends_csv,
       "grouped.csv" => generate_grouped_csv,
+      "stock_options.csv" => generate_stock_options_csv,
     }
   end
 
@@ -329,6 +337,79 @@ class FinancialReportCsvService
         flexile_fee_cents_total,
         transfer_fee_total,
         net_amount_total
+      ]
+    end
+
+    def stock_options_data
+      target_year = Time.current.last_month.year
+      target_month = Time.current.last_month.month
+      start_date = Date.new(target_year, target_month, 1)
+      end_date = start_date.end_of_month
+
+      filtered_vesting_events = @vesting_events.select do |vesting_event|
+        vesting_event.processed_at >= start_date && vesting_event.processed_at <= end_date
+      end
+
+      rows = []
+      filtered_vesting_events.each do |vesting_event|
+        equity_grant = vesting_event.equity_grant
+        company = equity_grant.company_investor.company
+        user = equity_grant.company_investor.user
+
+        current_price = equity_grant.share_price_usd
+        exercise_price = equity_grant.exercise_price_usd
+        time_to_expiration = calculate_time_to_expiration(equity_grant.expires_at)
+
+        option_value_per_share = BlackScholesCalculator.calculate_option_value(
+          current_price: current_price,
+          exercise_price: exercise_price,
+          time_to_expiration_years: time_to_expiration
+        )
+
+        total_option_expense = option_value_per_share * vesting_event.vested_shares
+
+        rows << [
+          vesting_event.processed_at.to_fs(:us_date),
+          company.name,
+          user.legal_name,
+          user.email,
+          equity_grant.id,
+          vesting_event.id,
+          vesting_event.vested_shares,
+          exercise_price,
+          current_price,
+          time_to_expiration.round(4),
+          option_value_per_share.round(4),
+          total_option_expense.round(2),
+          equity_grant.option_grant_type&.upcase || "N/A",
+          equity_grant.cancelled_at? ? "Cancelled" : "Active"
+        ]
+      end
+
+      rows.sort_by { |row| Date.parse(row[0]) rescue Date.today }
+    end
+
+    def calculate_time_to_expiration(expires_at)
+      return 0.0 unless expires_at
+
+      days_to_expiration = (expires_at.to_date - Date.current).to_f
+      [days_to_expiration / 365.25, 0.0].max
+    end
+
+    def calculate_stock_options_totals(data)
+      return [] if data.empty?
+
+      total_shares_vested = data.sum { |row| row[6].to_f }
+      total_option_expense = data.sum { |row| row[11].to_f }
+
+      [
+        "TOTAL", "", "", "", "", "",
+        total_shares_vested,
+        "", "", "",
+        "",
+        total_option_expense,
+        "",
+        ""
       ]
     end
 end

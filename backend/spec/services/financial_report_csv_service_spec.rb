@@ -58,32 +58,56 @@ RSpec.describe FinancialReportCsvService do
            created_at: Date.new(2024, 6, 3))
   end
 
+  let(:option_pool) { create(:option_pool, company: company) }
+  let(:equity_grant) do
+    create(:equity_grant,
+           company_investor: company_investor,
+           option_pool: option_pool,
+           number_of_shares: 1000,
+           vested_shares: 100,
+           unvested_shares: 900,
+           share_price_usd: 10.0,
+           exercise_price_usd: 5.0,
+           expires_at: Date.new(2025, 6, 1))
+  end
+
+  let(:vesting_event) do
+    create(:vesting_event,
+           equity_grant: equity_grant,
+           vested_shares: 100,
+           vesting_date: Date.new(2024, 6, 2),
+           processed_at: Date.new(2024, 6, 3))
+  end
+
   let(:consolidated_invoices) { [consolidated_invoice] }
   let(:dividends) { [dividend] }
   let(:dividend_rounds) { [dividend_round] }
+  let(:vesting_events) { [vesting_event] }
 
   before do
     # Create invoice first, then consolidated_invoice with the invoice
     invoice
     consolidated_invoice
     dividend_payment
+    vesting_event
   end
 
   describe "#generate_all" do
-    it "returns a hash with all three CSV types" do
-      service = described_class.new(consolidated_invoices, dividends, dividend_rounds)
+    it "returns a hash with all four CSV types" do
+      service = described_class.new(consolidated_invoices, dividends, dividend_rounds, vesting_events)
       result = service.generate_all
 
-      expect(result.keys).to match_array(["invoices.csv", "dividends.csv", "grouped.csv"])
+      expect(result.keys).to match_array(["invoices.csv", "dividends.csv", "grouped.csv", "stock_options.csv"])
       expect(result["invoices.csv"]).to be_a(String)
       expect(result["dividends.csv"]).to be_a(String)
       expect(result["grouped.csv"]).to be_a(String)
+      expect(result["stock_options.csv"]).to be_a(String)
     end
   end
 
   describe "invoices CSV generation" do
     it "generates CSV with correct headers and invoice data" do
-      service = described_class.new(consolidated_invoices, dividends, dividend_rounds)
+      service = described_class.new(consolidated_invoices, dividends, dividend_rounds, vesting_events)
       csv = service.send(:generate_invoices_csv)
       rows = CSV.parse(csv)
 
@@ -105,7 +129,7 @@ RSpec.describe FinancialReportCsvService do
     end
 
     it "includes totals row for invoices" do
-      service = described_class.new(consolidated_invoices, dividends, dividend_rounds)
+      service = described_class.new(consolidated_invoices, dividends, dividend_rounds, vesting_events)
       csv = service.send(:generate_invoices_csv)
       rows = CSV.parse(csv)
 
@@ -119,7 +143,7 @@ RSpec.describe FinancialReportCsvService do
 
   describe "dividends CSV generation" do
     it "generates CSV with correct headers and dividend data" do
-      service = described_class.new(consolidated_invoices, dividends, dividend_rounds)
+      service = described_class.new(consolidated_invoices, dividends, dividend_rounds, vesting_events)
       csv = service.send(:generate_dividends_csv)
       rows = CSV.parse(csv)
 
@@ -150,7 +174,7 @@ RSpec.describe FinancialReportCsvService do
     end
 
     it "includes totals row for dividends" do
-      service = described_class.new(consolidated_invoices, dividends, dividend_rounds)
+      service = described_class.new(consolidated_invoices, dividends, dividend_rounds, vesting_events)
       csv = service.send(:generate_dividends_csv)
       rows = CSV.parse(csv)
 
@@ -163,7 +187,7 @@ RSpec.describe FinancialReportCsvService do
 
   describe "grouped CSV generation" do
     it "generates CSV with correct headers and grouped data" do
-      service = described_class.new(consolidated_invoices, dividends, dividend_rounds)
+      service = described_class.new(consolidated_invoices, dividends, dividend_rounds, vesting_events)
       csv = service.send(:generate_grouped_csv)
       rows = CSV.parse(csv)
 
@@ -189,7 +213,7 @@ RSpec.describe FinancialReportCsvService do
     end
 
     it "includes totals row for grouped data" do
-      service = described_class.new(consolidated_invoices, dividends, dividend_rounds)
+      service = described_class.new(consolidated_invoices, dividends, dividend_rounds, vesting_events)
       csv = service.send(:generate_grouped_csv)
       rows = CSV.parse(csv)
 
@@ -199,19 +223,65 @@ RSpec.describe FinancialReportCsvService do
     end
   end
 
+  describe "stock options CSV generation" do
+    it "generates CSV with correct headers and stock options data" do
+      service = described_class.new(consolidated_invoices, dividends, dividend_rounds, vesting_events)
+      csv = service.send(:generate_stock_options_csv)
+      rows = CSV.parse(csv)
+
+      expected_headers = ["Date Vested", "Company Name", "Investor Name", "Investor Email", "Grant ID", "Vesting Event ID",
+                          "Shares Vested", "Exercise Price (USD)", "Current Share Price (USD)", "Time to Expiration (Years)",
+                          "Black-Scholes Option Value", "Total Option Expense", "Grant Type", "Grant Status"]
+
+      expect(rows[0]).to eq(expected_headers)
+      expect(rows.length).to eq(3)
+
+      data_row = rows[1]
+      expect(data_row[0]).to eq("6/3/2024")
+      expect(data_row[1]).to eq("TestCo")
+      expect(data_row[2]).to eq("Jane Investor")
+      expect(data_row[3]).to eq("jane@example.com")
+      expect(data_row[6]).to eq("100")
+      expect(data_row[7]).to eq("5.0")
+      expect(data_row[8]).to eq("10.0")
+      expect(data_row[13]).to eq("Active")
+    end
+
+    it "includes totals row for stock options" do
+      service = described_class.new(consolidated_invoices, dividends, dividend_rounds, vesting_events)
+      csv = service.send(:generate_stock_options_csv)
+      rows = CSV.parse(csv)
+
+      totals_row = rows.last
+      expect(totals_row[0]).to eq("TOTAL")
+      expect(totals_row[6]).to eq("100.0")
+      expect(totals_row[11]).to be_present
+    end
+
+    it "handles empty vesting events gracefully" do
+      service = described_class.new([], [], [], [])
+      csv = service.send(:generate_stock_options_csv)
+      rows = CSV.parse(csv)
+
+      expect(rows.length).to eq(1)
+    end
+  end
+
   describe "edge cases" do
     it "handles empty data gracefully" do
-      service = described_class.new([], [], [])
+      service = described_class.new([], [], [], [])
       result = service.generate_all
 
       invoices_csv = CSV.parse(result["invoices.csv"])
       dividends_csv = CSV.parse(result["dividends.csv"])
       grouped_csv = CSV.parse(result["grouped.csv"])
+      stock_options_csv = CSV.parse(result["stock_options.csv"])
 
       # Should only have headers, no data or totals rows
       expect(invoices_csv.length).to eq(1)
       expect(dividends_csv.length).to eq(1)
       expect(grouped_csv.length).to eq(1)
+      expect(stock_options_csv.length).to eq(1)
     end
 
     it "handles dividends without successful payments" do
@@ -223,7 +293,7 @@ RSpec.describe FinancialReportCsvService do
              dividends: [failed_dividend],
              status: Payment::FAILED)
 
-      service = described_class.new([], [failed_dividend], [])
+      service = described_class.new([], [failed_dividend], [], [])
       csv = service.send(:generate_dividends_csv)
       rows = CSV.parse(csv)
 

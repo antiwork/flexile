@@ -33,8 +33,14 @@ class FinancialReportEmailJob
                                    .distinct
                                    .order(issued_at: :asc)
 
+    # Get vesting events for the last month
+    vesting_events = VestingEvent.not_cancelled.processed
+                                 .joins(equity_grant: { company_investor: [:user, :company] })
+                                 .where(processed_at: start_date..end_date)
+                                 .includes(equity_grant: { company_investor: [:user, :company] })
+
     # Generate all CSV reports using unified service
-    csv_service = FinancialReportCsvService.new(invoices, dividends, dividend_rounds)
+    csv_service = FinancialReportCsvService.new(invoices, dividends, dividend_rounds, vesting_events)
     attached = csv_service.generate_all
     subject = "Financial report #{target_year}-#{target_month.to_s.rjust(2, '0')}"
 
