@@ -139,7 +139,7 @@ const DetailsModal = ({
             </>
           ) : null}
         </div>
-        {company.flags.includes("option_exercising") &&
+        {company.optionExercisingEnabled &&
         equityGrant.vestedShares > 0 &&
         isFuture(equityGrant.expiresAt) &&
         canExercise ? (

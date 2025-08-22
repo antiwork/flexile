@@ -14,6 +14,7 @@ test.describe("Company equity settings", () => {
       fmvPerShareInUsd: null,
       conversionSharePriceUsd: null,
       equityEnabled: false,
+      optionExercisingEnabled: false,
     });
     const { user: adminUser } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -25,12 +26,26 @@ test.describe("Company equity settings", () => {
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Equity" }).click();
 
+    // Check initial state - exercise requests should be visible but toggle should not be
+    await expect(page.getByText("Exercise requests")).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).not.toBeVisible();
+
     // Enable equity toggle
     const enableEquitySwitch = page.getByRole("switch", { name: "Enable equity" });
     await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "false");
     await enableEquitySwitch.waitFor({ state: "visible" });
     await enableEquitySwitch.click({ force: true });
     await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "true");
+
+    // Now option exercising toggle should be visible
+    const enableOptionExercisingSwitch = page.getByRole("switch", { name: "Enable option exercising" });
+    await expect(enableOptionExercisingSwitch).toBeVisible();
+    await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "false");
+
+    // Enable option exercising
+    await enableOptionExercisingSwitch.click({ force: true });
+    await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).not.toBeDisabled();
 
     // Wait for the form to appear
     await expect(page.getByRole("heading", { name: "Equity value" })).toBeVisible();
@@ -61,6 +76,7 @@ test.describe("Company equity settings", () => {
     });
     expect(dbCompany).toMatchObject({
       equityEnabled: true,
+      optionExercisingEnabled: true,
       sharePriceInUsd: "20",
       fmvPerShareInUsd: "15.123",
       conversionSharePriceUsd: "18.123456789",
@@ -75,5 +91,63 @@ test.describe("Company equity settings", () => {
     await expect(page.getByRole("link", { name: "Equity grants" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Dividends" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Buybacks" })).toBeVisible();
+  });
+
+  test("option exercising toggle behavior", async ({ page }) => {
+    const { company } = await companiesFactory.create({
+      equityEnabled: false,
+      optionExercisingEnabled: false,
+    });
+    const { user: adminUser } = await usersFactory.create();
+    await companyAdministratorsFactory.create({
+      companyId: company.id,
+      userId: adminUser.id,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Equity" }).click();
+
+    // Initially, exercise requests text should be visible but toggle should not
+    await expect(page.getByText("Exercise requests")).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).not.toBeVisible();
+
+    // Enable equity first
+    const enableEquitySwitch = page.getByRole("switch", { name: "Enable equity" });
+    await enableEquitySwitch.click({ force: true });
+    await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "true");
+
+    // Now option exercising toggle should appear
+    const enableOptionExercisingSwitch = page.getByRole("switch", { name: "Enable option exercising" });
+    await expect(enableOptionExercisingSwitch).toBeVisible();
+    await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "false");
+
+    // Test toggling option exercising
+    await enableOptionExercisingSwitch.click({ force: true });
+    await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).not.toBeDisabled();
+
+    // Verify in database
+    let dbCompany = await db.query.companies.findFirst({
+      where: eq(companies.id, company.id),
+    });
+    expect(dbCompany?.optionExercisingEnabled).toBe(true);
+
+    // Turn it back off
+    await enableOptionExercisingSwitch.click({ force: true });
+    await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "false");
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeDisabled();
+
+    // Verify in database
+    dbCompany = await db.query.companies.findFirst({
+      where: eq(companies.id, company.id),
+    });
+    expect(dbCompany?.optionExercisingEnabled).toBe(false);
+
+    // Disable equity - option exercising toggle should disappear
+    await enableEquitySwitch.click({ force: true });
+    await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "false");
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).not.toBeVisible();
+    await expect(page.getByText("Exercise requests")).toBeVisible(); // Text should still be visible
   });
 });
