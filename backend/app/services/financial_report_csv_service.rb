@@ -117,6 +117,25 @@ class FinancialReportCsvService
       end
     end
 
+    def generate_stock_options_csv
+      headers = ["Date Vested", "Company Name", "Investor Name", "Investor Email", "Grant ID", "Vesting Event ID",
+                 "Shares Vested", "Exercise Price (USD)", "Current Share Price (USD)", "Time to Expiration (Years)",
+                 "Black-Scholes Option Value", "Total Option Expense", "Grant Type", "Grant Status"]
+
+      data = stock_options_data
+      CSV.generate do |csv|
+        csv << headers
+        data.each do |row|
+          csv << row
+        end
+
+        if data.any?
+          totals = calculate_stock_options_totals(data)
+          csv << totals
+        end
+      end
+    end
+
     def consolidated_invoice_data
       @consolidated_invoices.each_with_object([]) do |ci, row|
         payments = ci.consolidated_payments

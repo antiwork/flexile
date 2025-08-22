@@ -300,5 +300,26 @@ RSpec.describe FinancialReportCsvService do
       # Should only have headers, no data rows since payment failed
       expect(rows.length).to eq(1)
     end
+
+    it "only includes vested options and excludes non-vested" do
+      non_vested_grant = create(:equity_grant,
+                                company_investor: company_investor,
+                                option_pool: option_pool,
+                                exercise_price_usd: 95.0,
+                                share_price_usd: 100.0,
+                                expires_at: Date.new(2025, 6, 1))
+
+      non_vested_event = create(:vesting_event,
+                                equity_grant: non_vested_grant,
+                                vested_shares: 0,
+                                processed_at: nil)
+
+      service = described_class.new(consolidated_invoices, dividends, dividend_rounds, [vesting_event, non_vested_event])
+      csv = service.send(:generate_stock_options_csv)
+      rows = CSV.parse(csv)
+
+      expect(rows.length).to eq(3)
+      expect(rows[1][6]).to eq("100")
+    end
   end
 end

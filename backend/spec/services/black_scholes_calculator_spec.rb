@@ -11,8 +11,7 @@ RSpec.describe BlackScholesCalculator do
         volatility: 0.20
       )
 
-      expect(option_value).to be > 0
-      expect(option_value).to be < 100.0
+      expect(option_value).to be_within(0.01).of(13.35)
     end
 
     it "returns zero for expired options" do
@@ -42,7 +41,7 @@ RSpec.describe BlackScholesCalculator do
         time_to_expiration_years: 1.0
       )
 
-      expect(option_value).to be > 0
+      expect(option_value).to be_within(0.01).of(13.35)
     end
   end
 end
