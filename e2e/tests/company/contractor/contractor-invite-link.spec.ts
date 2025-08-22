@@ -116,7 +116,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await expect(page.getByLabel("Rate")).toBeVisible();
 
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByLabel("Role")).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByText("Please enter your role")).toBeVisible();
 
     await completeContractorOnboarding(page, "Test Admin Role", "100");
     await verifyContractorRecord(company.id, adminUser.id, "Test Admin Role");

@@ -36,6 +36,7 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
       }),
     ),
     defaultValues: {
+      role: "",
       payRateType: PayRateType.Hourly,
       payRateInSubunits: 100,
       startedAt: today(getLocalTimeZone()),
