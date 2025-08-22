@@ -23,7 +23,6 @@ import { customAlphabet } from "nanoid";
 import { deterministicEncryptedString, encryptedJson, encryptedString } from "@/lib/encryptedField";
 import {
   BusinessType,
-  DocumentTemplateType,
   DocumentType,
   invoiceStatuses,
   optionGrantIssueDateRelationships,
@@ -387,6 +386,7 @@ export const dividendComputations = pgTable(
     dividendsIssuanceDate: date("dividends_issuance_date", { mode: "string" }).notNull(),
     externalId: varchar("external_id").$default(nanoid).notNull(),
     returnOfCapital: boolean("return_of_capital").notNull(),
+    finalizedAt: timestamp("finalized_at", { precision: 6, mode: "date" }),
   },
   (table) => [
     index("index_dividend_computations_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -448,6 +448,7 @@ export const dividends = pgTable(
     qualifiedAmountCents: bigint("qualified_amount_cents", { mode: "bigint" }).notNull(),
     signedReleaseAt: timestamp("signed_release_at", { precision: 6, mode: "date" }),
     investmentAmountCents: bigint("investment_amount_cents", { mode: "bigint" }),
+    externalId: varchar("external_id").$default(nanoid).notNull(),
   },
   (table) => [
     index("index_dividends_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -463,6 +464,7 @@ export const dividends = pgTable(
       "btree",
       table.userComplianceInfoId.asc().nullsLast().op("int8_ops"),
     ),
+    uniqueIndex("index_dividends_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
   ],
 );
 
@@ -488,34 +490,6 @@ export const dividendsDividendPayments = pgTable(
   ],
 );
 
-export const documentTemplates = pgTable(
-  "document_templates",
-  {
-    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-    companyId: bigint("company_id", { mode: "bigint" }),
-    name: varchar().notNull(),
-    type: integer("document_type").$type<DocumentTemplateType>().notNull(),
-    externalId: varchar("external_id").$default(nanoid).notNull(),
-    docusealId: bigint("docuseal_id", { mode: "bigint" }).notNull(),
-    signable: boolean("signable").notNull().default(false),
-    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
-      .notNull()
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    index("index_document_templates_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
-    uniqueIndex("index_document_templates_on_external_id").using(
-      "btree",
-      table.externalId.asc().nullsLast().op("text_ops"),
-    ),
-    uniqueIndex("index_document_templates_on_docuseal_id").using(
-      "btree",
-      table.docusealId.asc().nullsLast().op("int8_ops"),
-    ),
-  ],
-);
-
 export const documents = pgTable(
   "documents",
   {
@@ -534,6 +508,7 @@ export const documents = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
     docusealSubmissionId: integer("docuseal_submission_id"),
+    text: text(),
   },
   (table) => [
     index("index_documents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -1152,6 +1127,7 @@ export const tenderOffers = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
     acceptedPriceCents: integer("accepted_price_cents"),
+    letterOfTransmittal: text("letter_of_transmittal").notNull(),
   },
   (table) => [
     index("index_tender_offers_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -1644,6 +1620,7 @@ export const companies = pgTable(
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
     jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
     inviteLink: varchar("invite_link"),
+    exerciseNotice: text("exercise_notice"),
   },
   (table) => [
     index("index_companies_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),

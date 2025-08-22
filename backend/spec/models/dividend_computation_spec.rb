@@ -129,10 +129,10 @@ RSpec.describe DividendComputation do
     end
   end
 
-  describe "#generate_dividends" do
+  describe "#finalize_and_create_dividend_round" do
     it "generates records as expected" do
       expect do
-        @dividend_computation.generate_dividends
+        @dividend_computation.finalize_and_create_dividend_round
       end.to change { company.dividends.count }.by(9) # 1 record per investor
          .and change { company.dividend_rounds.count }.by(1)
 
@@ -270,7 +270,7 @@ RSpec.describe DividendComputation do
     end
 
     it "handles edge case with no dividend computation outputs" do
-      empty_computation = create(:dividend_computation, company: company, total_amount_in_usd: 0, dividends_issuance_date: Date.current)
+      empty_computation = create(:dividend_computation, company: company, total_amount_in_usd: 100, dividends_issuance_date: Date.current)
 
       result = empty_computation.broken_down_by_investor
       expect(result).to eq([])

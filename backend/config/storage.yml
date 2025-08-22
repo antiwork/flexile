@@ -8,7 +8,7 @@ test_public:
   public: true
 
 local:
-  service: Disk
+  service: DiskWithHost
   root: <%= Rails.root.join("storage") %>
 
 amazon:

@@ -43,9 +43,6 @@ importers:
       '@docuseal/api':
         specifier: ^1.0.13
         version: 1.0.13
-      '@docuseal/react':
-        specifier: ^1.0.63
-        version: 1.0.63
       '@helperai/client':
         specifier: ^0.3.1
         version: 0.3.1
@@ -136,6 +133,9 @@ importers:
       '@tiptap/extension-link':
         specifier: ^2.2.2
         version: 2.11.5(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/pm@2.11.5)
+      '@tiptap/extension-text-align':
+        specifier: ^3.0.9
+        version: 3.0.9(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))
       '@tiptap/extension-underline':
         specifier: ^2.6.6
         version: 2.11.5(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))
@@ -616,9 +616,6 @@ packages:
 
   '@docuseal/api@1.0.13':
     resolution: {integrity: sha512-nk3pGW/DbpZLN3IOVtFg8F6FtUnfzIfLfgrHpPrULqmA38J6mQGpeKN39VzP4FXe5EhdKgsvNlSOEt2D/U4Z+g==}
-
-  '@docuseal/react@1.0.63':
-    resolution: {integrity: sha512-bgduC++M3bLTUIEq2pxRX49QO0iIDOg09rgg1sK4x7afBDOMFqOvuqcAT/shRzbJLXryV68rA9vxAf5ACX4qPg==}
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
@@ -3332,6 +3329,11 @@ packages:
     resolution: {integrity: sha512-PVfUiCqrjvsLpbIoVlegSY8RlkR64F1Rr2RYmiybQfGbg+AkSZXDeO0eIrc03//4gua7D9DfIozHmAKv1KN3ow==}
     peerDependencies:
       '@tiptap/core': ^2.7.0
+
+  '@tiptap/extension-text-align@3.0.9':
+    resolution: {integrity: sha512-QQBk8orIdntL3tPzGkKIqEogqArvO/x4dfvbAA2K0DqvS9uGJ3Qp4X6Twv+BIHLjeyhZl/z48vEMB+bjwvqg+w==}
+    peerDependencies:
+      '@tiptap/core': ^3.0.9
 
   '@tiptap/extension-text-style@2.11.5':
     resolution: {integrity: sha512-YUmYl0gILSd/u/ZkOmNxjNXVw+mu8fpC2f8G4I4tLODm0zCx09j9DDEJXSrM5XX72nxJQqtSQsCpNKnL0hfeEQ==}
@@ -7280,8 +7282,6 @@ snapshots:
 
   '@docuseal/api@1.0.13': {}
 
-  '@docuseal/react@1.0.63': {}
-
   '@drizzle-team/brocli@0.10.2': {}
 
   '@emnapi/runtime@1.4.0':
@@ -10355,6 +10355,10 @@ snapshots:
       '@tiptap/core': 2.11.5(@tiptap/pm@2.11.5)
 
   '@tiptap/extension-strike@2.11.5(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))':
+    dependencies:
+      '@tiptap/core': 2.11.5(@tiptap/pm@2.11.5)
+
+  '@tiptap/extension-text-align@3.0.9(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))':
     dependencies:
       '@tiptap/core': 2.11.5(@tiptap/pm@2.11.5)
 

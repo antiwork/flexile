@@ -20,7 +20,6 @@ const env = z
     ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: z.string(),
     DOMAIN: z.string(),
     DOCUSEAL_TOKEN: z.string(),
-    DOCUSEAL_USER_EMAIL: z.string(),
     SLACK_WEBHOOK_URL: z.string(),
     SLACK_WEBHOOK_CHANNEL: z.string(),
     SLACK_TOKEN: z.string(),
@@ -31,6 +30,8 @@ const env = z
     HELPER_HMAC_SECRET: z.string(),
     API_SECRET_TOKEN: z.string(),
     NEXTAUTH_SECRET: z.string(),
+    GOOGLE_CLIENT_ID: z.string(),
+    GOOGLE_CLIENT_SECRET: z.string(),
   })
   .parse(process.env);
 
