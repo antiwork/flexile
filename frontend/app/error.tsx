@@ -6,7 +6,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { linkClasses } from "@/components/Link";
-import logo from "@/public/logo-icon.svg";
 import { ResponseError } from "@/utils/request";
 
 export default function Error({ error }: { error: Error }) {
@@ -62,10 +61,10 @@ export const ErrorPage = ({ code }: { code: 404 | 403 | 500 }) => {
 
   return (
     <main className="flex h-screen flex-col items-center justify-center gap-4 bg-black text-center text-white">
-      <Image src={logo} className="size-40 invert" alt="" />
+      <Image src="/logo-icon.svg" className="size-40 invert" alt="" />
       <div className="text-3xl font-bold">{heading}</div>
       <div>{text}</div>
-      <Link href="/dashboard" className={linkClasses}>
+      <Link href="/invoices" className={linkClasses}>
         Go home?
       </Link>
     </main>
