@@ -366,7 +366,9 @@ class FinancialReportCsvService
       end_date = start_date.end_of_month
 
       filtered_vesting_events = @vesting_events.select do |vesting_event|
-        vesting_event.processed_at >= start_date && vesting_event.processed_at <= end_date
+        vesting_event.processed_at &&
+        vesting_event.processed_at >= start_date &&
+        vesting_event.processed_at <= end_date
       end
 
       rows = []
