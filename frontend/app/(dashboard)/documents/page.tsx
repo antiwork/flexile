@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import DocusealForm, { customCss } from "@/app/(dashboard)/documents/DocusealForm";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
@@ -96,7 +95,7 @@ export default function DocumentsPage() {
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
   const isSignable = (document: Document) =>
-    (!!document.docusealSubmissionId || document.hasText) &&
+    document.hasText &&
     document.signatories.some(
       (signatory) =>
         !signatory.signedAt &&
@@ -378,35 +377,13 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
         <DialogHeader>
           <DialogTitle>{document.name}</DialogTitle>
         </DialogHeader>
-        {document.docusealSubmissionId != null ? (
-          <SignWithDocuseal id={document.docusealSubmissionId} onSigned={sign} />
-        ) : (
-          <>
-            <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
-            <DialogFooter>
-              <Button onClick={sign} disabled={!signed}>
-                Agree & Submit
-              </Button>
-            </DialogFooter>
-          </>
-        )}
+        <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
+        <DialogFooter>
+          <Button onClick={sign} disabled={!signed}>
+            Agree & Submit
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-};
-
-const SignWithDocuseal = ({ id, onSigned }: { id: number; onSigned: () => void }) => {
-  const company = useCurrentCompany();
-  const [{ slug, readonlyFields }] = trpc.documents.templates.getSubmitterSlug.useSuspenseQuery({
-    id,
-    companyId: company.id,
-  });
-  return (
-    <DocusealForm
-      src={`https://docuseal.com/s/${slug}`}
-      readonlyFields={readonlyFields}
-      customCss={customCss}
-      onComplete={onSigned}
-    />
   );
 };
