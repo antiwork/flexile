@@ -1,6 +1,8 @@
 {
   "name": "Flexile Dev",
-  "dockerComposeFile": ["../docker-compose.dev.yml"],
+  "dockerComposeFile": [
+    "../docker-compose.dev.yml"
+  ],
   "service": "workspace",
   "workspaceFolder": "/workspaces/flexile",
   "features": {
@@ -19,7 +21,9 @@
     "NODE_OPTIONS": "--max-old-space-size=4096",
     "RAILS_ENV": "development"
   },
-  "mounts": ["source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"],
+  "mounts": [
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
+  ],
   "customizations": {
     "vscode": {
       "settings": {
@@ -41,7 +45,6 @@
     }
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
-  "runServices": ["postgres", "redis", "rails", "next", "nginx"],
   "overrideCommand": false,
   "remoteUser": "vscode",
   "updateRemoteUserUID": true
