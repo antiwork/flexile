@@ -120,7 +120,7 @@ export const useNavLinks = (): NavLinkInfo[] => {
       label: "Documents",
       route: "/documents" as const,
       icon: Files,
-      isActive: pathname.startsWith("/documents") || pathname.startsWith("/document_templates"),
+      isActive: pathname.startsWith("/documents"),
       badge: documentsData?.length ?? 0,
     });
   }
