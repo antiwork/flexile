@@ -1,9 +1,6 @@
 services:
   workspace:
     image: mcr.microsoft.com/devcontainers/base:ubuntu
-    environment:
-      SSL_CERT_FILE: /workspaces/flexile/tmp/combined_ca_certs.pem
-      NODE_EXTRA_CA_CERTS: /workspaces/flexile/tmp/combined_ca_certs.pem
     volumes:
       - .:/workspaces/flexile:cached
       - /var/run/docker.sock:/var/run/docker.sock
