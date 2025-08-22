@@ -13,21 +13,39 @@ if [ ! -f "docker-compose.dev.yml" ]; then
 fi
 
 echo "This script will:"
-echo "1. Create environment file from template"
-echo "2. Start the dev container services"
+echo "1. Check prerequisites"
+echo "2. Create environment file from template"
+echo "3. Start the dev container services"
 echo ""
 
-# read -p "Continue? (y/N) " -n 1 -r
-# echo
-# if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-#     echo "Aborted."
-#     exit 0
-# fi
+# Check for Docker
+echo "🐳 Checking Docker..."
+if ! command -v docker &> /dev/null; then
+    echo "❌ Docker is not installed. Please install Docker first:"
+    echo "   https://docs.docker.com/engine/install/"
+    exit 1
+fi
 
-# Run host setup
+if ! docker info &> /dev/null; then
+    echo "❌ Docker is not running. Please start Docker first."
+    exit 1
+fi
+
+echo "✅ Docker is ready"
+
+# Create environment file if it doesn't exist
 echo ""
-echo "🔧 Setting up host machine..."
-./.devcontainer/host-setup.sh
+echo "📝 Setting up environment file..."
+if [ ! -f ".env.development" ]; then
+    if [ -f ".devcontainer/env.development.template" ]; then
+        cp .devcontainer/env.development.template .env.development
+        echo "✅ Created .env.development from template"
+    else
+        echo "⚠️  .devcontainer/env.development.template not found. You'll need to create .env.development manually."
+    fi
+else
+    echo "✅ .env.development already exists"
+fi
 
 # Start dev container services
 echo ""

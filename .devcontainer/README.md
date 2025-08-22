@@ -7,73 +7,42 @@ This dev container provides a complete development environment for Flexile with 
 - [Docker](https://docs.docker.com/engine/install/)
 - [VS Code](https://code.visualstudio.com/) with [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
-## One-time Host Setup
+## Quick Start
 
-### 1. Add Local Domain to /etc/hosts
+The dev container handles all setup automatically, including SSL certificates and environment configuration. You can start in two ways:
 
-```bash
-sudo sh -c 'echo "127.0.0.1 flexile.dev" >> /etc/hosts'
-```
+### Option A: Automated Setup (Recommended)
 
-### 2. Generate TLS Certificates
-
-#### Option A: Automatic Setup (Recommended)
-
-Run the certificate setup script:
+Run the quick start script that handles everything:
 
 ```bash
-./.devcontainer/setup-certs.sh
+./.devcontainer/quickstart.sh
 ```
 
-#### Option B: Manual Setup
+This will automatically:
 
-**macOS:**
+- Check Docker prerequisites
+- Create environment file from template
+- Start all services (Rails, Next.js, PostgreSQL, Redis, Nginx)
+- Set up SSL certificates and domain configuration
 
-```bash
-brew install mkcert nss
-mkdir -p .certs
-mkcert -install
-mkcert -key-file ./.certs/flexile.dev.key -cert-file ./.certs/flexile.dev.crt flexile.dev
-```
-
-**Linux:**
-
-```bash
-curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
-chmod +x mkcert-v*-linux-amd64
-sudo mv mkcert-v*-linux-amd64 /usr/local/bin/mkcert
-mkdir -p .certs
-mkcert -install
-mkcert -key-file ./.certs/flexile.dev.key -cert-file ./.certs/flexile.dev.crt flexile.dev
-```
-
-### 3. Create Environment File
-
-Create `.env.development` based on the template:
-
-```bash
-# Copy the template and customize as needed
-cp .devcontainer/env.development.template .env.development
-```
-
-## Starting the Dev Container
-
-### Option A: VS Code (Recommended)
+### Option B: VS Code Dev Container
 
 1. Open the project in VS Code
 2. Press `Cmd/Ctrl + Shift + P`
 3. Type "Dev Containers: Open Folder in Container"
 4. Select the current folder
 
-### Option B: Command Line
+VS Code will automatically run the setup and start all services.
+
+### Option C: Manual Docker Compose
 
 ```bash
+# Create environment file first
+cp .devcontainer/env.development.template .env.development
+
 # Start all services
 docker compose -f docker-compose.dev.yml up -d --build
-
-# Or start individual services
-docker compose -f docker-compose.dev.yml up postgres redis -d
-docker compose -f docker-compose.dev.yml up rails next nginx
 ```
 
 ## Accessing the Application

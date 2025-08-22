@@ -15,9 +15,10 @@ The easiest way to get started is with the dev container setup that provides a c
 
 This will:
 
-- Set up SSL certificates for `flexile.dev`
-- Add the domain to your `/etc/hosts`
+- Check Docker prerequisites
+- Create environment configuration
 - Start all services (Rails, Next.js, PostgreSQL, Redis, Nginx)
+- Set up SSL certificates and domain configuration automatically
 - Make the app available at `https://flexile.dev`
 
 For more details, see [.devcontainer/README.md](.devcontainer/README.md).
