@@ -8,10 +8,10 @@ import { Editor as RichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatFileSize } from "@/utils";
+import { cn, formatFileSize } from "@/utils";
 
 export const schema = z.object({
-  contract: z.string().min(1).or(z.instanceof(File)),
+  contract: z.string().or(z.instanceof(File)),
 });
 
 export default function NewDocumentField() {
@@ -68,9 +68,14 @@ export default function NewDocumentField() {
               onDragEnter={() => setIsDragging(true)}
               onDragLeave={() => setIsDragging(false)}
             >
-              <Placeholder icon={CloudUpload} className={isDragging ? "border-dashed border-blue-500 bg-blue-50" : ""}>
+              <Placeholder
+                icon={CloudUpload}
+                className={cn("border-2", { "border-dashed border-blue-500 bg-blue-50": isDragging })}
+              >
                 <b>
-                  Drag and drop or <span className={linkClasses}>click to browse</span> your PDF file here
+                  Drag and drop or{" "}
+                  <span className={cn(linkClasses, { "text-blue-500": isDragging })}>click to browse</span> your PDF
+                  file here
                 </b>
               </Placeholder>
               <FormControl>
