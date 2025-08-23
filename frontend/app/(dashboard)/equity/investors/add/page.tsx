@@ -12,12 +12,15 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
+import { useIsMobile } from "@/utils/use-mobile";
 
 const investorSchema = z.object({
   investors: z
@@ -48,7 +51,7 @@ const InvestorSearchInput = ({
   getAvailableUsers: (currentIndex: number, searchTerm?: string) => { value: string; label: string }[];
   hasError?: boolean;
   field: ControllerRenderProps<InvestorFormData, `investors.${number}.userId`>;
-  isLoading?: boolean;
+  isLoading: boolean;
 }) => {
   const fieldId = useId();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -108,9 +111,108 @@ const InvestorSearchInput = ({
   );
 };
 
+const MobileInvestorCard = ({
+  fieldIndex,
+  form,
+  users,
+  getAvailableUsers,
+  isLoading,
+  handleRemoveInvestor,
+  fieldsLength,
+}: {
+  fieldIndex: number;
+  form: ReturnType<typeof useForm<InvestorFormData>>;
+  users: { id: string; name: string }[] | undefined;
+  getAvailableUsers: (currentIndex: number, searchTerm?: string) => { value: string; label: string }[];
+  isLoading: boolean;
+  handleRemoveInvestor: (index: number) => void;
+  fieldsLength: number;
+}) => {
+  const allInvestors = form.watch("investors");
+  const liveShares = Number(allInvestors[fieldIndex]?.shares ?? 0);
+  const totalShares = allInvestors.reduce((sum, inv) => sum + (Number(inv.shares) || 0), 0);
+  const percentage = totalShares > 0 ? (liveShares / totalShares) * 100 : 0;
+
+  return (
+    <Card className="mb-4">
+      <CardContent className="space-y-3 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-600">Investor {fieldIndex + 1}</h3>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => handleRemoveInvestor(fieldIndex)}
+            disabled={fieldsLength === 1}
+            className="size-11 shrink-0 text-gray-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-30 disabled:hover:bg-transparent"
+            aria-label={`Remove investor ${fieldIndex + 1}`}
+          >
+            <TrashIcon className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <Label className="text-sm font-medium">Investor</Label>
+            <FormField
+              control={form.control}
+              name={`investors.${fieldIndex}.userId`}
+              render={({ field, fieldState }) => (
+                <FormItem className="mt-1">
+                  <FormControl>
+                    <InvestorSearchInput
+                      fieldIndex={fieldIndex}
+                      form={form}
+                      users={users}
+                      getAvailableUsers={getAvailableUsers}
+                      hasError={!!fieldState.error}
+                      field={field}
+                      isLoading={isLoading}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Shares</Label>
+            <FormField
+              control={form.control}
+              name={`investors.${fieldIndex}.shares`}
+              render={({ field }) => (
+                <FormItem className="mt-1">
+                  <FormControl>
+                    <NumberInput
+                      value={field.value}
+                      onChange={(val) => field.onChange(val ?? 0)}
+                      placeholder="0"
+                      decimal={false}
+                      className="w-full"
+                      aria-label="Number of shares"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="border-t border-gray-100 pt-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Ownership:</span>
+              <span className="font-medium">{percentage.toFixed(1)}%</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const AddCapTablePage = () => {
   const company = useCurrentCompany();
   const router = useRouter();
+  const isMobile = useIsMobile();
   const { data: users, isLoading } = trpc.companies.listCompanyUsers.useQuery({ companyId: company.id });
   const [mutationError, setMutationError] = useState<string | null>(null);
 
@@ -256,7 +358,7 @@ const AddCapTablePage = () => {
                       onChange={(val) => field.onChange(val ?? 0)}
                       placeholder="0"
                       decimal={false}
-                      className="ml-auto w-60"
+                      className="ml-auto w-full max-w-[160px]"
                       aria-label="Number of shares"
                     />
                   </FormControl>
@@ -353,7 +455,7 @@ const AddCapTablePage = () => {
         mutationError ? (
           <div className="mx-4 mb-4">
             <Alert variant="destructive">
-              <AlertDescription>
+              <AlertDescription className="break-words">
                 {mutationError ||
                   (form.formState.errors.investors &&
                     "message" in form.formState.errors.investors &&
@@ -365,7 +467,45 @@ const AddCapTablePage = () => {
         ) : null}
 
         <div className="w-full">
-          <DataTable table={table} />
+          {isMobile ? (
+            <div className="space-y-4 px-4 pb-4">
+              {fields.map((field, index) => (
+                <MobileInvestorCard
+                  key={field.id}
+                  fieldIndex={index}
+                  form={form}
+                  users={users}
+                  getAvailableUsers={getAvailableUsers}
+                  isLoading={isLoading}
+                  handleRemoveInvestor={handleRemoveInvestor}
+                  fieldsLength={fields.length}
+                />
+              ))}
+
+              <Button type="button" variant="outline" onClick={handleAddInvestor} className="w-full">
+                <PlusIcon className="mr-2 inline size-4" />
+                Add new investor
+              </Button>
+
+              {/* Mobile Total Summary */}
+              <Card className="bg-gray-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold">Total</span>
+                    <div className="font-semibold">
+                      {form
+                        .watch("investors")
+                        .reduce((sum, inv) => sum + (Number(inv.shares) || 0), 0)
+                        .toLocaleString()}{" "}
+                      shares
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <DataTable table={table} />
+          )}
         </div>
       </form>
     </Form>
