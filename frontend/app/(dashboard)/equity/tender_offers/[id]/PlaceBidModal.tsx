@@ -14,10 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
+  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogStackContent,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -35,21 +35,12 @@ type PlaceBidModalProps = {
   data: TenderOffer;
 };
 
-type ConfirmationSectionProps = {
+type BidStepProps = {
+  open: boolean;
   onNext: () => void;
-  data: TenderOffer;
-};
-
-type LetterOfTransmittalSectionProps = {
   onBack: () => void;
-  onNext: () => void;
   data: TenderOffer;
-};
-
-type SubmitBidSectionProps = {
   tenderOfferId: string;
-  onBack: () => void;
-  data: TenderOffer;
   mutation: ReturnType<typeof trpc.tenderOffers.bids.create.useMutation>;
 };
 
@@ -61,42 +52,7 @@ const formSchema = z.object({
 
 type BuybackBidFormValues = z.infer<typeof formSchema>;
 
-const PlaceTenderOfferBidModal = ({ onClose, data, tenderOfferId }: PlaceBidModalProps) => {
-  const [currentStep, setCurrentStep] = useState(0);
-
-  const createMutation = trpc.tenderOffers.bids.create.useMutation({
-    onSuccess: () => {
-      onClose();
-    },
-  });
-
-  const goToNextStep = () => {
-    setCurrentStep(currentStep + 1);
-  };
-
-  const goToPreviousStep = () => {
-    setCurrentStep(currentStep - 1);
-  };
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogStackContent step={currentStep}>
-        <ConfirmationSection data={data} onNext={goToNextStep} />
-
-        <LetterOfTransmittalSection onBack={goToPreviousStep} onNext={goToNextStep} data={data} />
-
-        <SubmitBidSection
-          onBack={goToPreviousStep}
-          data={data}
-          mutation={createMutation}
-          tenderOfferId={tenderOfferId}
-        />
-      </DialogStackContent>
-    </Dialog>
-  );
-};
-
-const ConfirmationSection = ({ onNext, data }: ConfirmationSectionProps) => {
+const ConfirmationSection = ({ onNext, data }: BidStepProps) => {
   const company = useCurrentCompany();
   return (
     <>
@@ -154,7 +110,7 @@ const ConfirmationSection = ({ onNext, data }: ConfirmationSectionProps) => {
   );
 };
 
-const LetterOfTransmittalSection = ({ onBack, onNext, data }: LetterOfTransmittalSectionProps) => {
+const LetterOfTransmittalSection = ({ onBack, onNext, data }: BidStepProps) => {
   const [reviewed, setReviewed] = useState(false);
   const [signed, setSigned] = useState(false);
   const [showDocument, setShowDocument] = useState(true);
@@ -218,7 +174,7 @@ const LetterOfTransmittalSection = ({ onBack, onNext, data }: LetterOfTransmitta
   );
 };
 
-const SubmitBidSection = ({ onBack, mutation, data, tenderOfferId }: SubmitBidSectionProps) => {
+const SubmitBidSection = ({ onBack, mutation, data, tenderOfferId }: BidStepProps) => {
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const investorId = user.roles.investor?.id;
@@ -364,6 +320,53 @@ const SubmitBidSection = ({ onBack, mutation, data, tenderOfferId }: SubmitBidSe
           Submit bid
         </MutationStatusButton>
       </DialogFooter>
+    </>
+  );
+};
+
+const bidSteps: React.ComponentType<BidStepProps>[] = [
+  ConfirmationSection,
+  LetterOfTransmittalSection,
+  SubmitBidSection,
+];
+
+const PlaceTenderOfferBidModal = ({ onClose, data, tenderOfferId }: PlaceBidModalProps) => {
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const createMutation = trpc.tenderOffers.bids.create.useMutation({
+    onSuccess: () => {
+      onClose();
+    },
+  });
+
+  const goToNextStep = () => {
+    if (currentStep < bidSteps.length - 1) {
+      setCurrentStep((step) => step + 1);
+    } else {
+      onClose();
+    }
+  };
+
+  const goToPreviousStep = () => {
+    setCurrentStep((step) => Math.max(step - 1, 0));
+  };
+
+  return (
+    <>
+      {bidSteps.map((Step, idx) => (
+        <Dialog key={idx} open={idx === currentStep}>
+          <DialogContent>
+            <Step
+              open={idx === currentStep}
+              onNext={goToNextStep}
+              onBack={goToPreviousStep}
+              data={data}
+              tenderOfferId={tenderOfferId}
+              mutation={createMutation}
+            />
+          </DialogContent>
+        </Dialog>
+      ))}
     </>
   );
 };
