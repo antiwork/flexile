@@ -44,10 +44,8 @@ export default function Buybacks() {
         headerActions={
           user.roles.administrator ? (
             isMobile ? (
-              <Button asChild variant="floating-action">
-                <Link href="/equity/tender_offers/new">
-                  <Plus />
-                </Link>
+              <Button variant="floating-action" onClick={() => setShowBuyBackModal(true)}>
+                <Plus className="size-4" />
               </Button>
             ) : (
               <Button size="small" variant="outline" onClick={() => setShowBuyBackModal(true)}>
