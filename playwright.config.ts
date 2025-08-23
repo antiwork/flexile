@@ -21,6 +21,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
     // HTTP in tests, so no TLS bypass needed
     locale: "en-US",
+    timezoneId: "UTC",
   },
   expect: { timeout: 30000, toPass: { timeout: 30000 } },
   timeout: process.env.CI ? 30000 : 120000,
