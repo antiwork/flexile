@@ -70,12 +70,25 @@ test.describe("Tender offer place bid", () => {
         await expect(modal.getByText("Starting price per share")).toBeVisible();
 
         await modal.getByRole("button", { name: "Continue" }).click();
+      },
+      { page, title: "Buyback details" },
+    );
+
+    await withinModal(
+      async (modal) => {
+        await modal.getByRole("button", { name: "Letter of Transmittal" }).click();
         await expect(modal.getByRole("article", { name: "Letter of transmittal" })).toContainText(letterOfTransmittal, {
           useInnerText: true,
         });
         await modal.getByRole("button", { name: "Add your signature" }).click();
         await modal.getByRole("checkbox", { name: /I've reviewed the/u }).click();
         await modal.getByRole("button", { name: "Continue" }).click();
+      },
+      { page, title: "Letter of transmittal" },
+    );
+
+    await withinModal(
+      async (modal) => {
         await page.getByRole("combobox", { name: "Share class" }).click();
         await page.getByRole("option").first().click();
         await modal.getByLabel("Number of shares").fill(`${numberOfShares}`);
@@ -83,7 +96,7 @@ test.describe("Tender offer place bid", () => {
         await modal.getByRole("button", { name: "Submit bid" }).click();
         await modal.waitFor({ state: "detached" });
       },
-      { page, title: "Buyback details" },
+      { page, title: "Place a bid" },
     );
 
     await row.click();

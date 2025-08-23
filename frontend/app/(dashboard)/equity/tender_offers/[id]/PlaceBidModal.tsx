@@ -144,6 +144,7 @@ const LetterOfTransmittalSection = ({ onBack, onNext, data }: BidStepProps) => {
             <label htmlFor="reviewed" className="cursor-pointer text-sm leading-tight font-medium">
               I've reviewed the{" "}
               <span
+                role="button"
                 className="text-blue-600 underline hover:text-blue-800"
                 onClick={(e) => {
                   e.stopPropagation();
