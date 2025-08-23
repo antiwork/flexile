@@ -28,7 +28,7 @@ test.describe("Buyback creation", () => {
 
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Buybacks" }).click();
-    await page.getByRole("link", { name: "New buyback" }).click();
+    await page.getByRole("button", { name: "New buyback" }).click();
 
     const startDate = new Date();
     const endDate = addDays(new Date(), 30);
@@ -42,8 +42,6 @@ test.describe("Buyback creation", () => {
     await findRichTextEditor(page, "Letter of transmittal").fill(letterOfTransmittal);
 
     await page.getByRole("button", { name: "Create buyback" }).click();
-    await expect(page.getByText("There are no buybacks yet.")).toBeVisible();
-    await page.reload();
 
     await page
       .getByRole("row", {

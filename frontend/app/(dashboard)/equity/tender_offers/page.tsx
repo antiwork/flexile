@@ -2,25 +2,28 @@
 import { CircleCheck, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React from "react";
+import { useState } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
+import NewBuybackForm from "./NewBuyBack";
 
 export default function Buybacks() {
   const isMobile = useIsMobile();
   const company = useCurrentCompany();
   const router = useRouter();
   const user = useCurrentUser();
-  const { data = [], isLoading } = trpc.tenderOffers.list.useQuery({ companyId: company.id });
+  const [showBuyBackModal, setShowBuyBackModal] = useState(false);
+  const { data = [], isLoading, refetch } = trpc.tenderOffers.list.useQuery({ companyId: company.id });
 
   const columnHelper = createColumnHelper<RouterOutput["tenderOffers"]["list"][number]>();
   const columns = [
@@ -41,17 +44,13 @@ export default function Buybacks() {
         headerActions={
           user.roles.administrator ? (
             isMobile ? (
-              <Button asChild variant="floating-action">
-                <Link href="/equity/tender_offers/new">
-                  <Plus />
-                </Link>
+              <Button variant="floating-action" onClick={() => setShowBuyBackModal(true)}>
+                <Plus className="size-4" />
               </Button>
             ) : (
-              <Button asChild size="small" variant="outline">
-                <Link href="/equity/tender_offers/new">
-                  <Plus className="size-4" />
-                  New buyback
-                </Link>
+              <Button size="small" variant="outline" onClick={() => setShowBuyBackModal(true)}>
+                <Plus className="size-4" />
+                New buyback
               </Button>
             )
           ) : null
@@ -67,6 +66,20 @@ export default function Buybacks() {
           <Placeholder icon={CircleCheck}>There are no buybacks yet.</Placeholder>
         </div>
       )}
+
+      <Dialog open={showBuyBackModal} onOpenChange={setShowBuyBackModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Buyback</DialogTitle>
+          </DialogHeader>
+          <NewBuybackForm
+            handleComplete={() => {
+              setShowBuyBackModal(false);
+              refetch();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
