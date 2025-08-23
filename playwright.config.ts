@@ -19,7 +19,6 @@ export default defineConfig({
     trace: "on-first-retry",
     video: "retain-on-failure",
     screenshot: "only-on-failure",
-    // HTTP in tests, so no TLS bypass needed
     locale: "en-US",
     timezoneId: "UTC",
   },

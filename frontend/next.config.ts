@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
   },
 };
 if (process.env.NODE_ENV === "development") {
-  nextConfig.images.remotePatterns.push({ protocol: "http", hostname: "localhost", port: "3000" });
+  nextConfig.images.remotePatterns.push({ protocol: "http", hostname: "localhost", port: "3001" });
 }
 
 const withBundleAnalyzer = NextBundleAnalyzer({
