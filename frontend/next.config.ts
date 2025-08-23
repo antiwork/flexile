@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     typedRoutes: true,
     testProxy: true,
     serverActions: {
-      allowedOrigins: [process.env.DOMAIN, process.env.APP_DOMAIN].filter((x) => x),
+      allowedOrigins: ["localhost:3001", "127.0.0.1:3001", process.env.DOMAIN, process.env.APP_DOMAIN].filter((x) => x),
     },
   },
   images: {
@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
   },
 };
 if (process.env.NODE_ENV === "development") {
-  nextConfig.images.remotePatterns.push({ hostname: "flexile.dev" });
+  nextConfig.images.remotePatterns.push({ hostname: "localhost" });
 }
 
 const withBundleAnalyzer = NextBundleAnalyzer({
