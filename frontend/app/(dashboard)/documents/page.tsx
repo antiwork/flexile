@@ -1,5 +1,5 @@
 "use client";
-import { skipToken, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { CircleCheck, Download, Info } from "lucide-react";
 import type { Route } from "next";
@@ -88,10 +88,6 @@ export default function DocumentsPage() {
   const { data: documents = [], isLoading } = trpc.documents.list.useQuery({ companyId: company.id, userId });
 
   const columnHelper = createColumnHelper<Document>();
-  const [downloadDocument, setDownloadDocument] = useState<bigint | null>(null);
-  const { data: downloadUrl } = trpc.documents.getUrl.useQuery(
-    downloadDocument ? { companyId: company.id, id: downloadDocument } : skipToken,
-  );
   const [signDocumentParam] = useQueryState("sign");
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
   const isSignable = (document: Document) =>
@@ -108,9 +104,6 @@ export default function DocumentsPage() {
     const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
     if (canSign && document && isSignable(document)) setSignDocumentId(document.id);
   }, [documents, signDocumentParam]);
-  useEffect(() => {
-    if (downloadUrl) window.location.href = downloadUrl;
-  }, [downloadUrl]);
 
   const desktopColumns = useMemo(
     () =>
@@ -168,18 +161,13 @@ export default function DocumentsPage() {
                       Download
                     </Link>
                   </Button>
-                ) : document.docusealSubmissionId && document.signatories.every((signatory) => signatory.signedAt) ? (
-                  <Button variant="outline" size="small" onClick={() => setDownloadDocument(document.id)}>
-                    <Download className="size-4" />
-                    Download
-                  </Button>
                 ) : null}
               </>
             );
           },
         }),
       ].filter((column) => !!column),
-    [documents, isCompanyRepresentative, isSignable, canSign, setSignDocumentId, setDownloadDocument],
+    [documents, isCompanyRepresentative, isSignable, canSign, setSignDocumentId],
   );
 
   const mobileColumns = useMemo(

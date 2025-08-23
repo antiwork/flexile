@@ -105,7 +105,7 @@ const StripeMicrodepositVerification = () => {
           <p>If {isDescriptorCode ? "it's" : "they're"} not visible yet, please check in 1-2 days.</p>
 
           <Form {...form}>
-            <form onSubmit={(e) => void submit(e)}>
+            <form onSubmit={(e) => void submit(e)} className="space-y-4">
               {isDescriptorCode ? (
                 <FormField
                   control={form.control}
@@ -151,7 +151,7 @@ const StripeMicrodepositVerification = () => {
                 </div>
               )}
 
-              <DialogFooter className="mt-6">
+              <DialogFooter>
                 <MutationStatusButton type="submit" loadingText="Submitting..." mutation={microdepositVerification}>
                   Submit
                 </MutationStatusButton>
