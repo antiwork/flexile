@@ -113,7 +113,7 @@ const ConfirmationSection = ({ onNext, data }: BidStepProps) => {
 const LetterOfTransmittalSection = ({ onBack, onNext, data }: BidStepProps) => {
   const [reviewed, setReviewed] = useState(false);
   const [signed, setSigned] = useState(false);
-  const [showDocument, setShowDocument] = useState(true);
+  const [showDocument, setShowDocument] = useState(false);
 
   const canContinue = reviewed && signed;
 
@@ -126,7 +126,7 @@ const LetterOfTransmittalSection = ({ onBack, onNext, data }: BidStepProps) => {
         </DialogDescription>
       </DialogHeader>
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div>
         {showDocument ? (
           <article aria-label="Letter of transmittal">
             <SignForm content={data.letterOfTransmittal} signed={signed} onSign={() => setSigned(true)} />
@@ -198,7 +198,7 @@ const SubmitBidSection = ({ onBack, mutation, data, tenderOfferId }: BidStepProp
   );
 
   const form = useForm<BuybackBidFormValues>({
-    defaultValues: { shareClass: holdings[0]?.className ?? "", pricePerShare: 0, numberOfShares: 0 },
+    defaultValues: { shareClass: holdings[0]?.className ?? "" },
     resolver: zodResolver(formSchema),
   });
 
@@ -286,7 +286,7 @@ const SubmitBidSection = ({ onBack, mutation, data, tenderOfferId }: BidStepProp
                 <FormItem>
                   <FormLabel>Price per share</FormLabel>
                   <FormControl>
-                    <NumberInput {...field} decimal prefix="$" placeholder="$ 0" />
+                    <NumberInput {...field} decimal prefix="$" placeholder="0" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -354,7 +354,7 @@ const PlaceTenderOfferBidModal = ({ onClose, data, tenderOfferId }: PlaceBidModa
   return (
     <>
       {bidSteps.map((Step, idx) => (
-        <Dialog key={idx} open={idx === currentStep}>
+        <Dialog key={idx} open={idx === currentStep} onOpenChange={(isOpen) => !isOpen && onClose()}>
           <DialogContent>
             <Step
               open={idx === currentStep}
