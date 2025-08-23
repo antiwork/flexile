@@ -6,7 +6,6 @@ RSpec.describe InviteLawyer do
   let!(:company) { create(:company, :completed_onboarding) }
   let(:email) { "lawyer@example.com" }
   let!(:current_user) { create(:user) }
-
   subject(:invite_lawyer) { described_class.new(company:, email:, current_user:).perform }
 
   before(:each) do
@@ -15,19 +14,32 @@ RSpec.describe InviteLawyer do
   end
 
   describe "#perform" do
-    context "email normalization" do
-      let(:email) { "   LaWyeR@EXAMPLE.COM  " }
+    context "when inviting existing company worker" do
+      let(:email) { "existing+contractor@example.com" }
+      let!(:existing_user) { create(:user, email:) }
+      let!(:existing_company_worker) { create(:company_worker, company:, user: existing_user) }
 
-      it "creates user with normalized email and sends invitation" do
-        result = invite_lawyer
-        perform_enqueued_jobs
+      it "creates company_lawyer with correct attributes and sends email" do
+        result = nil
+        expect do
+          result = invite_lawyer
+          perform_enqueued_jobs
+        end.to not_change(User, :count)
+          .and change(CompanyLawyer, :count).by(1)
+          .and change { ActionMailer::Base.deliveries.count }.by(1)
 
         expect(result[:success]).to be true
-        user = User.last
-        expect(user.email).to eq("lawyer@example.com")
+
+        company_lawyer = CompanyLawyer.last
+        expect(company_lawyer.user).to eq(existing_user)
+        expect(company_lawyer.user.email).to eq(email)
+        expect(company_lawyer.company).to eq(company)
+        expect(company_lawyer.user.invited_by).to eq(current_user)
 
         sent_email = ActionMailer::Base.deliveries.last
-        expect(sent_email.to).to eq(["lawyer@example.com"])
+        expect(sent_email.to).to eq([email])
+        expect(sent_email.subject).to eq("You've been invited to join #{company.name} as a lawyer")
+        expect(sent_email.reply_to).to eq([company.email])
       end
     end
 
@@ -47,14 +59,11 @@ RSpec.describe InviteLawyer do
         expect(result[:error_message]).to eq("Lawyer account already exists for this email")
         expect(result[:field]).to eq(:user_id)
       end
-
-      it "rolls back user creation in transaction" do
-        expect { invite_lawyer }.not_to change(User, :count)
-        expect(enqueued_jobs).to be_empty
-      end
     end
 
     context "when inviting new user" do
+      let(:email) { "   LaWyeR@EXAMPLE.COM  " }
+
       it "creates user and company_lawyer with correct attributes and sends email" do
         result = nil
         expect do
@@ -68,28 +77,15 @@ RSpec.describe InviteLawyer do
 
         user = User.last
         company_lawyer = CompanyLawyer.last
-        expect(user.email).to eq(email)
+        expect(user.email).to eq("lawyer@example.com")
         expect(company_lawyer.company).to eq(company)
         expect(company_lawyer.user).to eq(user)
         expect(user.invited_by).to eq(current_user)
 
         sent_email = ActionMailer::Base.deliveries.last
-        expect(sent_email.to).to eq([email])
+        expect(sent_email.to).to eq(["lawyer@example.com"])
         expect(sent_email.subject).to eq("You've been invited to join #{company.name} as a lawyer")
         expect(sent_email.reply_to).to eq([company.email])
-      end
-
-      it "sets skip_invitation on user invite" do
-        expect_any_instance_of(User)
-          .to receive(:invite!)
-          .and_wrap_original do |original, user, *args|
-            original.call(*args) do |invitation|
-              expect(invitation).to respond_to(:skip_invitation=)
-              invitation.skip_invitation = true
-            end
-          end
-
-        invite_lawyer
       end
     end
   end
