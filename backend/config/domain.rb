@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 # Simple configuration that relies on environment variables being set appropriately for each environment
-# Allow overriding protocol via env; default to https unless explicitly set
 PROTOCOL = ENV.fetch("PROTOCOL", "https")
 ROOT_DOMAIN = ENV.fetch("DOMAIN")
 DOMAIN = ENV.fetch("APP_DOMAIN", ROOT_DOMAIN)
