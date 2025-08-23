@@ -20,7 +20,5 @@ services:
     volumes:
       - ./tmp/redis:/data
 
-  # Nginx no longer required for local dev; frontend/backend run on localhost
-
 volumes:
   flexilepgdata:
