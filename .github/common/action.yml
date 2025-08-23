@@ -13,7 +13,7 @@ runs:
     - run: pnpm i
       shell: bash
 
-    - run: cp .env.example .env && ln -s $PWD/.env ./frontend/.env
+    - run: cp env.example .env && ln -s $PWD/.env ./frontend/.env
       shell: bash
 
     - uses: ruby/setup-ruby@v1
