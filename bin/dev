@@ -9,18 +9,15 @@ elif [ ! -f ".env" ]; then
     exit 1
 fi
 
-# Install Node.js dependencies first (before generating certificates)
 echo "Installing Node.js dependencies..."
 pnpm install
 
-# Start local Docker services
 echo "Starting Docker services..."
 make local
 
-# Prepare backend dependencies and database
-echo "Installing backend dependencies..."
 cd backend
 
+echo "Installing backend dependencies..."
 bundle install
 
 echo "Preparing database..."
