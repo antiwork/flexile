@@ -1,0 +1,48 @@
+{
+  "name": "Flexile Dev",
+  "dockerComposeFile": ["../docker-compose.dev.yml"],
+  "service": "workspace",
+  "workspaceFolder": "/workspaces/flexile",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    },
+    "ghcr.io/devcontainers/features/ruby:1": {
+      "version": "3.4.3"
+    }
+  },
+  "containerEnv": {
+    "BUNDLE_PATH": "vendor/bundle",
+    "NEXT_TELEMETRY_DISABLED": "1",
+    "NODE_OPTIONS": "--max-old-space-size=4096",
+    "RAILS_ENV": "development"
+  },
+  "mounts": ["source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"],
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "ruby.lsp.rubyVersionManager": {
+          "identifier": "rbenv"
+        }
+      },
+      "extensions": [
+        "rebornix.Ruby",
+        "Shopify.ruby-lsp",
+        "ms-azuretools.vscode-docker",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "Prisma.prisma",
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss"
+      ]
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "runServices": ["postgres", "redis", "rails", "next", "nginx"],
+  "overrideCommand": false,
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true
+}
