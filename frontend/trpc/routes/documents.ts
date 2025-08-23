@@ -1,17 +1,12 @@
-import docuseal from "@docuseal/api";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray, isNotNull, isNull, not, or, type SQLWrapper } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from "drizzle-orm";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
 import { activeStorageAttachments, activeStorageBlobs, documents, documentSignatures, users } from "@/db/schema";
-import env from "@/env";
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
-import { templatesRouter } from "./templates";
-
-docuseal.configure({ key: env.DOCUSEAL_TOKEN });
 
 const visibleDocuments = (companyId: bigint, userId: bigint | SQLWrapper | undefined) =>
   and(
@@ -28,7 +23,7 @@ export const documentsRouter = createRouter({
 
       const signable = assertDefined(
         and(
-          or(isNotNull(documents.docusealSubmissionId), isNotNull(documents.text)),
+          isNotNull(documents.text),
           isNull(documentSignatures.signedAt),
           input.userId ? undefined : eq(documentSignatures.title, "Company Representative"),
         ),
@@ -39,7 +34,7 @@ export const documentsRouter = createRouter({
       );
       const rows = await db
         .selectDistinctOn([documents.id], {
-          ...pick(documents, "id", "name", "createdAt", "docusealSubmissionId", "type"),
+          ...pick(documents, "id", "name", "createdAt", "type"),
           attachment: pick(activeStorageBlobs, "key", "filename"),
           hasText: isNotNull(documents.text),
         })
@@ -86,23 +81,6 @@ export const documentsRouter = createRouter({
     if (!document) throw new TRPCError({ code: "NOT_FOUND" });
     return document;
   }),
-  getUrl: companyProcedure.input(z.object({ id: z.bigint() })).query(async ({ ctx, input }) => {
-    const [document] = await db
-      .select({ docusealSubmissionId: documents.docusealSubmissionId })
-      .from(documents)
-      .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
-      .where(
-        and(
-          eq(documents.id, input.id),
-          visibleDocuments(ctx.company.id, ctx.companyAdministrator || ctx.companyLawyer ? undefined : ctx.user.id),
-        ),
-      )
-      .limit(1);
-    if (!document?.docusealSubmissionId) throw new TRPCError({ code: "NOT_FOUND" });
-    const submission = await docuseal.getSubmission(document.docusealSubmissionId);
-    return assertDefined(submission.documents[0]).url;
-  }),
-  // TODO set up a DocuSeal webhook instead
   sign: companyProcedure.input(z.object({ id: z.bigint(), role: z.string() })).mutation(async ({ ctx, input }) => {
     if (input.role === "Company Representative" && !ctx.companyAdministrator && !ctx.companyLawyer)
       throw new TRPCError({ code: "FORBIDDEN" });
@@ -138,6 +116,4 @@ export const documentsRouter = createRouter({
 
     return { documentId: input.id, complete: allSigned };
   }),
-
-  templates: templatesRouter,
 });

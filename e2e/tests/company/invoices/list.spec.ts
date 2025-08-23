@@ -11,8 +11,14 @@ import { and, eq, exists, isNull, not } from "drizzle-orm";
 import { companies, companyContractors, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
-const setupCompany = async ({ trusted = true }: { trusted?: boolean } = {}) => {
-  const { company } = await companiesFactory.create({ isTrusted: trusted, requiredInvoiceApprovalCount: 2 });
+const setupCompany = async ({
+  trusted = true,
+  withoutBankAccount = false,
+}: { trusted?: boolean; withoutBankAccount?: boolean } = {}) => {
+  const { company } = await companiesFactory.create(
+    { isTrusted: trusted, requiredInvoiceApprovalCount: 2 },
+    { withoutBankAccount },
+  );
   const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
   const user = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) });
   assert(user !== undefined);
@@ -51,8 +57,8 @@ test.describe("Invoices admin flow", () => {
 
   test.describe("account statuses", () => {
     test("when payment method setup is incomplete, it shows the correct status message", async ({ page }) => {
-      const { company, user } = await setupCompany();
-      await companyStripeAccountsFactory.createProcessing({ companyId: company.id });
+      const { company, user } = await setupCompany({ withoutBankAccount: true });
+
       await invoicesFactory.create({ companyId: company.id });
 
       await login(page, user);
