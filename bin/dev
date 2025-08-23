@@ -4,7 +4,7 @@ set -e
 
 if [ -f ".vercel/project.json" ]; then
     #pnpx vercel env pull .env
-    echo "Vercel pull temporarily disabled"
+    echo "Vercel pull temporarily disabled until env vars are updated"
 elif [ ! -f ".env" ]; then
     echo ".env file not found. Please run bin/setup first."
     exit 1
@@ -14,7 +14,7 @@ fi
 echo "Installing Node.js dependencies..."
 pnpm install
 
-# Start local Docker services (no SSL cert generation needed)
+# Start local Docker services
 echo "Starting Docker services..."
 make local
 
