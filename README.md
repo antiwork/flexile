@@ -21,7 +21,7 @@ The easiest way to set up the development environment is to use the [`bin/setup`
 
 - Navigate to frontend app and install dependencies `cd frontend && pnpm i`
 
-Finally, set up your environment: `cp env.example .env`. If you're an Antiwork team member, you can use `vercel env pull .env`.
+Finally, set up your environment: `cp .env.example .env`. If you're an Antiwork team member, you can use `vercel env pull .env`.
 
 ## Running the App
 
