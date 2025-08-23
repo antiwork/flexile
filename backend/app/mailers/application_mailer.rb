@@ -2,8 +2,8 @@
 
 class ApplicationMailer < ActionMailer::Base
   {
-    NOREPLY_EMAIL: "noreply@#{ROOT_DOMAIN}",
-    SUPPORT_EMAIL: "support@#{ROOT_DOMAIN}",
+    NOREPLY_EMAIL: "noreply@#{EMAIL_DOMAIN}",
+    SUPPORT_EMAIL: "support@#{EMAIL_DOMAIN}",
   }.each do |key, email|
     const_set(key, email)
     const_set("#{key}_WITH_NAME", email_address_with_name(email, "Flexile"))

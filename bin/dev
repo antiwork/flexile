@@ -3,7 +3,8 @@
 set -e
 
 if [ -f ".vercel/project.json" ]; then
-    pnpx vercel env pull .env
+    #pnpx vercel env pull .env
+    echo "Vercel pull temporarily disabled"
 elif [ ! -f ".env" ]; then
     echo ".env file not found. Please run bin/setup first."
     exit 1
