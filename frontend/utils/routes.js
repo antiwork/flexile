@@ -121,7 +121,7 @@ const __jsr = (
         constructor() {
             this.configuration = {
                 prefix: "",
-                default_url_options: {"protocol":"https","host":"flexile.dev"},
+                default_url_options: {"protocol":"http","host":"localhost:3000"},
                 special_options_key: "toString",
                 serializer: null || this.default_serializer.bind(this),
             };
@@ -2544,4 +2544,3 @@ export const wise_paid_admin_payment_url = /*#__PURE__*/ __jsr.r({"id":{"r":true
  * @returns {string} route path
  */
 export const wise_paid_admin_payment_path = /*#__PURE__*/ __jsr.r({"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"payments"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"wise_paid"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]);
-

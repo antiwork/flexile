@@ -3,8 +3,6 @@ name: Tests
 on:
   pull_request:
   push:
-    branches:
-      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -67,8 +65,6 @@ jobs:
         uses: ./.github/common/
 
       - run: pnpm puppeteer browsers install chrome
-
-      - run: node docker/createCertificate.js
 
       - name: Cache Next build
         id: next-cache
