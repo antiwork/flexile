@@ -101,6 +101,37 @@ RSpec.describe CreateOrUpdateInvoiceService do
         end.to change { user.invoices.count }.by(1)
       end
 
+      it "creates an invoice with multiple attachments" do
+        # Use direct params instead of invoice_params
+        params_with_attachments = ActionController::Parameters.new({
+          **invoice_params,
+          **invoice_line_item_params,
+          invoice: {
+            **invoice_params[:invoice],
+            attachments: [
+              fixture_file_upload("image.png", "image/png"),
+              fixture_file_upload("sample.pdf", "application/pdf")
+            ],
+          },
+        })
+        invoice_service_with_attachments = described_class.new(
+          params: params_with_attachments,
+          user: user,
+          company: company,
+          contractor: contractor,
+          invoice: nil
+        )
+
+        expect do
+          result = invoice_service_with_attachments.process
+          expect(result[:success]).to be(true)
+
+          invoice = result[:invoice]
+          expect(invoice.attachments.count).to eq(2)
+          expect(invoice.attachments.map(&:filename).map(&:to_s)).to contain_exactly("image.png", "sample.pdf")
+        end.to change { user.invoices.count }.by(1)
+      end
+
       it "does not create an invoice with no line items" do
         params[:invoice_line_items] = []
         expect do
@@ -310,6 +341,131 @@ RSpec.describe CreateOrUpdateInvoiceService do
           expect(invoice.country_code).to eq(user.country_code)
         end.to change { user.invoices.count }.by(0)
           .and change { invoice.reload.attachments.count }.to(0)
+      end
+
+      it "updates an invoice with attachments" do
+        # Make sure there are no existing attachments
+        invoice.attachments.purge
+        invoice.reload
+        expect(invoice.attachments.count).to eq(0)
+
+        # Use direct params instead of invoice_params
+        params_with_attachments = ActionController::Parameters.new({
+          **invoice_params,
+          **invoice_line_item_params,
+          invoice: {
+            **invoice_params[:invoice],
+            attachments: [
+              fixture_file_upload("image.png", "image/png"),
+              fixture_file_upload("sample.pdf", "application/pdf")
+            ],
+          },
+        })
+        invoice_service_with_attachments = described_class.new(
+          params: params_with_attachments,
+          user: user,
+          company: company,
+          contractor: contractor,
+          invoice: invoice
+        )
+
+        expect do
+          result = invoice_service_with_attachments.process
+          expect(result[:success]).to eq(true)
+
+          invoice.reload
+          expect(invoice.attachments.count).to eq(2)
+          expect(invoice.attachments.map(&:filename).map(&:to_s)).to contain_exactly("image.png", "sample.pdf")
+        end.to change { user.invoices.count }.by(0)
+          .and change { invoice.reload.attachments.count }.by(2)
+      end
+
+      it "retains only the attachments that are included in the update" do
+        # Make sure there are no existing attachments
+        invoice.attachments.purge
+        invoice.reload
+        expect(invoice.attachments.count).to eq(0)
+
+        # First add attachments
+        invoice.attachments.attach(fixture_file_upload("image.png", "image/png"))
+        invoice.attachments.attach(fixture_file_upload("contract.pdf", "application/pdf"))
+        invoice.reload
+        expect(invoice.attachments.count).to eq(2)
+
+        # Get the signed_id of the first attachment to keep it
+        keep_attachment_signed_id = invoice.attachments.first.signed_id
+
+        # Use direct params instead of invoice_params
+        params_with_attachments = ActionController::Parameters.new({
+          **invoice_params,
+          **invoice_line_item_params,
+          invoice: {
+            **invoice_params[:invoice],
+            attachments: [
+              keep_attachment_signed_id,
+              fixture_file_upload("sample.pdf", "application/pdf")
+            ],
+          },
+        })
+        invoice_service_with_attachments = described_class.new(
+          params: params_with_attachments,
+          user: user,
+          company: company,
+          contractor: contractor,
+          invoice: invoice
+        )
+
+        expect do
+          result = invoice_service_with_attachments.process
+          expect(result[:success]).to eq(true)
+
+          invoice.reload
+          expect(invoice.attachments.count).to eq(2)
+          # The first attachment should still be there (image.png), but contract.pdf should be replaced with sample.pdf
+          attachment_filenames = invoice.attachments.map(&:filename).map(&:to_s)
+          expect(attachment_filenames).to include("image.png")
+          expect(attachment_filenames).to include("sample.pdf")
+          expect(attachment_filenames).not_to include("contract.pdf")
+        end.to change { invoice.reload.attachments.count }.by(0)
+      end
+
+      it "removes all attachments when empty array is provided" do
+        invoice.attachments.purge
+        invoice.reload
+        expect(invoice.attachments.count).to eq(0)
+
+        # First add attachments
+        invoice.attachments.attach([
+                                     fixture_file_upload("image.png", "image/png"),
+                                     fixture_file_upload("contract.pdf", "application/pdf")
+                                   ])
+        invoice.reload
+        expect(invoice.attachments.count).to eq(2)
+
+        # Use direct params instead of invoice_params with empty attachments array
+        params_with_empty_attachments = ActionController::Parameters.new({
+          **invoice_params,
+          **invoice_line_item_params,
+          invoice: {
+            **invoice_params[:invoice],
+            attachments: [],
+          },
+        })
+        described_class.new(
+          params: params_with_empty_attachments,
+          user: user,
+          company: company,
+          contractor: contractor,
+          invoice: invoice
+        )
+
+        expect do
+          result = invoice_service.process
+          expect(result[:success]).to eq(true)
+
+          invoice.reload
+          expect(invoice.attachments.count).to eq(0)
+        end.to change { invoice.reload.attachments.count }.by(-2)
       end
 
       it "updates the invoice address when the contractor has changed it" do
