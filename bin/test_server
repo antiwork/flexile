@@ -19,7 +19,6 @@ export RAILS_ENV=test
 export NODE_ENV=test
 export ENABLE_DEFAULT_OTP=true
 
-
 cd backend
 bundle exec rails db:drop db:create db:schema:load db:seed_test_data
 cd ..
