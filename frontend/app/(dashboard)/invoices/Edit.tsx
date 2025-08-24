@@ -15,6 +15,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
 import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
+import { PdfDropZone } from "@/components/PdfDropZone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import { usePdfExtraction } from "@/hooks/usePdfExtraction";
 import { trpc } from "@/trpc/client";
 import { assert, assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
@@ -141,6 +143,20 @@ const Edit = () => {
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const showExpensesTable = showExpenses || expenses.size > 0;
+
+  const { isExtracting, isDragOver, fileInputRef, handleFileUpload, error, clearError } = usePdfExtraction({
+    onExtractedData: ({ invoiceNumber: extractedInvoiceNumber, invoiceDate, lineItems: extractedLineItems }) => {
+      if (extractedInvoiceNumber) {
+        setInvoiceNumber(extractedInvoiceNumber);
+      }
+      if (invoiceDate) {
+        setIssueDate(parseDate(invoiceDate));
+      }
+      if (extractedLineItems && extractedLineItems.length > 0) {
+        setLineItems(List(extractedLineItems));
+      }
+    },
+  });
 
   const validate = () => {
     setErrorField(null);
@@ -279,12 +295,32 @@ const Edit = () => {
         }
       />
 
+      {!data.invoice.id && (
+        <PdfDropZone
+          isDragOver={isDragOver}
+          isExtracting={isExtracting}
+          onFileSelect={() => fileInputRef.current?.click()}
+        />
+      )}
+
       {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
         <Alert className="mx-4" variant="warning">
           <CircleAlert />
           <AlertDescription>
             This invoice includes rates above your default of {formatMoneyFromCents(payRateInSubunits)}/
             {data.user.project_based ? "project" : "hour"}. Please check before submitting.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {error ? (
+        <Alert className="mx-4" variant="destructive">
+          <CircleAlert />
+          <AlertDescription>
+            {error}
+            <button onClick={clearError} className="ml-2 text-sm underline hover:no-underline">
+              Dismiss
+            </button>
           </AlertDescription>
         </Alert>
       ) : null}
@@ -416,6 +452,7 @@ const Edit = () => {
               onChange={createNewExpenseEntries}
             />
           ) : null}
+          <input ref={fileInputRef} type="file" className="hidden" accept=".pdf" onChange={handleFileUpload} />
           {showExpensesTable ? (
             <Table>
               <TableHeader>
