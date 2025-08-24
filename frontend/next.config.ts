@@ -10,7 +10,9 @@ const nextConfig: NextConfig = {
     return config;
   },
   experimental: {
-    typedRoutes: true,
+    browserDebugInfoInTerminal: true, // Forward browser logs to terminal
+    clientSegmentCache: true, // Client-side router improvements
+    devtoolSegmentExplorer: true, // Route composition in DevTools
     testProxy: true,
     serverActions: {
       allowedOrigins: [process.env.DOMAIN, process.env.APP_DOMAIN].filter((x) => x),
@@ -24,6 +26,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  typescript: {
+    // Unlike what the name implies, this skips the TS run entirely which speeds up the build,
+    // and it's already covered by autofix on CI
+    ignoreBuildErrors: process.env.NODE_ENV === "test",
+  },
+  typedRoutes: true,
 };
 if (process.env.NODE_ENV === "development") {
   nextConfig.images.remotePatterns.push({ hostname: "flexile.dev" });

@@ -381,7 +381,13 @@ export default function InvoicePage() {
                       <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
                       <div className="flex justify-between gap-2">
                         <Link
-                          href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
+                          href={{
+                            pathname: "/download/[key]/[filename]",
+                            query: {
+                              key: expense.attachment?.key,
+                              filename: expense.attachment?.filename,
+                            },
+                          }}
                           download
                           className={cn(linkClasses, "print:text-black print:no-underline")}
                         >

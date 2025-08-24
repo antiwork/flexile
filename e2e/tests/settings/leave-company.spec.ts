@@ -116,7 +116,7 @@ test.describe("Leave company", () => {
     await expect(page.getByText("Leave this workspace?")).toBeVisible();
     await page.getByRole("button", { name: "Leave" }).click();
 
-    await expect(page).toHaveURL("/invoices");
+    await expect(page).toHaveURL("/equity/dividends");
 
     const contractor = await db.query.companyContractors.findFirst({
       where: and(eq(companyContractors.companyId, company.id), eq(companyContractors.userId, user.id)),

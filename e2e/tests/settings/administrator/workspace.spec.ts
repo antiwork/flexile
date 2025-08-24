@@ -18,7 +18,7 @@ test.describe("Workspace settings", () => {
 
     await page.getByLabel("Company name").fill("Updated Company Name");
     await page.getByLabel("Company website").fill("https://example.com");
-    await page.getByLabel("Logo").setInputFiles("frontend/images/flexile-logo.svg");
+    await page.getByLabel("Logo").setInputFiles("frontend/public/flexile-logo.svg");
     await page.getByLabel("Brand color").fill("#4b5563");
 
     await page.getByRole("button", { name: "Save changes" }).click();
