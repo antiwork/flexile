@@ -275,7 +275,7 @@ const Edit = () => {
     );
 
   return (
-    <div>
+    <>
       <DashboardHeader
         title={data.invoice.id ? "Edit invoice" : "New invoice"}
         headerActions={
@@ -579,7 +579,7 @@ const Edit = () => {
           </footer>
         </div>
       </section>
-    </div>
+    </>
   );
 };
 
