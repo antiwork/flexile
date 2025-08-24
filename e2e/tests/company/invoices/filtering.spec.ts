@@ -71,14 +71,12 @@ const createInvoiceWithStatus = async (
   return { invoice, companyContractor };
 };
 
-const setupTestFixture = async (testId: string) => {
-  const uniqueSuffix = `${testId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-
+const setupTestFixture = async () => {
   const { company } = await companiesFactory.create({
     isTrusted: true,
     requiredInvoiceApprovalCount: 2,
-    stripeCustomerId: `cus_test_${uniqueSuffix}`,
-    name: `Test Company ${uniqueSuffix}`,
+    stripeCustomerId: "cus_test",
+    name: "Test Company",
   });
   const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
   const adminUser = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) });
@@ -86,7 +84,7 @@ const setupTestFixture = async (testId: string) => {
 
   const { companyContractor } = await companyContractorsFactory.create({
     companyId: company.id,
-    role: `Main Contractor ${uniqueSuffix}`,
+    role: "Main Contractor",
   });
   const contractorUser = await db.query.users.findFirst({ where: eq(users.id, companyContractor.userId) });
   assert(contractorUser !== undefined);
@@ -156,7 +154,7 @@ const setupTestFixture = async (testId: string) => {
     companyContractorId: companyContractor.id,
     status: "received",
     totalAmountInUsdCents: BigInt(800_00),
-    invoiceNumber: `INV-CONTRACTOR-${uniqueSuffix}`,
+    invoiceNumber: `INV-CONTRACTOR-1`,
   });
 
   return {
@@ -171,7 +169,7 @@ const setupTestFixture = async (testId: string) => {
 
 test.describe("Invoice Status Filtering", () => {
   test("admin can filter invoices by all status types", async ({ page }) => {
-    const fixture = await setupTestFixture("admin-all-filters");
+    const fixture = await setupTestFixture();
     await login(page, fixture.adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
 
