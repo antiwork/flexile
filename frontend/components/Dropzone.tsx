@@ -12,7 +12,7 @@ interface DropzoneState {
   isProcessing: boolean;
 }
 
-function getDTFileIfValid(dataTransfer: DataTransfer) {
+function getDataTransferFileIfValid(dataTransfer: DataTransfer) {
   const items = Array.from(dataTransfer.items);
   const item = items[0];
   if (items.length !== 1 || !item || item.kind !== "file" || item.type !== "application/pdf") return;
@@ -54,7 +54,7 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     preventDefault(e);
-    const file = getDTFileIfValid(e.dataTransfer);
+    const file = getDataTransferFileIfValid(e.dataTransfer);
     if (!file) return;
     setIsDragging(true);
   }, []);
@@ -68,7 +68,7 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
   const handleDrop = useCallback(
     async (e: React.DragEvent) => {
       preventDefault(e);
-      const file = getDTFileIfValid(e.dataTransfer)?.getAsFile();
+      const file = getDataTransferFileIfValid(e.dataTransfer)?.getAsFile();
       if (!file) return;
       setIsDragging(false);
       setIsProcessing(true);
