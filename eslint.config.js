@@ -72,11 +72,26 @@ export default [
   },
   nextPlugin.flatConfig.recommended,
   ...tseslint.config({
-    files: ["**/*.ts", "**/*.tsx"],
+    files: [
+      "frontend/next-env.d.ts",
+      "frontend/app/**/page.tsx",
+      "frontend/app/**/error.tsx",
+      "frontend/app/**/not-found.tsx",
+      "frontend/app/**/layout.tsx",
+      "frontend/app/**/route.ts",
+      "frontend/trpc/**/*.ts",
+      "frontend/.next/types/**/*.ts",
+      "frontend/types/*.d.ts",
+      "frontend/middleware.ts",
+    ],
     extends: [...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
     languageOptions: {
       parser: tseslint.parser,
-      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+        project: ["./frontend/tsconfig.json"],
+      },
     },
     rules: {
       "@typescript-eslint/no-unnecessary-condition": ["error", { allowConstantLoopConditions: true }],
@@ -104,7 +119,12 @@ export default [
     },
   }),
   ...tseslint.config({
-    files: ["**/*.tsx"],
+    files: [
+      "frontend/app/**/page.tsx",
+      "frontend/app/**/error.tsx",
+      "frontend/app/**/not-found.tsx",
+      "frontend/app/**/layout.tsx",
+    ],
     extends: [reactPlugin.configs.flat.recommended],
     rules: {
       "@typescript-eslint/no-unnecessary-type-constraint": "off", // sometimes required in TSX lest it be parsed as a tag
@@ -123,9 +143,7 @@ export default [
       "react/no-unknown-property": "off",
     },
     settings: {
-      react: {
-        version: "detect",
-      },
+      react: { version: "detect" },
     },
   }),
   ...tseslint.config({
@@ -139,10 +157,19 @@ export default [
     languageOptions: {
       globals: globals.node,
     },
-    extends: [tseslint.configs.base, tseslint.configs.disableTypeChecked],
+    extends: [tseslint.configs.disableTypeChecked],
   }),
   ...tseslint.config({
     files: ["e2e/**/*.ts"],
+    extends: [...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+        project: ["./e2e/tsconfig.json"],
+      },
+    },
     rules: {
       "no-console": "off",
       "no-debugger": "error",

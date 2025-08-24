@@ -3,17 +3,16 @@
 import { redirect, RedirectType, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect } from "react";
 import { useUserStore } from "@/global";
+import { isValidRoute } from "@/utils/nextHelpers";
 
 function AuthLayout({ children }: { children: React.ReactNode }) {
   const user = useUserStore((state) => state.user);
   const searchParams = useSearchParams();
 
-  const isValidRedirectUrl = (url: string) => url.startsWith("/") && !url.startsWith("//");
   useEffect(() => {
     if (user) {
       const redirectUrl = searchParams.get("redirect_url");
-      const targetUrl = redirectUrl && isValidRedirectUrl(redirectUrl) ? redirectUrl : "/invoices";
-      throw redirect(targetUrl, RedirectType.replace);
+      throw redirect(redirectUrl && isValidRoute(redirectUrl) ? redirectUrl : "/invoices", RedirectType.replace);
     }
   }, [user, searchParams]);
 

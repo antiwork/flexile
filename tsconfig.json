@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "rootDir": "."
+  },
+  // The root project has no sources of its own. By setting `files` to an empty
+  // list, TS won't automatically include all sources below root (the default).
+  "files": [],
+  "references": [
+    // Config for e2e
+    { "path": "./e2e/tsconfig.json" },
+    // Config for frontend specific code
+    { "path": "./frontend/tsconfig.json" }
+  ]
+}

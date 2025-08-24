@@ -2,10 +2,9 @@
 
 set -e
 
-[ "$CI" = "true" ] && pnpm next typegen frontend
+pnpm next typegen frontend
 pnpm next lint frontend --fix --max-warnings 0
-pnpm tsc -p e2e/tsconfig.json
-pnpm tsc -p frontend
+pnpm tsc -b
 pnpm prettier --write '**/*.{css,md,json}' --check '!docker'
 pnpm svgo --multipass backend/app/assets/**/*.svg
 pnpm svgo --multipass frontend/**/*.svg

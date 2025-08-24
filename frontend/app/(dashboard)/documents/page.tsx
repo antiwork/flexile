@@ -1,8 +1,8 @@
 "use client";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import { CircleCheck, Download, Info } from "lucide-react";
-import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
@@ -24,6 +24,7 @@ import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
+import { isValidRoute } from "@/utils/nextHelpers";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 
@@ -350,8 +351,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
       router.replace("/documents");
       await trpcUtils.documents.list.refetch();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not ideal, but there's no good way to assert this right now
-      if (redirectUrl) router.push(redirectUrl as Route);
+      if (isValidRoute(redirectUrl)) router.push(redirectUrl);
       else onClose();
     },
   });

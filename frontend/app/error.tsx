@@ -6,6 +6,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { linkClasses } from "@/components/Link";
+import { isValidRoute } from "@/utils/nextHelpers";
 import { ResponseError } from "@/utils/request";
 
 export default function Error({ error }: { error: Error }) {
@@ -22,7 +23,8 @@ export default function Error({ error }: { error: Error }) {
         if (error.response && !error.response.bodyUsed) {
           void error.response.json().then((body) => {
             const redirectData = z.object({ redirect_path: z.string() }).safeParse(body);
-            if (redirectData.success) throw redirect(redirectData.data.redirect_path);
+            if (redirectData.success && isValidRoute(redirectData.data.redirect_path))
+              throw redirect(redirectData.data.redirect_path);
           });
         }
         return status;

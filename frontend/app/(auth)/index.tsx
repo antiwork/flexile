@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { SignInMethod } from "@/db/enums";
 import { request } from "@/utils/request";
+import { isValidRoute } from "@/utils/nextHelpers";
 
 const emailSchema = z.object({ email: z.string().email() });
 const otpSchema = z.object({
@@ -78,10 +79,8 @@ export function AuthPage({
 
       const redirectUrl = searchParams.get("redirect_url");
       setRedirectInProgress(true);
-      router.replace(
-        // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
-        redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/invoices",
-      );
+
+      router.replace(isValidRoute(redirectUrl) ? redirectUrl : "/invoices");
     },
   });
   const emailForm = useForm({
