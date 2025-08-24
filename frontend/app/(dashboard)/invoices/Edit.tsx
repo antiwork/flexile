@@ -35,6 +35,10 @@ import {
 } from "@/utils/routes";
 import QuantityInput from "./QuantityInput";
 import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
+import { DropzoneOverlay, useDropzone } from "@/components/Dropzone";
+import { openFilePicker } from "@/lib/filePicker";
+import type { InvoiceExtractionResult } from "@/app/api/invoices/extract-from-pdf/route";
+import CircularProgress from "@/components/CircularProgress";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -258,12 +262,76 @@ const Edit = () => {
       }),
     );
 
+  const prefillFromExtractedInvoice = ({ invoice }: InvoiceExtractionResult) => {
+    console.log({ invoice });
+    const newLineItems = List(
+      invoice.line_items?.map((item) => ({
+        ...item,
+        errors: [],
+        quantity: item.quantity?.toString() ?? "",
+      })),
+    );
+    setLineItems(newLineItems);
+    setInvoiceNumber(invoice.invoice_number);
+    setIssueDate(parseDate(invoice.invoice_date));
+  };
+
+  const {
+    mutateAsync: extractInvoiceFromPdf,
+    isPending: isExtracting,
+    error,
+  } = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await request({
+        url: "/api/invoices/extract-from-pdf",
+        method: "POST",
+        formData,
+        accept: "json",
+      });
+      const json = (await response.json()) as { data: InvoiceExtractionResult } | { error: string };
+      if ("error" in json) throw new Error(json.error);
+      prefillFromExtractedInvoice(json.data);
+    },
+  });
+
+  const { dragProps, isDragging } = useDropzone({
+    onFileSelected: extractInvoiceFromPdf,
+  });
+
   return (
-    <>
+    <div {...dragProps}>
+      {(isExtracting || isDragging) && (
+        <DropzoneOverlay>
+          {isExtracting ? (
+            <CircularProgress progress={100} className="mb-3 h-8 w-8" />
+          ) : (
+            <ArrowUpTrayIcon className="mb-3 h-8 w-8" />
+          )}
+          <div className="text-foreground text-lg font-semibold">
+            {isExtracting ? "Extracting..." : "Drag your PDF here"}
+          </div>
+          <div className="text-muted-foreground text-sm">
+            {isExtracting
+              ? "Hang tight, we're reading your PDF..."
+              : "Release the file to automatically fill your invoice"}
+          </div>
+        </DropzoneOverlay>
+      )}
       <DashboardHeader
         title={data.invoice.id ? "Edit invoice" : "New invoice"}
         headerActions={
           <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                openFilePicker("application/pdf").then(extractInvoiceFromPdf);
+              }}
+            >
+              <ArrowUpTrayIcon className="size-4" />
+              Fill from PDF
+            </Button>
             {data.invoice.id && data.invoice.status === "rejected" ? (
               <div className="inline-flex items-center">Action required</div>
             ) : (
@@ -286,6 +354,13 @@ const Edit = () => {
             This invoice includes rates above your default of {formatMoneyFromCents(payRateInSubunits)}/
             {data.user.project_based ? "project" : "hour"}. Please check before submitting.
           </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {error ? (
+        <Alert className="mx-4" variant="destructive">
+          <CircleAlert />
+          <AlertDescription>{error.message}</AlertDescription>
         </Alert>
       ) : null}
 
@@ -542,7 +617,7 @@ const Edit = () => {
           </footer>
         </div>
       </section>
-    </>
+    </div>
   );
 };
 

@@ -119,6 +119,7 @@
     "next": "^15.0.1",
     "next-auth": "4",
     "nuqs": "^2.1.1",
+    "openai": "^5.15.0",
     "pg": "^8.13.1",
     "puppeteer": "^24.0.0",
     "quickbooks-node-promise": "^3.3.11",
