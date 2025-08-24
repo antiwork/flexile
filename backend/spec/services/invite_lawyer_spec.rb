@@ -28,7 +28,7 @@ RSpec.describe InviteLawyer do
     end
   end
 
-  context "when inviting an existing user" do
+  context "when inviting a user who is already a lawyer for this company" do
     let!(:company_lawyer) { create(:company_lawyer, company:, user: create(:user, email:)) }
 
     it "returns an error and does not create new records or send emails" do
@@ -38,8 +38,32 @@ RSpec.describe InviteLawyer do
       end.not_to have_enqueued_mail(CompanyLawyerMailer, :invitation_instructions)
 
       expect(result[:success]).to be false
-      expect(result[:error_message]).to eq("Email has already been taken")
+      expect(result[:error_message]).to eq("User is already a lawyer for this company.")
       expect(result[:field]).to eq("email")
+    end
+  end
+
+  context "when inviting a user who exists in another company" do
+    let!(:other_company) { create(:company, :completed_onboarding) }
+    let!(:existing_user) { create(:user, email:) }
+    let!(:other_company_lawyer) { create(:company_lawyer, company: other_company, user: existing_user) }
+
+    it "successfully invites the user as a lawyer to this company" do
+      result = nil
+      expect do
+        result = invite_lawyer
+      end.to change(CompanyLawyer, :count).by(1)
+         .and have_enqueued_mail(CompanyLawyerMailer, :invitation_instructions)
+
+      expect(result[:success]).to be true
+
+      # Verify the user is now a lawyer in our company
+      company_lawyer = CompanyLawyer.find_by(company:, user: existing_user)
+      expect(company_lawyer).to be_present
+
+      # Verify the user still has their role in the other company
+      other_company_lawyer = CompanyLawyer.find_by(company: other_company, user: existing_user)
+      expect(other_company_lawyer).to be_present
     end
   end
 end
