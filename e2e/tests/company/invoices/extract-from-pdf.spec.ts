@@ -31,7 +31,7 @@ test.describe("invoice PDF extraction via dropzone", () => {
     }, files);
   }
 
-  test("should handle drag and drop PDF extraction", async ({ page }) => {
+  test("should successfuly submit an invoice extracted from a PDF", async ({ page }) => {
     await login(page, user, "/invoices/new");
     await page.route("/api/invoices/extract-from-pdf", async (route) => {
       await route.fulfill({
