@@ -2,7 +2,7 @@
 import CircularProgress from "@/components/CircularProgress";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
-import { useCallback, useId, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 interface DropzoneOptions {
@@ -14,7 +14,6 @@ interface DropzoneState {
 }
 
 export function useDropzone({ onFileSelected }: DropzoneOptions) {
-  const id = useId();
   const [state, setState] = useState<DropzoneState>({
     isDragging: false,
     isProcessing: false,
@@ -90,7 +89,7 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
     openFilePicker,
     state,
     dragProps: {
-      id: `dropzone-${id}`,
+      id: "dropzone",
       onDrop: handleDrop,
       onDragEnter: handleDragEnter,
       onDragLeave: handleDragLeave,
