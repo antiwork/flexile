@@ -20,14 +20,15 @@ test.describe("invoice PDF extraction via dropzone", () => {
     });
   });
 
-  async function createDataTransferHandle(page: Page, opts: { fileName: string; type: string; bytes: number[] }) {
-    return page.evaluateHandle((opts) => {
-      const { fileName, type, bytes } = opts;
+  async function createDataTransferHandle(page: Page, files: { name: string; type: string; bytes: number[] }[]) {
+    return page.evaluateHandle((files) => {
       const dt = new DataTransfer();
-      const file = new File([new Uint8Array(bytes)], fileName, { type });
-      dt.items.add(file);
+      files.forEach(({ name, type, bytes }) => {
+        const file = new File([new Uint8Array(bytes)], name, { type });
+        dt.items.add(file);
+      });
       return dt;
-    }, opts);
+    }, files);
   }
 
   test("should handle drag and drop PDF extraction", async ({ page }) => {
@@ -57,11 +58,13 @@ test.describe("invoice PDF extraction via dropzone", () => {
     });
 
     const dropzoneTarget = page.locator("#dropzone");
-    const dataTransfer = await createDataTransferHandle(page, {
-      fileName: "invoice.pdf",
-      type: "application/pdf",
-      bytes: Array.from(Buffer.from("%PDF-1.4\nTest Invoice")),
-    });
+    const dataTransfer = await createDataTransferHandle(page, [
+      {
+        name: "invoice.pdf",
+        type: "application/pdf",
+        bytes: Array.from(Buffer.from("Invoice")),
+      },
+    ]);
     await dropzoneTarget.dispatchEvent("dragenter", { dataTransfer });
     await expect(page.getByText("Drag your PDF here")).toBeVisible();
     await dropzoneTarget.dispatchEvent("drop", { dataTransfer });
@@ -88,15 +91,50 @@ test.describe("invoice PDF extraction via dropzone", () => {
     expect(invoice.invoiceNumber).toBe("INV-DRAG-DROP-001");
   });
 
-  test("should not accept non-PDF files", async ({ page }) => {
+  test("should only accept one PDF file", async ({ page }) => {
     await login(page, user, "/invoices/new");
     const dropzoneTarget = page.locator("#dropzone");
-    const dataTransfer = await createDataTransferHandle(page, {
-      fileName: "document.txt",
-      type: "text/plain",
-      bytes: Array.from(Buffer.from("This is a text file, not a PDF")),
-    });
+    const dataTransfer = await createDataTransferHandle(page, [
+      {
+        name: "document.txt",
+        type: "text/plain",
+        bytes: Array.from(Buffer.from("This is a text file, not a PDF")),
+      },
+    ]);
     await dropzoneTarget.dispatchEvent("dragenter", { dataTransfer });
     await expect(page.getByText("Drag your PDF here")).not.toBeVisible();
+
+    const dataTransfer2 = await createDataTransferHandle(page, [
+      {
+        name: "invoice1.pdf",
+        type: "application/pdf",
+        bytes: Array.from(Buffer.from("Invoice 1")),
+      },
+      {
+        name: "invoice2.pdf",
+        type: "application/pdf",
+        bytes: Array.from(Buffer.from("Invoice 2")),
+      },
+    ]);
+    await dropzoneTarget.dispatchEvent("dragenter", { dataTransfer: dataTransfer2 });
+    await expect(page.getByText("Drag your PDF here")).not.toBeVisible();
+  });
+
+  test("should display an error message if something goes wrong (e.g. file size exceeds the 10MB limit)", async ({
+    page,
+  }) => {
+    await login(page, user, "/invoices/new");
+    const dataTransfer = await createDataTransferHandle(page, [
+      {
+        name: "large_invoice.pdf",
+        type: "application/pdf",
+        bytes: Array.from(Buffer.alloc(1024 * 1024 * 15)), // 15MB
+      },
+    ]);
+    const dropzoneTarget = page.locator("#dropzone");
+    await dropzoneTarget.dispatchEvent("dragenter", { dataTransfer });
+    await expect(page.getByText("Drag your PDF here")).toBeVisible();
+    await dropzoneTarget.dispatchEvent("drop", { dataTransfer });
+    await expect(page.getByText("File size exceeds the 10MB limit")).toBeVisible();
   });
 });
