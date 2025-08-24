@@ -263,7 +263,6 @@ const Edit = () => {
     );
 
   const prefillFromExtractedInvoice = ({ invoice }: InvoiceExtractionResult) => {
-    console.log({ invoice });
     const newLineItems = List(
       invoice.line_items?.map((item) => ({
         ...item,
