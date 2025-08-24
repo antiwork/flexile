@@ -1,40 +1,56 @@
 "use client";
+import CircularProgress from "@/components/CircularProgress";
 import { Card, CardContent } from "@/components/ui/card";
-import { useCallback, useState, type PropsWithChildren } from "react";
+import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
+import { useCallback, useId, useRef, useState } from "react";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 interface DropzoneOptions {
   onFileSelected: (file: File) => Promise<void>;
 }
+interface DropzoneState {
+  isDragging: boolean;
+  isProcessing: boolean;
+}
 
 export function useDropzone({ onFileSelected }: DropzoneOptions) {
-  const [isDragging, setIsDragging] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const id = useId();
+  const [state, setState] = useState<DropzoneState>({
+    isDragging: false,
+    isProcessing: false,
+  });
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const updateState = useCallback((update: Partial<DropzoneState>) => {
+    setState((state) => ({ ...state, ...update }));
+  }, []);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
-    preventDefault(e);
+    e.preventDefault();
+    e.stopPropagation();
     const file = getFileIfValid(e.dataTransfer);
     if (!file) return;
-    setIsDragging(true);
+    updateState({ isDragging: true });
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    preventDefault(e);
-    // If user is dragging over a child element, don't hide the dropzone
+    e.preventDefault();
+    e.stopPropagation();
     // @ts-expect-error https://stackoverflow.com/a/54271161
     if (!e.currentTarget.contains(e.relatedTarget)) {
-      setIsDragging(false);
+      updateState({ isDragging: false });
     }
   }, []);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      preventDefault(e);
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       const file = getFileIfValid(e.dataTransfer)?.getAsFile();
       if (!file || file.size > MAX_FILE_SIZE) return;
-      setIsDragging(false);
-      setIsProcessing(true);
-      onFileSelected(file).finally(() => setIsProcessing(false));
+      updateState({ isDragging: false, isProcessing: true });
+      await onFileSelected(file);
+      updateState({ isProcessing: false });
     },
     [onFileSelected],
   );
@@ -47,28 +63,69 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
     return item;
   }, []);
 
+  // Disable default dragover behavior
+  // to prevent the browser from opening the file
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleInputChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || file.size > MAX_FILE_SIZE) return;
+      updateState({ isProcessing: true });
+      await onFileSelected(file);
+      updateState({ isProcessing: false });
+      e.target.value = "";
+    },
+    [onFileSelected],
+  );
+
+  const openFilePicker = useCallback(() => {
+    inputRef.current?.click();
+  }, []);
+
   return {
+    openFilePicker,
+    state,
     dragProps: {
+      id: `dropzone-${id}`,
       onDrop: handleDrop,
       onDragEnter: handleDragEnter,
       onDragLeave: handleDragLeave,
-      onDragOver: preventDefault,
-      id: "dropzone",
+      onDragOver: handleDragOver,
     },
-    isDragging,
-    isProcessing,
+    inputProps: {
+      ref: inputRef,
+      type: "file" as const,
+      accept: "application/pdf",
+      multiple: false,
+      onChange: handleInputChange,
+      style: { display: "none" },
+    },
   };
 }
 
-export function DropzoneOverlay({ children }: PropsWithChildren) {
+export function Dropzone({ isProcessing, isDragging }: DropzoneState) {
+  if (!isProcessing && !isDragging) return null;
   return (
     <Card className="animate-in pointer-events-none fixed inset-0 z-50 flex items-center justify-center overflow-hidden border-none bg-black/10 duration-200">
-      <CardContent className="flex flex-col items-center">{children}</CardContent>
+      <CardContent className="flex flex-col items-center">
+        {isProcessing ? (
+          <CircularProgress progress={100} className="mb-3 h-8 w-8" />
+        ) : (
+          <ArrowUpTrayIcon className="mb-3 h-8 w-8" />
+        )}
+        <div className="text-foreground text-lg font-semibold">
+          {isProcessing ? "Extracting..." : "Drag your PDF here"}
+        </div>
+        <div className="text-muted-foreground text-sm">
+          {isProcessing
+            ? "Hang tight, we're reading your PDF..."
+            : "Release the file to automatically fill your invoice"}
+        </div>
+      </CardContent>
     </Card>
   );
-}
-
-function preventDefault(e: React.DragEvent) {
-  e.preventDefault();
-  e.stopPropagation();
 }

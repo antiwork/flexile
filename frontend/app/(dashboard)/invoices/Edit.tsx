@@ -35,10 +35,8 @@ import {
 } from "@/utils/routes";
 import QuantityInput from "./QuantityInput";
 import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
-import { DropzoneOverlay, useDropzone } from "@/components/Dropzone";
-import { openFilePicker } from "@/lib/filePicker";
+import { Dropzone, useDropzone } from "@/components/Dropzone";
 import type { InvoiceExtractionResult } from "@/app/api/invoices/extract-from-pdf/route";
-import CircularProgress from "@/components/CircularProgress";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -275,11 +273,7 @@ const Edit = () => {
     setIssueDate(parseDate(invoice.invoice_date));
   };
 
-  const {
-    mutateAsync: extractInvoiceFromPdf,
-    isPending: isExtracting,
-    error,
-  } = useMutation({
+  const { mutateAsync: extractInvoiceFromPdf, error } = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
@@ -295,39 +289,19 @@ const Edit = () => {
     },
   });
 
-  const { dragProps, isDragging } = useDropzone({
+  const { dragProps, inputProps, openFilePicker, state } = useDropzone({
     onFileSelected: extractInvoiceFromPdf,
   });
 
   return (
     <div {...dragProps}>
-      {(isExtracting || isDragging) && (
-        <DropzoneOverlay>
-          {isExtracting ? (
-            <CircularProgress progress={100} className="mb-3 h-8 w-8" />
-          ) : (
-            <ArrowUpTrayIcon className="mb-3 h-8 w-8" />
-          )}
-          <div className="text-foreground text-lg font-semibold">
-            {isExtracting ? "Extracting..." : "Drag your PDF here"}
-          </div>
-          <div className="text-muted-foreground text-sm">
-            {isExtracting
-              ? "Hang tight, we're reading your PDF..."
-              : "Release the file to automatically fill your invoice"}
-          </div>
-        </DropzoneOverlay>
-      )}
+      <input {...inputProps} />
+      <Dropzone {...state} />
       <DashboardHeader
         title={data.invoice.id ? "Edit invoice" : "New invoice"}
         headerActions={
           <>
-            <Button
-              variant="outline"
-              onClick={() => {
-                openFilePicker("application/pdf").then(extractInvoiceFromPdf);
-              }}
-            >
+            <Button variant="outline" onClick={openFilePicker}>
               <ArrowUpTrayIcon className="size-4" />
               Fill from PDF
             </Button>
