@@ -17,15 +17,12 @@ const extractedInvoiceDataSchema = z.object({
     }),
   ),
 });
-
 const invoiceExtractionResultSchema = z.object({
   is_invoice: z.boolean().describe("Whether the document is an invoice."),
   invoice: extractedInvoiceDataSchema,
 });
 
-export type ExtractedInvoiceData = z.infer<typeof extractedInvoiceDataSchema>;
 export type InvoiceExtractionResult = z.infer<typeof invoiceExtractionResultSchema>;
-
 const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,
 });
@@ -63,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     const data = completion.choices[0]?.message.parsed;
 
-    if (!data?.is_invoice)
+    if (!data || !data.is_invoice)
       return NextResponse.json(
         { error: "We couldn't spot an invoice in that file. Make sure you uploaded the right PDF and try again." },
         { status: 400 },
