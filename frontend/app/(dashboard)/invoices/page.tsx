@@ -105,7 +105,6 @@ export default function InvoicesPage() {
     },
     [isPayable, company.completedPaymentMethodSetup],
   );
-
   const actionConfig = useMemo(
     (): ActionConfig<Invoice> => ({
       entityName: "invoices",
