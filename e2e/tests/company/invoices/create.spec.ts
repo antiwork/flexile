@@ -51,22 +51,21 @@ test.describe("invoice creation", () => {
   });
 
   const importFromPdf = async (page: Page, filePath: string) => {
-    const importButton = page.getByRole("button", { name: "Import from PDF" });
+    const dropZone = page.getByRole("button", { name: "Drop invoice PDF here to auto-fill the form" });
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await importButton.click();
+    await dropZone.click();
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(filePath);
   };
 
   const expectExtractionInProgress = async (page: Page) => {
-    await expect(page.getByRole("button", { name: "Extracting..." })).toBeVisible();
-    await expect(page.getByText("Extracting invoice data")).toBeVisible();
-    await expect(page.getByText("This may take a few seconds...")).toBeVisible();
+    await expect(page.getByText("Extracting invoice data...")).toBeVisible();
+    await expect(page.getByText("This may take a few seconds")).toBeVisible();
   };
 
   const expectExtractionComplete = async (page: Page) => {
-    await expect(page.getByRole("button", { name: "Import from PDF" })).toBeVisible();
-    await expect(page.getByText("Extracting invoice data")).not.toBeVisible();
+    await expect(page.getByText("Extracting invoice data...")).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Drop invoice PDF here to auto-fill the form" })).toBeVisible();
   };
 
   const setupExtractionRequestCapture = (page: Page): { url: string; method: string }[] => {
@@ -323,8 +322,8 @@ test.describe("invoice creation", () => {
 
     await expect(page.getByRole("heading", { name: "New invoice" })).toBeVisible();
 
-    const importButton = page.getByRole("button", { name: "Import from PDF" });
-    await expect(importButton).toBeVisible();
+    const dropZone = page.getByRole("button", { name: "Drop invoice PDF here to auto-fill the form" });
+    await expect(dropZone).toBeVisible();
 
     const extractionRequests = setupExtractionRequestCapture(page);
 
@@ -374,8 +373,8 @@ test.describe("invoice creation", () => {
   test("rejects non-invoice PDFs with appropriate error message", async ({ page }) => {
     await login(page, contractorUser, "/invoices/new");
 
-    const importButton = page.getByRole("button", { name: "Import from PDF" });
-    await expect(importButton).toBeVisible();
+    const dropZone = page.getByRole("button", { name: "Drop invoice PDF here to auto-fill the form" });
+    await expect(dropZone).toBeVisible();
 
     const extractionRequests = setupExtractionRequestCapture(page);
 

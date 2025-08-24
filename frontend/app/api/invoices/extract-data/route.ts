@@ -7,7 +7,6 @@ import { authOptions } from "@/lib/auth";
 
 const extractionSchema = z.object({
   is_invoice: z.boolean().describe("Whether this document is an invoice"),
-  confidence: z.number().min(0).max(100).describe("Confidence level 0-100"),
   invoice_number: z.string().nullable().describe("Invoice number if found"),
   invoice_date: z.string().nullable().describe("Invoice date in YYYY-MM-DD format"),
   total_amount: z.number().nullable().describe("Total amount of the invoice"),
@@ -62,7 +61,7 @@ export async function POST(request: NextRequest) {
           content: [
             {
               type: "text",
-              text: 'Analyze this document. Return JSON with these exact fields:\n\n{\n  "is_invoice": boolean,\n  "confidence": 0-100,\n  "invoice_number": string or null,\n  "invoice_date": "YYYY-MM-DD" or null,\n  "total_amount": number or null,\n  "line_items": array or null\n}\n\nIf is_invoice is false, set all invoice fields to null. Only extract invoice data if you\'re confident this is actually an invoice.',
+              text: 'Analyze this document. Return JSON with these exact fields:\n\n{\n  "is_invoice": boolean,\n  "invoice_number": string or null,\n  "invoice_date": "YYYY-MM-DD" or null,\n  "total_amount": number or null,\n  "line_items": array or null\n}\n\nIf is_invoice is false, set all invoice fields to null. Only extract invoice data if this is actually an invoice.',
             },
             {
               type: "file",
