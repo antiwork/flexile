@@ -3,7 +3,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { expect, test, type Page } from "@test/index";
+import { expect, type Page, test } from "@test/index";
 import { desc, eq } from "drizzle-orm";
 import { invoices } from "@/db/schema";
 
