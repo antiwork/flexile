@@ -1,8 +1,8 @@
-import OpenAI from "openai";
-import env from "@/env";
 import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
+import env from "@/env";
 
 const extractedInvoiceDataSchema = z.object({
   invoice_date: z.string().describe("The date the invoice was issued, formatted as YYYY-MM-DD."),
@@ -32,16 +32,15 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File;
-
-    if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    const file = formData.get("file");
+    if (!file || !(file instanceof File)) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json({ error: "File size exceeds the 10MB limit" }, { status: 400 });
     }
 
     const { id: fileId } = await openai.files.create({
-      file: file,
+      file,
       purpose: "user_data",
     });
 
@@ -67,14 +66,14 @@ export async function POST(request: NextRequest) {
 
     const data = completion.choices[0]?.message.parsed;
 
-    if (!data || !data.is_invoice)
+    if (!data?.is_invoice)
       return NextResponse.json(
         { error: "We couldn't spot an invoice in that file. Make sure you uploaded the right PDF and try again." },
         { status: 400 },
       );
 
     return NextResponse.json({ data });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
   }
 }

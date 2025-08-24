@@ -10,9 +10,11 @@ import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
+import type { InvoiceExtractionResult } from "@/app/api/invoices/extract-from-pdf/route";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
+import { Dropzone, useDropzone } from "@/components/Dropzone";
 import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -35,8 +37,6 @@ import {
 } from "@/utils/routes";
 import QuantityInput from "./QuantityInput";
 import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
-import { Dropzone, useDropzone } from "@/components/Dropzone";
-import type { InvoiceExtractionResult } from "@/app/api/invoices/extract-from-pdf/route";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -262,7 +262,7 @@ const Edit = () => {
 
   const prefillFromExtractedInvoice = ({ invoice }: InvoiceExtractionResult) => {
     const newLineItems = List(
-      invoice.line_items?.map((item) => ({
+      invoice.line_items.map((item) => ({
         ...item,
         errors: [],
         quantity: item.quantity?.toString() ?? "",
@@ -283,6 +283,7 @@ const Edit = () => {
         formData,
         accept: "json",
       });
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- already validated
       const json = (await response.json()) as { data: InvoiceExtractionResult } | { error: string };
       if ("error" in json) throw new Error(json.error);
       prefillFromExtractedInvoice(json.data);
