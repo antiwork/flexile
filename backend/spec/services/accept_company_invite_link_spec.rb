@@ -27,7 +27,7 @@ RSpec.describe AcceptCompanyInviteLink do
       it "does not allow duplicate company_worker" do
         result = described_class.new(token: "token", user: user).perform
         expect(result[:success]).to eq(false)
-        expect(result[:error]).to match(/already a worker/)
+        expect(result[:error]).to match(:already_accepted)
       end
     end
 

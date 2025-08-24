@@ -10,6 +10,8 @@ class Internal::InviteLinksController < Internal::BaseController
     if result[:success]
       cookies.permanent[current_user_selected_company_cookie_name] = result[:company].external_id
       head :no_content
+    elsif result[:error] == :already_accepted
+      head :conflict
     else
       render json: { error_message: result[:error] }, status: :unprocessable_entity
     end
