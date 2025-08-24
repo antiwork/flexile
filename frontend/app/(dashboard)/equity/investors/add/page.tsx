@@ -36,6 +36,14 @@ const investorSchema = z.object({
 
 type InvestorFormData = z.infer<typeof investorSchema>;
 
+const calculateTotalShares = (investors: InvestorFormData["investors"]) =>
+  investors.reduce((sum, inv) => sum + (Number(inv.shares) || 0), 0);
+
+const calculateOwnershipPercentage = (shares: number, totalShares: number) =>
+  totalShares > 0 ? (shares / totalShares) * 100 : 0;
+
+const formatShares = (shares: number) => shares.toLocaleString();
+
 const InvestorSearchInput = ({
   fieldIndex,
   form,
@@ -111,6 +119,62 @@ const InvestorSearchInput = ({
   );
 };
 
+const InvestorFormFields = ({
+  fieldIndex,
+  form,
+  users,
+  getAvailableUsers,
+  isLoading,
+}: {
+  fieldIndex: number;
+  form: ReturnType<typeof useForm<InvestorFormData>>;
+  users: { id: string; name: string }[] | undefined;
+  getAvailableUsers: (currentIndex: number, searchTerm?: string) => { value: string; label: string }[];
+  isLoading: boolean;
+}) => ({
+  InvestorField: (
+    <FormField
+      control={form.control}
+      name={`investors.${fieldIndex}.userId`}
+      render={({ field, fieldState }) => (
+        <FormItem className="mt-1">
+          <FormControl>
+            <InvestorSearchInput
+              fieldIndex={fieldIndex}
+              form={form}
+              users={users}
+              getAvailableUsers={getAvailableUsers}
+              hasError={!!fieldState.error}
+              field={field}
+              isLoading={isLoading}
+            />
+          </FormControl>
+        </FormItem>
+      )}
+    />
+  ),
+  SharesField: (
+    <FormField
+      control={form.control}
+      name={`investors.${fieldIndex}.shares`}
+      render={({ field }) => (
+        <FormItem className="mt-1">
+          <FormControl>
+            <NumberInput
+              value={field.value}
+              onChange={(val) => field.onChange(val ?? 0)}
+              placeholder="0"
+              decimal={false}
+              className="w-full"
+              aria-label="Number of shares"
+            />
+          </FormControl>
+        </FormItem>
+      )}
+    />
+  ),
+});
+
 const MobileInvestorCard = ({
   fieldIndex,
   form,
@@ -130,8 +194,9 @@ const MobileInvestorCard = ({
 }) => {
   const allInvestors = form.watch("investors");
   const liveShares = Number(allInvestors[fieldIndex]?.shares ?? 0);
-  const totalShares = allInvestors.reduce((sum, inv) => sum + (Number(inv.shares) || 0), 0);
-  const percentage = totalShares > 0 ? (liveShares / totalShares) * 100 : 0;
+  const totalShares = calculateTotalShares(allInvestors);
+  const percentage = calculateOwnershipPercentage(liveShares, totalShares);
+  const formFields = InvestorFormFields({ fieldIndex, form, users, getAvailableUsers, isLoading });
 
   return (
     <Card className="mb-4">
@@ -154,47 +219,12 @@ const MobileInvestorCard = ({
         <div className="space-y-3">
           <div>
             <Label className="text-sm font-medium">Investor</Label>
-            <FormField
-              control={form.control}
-              name={`investors.${fieldIndex}.userId`}
-              render={({ field, fieldState }) => (
-                <FormItem className="mt-1">
-                  <FormControl>
-                    <InvestorSearchInput
-                      fieldIndex={fieldIndex}
-                      form={form}
-                      users={users}
-                      getAvailableUsers={getAvailableUsers}
-                      hasError={!!fieldState.error}
-                      field={field}
-                      isLoading={isLoading}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            {formFields.InvestorField}
           </div>
 
           <div>
             <Label className="text-sm font-medium">Shares</Label>
-            <FormField
-              control={form.control}
-              name={`investors.${fieldIndex}.shares`}
-              render={({ field }) => (
-                <FormItem className="mt-1">
-                  <FormControl>
-                    <NumberInput
-                      value={field.value}
-                      onChange={(val) => field.onChange(val ?? 0)}
-                      placeholder="0"
-                      decimal={false}
-                      className="w-full"
-                      aria-label="Number of shares"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            {formFields.SharesField}
           </div>
 
           <div className="border-t border-gray-100 pt-2">
@@ -313,28 +343,8 @@ const AddCapTablePage = () => {
           }
 
           const fieldIndex = row.original._index;
-
-          return (
-            <FormField
-              control={form.control}
-              name={`investors.${fieldIndex}.userId`}
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormControl>
-                    <InvestorSearchInput
-                      fieldIndex={fieldIndex}
-                      form={form}
-                      users={users}
-                      getAvailableUsers={getAvailableUsers}
-                      hasError={!!fieldState.error}
-                      field={field}
-                      isLoading={isLoading}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          );
+          const formFields = InvestorFormFields({ fieldIndex, form, users, getAvailableUsers, isLoading });
+          return formFields.InvestorField;
         },
         footer: () => <div className="font-semibold">Total</div>,
       }),
@@ -345,32 +355,12 @@ const AddCapTablePage = () => {
           if ("_isAddRow" in row.original) return null;
 
           const fieldIndex = row.original._index;
-
-          return (
-            <FormField
-              control={form.control}
-              name={`investors.${fieldIndex}.shares`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <NumberInput
-                      value={field.value}
-                      onChange={(val) => field.onChange(val ?? 0)}
-                      placeholder="0"
-                      decimal={false}
-                      className="ml-auto w-full max-w-[160px]"
-                      aria-label="Number of shares"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          );
+          const formFields = InvestorFormFields({ fieldIndex, form, users, getAvailableUsers, isLoading });
+          return <div className="ml-auto w-full max-w-[160px]">{formFields.SharesField}</div>;
         },
         footer: () => {
-          const allInvestors = form.watch("investors");
-          const total = allInvestors.reduce((sum, inv) => sum + (Number(inv.shares) || 0), 0);
-          return <div className="font-semibold">{total.toLocaleString()}</div>;
+          const totalShares = calculateTotalShares(form.watch("investors"));
+          return <div className="font-semibold">{formatShares(totalShares)}</div>;
         },
       }),
       columnHelper.accessor("shares", {
@@ -378,15 +368,13 @@ const AddCapTablePage = () => {
         header: "Ownership",
         meta: { numeric: true },
         cell: ({ row }) => {
-          if ("_isAddRow" in row.original) {
-            return <div></div>;
-          }
+          if ("_isAddRow" in row.original) return null;
 
           const fieldIndex = row.original._index;
           const allInvestors = form.watch("investors");
           const liveShares = Number(allInvestors[fieldIndex]?.shares ?? 0);
-          const totalShares = allInvestors.reduce((sum, inv) => sum + (Number(inv.shares) || 0), 0);
-          const percentage = totalShares > 0 ? (liveShares / totalShares) * 100 : 0;
+          const totalShares = calculateTotalShares(allInvestors);
+          const percentage = calculateOwnershipPercentage(liveShares, totalShares);
 
           return <div>{percentage.toFixed(1)}%</div>;
         },
@@ -396,9 +384,7 @@ const AddCapTablePage = () => {
         id: "actions",
         header: "",
         cell: ({ row }) => {
-          if ("_isAddRow" in row.original) {
-            return <div></div>;
-          }
+          if ("_isAddRow" in row.original) return null;
 
           const fieldIndex = row.original._index;
 
@@ -424,6 +410,20 @@ const AddCapTablePage = () => {
     data: tableData,
   });
 
+  const hasFormErrors =
+    (form.formState.errors.investors &&
+      "message" in form.formState.errors.investors &&
+      form.formState.errors.investors.message) ||
+    (Array.isArray(form.formState.errors.investors) && form.formState.errors.investors.some((investor) => investor)) ||
+    mutationError;
+
+  const errorMessage =
+    mutationError ||
+    (form.formState.errors.investors &&
+      "message" in form.formState.errors.investors &&
+      form.formState.errors.investors.message) ||
+    "Some investor details are missing. Please fill in all required fields before finalizing the cap table.";
+
   return (
     <Form {...form}>
       <form
@@ -447,21 +447,10 @@ const AddCapTablePage = () => {
           }
         />
 
-        {(form.formState.errors.investors &&
-          "message" in form.formState.errors.investors &&
-          form.formState.errors.investors.message) ||
-        (Array.isArray(form.formState.errors.investors) &&
-          form.formState.errors.investors.some((investor) => investor)) ||
-        mutationError ? (
+        {hasFormErrors ? (
           <div className="mx-4 mb-4">
             <Alert variant="destructive">
-              <AlertDescription className="break-words">
-                {mutationError ||
-                  (form.formState.errors.investors &&
-                    "message" in form.formState.errors.investors &&
-                    form.formState.errors.investors.message) ||
-                  "Some investor details are missing. Please fill in all required fields before finalizing the cap table."}
-              </AlertDescription>
+              <AlertDescription className="break-words">{errorMessage}</AlertDescription>
             </Alert>
           </div>
         ) : null}
@@ -487,17 +476,12 @@ const AddCapTablePage = () => {
                 Add new investor
               </Button>
 
-              {/* Mobile Total Summary */}
               <Card className="bg-gray-50">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold">Total</span>
                     <div className="font-semibold">
-                      {form
-                        .watch("investors")
-                        .reduce((sum, inv) => sum + (Number(inv.shares) || 0), 0)
-                        .toLocaleString()}{" "}
-                      shares
+                      {formatShares(calculateTotalShares(form.watch("investors")))} shares
                     </div>
                   </div>
                 </CardContent>
