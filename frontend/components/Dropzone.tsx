@@ -19,7 +19,6 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
     isProcessing: false,
   });
   const inputRef = useRef<HTMLInputElement>(null);
-
   const updateState = useCallback((update: Partial<DropzoneState>) => {
     setState((state) => ({ ...state, ...update }));
   }, []);
@@ -35,7 +34,6 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // @ts-expect-error https://stackoverflow.com/a/54271161
     if (!e.currentTarget.contains(e.relatedTarget)) {
       updateState({ isDragging: false });
     }
@@ -54,7 +52,6 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
     [onFileSelected],
   );
 
-  // Allows only one PDF file to be dropped
   const getFileIfValid = useCallback((dataTransfer: DataTransfer) => {
     const items = Array.from(dataTransfer?.items);
     const item = items[0];
@@ -62,8 +59,6 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
     return item;
   }, []);
 
-  // Disable default dragover behavior
-  // to prevent the browser from opening the file
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -111,18 +106,15 @@ export function Dropzone({ isProcessing, isDragging }: DropzoneState) {
   return (
     <Card className="animate-in pointer-events-none fixed inset-0 z-50 flex items-center justify-center overflow-hidden border-none bg-black/10 duration-200">
       <CardContent className="flex flex-col items-center">
-        {isProcessing ? (
-          <CircularProgress progress={100} className="mb-3 h-8 w-8" />
-        ) : (
-          <ArrowUpTrayIcon className="mb-3 h-8 w-8" />
-        )}
+        {isProcessing && <CircularProgress progress={100} className="mb-3 h-8 w-8" />}
+        {isDragging && <ArrowUpTrayIcon className="mb-3 h-8 w-8" />}
         <div className="text-foreground text-lg font-semibold">
-          {isProcessing ? "Extracting..." : "Drag your PDF here"}
+          {isProcessing && "Extracting..."}
+          {isDragging && "Drag your PDF here"}
         </div>
         <div className="text-muted-foreground text-sm">
-          {isProcessing
-            ? "Hang tight, we're reading your PDF..."
-            : "Release the file to automatically fill your invoice"}
+          {isProcessing && "Hang tight, we're reading your PDF..."}
+          {isDragging && "Release the file to automatically fill your invoice"}
         </div>
       </CardContent>
     </Card>
