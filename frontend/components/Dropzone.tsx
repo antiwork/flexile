@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 import { useCallback, useRef, useState } from "react";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 interface DropzoneOptions {
   onFileSelected: (file: File) => Promise<void>;
 }
@@ -24,55 +23,67 @@ function preventDefault(e: React.DragEvent) {
   e.stopPropagation();
 }
 export function useDropzone({ onFileSelected }: DropzoneOptions) {
-  const [state, setState] = useState<DropzoneState>({
-    isDragging: false,
-    isProcessing: false,
-  });
-  const updateState = (update: Partial<DropzoneState>) => {
-    setState((state) => ({ ...state, ...update }));
-  };
+  const [isDragging, setIsDragging] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const openFilePicker = () => {
+    inputRef.current?.click();
+  };
+
+  const handleInputChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setIsProcessing(true);
+      await onFileSelected(file);
+      setIsProcessing(false);
+      e.target.value = "";
+    },
+    [onFileSelected],
+  );
+
+  const inputProps = {
+    ref: inputRef,
+    type: "file" as const,
+    accept: "application/pdf",
+    multiple: false,
+    onChange: handleInputChange,
+    style: { display: "none" },
+  };
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     preventDefault(e);
     const file = getDTFileIfValid(e.dataTransfer);
     if (!file) return;
-    updateState({ isDragging: true });
+    setIsDragging(true);
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     preventDefault(e);
     if (e.currentTarget.contains(e.relatedTarget)) return;
-    updateState({ isDragging: false });
+    setIsDragging(false);
   }, []);
 
   const handleDrop = useCallback(
     async (e: React.DragEvent) => {
       preventDefault(e);
       const file = getDTFileIfValid(e.dataTransfer)?.getAsFile();
-      if (!file || file.size > MAX_FILE_SIZE) return;
-      updateState({ isDragging: false, isProcessing: true });
+      if (!file) return;
+      setIsDragging(false);
+      setIsProcessing(true);
       await onFileSelected(file);
-      updateState({ isProcessing: false });
-    },
-    [onFileSelected],
-  );
-
-  const handleInputChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file || file.size > MAX_FILE_SIZE) return;
-      updateState({ isProcessing: true });
-      await onFileSelected(file);
-      updateState({ isProcessing: false });
-      e.target.value = "";
+      setIsProcessing(false);
     },
     [onFileSelected],
   );
 
   return {
-    openFilePicker: inputRef.current?.click,
-    state,
+    openFilePicker,
+    state: {
+      isDragging,
+      isProcessing,
+    },
     dragProps: {
       id: "dropzone",
       onDrop: handleDrop,
@@ -80,14 +91,7 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
       onDragLeave: handleDragLeave,
       onDragOver: preventDefault,
     },
-    inputProps: {
-      ref: inputRef,
-      type: "file" as const,
-      accept: "application/pdf",
-      multiple: false,
-      onChange: handleInputChange,
-      style: { display: "none" },
-    },
+    inputProps,
   };
 }
 
