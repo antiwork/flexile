@@ -36,8 +36,7 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
       const file = e.target.files?.[0];
       if (!file) return;
       setIsProcessing(true);
-      await onFileSelected(file);
-      setIsProcessing(false);
+      onFileSelected(file).finally(() => setIsProcessing(false));
       e.target.value = "";
     },
     [onFileSelected],
@@ -72,8 +71,7 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
       if (!file) return;
       setIsDragging(false);
       setIsProcessing(true);
-      await onFileSelected(file);
-      setIsProcessing(false);
+      onFileSelected(file).finally(() => setIsProcessing(false));
     },
     [onFileSelected],
   );
