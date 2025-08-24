@@ -13,19 +13,16 @@ interface DropzoneState {
   isProcessing: boolean;
 }
 
-// Get the first file from the data transfer if it's a valid PDF
-function getFileIfValid(dataTransfer: DataTransfer) {
+function getDTFileIfValid(dataTransfer: DataTransfer) {
   const items = Array.from(dataTransfer?.items);
   const item = items[0];
   if (items.length !== 1 || !item || item.kind !== "file" || item.type !== "application/pdf") return;
   return item;
 }
-
 function preventDefault(e: React.DragEvent) {
   e.preventDefault();
   e.stopPropagation();
 }
-
 export function useDropzone({ onFileSelected }: DropzoneOptions) {
   const [state, setState] = useState<DropzoneState>({
     isDragging: false,
@@ -38,7 +35,7 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     preventDefault(e);
-    const file = getFileIfValid(e.dataTransfer);
+    const file = getDTFileIfValid(e.dataTransfer);
     if (!file) return;
     updateState({ isDragging: true });
   }, []);
@@ -52,7 +49,7 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
   const handleDrop = useCallback(
     async (e: React.DragEvent) => {
       preventDefault(e);
-      const file = getFileIfValid(e.dataTransfer)?.getAsFile();
+      const file = getDTFileIfValid(e.dataTransfer)?.getAsFile();
       if (!file || file.size > MAX_FILE_SIZE) return;
       updateState({ isDragging: false, isProcessing: true });
       await onFileSelected(file);
