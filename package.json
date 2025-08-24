@@ -53,6 +53,7 @@
     "prepare": "git config --local core.hooksPath .githooks"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.19",
     "@ai-sdk/react": "^1.2.12",
     "@aws-sdk/client-s3": "^3.688.0",
     "@aws-sdk/s3-request-presigner": "^3.691.0",
@@ -99,6 +100,7 @@
     "@trpc/server": "^11.0.0-rc.601",
     "@types/bcrypt": "^5.0.2",
     "@types/lodash-es": "^4.17.12",
+    "ai": "^5.0.22",
     "bcrypt": "^5.1.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -133,7 +135,7 @@
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "~5.8.0",
-    "zod": "^3.24.2",
+    "zod": "^4.1.1",
     "zustand": "^5.0.0-rc.2"
   },
   "overrides": {

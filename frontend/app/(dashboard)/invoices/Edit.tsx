@@ -13,6 +13,7 @@ import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
+import InvoiceDocumentDropZone from "@/components/InvoiceDocumentDropZone";
 import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -41,8 +42,8 @@ const addressSchema = z.object({
   city: z.string(),
   zip_code: z.string(),
   state: z.string().nullable(),
-  country: z.string(),
-  country_code: z.string(),
+  country: z.string().nullable().default("United States"),
+  country_code: z.string().nullable().default("US"),
 });
 
 const dataSchema = z.object({
@@ -258,6 +259,34 @@ const Edit = () => {
       }),
     );
 
+  const handleDocumentDataExtracted = (extractedData: {
+    description: string;
+    quantity: string;
+    hourly: boolean;
+    payRateInSubunits: number;
+    invoiceDate: string;
+  }) => {
+    if (lineItems.size > 0) {
+      updateLineItem(0, {
+        description: extractedData.description,
+        quantity: extractedData.quantity,
+        hourly: extractedData.hourly,
+        pay_rate_in_subunits: extractedData.payRateInSubunits,
+      });
+    } else {
+      setLineItems((lineItems) =>
+        lineItems.push({
+          description: extractedData.description,
+          quantity: extractedData.quantity,
+          hourly: extractedData.hourly,
+          pay_rate_in_subunits: extractedData.payRateInSubunits,
+        }),
+      );
+    }
+
+    setIssueDate(parseDate(extractedData.invoiceDate));
+  };
+
   return (
     <>
       <DashboardHeader
@@ -288,6 +317,12 @@ const Edit = () => {
           </AlertDescription>
         </Alert>
       ) : null}
+
+      {!data.invoice.id && (
+        <div className="mx-4 mb-6">
+          <InvoiceDocumentDropZone onDataExtracted={handleDocumentDataExtracted} disabled={submit.isPending} />
+        </div>
+      )}
 
       <section>
         <div className="grid gap-4">
