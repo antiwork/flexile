@@ -52,13 +52,12 @@ const formSchema = documentSchema.extend({
   boardApprovalDate: z.instanceof(CalendarDate, { message: "This field is required." }),
 });
 
-const refinedSchema = formSchema.refine(
-  (data) => data.optionGrantType !== "iso" || ["employee", "founder"].includes(data.issueDateRelationship),
-  {
+const refinedSchema = formSchema
+  .refine((data) => data.optionGrantType !== "iso" || ["employee", "founder"].includes(data.issueDateRelationship), {
     message: "ISOs can only be issued to employees or founders.",
     path: ["optionGrantType"],
-  },
-);
+  })
+  .refine((data) => !!data.contract, { message: "Equity contract is required", path: ["contract"] });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -220,7 +219,6 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
       await trpcUtils.equityGrants.list.invalidate();
       await trpcUtils.equityGrants.totals.invalidate();
       await trpcUtils.capTable.show.invalidate();
-      await trpcUtils.documents.list.invalidate();
 
       handleClose();
     },

@@ -17,7 +17,6 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await page.getByRole("button", { name: "Sign up", exact: true }).click();
     await fillOtp(page);
 
-    await expect(page).toHaveURL(/documents/iu);
     await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
 
     const contractor = await db.query.companyContractors
@@ -36,11 +35,12 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await login(page, adminUser);
 
     await page.goto(`/invite/${company.inviteLink}`);
-    await expect(page).toHaveURL(/documents/iu);
 
     await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
-    await expect(page.getByLabel("Role")).toBeVisible();
-    await expect(page.getByLabel("Rate")).toBeVisible();
+
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await expect(page.getByLabel("Role")).not.toBeValid();
 
     await page.getByLabel("Role").fill("Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
@@ -49,6 +49,10 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await expect(
       page.getByText(`Your details have been submitted. ${company.name} will be in touch if anything else is needed.`),
     ).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
+    await expect(page.getByText(/What will you be doing at/iu)).not.toBeVisible();
 
     const contractor = await db.query.companyContractors
       .findFirst({

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_21_091952) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_22_115115) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -396,19 +396,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_091952) do
     t.index ["user_id"], name: "index_document_signatures_on_user_id"
   end
 
-  create_table "document_templates", force: :cascade do |t|
-    t.bigint "company_id"
-    t.string "name", null: false
-    t.integer "document_type", null: false
-    t.string "external_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", null: false
-    t.boolean "signable", default: false, null: false
-    t.bigint "docuseal_id", null: false
-    t.index ["company_id"], name: "index_document_templates_on_company_id"
-    t.index ["external_id"], name: "index_document_templates_on_external_id", unique: true
-  end
-
   create_table "documents", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.bigint "user_compliance_info_id"
@@ -421,10 +408,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_21_091952) do
     t.jsonb "json_data"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
-    t.integer "docuseal_submission_id"
     t.text "text"
     t.index ["company_id"], name: "index_documents_on_company_id"
-    t.index ["docuseal_submission_id"], name: "index_documents_on_docuseal_submission_id"
     t.index ["equity_grant_id"], name: "index_documents_on_equity_grant_id"
     t.index ["user_compliance_info_id"], name: "index_documents_on_user_compliance_info_id"
   end

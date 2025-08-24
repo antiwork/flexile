@@ -22,7 +22,7 @@ class InviteLawyer
     end
 
     if user.errors.blank? && company_lawyer.errors.blank?
-      CompanyLawyerMailer.invitation_instructions(lawyer_id: company_lawyer.id, url: SIGNUP_URL).deliver_later
+      CompanyLawyerMailer.invitation_instructions(lawyer_id: company_lawyer.id).deliver_later
       return { success: true }
     end
 

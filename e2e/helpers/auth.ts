@@ -6,7 +6,7 @@ const TEST_OTP_CODE = "000000";
 
 export const fillOtp = async (page: Page) => {
   // Wait for the OTP input to be visible before filling
-  const otp = page.locator('[data-input-otp="true"]');
+  const otp = page.getByRole("textbox", { name: "Verification code" });
   await expect(otp).toBeVisible();
   await otp.fill(TEST_OTP_CODE);
 };
@@ -35,23 +35,6 @@ export const logout = async (page: Page) => {
   // Wait for redirect to login
   await page.waitForURL(/.*\/login.*/u);
   await page.waitForLoadState("networkidle");
-};
-
-/**
- * Performs signup flow with OTP authentication
- */
-export const signup = async (page: Page, email: string) => {
-  await page.goto("/signup");
-
-  // Enter email and request OTP
-  await page.getByLabel("Work email").fill(email);
-  await page.getByRole("button", { name: "Sign up", exact: true }).click();
-
-  // Wait for OTP step and enter verification code
-  await page.getByLabel("Verification code").waitFor();
-
-  await fillOtp(page);
-  await page.waitForURL(/^(?!.*\/(signup|login)$).*/u);
 };
 
 export const externalProviderMock = async (page: Page, provider: string, credentials: { email: string }) => {
