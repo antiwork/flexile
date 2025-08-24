@@ -72,25 +72,12 @@ import { useCanSubmitInvoices } from ".";
 
 const statusNames = {
   received: "Awaiting approval",
-  approved: "Approved",
+  approved: "Awaiting approval",
   processing: "Processing",
   payment_pending: "Processing",
   paid: "Paid",
   rejected: "Rejected",
   failed: "Failed",
-};
-
-const getInvoiceFilterStatus = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
-  if (
-    (invoice.status === "received" || invoice.status === "approved") &&
-    invoice.approvals.length < company.requiredInvoiceApprovals
-  ) {
-    return "Awaiting approval";
-  }
-  if (invoice.status === "approved" && invoice.approvals.length >= company.requiredInvoiceApprovals) {
-    return "Approved";
-  }
-  return statusNames[invoice.status];
 };
 
 type Invoice = RouterOutput["invoices"]["list"][number];
@@ -114,8 +101,7 @@ export default function InvoicesPage() {
   const isPayNowDisabled = useCallback(
     (invoice: Invoice) => {
       const payable = isPayable(invoice);
-      // return payable && !company.completedPaymentMethodSetup;
-      return payable;
+      return payable && !company.completedPaymentMethodSetup;
     },
     [isPayable, company.completedPaymentMethodSetup],
   );
@@ -230,7 +216,7 @@ export default function InvoicesPage() {
         (value) => (value ? formatMoneyFromCents(value) : "N/A"),
         "numeric",
       ),
-      columnHelper.accessor((row) => getInvoiceFilterStatus(row, company), {
+      columnHelper.accessor((row) => statusNames[row.status], {
         id: "status",
         header: "Status",
         cell: (info) => (
@@ -316,7 +302,7 @@ export default function InvoicesPage() {
         },
       }),
 
-      columnHelper.accessor((row) => getInvoiceFilterStatus(row, company), {
+      columnHelper.accessor((row) => statusNames[row.status], {
         id: "status",
         meta: {
           filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],

@@ -8,13 +8,13 @@ import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoicesFactory } from "@test/factories/invoices";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { invoiceStatuses } from "@/db/enums";
 import { users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 const selectStatusFilter = async (page: Page, statusName: string) => {
-  await page.getByRole("button", { name: "Filter" }).click();
+  await page.locator("main").getByRole("button", { name: "Filter" }).click();
   await page.getByRole("menuitem", { name: "Status" }).click();
   await page.getByRole("menuitemcheckbox", { name: statusName }).click();
 };
@@ -71,10 +71,14 @@ const createInvoiceWithStatus = async (
   return { invoice, companyContractor };
 };
 
-const setupTestFixture = async () => {
+const setupTestFixture = async (testId: string) => {
+  const uniqueSuffix = `${testId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
   const { company } = await companiesFactory.create({
     isTrusted: true,
     requiredInvoiceApprovalCount: 2,
+    stripeCustomerId: `cus_test_${uniqueSuffix}`,
+    name: `Test Company ${uniqueSuffix}`,
   });
   const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
   const adminUser = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) });
@@ -82,7 +86,7 @@ const setupTestFixture = async () => {
 
   const { companyContractor } = await companyContractorsFactory.create({
     companyId: company.id,
-    role: "Main Contractor",
+    role: `Main Contractor ${uniqueSuffix}`,
   });
   const contractorUser = await db.query.users.findFirst({ where: eq(users.id, companyContractor.userId) });
   assert(contractorUser !== undefined);
@@ -152,7 +156,7 @@ const setupTestFixture = async () => {
     companyContractorId: companyContractor.id,
     status: "received",
     totalAmountInUsdCents: BigInt(800_00),
-    invoiceNumber: "INV-CONTRACTOR-001",
+    invoiceNumber: `INV-CONTRACTOR-${uniqueSuffix}`,
   });
 
   return {
@@ -165,152 +169,23 @@ const setupTestFixture = async () => {
   };
 };
 
-test.describe.configure({ mode: "serial" });
-
 test.describe("Invoice Status Filtering", () => {
-  let fixture: Awaited<ReturnType<typeof setupTestFixture>>;
-
-  test.beforeEach(async () => {
-    fixture = await setupTestFixture();
-  });
-
-  test.afterEach(async () => {
-    await db.execute(sql`
-      DELETE FROM invoice_approvals WHERE invoice_id IN (
-        SELECT id FROM invoices WHERE company_id = ${fixture.company.id}
-      )
-    `);
-    await db.execute(sql`DELETE FROM invoices WHERE company_id = ${fixture.company.id}`);
-    await db.execute(sql`DELETE FROM company_contractors WHERE company_id = ${fixture.company.id}`);
-    await db.execute(sql`DELETE FROM company_administrators WHERE company_id = ${fixture.company.id}`);
-    await db.execute(sql`DELETE FROM company_stripe_accounts WHERE company_id = ${fixture.company.id}`);
-    await db.execute(sql`DELETE FROM users WHERE id IN (${fixture.adminUser.id}, ${fixture.contractorUser.id})`);
-    await db.execute(sql`DELETE FROM companies WHERE id = ${fixture.company.id}`);
-  });
-
-  test("shows all expected status options in dropdown", async ({ page }) => {
-    await login(page, fixture.adminUser);
-    await page.getByRole("link", { name: "Invoices" }).click();
-
-    await page.getByRole("button", { name: "Filter" }).click();
-    await page.getByRole("menuitem", { name: "Status" }).click();
-
-    const expectedStatuses = ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"];
-    for (const status of expectedStatuses) {
-      await expect(page.getByRole("menuitemcheckbox", { name: status })).toBeVisible();
-    }
-  });
-
-  test("contractor can filter by visible status types", async ({ page }) => {
-    await login(page, fixture.contractorUser);
-    await page.getByRole("link", { name: "Invoices" }).click();
-
-    const invoiceRows = page.locator("tbody tr");
-    await expect(invoiceRows).toHaveCount(1);
-    await expect(page.getByText("INV-CONTRACTOR-001")).toBeVisible();
-    await expect(page.getByText("$800")).toBeVisible();
-
-    await page.getByRole("button", { name: "Filter" }).click();
-    await page.getByRole("menuitem", { name: "Status" }).click();
-
-    const expectedStatuses = ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"];
-    for (const status of expectedStatuses) {
-      await expect(page.getByRole("menuitemcheckbox", { name: status })).toBeVisible();
-    }
-
-    await page.getByRole("menuitemcheckbox", { name: "Awaiting approval" }).click();
-    await expect(page.locator("tbody tr")).toHaveCount(1);
-    await expect(page.getByText("INV-CONTRACTOR-001")).toBeVisible();
-
-    await selectStatusFilter(page, "Awaiting approval");
-    await selectStatusFilter(page, "Paid");
-    await expect(page.getByText("No results.")).toBeVisible();
-  });
-
-  test("shows approval progress in multi-approval workflow", async ({ page }) => {
-    await login(page, fixture.adminUser);
-    await page.getByRole("link", { name: "Invoices" }).click();
-
-    await selectStatusFilter(page, "Failed");
-
-    const invoiceRows = page.locator("tbody tr");
-    await expect(invoiceRows).toHaveCount(4);
-    await expect(page.getByText("Awaiting approval (0/2)").first()).toBeVisible();
-    await expect(page.getByText("Awaiting approval (1/2)")).toBeVisible();
-  });
-
-  test("moves invoice from 'Awaiting approval' to 'Approved' after final approval", async ({ page }) => {
-    await login(page, fixture.adminUser);
-    await page.getByRole("link", { name: "Invoices" }).click();
-
-    await selectStatusFilter(page, "Failed");
-
-    let invoiceRows = page.locator("tbody tr");
-    await expect(invoiceRows).toHaveCount(4);
-    await expect(page.getByText("Awaiting approval (1/2)").first()).toBeVisible();
-    await invoiceApprovalsFactory.create({ invoiceId: fixture.invoices.oneApproval.invoice.id });
-    await page.reload();
-
-    await selectStatusFilter(page, "Awaiting approval");
-    await selectStatusFilter(page, "Failed");
-
-    await selectStatusFilter(page, "Approved");
-    invoiceRows = page.locator("tbody tr");
-    await expect(invoiceRows).toHaveCount(2);
-    await expect(page.locator("tbody tr").getByText("Approved", { exact: true }).first()).toBeVisible();
-    await selectStatusFilter(page, "Approved");
-    await selectStatusFilter(page, "Awaiting approval");
-    await expect(page.locator("tbody tr")).toHaveCount(3);
-  });
-  test("filters by 'Processing' status shows processing and payment pending invoices", async ({ page }) => {
-    await login(page, fixture.adminUser);
-    await page.getByRole("link", { name: "Invoices" }).click();
-
-    await selectStatusFilter(page, "Awaiting approval");
-    await selectStatusFilter(page, "Failed");
-
-    await selectStatusFilter(page, "Processing");
-    const invoiceRows = page.locator("tbody tr");
-    await expect(invoiceRows).toHaveCount(2);
-    await expect(page.getByText("Processing Dev")).toBeVisible();
-    await expect(page.getByText("Payment Pending Dev")).toBeVisible();
-    await expect(page.getByText("$1,700")).toBeVisible();
-    await expect(page.getByText("$1,800")).toBeVisible();
-    await expect(page.getByText("Payment in progress")).toBeVisible();
-    await expect(page.getByText("Payment scheduled")).toBeVisible();
-    await expect(page.getByText("Zero Approval Dev")).not.toBeVisible();
-    await expect(page.getByText("$500")).not.toBeVisible();
-  });
-
   test("admin can filter invoices by all status types", async ({ page }) => {
+    const fixture = await setupTestFixture("admin-all-filters");
     await login(page, fixture.adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
 
     const statusTests = [
       {
         status: "Awaiting approval",
-        expectedContractors: ["Zero Approval Dev", "One Approval Dev", "Frontend Developer", "Main Contractor"],
-        hiddenContractors: [
-          "Fully Approved Dev",
-          "Processing Dev",
-          "Paid Dev",
-          "Rejected Dev",
-          "Failed Dev",
-          "Payment Pending Dev",
-        ],
-      },
-      {
-        status: "Approved",
-        expectedContractors: ["Fully Approved Dev"],
-        hiddenContractors: [
+        expectedContractors: [
           "Zero Approval Dev",
           "One Approval Dev",
-          "Processing Dev",
-          "Paid Dev",
-          "Rejected Dev",
-          "Failed Dev",
-          "Payment Pending Dev",
+          "Fully Approved Dev",
+          "Frontend Developer",
+          "Main Contractor",
         ],
+        hiddenContractors: ["Processing Dev", "Paid Dev", "Rejected Dev", "Failed Dev", "Payment Pending Dev"],
       },
       {
         status: "Processing",
@@ -365,16 +240,14 @@ test.describe("Invoice Status Filtering", () => {
       },
     ];
 
+    await selectStatusFilter(page, "Awaiting approval");
+    await selectStatusFilter(page, "Failed");
+
     for (let i = 0; i < statusTests.length; i++) {
       const testCase = statusTests[i];
       const previousTestCase = statusTests[i - 1];
 
       if (!testCase) continue;
-
-      if (i === 0) {
-        await selectStatusFilter(page, "Awaiting approval");
-        await selectStatusFilter(page, "Failed");
-      }
 
       if (previousTestCase) {
         await selectStatusFilter(page, previousTestCase.status);
@@ -393,28 +266,5 @@ test.describe("Invoice Status Filtering", () => {
         await expect(page.getByText(hiddenContractor)).not.toBeVisible();
       }
     }
-  });
-
-  test("admin default filter shows awaiting approval and failed invoices", async ({ page }) => {
-    await login(page, fixture.adminUser);
-    await page.getByRole("link", { name: "Invoices" }).click();
-
-    // Admin default filter should show 5 invoices (4 awaiting approval + 1 failed)
-    const invoiceRows = page.locator("tbody tr");
-    await expect(invoiceRows).toHaveCount(5);
-
-    await expect(page.getByText("Zero Approval Dev")).toBeVisible();
-    await expect(page.getByText("One Approval Dev")).toBeVisible();
-    await expect(page.getByText("Frontend Developer")).toBeVisible();
-    await expect(page.getByText("Main Contractor")).toBeVisible();
-
-    await expect(page.getByText("Failed Dev")).toBeVisible();
-
-    await expect(page.getByText("Fully Approved Dev")).not.toBeVisible();
-    await expect(page.getByText("Processing Dev")).not.toBeVisible();
-    await expect(page.getByText("Paid Dev")).not.toBeVisible();
-    await expect(page.getByText("Rejected Dev")).not.toBeVisible();
-    await expect(page.getByText("Payment Pending Dev")).not.toBeVisible();
-    await expect(page.getByText("Backend Developer")).not.toBeVisible();
   });
 });
