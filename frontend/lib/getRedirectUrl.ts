@@ -5,12 +5,16 @@ import { internal_current_user_data_url } from "@/utils/routes";
 
 export const getRedirectUrl = async (req: Request) => {
   const host = assertDefined(req.headers.get("Host"));
+  // eslint-disable-next-line no-console
+  console.log("host", host);
   const response = await fetch(internal_current_user_data_url({ host }), {
     headers: {
       cookie: req.headers.get("cookie") ?? "",
       "User-Agent": req.headers.get("User-Agent") ?? "",
     },
   });
+  // eslint-disable-next-line no-console
+  console.log("response", response);
   if (!response.ok) return "/login";
   const user = currentUserSchema.parse(await response.json());
   if (user.onboardingPath) return user.onboardingPath;

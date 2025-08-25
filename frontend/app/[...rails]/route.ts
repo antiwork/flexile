@@ -26,10 +26,15 @@ async function handler(req: Request) {
   const headers = new Headers(req.headers);
 
   if (session?.user) headers.set("x-flexile-auth", `Bearer ${session.user.jwt}`);
+  // eslint-disable-next-line no-console
+  if (session?.user) console.log("session", session.user.jwt.slice(0, 10));
 
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/v1/")) {
     url.searchParams.set("token", env.API_SECRET_TOKEN);
   }
+
+  // eslint-disable-next-line no-console
+  console.log("url", url.toString());
 
   const data = {
     headers,
