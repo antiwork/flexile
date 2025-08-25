@@ -74,14 +74,14 @@ echo "✅ Redis is ready"
 
 # Wait for Rails
 echo "Waiting for Rails server..."
-until curl -s http://localhost:3000 &> /dev/null; do
+until curl -s http://localhost:3001 &> /dev/null; do
     sleep 2
 done
 echo "✅ Rails server is ready"
 
 # Wait for Next.js
 echo "Waiting for Next.js server..."
-until curl -s http://localhost:3001 &> /dev/null; do
+until curl -s http://localhost:3000 &> /dev/null; do
     sleep 2
 done
 echo "✅ Next.js server is ready"
@@ -90,9 +90,8 @@ echo ""
 echo "🎉 Dev container is ready!"
 echo ""
 echo "Access your application at:"
-echo "  🌐 Main App: https://flexile.dev"
-echo "  🔧 Rails API: http://localhost:3000"
-echo "  ⚡ Next.js: http://localhost:3001"
+echo "  🌐 Main App: http://localhost:3000"
+echo "  🔧 Rails API: http://localhost:3001"
 echo "  🎯 Inngest: http://localhost:8288"
 echo ""
 echo "Useful commands:"

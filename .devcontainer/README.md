@@ -1,6 +1,6 @@
 # Flexile Dev Container Setup
 
-This dev container provides a complete development environment for Flexile with Rails, Next.js, PostgreSQL, Redis, and Nginx running with TLS support.
+This dev container provides a complete development environment for Flexile with Rails, Next.js, PostgreSQL, and Redis.
 
 ## Prerequisites
 
@@ -9,7 +9,7 @@ This dev container provides a complete development environment for Flexile with 
 
 ## Quick Start
 
-The dev container handles all setup automatically, including SSL certificates and environment configuration. You can start in two ways:
+The dev container handles all setup automatically, including environment configuration. You can start in two ways:
 
 ### Option A: Automated Setup (Recommended)
 
@@ -23,8 +23,7 @@ This will automatically:
 
 - Check Docker prerequisites
 - Create environment file from template
-- Start all services (Rails, Next.js, PostgreSQL, Redis, Nginx)
-- Set up SSL certificates and domain configuration
+- Start all services (Rails, Next.js, PostgreSQL, Redis)
 
 ### Option B: VS Code Dev Container
 
@@ -49,9 +48,8 @@ docker compose -f docker-compose.dev.yml up -d --build
 
 Once the dev container is running, you can access:
 
-- **Main Application**: https://flexile.dev
-- **Rails API**: http://localhost:3000
-- **Next.js Frontend**: http://localhost:3001
+- **Main Application**: http://localhost:3000
+- **Rails API**: http://localhost:3001
 - **Inngest Dashboard**: http://localhost:8288
 - **PostgreSQL**: localhost:5432
 - **Redis**: localhost:6379
@@ -59,24 +57,24 @@ Once the dev container is running, you can access:
 ## Services Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐
-│     Browser     │────│      Nginx      │
-│  flexile.dev    │    │   (Port 443)    │
-└─────────────────┘    └─────────────────┘
-                                │
-                       ┌────────┴────────┐
-                       │                 │
-              ┌─────────▼──┐    ┌────────▼─────┐
-              │  Next.js   │    │    Rails     │
-              │ (Port 3001)│    │ (Port 3000)  │
-              └────────────┘    └──────────────┘
-                       │                 │
-              ┌────────┴────────┬────────▼─────┐
-              │                 │              │
-        ┌─────▼──┐    ┌────────▼─┐    ┌──────▼──┐
-        │Inngest │    │PostgreSQL│    │  Redis  │
-        │ (8288) │    │  (5432)  │    │ (6379)  │
-        └────────┘    └──────────┘    └─────────┘
+        ┌─────────────────┐
+        │     Browser     │
+        │ localhost:3000  │
+        └─────────────────┘
+                │
+       ┌────────┴────────┐
+       │                 │
+┌──────▼─────┐    ┌──────▼─────┐
+│  Next.js   │    │   Rails    │
+│(Port 3000) │    │(Port 3001) │
+└────────────┘    └────────────┘
+       │                 │
+┌──────┴─────────────────▼─────┐
+│                              │
+┌▼──────┐  ┌──────────┐  ┌────▼──┐
+│Inngest│  │PostgreSQL│  │ Redis │
+│(8288) │  │ (5432)   │  │(6379) │
+└───────┘  └──────────┘  └───────┘
 ```
 
 ## Development Workflow
@@ -128,13 +126,6 @@ docker compose -f docker-compose.dev.yml up -d --build
 
 ## Troubleshooting
 
-### SSL Certificate Issues
-
-If you see SSL/TLS errors:
-
-1. Regenerate certificates: `./.devcontainer/setup-certs.sh`
-2. Restart the nginx service: `docker compose -f docker-compose.dev.yml restart nginx`
-
 ### Database Connection Issues
 
 1. Ensure PostgreSQL is healthy: `docker compose -f docker-compose.dev.yml ps postgres`
@@ -147,10 +138,10 @@ If ports are already in use:
 
 ```bash
 # Find processes using ports
-lsof -ti:3000,3001,5432,6379,443,80,8288
+lsof -ti:3000,3001,5432,6379,8288
 
 # Kill processes if needed
-kill -9 $(lsof -ti:3000,3001,5432,6379,443,80,8288)
+kill -9 $(lsof -ti:3000,3001,5432,6379,8288)
 ```
 
 ### Node Modules Issues
@@ -168,8 +159,10 @@ Key environment variables in `.env`:
 
 - `DATABASE_URL`: PostgreSQL connection string
 - `REDIS_URL`: Redis connection string
-- `DOMAIN`: Base domain (flexile.dev)
-- `NEXT_PUBLIC_API_ORIGIN`: Frontend API origin
+- `DOMAIN`: Base domain (localhost:3000)
+- `APP_DOMAIN`: Application domain (localhost:3000)
+- `API_DOMAIN`: API domain (localhost:3001)
+- `PROTOCOL`: Protocol to use (http)
 - `ENABLE_DEFAULT_OTP`: Use 000000 as OTP for development
 
 ## VS Code Extensions
