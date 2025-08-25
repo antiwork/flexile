@@ -135,7 +135,6 @@ export default [
       "frontend/next.config.ts",
       "frontend/drizzle.config.js",
       "playwright.config.ts",
-      "docker/createCertificate.js",
     ],
     languageOptions: {
       globals: globals.node,
