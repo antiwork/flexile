@@ -48,6 +48,8 @@ if [ ! -f ".env" ]; then
     fi
 fi
 
+ln -sf $PWD/.env ./frontend/.env
+
 gem install foreman
 
 echo "✨ Setup complete! You can now start the development server."
