@@ -15,7 +15,7 @@ export default defineConfig({
   workers: process.env.CI ? "100%" : undefined,
   reporter: process.env.CI ? [["list"], ["html"]] : "list",
   use: {
-    baseURL: "http://localhost:3101",
+    baseURL: "http://localhost:3100",
     trace: "on-first-retry",
     video: "retain-on-failure",
     screenshot: "only-on-failure",
@@ -41,7 +41,7 @@ export default defineConfig({
   tsconfig: "./e2e/tsconfig.json",
   webServer: {
     command: "bin/test_server",
-    url: "http://localhost:3101",
+    url: "http://localhost:3100",
     reuseExistingServer: !process.env.CI,
   },
 });
