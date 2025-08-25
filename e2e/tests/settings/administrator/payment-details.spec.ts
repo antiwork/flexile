@@ -63,7 +63,7 @@ test.describe("Company administrator settings - payment details", () => {
     expect(companyStripeAccount.bankAccountLastFour).toBe("4321");
   });
 
-  test("allows manually connecting a bank account with microdeposit verification", async ({ page }) => {
+  test("allows connecting a bank account via microdeposits (amounts or descriptor code)", async ({ page }) => {
     const { company } = await companiesFactory.create({ stripeCustomerId: null }, { withoutBankAccount: true });
     const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
     const adminUser = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) }).then(takeOrThrow);
@@ -117,13 +117,21 @@ test.describe("Company administrator settings - payment details", () => {
     await page.getByRole("button", { name: "Verify bank account" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
 
-    const amount1Input = page.getByLabel("Amount 1");
-    await amount1Input.fill("0.32");
-    await expect(amount1Input).toHaveValue("0.32");
+    // Stripe determines at runtime whether microdeposits use two "amounts" or a "descriptor_code" (6-digit code).
+    // The Payment Element does not allow forcing a specific type, so the test handles both.
+    const codeInput = page.getByLabel("6-digit code");
+    if (await codeInput.isVisible().catch(() => false)) {
+      await codeInput.fill("SM11AA");
+      await expect(codeInput).toHaveValue("SM11AA");
+    } else {
+      const amount1Input = page.getByLabel("Amount 1");
+      await amount1Input.fill("0.32");
+      await expect(amount1Input).toHaveValue("0.32");
 
-    const amount2Input = page.getByLabel("Amount 2");
-    await amount2Input.fill("0.45");
-    await expect(amount2Input).toHaveValue("0.45");
+      const amount2Input = page.getByLabel("Amount 2");
+      await amount2Input.fill("0.45");
+      await expect(amount2Input).toHaveValue("0.45");
+    }
 
     await page.getByRole("button", { name: "Submit" }).click();
 
