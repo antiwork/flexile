@@ -9,37 +9,15 @@ elif [ ! -f ".env" ]; then
     exit 1
 fi
 
-# Install Node.js dependencies first (before generating certificates)
 echo "Installing Node.js dependencies..."
 pnpm install
 
-# Generate SSL certificates and start local services
 echo "Starting Docker services..."
 make local
 
-# Generate SSL certificates
-echo "Generating SSL certificates..."
-mkdir -p certificates
-NODE_EXTRA_CA_CERTS_FILE="$(node docker/createCertificate.js)"
-
-# Generate combined SSL certificates and set environment variables
-mkdir -p tmp
-default_cert_file=$(ruby -ropenssl -e 'puts OpenSSL::X509::DEFAULT_CERT_FILE')
-combined_cert_file="tmp/combined_ca_certs.pem"
-
-if [ -f "$default_cert_file" ] && [ -f "$NODE_EXTRA_CA_CERTS_FILE" ]; then
-  cat "$default_cert_file" "$NODE_EXTRA_CA_CERTS_FILE" > "$combined_cert_file"
-  echo "Combined certificates created at $combined_cert_file"
-  export SSL_CERT_FILE="$(pwd)/$combined_cert_file"
-  export NODE_EXTRA_CA_CERTS="$(pwd)/$combined_cert_file"
-else
-  echo "Warning: Could not create combined cert file. Using default certificates."
-fi
-
-# Prepare backend dependencies and database
-echo "Installing backend dependencies..."
 cd backend
 
+echo "Installing backend dependencies..."
 bundle install
 
 echo "Preparing database..."
@@ -61,6 +39,4 @@ kill_process_listening_on_port 8288 # inngest
 rm -f backend/tmp/pids/server.pid
 
 echo "Starting application services..."
-# Export SSL environment variables for the foreman processes
-export SSL_CERT_FILE NODE_EXTRA_CA_CERTS
 foreman start -f Procfile.dev "$@"

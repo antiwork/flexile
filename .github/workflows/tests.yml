@@ -11,8 +11,9 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'dummy' }}
   RAILS_ENV: test
+  # In CI, run Wise and Stripe tests with valid credentials
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'dummy' }}
   STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY || 'dummy' }}
   WISE_API_KEY: ${{ secrets.WISE_API_KEY || 'dummy' }}
   WISE_PROFILE_ID: ${{ secrets.WISE_PROFILE_ID || 0 }}
@@ -92,14 +93,12 @@ jobs:
       - run: pnpm puppeteer browsers install chrome
         if: steps.restore-cache.outputs.cache-hit != 'true'
 
-      - name: Install Playwright Chromium deps
-        run: pnpm playwright install-deps chromium
+      - name: Install Playwright Chromium deps (headless shell)
+        run: pnpm playwright install-deps chromium-headless-shell
 
-      - name: Install Playwright Chromium (headless shell only)
+      - name: Install Playwright Chromium (headless shell)
         run: pnpm playwright install --only-shell chromium
         if: steps.restore-cache.outputs.cache-hit != 'true'
-
-      - run: node docker/createCertificate.js
 
       - run: NODE_ENV=test pnpm run build-next --no-lint
         shell: bash
