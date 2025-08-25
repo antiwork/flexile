@@ -46,7 +46,9 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByLabel("Hours / Qty").nth(1).fill("10");
     await page.getByPlaceholder("Enter notes about your").fill("A note in the invoice");
     await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
+      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 201),
+      // TRPC Clubs into 207 multi-status when repsonses are batched from server
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
       page.getByRole("button", { name: "Send invoice" }).click(),
     ]);
 
@@ -75,7 +77,8 @@ test.describe("Invoice submission, approval and rejection", () => {
     await timeField.fill("04:30");
     await timeField.blur(); // work around a test-specific issue; this works fine in a real browser
     await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
+      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 204),
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
       page.getByRole("button", { name: "Re-submit invoice" }).click(),
     ]);
 
@@ -216,7 +219,6 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await logout(page);
     await Promise.all([
-      // TRPC Clubs into 207 multi-status
       page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
       login(page, adminUser),
     ]);
