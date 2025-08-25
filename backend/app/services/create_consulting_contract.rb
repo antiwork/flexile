@@ -4,10 +4,10 @@
 # First signature can be by either a company worker or a company administrator
 #
 class CreateConsultingContract
-  def initialize(company_worker:, company_administrator:, current_user:)
+  def initialize(company_worker:, company_administrator:, contract:)
     @company_worker = company_worker
     @company_administrator = company_administrator
-    @current_user = current_user
+    @contract = contract
   end
 
   def perform!
@@ -19,12 +19,16 @@ class CreateConsultingContract
     }.compact
     company_worker.user.documents.unsigned_contracts.each(&:mark_deleted!)
     document = company_worker.user.documents.build(attributes)
-    document.signatures.build(user: company_administrator.user, title: "Company Representative")
-    document.signatures.build(user: company_worker.user, title: "Signer")
+    if contract.is_a?(String)
+      document.text = contract
+    else
+      document.attachments.attach(contract)
+    end
+    document.signatures.build(user: company_worker.user, title: "Signer", signed_at: contract.is_a?(String) ? nil : Time.current)
     document.save!
     document
   end
 
   private
-    attr_reader :company_worker, :company_administrator, :current_user
+    attr_reader :company_worker, :company_administrator, :contract
 end
