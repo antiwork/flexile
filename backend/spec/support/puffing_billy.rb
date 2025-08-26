@@ -23,15 +23,3 @@ Billy.module_eval do
     end
   end
 end
-
-if ENV["KNAPSACK_PRO_TEST_SUITE_TOKEN_RSPEC"].present?
-  KnapsackPro::Hooks::Queue.before_queue do
-    # executes before Queue Mode starts work
-    Billy.proxy.start
-  end
-
-  KnapsackPro::Hooks::Queue.after_queue do
-    # executes after Queue Mode finishes work
-    Billy.proxy.stop
-  end
-end
