@@ -257,7 +257,7 @@ export default function RolesPage() {
       columnHelper.accessor("role", {
         header: "Role",
         cell: (info) => info.getValue() || "-",
-        meta: { cellClassName: "whitespace-nowrap text-left" },
+        meta: { cellClassName: "text-left" },
       }),
       columnHelper.display({
         id: "actions",
@@ -367,7 +367,7 @@ export default function RolesPage() {
           {adminsAndLawyers.length === 0 ? (
             <TableSkeleton columns={3} />
           ) : (
-            <div className="[&_table]:w-full [&_table]:table-fixed [&_td:nth-child(1)]:w-[75%] [&_td:nth-child(2)]:w-[15%] [&_td:nth-child(2)]:pr-1 [&_td:nth-child(2)]:text-left [&_td:nth-child(3)]:w-[10%] [&_td:nth-child(3)]:pr-0 [&_td:nth-child(3)]:pl-0 [&_th:nth-child(1)]:w-[75%] [&_th:nth-child(2)]:w-[15%] [&_th:nth-child(3)]:w-[10%] [&>div>div:first-child]:mx-0">
+            <div className="[&_table]:w-full [&_table]:table-fixed [&_td:nth-child(1)]:w-[65%] [&_td:nth-child(2)]:w-[25%] [&_td:nth-child(2)]:pr-1 [&_td:nth-child(2)]:text-left [&_td:nth-child(3)]:w-[10%] [&_td:nth-child(3)]:pr-0 [&_td:nth-child(3)]:pl-0 [&_th:nth-child(1)]:w-[65%] [&_th:nth-child(2)]:w-[25%] [&_th:nth-child(3)]:w-[10%] [&>div>div:first-child]:mx-0">
               <DataTable
                 table={table}
                 searchColumn="name"
