@@ -104,7 +104,7 @@ const FinalizeDistributionModal = ({
           <div className="flex justify-between">
             <div>
               <div>Processing fees:</div>
-              <div className="mt-1 text-sm text-gray-500">$0.50 + 1.5%, up to $15/investor</div>
+              <div className="mt-1 text-sm text-gray-500">$0.30 + 2.9%, up to $30/investor</div>
             </div>
             <span>{formatMoneyFromCents(dividendComputation.total_fees_cents)}</span>
           </div>
