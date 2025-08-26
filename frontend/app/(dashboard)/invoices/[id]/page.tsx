@@ -382,11 +382,7 @@ export default function InvoicePage() {
                       <div className="flex justify-between gap-2">
                         <Link
                           href={{
-                            pathname: "/download/[key]/[filename]",
-                            query: {
-                              key: expense.attachment?.key,
-                              filename: expense.attachment?.filename,
-                            },
+                            pathname: `/download/${expense.attachment?.key}/${expense.attachment?.filename}`,
                           }}
                           download
                           className={cn(linkClasses, "print:text-black print:no-underline")}

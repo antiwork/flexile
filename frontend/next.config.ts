@@ -10,8 +10,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   experimental: {
-    browserDebugInfoInTerminal: true, // Forward browser logs to terminal
-    clientSegmentCache: true, // Client-side router improvements
+    browserDebugInfoInTerminal: true,
     devtoolSegmentExplorer: true, // Route composition in DevTools
     testProxy: true,
     serverActions: {
@@ -34,7 +33,7 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
 };
 if (process.env.NODE_ENV === "development") {
-  nextConfig.images.remotePatterns.push({ hostname: "flexile.dev" });
+  nextConfig.images.remotePatterns.push({ protocol: "http", hostname: "localhost", port: "3001" });
 }
 
 const withBundleAnalyzer = NextBundleAnalyzer({

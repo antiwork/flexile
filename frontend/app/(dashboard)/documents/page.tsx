@@ -158,11 +158,7 @@ export default function DocumentsPage() {
                   <Button variant="outline" size="small" asChild>
                     <Link
                       href={{
-                        pathname: "/download/[key]/[filename]",
-                        query: {
-                          key: document.attachment.key,
-                          filename: document.attachment.filename,
-                        },
+                        pathname: `/download/${document.attachment.key}/${document.attachment.filename}`,
                       }}
                       download
                     >

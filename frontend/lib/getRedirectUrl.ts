@@ -5,7 +5,9 @@ import { internal_current_user_data_url } from "@/utils/routes";
 
 export const getRedirectUrl = async (req: Request) => {
   const host = assertDefined(req.headers.get("Host"));
-  const response = await fetch(internal_current_user_data_url({ host }), {
+  const url = new URL(req.url);
+  const protocol = url.protocol.slice(0, -1); // "http" or "https"
+  const response = await fetch(internal_current_user_data_url({ protocol, host }), {
     headers: {
       cookie: req.headers.get("cookie") ?? "",
       "User-Agent": req.headers.get("User-Agent") ?? "",

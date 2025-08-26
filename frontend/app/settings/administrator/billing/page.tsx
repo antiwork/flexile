@@ -190,11 +190,7 @@ const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
             <Button asChild variant="outline" size="small">
               <Link
                 href={{
-                  pathname: "/download/[key]/[filename]",
-                  query: {
-                    key: attachment.key,
-                    filename: attachment.filename,
-                  },
+                  pathname: `/download/${attachment.key}/${attachment.filename}`,
                 }}
                 download
               >
