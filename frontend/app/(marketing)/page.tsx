@@ -56,7 +56,7 @@ export default async function HomePage() {
       <main className="min-h-screen bg-white pt-20">
         <Section className="bg-blue-600 py-8 md:py-16">
           <h1 className="text-6xl leading-[0.9] font-medium tracking-tight sm:text-8xl md:text-[12rem]">
-            Contractor payments as easy as 1-2-3
+            Contractor payments
           </h1>
           <div className="flex">
             <Link

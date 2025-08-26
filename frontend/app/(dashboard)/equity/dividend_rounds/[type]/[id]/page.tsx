@@ -38,7 +38,7 @@ const DividendRound = ({ id }: { id: string }) => {
 
   const { data: dividends = [], isLoading } = trpc.dividends.list.useQuery({
     companyId: company.id,
-    dividendRoundId: Number(id),
+    dividendRoundId: id,
   });
 
   const columnHelper = createColumnHelper<Dividend>();
@@ -96,7 +96,7 @@ const DividendRound = ({ id }: { id: string }) => {
 };
 
 const dividendComputationSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   total_amount_in_usd: z.string(),
   dividends_issuance_date: z.string(),
   return_of_capital: z.boolean(),
@@ -127,7 +127,7 @@ const DividendComputation = ({ id }: { id: string }) => {
       const response = await request({
         method: "GET",
         accept: "json",
-        url: company_dividend_computation_path(company.id, BigInt(id)),
+        url: company_dividend_computation_path(company.id, id),
         assertOk: true,
       });
       return dividendComputationSchema.parse(await response.json());

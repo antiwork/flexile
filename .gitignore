@@ -8,6 +8,7 @@ tmp
 
 # Environment and configuration
 .env*
+!.env.example
 !.env.test
 .env*.local
 .vercel
