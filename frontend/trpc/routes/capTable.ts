@@ -115,12 +115,82 @@ export const capTableRouter = createRouter({
           .where(inArray(equityGrants.optionPoolId, poolIds));
         const exercisableShares = grants?.exercisableShares ?? 0;
         return {
+          id: shareClass.id,
           name: shareClass.name,
           outstandingShares,
           fullyDilutedShares: outstandingShares + exercisableShares,
         };
       }),
     );
+
+    const exercisePricesResult = await db
+      .selectDistinct({ exercisePriceUsd: equityGrants.exercisePriceUsd })
+      .from(equityGrants)
+      .innerJoin(optionPools, eq(equityGrants.optionPoolId, optionPools.id))
+      .where(eq(optionPools.companyId, ctx.company.id))
+      .orderBy(equityGrants.exercisePriceUsd);
+
+    const exercisePrices = exercisePricesResult.map((r) => r.exercisePriceUsd);
+
+    // Add breakdown data to each investor
+    for (const investor of investors) {
+      if (!("id" in investor)) {
+        // Skip SAFE investments - they don't have breakdowns
+        investor.sharesByClass = {};
+        investor.optionsByStrike = {};
+        continue;
+      }
+
+      const sharesByClass: Record<string, number> = {};
+      const optionsByStrike: Record<string, number> = {};
+
+      // Get share holdings by share class
+      for (const shareClass of classes) {
+        const joinCondition = input.newSchema
+          ? eq(companyInvestorEntities.externalId, investor.id)
+          : eq(companyInvestors.externalId, investor.id);
+
+        const [holdings] = await db
+          .select({ total: sum(shareHoldings.numberOfShares).mapWith(Number) })
+          .from(shareHoldings)
+          .innerJoin(
+            input.newSchema ? companyInvestorEntities : companyInvestors,
+            input.newSchema
+              ? eq(shareHoldings.companyInvestorEntityId, companyInvestorEntities.id)
+              : eq(shareHoldings.companyInvestorId, companyInvestors.id),
+          )
+          .where(and(joinCondition, eq(shareHoldings.shareClassId, shareClass.id)));
+        sharesByClass[shareClass.name] = holdings?.total ?? 0;
+      }
+
+      // Get option grants by exercise price
+      for (const exercisePrice of exercisePrices) {
+        const [grants] = await db
+          .select({ total: sum(sql`${equityGrants.vestedShares} + ${equityGrants.unvestedShares}`).mapWith(Number) })
+          .from(equityGrants)
+          .innerJoin(optionPools, eq(equityGrants.optionPoolId, optionPools.id))
+          .innerJoin(
+            input.newSchema ? companyInvestorEntities : companyInvestors,
+            input.newSchema
+              ? eq(equityGrants.companyInvestorEntityId, companyInvestorEntities.id)
+              : eq(equityGrants.companyInvestorId, companyInvestors.id),
+          )
+          .where(
+            and(
+              input.newSchema
+                ? eq(companyInvestorEntities.externalId, investor.id)
+                : eq(companyInvestors.externalId, investor.id),
+              eq(equityGrants.exercisePriceUsd, exercisePrice),
+              eq(optionPools.companyId, ctx.company.id),
+            ),
+          );
+        const strikeKey = `$${Number(exercisePrice).toFixed(2)}`;
+        optionsByStrike[strikeKey] = grants?.total ?? 0;
+      }
+
+      investor.sharesByClass = sharesByClass;
+      investor.optionsByStrike = optionsByStrike;
+    }
 
     return {
       investors,
@@ -129,6 +199,8 @@ export const capTableRouter = createRouter({
 
       optionPools: pools.map((pool) => pick(pool, ["name", "availableShares"])),
       shareClasses: classes,
+      allShareClasses: classes.map((sc) => sc.name),
+      exercisePrices: exercisePrices.map((price) => `$${Number(price).toFixed(2)}`),
     };
   }),
 });
