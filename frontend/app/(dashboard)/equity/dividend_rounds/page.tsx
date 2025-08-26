@@ -21,7 +21,7 @@ import NewDistributionModal from "./NewDistributionModal";
 
 const dividendComputationSchema = z.array(
   z.object({
-    id: z.number(),
+    id: z.string(),
     total_amount_in_usd: z.string(),
     dividends_issuance_date: z.string(),
     return_of_capital: z.boolean(),
@@ -30,7 +30,7 @@ const dividendComputationSchema = z.array(
 );
 
 type DividendOrComputation = {
-  id: bigint;
+  id: string;
   status: string;
   totalAmountInUsd: number;
   numberOfShareholders: bigint;
@@ -57,7 +57,6 @@ export default function DividendRounds() {
     select: (computations) =>
       computations.map((computation) => ({
         ...computation,
-        id: BigInt(computation.id),
         type: "draft" as const,
         status: "Draft",
         totalAmountInUsd: Number(computation.total_amount_in_usd),
