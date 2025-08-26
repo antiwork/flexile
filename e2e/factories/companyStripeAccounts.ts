@@ -17,23 +17,4 @@ export const companyStripeAccountsFactory = {
 
     return { stripeAccount: insertedStripeAccount[0] };
   },
-
-  createInitial: async (overrides: Partial<typeof companyStripeAccounts.$inferInsert> = {}) =>
-    companyStripeAccountsFactory.create({
-      status: "initial",
-      bankAccountLastFour: null,
-      ...overrides,
-    }),
-
-  createActionRequired: async (overrides: Partial<typeof companyStripeAccounts.$inferInsert> = {}) =>
-    companyStripeAccountsFactory.create({
-      status: "action_required",
-      ...overrides,
-    }),
-
-  createProcessing: async (overrides: Partial<typeof companyStripeAccounts.$inferInsert> = {}) =>
-    companyStripeAccountsFactory.create({
-      status: "processing",
-      ...overrides,
-    }),
 };

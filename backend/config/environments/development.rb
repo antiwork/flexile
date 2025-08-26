@@ -35,8 +35,11 @@ Rails.application.configure do
     config.cache_store = :null_store
   end
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :amazon
+  if ENV["AWS_ACCESS_KEY_ID"].present?
+    config.active_storage.service = :amazon
+  else
+    config.active_storage.service = :local
+  end
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false

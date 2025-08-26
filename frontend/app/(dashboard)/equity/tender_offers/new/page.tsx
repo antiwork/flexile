@@ -11,6 +11,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
+import { Editor as RichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ const formSchema = z.object({
   endDate: z.instanceof(CalendarDate, { message: "This field is required." }),
   minimumValuation: z.number(),
   attachment: z.instanceof(File, { message: "This field is required." }),
+  letterOfTransmittal: z.string().min(1, "This field is required."),
 });
 
 export default function NewBuyback() {
@@ -38,7 +40,7 @@ export default function NewBuyback() {
 
   const createMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const { startDate, endDate, minimumValuation, attachment } = values;
+      const { startDate, endDate, minimumValuation, attachment, letterOfTransmittal } = values;
 
       const base64Checksum = await md5Checksum(attachment);
       const { directUploadUrl, key } = await createUploadUrl.mutateAsync({
@@ -66,6 +68,7 @@ export default function NewBuyback() {
         endsAt: endDate.toDate(localTimeZone),
         minimumValuation: BigInt(minimumValuation),
         attachmentKey: key,
+        letterOfTransmittal,
       });
       router.push(`/equity/tender_offers`);
     },
@@ -137,6 +140,25 @@ export default function NewBuyback() {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="letterOfTransmittal"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Letter of transmittal</FormLabel>
+                <FormControl>
+                  <RichTextEditor {...field} aria-label="Letter of transmittal" />
+                </FormControl>
+                <FormMessage>
+                  <span className="text-xs text-gray-500">
+                    Rich text formatting will be preserved. You can paste from Word or Google Docs.
+                  </span>
+                </FormMessage>
+              </FormItem>
+            )}
+          />
+
           <MutationStatusButton
             className="justify-self-end"
             type="submit"

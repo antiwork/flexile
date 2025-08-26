@@ -17,7 +17,6 @@ class RemoveCompanyMonthlyFinancialReports < ActiveRecord::Migration[8.0]
       t.timestamps
       
       t.index [:company_id, :year, :month], unique: true, name: 'index_company_monthly_financials_on_company_year_month'
-      t.index [:company_id], name: 'index_company_monthly_financial_reports_on_company_id'
     end
   end
 end
