@@ -181,6 +181,14 @@ class User < ApplicationRecord
     end
   end
 
+  def actor_token
+    JwtService.generate_actor_token(self)
+  end
+
+  def impersonation_url
+    "#{PROTOCOL}://#{DOMAIN}/impersonate?actor_token=#{actor_token}"
+  end
+
   private
     def sync_with_quickbooks
       return unless has_personal_details?
