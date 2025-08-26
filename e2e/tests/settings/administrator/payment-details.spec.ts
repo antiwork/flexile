@@ -31,7 +31,9 @@ test.describe("Company administrator settings - payment details", () => {
     await bankFrame.getByRole("button", { name: "Agree" }).click();
     await bankFrame.getByTestId("success").click();
     await bankFrame.getByRole("button", { name: "Connect account" }).click();
-    await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
+    await bankFrame.getByRole("button", { name: "Not now" }).click();
+    await bankFrame.getByRole("button", { name: "Back to new Business sandbox" }).click();
+
     await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByText("USD bank account")).toBeVisible();
     await expect(page.getByText("Ending in 6789")).toBeVisible();
@@ -49,7 +51,8 @@ test.describe("Company administrator settings - payment details", () => {
     await bankFrame.getByRole("button", { name: "Agree" }).click();
     await bankFrame.getByRole("button", { name: "High Balance" }).click();
     await bankFrame.getByRole("button", { name: "Connect account" }).click();
-    await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
+    await bankFrame.getByRole("button", { name: "Not now" }).click();
+    await bankFrame.getByRole("button", { name: "Back to new Business sandbox" }).click();
     await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByText("USD bank account")).toBeVisible();
     await expect(page.getByText("Ending in 4321")).toBeVisible();
@@ -82,16 +85,27 @@ test.describe("Company administrator settings - payment details", () => {
     await bankFrame.getByTestId("manualEntry-confirmAccountNumber-input").fill("000123456789");
     await bankFrame.getByRole("button", { name: "Submit" }).click();
 
-    await expect(
-      bankFrame.getByText(
-        "Next, finish up on Flexile to initiate micro-deposits. You can expect an email with instructions within 1-2 business days.",
-      ),
-    ).toBeVisible();
-
-    await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
+    await bankFrame.getByRole("button", { name: "Not now" }).click();
+    await bankFrame.getByRole("button", { name: "Back to new Business sandbox" }).click();
     await expect(page.getByRole("dialog")).not.toBeVisible();
 
     await expect(page.getByText("Verify your bank account to enable contractor payments")).toBeVisible();
+    await page.getByRole("button", { name: "Verify bank account" }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+
+    const dialog = page.getByRole("dialog");
+
+    const codeInput = dialog.getByRole("textbox", { name: "6-digit code" });
+    if (await codeInput.isVisible().catch(() => false)) {
+      await codeInput.fill("SM11AA");
+      await dialog.getByRole("button", { name: "Submit" }).click();
+    } else {
+      await dialog.getByRole("textbox", { name: "Amount 1" }).fill("0.04");
+      await dialog.getByRole("textbox", { name: "Amount 2" }).fill("0.05");
+      await dialog.getByRole("button", { name: "Submit" }).click();
+    }
+
+    await expect(page.getByRole("dialog")).not.toBeVisible();
 
     const companyStripeAccount = await db.query.companyStripeAccounts
       .findFirst({ where: eq(companyStripeAccounts.companyId, company.id) })
