@@ -12,8 +12,6 @@ Dir[Rails.root.join("spec", "support", "**", "*.rb")].sort.each { |f| require f 
 
 BUILDING_ON_CI = !ENV["CI"].nil?
 
-KnapsackPro::Adapters::RSpecAdapter.bind
-
 SuperDiff.configure { |config| config.actual_color = :green }
 
 # Checks for pending migrations and applies them before tests are run.
@@ -31,7 +29,6 @@ def configure_vcr
     config.hook_into :webmock
     config.ignore_localhost = true
     config.ignore_hosts "chromedriver.storage.googleapis.com"
-    config.ignore_hosts "api.knapsackpro.com"
     config.configure_rspec_metadata!
     config.debug_logger = $stdout if ENV["VCR_DEBUG"]
     config.default_cassette_options[:record] = BUILDING_ON_CI ? :none : :once
@@ -53,7 +50,7 @@ end
 
 configure_vcr
 
-WebMock.disable_net_connect!(net_http_connect_on_start: true, allow: ["api.knapsackpro.com"])
+WebMock.disable_net_connect!(net_http_connect_on_start: true)
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
