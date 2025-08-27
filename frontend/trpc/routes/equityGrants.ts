@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gt, gte, isNotNull, isNull, lte, or, sql, type SQLWrapper, sum } from "drizzle-orm";
+import { and, desc, eq, gt, gte, isNotNull, isNull, lte, ne, or, sql, type SQLWrapper, sum } from "drizzle-orm";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
@@ -217,6 +217,7 @@ export const equityGrantsRouter = createRouter({
           eq(companyContractors.companyId, ctx.company.id),
           isNull(companyContractors.endedAt),
           lte(companyContractors.startedAt, new Date()),
+          ne(companyContractors.userId, ctx.user.id),
         ),
       }),
       db.query.companyAdministrators.findMany({
@@ -239,7 +240,7 @@ export const equityGrantsRouter = createRouter({
             },
           },
         },
-        where: eq(companyAdministrators.companyId, ctx.company.id),
+        where: and(eq(companyAdministrators.companyId, ctx.company.id), ne(companyAdministrators.userId, ctx.user.id)),
       }),
     ]);
 
