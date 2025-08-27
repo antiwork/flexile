@@ -66,9 +66,9 @@ test.describe("invoice PDF extraction via dropzone", () => {
       },
     ]);
     await dropzoneTarget.dispatchEvent("dragenter", { dataTransfer });
-    await expect(page.getByText("Drag your PDF here")).toBeVisible();
+    await expect(page.getByText("Release to import")).toBeVisible();
     await dropzoneTarget.dispatchEvent("drop", { dataTransfer });
-    await expect(page.getByText("Drag your PDF here")).not.toBeVisible();
+    await expect(page.getByText("Release to import")).not.toBeVisible();
     await expect(page.getByLabel("Invoice ID")).toHaveValue("INV-DRAG-DROP-001");
     await expect(page.getByPlaceholder("Description").first()).toHaveValue("Backend Development");
     await expect(page.getByLabel("Hours / Qty").first()).toHaveValue("01:00");
@@ -102,7 +102,7 @@ test.describe("invoice PDF extraction via dropzone", () => {
       },
     ]);
     await dropzoneTarget.dispatchEvent("dragenter", { dataTransfer });
-    await expect(page.getByText("Drag your PDF here")).not.toBeVisible();
+    await expect(page.getByText("Release to import")).not.toBeVisible();
 
     const dataTransfer2 = await createDataTransferHandle(page, [
       {
@@ -117,7 +117,7 @@ test.describe("invoice PDF extraction via dropzone", () => {
       },
     ]);
     await dropzoneTarget.dispatchEvent("dragenter", { dataTransfer: dataTransfer2 });
-    await expect(page.getByText("Drag your PDF here")).not.toBeVisible();
+    await expect(page.getByText("Release to import")).not.toBeVisible();
   });
 
   test("should display an error message if something goes wrong (e.g. file size exceeds the 10MB limit)", async ({
@@ -133,7 +133,7 @@ test.describe("invoice PDF extraction via dropzone", () => {
     ]);
     const dropzoneTarget = page.locator("#dropzone");
     await dropzoneTarget.dispatchEvent("dragenter", { dataTransfer });
-    await expect(page.getByText("Drag your PDF here")).toBeVisible();
+    await expect(page.getByText("Release to import")).toBeVisible();
     await dropzoneTarget.dispatchEvent("drop", { dataTransfer });
     await expect(page.getByText("File size exceeds the 10MB limit")).toBeVisible();
   });
