@@ -95,18 +95,20 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
 
 export function Dropzone({ isProcessing, isDragging }: DropzoneState) {
   if (!isProcessing && !isDragging) return null;
+
   return (
     <Card className="animate-in pointer-events-none fixed inset-0 z-50 flex items-center justify-center overflow-hidden border-none bg-black/10 duration-200">
       <CardContent className="flex flex-col items-center">
-        {isProcessing ? <CircularProgress progress={100} className="mb-3 h-8 w-8" /> : null}
-        {isDragging ? <ArrowUpTrayIcon className="mb-3 h-8 w-8" /> : null}
+        {isProcessing ? (
+          <CircularProgress progress={100} className="mb-3 h-8 w-8" />
+        ) : (
+          <ArrowUpTrayIcon className="mb-3 h-8 w-8" />
+        )}
         <div className="text-foreground text-lg font-semibold">
-          {isProcessing ? "Extracting..." : null}
-          {isDragging ? "Drag your PDF here" : null}
+          {isProcessing ? "Extracting invoice..." : "Release to import"}
         </div>
         <div className="text-muted-foreground text-sm">
-          {isProcessing ? "Hang tight, we're reading your PDF..." : null}
-          {isDragging ? "Release the file to automatically fill your invoice" : null}
+          {isProcessing ? "This may take a few seconds..." : "We'll extract the details automatically."}
         </div>
       </CardContent>
     </Card>
