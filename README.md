@@ -27,7 +27,7 @@ Finally, set up your environment: `cp .env.example .env`. If you're an Antiwork 
 
 You can start the local app using the [`bin/dev` script](bin/dev) - or feel free to run the commands contained in it yourself.
 
-Once the local services are up and running, the application will be available at `https://flexile.dev`
+Once the local services are up and running, the application will be available at http://localhost:3000, with the backend (Rails API) running at http://localhost:3001.
 
 **Development shortcuts**:
 
