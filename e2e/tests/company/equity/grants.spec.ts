@@ -1,5 +1,6 @@
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
+import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
@@ -359,5 +360,52 @@ test.describe("Equity Grants", () => {
     await expect(
       page.getByRole("alert", { name: "Please add an exercise notice so investors can exercise their options." }),
     ).not.toBeVisible();
+  });
+
+  test("includes administrators in recipient search results", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fmvPerShareInUsd: "1",
+      conversionSharePriceUsd: "1.00",
+      sharePriceInUsd: "1.00",
+    });
+
+    const { user: contractorUser } = await usersFactory.create({
+      email: "contractor@company.com",
+      legalName: "John Contractor",
+      preferredName: "John Contractor",
+    });
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+    });
+
+    const { user: additionalAdminUser } = await usersFactory.create({
+      email: "admin@company.com",
+      legalName: "Jane Admin",
+      preferredName: "Jane Admin",
+    });
+    await companyAdministratorsFactory.create({
+      companyId: company.id,
+      userId: additionalAdminUser.id,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
+    await page.getByRole("button", { name: "New option grant" }).click();
+
+    await page.getByRole("combobox", { name: "Recipient" }).click();
+
+    await expect(page.getByRole("option", { name: "John Contractor (contractor@company.com)" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Jane Admin (admin@company.com)" })).toBeVisible();
+
+    await page.getByPlaceholder("Search...").fill("admin");
+    await expect(page.getByRole("option", { name: "Jane Admin (admin@company.com)" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "John Contractor (contractor@company.com)" })).not.toBeVisible();
+
+    await page.getByPlaceholder("Search...").clear();
+    await page.getByRole("option", { name: "Jane Admin (admin@company.com)" }).click();
+    await expect(page.getByRole("combobox", { name: "Recipient" })).toHaveText("Jane Admin (admin@company.com)");
   });
 });

@@ -4,6 +4,7 @@ import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
 import {
+  companyAdministrators,
   companyContractors,
   companyInvestors,
   equityGrantExercises,
@@ -191,32 +192,58 @@ export const equityGrantsRouter = createRouter({
       },
       where: eq(optionPools.companyId, ctx.company.id),
     });
-    const workers = await db.query.companyContractors.findMany({
-      columns: {
-        externalId: true,
-      },
-      with: {
-        user: {
-          columns: simpleUser.columns,
-          with: {
-            companyInvestors: {
-              where: eq(companyInvestors.companyId, ctx.company.id),
-              with: {
-                equityGrants: {
-                  orderBy: desc(equityGrants.issuedAt),
-                  limit: 1,
+    const [contractors, administrators] = await Promise.all([
+      db.query.companyContractors.findMany({
+        columns: {
+          externalId: true,
+        },
+        with: {
+          user: {
+            columns: simpleUser.columns,
+            with: {
+              companyInvestors: {
+                where: eq(companyInvestors.companyId, ctx.company.id),
+                with: {
+                  equityGrants: {
+                    orderBy: desc(equityGrants.issuedAt),
+                    limit: 1,
+                  },
                 },
               },
             },
           },
         },
-      },
-      where: and(
-        eq(companyContractors.companyId, ctx.company.id),
-        isNull(companyContractors.endedAt),
-        lte(companyContractors.startedAt, new Date()),
-      ),
-    });
+        where: and(
+          eq(companyContractors.companyId, ctx.company.id),
+          isNull(companyContractors.endedAt),
+          lte(companyContractors.startedAt, new Date()),
+        ),
+      }),
+      db.query.companyAdministrators.findMany({
+        columns: {
+          externalId: true,
+        },
+        with: {
+          user: {
+            columns: simpleUser.columns,
+            with: {
+              companyInvestors: {
+                where: eq(companyInvestors.companyId, ctx.company.id),
+                with: {
+                  equityGrants: {
+                    orderBy: desc(equityGrants.issuedAt),
+                    limit: 1,
+                  },
+                },
+              },
+            },
+          },
+        },
+        where: eq(companyAdministrators.companyId, ctx.company.id),
+      }),
+    ]);
+
+    const workers = [...contractors, ...administrators];
 
     const defaultVestingSchedules = (
       await Promise.all(
