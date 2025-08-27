@@ -15,14 +15,12 @@ export default defineConfig({
   workers: process.env.CI ? "100%" : undefined,
   reporter: process.env.CI ? [["list"], ["html"]] : "list",
   use: {
-    baseURL: "https://test.flexile.dev:3101",
+    baseURL: "http://localhost:3100",
     trace: "on-first-retry",
     video: "retain-on-failure",
     screenshot: "only-on-failure",
-    contextOptions: {
-      ignoreHTTPSErrors: true,
-    },
     locale: "en-US",
+    timezoneId: "UTC",
   },
   expect: { timeout: 30000, toPass: { timeout: 30000 } },
   timeout: process.env.CI ? 30000 : 120000,
@@ -43,8 +41,7 @@ export default defineConfig({
   tsconfig: "./e2e/tsconfig.json",
   webServer: {
     command: "bin/test_server",
-    url: "https://test.flexile.dev:3101",
+    url: "http://localhost:3100",
     reuseExistingServer: !process.env.CI,
-    ignoreHTTPSErrors: true,
   },
 });
