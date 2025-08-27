@@ -7,7 +7,6 @@ import env from "@/env";
 const extractedInvoiceDataSchema = z.object({
   invoice_date: z.string().describe("The date the invoice was issued, formatted as YYYY-MM-DD."),
   invoice_number: z.string().describe("A unique identifier for this invoice."),
-  notes: z.string().nullable().describe("Additional notes or comments related to the invoice."),
   line_items: z.array(
     z.object({
       description: z.string().describe("Details of the product or service being billed."),
@@ -21,12 +20,10 @@ const invoiceExtractionResultSchema = z.object({
   is_invoice: z.boolean().describe("Whether the document is an invoice."),
   invoice: extractedInvoiceDataSchema,
 });
-
 export type InvoiceExtractionResult = z.infer<typeof invoiceExtractionResultSchema>;
 const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,
 });
-
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export async function POST(request: NextRequest) {
@@ -45,7 +42,7 @@ export async function POST(request: NextRequest) {
     });
 
     const completion = await openai.chat.completions.parse({
-      model: "gpt-4o-2024-08-06",
+      model: "gpt-5-2025-08-07",
       messages: [
         { role: "system", content: "You are an assistant that extracts invoice data." },
         {

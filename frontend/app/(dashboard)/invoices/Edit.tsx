@@ -261,14 +261,15 @@ const Edit = () => {
     );
 
   const prefillFromExtractedInvoice = ({ invoice }: InvoiceExtractionResult) => {
-    const newLineItems = List(
-      invoice.line_items.map((item) => ({
-        ...item,
-        errors: [],
-        quantity: item.quantity?.toString() ?? "",
-      })),
+    setLineItems(
+      List(
+        invoice.line_items.map((item) => ({
+          ...item,
+          errors: [],
+          quantity: item.quantity?.toString() ?? "",
+        })),
+      ),
     );
-    setLineItems(newLineItems);
     setInvoiceNumber(invoice.invoice_number);
     setIssueDate(parseDate(invoice.invoice_date));
   };
@@ -296,8 +297,6 @@ const Edit = () => {
 
   return (
     <div {...dragProps}>
-      <input {...inputProps} />
-      <Dropzone {...state} />
       <DashboardHeader
         title={data.invoice.id ? "Edit invoice" : "New invoice"}
         headerActions={
@@ -330,6 +329,9 @@ const Edit = () => {
           </AlertDescription>
         </Alert>
       ) : null}
+
+      <input {...inputProps} />
+      <Dropzone {...state} />
 
       {error ? (
         <Alert className="mx-4" variant="destructive">
