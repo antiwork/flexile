@@ -274,7 +274,7 @@ const Edit = () => {
     setIssueDate(parseDate(invoice.invoice_date));
   };
 
-  const { mutateAsync: extractInvoiceFromPdf, error } = useMutation({
+  const { mutateAsync: extractInvoiceFromPdf } = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
@@ -333,10 +333,10 @@ const Edit = () => {
       <input {...inputProps} />
       <Dropzone {...state} />
 
-      {error ? (
+      {state.error ? (
         <Alert className="mx-4" variant="destructive">
           <CircleAlert />
-          <AlertDescription>{error.message}</AlertDescription>
+          <AlertDescription>{state.error.message}</AlertDescription>
         </Alert>
       ) : null}
 

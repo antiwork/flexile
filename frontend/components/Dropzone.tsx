@@ -8,6 +8,7 @@ interface DropzoneOptions {
   onFileSelected: (file: File) => Promise<void>;
 }
 interface DropzoneState {
+  error: Error | null;
   isDragging: boolean;
   isProcessing: boolean;
 }
@@ -25,6 +26,7 @@ function preventDefault(e: React.DragEvent) {
 export function useDropzone({ onFileSelected }: DropzoneOptions) {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const openFilePicker = () => {
@@ -32,11 +34,13 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
   };
 
   const handleInputChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
       setIsProcessing(true);
-      onFileSelected(file).finally(() => setIsProcessing(false));
+      onFileSelected(file)
+        .catch(setError)
+        .finally(() => setIsProcessing(false));
       e.target.value = "";
     },
     [onFileSelected],
@@ -65,13 +69,15 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
   }, []);
 
   const handleDrop = useCallback(
-    async (e: React.DragEvent) => {
+    (e: React.DragEvent) => {
       preventDefault(e);
       const file = getDataTransferFileIfValid(e.dataTransfer)?.getAsFile();
       if (!file) return;
       setIsDragging(false);
       setIsProcessing(true);
-      onFileSelected(file).finally(() => setIsProcessing(false));
+      onFileSelected(file)
+        .catch(setError)
+        .finally(() => setIsProcessing(false));
     },
     [onFileSelected],
   );
@@ -81,6 +87,7 @@ export function useDropzone({ onFileSelected }: DropzoneOptions) {
     state: {
       isDragging,
       isProcessing,
+      error,
     },
     dragProps: {
       id: "dropzone",
