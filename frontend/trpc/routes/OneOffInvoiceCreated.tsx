@@ -8,12 +8,14 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 type Invoice = typeof invoices.$inferSelect;
 
 const OneOffInvoiceCreated = ({
+  protocol,
   host,
   companyName,
   invoice,
   bankAccountLastFour,
   paymentDescriptions,
 }: {
+  protocol: string;
   host: string;
   companyName: string;
   invoice: Invoice;
@@ -39,7 +41,7 @@ const OneOffInvoiceCreated = ({
         <div className="mb-4">
           <div className="mb-1 text-gray-500">Invoice ID</div>
           <div className="font-bold">
-            <Link href={`https://${host}/invoices/${invoice.externalId}`} className="text-black">
+            <Link href={`${protocol}://${host}/invoices/${invoice.externalId}`} className="text-black">
               {invoice.invoiceNumber}
             </Link>
           </div>
@@ -94,13 +96,13 @@ const OneOffInvoiceCreated = ({
             {bankAccountLastFour ? (
               <>****{bankAccountLastFour}</>
             ) : (
-              <LinkButton href={`https://${host}/settings/payouts`}>Connect bank account</LinkButton>
+              <LinkButton href={`${protocol}://${host}/settings/payouts`}>Connect bank account</LinkButton>
             )}
           </div>
         </div>
       </div>
 
-      <LinkButton href={`https://${host}/invoices/${invoice.externalId}?accept=true`}>Accept payment</LinkButton>
+      <LinkButton href={`${protocol}://${host}/invoices/${invoice.externalId}?accept=true`}>Accept payment</LinkButton>
     </Container>
   </EmailLayout>
 );
