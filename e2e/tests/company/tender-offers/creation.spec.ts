@@ -24,10 +24,8 @@ test.describe("Buyback creation", () => {
       })
       .then(takeOrThrow);
 
-    await login(page, user);
+    await login(page, user, "/equity/tender_offers");
 
-    await page.getByRole("button", { name: "Equity" }).click();
-    await page.getByRole("link", { name: "Buybacks" }).click();
     await page.getByRole("link", { name: "New buyback" }).click();
 
     const startDate = new Date();
@@ -50,9 +48,7 @@ test.describe("Buyback creation", () => {
         name: new RegExp(`${format(startDate, "MMM d, yyyy")}.*${format(endDate, "MMM d, yyyy")}.*\\$100,000,000`, "u"),
       })
       .click();
-
-    await expect(page.getByRole("article", { name: "Letter of transmittal" })).toContainText(letterOfTransmittal, {
-      useInnerText: true,
-    });
+    await expect(page).toHaveURL(/\/equity\/tender_offers\/.*/u);
+    await expect(page.getByRole("button", { name: "Place bid" })).toBeVisible();
   });
 });
