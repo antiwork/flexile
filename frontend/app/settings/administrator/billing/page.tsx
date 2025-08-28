@@ -188,7 +188,12 @@ const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
           const attachment = info.getValue();
           return attachment ? (
             <Button asChild variant="outline" size="small">
-              <Link href={`/download/${attachment.key}/${attachment.filename}`} download>
+              <Link
+                href={{
+                  pathname: `/download/${attachment.key}/${attachment.filename}`,
+                }}
+                download
+              >
                 <Download className="size-4" /> Download
               </Link>
             </Button>

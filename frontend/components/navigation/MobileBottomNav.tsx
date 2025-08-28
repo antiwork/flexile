@@ -11,7 +11,6 @@ import { NavBadge } from "@/components/navigation/NavBadge";
 import { SupportBadge } from "@/components/Support";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useCurrentUser, useUserStore } from "@/global";
-import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import { useSwitchCompany } from "@/lib/companySwitcher";
 import { hasSubItems, type NavLinkInfo, useNavLinks } from "@/lib/useNavLinks";
 import { cn } from "@/utils/index";
@@ -243,7 +242,13 @@ const CompanySwitcher = ({ onSelect }: CompanySwitcherProps) => {
       aria-label={`Switch to ${company.name}`}
       aria-current={company.id === user.currentCompanyId ? "true" : undefined}
     >
-      <Image src={company.logo_url ?? defaultCompanyLogo.src} width={20} height={20} className="rounded-xs" alt="" />
+      <Image
+        src={company.logo_url ?? "/default-company-logo.svg"}
+        width={20}
+        height={20}
+        className="rounded-xs"
+        alt=""
+      />
       <span className="line-clamp-1 flex-1 text-left font-normal">{company.name}</span>
     </button>
   ));
@@ -334,7 +339,7 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
                 item={{ label: currentCompany.name ?? "Personal" }}
                 image={
                   <Image
-                    src={currentCompany.logo_url ?? defaultCompanyLogo.src}
+                    src={currentCompany.logo_url ?? "/default-company-logo.svg"}
                     width={20}
                     height={20}
                     className="rounded-xs object-contain"

@@ -13,7 +13,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
-import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
 import QuickbooksIntegration from "./QuickbooksIntegration";
@@ -40,7 +39,7 @@ export default function SettingsPage() {
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const logoUrl = useMemo(
-    () => (logoFile ? URL.createObjectURL(logoFile) : (company.logo_url ?? defaultLogo.src)),
+    () => (logoFile ? URL.createObjectURL(logoFile) : (company.logo_url ?? "/default-company-logo.svg")),
     [logoFile, company.logo_url],
   );
 
@@ -117,7 +116,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <AvatarImage
-                    src={logoUrl}
+                    src="/default-company-logo.svg"
                     alt="Company logo"
                     className={`rounded ${isDefaultLogo ? "size-6" : "size-12"}`}
                   />

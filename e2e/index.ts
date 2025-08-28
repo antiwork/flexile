@@ -15,7 +15,6 @@ export const test = baseTest.extend<{
     const emails: SentEmail[] = [];
     next.onFetch(async (request) => {
       if (request.method === "POST" && request.url === "https://api.resend.com/emails") {
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- not worth validating
         const email = (await request.json()) as SentEmail;
         if (!email.text) email.text = assertDefined(parseHTML(email.html).textContent);
         emails.push(email);
@@ -36,12 +35,12 @@ export const expect = baseExpect.extend({
   async toBeValid(locator: Locator) {
     let error: unknown;
     try {
-      await expect(async () =>
+      await expect(async () => {
         expect(
           (await locator.evaluate((el: HTMLInputElement) => el.validity.valid)) &&
             (await locator.getAttribute("aria-invalid")) !== "true",
-        ).toBe(!this.isNot),
-      ).toPass();
+        ).toBe(!this.isNot);
+      }).toPass();
     } catch (e) {
       error = e;
     }

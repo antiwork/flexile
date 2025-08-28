@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany } from "@/global";
-import quickbooksLogo from "@/images/quickbooks.svg";
 import { trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
 import { getOauthCode } from "@/utils/oauth";
@@ -132,7 +131,7 @@ export default function QuickbooksRow() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="flex items-center pb-1 text-base font-bold">
-              <Image src={quickbooksLogo.src} width={24} height={24} className="inline" alt="" />
+              <Image src="/quickbooks.svg" width={24} height={24} className="inline" alt="" />
               &ensp;QuickBooks
             </h2>
             {quickbooksIntegration?.status === "active" ? <Status variant="success">Connected</Status> : null}

@@ -22,7 +22,6 @@ import { Card, CardAction, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import defaultLogo from "@/images/default-company-logo.svg";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { request } from "@/utils/request";
 import { settings_path } from "@/utils/routes";
@@ -138,7 +137,13 @@ const LeaveWorkspaceSection = () => {
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       setTimeout(() => {
         setIsModalOpen(false);
-        router.push("/dashboard");
+        if (user.roles.investor) {
+          router.push("/equity/dividends");
+        } else if (user.roles.lawyer) {
+          router.push("/documents");
+        } else {
+          router.push("/invoices");
+        }
       }, 1000);
     },
     onError: (error: Error) => {
@@ -177,7 +182,7 @@ const LeaveWorkspaceSection = () => {
           <CardHeader className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="size-8 rounded-md">
-                <AvatarImage src={company.logo_url ?? defaultLogo.src} alt="Company logo" />
+                <AvatarImage src={company.logo_url ?? "/default-company-logo.svg"} alt="Company logo" />
                 <AvatarFallback>{company.name?.charAt(0)}</AvatarFallback>
               </Avatar>
               <span className="font-medium">{company.name}</span>

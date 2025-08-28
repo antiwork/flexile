@@ -33,7 +33,6 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
-import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import { useSwitchCompany } from "@/lib/companySwitcher";
 import { hasSubItems, type NavLinkInfo, useNavLinks } from "@/lib/useNavLinks";
 import { UserDataProvider } from "@/trpc/client";
@@ -69,7 +68,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                       }`}
                     >
                       <Image
-                        src={company.logo_url ?? defaultCompanyLogo.src}
+                        src={company.logo_url ?? "/default-company-logo.svg"}
                         className={isDefaultLogo ? "size-4" : "size-8 rounded"}
                         width={24}
                         height={24}
@@ -108,7 +107,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                           }`}
                         >
                           <Image
-                            src={company.logo_url ?? defaultCompanyLogo.src}
+                            src={company.logo_url ?? "/default-company-logo.svg"}
                             className={
                               !company.logo_url || company.logo_url.includes("default-company-logo")
                                 ? "size-4"

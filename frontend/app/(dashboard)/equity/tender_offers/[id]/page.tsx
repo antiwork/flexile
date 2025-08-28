@@ -166,7 +166,11 @@ export default function BuybackView() {
           <div>
             {data.attachment ? (
               <Button asChild>
-                <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
+                <Link
+                  href={{
+                    pathname: `/download/${data.attachment.key}/${data.attachment.filename}`,
+                  }}
+                >
                   <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
                   Download buyback documents
                 </Link>

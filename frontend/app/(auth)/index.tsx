@@ -14,9 +14,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { SignInMethod } from "@/db/enums";
-import googleLogoLight from "@/images/google-light.svg";
-import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
+import { isValidRoute } from "@/utils/nextHelpers";
 
 const emailSchema = z.object({ email: z.string().email() });
 const otpSchema = z.object({
@@ -80,10 +79,8 @@ export function AuthPage({
 
       const redirectUrl = searchParams.get("redirect_url");
       setRedirectInProgress(true);
-      router.replace(
-        // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
-        redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard",
-      );
+
+      router.replace(isValidRoute(redirectUrl) ? redirectUrl : "/invoices");
     },
   });
   const emailForm = useForm({
@@ -117,7 +114,7 @@ export function AuthPage({
     const redirectUrl =
       redirectUrlParam && redirectUrlParam.startsWith("/") && !redirectUrlParam.startsWith("//")
         ? redirectUrlParam
-        : "/dashboard";
+        : "/invoices";
     void signIn(provider, { callbackUrl: redirectUrl });
   };
 
@@ -126,7 +123,7 @@ export function AuthPage({
       <Card className="w-full max-w-md border-0 bg-transparent">
         <CardHeader className="text-center">
           <div className="mb-8 flex justify-center">
-            <Image src={logo} alt="Flexile" className="size-16" />
+            <Image src="/logo-icon.svg" alt="Flexile" className="size-16" width={64} height={64} />
           </div>
           <CardTitle className="pb-1 text-xl font-medium">
             {sendOtp.isSuccess ? "Check your email for a code" : title}
@@ -210,7 +207,7 @@ export function AuthPage({
                     className="flex h-12 w-full items-center justify-center gap-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-500"
                     onClick={() => providerSignIn(SignInMethod.Google)}
                   >
-                    <Image src={googleLogoLight} alt="Google" width={20} height={20} />
+                    <Image src="/google-light.svg" alt="Google" width={20} height={20} />
                     {sendOtpText} with Google
                   </Button>
                   <div className="my-3 flex w-full items-center gap-2">

@@ -25,8 +25,7 @@
     "incremental": true,
     "esModuleInterop": true,
     "allowJs": true,
-    "exactOptionalPropertyTypes": true,
-    "types": []
+    "exactOptionalPropertyTypes": true
   },
   "include": [
     "next-env.d.ts",
@@ -40,5 +39,7 @@
     "types/*.d.ts",
     "middleware.ts"
   ],
-  "exclude": ["node_modules"]
+  // validator.ts is the file responsible for type validation during build
+  // it's buggy in next 15.5.1 do adding to ignore
+  "exclude": ["node_modules", ".next/types/validator.ts"]
 }

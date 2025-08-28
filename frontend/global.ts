@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { combine } from "zustand/middleware";
 import { type CurrentUser, currentUserSchema } from "@/models/user";
 import { assertDefined } from "@/utils/assert";
+import { isValidRoute } from "@/utils/nextHelpers";
 
 export const useUserStore = create(
   combine(
@@ -32,7 +33,7 @@ export const useCurrentUser = () => {
     const fullUrl = typeof window !== "undefined" ? pathname + window.location.search : pathname;
     throw redirect(`/login?${new URLSearchParams({ redirect_url: fullUrl })}`, RedirectType.replace);
   }
-  if (user.onboardingPath && user.onboardingPath !== window.location.pathname)
+  if (isValidRoute(user.onboardingPath) && user.onboardingPath !== window.location.pathname)
     throw redirect(user.onboardingPath, RedirectType.replace);
   useEffect(setRedirected, []);
   return user;
