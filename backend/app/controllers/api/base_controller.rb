@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 class Api::BaseController < ActionController::Base
-  include JwtAuthenticatable, ApiTokenAuthenticatable
+  include JwtAuthenticatable
 
   protect_from_forgery with: :null_session
   before_action :set_paper_trail_whodunnit
+
+  include ApiTokenAuthenticatable
 
   private
     def set_paper_trail_whodunnit
