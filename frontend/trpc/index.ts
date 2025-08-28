@@ -22,14 +22,15 @@ import env from "@/env";
 import { authOptions } from "@/lib/auth";
 import { assertDefined } from "@/utils/assert";
 import { richTextExtensions } from "@/utils/richText";
+import { configure as configureRoutes } from "@/utils/routes";
 import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 
+configureRoutes({ default_url_options: { host: env.DOMAIN, protocol: env.PROTOCOL } });
+
 export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) => {
-  const host = assertDefined(req.headers.get("Host"));
   const cookie = req.headers.get("cookie") ?? "";
   const userAgent = req.headers.get("user-agent") ?? "";
-  const ipAddress = req.headers.get("x-real-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "";
   const csrfToken = cookie
     .split("; ")
     .find((row) => row.startsWith("X-CSRF-Token="))
@@ -61,9 +62,6 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
 
   return {
     userId,
-    host,
-    ipAddress,
-    userAgent,
     headers,
   };
 });

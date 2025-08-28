@@ -7,7 +7,7 @@ export const lawyersRouter = createRouter({
   invite: companyProcedure.input(z.object({ email: z.string() })).mutation(async ({ ctx, input }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const response = await fetch(company_lawyers_url(ctx.company.externalId, { host: ctx.host }), {
+    const response = await fetch(company_lawyers_url(ctx.company.externalId), {
       method: "POST",
       body: JSON.stringify(input),
       headers: { "Content-Type": "application/json", ...ctx.headers },

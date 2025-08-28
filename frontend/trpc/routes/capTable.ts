@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray, or, sql, sum } from "drizzle-orm";
+import { and, desc, eq, inArray, sql, sum } from "drizzle-orm";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
@@ -26,50 +26,64 @@ export const capTableRouter = createRouter({
 
     const investors: (CapTableInvestor | CapTableInvestorForAdmin)[] = [];
     const investorsConditions = (relation: typeof companyInvestorEntities | typeof companyInvestors) =>
-      and(
-        eq(relation.companyId, ctx.company.id),
-        or(sql`${relation.totalShares} > 0`, sql`${relation.totalOptions} > 0`),
-      );
+      eq(relation.companyId, ctx.company.id);
 
     if (input.newSchema) {
-      (
-        await db
-          .select({
-            id: companyInvestorEntities.externalId,
-            name: companyInvestorEntities.name,
-            outstandingShares: companyInvestorEntities.totalShares,
-            fullyDilutedShares: sql<bigint>`${companyInvestorEntities.totalShares} + ${companyInvestorEntities.totalOptions}`,
-            email: companyInvestorEntities.email,
-          })
-          .from(companyInvestorEntities)
-          .where(investorsConditions(companyInvestorEntities))
-          .orderBy(desc(companyInvestorEntities.totalShares), desc(companyInvestorEntities.totalOptions))
-      ).forEach((investor) => {
-        outstandingShares += investor.outstandingShares;
-        investors.push({
-          ...(isAdminOrLawyer ? investor : omit(investor, "email")),
-        });
-      });
-    } else {
-      (
-        await db
-          .select({
-            id: companyInvestors.externalId,
-            userId: users.externalId,
-            name: sql<string>`COALESCE(${users.legalName}, '')`,
-            outstandingShares: companyInvestors.totalShares,
-            fullyDilutedShares: companyInvestors.fullyDilutedShares,
+      const potentialInvestors = await db
+        .select({
+          id: companyInvestorEntities.externalId,
+          name: companyInvestorEntities.name,
+          outstandingShares: companyInvestorEntities.totalShares,
+          email: companyInvestorEntities.email,
+          totalOptions: sql<bigint>`COALESCE((
+            SELECT SUM(${equityGrants.vestedShares} + ${equityGrants.unvestedShares})
+            FROM ${equityGrants}
+            WHERE ${equityGrants.companyInvestorEntityId} = ${companyInvestorEntities.id}
+          ), 0)`,
+        })
+        .from(companyInvestorEntities)
+        .where(investorsConditions(companyInvestorEntities));
 
-            email: users.email,
-          })
-          .from(companyInvestors)
-          .innerJoin(users, eq(companyInvestors.userId, users.id))
-          .where(investorsConditions(companyInvestors))
-          .orderBy(desc(companyInvestors.totalShares), desc(companyInvestors.totalOptions))
-      ).forEach((investor) => {
-        outstandingShares += investor.outstandingShares;
-        investors.push(isAdminOrLawyer ? investor : omit(investor, "email"));
-      });
+      potentialInvestors
+        .filter((investor) => investor.outstandingShares > 0 || investor.totalOptions > 0)
+        .sort((a, b) => Number(b.outstandingShares - a.outstandingShares) || Number(b.totalOptions - a.totalOptions))
+        .forEach((investor) => {
+          const fullyDilutedShares = BigInt(investor.outstandingShares) + BigInt(investor.totalOptions);
+          outstandingShares += investor.outstandingShares;
+          investors.push({
+            ...(isAdminOrLawyer
+              ? { ...investor, fullyDilutedShares }
+              : omit({ ...investor, fullyDilutedShares }, "email")),
+          });
+        });
+    } else {
+      const potentialInvestors = await db
+        .select({
+          id: companyInvestors.externalId,
+          userId: users.externalId,
+          name: sql<string>`COALESCE(${users.legalName}, '')`,
+          outstandingShares: companyInvestors.totalShares,
+          email: users.email,
+          totalOptions: sql<bigint>`COALESCE((
+            SELECT SUM(${equityGrants.vestedShares} + ${equityGrants.unvestedShares})
+            FROM ${equityGrants}
+            WHERE ${equityGrants.companyInvestorId} = ${companyInvestors.id}
+          ), 0)`,
+        })
+        .from(companyInvestors)
+        .innerJoin(users, eq(companyInvestors.userId, users.id))
+        .where(investorsConditions(companyInvestors));
+
+      potentialInvestors
+        .filter((investor) => investor.outstandingShares > 0 || investor.totalOptions > 0)
+        .sort((a, b) => Number(b.outstandingShares - a.outstandingShares) || Number(b.totalOptions - a.totalOptions))
+        .forEach((investor) => {
+          const fullyDilutedShares = BigInt(investor.outstandingShares) + BigInt(investor.totalOptions);
+          outstandingShares += investor.outstandingShares;
+          investors.push(
+            isAdminOrLawyer ? { ...investor, fullyDilutedShares } : omit({ ...investor, fullyDilutedShares }, "email"),
+          );
+        });
     }
 
     (
@@ -166,7 +180,7 @@ export const capTableRouter = createRouter({
       // Get option grants by exercise price
       for (const exercisePrice of exercisePrices) {
         const [grants] = await db
-          .select({ total: sum(sql`${equityGrants.vestedShares} + ${equityGrants.unvestedShares}`).mapWith(Number) })
+          .select({ total: sum(equityGrants.vestedShares).mapWith(Number) })
           .from(equityGrants)
           .innerJoin(optionPools, eq(equityGrants.optionPoolId, optionPools.id))
           .innerJoin(

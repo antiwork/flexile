@@ -1,20 +1,19 @@
 import { Container, Heading, Link, Preview } from "@react-email/components";
 import React from "react";
 import { invoices } from "@/db/schema";
+import env from "@/env";
 import { LinkButton } from "@/trpc/email";
 import EmailLayout from "@/trpc/EmailLayout";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 
 type Invoice = typeof invoices.$inferSelect;
-
+const host = `${env.PROTOCOL}://${env.DOMAIN}`;
 const OneOffInvoiceCreated = ({
-  host,
   companyName,
   invoice,
   bankAccountLastFour,
   paymentDescriptions,
 }: {
-  host: string;
   companyName: string;
   invoice: Invoice;
   bankAccountLastFour: string | undefined | null;
@@ -39,7 +38,7 @@ const OneOffInvoiceCreated = ({
         <div className="mb-4">
           <div className="mb-1 text-gray-500">Invoice ID</div>
           <div className="font-bold">
-            <Link href={`https://${host}/invoices/${invoice.externalId}`} className="text-black">
+            <Link href={`${host}/invoices/${invoice.externalId}`} className="text-black">
               {invoice.invoiceNumber}
             </Link>
           </div>
@@ -94,13 +93,13 @@ const OneOffInvoiceCreated = ({
             {bankAccountLastFour ? (
               <>****{bankAccountLastFour}</>
             ) : (
-              <LinkButton href={`https://${host}/settings/payouts`}>Connect bank account</LinkButton>
+              <LinkButton href={`${host}/settings/payouts`}>Connect bank account</LinkButton>
             )}
           </div>
         </div>
       </div>
 
-      <LinkButton href={`https://${host}/invoices/${invoice.externalId}?accept=true`}>Accept payment</LinkButton>
+      <LinkButton href={`${host}/invoices/${invoice.externalId}?accept=true`}>Accept payment</LinkButton>
     </Container>
   </EmailLayout>
 );
