@@ -1,9 +1,10 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gt, gte, isNotNull, isNull, lte, or, sql, type SQLWrapper, sum } from "drizzle-orm";
+import { and, desc, eq, gt, gte, isNotNull, isNull, lte, ne, or, sql, type SQLWrapper, sum } from "drizzle-orm";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
 import {
+  companyAdministrators,
   companyContractors,
   companyInvestors,
   equityGrantExercises,
@@ -191,32 +192,59 @@ export const equityGrantsRouter = createRouter({
       },
       where: eq(optionPools.companyId, ctx.company.id),
     });
-    const workers = await db.query.companyContractors.findMany({
-      columns: {
-        externalId: true,
-      },
-      with: {
-        user: {
-          columns: simpleUser.columns,
-          with: {
-            companyInvestors: {
-              where: eq(companyInvestors.companyId, ctx.company.id),
-              with: {
-                equityGrants: {
-                  orderBy: desc(equityGrants.issuedAt),
-                  limit: 1,
+    const [contractors, administrators] = await Promise.all([
+      db.query.companyContractors.findMany({
+        columns: {
+          externalId: true,
+        },
+        with: {
+          user: {
+            columns: simpleUser.columns,
+            with: {
+              companyInvestors: {
+                where: eq(companyInvestors.companyId, ctx.company.id),
+                with: {
+                  equityGrants: {
+                    orderBy: desc(equityGrants.issuedAt),
+                    limit: 1,
+                  },
                 },
               },
             },
           },
         },
-      },
-      where: and(
-        eq(companyContractors.companyId, ctx.company.id),
-        isNull(companyContractors.endedAt),
-        lte(companyContractors.startedAt, new Date()),
-      ),
-    });
+        where: and(
+          eq(companyContractors.companyId, ctx.company.id),
+          isNull(companyContractors.endedAt),
+          lte(companyContractors.startedAt, new Date()),
+          ne(companyContractors.userId, ctx.user.id),
+        ),
+      }),
+      db.query.companyAdministrators.findMany({
+        columns: {
+          externalId: true,
+        },
+        with: {
+          user: {
+            columns: simpleUser.columns,
+            with: {
+              companyInvestors: {
+                where: eq(companyInvestors.companyId, ctx.company.id),
+                with: {
+                  equityGrants: {
+                    orderBy: desc(equityGrants.issuedAt),
+                    limit: 1,
+                  },
+                },
+              },
+            },
+          },
+        },
+        where: and(eq(companyAdministrators.companyId, ctx.company.id), ne(companyAdministrators.userId, ctx.user.id)),
+      }),
+    ]);
+
+    const workers = [...contractors, ...administrators];
 
     const defaultVestingSchedules = (
       await Promise.all(
@@ -246,10 +274,12 @@ export const equityGrantsRouter = createRouter({
 
     return {
       optionPools: pools.map((pool) => omit({ ...pool, id: pool.externalId }, "externalId")),
-      workers: workers.map((worker) => {
+      workers: workers.map((worker, index) => {
         const lastGrant = worker.user.companyInvestors[0]?.equityGrants[0];
+        const isAdministrator = index >= contractors.length;
         return {
           id: worker.externalId,
+          type: isAdministrator ? "administrator" : "contractor",
           user: { ...simpleUser(worker.user), legalName: worker.user.legalName },
           salaried: false,
           lastGrant: lastGrant

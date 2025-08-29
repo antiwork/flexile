@@ -4,7 +4,16 @@ class Internal::Companies::Administrator::EquityGrantsController < Internal::Com
   def create
     authorize EquityGrant
 
-    company_worker = Current.company.company_workers.find_by(external_id: params[:equity_grant][:company_worker_id])
+    if params[:equity_grant][:user_id].present?
+      user = User.find_by(external_id: params[:equity_grant][:user_id])
+      company_worker = Current.company.company_workers.find_or_create_by(user: user) do |cw|
+        cw.started_at = Date.current
+        cw.role = "administrator"
+      end
+    else
+      company_worker = Current.company.company_workers.find_by(external_id: params[:equity_grant][:company_worker_id])
+    end
+
     option_pool = Current.company.option_pools.find_by(external_id: params[:equity_grant][:option_pool_id])
 
     result = GrantStockOptions.new(
@@ -25,6 +34,8 @@ class Internal::Companies::Administrator::EquityGrantsController < Internal::Com
   private
     def equity_grant_params
       params.require(:equity_grant).permit(
+        :company_worker_id,
+        :user_id,
         :number_of_shares,
         :issue_date_relationship,
         :option_grant_type,

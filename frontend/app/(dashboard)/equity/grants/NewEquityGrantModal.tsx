@@ -140,8 +140,21 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
           message: `Not enough shares available in the option pool "${optionPool.name}" to create a grant with this number of options.`,
         });
 
+      const selectedWorker = data.workers.find((w) => w.id === values.companyWorkerId);
+      const isAdministrator = selectedWorker?.type === "administrator";
+
+      if (isAdministrator && values.vestingTrigger !== "scheduled") {
+        return form.setError("vestingTrigger", { message: "Administrators must use scheduled vesting." });
+      }
+
       const formData = new FormData();
-      formData.append("equity_grant[company_worker_id]", values.companyWorkerId);
+
+      if (isAdministrator) {
+        formData.append("equity_grant[user_id]", selectedWorker.user.id);
+      } else {
+        formData.append("equity_grant[company_worker_id]", values.companyWorkerId);
+      }
+
       formData.append("equity_grant[option_pool_id]", values.optionPoolId);
       formData.append("equity_grant[number_of_shares]", values.numberOfShares.toString());
       formData.append("equity_grant[issue_date_relationship]", values.issueDateRelationship);
