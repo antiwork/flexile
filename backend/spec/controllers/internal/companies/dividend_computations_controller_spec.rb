@@ -7,7 +7,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
 
   let(:dividend_computation) { create(:dividend_computation, company: company) }
   let(:investor_user) { create(:user, legal_name: "Matthew Smith") }
-  let(:company_investor) { create(:company_investor, user: investor_user, company: company) }
+  let(:company_investor) { create(:company_investor, user: investor_user, company: company, investment_amount_in_cents: 100_000) }
   let(:dividend_computation_output) do
     create(:dividend_computation_output,
            dividend_computation: dividend_computation,
@@ -148,6 +148,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(computation_output["investor_external_id"]).to eq(investor_user.external_id)
       expect(computation_output["total_amount"].to_f).to eq(1000.0)
       expect(computation_output["number_of_shares"]).to eq(100)
+      expect(computation_output["investment_amount_cents"]).to eq(100_000)
     end
 
     it "returns not found for invalid id" do

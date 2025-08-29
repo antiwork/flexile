@@ -184,8 +184,8 @@ RSpec.describe DividendComputation do
         @all_class_investor.id => { number_of_shares: 25_035, total_amount: 17_479.75, qualified_dividends_amount: 17_479.75, investment_amount_cents: 29_113_00 },
       })
       expect(safe_dividends).to eq({
-        @safe1.entity_name => { number_of_shares: 987_632, total_amount: 578_982.04, qualified_dividends_amount: 578_982.04 },
-        @safe2.entity_name => { number_of_shares: 497_092, total_amount: 291_411.52, qualified_dividends_amount: 291_411.52 },
+        @safe1.entity_name => { number_of_shares: 987_632, total_amount: 578_982.04, qualified_dividends_amount: 578_982.04, investment_amount_cents: 1_000_000_00 },
+        @safe2.entity_name => { number_of_shares: 497_092, total_amount: 291_411.52, qualified_dividends_amount: 291_411.52, investment_amount_cents: 2_000_000_00 },
       })
     end
   end
@@ -212,7 +212,8 @@ RSpec.describe DividendComputation do
         company_investor_id: @seed_investor.id,
         investor_external_id: @seed_investor.user.external_id,
         total_amount: 80_328.26,
-        number_of_shares: 111_406
+        number_of_shares: 111_406,
+        investment_amount_cents: 125_031_00
       )
 
       series_a_investor_data = result.find { |r| r[:investor_name] == "Series A Investor" }
@@ -221,7 +222,8 @@ RSpec.describe DividendComputation do
         company_investor_id: @series_A_investor.id,
         investor_external_id: @series_A_investor.user.external_id,
         total_amount: 22_523.16,
-        number_of_shares: 33_469
+        number_of_shares: 33_469,
+        investment_amount_cents: 41_434_00
       )
     end
 
@@ -234,7 +236,8 @@ RSpec.describe DividendComputation do
         company_investor_id: @seed_and_series_A_investor.id,
         investor_external_id: @seed_and_series_A_investor.user.external_id,
         total_amount: 8_752.98,
-        number_of_shares: 12_441
+        number_of_shares: 12_441,
+        investment_amount_cents: 14_496_00
       )
 
       all_class_investor_data = result.find { |r| r[:investor_name] == "All class Investor" }
@@ -243,7 +246,8 @@ RSpec.describe DividendComputation do
         company_investor_id: @all_class_investor.id,
         investor_external_id: @all_class_investor.user.external_id,
         total_amount: 17_479.75,
-        number_of_shares: 25_035
+        number_of_shares: 25_035,
+        investment_amount_cents: 29_113_00
       )
     end
 
@@ -256,7 +260,8 @@ RSpec.describe DividendComputation do
         company_investor_id: nil,
         investor_external_id: nil,
         total_amount: 578_982.04,
-        number_of_shares: 987_632
+        number_of_shares: 987_632,
+        investment_amount_cents: 1_000_000_00
       )
 
       wefunder_data = result.find { |r| r[:investor_name] == "Wefunder" }
@@ -265,7 +270,8 @@ RSpec.describe DividendComputation do
         company_investor_id: nil,
         investor_external_id: nil,
         total_amount: 291_411.52,
-        number_of_shares: 497_092
+        number_of_shares: 497_092,
+        investment_amount_cents: 2_000_000_00
       )
     end
 

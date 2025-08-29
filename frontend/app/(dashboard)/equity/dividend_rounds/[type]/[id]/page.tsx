@@ -50,6 +50,12 @@ const DividendRound = ({ id }: { id: string }) => {
         cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
         footer: "Total",
       }),
+      columnHelper.accessor("investmentAmountCents", {
+        header: "Investment amount",
+        cell: (info) => formatMoney(Number(info.getValue()) / 100),
+        meta: { numeric: true },
+        footer: formatMoney(dividends.reduce((sum, dividend) => sum + Number(dividend.investmentAmountCents) / 100, 0)),
+      }),
       columnHelper.accessor("totalAmountInCents", {
         header: "Return amount",
         cell: (info) => formatMoney(Number(info.getValue()) / 100),
@@ -108,6 +114,7 @@ const dividendComputationSchema = z.object({
       investor_external_id: z.string().nullable(),
       total_amount: z.string(),
       number_of_shares: z.number(),
+      investment_amount_cents: z.number(),
     }),
   ),
 });
@@ -144,6 +151,14 @@ const DividendComputation = ({ id }: { id: string }) => {
         header: "Investor",
         cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
         footer: "Total",
+      }),
+      columnHelper.accessor("investment_amount_cents", {
+        header: "Investment amount",
+        cell: (info) => formatMoney(Number(info.getValue()) / 100),
+        meta: { numeric: true },
+        footer: formatMoney(
+          computationOutputs.reduce((sum, output) => sum + Number(output.investment_amount_cents) / 100, 0),
+        ),
       }),
       columnHelper.accessor("total_amount", {
         header: "Return amount",
