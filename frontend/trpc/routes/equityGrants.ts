@@ -274,10 +274,12 @@ export const equityGrantsRouter = createRouter({
 
     return {
       optionPools: pools.map((pool) => omit({ ...pool, id: pool.externalId }, "externalId")),
-      workers: workers.map((worker) => {
+      workers: workers.map((worker, index) => {
         const lastGrant = worker.user.companyInvestors[0]?.equityGrants[0];
+        const isAdministrator = index >= contractors.length;
         return {
           id: worker.externalId,
+          type: isAdministrator ? "administrator" : "contractor",
           user: { ...simpleUser(worker.user), legalName: worker.user.legalName },
           salaried: false,
           lastGrant: lastGrant
