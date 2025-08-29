@@ -224,7 +224,7 @@ export default function InvoicesPage() {
           </div>
         ),
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
         },
       }),
       columnHelper.accessor(isActionable, {
@@ -304,7 +304,7 @@ export default function InvoicesPage() {
       columnHelper.accessor((row) => statusNames[row.status], {
         id: "status",
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
           hidden: true,
         },
       }),
@@ -406,31 +406,31 @@ export default function InvoicesPage() {
         title="Invoices"
         headerActions={
           isMobile ? (
-            <div className="flex items-center">
-              {data.length > 0 ? (
+            data.length > 0 ? (
+              <div className="flex items-center">
                 <button
                   className="p-2 text-blue-600"
                   onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
                 >
                   {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
                 </button>
-              ) : null}
-              {user.roles.administrator ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="p-2">
-                    <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <a href={export_company_invoices_path(company.id)} className="flex h-11 items-center gap-2">
-                        <Download className="size-4" />
-                        Download CSV
-                      </a>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : null}
-            </div>
+                {user.roles.administrator ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="p-2">
+                      <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <a href={export_company_invoices_path(company.id)} className="flex h-11 items-center gap-2">
+                          <Download className="size-4" />
+                          Download CSV
+                        </a>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
+              </div>
+            ) : null
           ) : user.roles.worker ? (
             <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
               <Link href="/invoices/new" inert={!canSubmitInvoices}>
@@ -489,7 +489,7 @@ export default function InvoicesPage() {
 
           {!company.completedPaymentMethodSetup && (
             <Alert className="mx-4" variant="destructive">
-              <AlertTriangle className="size-4" />
+              <AlertTriangle className="my-auto max-h-4 max-w-4" />
               <AlertTitle>Bank account setup incomplete.</AlertTitle>
               <AlertDescription>
                 We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
@@ -500,7 +500,7 @@ export default function InvoicesPage() {
 
           {company.completedPaymentMethodSetup && !company.isTrusted ? (
             <Alert className="mx-4" variant="destructive">
-              <AlertTriangle className="size-4" />
+              <AlertTriangle className="my-auto max-h-4 max-w-4" />
               <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
               <AlertDescription>
                 Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional

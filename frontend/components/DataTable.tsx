@@ -170,7 +170,6 @@ export default function DataTable<T extends RowData>({
     [table.getState().columnFilters],
   );
 
-  const rowClasses = `px-1 py-2 md:px-0 ${isMobile ? "min-h-16 flex" : ""}`;
   const cellClasses = (column: Column<T> | null, type?: "header" | "footer") => {
     const numeric = column?.columnDef.meta?.numeric;
     return cn(
@@ -178,7 +177,7 @@ export default function DataTable<T extends RowData>({
       numeric && "md:text-right print:text-right",
       numeric && type !== "header" && "tabular-nums",
       !numeric && "print:text-wrap",
-      isMobile && "align-top",
+      isMobile && "align-top py-4",
     );
   };
   const searchColumn = searchColumnName ? table.getColumn(searchColumnName) : null;
@@ -347,7 +346,7 @@ export default function DataTable<T extends RowData>({
         </div>
       ) : null}
 
-      <ShadcnTable className="caption-top not-print:max-md:grid">
+      <ShadcnTable className="h-full caption-top">
         <TableHeader className="not-print:max-md:hidden">
           {data.headers.map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -389,7 +388,7 @@ export default function DataTable<T extends RowData>({
               const rowContent = (
                 <TableRow
                   key={row.id}
-                  className={`${rowClasses} ${onRowClicked ? "cursor-pointer" : ""}`}
+                  className={`${onRowClicked ? "cursor-pointer" : ""}`}
                   data-state={isSelected ? "selected" : undefined}
                   onClick={() => onRowClicked?.(row.original)}
                 >
@@ -452,11 +451,11 @@ export default function DataTable<T extends RowData>({
         {data.footers.length > 0 && (
           <TableFooter>
             {data.footers.map((footerGroup) => (
-              <TableRow key={footerGroup.id} className={rowClasses}>
+              <TableRow key={footerGroup.id}>
                 {selectable ? <TableCell className={cellClasses(null, "footer")} /> : null}
                 {footerGroup.headers.map((header) => (
                   <TableCell key={header.id} className={cellClasses(header.column, "footer")} colSpan={header.colSpan}>
-                    {header.isPlaceholder ? null : (
+                    {header.isPlaceholder || !header.column.columnDef.footer ? null : (
                       <>
                         {typeof header.column.columnDef.header === "string" && (
                           <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
