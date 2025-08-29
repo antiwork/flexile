@@ -1,5 +1,3 @@
-import { CheckCircleIcon } from "@heroicons/react/16/solid";
-import { ClockIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { addDays, isWeekend, nextMonday } from "date-fns";
 import React from "react";
 import Status, { type Variant } from "@/components/Status";
@@ -66,7 +64,6 @@ export default function InvoiceStatus({
 }) {
   const company = useCurrentCompany();
   let variant: Variant;
-  let Icon: React.ElementType | undefined;
   let label: string;
 
   switch (invoice.status) {
@@ -78,7 +75,6 @@ export default function InvoiceStatus({
         if (company.requiredInvoiceApprovals > 1)
           label += ` (${invoice.approvals.length}/${company.requiredInvoiceApprovals})`;
       } else {
-        Icon = CheckCircleIcon;
         label = "Approved";
       }
       break;
@@ -88,12 +84,10 @@ export default function InvoiceStatus({
       break;
     case "payment_pending":
       variant = "primary";
-      Icon = ClockIcon;
       label = "Payment scheduled";
       break;
     case "paid":
       variant = "success";
-      Icon = CurrencyDollarIcon;
       label = invoice.paidAt ? `Paid on ${formatDate(invoice.paidAt)}` : "Paid";
       break;
     case "rejected":
@@ -107,7 +101,7 @@ export default function InvoiceStatus({
   }
 
   return (
-    <Status variant={variant} className={className} icon={Icon ? <Icon /> : undefined}>
+    <Status variant={variant} className={className}>
       {iconOnly ? null : label}
     </Status>
   );

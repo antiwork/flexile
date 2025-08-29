@@ -293,7 +293,7 @@ export default function InvoicesPage() {
           return (
             <div className="flex h-full flex-col items-end justify-between">
               <div className="flex h-5 w-4 items-center justify-center">
-                <Status invoice={invoice} iconOnly />
+                <Status invoice={invoice} />
               </div>
               <div className="text-gray-600">{formatDate(invoice.invoiceDate)}</div>
             </div>
