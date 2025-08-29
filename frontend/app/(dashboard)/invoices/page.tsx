@@ -34,7 +34,6 @@ import {
   useIsDeletable,
   useIsPayable,
 } from "@/app/(dashboard)/invoices/index";
-import Status, { StatusDetails } from "@/app/(dashboard)/invoices/Status";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
@@ -78,6 +77,31 @@ const statusNames = {
   paid: "Paid",
   rejected: "Rejected",
   failed: "Failed",
+};
+
+const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
+  switch (invoice.status) {
+    case "received":
+    case "approved":
+      if (invoice.approvals.length < company.requiredInvoiceApprovals) {
+        let label = "Awaiting approval";
+        if (company.requiredInvoiceApprovals > 1)
+          label += ` (${invoice.approvals.length}/${company.requiredInvoiceApprovals})`;
+        return label;
+      }
+      return "Approved";
+
+    case "processing":
+      return "Payment in progress";
+    case "payment_pending":
+      return "Payment scheduled";
+    case "paid":
+      return invoice.paidAt ? `Paid on ${formatDate(invoice.paidAt)}` : "Paid";
+    case "rejected":
+      return "Rejected";
+    case "failed":
+      return "Failed";
+  }
 };
 
 type Invoice = RouterOutput["invoices"]["list"][number];
@@ -218,11 +242,7 @@ export default function InvoicesPage() {
       columnHelper.accessor((row) => statusNames[row.status], {
         id: "status",
         header: "Status",
-        cell: (info) => (
-          <div className="relative z-1">
-            <Status invoice={info.row.original} />
-          </div>
-        ),
+        cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
         meta: {
           filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
         },
@@ -292,9 +312,7 @@ export default function InvoicesPage() {
 
           return (
             <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 w-4 items-center justify-center">
-                <Status invoice={invoice} />
-              </div>
+              <div className="flex h-5 w-4 items-center justify-center">{getInvoiceStatusText(invoice, company)}</div>
               <div className="text-gray-600">{formatDate(invoice.invoiceDate)}</div>
             </div>
           );
@@ -666,7 +684,10 @@ const TasksModal = ({
           </DialogTitle>
         </DialogHeader>
         <section>
-          <StatusDetails invoice={invoice} />
+          <div className="mb-4">
+            <div className="text-sm text-gray-500">Status</div>
+            <div className="font-medium">{getInvoiceStatusText(invoice, company)}</div>
+          </div>
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
             <Alert className="max-md:mb-4" variant="warning">
