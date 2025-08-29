@@ -101,4 +101,41 @@ test.describe("End contract", () => {
     await expect(page.getByText(`Contract ends on`)).not.toBeVisible();
     await expect(page.getByRole("button", { name: "End contract" })).toBeVisible();
   });
+
+  test("displays consistent end date in Pacific Time timezone", async ({ browser }) => {
+    const context = await browser.newContext({
+      timezoneId: "America/Los_Angeles", // Pacific Time
+      locale: "en-US",
+    });
+    const page = await context.newPage();
+
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
+    await login(page, adminUser);
+
+    const { companyContractor } = await companyContractorsFactory.create({
+      companyId: company.id,
+    });
+    const contractor = await db.query.users.findFirst({
+      where: eq(users.id, companyContractor.userId),
+    });
+    assert(contractor != null, "Contractor is required");
+    assert(contractor.preferredName != null, "Contractor preferred name is required");
+
+    const endDate = new Date("2025-08-12");
+    const expectedDisplay = format(endDate, "MMM d, yyyy");
+
+    await page.getByRole("link", { name: "People" }).click();
+    await page.getByRole("link", { name: contractor.preferredName }).click();
+    await page.getByRole("button", { name: "End contract" }).click();
+
+    await fillDatePicker(page, "End date", format(endDate, "MM/dd/yyyy"));
+    await page.getByRole("button", { name: "Yes, end contract" }).click();
+
+    // Verify date displays correctly in Pacific Time (should not shift to the previous day)
+    await expect(page.getByRole("row").getByText(`Ended on ${expectedDisplay}`)).toBeVisible();
+    await page.getByRole("link", { name: contractor.preferredName }).click();
+    await expect(page.getByText(`Contract ended on ${expectedDisplay}`)).toBeVisible();
+
+    await context.close();
+  });
 });
