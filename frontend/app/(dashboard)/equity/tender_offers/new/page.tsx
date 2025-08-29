@@ -70,7 +70,7 @@ export default function NewBuyback() {
         attachmentKey: key,
         letterOfTransmittal,
       });
-      router.push(`/equity/tender_offers`);
+      void router.push(`/equity/tender_offers`);
     },
   });
 
