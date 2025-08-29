@@ -103,4 +103,6 @@ scope path: :internal, module: :internal do
   resources :invite_links, only: [] do
     post :accept, on: :collection
   end
+
+  resources :actor_tokens, only: [:create]
 end
