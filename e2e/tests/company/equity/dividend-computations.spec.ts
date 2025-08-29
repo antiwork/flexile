@@ -10,7 +10,7 @@ import { expect, test, withinModal } from "@test/index";
 import { format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { dividendComputations } from "@/db/schema";
-import { formatMoney } from "@/utils/formatMoney";
+import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate } from "@/utils/time";
 
 test.describe("Dividend Computations", () => {
@@ -130,7 +130,13 @@ test.describe("Dividend Computations", () => {
         await expect(modal.getByText("Please confirm all details are accurate")).toBeVisible();
         await expect(modal.getByText("Dividends")).toBeVisible();
         const totalCostRow = modal.getByText("Total cost:").locator("..");
-        await expect(totalCostRow.getByText(formatMoney(dividendComputation.totalAmountInUsd))).toBeVisible();
+        await expect(
+          totalCostRow.getByText(
+            formatMoneyFromCents(
+              Number(dividendComputation.totalAmountInUsd) * 100 + dividendComputation.totalFeesCents,
+            ),
+          ),
+        ).toBeVisible();
         await modal.getByLabel("I've reviewed all information and confirm it's correct.").click();
         await expect(modal.getByRole("button", { name: "Finalize distribution" })).toBeEnabled();
         await modal.getByRole("button", { name: "Finalize distribution" }).click();
