@@ -4,12 +4,13 @@ require "spec_helper"
 
 RSpec.describe Internal::OauthController, type: :controller do
   let(:email) { "oauthuser@example.com" }
+  let(:api_token) { GlobalConfig.get("API_SECRET_TOKEN", Rails.application.secret_key_base) }
 
   describe "POST #create" do
     context "with valid parameters" do
       it "creates a user and returns JWT" do
         expect do
-          post :create, params: { email: email }
+          post :create, params: { email: email, token: api_token }
         end.to change(User, :count).by(1)
         expect(response).to have_http_status(:created).or have_http_status(:ok)
         json_response = JSON.parse(response.body)
@@ -20,7 +21,7 @@ RSpec.describe Internal::OauthController, type: :controller do
       it "returns existing user if already present" do
         User.create!(email: email)
         expect do
-          post :create, params: { email: email }
+          post :create, params: { email: email, token: api_token }
         end.not_to change(User, :count)
         expect(response).to have_http_status(:ok)
         json_response = JSON.parse(response.body)
@@ -30,7 +31,7 @@ RSpec.describe Internal::OauthController, type: :controller do
       it "updates current_sign_in_at for existing user on login" do
         user = User.create!(email: email, current_sign_in_at: 2.days.ago)
         expect do
-          post :create, params: { email: email }
+          post :create, params: { email: email, token: api_token }
         end.not_to change(User, :count)
         user.reload
         expect(user.current_sign_in_at).to be_within(5.seconds).of(Time.current)
@@ -39,17 +40,24 @@ RSpec.describe Internal::OauthController, type: :controller do
 
     context "with missing parameters" do
       it "returns error if email is missing" do
-        post :create, params: {}
+        post :create, params: { token: api_token }
         expect(response).to have_http_status(:bad_request).or have_http_status(:unprocessable_entity)
         json_response = JSON.parse(response.body)
         expect(json_response["error"]).to eq("Email is required")
+      end
+
+      it "returns error if token is missing" do
+        post :create, params: { email: email }
+        expect(response).to have_http_status(:bad_request)
+        json_response = JSON.parse(response.body)
+        expect(json_response["error"]).to eq("Token is required")
       end
     end
 
 
     context "JWT token validation" do
       it "generates a valid JWT token" do
-        post :create, params: { email: email }
+        post :create, params: { email: email, token: api_token }
         json_response = JSON.parse(response.body)
         jwt_token = json_response["jwt"]
 

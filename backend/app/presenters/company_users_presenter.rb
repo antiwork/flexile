@@ -40,7 +40,7 @@ class CompanyUsersPresenter
       user = admin.user
 
       user_props(user).merge(
-        role: is_primary_admin?(user) ? "Owner" : "Admin",
+        role: is_primary_admin?(user) ? "Owner" : format_role_display(get_user_roles(user)),
       )
     end.sort_by { |admin| [admin[:isOwner] ? 0 : 1, admin[:name]] }
   end
@@ -120,5 +120,10 @@ class CompanyUsersPresenter
     def is_primary_admin?(user)
       primary_admin = @company.primary_admin
       primary_admin&.user_id == user.id
+    end
+
+    def format_role_display(roles)
+      sorted_roles = roles.sort_by { |role| role == "Admin" ? 0 : 1 }
+      sorted_roles.join(", ")
     end
 end
