@@ -296,7 +296,7 @@ const Edit = () => {
   });
 
   return (
-    <div {...dragProps}>
+    <div {...dragProps} className="h-full">
       <DashboardHeader
         title={data.invoice.id ? "Edit invoice" : "New invoice"}
         headerActions={

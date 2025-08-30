@@ -104,20 +104,22 @@ export function Dropzone({ isProcessing, isDragging }: DropzoneState) {
   if (!isProcessing && !isDragging) return null;
 
   return (
-    <Card className="animate-in pointer-events-none fixed inset-0 z-50 flex items-center justify-center overflow-hidden border-none bg-black/10 duration-200">
-      <CardContent className="flex flex-col items-center">
-        {isProcessing ? (
-          <CircularProgress progress={100} className="mb-3 h-8 w-8" />
-        ) : (
-          <ArrowUpTrayIcon className="mb-3 h-8 w-8" />
-        )}
-        <div className="text-foreground text-lg font-semibold">
-          {isProcessing ? "Extracting invoice..." : "Release to import"}
-        </div>
-        <div className="text-muted-foreground text-sm">
-          {isProcessing ? "This may take a few seconds..." : "We'll extract the details automatically."}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="animate-in pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-white/5 backdrop-blur-[1px] duration-200">
+      <Card className="border-blue-600/20 bg-blue-50/80 shadow-lg backdrop-blur-sm">
+        <CardContent className="flex flex-col items-center p-8">
+          {isProcessing ? (
+            <CircularProgress progress={60} className="mb-4 h-10 w-10 animate-spin text-blue-600" />
+          ) : (
+            <ArrowUpTrayIcon className="mb-4 h-10 w-10 text-blue-600" />
+          )}
+          <div className="text-foreground mb-2 text-lg font-semibold">
+            {isProcessing ? "Extracting invoice..." : "Release to import"}
+          </div>
+          <div className="text-muted-foreground max-w-xs text-center text-sm">
+            {isProcessing ? "This may take a few seconds..." : "We'll extract the details automatically."}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

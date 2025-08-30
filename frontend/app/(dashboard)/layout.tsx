@@ -200,7 +200,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
           <main className={cn("flex flex-1 flex-col pb-20 not-print:overflow-y-auto sm:pb-4")}>
-            <div className="flex flex-col gap-2 md:gap-4">{children}</div>
+            <div className="flex h-full flex-col gap-2 md:gap-4">{children}</div>
           </main>
         </div>
       </SidebarInset>
