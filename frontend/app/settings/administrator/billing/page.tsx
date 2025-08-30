@@ -4,7 +4,7 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleDollarSign, Download, Plus, RefreshCw } from "lucide-react";
+import { CircleDollarSign, Download, Plus } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
 import { z } from "zod";
@@ -162,23 +162,11 @@ const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
           case "processing":
             return <Status variant="primary">Payment in progress</Status>;
           case "paid":
-            return (
-              <Status variant="success" icon={<CircleDollarSign />}>
-                Paid
-              </Status>
-            );
+            return <Status variant="success">Paid</Status>;
           case "refunded":
-            return (
-              <Status variant="success" icon={<RefreshCw />}>
-                Refunded
-              </Status>
-            );
+            return <Status variant="success">Refunded</Status>;
           case "failed":
-            return (
-              <Status variant="critical" icon={<RefreshCw />}>
-                Failed
-              </Status>
-            );
+            return <Status variant="critical">Failed</Status>;
         }
       }),
       columnHelper.accessor("attachment", {
