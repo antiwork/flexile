@@ -31,7 +31,9 @@ test.describe("Company administrator settings - payment details", () => {
     await bankFrame.getByRole("button", { name: "Agree" }).click();
     await bankFrame.getByTestId("success").click();
     await bankFrame.getByRole("button", { name: "Connect account" }).click();
-    await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
+    await bankFrame.getByRole("button", { name: "Not now" }).click();
+    await bankFrame.getByRole("button", { name: "Back to new Business sandbox" }).click();
+
     await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByText("USD bank account")).toBeVisible();
     await expect(page.getByText("Ending in 6789")).toBeVisible();
@@ -49,7 +51,9 @@ test.describe("Company administrator settings - payment details", () => {
     await bankFrame.getByRole("button", { name: "Agree" }).click();
     await bankFrame.getByRole("button", { name: "High Balance" }).click();
     await bankFrame.getByRole("button", { name: "Connect account" }).click();
-    await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
+    await bankFrame.getByRole("button", { name: "Not now" }).click();
+    await bankFrame.getByRole("button", { name: "Back to new Business sandbox" }).click();
+
     await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByText("USD bank account")).toBeVisible();
     await expect(page.getByText("Ending in 4321")).toBeVisible();
