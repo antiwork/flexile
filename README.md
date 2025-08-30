@@ -81,7 +81,7 @@ stripe customers create \
 
 ```shell
 # Run Rails specs
-bundle exec rspec --tag '~skip' --tag '~type:system'
+bundle exec rspec
 
 # Run a single spec
 bundle exec rspec spec/system/roles/show_spec.rb:7

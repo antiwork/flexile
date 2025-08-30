@@ -217,7 +217,6 @@ export const invoicesRouter = createRouter({
       subject: `🔴 Action needed: ${companyWorker.company.name} would like to pay you`,
       react: OneOffInvoiceCreated({
         companyName: companyWorker.company.name || companyWorker.company.email,
-        host: ctx.host,
         invoice,
         bankAccountLastFour,
         paymentDescriptions,
