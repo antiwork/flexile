@@ -64,17 +64,21 @@ export const companiesRouter = createRouter({
           conversionSharePriceUsd: true,
           exerciseNotice: true,
         })
-        .extend({ logoKey: z.string().optional(), equityEnabled: z.boolean().optional() }),
+        .extend({
+          logoKey: z.string().optional(),
+          equityEnabled: z.boolean().optional(),
+          optionExercisingEnabled: z.boolean().optional(),
+        }),
     )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      const { equityEnabled, ...rest } = input;
+      const { equityEnabled, optionExercisingEnabled, ...rest } = input;
       await db.transaction(async (tx) => {
-        if (equityEnabled !== undefined) {
+        if (equityEnabled !== undefined || optionExercisingEnabled !== undefined) {
           await tx
             .update(companies)
-            .set({ ...rest, equityEnabled })
+            .set({ ...rest, equityEnabled, optionExercisingEnabled })
             .where(eq(companies.id, ctx.company.id));
         } else {
           await tx.update(companies).set(rest).where(eq(companies.id, ctx.company.id));
