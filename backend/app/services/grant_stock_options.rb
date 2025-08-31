@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 class GrantStockOptions
-  def initialize(company_worker, option_pool:, board_approval_date:, vesting_commencement_date:,
+  def initialize(user, company:, option_pool:, board_approval_date:, vesting_commencement_date:,
                 number_of_shares:, issue_date_relationship:, option_grant_type:, option_expiry_months:,
                 vesting_trigger:, vesting_schedule_params:, voluntary_termination_exercise_months:,
                 involuntary_termination_exercise_months:, termination_with_cause_exercise_months:,
                 death_exercise_months:, disability_exercise_months:, retirement_exercise_months:, contract:)
-    @company_worker = company_worker
+    @user = user
     @option_pool = option_pool
-    @company = company_worker.company
+    @company = company
     @board_approval_date = board_approval_date
     @vesting_commencement_date = vesting_commencement_date
     @number_of_shares = number_of_shares&.to_i
@@ -27,9 +27,8 @@ class GrantStockOptions
   end
 
   def process
-    user = company_worker.user
-
-    return { success: false, error: "Cannot grant stock options for #{user.display_name} because they are an alum" } if company_worker.alumni?
+    company_worker = user.company_worker_for(company)
+    return { success: false, error: "Cannot use invoice vesting for #{user.display_name} as they are not an active contractor" } if vesting_trigger == EquityGrant.vesting_triggers[:invoice_paid] && !company_worker&.active?
     return { success: false, error: "Please set the company's conversion share price first" } if company.conversion_share_price_usd.nil?
     return { success: false, error: "Please set the company's current FMV (409A valuation) first" } if company.fmv_per_share_in_usd.nil?
     return { success: false, error: "Equity contract missing" } unless contract.present?
@@ -70,11 +69,11 @@ class GrantStockOptions
                                                         .process
       if equity_grant_creation_result.success?
         equity_grant = equity_grant_creation_result.equity_grant
-        document = company_worker.user.documents.build(equity_grant:,
-                                                       company:,
-                                                       name: "Equity Incentive Plan #{Date.current.year}",
-                                                       year: Date.current.year,
-                                                       document_type: :equity_plan_contract)
+        document = user.documents.build(equity_grant:,
+                                        company:,
+                                        name: "Equity Incentive Plan #{Date.current.year}",
+                                        year: Date.current.year,
+                                        document_type: :equity_plan_contract)
         if contract.is_a?(String)
           document.text = contract
         else
@@ -91,7 +90,7 @@ class GrantStockOptions
   end
 
   private
-    attr_reader :company_worker, :option_pool, :option_grant_type, :company, :board_approval_date, :vesting_commencement_date,
+    attr_reader :user, :option_pool, :option_grant_type, :company, :board_approval_date, :vesting_commencement_date,
                 :issue_date_relationship, :option_expiry_months, :vesting_trigger, :vesting_schedule_params,
                 :voluntary_termination_exercise_months, :involuntary_termination_exercise_months,
                 :termination_with_cause_exercise_months, :death_exercise_months, :disability_exercise_months,

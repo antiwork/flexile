@@ -362,50 +362,36 @@ test.describe("Equity Grants", () => {
     ).not.toBeVisible();
   });
 
-  test("includes administrators in recipient search results", async ({ page }) => {
+  test("allows issuing equity grants to administrators", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       fmvPerShareInUsd: "1",
       conversionSharePriceUsd: "1.00",
       sharePriceInUsd: "1.00",
     });
+    await optionPoolsFactory.create({ companyId: company.id });
 
-    const { user: contractorUser } = await usersFactory.create({
-      email: "contractor@company.com",
-      legalName: "John Contractor",
-      preferredName: "John Contractor",
-    });
-    await companyContractorsFactory.create({
-      companyId: company.id,
-      userId: contractorUser.id,
-    });
+    await companyContractorsFactory.create({ companyId: company.id });
 
-    const { user: additionalAdminUser } = await usersFactory.create({
-      email: "admin@company.com",
-      legalName: "Jane Admin",
-      preferredName: "Jane Admin",
-    });
-    await companyAdministratorsFactory.create({
-      companyId: company.id,
-      userId: additionalAdminUser.id,
-    });
+    const { user: otherAdminUser } = await usersFactory.create();
+    await companyAdministratorsFactory.create({ companyId: company.id, userId: otherAdminUser.id });
 
     await login(page, adminUser);
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Equity grants" }).click();
     await page.getByRole("button", { name: "New option grant" }).click();
 
-    await page.getByRole("combobox", { name: "Recipient" }).click();
+    await page.getByLabel("Number of options").fill("100");
+    await selectComboboxOption(page, "Recipient", `${otherAdminUser.preferredName} (${otherAdminUser.email})`);
+    await expect(page.getByLabel("Shares will vest")).not.toBeVisible();
+    await selectComboboxOption(page, "Vesting schedule", "4-year with 1-year cliff (1/48th monthly after cliff)");
+    await page.getByRole("tab", { name: "Write" }).click();
+    await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
 
-    await expect(page.getByRole("option", { name: "John Contractor (contractor@company.com)" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Jane Admin (admin@company.com)" })).toBeVisible();
+    await page.getByRole("button", { name: "Create grant" }).click();
 
-    await page.getByPlaceholder("Search...").fill("admin");
-    await expect(page.getByRole("option", { name: "Jane Admin (admin@company.com)" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "John Contractor (contractor@company.com)" })).not.toBeVisible();
-
-    await page.getByPlaceholder("Search...").clear();
-    await page.getByRole("option", { name: "Jane Admin (admin@company.com)" }).click();
-    await expect(page.getByRole("combobox", { name: "Recipient" })).toHaveText("Jane Admin (admin@company.com)");
+    const row = page.locator("tbody tr").first();
+    await expect(row).toContainText(otherAdminUser.legalName ?? "");
+    await expect(row).toContainText("100");
   });
 });
