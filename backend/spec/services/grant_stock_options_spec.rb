@@ -54,9 +54,12 @@ RSpec.describe GrantStockOptions do
         expect(result).to eq(success: false, error: "Please set the company's conversion share price first")
       end
 
-      it "returns an error if the user is not a contractor and the vesting trigger is invoice_paid" do
-        result = service.process
-        expect(result).to eq(success: false, error: "Cannot use invoice vesting for #{user.display_name} as they are not an active contractor")
+      context "when the user is not a contractor" do
+        let(:user) { administrator.user }
+        it "returns an error if the user is not a contractor and the vesting trigger is invoice_paid" do
+          result = service.process
+          expect(result).to eq(success: false, error: "Cannot use invoice vesting for #{user.display_name} as they are not an active contractor")
+        end
       end
     end
 
