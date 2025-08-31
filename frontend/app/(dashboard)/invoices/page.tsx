@@ -29,6 +29,7 @@ import {
   DeleteModal,
   EDITABLE_INVOICE_STATES,
   RejectModal,
+  StatusDetails,
   useApproveInvoices,
   useIsActionable,
   useIsDeletable,
@@ -684,10 +685,7 @@ const TasksModal = ({
           </DialogTitle>
         </DialogHeader>
         <section>
-          <div className="mb-4">
-            <div className="text-sm text-gray-500">Status</div>
-            <div className="font-medium">{getInvoiceStatusText(invoice, company)}</div>
-          </div>
+          <StatusDetails invoice={invoice} className="mb-4" />
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
             <Alert className="max-md:mb-4" variant="warning">
