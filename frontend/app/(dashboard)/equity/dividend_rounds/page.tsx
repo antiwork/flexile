@@ -17,11 +17,12 @@ import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_dividend_computations_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 import NewDistributionModal from "./NewDistributionModal";
 
 const dividendComputationSchema = z.array(
   z.object({
-    id: z.number(),
+    id: z.string(),
     total_amount_in_usd: z.string(),
     dividends_issuance_date: z.string(),
     return_of_capital: z.boolean(),
@@ -30,7 +31,7 @@ const dividendComputationSchema = z.array(
 );
 
 type DividendOrComputation = {
-  id: bigint;
+  id: string;
   status: string;
   totalAmountInUsd: number;
   numberOfShareholders: bigint;
@@ -40,6 +41,7 @@ type DividendOrComputation = {
 };
 
 export default function DividendRounds() {
+  const isMobile = useIsMobile();
   const company = useCurrentCompany();
 
   const { data: dividendComputations = [], isLoading: isLoadingDividendComputations } = useQuery({
@@ -57,7 +59,6 @@ export default function DividendRounds() {
     select: (computations) =>
       computations.map((computation) => ({
         ...computation,
-        id: BigInt(computation.id),
         type: "draft" as const,
         status: "Draft",
         totalAmountInUsd: Number(computation.total_amount_in_usd),
@@ -147,15 +148,23 @@ export default function DividendRounds() {
     getSortedRowModel: getSortedRowModel(),
   });
 
+  const handleNewDistributionClick = () => setIsNewDistributionModalOpen(true);
+
   return (
     <>
       <DashboardHeader
         title="Dividends"
         headerActions={
-          <Button variant="outline" size="small" onClick={() => setIsNewDistributionModalOpen(true)}>
-            <Plus className="size-4" />
-            New distribution
-          </Button>
+          isMobile ? (
+            <Button variant="floating-action" onClick={handleNewDistributionClick} aria-label="New distribution">
+              <Plus />
+            </Button>
+          ) : (
+            <Button variant="outline" size="small" onClick={handleNewDistributionClick}>
+              <Plus className="size-4" />
+              New distribution
+            </Button>
+          )
         }
       />
       {isLoading ? (

@@ -18,8 +18,8 @@ import { formatDate } from "@/utils/time";
 
 const formSchema = z.object({ verificationCode: z.string().length(6, "Please enter a 6-digit code.") }).or(
   z.object({
-    firstAmount: z.number().min(1, "Please enter an amount."),
-    secondAmount: z.number().min(1, "Please enter an amount."),
+    firstAmount: z.number().min(0.01, "Please enter an amount."),
+    secondAmount: z.number().min(0.01, "Please enter an amount."),
   }),
 );
 
@@ -74,11 +74,13 @@ const StripeMicrodepositVerification = () => {
 
   return !microdepositVerificationDetails || microdepositVerification.isSuccess ? null : (
     <>
-      <Alert>
+      <Alert className="mx-4">
         <AlertTitle>Verify your bank account to enable contractor payments</AlertTitle>
         <AlertDescription>
           <p>To ensure seamless payments to your contractors, we need to confirm your bank account details.</p>
-          <Button onClick={() => setShowVerificationModal(true)}>Verify bank account</Button>
+          <p>
+            <Button onClick={() => setShowVerificationModal(true)}>Verify bank account</Button>
+          </p>
         </AlertDescription>
       </Alert>
 
@@ -95,16 +97,15 @@ const StripeMicrodepositVerification = () => {
             </p>
           ) : (
             <p>
-              Check your {microdepositVerificationDetails.bank_account_number || ""} bank account for
-              <strong>two deposits</strong> from Stripe on {arrivalDate}. The transactions' description will read
-              "ACCTVERIFY".
+              Check your {microdepositVerificationDetails.bank_account_number || ""} bank account for two deposits from
+              Stripe on {arrivalDate}. The transactions' description will read "ACCTVERIFY".
             </p>
           )}
 
           <p>If {isDescriptorCode ? "it's" : "they're"} not visible yet, please check in 1-2 days.</p>
 
           <Form {...form}>
-            <form onSubmit={(e) => void submit(e)}>
+            <form onSubmit={(e) => void submit(e)} className="space-y-4">
               {isDescriptorCode ? (
                 <FormField
                   control={form.control}
@@ -128,7 +129,7 @@ const StripeMicrodepositVerification = () => {
                       <FormItem>
                         <FormLabel>Amount 1</FormLabel>
                         <FormControl>
-                          <NumberInput {...field} prefix="$" />
+                          <NumberInput {...field} prefix="$" decimal maximumFractionDigits={2} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -141,7 +142,7 @@ const StripeMicrodepositVerification = () => {
                       <FormItem>
                         <FormLabel>Amount 2</FormLabel>
                         <FormControl>
-                          <NumberInput {...field} prefix="$" />
+                          <NumberInput {...field} prefix="$" decimal maximumFractionDigits={2} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

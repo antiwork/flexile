@@ -6,7 +6,7 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccounts";
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
-import { selectComboboxOption } from "@test/helpers";
+import { wiseRecipientsFactory } from "@test/factories/wiseRecipients";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 
@@ -124,28 +124,8 @@ test.describe("Onboarding checklist", () => {
     await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/u);
     await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/u);
 
-    await page.getByText("Add payout information").click();
-    await expect(page).toHaveURL(/\/settings\/payouts/u);
-    await page.getByText("Add bank account").click();
-    await withinModal(
-      async (modal) => {
-        await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
-        await modal.getByLabel("Full name of the account holder").fill(faker.person.fullName());
-        await modal.getByLabel("Routing number").fill("071004200");
-        await modal.getByLabel("Account number").fill("12345678");
-        await modal.getByLabel("Country").click();
-        await modal.getByRole("option", { name: "United States", exact: true }).click();
-        await modal.getByLabel("City").fill(faker.location.city());
-        await modal.getByLabel("Street address, apt number").fill(faker.location.streetAddress());
-        await modal.getByLabel("State").click();
-        await modal.getByRole("option", { name: faker.location.state(), exact: true }).click();
-        await modal.getByLabel("ZIP code").fill(faker.location.zipCode());
-        await modal.getByRole("button", { name: "Save bank account" }).click();
-      },
-      { page },
-    );
-    await expect(page.getByText("Ending in 5678")).toBeVisible();
-    await page.getByRole("link", { name: "Back to app" }).click();
+    await wiseRecipientsFactory.create({ userId: contractorUser.id });
+    await page.reload();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
     await expect(page.getByText("You are ready to send your first invoice.")).toBeVisible();
@@ -188,28 +168,8 @@ test.describe("Onboarding checklist", () => {
     await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/u);
     await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/u);
 
-    await page.getByText("Add payout information").click();
-    await expect(page).toHaveURL(/\/settings\/payouts/u);
-    await page.getByText("Add bank account").click();
-    await withinModal(
-      async (modal) => {
-        await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
-        await modal.getByLabel("Full name of the account holder").fill(faker.person.fullName());
-        await modal.getByLabel("Routing number").fill("071004200");
-        await modal.getByLabel("Account number").fill("12345678");
-        await modal.getByLabel("Country").click();
-        await modal.getByRole("option", { name: "United States", exact: true }).click();
-        await modal.getByLabel("City").fill(faker.location.city());
-        await modal.getByLabel("Street address, apt number").fill(faker.location.streetAddress());
-        await modal.getByLabel("State").click();
-        await modal.getByRole("option", { name: faker.location.state(), exact: true }).click();
-        await modal.getByLabel("ZIP code").fill(faker.location.zipCode());
-        await modal.getByRole("button", { name: "Save bank account" }).click();
-      },
-      { page },
-    );
-    await expect(page.getByText("Ending in 5678")).toBeVisible();
-    await page.getByRole("link", { name: "Back to app" }).click();
+    await wiseRecipientsFactory.create({ userId: investorUser.id, usedForDividends: true });
+    await page.reload();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
     await expect(page.getByText("Everything is in place. Time to flex.")).toBeVisible();
@@ -247,27 +207,8 @@ test.describe("Onboarding checklist", () => {
     await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/u);
     await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/u);
 
-    await page.getByText("Add payout information").click();
-    await page.getByText("Add bank account").click();
-    await withinModal(
-      async (modal) => {
-        await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
-        await modal.getByLabel("Full name of the account holder").fill(faker.person.fullName());
-        await modal.getByLabel("Routing number").fill("071004200");
-        await modal.getByLabel("Account number").fill("12345678");
-        await modal.getByLabel("Country").click();
-        await modal.getByRole("option", { name: "United States", exact: true }).click();
-        await modal.getByLabel("City").fill(faker.location.city());
-        await modal.getByLabel("Street address, apt number").fill(faker.location.streetAddress());
-        await modal.getByLabel("State").click();
-        await modal.getByRole("option", { name: faker.location.state(), exact: true }).click();
-        await modal.getByLabel("ZIP code").fill(faker.location.zipCode());
-        await modal.getByRole("button", { name: "Save bank account" }).click();
-      },
-      { page },
-    );
-    await expect(page.getByText("Ending in 5678")).toBeVisible();
-    await page.getByRole("link", { name: "Back to app" }).click();
+    await wiseRecipientsFactory.create({ userId: contractorUser.id, usedForDividends: true });
+    await page.reload();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
     await expect(page.getByText("You are ready to send your first invoice.")).toBeVisible();

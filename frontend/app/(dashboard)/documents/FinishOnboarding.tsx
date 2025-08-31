@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -8,17 +9,20 @@ import { MutationStatusButton } from "@/components/MutationButton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
 
 type OnboardingStepProps = {
   open: boolean;
+  onClose: () => void;
   onNext: () => void;
   onBack: () => void;
 };
 
-const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
+const WorkerOnboardingModal = ({ open, onClose, onNext }: OnboardingStepProps) => {
+  const user = useCurrentUser();
   const company = useCurrentCompany();
+  const queryClient = useQueryClient();
 
   const form = useForm({
     resolver: zodResolver(
@@ -26,25 +30,30 @@ const WorkerOnboardingModal = ({ open, onNext }: OnboardingStepProps) => {
         startedAt: z.instanceof(CalendarDate),
         payRateInSubunits: z.number(),
         payRateType: z.nativeEnum(PayRateType),
-        role: z.string(),
+        role: z.string().min(1),
       }),
     ),
     defaultValues: {
-      role: "",
       payRateType: PayRateType.Hourly,
       payRateInSubunits: 100,
       startedAt: today(getLocalTimeZone()),
     },
   });
 
-  const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({ onSuccess: onNext });
+  const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      onNext();
+    },
+  });
   const submit = form.handleSubmit((values) => {
     updateContractor.mutate({ companyId: company.id, ...values, startedAt: values.startedAt.toString() });
   });
 
+  const otherRolesExist = Object.keys(user.roles).some((role) => role !== "worker");
   return (
-    <Dialog open={open}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={() => (otherRolesExist ? onClose() : undefined)}>
+      <DialogContent showCloseButton={otherRolesExist}>
         <DialogHeader>
           <DialogTitle>What will you be doing at {company.name}?</DialogTitle>
           <DialogDescription>
@@ -123,7 +132,13 @@ export const FinishOnboarding = ({ handleComplete }: FinishOnboardingProps) => {
   return (
     <>
       {onboardingSteps.map((Step, idx) => (
-        <Step key={idx} open={idx === currentStep} onNext={goToNextStep} onBack={goToPreviousStep} />
+        <Step
+          key={idx}
+          open={idx === currentStep}
+          onClose={handleComplete}
+          onNext={goToNextStep}
+          onBack={goToPreviousStep}
+        />
       ))}
     </>
   );

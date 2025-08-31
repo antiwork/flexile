@@ -1,9 +1,11 @@
+import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
-import { fillDatePicker } from "@test/helpers";
+import { fillDatePicker, findRichTextEditor } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
+import { addDays, format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
 
@@ -26,21 +28,29 @@ test.describe("Buyback creation", () => {
 
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Buybacks" }).click();
-    await page.getByRole("link", { name: "New buyback" }).click();
+    await page.getByRole("button", { name: "New buyback" }).click();
 
-    await fillDatePicker(page, "Start date", "08/08/2022");
-    await fillDatePicker(page, "End date", "09/09/2022");
+    const startDate = new Date();
+    const endDate = addDays(new Date(), 30);
+
+    await fillDatePicker(page, "Start date", format(startDate, "MM/dd/yyyy"));
+    await fillDatePicker(page, "End date", format(endDate, "MM/dd/yyyy"));
     await page.getByLabel("Starting valuation").fill("100000000");
     await page.getByLabel("Document package").setInputFiles("e2e/samples/sample.zip");
 
-    await page.getByRole("button", { name: "Create buyback" }).click();
-    await expect(page.getByText("There are no buybacks yet.")).toBeVisible();
-    await page.reload();
+    const letterOfTransmittal = faker.lorem.paragraphs();
+    await findRichTextEditor(page, "Letter of transmittal").fill(letterOfTransmittal);
 
-    await expect(
-      page.getByRole("row", {
-        name: /Aug 8, 2022.*Sep 9, 2022.*\$100,000,000/u,
-      }),
-    ).toBeVisible();
+    await page.getByRole("button", { name: "Create buyback" }).click();
+
+    await page
+      .getByRole("row", {
+        name: new RegExp(`${format(startDate, "MMM d, yyyy")}.*${format(endDate, "MMM d, yyyy")}.*\\$100,000,000`, "u"),
+      })
+      .click();
+
+    await expect(page.getByRole("article", { name: "Letter of transmittal" })).toContainText(letterOfTransmittal, {
+      useInnerText: true,
+    });
   });
 });

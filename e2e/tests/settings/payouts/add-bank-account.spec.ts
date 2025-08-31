@@ -35,6 +35,8 @@ async function fillOutUsdBankAccountForm(
   await page.getByLabel("ZIP code").fill(formValues.zipCode);
 }
 
+// allow green builds on OSS PRs that don't have a wise sandbox key, but fail on CI if something changes on Wise's end
+test.skip(() => process.env.WISE_API_KEY === "dummy");
 test.describe("Bank account settings", () => {
   let company: typeof companies.$inferSelect;
   let onboardingUser: typeof users.$inferSelect;
@@ -383,11 +385,10 @@ test.describe("Bank account settings", () => {
         await page.getByRole("link", { name: "Payouts" }).click();
         await page.getByRole("button", { name: "Add bank account" }).click();
         await selectComboboxOption(page, "Currency", "GBP (British Pound)");
+        await expect(page.getByRole("tab", { name: "Local bank account", selected: true })).toBeVisible();
         await expect(page.getByLabel("Full name of the account holder")).toBeVisible();
         await expect(page.getByLabel("UK sort code")).toBeVisible();
         await expect(page.getByLabel("Account number")).toBeVisible();
-        await expect(page.getByLabel("I'd prefer to use IBAN")).toBeVisible();
-        await expect(page.getByLabel("Account Type")).not.toBeVisible();
       });
 
       test("shows local bank account when the currency is HKD", async ({ page }) => {
