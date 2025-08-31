@@ -98,10 +98,9 @@ export const companiesRouter = createRouter({
   microdepositVerificationDetails: companyProcedure.query(async ({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const response = await fetch(
-      microdeposit_verification_details_company_invoices_url(ctx.company.externalId, { host: ctx.host }),
-      { headers: ctx.headers },
-    );
+    const response = await fetch(microdeposit_verification_details_company_invoices_url(ctx.company.externalId), {
+      headers: ctx.headers,
+    });
     const data = z
       .object({
         details: z
@@ -121,7 +120,7 @@ export const companiesRouter = createRouter({
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
       const response = await fetch(
-        company_administrator_stripe_microdeposit_verifications_url(ctx.company.externalId, { host: ctx.host }),
+        company_administrator_stripe_microdeposit_verifications_url(ctx.company.externalId),
         {
           method: "POST",
           body: JSON.stringify(input),
@@ -159,11 +158,11 @@ export const companiesRouter = createRouter({
     .query(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      let url = company_users_url(ctx.company.externalId, { host: ctx.host });
+      let url = company_users_url(ctx.company.externalId);
 
       if (input.roles && input.roles.length > 0) {
         const filterParam = input.roles.join(",");
-        url = company_users_url(ctx.company.externalId, { host: ctx.host, params: { filter: filterParam } });
+        url = company_users_url(ctx.company.externalId, { params: { filter: filterParam } });
       }
 
       const response = await fetch(url, {
@@ -219,7 +218,7 @@ export const companiesRouter = createRouter({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      const response = await fetch(add_role_company_users_url(ctx.company.externalId, { host: ctx.host }), {
+      const response = await fetch(add_role_company_users_url(ctx.company.externalId), {
         method: "POST",
         headers: { ...ctx.headers, "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: input.userId, role: input.role }),
@@ -242,7 +241,7 @@ export const companiesRouter = createRouter({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      const response = await fetch(remove_role_company_users_url(ctx.company.externalId, { host: ctx.host }), {
+      const response = await fetch(remove_role_company_users_url(ctx.company.externalId), {
         method: "POST",
         headers: { ...ctx.headers, "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: input.userId, role: input.role }),
