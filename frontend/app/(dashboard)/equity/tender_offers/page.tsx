@@ -75,7 +75,7 @@ export default function Buybacks() {
           <NewBuybackForm
             handleComplete={() => {
               setShowBuyBackModal(false);
-              refetch();
+              void refetch();
             }}
           />
         </DialogContent>
