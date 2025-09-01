@@ -79,7 +79,6 @@ RSpec.describe CreateCapTable do
         alice_investor = company.company_investors.find_by(user: user1)
         alice_holding = alice_investor.share_holdings.first
 
-        # Should use legal_name for regular users (since business_entity? is false by default)
         expect(alice_holding.share_holder_name).to eq("Alice Johnson")
       end
 
@@ -144,10 +143,8 @@ RSpec.describe CreateCapTable do
     context "when company already has cap table data" do
       context "when company has existing option pools" do
         it "returns error when trying to create cap table after option pool already exists" do
-          # First, create an option pool in the company
           create(:option_pool, company: company)
 
-          # Then try to create cap table - should fail
           service = described_class.new(company: company, investors_data: [{ userId: user1.external_id, shares: 1000 }])
           result = service.perform
 
@@ -158,10 +155,8 @@ RSpec.describe CreateCapTable do
 
       context "when company has existing share classes" do
         it "returns error when trying to create cap table after share class already exists" do
-          # First, create a share class in the company
           create(:share_class, company: company, name: "Series A")
 
-          # Then try to create cap table - should fail
           service = described_class.new(company: company, investors_data: [{ userId: user1.external_id, shares: 1000 }])
           result = service.perform
 
@@ -172,10 +167,8 @@ RSpec.describe CreateCapTable do
 
       context "when company has existing company investors" do
         it "returns error when trying to create cap table after investors already exist" do
-          # First, create an investor in the company
           create(:company_investor, company: company)
 
-          # Then try to create cap table - should fail
           service = described_class.new(company: company, investors_data: [{ userId: user1.external_id, shares: 1000 }])
           result = service.perform
 
@@ -186,12 +179,10 @@ RSpec.describe CreateCapTable do
 
       context "when company has existing share holdings" do
         it "returns error when trying to create cap table after share holdings already exist" do
-          # First, create share holdings in the company
           user = create(:user)
           company_investor = create(:company_investor, company: company, user: user)
           create(:share_holding, company_investor: company_investor)
 
-          # Then try to create cap table - should fail
           service = described_class.new(company: company, investors_data: [{ userId: user1.external_id, shares: 1000 }])
           result = service.perform
 

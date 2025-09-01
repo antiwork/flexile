@@ -44,7 +44,6 @@ RSpec.describe CompanyUsersPresenter do
       end
 
       it "removes duplicate users across roles" do
-        # User1 is both admin and lawyer
         create(:company_administrator, company: company, user: user1)
         create(:company_lawyer, company: company, user: user1)
         create(:company_investor, company: company, user: user2)
@@ -54,7 +53,6 @@ RSpec.describe CompanyUsersPresenter do
         expect(result.length).to eq(2)
         expect(result.map { |u| u[:id] }).to contain_exactly(user1.external_id, user2.external_id)
 
-        # Verify user1 has both roles
         user1_result = result.find { |u| u[:id] == user1.external_id }
         expect(user1_result[:allRoles]).to contain_exactly("Admin", "Lawyer")
       end
@@ -69,7 +67,7 @@ RSpec.describe CompanyUsersPresenter do
 
         expect(result.length).to eq(1)
         expect(result.first[:id]).to eq(user1.external_id)
-        expect(result.first[:role]).to eq("Owner") # Primary admin
+        expect(result.first[:role]).to eq("Owner")
       end
 
       it "handles primary admin correctly" do
@@ -81,11 +79,9 @@ RSpec.describe CompanyUsersPresenter do
         expect(result.length).to eq(2)
         result_by_id = result.index_by { |u| u[:id] }
 
-        # Primary admin (first created) should be Owner
         expect(result_by_id[user1.external_id][:role]).to eq("Owner")
         expect(result_by_id[user1.external_id][:isOwner]).to be(true)
 
-        # Secondary admin should have formatted role
         expect(result_by_id[user2.external_id][:role]).to eq("Admin")
         expect(result_by_id[user2.external_id][:isOwner]).to be(false)
       end
@@ -146,7 +142,6 @@ RSpec.describe CompanyUsersPresenter do
       end
 
       it "removes duplicates when user has multiple roles in filter" do
-        # User1 is admin and lawyer
         create(:company_administrator, company: company, user: user1)
         create(:company_lawyer, company: company, user: user1)
         create(:company_investor, company: company, user: user2)
@@ -209,7 +204,6 @@ RSpec.describe CompanyUsersPresenter do
         create(:company_administrator, company: company, user: user1)
         create(:company_lawyer, company: company, user: user2)
 
-        # Create a new presenter instance to test nil explicitly
         test_presenter = CompanyUsersPresenter.new(company: company)
         result = test_presenter.users(nil)
 
