@@ -3,75 +3,71 @@
 require "set"
 
 class CompanyUsersPresenter
+  ALLOWED_USER_TYPES = {
+    "administrators" => :administrators_props,
+    "lawyers" => :lawyers_props,
+    "contractors" => :contractors_props,
+    "investors" => :investors_props,
+  }.freeze
+
+  DEFAULT_USER_TYPES = %w[administrators lawyers contractors investors].freeze
+
   def initialize(company:)
     @company = company
   end
 
-  def users(filters = "administrators,lawyers,contractors,investors")
-    valid_filters = %w[administrators lawyers contractors investors]
-    applied_filters = filters.split(",").map(&:strip) & valid_filters
+  def users(filters = nil)
+    requested_types = filters.blank? ? DEFAULT_USER_TYPES : filters.split(",").map(&:strip)
+    allowed_types   = requested_types & ALLOWED_USER_TYPES.keys
 
-    return [] if applied_filters.empty?
+    allowed_types
+      .flat_map { |type| send(ALLOWED_USER_TYPES[type]) }
+      .uniq { |user| user[:id] }
+  end
 
-    combined_users = []
-    applied_filters.each do |filter|
-      case filter
-      when "administrators"
-        combined_users.concat(administrators_props)
-      when "lawyers"
-        combined_users.concat(lawyers_props)
-      when "contractors"
-        combined_users.concat(contractors_props)
-      when "investors"
-        combined_users.concat(investors_props)
-      end
+  private
+    def administrators_props
+      admins = @company.company_administrators.includes(:user).order(:id)
+
+      admins.map do |admin|
+        user = admin.user
+
+        user_props(user).merge(
+          role: is_primary_admin?(user) ? "Owner" : format_role_display(get_user_roles(user)),
+        )
+      end.sort_by { |admin| [admin[:isOwner] ? 0 : 1, admin[:name]] }
     end
 
-    combined_users.uniq { |user| user[:id] }
-  end
+    def lawyers_props
+      @company.company_lawyers.includes(:user).order(:id).map do |lawyer|
+        user = lawyer.user
 
-  def administrators_props
-    admins = @company.company_administrators.includes(:user).order(:id)
+        user_props(user).merge(
+          role: "Lawyer",
+        )
+      end.sort_by { |lawyer| lawyer[:name] }
+    end
 
-    admins.map do |admin|
-      user = admin.user
+    def contractors_props
+      @company.company_workers.includes(:user).order(:id).map do |worker|
+        user = worker.user
 
-      user_props(user).merge(
-        role: is_primary_admin?(user) ? "Owner" : format_role_display(get_user_roles(user)),
-      )
-    end.sort_by { |admin| [admin[:isOwner] ? 0 : 1, admin[:name]] }
-  end
+        user_props(user).merge(
+          role: "Contractor",
+          active: worker.active?,
+        )
+      end.sort_by { |contractor| contractor[:name] }
+    end
 
-  def lawyers_props
-    @company.company_lawyers.includes(:user).order(:id).map do |lawyer|
-      user = lawyer.user
+    def investors_props
+      @company.company_investors.includes(:user).order(:id).map do |investor|
+        user = investor.user
 
-      user_props(user).merge(
-        role: "Lawyer",
-      )
-    end.sort_by { |lawyer| lawyer[:name] }
-  end
-
-  def contractors_props
-    @company.company_workers.includes(:user).order(:id).map do |worker|
-      user = worker.user
-
-      user_props(user).merge(
-        role: "Contractor",
-        active: worker.active?,
-      )
-    end.sort_by { |contractor| contractor[:name] }
-  end
-
-  def investors_props
-    @company.company_investors.includes(:user).order(:id).map do |investor|
-      user = investor.user
-
-      user_props(user).merge(
-        role: "Investor",
-      )
-    end.sort_by { |investor| investor[:name] }
-  end
+        user_props(user).merge(
+          role: "Investor",
+        )
+      end.sort_by { |investor| investor[:name] }
+    end
 
   private
     def user_props(user)
