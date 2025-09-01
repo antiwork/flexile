@@ -42,8 +42,6 @@ const calculateTotalShares = (investors: InvestorFormData["investors"]) =>
 const calculateOwnershipPercentage = (shares: number, totalShares: number) =>
   totalShares > 0 ? (shares / totalShares) * 100 : 0;
 
-const formatShares = (shares: number) => shares.toLocaleString();
-
 const InvestorSearchInput = ({
   fieldIndex,
   form,
@@ -360,7 +358,7 @@ const AddCapTablePage = () => {
         },
         footer: () => {
           const totalShares = calculateTotalShares(form.watch("investors"));
-          return <div className="font-semibold">{formatShares(totalShares)}</div>;
+          return <div className="font-semibold">{totalShares.toLocaleString()}</div>;
         },
       }),
       columnHelper.accessor("shares", {
@@ -481,7 +479,7 @@ const AddCapTablePage = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold">Total</span>
                     <div className="font-semibold">
-                      {formatShares(calculateTotalShares(form.watch("investors")))} shares
+                      {calculateTotalShares(form.watch("investors")).toLocaleString()} shares
                     </div>
                   </div>
                 </CardContent>

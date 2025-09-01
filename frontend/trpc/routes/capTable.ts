@@ -248,16 +248,13 @@ export const capTableRouter = createRouter({
       });
 
       if (!response.ok) {
-        let errorMessage = "Failed to create cap table";
-        try {
-          const { errors } = z.object({ errors: z.array(z.string()).optional() }).parse(await response.json());
-          errorMessage = errors?.join(", ") || errorMessage;
-        } catch {
-          // If response is not JSON (e.g., HTML error page), use default message
-        }
+        const errorSchema = z.object({
+          errors: z.array(z.string()).optional(),
+        });
+        const errorData = errorSchema.parse(await response.json().catch(() => ({})));
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: errorMessage,
+          message: errorData.errors?.join(", ") || "Failed to create cap table",
         });
       }
 
