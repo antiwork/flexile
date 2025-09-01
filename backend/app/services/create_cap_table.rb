@@ -17,7 +17,7 @@ class CreateCapTable
     return { success: false, errors: @errors } if @errors.any?
 
     ApplicationRecord.transaction do
-      create_share_class_if_needed
+      company.share_classes.create!(name: ShareClass::DEFAULT_NAME)
       create_investors_and_holdings
     end
 
@@ -58,15 +58,6 @@ class CreateCapTable
       if company.fully_diluted_shares > 0 && total_shares > company.fully_diluted_shares
         @errors << "Total shares (#{total_shares}) cannot exceed company's fully diluted shares (#{company.fully_diluted_shares})"
       end
-    end
-
-    def create_share_class_if_needed
-      return if company.share_classes.exists?(name: ShareClass::DEFAULT_NAME)
-
-      company.share_classes.create!(
-        name: ShareClass::DEFAULT_NAME,
-        original_issue_price_in_dollars: nil
-      )
     end
 
     def create_investors_and_holdings
