@@ -108,7 +108,7 @@ class EquityGrantCreation
     def next_grant_name
       company = company_investor.company
 
-      SequentialNamingService.next_name(
+      EquityNamingService.next_entity_name(
         company: company,
         collection: company.equity_grants,
         prefix_length: 3
@@ -116,15 +116,7 @@ class EquityGrantCreation
     end
 
     def option_holder_name
-      @_option_holder_name ||= begin
-        return user.legal_name unless user.business_entity?
-
-        if ISO3166::Country[:IN] == ISO3166::Country[user.country_code]
-          user.legal_name
-        else
-          user.business_name
-        end
-      end
+      @_option_holder_name ||= EquityNamingService.option_holder_name(user)
     end
 
     def build_result(success:, error: nil, equity_grant: nil)

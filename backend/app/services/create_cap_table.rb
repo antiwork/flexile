@@ -84,7 +84,7 @@ class CreateCapTable
           number_of_shares: shares,
           share_price_usd: share_price,
           total_amount_in_cents: investment_amount_cents,
-          share_holder_name: option_holder_name(user)
+          share_holder_name: EquityNamingService.option_holder_name(user)
         )
       end
     end
@@ -95,21 +95,10 @@ class CreateCapTable
     end
 
     def generate_share_name(user)
-      SequentialNamingService.next_name(
+      EquityNamingService.next_name(
         company: company,
         collection: company.share_holdings,
         prefix_length: 3
       )
-    end
-
-    def option_holder_name(user)
-      # Use same logic as EquityGrantCreation#option_holder_name
-      return user.legal_name unless user.business_entity?
-
-      if ISO3166::Country[:IN] == ISO3166::Country[user.country_code]
-        user.legal_name
-      else
-        user.business_name
-      end
     end
 end

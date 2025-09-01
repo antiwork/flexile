@@ -130,7 +130,7 @@ class EquityExercisingService
     end
 
     def next_share_name
-      SequentialNamingService.next_name(
+      EquityNamingService.next_name(
         company: company,
         collection: company.share_holdings,
         prefix_length: 1
