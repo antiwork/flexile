@@ -196,23 +196,32 @@ export default function DocumentsPage() {
           id: "statusSentOn",
           cell: (info) => {
             const document = info.row.original;
-            const { variant } = getStatus(info.row.original);
+            const { variant, text } = getStatus(document);
 
             return (
-              <div
-                className={`flex h-full flex-col items-end justify-between ${document.attachment ? "gap-3" : "gap-0"}`}
-              >
-                <div className="flex items-center justify-center">
+              <div className="flex h-full flex-col items-end justify-between gap-3">
+                <div className="flex items-center justify-end gap-2">
+                  <Status variant={variant}>{text}</Status>
                   {document.attachment ? (
                     <Button variant="outline" size="small" asChild>
                       <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
                         <Download className="size-4" />
                       </Link>
                     </Button>
-                  ) : (
-                    <Status variant={variant} />
-                  )}
+                  ) : null}
                 </div>
+                {isSignable(document) ? (
+                  <div>
+                    <Button
+                      variant="outline"
+                      size="small"
+                      onClick={() => setSignDocumentId(document.id)}
+                      disabled={!canSign}
+                    >
+                      Review and sign
+                    </Button>
+                  </div>
+                ) : null}
                 <div className="text-gray-600">{formatDate(document.createdAt)}</div>
               </div>
             );
