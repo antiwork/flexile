@@ -199,12 +199,23 @@ export default function DocumentsPage() {
             const { variant } = getStatus(info.row.original);
 
             return (
-              <div className="flex h-full flex-col items-end justify-between">
-                <div className="flex h-5 w-4 items-center justify-center">
-                  <Status variant={variant} />
+              <>
+                <div className="flex h-full flex-col items-end justify-between">
+                  {document.attachment ? (
+                    <Button variant="outline" size="small" asChild>
+                      <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
+                        <Download className="size-4" />
+                      </Link>
+                    </Button>
+                  ) : null}
                 </div>
-                <div className="text-gray-600">{formatDate(document.createdAt)}</div>
-              </div>
+                <div className="flex h-full flex-col items-end justify-between">
+                  <div className="flex h-5 w-4 items-center justify-center">
+                    <Status variant={variant} />
+                  </div>
+                  <div className="text-gray-600">{formatDate(document.createdAt)}</div>
+                </div>
+              </>
             );
           },
         }),
