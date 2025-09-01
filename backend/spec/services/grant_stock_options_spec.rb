@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe GrantStockOptions do
-  let(:user) { create(:user) }
   let(:company) { create(:company, name: "Acme", share_price_in_usd: 17.68, fmv_per_share_in_usd: 8.68, conversion_share_price_usd: 7.68) }
-  let(:company_worker) { create(:company_worker, user:, company:, pay_rate_in_subunits: 193_00) }
+  let(:company_worker) { create(:company_worker, company:, pay_rate_in_subunits: 193_00) }
+  let(:user) { company_worker.user }
   let!(:option_pool) { create(:option_pool, company:, authorized_shares: 10_000_000, issued_shares: 50_000) }
   let!(:administrator) { create(:company_administrator, company:) }
   let(:board_approval_date) { "2020-08-01" }
@@ -22,34 +22,44 @@ RSpec.describe GrantStockOptions do
   let(:retirement_exercise_months) { nil }
   let(:contract) { "Contract" }
   subject(:service) do
-    described_class.new(company_worker, option_pool:, board_approval_date:, vesting_commencement_date:,
-                                        number_of_shares:, issue_date_relationship:,
-                                        option_grant_type:, option_expiry_months:, vesting_trigger:,
-                                        vesting_schedule_params:, voluntary_termination_exercise_months:,
-                                        involuntary_termination_exercise_months:,
-                                        termination_with_cause_exercise_months:,
-                                        death_exercise_months:, disability_exercise_months:,
-                                        retirement_exercise_months:, contract:)
+    described_class.new(user, company:, option_pool:, board_approval_date:, vesting_commencement_date:,
+                              number_of_shares:, issue_date_relationship:,
+                              option_grant_type:, option_expiry_months:, vesting_trigger:,
+                              vesting_schedule_params:, voluntary_termination_exercise_months:,
+                              involuntary_termination_exercise_months:,
+                              termination_with_cause_exercise_months:,
+                              death_exercise_months:, disability_exercise_months:,
+                              retirement_exercise_months:, contract:)
   end
 
   describe "#process" do
     context "when pre-requisites are unfulfilled" do
       it "rerurns an error if the contractor is an alum" do
-        company_worker.ended_at = Time.current
+        company_worker.update!(ended_at: Time.current)
         result = service.process
-        expect(result).to eq(success: false, error: "Cannot grant stock options for #{user.display_name} because they are an alum")
+        expect(result).to eq(success: false, error: "Cannot use invoice vesting for #{user.display_name} as they are not an active contractor")
       end
 
       it "returns an error if fmv_per_share_in_usd is nil" do
+        company_worker
         company.fmv_per_share_in_usd = nil
         result = service.process
         expect(result).to eq(success: false, error: "Please set the company's current FMV (409A valuation) first")
       end
 
       it "returns an error if conversion_share_price_usd is nil" do
+        company_worker
         company.conversion_share_price_usd = nil
         result = service.process
         expect(result).to eq(success: false, error: "Please set the company's conversion share price first")
+      end
+
+      context "when the user is not a contractor" do
+        let(:user) { administrator.user }
+        it "returns an error if the user is not a contractor and the vesting trigger is invoice_paid" do
+          result = service.process
+          expect(result).to eq(success: false, error: "Cannot use invoice vesting for #{user.display_name} as they are not an active contractor")
+        end
       end
     end
 
@@ -236,6 +246,21 @@ RSpec.describe GrantStockOptions do
           end.to change { VestingSchedule.count }.by(1)
         end
       end
+
+      context "when the user is not an active contractor" do
+        let(:user) { administrator.user }
+
+        it "allows creating the grant" do
+          expect do
+            result = service.process
+            expect(result).to eq(success: true)
+          end.to change { EquityGrant.count }.by(1)
+                                             .and change { CompanyInvestor.count }.by(1)
+                                             .and have_enqueued_mail(CompanyWorkerMailer, :equity_grant_issued)
+          equity_grant = EquityGrant.last
+          expect(equity_grant.company_investor.user).to eq(user)
+        end
+      end
     end
   end
 
@@ -243,6 +268,7 @@ RSpec.describe GrantStockOptions do
     let(:contract) { Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/sample.pdf"), "application/pdf") }
 
     it "attaches the file to the contract and assumes it's signed" do
+      company_worker
       service.process
       contract = Document.equity_plan_contract.last
       expect(contract.company).to eq(company)

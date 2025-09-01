@@ -63,7 +63,6 @@ export type AppRouter = typeof appRouter;
 
 export const getQueryClient = cache(createClient);
 const createCaller = createCallerFactory(appRouter);
-const caller = createCaller({ userId: null, host: "", ipAddress: "", userAgent: "", headers: {} });
+const caller = createCaller({ userId: null, headers: {} });
 export const { trpc, HydrateClient } = createHydrationHelpers<typeof appRouter>(caller, getQueryClient);
-export const createServerCaller = ({ userId }: { userId: number }) =>
-  createCaller({ userId, host: "", ipAddress: "", userAgent: "", headers: {} });
+export const createServerCaller = ({ userId }: { userId: number }) => createCaller({ userId, headers: {} });

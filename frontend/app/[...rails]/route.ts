@@ -17,7 +17,7 @@ async function handler(req: Request) {
       url.hostname = `flexile-pipeline-pr-${process.env.VERCEL_GIT_PULL_REQUEST_ID}.herokuapp.com`;
       break;
     default:
-      url.port = process.env.RAILS_ENV === "test" ? "3100" : "3000";
+      url.port = process.env.RAILS_ENV === "test" ? "3101" : "3001";
       url.protocol = "http";
   }
 
