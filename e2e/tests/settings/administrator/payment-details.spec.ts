@@ -78,10 +78,16 @@ test.describe("Company administrator settings - payment details", () => {
 
     await page.getByRole("button", { name: "Link your bank account" }).click();
 
-    const stripePaymentFrame = page.frameLocator("iframe[src*='js.stripe.com/v3/elements-inner-payment']").first();
+    const stripePaymentFrame = page
+      .locator("iframe[src*='js.stripe.com/v3/elements-inner-payment']")
+      .first()
+      .contentFrame();
     await stripePaymentFrame.getByRole("button", { name: /Enter bank details manually/iu }).click();
 
-    const stripeBankFrame = page.frameLocator("iframe[src*='js.stripe.com/v3/linked-accounts-inner']").first();
+    const stripeBankFrame = page
+      .locator("iframe[src*='js.stripe.com/v3/linked-accounts-inner']")
+      .first()
+      .contentFrame();
     await stripeBankFrame.getByLabel("Routing number").waitFor({ state: "visible" });
     await stripeBankFrame.getByLabel("Routing number").fill("110000000");
     await stripeBankFrame.getByTestId("manualEntry-accountNumber-input").fill("000123456789");
