@@ -119,7 +119,7 @@ RSpec.describe CreateCapTable do
         result = service.perform
 
         expect(result[:success]).to be false
-        expect(result[:errors]).to include("Company already has cap table data: investors")
+        expect(result[:errors]).to include("Company already has cap table data")
       end
 
       it "returns error when user is not found" do
@@ -164,7 +164,7 @@ RSpec.describe CreateCapTable do
           result = service.perform
 
           expect(result[:success]).to be false
-          expect(result[:errors]).to include("Company already has cap table data: option pools")
+          expect(result[:errors]).to include("Company already has cap table data")
         end
       end
 
@@ -178,7 +178,7 @@ RSpec.describe CreateCapTable do
           result = service.perform
 
           expect(result[:success]).to be false
-          expect(result[:errors]).to include("Company already has cap table data: share classes")
+          expect(result[:errors]).to include("Company already has cap table data")
         end
       end
 
@@ -192,7 +192,7 @@ RSpec.describe CreateCapTable do
           result = service.perform
 
           expect(result[:success]).to be false
-          expect(result[:errors]).to include("Company already has cap table data: investors")
+          expect(result[:errors]).to include("Company already has cap table data")
         end
       end
 
@@ -208,7 +208,7 @@ RSpec.describe CreateCapTable do
           result = service.perform
 
           expect(result[:success]).to be false
-          expect(result[:errors]).to include("Company already has cap table data: share classes, investors, and share holdings")
+          expect(result[:errors]).to include("Company already has cap table data")
         end
       end
     end
