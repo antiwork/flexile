@@ -234,7 +234,7 @@ export const capTableRouter = createRouter({
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
       if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN", message: "Equity must be enabled" });
 
-      const response = await fetch(company_administrator_cap_tables_url(ctx.company.externalId, { host: ctx.host }), {
+      const response = await fetch(company_administrator_cap_tables_url(ctx.company.externalId), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
