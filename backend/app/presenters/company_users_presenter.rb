@@ -7,13 +7,11 @@ class CompanyUsersPresenter
     @company = company
   end
 
-  def users(filters = nil)
-    return all_users_props if filters.blank?
-
+  def users(filters = "administrators,lawyers,contractors,investors")
     valid_filters = %w[administrators lawyers contractors investors]
     applied_filters = filters.split(",").map(&:strip) & valid_filters
 
-    return all_users_props if applied_filters.empty?
+    return [] if applied_filters.empty?
 
     combined_users = []
     applied_filters.each do |filter|
@@ -73,21 +71,6 @@ class CompanyUsersPresenter
         role: "Investor",
       )
     end.sort_by { |investor| investor[:name] }
-  end
-
-  def all_users_props
-    seen = Set.new
-    all_users = []
-
-    [administrators_props, lawyers_props, contractors_props, investors_props].each do |role_users|
-      role_users.each do |user|
-        next if seen.include?(user[:id])
-        seen.add(user[:id])
-        all_users << user
-      end
-    end
-
-    all_users.sort_by { |user| user[:name] }
   end
 
   private
