@@ -175,7 +175,7 @@ export default function DocumentsPage() {
         columnHelper.display({
           id: "documentNameSigner",
           cell: (info) => (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-4">
               <div className="text-base font-medium">{info.row.original.name}</div>
               {isCompanyRepresentative ? (
                 <div className="text-sm font-normal">
