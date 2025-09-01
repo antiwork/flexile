@@ -4,11 +4,13 @@ class Internal::Companies::Administrator::EquityGrantsController < Internal::Com
   def create
     authorize EquityGrant
 
-    company_worker = Current.company.company_workers.find_by(external_id: params[:equity_grant][:company_worker_id])
+    user = User.find_by(external_id: params[:equity_grant][:user_id])
+
     option_pool = Current.company.option_pools.find_by(external_id: params[:equity_grant][:option_pool_id])
 
     result = GrantStockOptions.new(
-      company_worker,
+      user,
+      company: Current.company,
       **equity_grant_params.to_h.symbolize_keys.merge(option_pool:, vesting_schedule_params:)
     ).process
 
