@@ -48,7 +48,7 @@ import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
-import { formatDate, formatServerDate } from "@/utils/time";
+import { formatDate, serverDateToLocal } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 import FormFields, { schema as formSchema } from "../FormFields";
 
@@ -488,7 +488,7 @@ const DetailsTab = ({
               <AlertDescription>
                 <div className="flex items-center justify-between">
                   Contract {isFuture(contractor.endedAt) ? "ends" : "ended"} on{" "}
-                  {formatDate(formatServerDate(contractor.endedAt))}.
+                  {formatDate(serverDateToLocal(contractor.endedAt))}.
                   {isFuture(contractor.endedAt) && (
                     <Button variant="outline" onClick={() => setCancelModalOpen(true)}>
                       Cancel contract end
