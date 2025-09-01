@@ -29,7 +29,6 @@ class CompanyUsersPresenter
       end
     end
 
-    # Remove duplicates based on user ID and return unique users
     combined_users.uniq { |user| user[:id] }
   end
 
@@ -92,7 +91,6 @@ class CompanyUsersPresenter
   end
 
   private
-    # Common method for user properties that are shared across all role types
     def user_props(user)
       roles = get_user_roles(user)
 

@@ -2,7 +2,6 @@
 
 class EquityNamingService
   class << self
-    # Generate the next sequential entity name (grants, holdings, etc.)
     def next_name(company:, collection:, prefix_length: 3)
       preceding_item = collection.order(id: :desc).first
       return "#{company.name.first(prefix_length).upcase}-1" if preceding_item.nil?
@@ -14,7 +13,6 @@ class EquityNamingService
       preceding_item.name.reverse.sub(preceding_digits.reverse, next_number.to_s.reverse).reverse
     end
 
-    # Determine the appropriate holder name for equity positions
     def option_holder_name(user)
       return user.legal_name unless user.business_entity?
 

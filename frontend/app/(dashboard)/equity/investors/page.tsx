@@ -1,5 +1,5 @@
 "use client";
-import { Plus, Users } from "lucide-react";
+import { CircleCheck, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
@@ -301,6 +301,10 @@ export default function CapTable() {
       ) : data.investors.length > 0 ? (
         <div className="overflow-x-auto">
           <DataTable table={investorsTable} />
+        </div>
+      ) : data.shareClasses.length > 0 || data.optionPools.length > 0 ? (
+        <div className="mx-4">
+          <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
         </div>
       ) : (
         <div className="mx-4">
