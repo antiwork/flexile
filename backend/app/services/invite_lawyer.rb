@@ -9,22 +9,31 @@ class InviteLawyer
 
   def perform
     user = User.find_or_initialize_by(email:)
-    return { success: false, field: "email", error_message: "Email has already been taken" } if user.persisted?
+    company_lawyer = user.company_lawyers.find_or_initialize_by(company:)
+    return { success: false, field: "email", error_message: "User is already a lawyer for this company." } if company_lawyer.persisted?
 
-    company_lawyer = user.company_lawyers.find_or_initialize_by(company: company)
-    user.invite!(current_user) { |u| u.skip_invitation = true }
-
-    if user.errors.blank?
-      CompanyLawyerMailer.invitation_instructions(lawyer_id: company_lawyer.id).deliver_later
-      { success: true }
+    if user.persisted?
+      user.invited_by = current_user
+      user.save
+      company_lawyer.save
     else
-      error_object = if company_lawyer.errors.any?
-        company_lawyer
-      else
-        user
-      end
-      { success: false, field: error_object.errors.first.attribute, error_message: error_object.errors.first.full_message }
+      user.invite!(current_user) { |u| u.skip_invitation = true }
+      company_lawyer.save if user.persisted?
     end
+
+    if user.errors.blank? && company_lawyer.errors.blank?
+      CompanyLawyerMailer.invitation_instructions(lawyer_id: company_lawyer.id).deliver_later
+      return { success: true }
+    end
+
+    error_object = company_lawyer.errors.any? ? company_lawyer : user
+    field = error_object.errors.attribute_names.first
+    message = if company_lawyer.errors.details[:user_id].any? { |e| e[:error] == :taken }
+      "User is already a lawyer for this company."
+    else
+      error_object.errors.full_messages.to_sentence
+    end
+    { success: false, field: field, error_message: message }
   end
 
   private
