@@ -199,7 +199,9 @@ export default function DocumentsPage() {
             const { variant } = getStatus(info.row.original);
 
             return (
-              <div className="flex h-full flex-col items-end justify-between gap-3">
+              <div
+                className={`flex h-full flex-col items-end justify-between ${document.attachment ? "gap-3" : "gap-0"}`}
+              >
                 <div className="flex items-center justify-center">
                   {document.attachment ? (
                     <Button variant="outline" size="small" asChild>
