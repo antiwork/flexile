@@ -62,7 +62,7 @@ class CreateCapTable
 
     def create_investors_and_holdings
       share_class = company.share_classes.find_by!(name: ShareClass::DEFAULT_NAME)
-      share_price = company.share_price_in_usd || 0.01
+      share_price = company.share_price_in_usd || 0.01.to_d
 
       investors_data.each do |investor_data|
         user = User.find_by!(external_id: investor_data[:userId])
@@ -76,7 +76,6 @@ class CreateCapTable
           total_shares: 0
         )
 
-        # Create share holding
         company_investor.share_holdings.create!(
           share_class: share_class,
           name: generate_share_name(user),
@@ -96,15 +95,11 @@ class CreateCapTable
     end
 
     def generate_share_name(user)
-      # Use same logic as EquityGrantCreation#next_grant_name
-      preceding_holding = company.share_holdings.order(id: :desc).first
-      return "#{company.name.first(3).upcase}-1" if preceding_holding.nil?
-
-      preceding_holding_digits = preceding_holding.name.scan(/\d+\z/).last
-      preceding_holding_number = preceding_holding_digits.to_i
-
-      next_holding_number = preceding_holding_number + 1
-      preceding_holding.name.reverse.sub(preceding_holding_digits.reverse, next_holding_number.to_s.reverse).reverse
+      SequentialNamingService.next_name(
+        company: company,
+        collection: company.share_holdings,
+        prefix_length: 3
+      )
     end
 
     def option_holder_name(user)

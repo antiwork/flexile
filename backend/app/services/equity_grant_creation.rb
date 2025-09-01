@@ -108,14 +108,11 @@ class EquityGrantCreation
     def next_grant_name
       company = company_investor.company
 
-      preceding_grant = company.equity_grants.order(id: :desc).first
-      return "#{company.name.first(3).upcase}-1" if preceding_grant.nil?
-
-      preceding_grant_digits = preceding_grant.name.scan(/\d+\z/).last
-      preceding_grant_number = preceding_grant_digits.to_i
-
-      next_grant_number = preceding_grant_number + 1
-      preceding_grant.name.reverse.sub(preceding_grant_digits.reverse, next_grant_number.to_s.reverse).reverse
+      SequentialNamingService.next_name(
+        company: company,
+        collection: company.equity_grants,
+        prefix_length: 3
+      )
     end
 
     def option_holder_name
