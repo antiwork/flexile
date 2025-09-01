@@ -19,13 +19,58 @@ declare module "next-auth" {
       preferredName?: string;
       jwt: string;
     };
+    impersonation?: {
+      jwt: string;
+      user: {
+        id: number;
+        email: string;
+        name: string;
+        legal_name?: string;
+        preferred_name?: string;
+      };
+      originalUser: {
+        id: string;
+        email: string;
+        name: string;
+        legalName?: string;
+        preferredName?: string;
+        jwt: string;
+      };
+    };
   }
 }
+
+// Helper type for session with impersonation
+type SessionWithImpersonation = Session & {
+  impersonation?: {
+    user: {
+      email: string;
+    };
+  };
+};
 
 declare module "next-auth/jwt" {
   interface JWT {
     jwt?: string;
     legalName?: string;
     preferredName?: string;
+    impersonation?: {
+      jwt: string;
+      user: {
+        id: number;
+        email: string;
+        name: string;
+        legal_name?: string;
+        preferred_name?: string;
+      };
+      originalUser: {
+        id: string;
+        email: string;
+        name: string;
+        legalName?: string;
+        preferredName?: string;
+        jwt: string;
+      };
+    };
   }
 }

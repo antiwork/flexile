@@ -751,6 +751,22 @@ export const admin_consolidated_payments_path = /*#__PURE__*/ __jsr.r({"format":
 
 /**
  * Generates rails route to
+ * /internal/admin/impersonation(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const admin_impersonation_index_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"impersonation"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/admin/impersonation(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const admin_impersonation_index_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"admin"],[2,[7,"/"],[2,[6,"impersonation"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /admin/invoices/:id(.:format)
  * @param {any} id
  * @param {object | undefined} options

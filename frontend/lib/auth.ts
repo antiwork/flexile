@@ -114,16 +114,36 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
-      if (!user) return token;
-      token.jwt = user.jwt;
-      token.legalName = user.legalName ?? "";
-      token.preferredName = user.preferredName ?? "";
+      if (!user && trigger !== "update") return token;
+
+      if (user) {
+        token.jwt = user.jwt;
+        token.legalName = user.legalName ?? "";
+        token.preferredName = user.preferredName ?? "";
+      }
+
+      // Handle session updates for impersonation
+      if (trigger === "update" && session) {
+        if (session.impersonation) {
+          token.impersonation = session.impersonation;
+        } else if (session.impersonation === undefined) {
+          delete token.impersonation;
+        }
+      }
+
       return token;
     },
     session({ session, token }) {
-      return { ...session, user: { ...session.user, ...token, id: token.sub } };
+      const baseSession = { ...session, user: { ...session.user, ...token, id: token.sub } };
+
+      if (token.impersonation) {
+        baseSession.impersonation = token.impersonation;
+        baseSession.user.jwt = token.impersonation.jwt;
+      }
+
+      return baseSession;
     },
     async signIn({ user, account }) {
       if (!account) return false;
