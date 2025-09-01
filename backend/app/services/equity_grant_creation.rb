@@ -108,7 +108,7 @@ class EquityGrantCreation
     def next_grant_name
       company = company_investor.company
 
-      EquityNamingService.next_entity_name(
+      EquityNamingService.next_name(
         company: company,
         collection: company.equity_grants,
         prefix_length: 3

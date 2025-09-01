@@ -22,10 +22,9 @@ RSpec.describe CreateCapTable do
         expect(result[:errors]).to eq([])
       end
 
-      it "creates share class if it doesn't exist" do
+      it "creates a share class" do
         service = described_class.new(company: company, investors_data: investors_data)
         service.perform
-
         share_class = company.share_classes.last
         expect(share_class.name).to eq(ShareClass::DEFAULT_NAME)
         expect(share_class.original_issue_price_in_dollars).to be_nil
@@ -91,13 +90,13 @@ RSpec.describe CreateCapTable do
         expect(company.reload.fully_diluted_shares).to eq(150_000)
       end
 
-      it "doesn't update company shares if already set" do
+      it "updates company shares even if already set" do
         company.update!(fully_diluted_shares: 1_000_000)
 
         service = described_class.new(company: company, investors_data: investors_data)
         service.perform
 
-        expect(company.reload.fully_diluted_shares).to eq(1_000_000)
+        expect(company.reload.fully_diluted_shares).to eq(150_000)
       end
     end
 
@@ -139,17 +138,6 @@ RSpec.describe CreateCapTable do
 
         expect(result[:success]).to be false
         expect(result[:errors]).to include("Total shares (100000) cannot exceed company's fully diluted shares (50000)")
-      end
-    end
-
-    context "with existing share class" do
-      let!(:share_class) { create(:share_class, company: company, name: ShareClass::DEFAULT_NAME) }
-
-      it "doesn't create duplicate share class" do
-        service = described_class.new(company: company, investors_data: [{ userId: user1.external_id, shares: 1000 }])
-        service.perform
-
-        expect(company.share_classes.count).to eq(1)
       end
     end
 

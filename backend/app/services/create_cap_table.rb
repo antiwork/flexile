@@ -91,7 +91,7 @@ class CreateCapTable
 
     def update_company_shares
       total_shares = company.company_investors.sum(:total_shares)
-      company.update!(fully_diluted_shares: total_shares) if company.fully_diluted_shares.zero?
+      company.update!(fully_diluted_shares: total_shares)
     end
 
     def generate_share_name(user)
