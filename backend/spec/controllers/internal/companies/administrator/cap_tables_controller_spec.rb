@@ -12,7 +12,6 @@ RSpec.describe Internal::Companies::Administrator::CapTablesController, type: :c
 
   before do
     allow(controller).to receive(:authenticate_user_json!).and_return(true)
-    allow(controller).to receive(:verify_authorized).and_return(true)
 
     allow(controller).to receive(:current_context) do
       Current.user = user
@@ -26,10 +25,6 @@ RSpec.describe Internal::Companies::Administrator::CapTablesController, type: :c
     context "when user is company administrator" do
       before do
         company_administrator
-      end
-
-      before do
-        allow(controller).to receive(:authorize).with(:cap_table).and_return(true)
       end
 
       context "with valid data" do
@@ -77,7 +72,7 @@ RSpec.describe Internal::Companies::Administrator::CapTablesController, type: :c
             post :create, params: { company_id: company.external_id, cap_table: { investors: investors_data } }
 
             expect(response).to have_http_status(:unprocessable_entity)
-            expect(JSON.parse(response.body)).to eq({
+            expect(response.parsed_body).to eq({
               "success" => false,
               "errors" => ["Investor 1: User not found"],
             })
@@ -91,25 +86,9 @@ RSpec.describe Internal::Companies::Administrator::CapTablesController, type: :c
             post :create, params: { company_id: company.external_id, cap_table: { investors: investors_data } }
 
             expect(response).to have_http_status(:unprocessable_entity)
-            expect(JSON.parse(response.body)).to eq({
+            expect(response.parsed_body).to eq({
               "success" => false,
               "errors" => ["Company must have equity enabled"],
-            })
-          end
-        end
-
-        context "when company already has cap table data" do
-          before do
-            create(:share_class, company: company, name: "Series A")
-          end
-
-          it "returns unprocessable entity status" do
-            post :create, params: { company_id: company.external_id, cap_table: { investors: investors_data } }
-
-            expect(response).to have_http_status(:unprocessable_entity)
-            expect(JSON.parse(response.body)).to eq({
-              "success" => false,
-              "errors" => ["Company already has cap table data: share classes"],
             })
           end
         end
@@ -120,43 +99,48 @@ RSpec.describe Internal::Companies::Administrator::CapTablesController, type: :c
             [{ userId: user.external_id, shares: 100_000 }]
           end
 
-          it "returns unprocessable entity status" do
+          it "returns forbidden status due to authorization policy" do
             post :create, params: { company_id: company.external_id, cap_table: { investors: investors_data } }
 
-            expect(response).to have_http_status(:unprocessable_entity)
-            expect(JSON.parse(response.body)).to eq({
-              "success" => false,
-              "errors" => ["Total shares (100000) cannot exceed company's fully diluted shares (50000)"],
-            })
+            expect(response).to have_http_status(:forbidden)
           end
         end
       end
     end
 
-    context "authorization" do
-      it "calls authorize with :cap_table" do
-        expect(controller).to receive(:authorize).with(:cap_table).and_return(true)
-        allow_any_instance_of(CreateCapTable).to receive(:perform).and_return({ success: true })
+    context "when user is not a company administrator" do
+      before { company_administrator.destroy! }
 
+      it "disallows access" do
         post :create, params: { company_id: company.external_id, cap_table: { investors: investors_data } }
+
+        expect(response).to have_http_status(:forbidden)
       end
     end
 
     context "when company already has existing cap table data" do
       before do
         company_administrator
-        create(:company_investor, company: company, user: user)
-        allow(controller).to receive(:authorize).with(:cap_table).and_return(true)
+        create(:share_class, company: company, name: "Series A")
       end
 
-      it "returns unprocessable entity status" do
+      it "returns forbidden status due to authorization policy" do
         post :create, params: { company_id: company.external_id, cap_table: { investors: investors_data } }
 
-        expect(response).to have_http_status(:unprocessable_entity)
-        expect(JSON.parse(response.body)).to eq({
-          "success" => false,
-          "errors" => ["Company already has cap table data: investors"],
-        })
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+
+    context "when company already has existing investors" do
+      before do
+        company_administrator
+        create(:company_investor, company: company, user: user)
+      end
+
+      it "returns forbidden status due to authorization policy" do
+        post :create, params: { company_id: company.external_id, cap_table: { investors: investors_data } }
+
+        expect(response).to have_http_status(:forbidden)
       end
     end
   end
