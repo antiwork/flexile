@@ -187,8 +187,6 @@ test.describe("Invoices admin flow", () => {
         },
         { page },
       );
-
-      await expect(page.getByRole("dialog")).not.toBeVisible();
       expect(await countInvoiceApprovals(company.id)).toBe(2);
 
       const pendingInvoices = await db.$count(
@@ -264,7 +262,6 @@ test.describe("Invoices admin flow", () => {
           },
           { page },
         );
-        await expect(page.getByRole("dialog")).not.toBeVisible();
 
         const consolidatedInvoicesCountAfter = await db.$count(
           consolidatedInvoices,
@@ -356,8 +353,12 @@ test.describe("Invoices admin flow", () => {
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
     await page.getByRole("row").getByText("Awaiting approval").first().click();
-    await expect(page.getByRole("dialog")).toBeVisible();
-    await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
+      },
+      { page, assertClosed: false },
+    );
 
     await db
       .update(companyContractors)
@@ -365,8 +366,12 @@ test.describe("Invoices admin flow", () => {
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
     await page.getByRole("row").getByText("Awaiting approval").first().click();
-    await expect(page.getByRole("dialog")).toBeVisible();
-    await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
+      },
+      { page, assertClosed: false },
+    );
   });
 });
 
@@ -435,9 +440,12 @@ test.describe("Invoices contractor flow", () => {
       await deletableInvoiceRow.click({ button: "right" });
       await expect(page.getByRole("menuitem", { name: "Delete" })).toBeVisible();
       await page.getByRole("menuitem", { name: "Delete" }).click();
-      await expect(page.getByRole("dialog")).toBeVisible();
-      await page.getByRole("button", { name: "Delete" }).click();
-
+      await withinModal(
+        async (modal) => {
+          await modal.getByRole("button", { name: "Delete" }).click();
+        },
+        { page },
+      );
       await expect(page.locator("tbody tr")).toHaveCount(2);
 
       const remainingInvoices = await db.query.invoices.findMany({

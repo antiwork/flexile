@@ -2,7 +2,7 @@ import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { and, eq, isNull } from "drizzle-orm";
 import { companyStripeAccounts, users } from "@/db/schema";
 
@@ -121,27 +121,29 @@ test.describe("Company administrator settings - payment details", () => {
     expect(companyStripeAccount.status).toBe("processing");
 
     await page.getByRole("button", { name: "Verify bank account" }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
 
-    // Stripe determines at runtime whether microdeposits use two "amounts" or a "descriptor_code" (6-digit code).
-    // The Payment Element does not allow forcing a specific type, so the test handles both.
-    const codeInput = page.getByLabel("6-digit code");
-    if (await codeInput.isVisible().catch(() => false)) {
-      await codeInput.fill("SM11AA");
-      await expect(codeInput).toHaveValue("SM11AA");
-    } else {
-      const amount1Input = page.getByLabel("Amount 1");
-      await amount1Input.fill("0.32");
-      await expect(amount1Input).toHaveValue("0.32");
+    await withinModal(
+      async (modal) => {
+        // Stripe determines at runtime whether microdeposits use two "amounts" or a "descriptor_code" (6-digit code).
+        // The Payment Element does not allow forcing a specific type, so the test handles both.
+        const codeInput = modal.getByLabel("6-digit code");
+        if (await codeInput.isVisible().catch(() => false)) {
+          await codeInput.fill("SM11AA");
+          await expect(codeInput).toHaveValue("SM11AA");
+        } else {
+          const amount1Input = modal.getByLabel("Amount 1");
+          await amount1Input.fill("0.32");
+          await expect(amount1Input).toHaveValue("0.32");
 
-      const amount2Input = page.getByLabel("Amount 2");
-      await amount2Input.fill("0.45");
-      await expect(amount2Input).toHaveValue("0.45");
-    }
+          const amount2Input = modal.getByLabel("Amount 2");
+          await amount2Input.fill("0.45");
+          await expect(amount2Input).toHaveValue("0.45");
+        }
 
-    await page.getByRole("button", { name: "Submit" }).click();
-
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+        await page.getByRole("button", { name: "Submit" }).click();
+      },
+      { page },
+    );
 
     const updatedStripeAccount = await db.query.companyStripeAccounts
       .findFirst({ where: eq(companyStripeAccounts.companyId, company.id) })

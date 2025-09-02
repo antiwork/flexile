@@ -50,7 +50,6 @@ test.describe("One-off payments", () => {
         },
         { page },
       );
-      await expect(page.getByRole("dialog")).not.toBeVisible();
 
       const invoice = await db.query.invoices.findFirst({
         where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
@@ -113,7 +112,7 @@ test.describe("One-off payments", () => {
             ]);
             await expect(modal.getByText("Recipient has insufficient unvested equity")).toBeVisible();
           },
-          { page },
+          { page, assertClosed: false },
         );
       });
 
@@ -131,7 +130,6 @@ test.describe("One-off payments", () => {
           },
           { page },
         );
-        await expect(page.getByRole("dialog")).not.toBeVisible();
 
         const invoice = await db.query.invoices.findFirst({
           where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
@@ -202,7 +200,6 @@ test.describe("One-off payments", () => {
           },
           { page },
         );
-        await expect(page.getByRole("dialog")).not.toBeVisible();
 
         const invoice = await db.query.invoices.findFirst({
           where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
@@ -246,8 +243,6 @@ test.describe("One-off payments", () => {
 
         await page.getByRole("button", { name: "Accept payment" }).click();
         await withinModal(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), { page });
-
-        await expect(page.getByRole("dialog")).not.toBeVisible();
         await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
       });
 
@@ -295,9 +290,6 @@ test.describe("One-off payments", () => {
           { page },
         );
 
-        await expect(page.getByRole("dialog")).not.toBeVisible();
-        await expect(page.getByRole("button", { name: "Confirm 25% split" })).not.toBeVisible();
-
         expect(await db.query.invoices.findFirst({ where: eq(invoices.id, invoice.id) })).toEqual(
           expect.objectContaining({
             totalAmountInUsdCents: BigInt(50000),
@@ -330,7 +322,6 @@ test.describe("One-off payments", () => {
         },
         { page },
       );
-      await expect(page.getByRole("dialog")).not.toBeVisible();
 
       await logout(page);
       await login(page, workerUser);
@@ -353,8 +344,6 @@ test.describe("One-off payments", () => {
         },
         { page },
       );
-
-      await expect(page.getByRole("dialog")).not.toBeVisible();
 
       await logout(page);
       await login(page, adminUser);

@@ -7,7 +7,7 @@ import { companyLawyersFactory } from "@test/factories/companyLawyers";
 import { usersFactory } from "@test/factories/users";
 import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companies, companyAdministrators, companyContractors, companyLawyers, users } from "@/db/schema";
 
@@ -172,23 +172,22 @@ test.describe("Manage roles access", () => {
       // Click "Remove admin" in dropdown
       await page.getByRole("menuitem", { name: "Remove admin" }).click();
 
-      // Confirm in modal
-      await expect(page.getByRole("dialog")).toBeVisible();
-      await expect(page.getByText(/Remove admin access for/u)).toBeVisible();
-
-      // Set up promise to wait for the tRPC mutation response
-      const responsePromise = page.waitForResponse(
-        (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+      await withinModal(
+        async (modal) => {
+          await expect(modal.getByText(/Remove admin access for/u)).toBeVisible();
+          await Promise.all([
+            // Set up promise to wait for the tRPC mutation response
+            page.waitForResponse(
+              (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+            ),
+            page.getByRole("button", { name: "Remove admin" }).click(),
+          ]);
+        },
+        { page },
       );
-
-      // Click the button
-      await page.getByRole("button", { name: "Remove admin" }).click();
 
       // Wait for the row in the table to be removed, not just any text
       await expect(page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") })).not.toBeVisible();
-
-      // Wait for the actual backend response
-      await responsePromise;
 
       // Verify in database
       const adminRecord = await db.query.companyAdministrators.findFirst({
@@ -267,24 +266,22 @@ test.describe("Manage roles access", () => {
 
       // Click "Remove lawyer" in dropdown
       await page.getByRole("menuitem", { name: "Remove lawyer" }).click();
-
-      // Confirm in modal
-      await expect(page.getByRole("dialog")).toBeVisible();
-      await expect(page.getByText(/Remove lawyer access for/u)).toBeVisible();
-
-      // Set up promise to wait for the tRPC mutation response
-      const responsePromise = page.waitForResponse(
-        (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+      await withinModal(
+        async (modal) => {
+          await expect(modal.getByText(/Remove lawyer access for/u)).toBeVisible();
+          await Promise.all([
+            // Set up promise to wait for the tRPC mutation response
+            page.waitForResponse(
+              (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+            ),
+            page.getByRole("button", { name: "Remove lawyer" }).click(),
+          ]);
+        },
+        { page },
       );
-
-      // Click the button
-      await page.getByRole("button", { name: "Remove lawyer" }).click();
 
       // Wait for row to be removed (optimistic update)
       await expect(page.getByRole("row", { name: new RegExp(lawyerUser.legalName || "", "u") })).not.toBeVisible();
-
-      // Wait for the actual backend response
-      await responsePromise;
     });
 
     test("shows remove admin option for multi-role user when they have admin role", async ({ page }) => {

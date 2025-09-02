@@ -99,8 +99,12 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.getByRole("cell", { name: "CUSTOM-3" }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Delete" }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
-    await page.getByRole("button", { name: "Delete" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByRole("button", { name: "Delete" }).click();
+      },
+      { page },
+    );
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).not.toBeVisible();
 
     await logout(page);
@@ -165,7 +169,6 @@ test.describe("Invoice submission, approval and rejection", () => {
       },
       { page, title: "Approve these invoices?" },
     );
-    await expect(page.getByRole("dialog")).not.toBeVisible();
 
     await page.getByRole("checkbox", { name: "Select all" }).check();
     await page.getByRole("checkbox", { name: "Select all" }).uncheck();

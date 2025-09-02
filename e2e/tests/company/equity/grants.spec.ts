@@ -200,8 +200,6 @@ test.describe("Equity Grants", () => {
       },
       { page },
     );
-
-    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Cancel" })).not.toBeVisible();
     expect(
       (await db.query.equityGrants.findFirst({ where: eq(equityGrants.id, equityGrant.id) }).then(takeOrThrow))
@@ -272,11 +270,15 @@ test.describe("Equity Grants", () => {
 
     // Open the modal
     await page.getByRole("button", { name: "New option grant" }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
 
-    // Test that estimated value is not shown when FMV share price is missing
-    await page.getByLabel("Number of options").fill("1000");
-    await expect(page.getByText("Estimated value:")).not.toBeVisible();
+    await withinModal(
+      async () => {
+        await page.getByLabel("Number of options").fill("1000");
+        // Test that estimated value is not shown when FMV share price is missing
+        await expect(page.getByText("Estimated value:")).not.toBeVisible();
+      },
+      { page, assertClosed: false },
+    );
   });
 
   test("shows exercise notice alert when no exercise notice is present", async ({ page }) => {
