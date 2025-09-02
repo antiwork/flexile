@@ -31,7 +31,7 @@ import { company_administrator_equity_grants_path } from "@/utils/routes";
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 
 const formSchema = documentSchema.extend({
-  companyWorkerId: z.string().min(1, "Must be present."),
+  userId: z.string().min(1, "Must be present."),
   optionPoolId: z.string().min(1, "Must be present."),
   numberOfShares: z.number().gt(0),
   issueDateRelationship: z.enum(optionGrantIssueDateRelationships),
@@ -75,7 +75,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
   const form = useForm({
     resolver: zodResolver(refinedSchema),
     defaultValues: {
-      companyWorkerId: "",
+      userId: "",
       optionPoolId: data.optionPools[0]?.id ?? "",
       numberOfShares: 10_000,
       optionGrantType: "nso" as const,
@@ -95,11 +95,11 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
     },
   });
 
-  const recipientId = form.watch("companyWorkerId");
+  const recipientId = form.watch("userId");
   const optionPoolId = form.watch("optionPoolId");
   const numberOfShares = form.watch("numberOfShares");
   const optionPool = data.optionPools.find((pool) => pool.id === optionPoolId);
-  const recipient = data.workers.find(({ id }) => id === recipientId);
+  const recipient = data.users.find(({ id }) => id === recipientId);
 
   const estimatedValue =
     data.sharePriceUsd && numberOfShares && !isNaN(Number(data.sharePriceUsd))
@@ -111,14 +111,10 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
   useEffect(() => {
     if (!recipientId) return;
 
-    if (recipient?.salaried) {
-      form.setValue("optionGrantType", "iso");
-      form.setValue("issueDateRelationship", "employee");
-    } else {
-      const lastGrant = recipient?.lastGrant;
-      form.setValue("optionGrantType", lastGrant?.optionGrantType ?? "nso");
-      form.setValue("issueDateRelationship", lastGrant?.issueDateRelationship ?? "employee");
-    }
+    const lastGrant = recipient?.lastGrant;
+    form.setValue("optionGrantType", lastGrant?.optionGrantType ?? "nso");
+    form.setValue("issueDateRelationship", lastGrant?.issueDateRelationship ?? "employee");
+    if (!recipient?.activeContractor) form.setValue("vestingTrigger", "scheduled");
   }, [recipientId]);
 
   useEffect(() => {
@@ -141,7 +137,9 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
         });
 
       const formData = new FormData();
-      formData.append("equity_grant[company_worker_id]", values.companyWorkerId);
+
+      formData.append("equity_grant[user_id]", values.userId);
+
       formData.append("equity_grant[option_pool_id]", values.optionPoolId);
       formData.append("equity_grant[number_of_shares]", values.numberOfShares.toString());
       formData.append("equity_grant[issue_date_relationship]", values.issueDateRelationship);
@@ -246,19 +244,19 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
               <h2 className="text-lg font-medium">Recipient details</h2>
               <FormField
                 control={form.control}
-                name="companyWorkerId"
+                name="userId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Recipient</FormLabel>
                     <FormControl>
                       <ComboBox
                         {...field}
-                        options={data.workers
-                          .sort((a, b) => a.user.name.localeCompare(b.user.name))
-                          .map((worker) => ({
-                            label: `${worker.user.name} (${worker.user.email})`,
-                            value: worker.id,
-                            keywords: [worker.user.name, worker.user.email],
+                        options={data.users
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map((user) => ({
+                            label: `${user.name} (${user.email})`,
+                            value: user.id,
+                            keywords: [user.name, user.email],
                           }))}
                         placeholder="Select recipient"
                       />
@@ -391,26 +389,28 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
 
             <div className="grid gap-4">
               <h2 className="text-lg font-medium">Vesting details</h2>
-              <FormField
-                control={form.control}
-                name="vestingTrigger"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Shares will vest</FormLabel>
-                    <FormControl>
-                      <ComboBox
-                        {...field}
-                        options={Object.entries(vestingTriggerDisplayNames).map(([key, value]) => ({
-                          label: value,
-                          value: key,
-                        }))}
-                        placeholder="Select an option"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {recipient?.activeContractor ? (
+                <FormField
+                  control={form.control}
+                  name="vestingTrigger"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Shares will vest</FormLabel>
+                      <FormControl>
+                        <ComboBox
+                          {...field}
+                          options={Object.entries(vestingTriggerDisplayNames).map(([key, value]) => ({
+                            label: value,
+                            value: key,
+                          }))}
+                          placeholder="Select an option"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
 
               {form.watch("vestingTrigger") === "scheduled" && (
                 <>

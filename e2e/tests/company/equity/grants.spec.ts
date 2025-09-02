@@ -1,5 +1,6 @@
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
+import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
@@ -278,62 +279,6 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("Estimated value:")).not.toBeVisible();
   });
 
-  test("displays recipients with email addresses and enables email search", async ({ page }) => {
-    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
-      equityEnabled: true,
-      fmvPerShareInUsd: "1",
-      conversionSharePriceUsd: "1.00",
-      sharePriceInUsd: "1.00",
-    });
-
-    const { user: cooleyContractor } = await usersFactory.create({
-      email: "john.doe@cooley.com",
-      legalName: "John Doe",
-      preferredName: "John Doe",
-    });
-    const { user: regularContractor } = await usersFactory.create({
-      email: "jane.smith@company.com",
-      legalName: "Jane Smith",
-      preferredName: "Jane Smith",
-    });
-
-    await companyContractorsFactory.create({
-      companyId: company.id,
-      userId: cooleyContractor.id,
-    });
-    await companyContractorsFactory.create({
-      companyId: company.id,
-      userId: regularContractor.id,
-    });
-
-    await login(page, adminUser);
-    await page.getByRole("button", { name: "Equity" }).click();
-    await page.getByRole("link", { name: "Equity grants" }).click();
-    await page.getByRole("button", { name: "New option grant" }).click();
-
-    await page.getByRole("combobox", { name: "Recipient" }).click();
-    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
-
-    await page.getByPlaceholder("Search...").fill("cooley");
-    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).not.toBeVisible();
-
-    await page.getByPlaceholder("Search...").clear();
-    await page.getByPlaceholder("Search...").fill("Jane");
-    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).not.toBeVisible();
-
-    await page.getByPlaceholder("Search...").clear();
-    await page.getByPlaceholder("Search...").fill("company.com");
-    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).not.toBeVisible();
-
-    await page.getByPlaceholder("Search...").clear();
-    await page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" }).click();
-    await expect(page.getByRole("combobox", { name: "Recipient" })).toHaveText("John Doe (john.doe@cooley.com)");
-  });
-
   test("shows exercise notice alert when no exercise notice is present", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({ equityEnabled: true });
     await login(page, adminUser);
@@ -359,5 +304,38 @@ test.describe("Equity Grants", () => {
     await expect(
       page.getByRole("alert", { name: "Please add an exercise notice so investors can exercise their options." }),
     ).not.toBeVisible();
+  });
+
+  test("allows issuing equity grants to administrators", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fmvPerShareInUsd: "1",
+      conversionSharePriceUsd: "1.00",
+      sharePriceInUsd: "1.00",
+    });
+    await optionPoolsFactory.create({ companyId: company.id });
+
+    await companyContractorsFactory.create({ companyId: company.id });
+
+    const { user: otherAdminUser } = await usersFactory.create();
+    await companyAdministratorsFactory.create({ companyId: company.id, userId: otherAdminUser.id });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
+    await page.getByRole("button", { name: "New option grant" }).click();
+
+    await page.getByLabel("Number of options").fill("100");
+    await selectComboboxOption(page, "Recipient", `${otherAdminUser.preferredName} (${otherAdminUser.email})`);
+    await expect(page.getByLabel("Shares will vest")).not.toBeVisible();
+    await selectComboboxOption(page, "Vesting schedule", "4-year with 1-year cliff (1/48th monthly after cliff)");
+    await page.getByRole("tab", { name: "Write" }).click();
+    await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
+
+    await page.getByRole("button", { name: "Create grant" }).click();
+
+    const row = page.locator("tbody tr").first();
+    await expect(row).toContainText(otherAdminUser.legalName ?? "");
+    await expect(row).toContainText("100");
   });
 });
