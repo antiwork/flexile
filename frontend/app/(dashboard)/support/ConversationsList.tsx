@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 
 interface ConversationsListProps {
@@ -101,13 +102,15 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
           </div>
         ) : (
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Subject</TableHead>
-                <TableHead>Messages</TableHead>
-                <TableHead>Last updated</TableHead>
-              </TableRow>
-            </TableHeader>
+            {!isMobile ? (
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Messages</TableHead>
+                  <TableHead>Last updated</TableHead>
+                </TableRow>
+              </TableHeader>
+            ) : null}
             <TableBody>
               {conversations.map((conversation) => (
                 <TableRow
@@ -115,20 +118,44 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                   className="cursor-pointer hover:bg-gray-50"
                   onClick={() => onSelectConversation(conversation.slug)}
                 >
-                  <TableCell className={`font-medium ${conversation.isUnread ? "font-bold" : ""}`}>
-                    <div className="flex items-center gap-2">
-                      {conversation.isUnread ? (
-                        <div className="h-2 w-2 flex-shrink-0 rounded-full bg-blue-500" />
-                      ) : null}
-                      {conversation.subject}
-                    </div>
-                  </TableCell>
-                  <TableCell className={conversation.isUnread ? "font-bold" : ""}>
-                    {conversation.messageCount}
-                  </TableCell>
-                  <TableCell className={conversation.isUnread ? "font-bold" : ""}>
-                    {new Date(conversation.latestMessageAt ?? conversation.createdAt).toLocaleDateString()}
-                  </TableCell>
+                  {isMobile ? (
+                    <>
+                      <TableCell className="max-w-[70vw] py-4">
+                        <div className="flex flex-col gap-1 text-base">
+                          <div className="flex items-center gap-2">
+                            <UnreadDot isUnread={conversation.isUnread} />
+                            <div className={`truncate ${conversation.isUnread ? "font-bold" : "font-medium"}`}>
+                              {conversation.subject}
+                            </div>
+                          </div>
+                          <div className="truncate leading-5 font-[350] text-gray-600">
+                            {conversation.latestMessage}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <div className="flex flex-col items-end gap-1 font-[350] text-gray-600">
+                          <div>{conversation.messageCount}</div>
+                          <div>{formatDate(conversation.latestMessageAt ?? conversation.createdAt)} </div>
+                        </div>
+                      </TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell className={`font-medium ${conversation.isUnread ? "font-bold" : ""}`}>
+                        <div className="flex items-center gap-2">
+                          <UnreadDot isUnread={conversation.isUnread} />
+                          {conversation.subject}
+                        </div>
+                      </TableCell>
+                      <TableCell className={conversation.isUnread ? "font-bold" : ""}>
+                        {conversation.messageCount}
+                      </TableCell>
+                      <TableCell className={conversation.isUnread ? "font-bold" : ""}>
+                        {new Date(conversation.latestMessageAt ?? conversation.createdAt).toLocaleDateString()}
+                      </TableCell>
+                    </>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -218,3 +245,6 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
     </>
   );
 };
+
+const UnreadDot = ({ isUnread }: { isUnread: boolean }) =>
+  isUnread ? <div className="size-2 flex-shrink-0 rounded-full bg-blue-500" /> : null;
