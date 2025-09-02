@@ -288,7 +288,7 @@ export default function CapTable() {
 
   const actionContext = useMemo<ActionContext>(
     () => ({
-      userRole: user.roles.administrator ? "administrator" : user.roles.lawyer ? "lawyer" : "guest",
+      userRole: user.roles.administrator ? "administrator" : "worker",
       permissions: {},
     }),
     [user.roles],
