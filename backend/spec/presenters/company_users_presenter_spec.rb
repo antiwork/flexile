@@ -187,7 +187,7 @@ RSpec.describe CompanyUsersPresenter do
     end
 
     context "when filter is empty string" do
-      it "returns default behavior (all users)" do
+      it "returns all users" do
         create(:company_administrator, company: company, user: user1)
         create(:company_lawyer, company: company, user: user2)
 
@@ -200,7 +200,7 @@ RSpec.describe CompanyUsersPresenter do
     end
 
     context "when filter is nil" do
-      it "returns default behavior (all users)" do
+      it "returns all users" do
         create(:company_administrator, company: company, user: user1)
         create(:company_lawyer, company: company, user: user2)
 

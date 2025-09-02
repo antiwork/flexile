@@ -10,15 +10,24 @@ class CompanyUsersPresenter
     "investors" => :investors_props,
   }.freeze
 
-  DEFAULT_USER_TYPES = %w[administrators lawyers contractors investors].freeze
+  DEFAULT_USER_TYPES = ALLOWED_USER_TYPES.keys.freeze
 
   def initialize(company:)
     @company = company
   end
 
-  def users(filters = nil)
-    requested_types = filters.blank? ? DEFAULT_USER_TYPES : filters.split(",").map(&:strip)
-    allowed_types   = requested_types & ALLOWED_USER_TYPES.keys
+  def users(filters = DEFAULT_USER_TYPES)
+    requested_types =
+      case filters
+      when Array
+        filters
+      when String
+        filters.strip.empty? ? DEFAULT_USER_TYPES : filters.split(",").map(&:strip)
+      else
+        DEFAULT_USER_TYPES
+      end
+
+    allowed_types = requested_types & ALLOWED_USER_TYPES.keys
 
     allowed_types
       .flat_map { |type| send(ALLOWED_USER_TYPES[type]) }

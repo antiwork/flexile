@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Internal::Companies::Administrator::CapTablesController, type: :controller do
+RSpec.describe Internal::Companies::Administrator::CapTablesController do
   let(:company) { create(:company, equity_enabled: true, share_price_in_usd: 10.0, fully_diluted_shares: 0) }
   let(:user) { create(:user) }
   let(:company_administrator) { create(:company_administrator, company: company, user: user) }
@@ -43,11 +43,6 @@ RSpec.describe Internal::Companies::Administrator::CapTablesController, type: :c
           end
 
           post :create, params: { company_id: company.external_id, cap_table: { investors: investors_data } }
-        end
-
-        it "returns created status" do
-          post :create, params: { company_id: company.external_id, cap_table: { investors: investors_data } }
-
           expect(response).to have_http_status(:created)
         end
       end
@@ -67,10 +62,6 @@ RSpec.describe Internal::Companies::Administrator::CapTablesController, type: :c
             double(perform: { success: false, errors: ["Some error message"] })
           end
 
-          post :create, params: { company_id: company.external_id, cap_table: { investors: investors_data } }
-        end
-
-        it "returns unprocessable entity status with errors" do
           post :create, params: { company_id: company.external_id, cap_table: { investors: investors_data } }
 
           expect(response).to have_http_status(:unprocessable_entity)

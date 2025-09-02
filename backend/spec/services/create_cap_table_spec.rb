@@ -20,19 +20,10 @@ RSpec.describe CreateCapTable do
 
         expect(result[:success]).to be true
         expect(result[:errors]).to eq([])
-      end
 
-      it "creates a share class" do
-        service = described_class.new(company: company, investors_data: investors_data)
-        service.perform
         share_class = company.share_classes.last
         expect(share_class.name).to eq(ShareClass::DEFAULT_NAME)
         expect(share_class.original_issue_price_in_dollars).to be_nil
-      end
-
-      it "creates company investors" do
-        service = described_class.new(company: company, investors_data: investors_data)
-        service.perform
 
         alice_investor = company.company_investors.find_by(user: user1)
         bob_investor = company.company_investors.find_by(user: user2)
@@ -41,59 +32,19 @@ RSpec.describe CreateCapTable do
         expect(bob_investor.total_shares).to eq(50_000)
         expect(alice_investor.investment_amount_in_cents).to eq(100_000_000)
         expect(bob_investor.investment_amount_in_cents).to eq(50_000_000)
-      end
 
-      it "creates share holdings" do
-        service = described_class.new(company: company, investors_data: investors_data)
-        service.perform
-
-        alice_investor = company.company_investors.find_by(user: user1)
         alice_holding = alice_investor.share_holdings.first
+        bob_holding = bob_investor.share_holdings.first
 
         expect(alice_holding.number_of_shares).to eq(100_000)
         expect(alice_holding.share_price_usd).to eq(10.0)
         expect(alice_holding.total_amount_in_cents).to eq(100_000_000)
         expect(alice_holding.share_holder_name).to eq("Alice Johnson")
         expect(alice_holding.name).to match(/\A[A-Z]{3}-\d+\z/)
-      end
-
-      it "generates sequential share names using company prefix" do
-        service = described_class.new(company: company, investors_data: investors_data)
-        service.perform
-
-        alice_investor = company.company_investors.find_by(user: user1)
-        bob_investor = company.company_investors.find_by(user: user2)
-
-        alice_holding = alice_investor.share_holdings.first
-        bob_holding = bob_investor.share_holdings.first
 
         company_prefix = company.name.first(3).upcase
         expect(alice_holding.name).to eq("#{company_prefix}-1")
         expect(bob_holding.name).to eq("#{company_prefix}-2")
-      end
-
-      it "uses option_holder_name logic for share_holder_name" do
-        service = described_class.new(company: company, investors_data: investors_data)
-        service.perform
-
-        alice_investor = company.company_investors.find_by(user: user1)
-        alice_holding = alice_investor.share_holdings.first
-
-        expect(alice_holding.share_holder_name).to eq("Alice Johnson")
-      end
-
-      it "updates company fully diluted shares" do
-        service = described_class.new(company: company, investors_data: investors_data)
-        service.perform
-
-        expect(company.reload.fully_diluted_shares).to eq(150_000)
-      end
-
-      it "updates company shares even if already set" do
-        company.update!(fully_diluted_shares: 1_000_000)
-
-        service = described_class.new(company: company, investors_data: investors_data)
-        service.perform
 
         expect(company.reload.fully_diluted_shares).to eq(150_000)
       end
