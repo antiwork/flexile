@@ -207,7 +207,7 @@ export function AuthPage({
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex h-12 w-full items-center justify-center gap-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-500"
+                    className="font-base flex h-11 w-full items-center justify-center gap-2 border-none bg-blue-600 text-base text-white hover:bg-blue-500"
                     onClick={() => providerSignIn(SignInMethod.Google)}
                   >
                     <Image src={googleLogoLight} alt="Google" width={20} height={20} />
@@ -243,7 +243,7 @@ export function AuthPage({
                 <MutationStatusButton
                   mutation={sendOtp}
                   type="submit"
-                  className="w-full bg-white text-gray-900 hover:bg-gray-100"
+                  className="border-input hover:border-input hover:bg-accent w-full bg-white text-gray-900"
                   loadingText="Sending..."
                 >
                   {sendOtpText}
