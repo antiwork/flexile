@@ -26,7 +26,7 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatServerDate } from "@/utils/time";
+import { serverDateToLocal } from "@/utils/time";
 import { VESTED_SHARES_CLASS } from "..";
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 
@@ -153,11 +153,11 @@ export default function BuybackView() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>Start date</Label>
-            <p>{formatServerDate(data.startsAt)}</p>
+            <p>{serverDateToLocal(data.startsAt)}</p>
           </div>
           <div>
             <Label>End date</Label>
-            <p>{formatServerDate(data.endsAt)}</p>
+            <p>{serverDateToLocal(data.endsAt)}</p>
           </div>
           <div>
             <Label>Starting valuation</Label>

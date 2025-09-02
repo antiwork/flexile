@@ -19,7 +19,7 @@ export const formatDayOfMonth = (date: Date | string, options?: { weekday?: bool
     weekday: options?.weekday ? "short" : undefined,
   });
 
-export const formatServerDate = (date: Date) => formatISO(date, { representation: "date", in: utc });
+export const serverDateToLocal = (date: Date) => formatISO(date, { representation: "date", in: utc });
 
 export const formatMonth = (date: Date | string) => formatDateTime(date, { month: "short", year: "numeric" });
 
