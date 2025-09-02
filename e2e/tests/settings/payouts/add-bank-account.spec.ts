@@ -153,8 +153,6 @@ test.describe("Bank account settings", () => {
 
     await page.getByLabel("Account number").fill("12345678");
     await page.getByLabel("Routing number").fill("071004200");
-    // TODO(techdebt): check why re-selection needs to take place
-    await selectComboboxOption(page, "State", "New York");
     await page.getByRole("button", { name: "Save bank account" }).click();
 
     await expect(page.getByText("Saving bank account...")).toBeVisible();
