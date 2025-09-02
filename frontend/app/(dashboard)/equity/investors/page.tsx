@@ -311,7 +311,7 @@ export default function CapTable() {
       case "contact": {
         const emails = items
           .filter(isInvestor)
-          .map((inv) => fetchInvestorEmail(inv))
+          .map(fetchInvestorEmail)
           .filter((email): email is string => !!email)
           .join(", ");
         if (!emails) return false;
