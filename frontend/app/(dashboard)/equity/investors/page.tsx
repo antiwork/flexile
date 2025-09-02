@@ -1,5 +1,5 @@
 "use client";
-import { CircleCheck, Mail, X } from "lucide-react";
+import { Check, CircleCheck, Mail, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
@@ -302,7 +302,7 @@ export default function CapTable() {
   const availableActionsForRender = useMemo(
     () =>
       availableActions.map((a) =>
-        a.key === "contact" ? { ...a, label: copied ? "Copied" : "Contact", icon: copied ? CircleCheck : Mail } : a,
+        a.key === "contact" ? { ...a, label: copied ? "Copied!" : "Contact", icon: copied ? Check : Mail } : a,
       ),
     [availableActions, copied],
   );
@@ -479,12 +479,8 @@ function ContactCopyButton({
         }
       }}
     >
-      {copied ? (
-        <CircleCheck className="size-3.5" strokeWidth={2.5} />
-      ) : (
-        <Mail className="size-3.5" strokeWidth={2.5} />
-      )}
-      {copied ? "Copied" : "Contact"}
+      {copied ? <Check className="size-3.5" strokeWidth={2.5} /> : <Mail className="size-3.5" strokeWidth={2.5} />}
+      {copied ? "Copied!" : "Contact"}
     </Button>
   );
 }
