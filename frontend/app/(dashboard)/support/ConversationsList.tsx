@@ -136,13 +136,13 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                       <TableCell className="py-4">
                         <div className="flex flex-col items-end gap-1 font-[350] text-gray-600">
                           <div>{conversation.messageCount}</div>
-                          <div>{formatDate(conversation.latestMessageAt ?? conversation.createdAt)} </div>
+                          <div>{formatDate(conversation.latestMessageAt ?? conversation.createdAt)}</div>
                         </div>
                       </TableCell>
                     </>
                   ) : (
                     <>
-                      <TableCell className={`font-medium ${conversation.isUnread ? "font-bold" : ""}`}>
+                      <TableCell className={conversation.isUnread ? "font-bold" : "font-medium"}>
                         <div className="flex items-center gap-2">
                           <UnreadDot isUnread={conversation.isUnread} />
                           {conversation.subject}
@@ -152,7 +152,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                         {conversation.messageCount}
                       </TableCell>
                       <TableCell className={conversation.isUnread ? "font-bold" : ""}>
-                        {new Date(conversation.latestMessageAt ?? conversation.createdAt).toLocaleDateString()}
+                        {formatDate(conversation.latestMessageAt ?? conversation.createdAt)}
                       </TableCell>
                     </>
                   )}
