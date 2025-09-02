@@ -14,7 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-import { formatMoney } from "@/utils/formatMoney";
+import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_dividend_computation_path } from "@/utils/routes";
 import FinalizeDistributionModal from "./FinalizeDistributionModal";
@@ -52,7 +52,8 @@ const DividendRound = ({ id }: { id: string }) => {
       }),
       columnHelper.accessor("investmentAmountCents", {
         header: "Investment amount",
-        cell: (info) => formatMoney(Number(info.getValue()) / 100),
+        // @ts-expect-error - dividends created from computation will always have the value
+        cell: (info) => formatMoneyFromCents(info.getValue()),
         meta: { numeric: true },
         footer: formatMoney(dividends.reduce((sum, dividend) => sum + Number(dividend.investmentAmountCents) / 100, 0)),
       }),
@@ -154,7 +155,7 @@ const DividendComputation = ({ id }: { id: string }) => {
       }),
       columnHelper.accessor("investment_amount_cents", {
         header: "Investment amount",
-        cell: (info) => formatMoney(Number(info.getValue()) / 100),
+        cell: (info) => formatMoneyFromCents(info.getValue()),
         meta: { numeric: true },
         footer: formatMoney(
           computationOutputs.reduce((sum, output) => sum + Number(output.investment_amount_cents) / 100, 0),
