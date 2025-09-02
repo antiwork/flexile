@@ -1,7 +1,7 @@
 "use client";
 import { Check, CircleCheck, Mail, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
 import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -400,10 +400,11 @@ export default function CapTable() {
         </div>
       )}
 
-      {isMobile ? (
+      {isMobile && selectedInvestors.length > 0 ? (
         <InvestorBulkActionsBar
           availableActions={availableActions}
           selectedItems={selectedInvestors}
+          copied={copied}
           onAction={handleAction}
           onClose={() => investorsTable.toggleAllRowsSelected(false)}
         />
@@ -417,25 +418,16 @@ function InvestorBulkActionsBar({
   onClose,
   availableActions,
   onAction,
+  copied,
 }: {
   selectedItems: InvestorItem[];
   onClose: () => void;
   availableActions: AvailableActions<InvestorItem>[];
   onAction: (actionId: string, items: InvestorItem[]) => boolean;
+  copied: boolean;
 }) {
-  const [visibleItems, setVisibleItems] = useState<InvestorItem[]>([]);
-  const [visibleActions, setVisibleActions] = useState<AvailableActions<InvestorItem>[]>([]);
-
-  useEffect(() => {
-    const isOpen = selectedItems.length > 0;
-    if (isOpen) {
-      setVisibleItems(selectedItems);
-      setVisibleActions(availableActions);
-    }
-  }, [selectedItems, availableActions]);
-
-  const rowsSelected = visibleItems.length;
-  const contactAction = visibleActions.find((a) => a.key === "contact");
+  const rowsSelected = selectedItems.length;
+  const contactAction = availableActions.find((a) => a.key === "contact");
 
   return (
     <Dialog open={selectedItems.length > 0} modal={false}>
@@ -452,7 +444,9 @@ function InvestorBulkActionsBar({
             <span className="tabular-nums">{rowsSelected}</span> selected
             <X className="size-4" />
           </Button>
-          {contactAction ? <ContactCopyButton selectedItems={selectedItems} onAction={onAction} /> : null}
+          {contactAction ? (
+            <ContactCopyButton selectedItems={selectedItems} onAction={onAction} copied={copied} />
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
@@ -462,21 +456,18 @@ function InvestorBulkActionsBar({
 function ContactCopyButton({
   selectedItems,
   onAction,
+  copied,
 }: {
   selectedItems: InvestorItem[];
   onAction: (actionId: string, items: InvestorItem[]) => boolean;
+  copied: boolean;
 }) {
-  const [copied, setCopied] = useState(false);
   return (
     <Button
       variant="primary"
       className="flex h-9 items-center gap-2 border-none text-sm"
       onClick={() => {
-        const ok = onAction("contact", selectedItems);
-        if (ok) {
-          setCopied(true);
-          window.setTimeout(() => setCopied(false), 1500);
-        }
+        void onAction("contact", selectedItems);
       }}
     >
       {copied ? <Check className="size-3.5" strokeWidth={2.5} /> : <Mail className="size-3.5" strokeWidth={2.5} />}
