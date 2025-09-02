@@ -302,7 +302,7 @@ export default function CapTable() {
   const availableActionsForRender = useMemo(
     () =>
       availableActions.map((a) =>
-        a.key === "contact" ? { ...a, label: copied ? "Copied!" : "Contact", icon: copied ? Check : Mail } : a,
+        a.key === "contact" ? { ...a, label: copied ? "Copied!" : "Contact selected", icon: copied ? Check : Mail } : a,
       ),
     [availableActions, copied],
   );
@@ -471,7 +471,7 @@ function ContactCopyButton({
       }}
     >
       {copied ? <Check className="size-3.5" strokeWidth={2.5} /> : <Mail className="size-3.5" strokeWidth={2.5} />}
-      {copied ? "Copied!" : "Contact"}
+      {copied ? "Copied!" : "Contact selected"}
     </Button>
   );
 }
