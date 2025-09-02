@@ -50,10 +50,13 @@ test.describe("company update creation", () => {
       { page, title: "New company update" },
     );
 
-    await expect(page.getByRole("dialog", { name: "Publish update?" })).toBeVisible();
-    await page.getByRole("button", { name: "Yes, publish" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByRole("button", { name: "Yes, publish" }).click();
+      },
+      { page, title: "Publish update?" },
+    );
 
-    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByRole("row").filter({ hasText: title }).filter({ hasText: "Sent" })).toBeVisible();
 
     const updates = await db.query.companyUpdates.findMany({
@@ -156,10 +159,13 @@ test.describe("company update creation", () => {
       { page, title: "Edit company update" },
     );
 
-    await expect(page.getByRole("dialog", { name: "Publish update?" })).toBeVisible();
-    await page.getByRole("button", { name: "Yes, update" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByRole("button", { name: "Yes, update" }).click();
+      },
+      { page, title: "Publish update?" },
+    );
 
-    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByRole("row").filter({ hasText: "Updated Title" }).filter({ hasText: "Sent" })).toBeVisible();
 
     const updatedRecord = await db.query.companyUpdates.findFirst({

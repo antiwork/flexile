@@ -366,15 +366,16 @@ test.describe("Roles page invite functionality", () => {
     await page.goto("/settings/administrator/roles");
 
     await page.getByRole("button", { name: "Add member" }).click();
-
     const invitedEmail = "testadmin@example.com";
-    await page.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
 
-    await selectComboboxOption(page, "Role", "Admin");
-
-    await page.getByRole("button", { name: "Add member" }).click();
-
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await modal.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
+        await selectComboboxOption(page, "Role", "Admin");
+        await modal.getByRole("button", { name: "Add member" }).click();
+      },
+      { page },
+    );
 
     // Check that the invited user appears in the table with the correct role
     const invitedRow = page.getByRole("row", { name: new RegExp(invitedEmail, "u") });
@@ -399,13 +400,15 @@ test.describe("Roles page invite functionality", () => {
     await page.getByRole("button", { name: "Add member" }).click();
 
     const invitedEmail = "testlawyer@example.com";
-    await page.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
 
-    await selectComboboxOption(page, "Role", "Lawyer");
-
-    await page.getByRole("button", { name: "Add member" }).click();
-
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await modal.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
+        await selectComboboxOption(page, "Role", "Lawyer");
+        await modal.getByRole("button", { name: "Add member" }).click();
+      },
+      { page },
+    );
 
     // Check that the invited user appears in the table with the correct role
     const invitedRow = page.getByRole("row", { name: new RegExp(invitedEmail, "u") });
@@ -456,14 +459,15 @@ test.describe("Roles page invite functionality", () => {
 
     await page.getByRole("button", { name: "Add member" }).click();
 
-    // Use the email of the user who already exists in another company
-    await page.getByPlaceholder("Search by name or enter email...").fill(existingUser.email);
-
-    await selectComboboxOption(page, "Role", "Lawyer");
-
-    await page.getByRole("button", { name: "Add member" }).click();
-
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        // Use the email of the user who already exists in another company
+        await modal.getByPlaceholder("Search by name or enter email...").fill(existingUser.email);
+        await selectComboboxOption(page, "Role", "Lawyer");
+        await modal.getByRole("button", { name: "Add member" }).click();
+      },
+      { page },
+    );
 
     // Check that the invited user appears in the table with the correct role
     const invitedRow = page.getByRole("row", { name: new RegExp(existingUser.email, "u") });

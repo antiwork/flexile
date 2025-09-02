@@ -24,15 +24,21 @@ test.describe("Company administrator settings - payment details", () => {
     await expect(page.getByText("Payments to contractors may take up to 10 business days to process.")).toBeVisible();
     await page.getByRole("button", { name: "Link your bank account" }).click();
 
-    const stripeFrame = page.frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']");
-    await stripeFrame.getByLabel("Test Institution").click();
+    const stripePaymentFrame = page.frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']");
+    const stripeBankFrame = page.frameLocator("[src^='https://js.stripe.com/v3/linked-accounts-inner']");
 
-    const bankFrame = page.frameLocator("[src^='https://js.stripe.com/v3/linked-accounts-inner']");
-    await bankFrame.getByRole("button", { name: "Agree" }).click();
-    await bankFrame.getByTestId("success").click();
-    await bankFrame.getByRole("button", { name: "Connect account" }).click();
-    await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await withinModal(
+      async () => {
+        await stripePaymentFrame.getByLabel("Test Institution").click();
+        await stripeBankFrame.getByTestId("agree-button").click();
+        await stripeBankFrame.getByTestId("success").click();
+        await stripeBankFrame.getByTestId("select-button").click();
+        await stripeBankFrame.getByTestId("link-not-now-button").click();
+        await stripeBankFrame.getByTestId("done-button").click();
+      },
+      { page, title: "Link your bank account" },
+    );
+
     await expect(page.getByText("USD bank account")).toBeVisible();
     await expect(page.getByText("Ending in 6789")).toBeVisible();
 
@@ -45,12 +51,18 @@ test.describe("Company administrator settings - payment details", () => {
     expect(companyStripeAccount.bankAccountLastFour).toBe("6789");
 
     await page.getByRole("button", { name: "Edit" }).click();
-    await stripeFrame.getByLabel("Test Institution").click();
-    await bankFrame.getByRole("button", { name: "Agree" }).click();
-    await bankFrame.getByRole("button", { name: "High Balance" }).click();
-    await bankFrame.getByRole("button", { name: "Connect account" }).click();
-    await bankFrame.getByRole("button", { name: "Back to Flexile" }).click();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await withinModal(
+      async () => {
+        await stripePaymentFrame.getByLabel("Test Institution").click();
+        await stripeBankFrame.getByTestId("agree-button").click();
+        await stripeBankFrame.getByTestId("high balance").click();
+        await stripeBankFrame.getByTestId("select-button").click();
+        await stripeBankFrame.getByTestId("link-not-now-button").click();
+        await stripeBankFrame.getByTestId("done-button").click();
+      },
+      { page, title: "Link your bank account" },
+    );
+
     await expect(page.getByText("USD bank account")).toBeVisible();
     await expect(page.getByText("Ending in 4321")).toBeVisible();
 
@@ -78,39 +90,23 @@ test.describe("Company administrator settings - payment details", () => {
 
     await page.getByRole("button", { name: "Link your bank account" }).click();
 
-    const stripePaymentFrame = page
-      .locator("iframe[src*='js.stripe.com/v3/elements-inner-payment']")
-      .first()
-      .contentFrame();
-    await stripePaymentFrame.getByRole("button", { name: /Enter bank details manually/iu }).click();
-
-    const stripeBankFrame = page
-      .locator("iframe[src*='js.stripe.com/v3/linked-accounts-inner']")
-      .first()
-      .contentFrame();
-    await stripeBankFrame.getByLabel("Routing number").waitFor({ state: "visible" });
-    await stripeBankFrame.getByLabel("Routing number").fill("110000000");
-    await stripeBankFrame.getByTestId("manualEntry-accountNumber-input").fill("000123456789");
-    await stripeBankFrame.getByTestId("manualEntry-confirmAccountNumber-input").fill("000123456789");
-
-    await stripeBankFrame.getByRole("button", { name: "Submit" }).click();
-
-    const bankFrame = page.frameLocator("iframe[src*='js.stripe.com/v3/linked-accounts-inner']");
-    const linkNotNowButton = bankFrame.getByTestId("link-not-now-button");
-    const completionText = bankFrame.getByText(/Next, finish up on/iu);
-
-    await Promise.race([
-      linkNotNowButton.waitFor({ state: "visible" }).catch(() => undefined),
-      completionText.waitFor({ state: "visible" }).catch(() => undefined),
-    ]);
-
-    if (await linkNotNowButton.isVisible().catch(() => false)) {
-      await linkNotNowButton.click();
-    }
-
-    await bankFrame.getByRole("button", { name: /Back to/iu }).click();
-
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await withinModal(
+      async () => {
+        await page
+          .frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']")
+          .getByRole("button", { name: "Enter bank details manually" })
+          .click();
+        const stripeBankFrame = page.frameLocator("[src^='https://js.stripe.com/v3/linked-accounts-inner']");
+        await expect(stripeBankFrame.getByLabel("Routing number")).toBeVisible();
+        await stripeBankFrame.getByTestId("manualEntry-routingNumber-input").fill("110000000");
+        await stripeBankFrame.getByTestId("manualEntry-accountNumber-input").fill("000123456789");
+        await stripeBankFrame.getByTestId("manualEntry-confirmAccountNumber-input").fill("000123456789");
+        await stripeBankFrame.getByTestId("continue-button").click();
+        await stripeBankFrame.getByTestId("link-not-now-button").click();
+        await stripeBankFrame.getByTestId("done-button").click();
+      },
+      { page, title: "Link your bank account" },
+    );
 
     const bannerLocator = page.getByText("Verify your bank account to enable contractor payments");
     await expect(bannerLocator).toBeVisible();

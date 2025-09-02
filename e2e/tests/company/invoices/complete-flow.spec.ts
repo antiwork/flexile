@@ -179,10 +179,13 @@ test.describe("Invoice submission, approval and rejection", () => {
       .getByLabel("Select row")
       .check();
     await page.getByRole("button", { name: "Reject selected invoices" }).click();
-    await page.getByLabel("Explain why the invoice was").fill("Too little time");
-
-    await page.getByRole("button", { name: "Yes, reject" }).click();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Explain why the invoice was").fill("Too little time");
+        await modal.getByRole("button", { name: "Yes, reject" }).click();
+      },
+      { page },
+    );
     const rejectedInvoiceRow0 = page
       .locator("tbody tr")
       .filter({ hasText: workerUserA.legalName ?? "never" })
