@@ -52,10 +52,14 @@ const DividendRound = ({ id }: { id: string }) => {
       }),
       columnHelper.accessor("investmentAmountCents", {
         header: "Investment amount",
-        // @ts-expect-error - dividends created from computation will always have the value
-        cell: (info) => formatMoneyFromCents(info.getValue()),
+        cell: (info) => {
+          const value = info.getValue();
+          return value !== null ? formatMoneyFromCents(value) : "—";
+        },
         meta: { numeric: true },
-        footer: formatMoney(dividends.reduce((sum, dividend) => sum + Number(dividend.investmentAmountCents) / 100, 0)),
+        footer: formatMoneyFromCents(
+          dividends.reduce((sum, dividend) => sum + Number(dividend.investmentAmountCents || 0), 0),
+        ),
       }),
       columnHelper.accessor("totalAmountInCents", {
         header: "Return amount",
@@ -157,8 +161,8 @@ const DividendComputation = ({ id }: { id: string }) => {
         header: "Investment amount",
         cell: (info) => formatMoneyFromCents(info.getValue()),
         meta: { numeric: true },
-        footer: formatMoney(
-          computationOutputs.reduce((sum, output) => sum + Number(output.investment_amount_cents) / 100, 0),
+        footer: formatMoneyFromCents(
+          computationOutputs.reduce((sum, output) => sum + Number(output.investment_amount_cents), 0),
         ),
       }),
       columnHelper.accessor("total_amount", {
