@@ -61,9 +61,7 @@ const DividendRound = ({ id }: { id: string }) => {
         footer: () => {
           const hasInvestmentAmounts = dividends.some((dividend) => dividend.investmentAmountCents !== null);
           return hasInvestmentAmounts
-            ? formatMoneyFromCents(
-                dividends.reduce((sum, dividend) => sum + Number(dividend.investmentAmountCents || 0), 0),
-              )
+            ? formatMoneyFromCents(dividends.reduce((sum, dividend) => sum + Number(dividend.investmentAmountCents), 0))
             : "—";
         },
       }),
