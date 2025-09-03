@@ -95,6 +95,7 @@ const DetailsSection = () => {
         <MutationStatusButton
           className="w-fit"
           type="submit"
+          size="small"
           mutation={saveMutation}
           loadingText="Saving..."
           successText="Saved!"

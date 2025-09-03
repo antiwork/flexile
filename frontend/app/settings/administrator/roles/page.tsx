@@ -453,6 +453,7 @@ export default function RolesPage() {
                 ) : null}
                 <Button
                   type="submit"
+                  size="small"
                   disabled={
                     !addMemberForm.formState.isValid ||
                     addRoleMutation.isPending ||

@@ -367,9 +367,21 @@ export default function TaxPage() {
                       </FormLabel>
                       {!isForeign && field.value && !form.getFieldState("tax_id").isDirty ? (
                         <>
-                          {taxIdStatus === "verified" && <Status variant="success">VERIFIED</Status>}
-                          {taxIdStatus === "invalid" && <Status variant="critical">INVALID</Status>}
-                          {!taxIdStatus && <Status variant="primary">VERIFYING</Status>}
+                          {taxIdStatus === "verified" && (
+                            <Status variant="success" className="text-xs">
+                              VERIFIED
+                            </Status>
+                          )}
+                          {taxIdStatus === "invalid" && (
+                            <Status variant="critical" className="text-xs">
+                              INVALID
+                            </Status>
+                          )}
+                          {!taxIdStatus && (
+                            <Status variant="primary" className="text-xs">
+                              VERIFYING
+                            </Status>
+                          )}
                         </>
                       ) : null}
                     </div>
@@ -388,7 +400,7 @@ export default function TaxPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="rounded-l-none"
+                        className="focus-visible:ring-ring/15 rounded-l-none outline-none focus-visible:border-gray-300 focus-visible:ring-[3px]"
                         onPointerDown={() => setMaskTaxId(false)}
                         onPointerUp={() => setMaskTaxId(true)}
                         onPointerLeave={() => setMaskTaxId(true)}
@@ -488,6 +500,7 @@ export default function TaxPage() {
           <div className="flex flex-wrap gap-8">
             <MutationStatusButton
               type="submit"
+              size="small"
               disabled={!!isTaxInfoConfirmed && !form.formState.isDirty}
               mutation={saveMutation}
             >

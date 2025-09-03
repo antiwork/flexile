@@ -57,7 +57,9 @@ export default function CompanyUpdates() {
                 <Plus />
               </Button>
             ) : (
-              <Button onClick={handleNewUpdate}>New update</Button>
+              <Button size="small" onClick={handleNewUpdate}>
+                New update
+              </Button>
             )
           ) : null
         }
