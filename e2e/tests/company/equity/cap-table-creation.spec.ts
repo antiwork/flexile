@@ -104,11 +104,8 @@ test.describe("Cap table creation", () => {
 
     await page.getByRole("button", { name: "Finalize cap table" }).click();
 
-    await expect(
-      page.getByText(
-        "Some investor details are missing. Please fill in all required fields before finalizing the cap table.",
-      ),
-    ).toBeVisible();
+    await expect(page.getByText("Some investor details are missing.")).toBeVisible();
+    await expect(page.getByText("Please fill in all required fields before finalizing the cap table.")).toBeVisible();
   });
 
   test("validates share amounts", async ({ page }) => {
@@ -132,11 +129,8 @@ test.describe("Cap table creation", () => {
 
     await page.getByRole("button", { name: "Finalize cap table" }).click();
 
-    await expect(
-      page.getByText(
-        "Some investor details are missing. Please fill in all required fields before finalizing the cap table.",
-      ),
-    ).toBeVisible();
+    await expect(page.getByText("Some investor details are missing.")).toBeVisible();
+    await expect(page.getByText("Please fill in all required fields before finalizing the cap table.")).toBeVisible();
   });
 
   test("prevents duplicate investors", async ({ page }) => {

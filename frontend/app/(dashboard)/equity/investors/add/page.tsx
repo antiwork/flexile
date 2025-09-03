@@ -3,6 +3,7 @@
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useId, useMemo, useState } from "react";
 import { type ControllerRenderProps, useFieldArray, useForm } from "react-hook-form";
@@ -10,7 +11,7 @@ import { z } from "zod";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import NumberInput from "@/components/NumberInput";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
@@ -334,9 +335,12 @@ const AddCapTablePage = () => {
         cell: ({ row }) => {
           if ("_isAddRow" in row.original) {
             return (
-              <Button variant="link" onClick={handleAddInvestor}>
-                <PlusIcon className="inline size-4" /> Add new investor
-              </Button>
+              <div className="mt-1">
+                <Button variant="link" onClick={handleAddInvestor} className="inline-flex items-center">
+                  <PlusIcon className="size-4 align-middle" />
+                  <span className="align-middle">Add new investor</span>
+                </Button>
+              </div>
             );
           }
 
@@ -420,7 +424,7 @@ const AddCapTablePage = () => {
     (form.formState.errors.investors &&
       "message" in form.formState.errors.investors &&
       form.formState.errors.investors.message) ||
-    "Some investor details are missing. Please fill in all required fields before finalizing the cap table.";
+    null;
 
   return (
     <Form {...form}>
@@ -446,16 +450,22 @@ const AddCapTablePage = () => {
         />
 
         {hasFormErrors ? (
-          <div className="mx-4 mb-4">
-            <Alert variant="destructive">
-              <AlertDescription className="break-words">{errorMessage}</AlertDescription>
-            </Alert>
-          </div>
+          <Alert className="mx-4 mt-4 mb-4" variant="destructive">
+            <AlertTriangle className="my-auto max-h-4 max-w-4" />
+            {!errorMessage ? (
+              <>
+                <AlertTitle>Some investor details are missing.</AlertTitle>
+                <AlertDescription>Please fill in all required fields before finalizing the cap table.</AlertDescription>
+              </>
+            ) : (
+              <AlertDescription>{errorMessage}</AlertDescription>
+            )}
+          </Alert>
         ) : null}
 
         <div className="w-full">
           {isMobile ? (
-            <div className="space-y-4 px-4 pb-4">
+            <div className="space-y-4 px-4">
               {fields.map((field, index) => (
                 <MobileInvestorCard
                   key={field.id}
