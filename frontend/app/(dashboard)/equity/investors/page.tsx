@@ -265,14 +265,10 @@ export default function CapTable() {
   });
 
   const selectedInvestors = investorsTable.getSelectedRowModel().rows.map((row) => row.original);
-  const selectedInvestorEmails = useMemo(
-    () =>
-      selectedInvestors
-        .map(fetchInvestorEmail)
-        .filter((email): email is string => !!email)
-        .join(", "),
-    [selectedInvestors],
-  );
+  const selectedInvestorEmails = selectedInvestors
+    .map(fetchInvestorEmail)
+    .filter((email): email is string => !!email)
+    .join(", ");
 
   const isMobile = useIsMobile();
 
