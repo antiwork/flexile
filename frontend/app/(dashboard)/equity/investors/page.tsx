@@ -25,7 +25,6 @@ import { useIsMobile } from "@/utils/use-mobile";
 import { type ColumnConfig, ColumnSettingsToggle, useColumnSettings } from "./ColumnSettings";
 
 type Data = RouterOutput["capTable"]["show"];
-type InvestorItem = Data["investors"][number];
 
 export default function CapTable() {
   const company = useCurrentCompany();
@@ -49,6 +48,7 @@ export default function CapTable() {
   const user = useCurrentUser();
   const canViewInvestor = !!user.roles.administrator || !!user.roles.lawyer;
 
+  type InvestorItem = Data["investors"][number];
   const investorColumnHelper = createColumnHelper<InvestorItem>();
 
   const columnConfigs = useMemo((): ColumnConfig[] => {
@@ -265,19 +265,11 @@ export default function CapTable() {
   });
 
   const selectedInvestors = investorsTable.getSelectedRowModel().rows.map((row) => row.original);
-  const hasContact = useMemo(
-    () =>
-      canViewInvestor &&
-      selectedInvestors.length > 0 &&
-      selectedInvestors.every((i) => isInvestor(i) && !!fetchInvestorEmail(i)),
-    [canViewInvestor, selectedInvestors],
-  );
-  const selectedEmails = useMemo(
+  const selectedInvestorEmails = useMemo(
     () =>
       selectedInvestors
-        .filter(isInvestor)
         .map(fetchInvestorEmail)
-        .filter((e): e is string => !!e)
+        .filter((email): email is string => !!email)
         .join(", "),
     [selectedInvestors],
   );
@@ -327,7 +319,7 @@ export default function CapTable() {
                     <X className="size-4 shrink-0" aria-hidden="true" />
                   </Button>
                 </div>
-                {hasContact ? <ContactSelectedCopyButton emails={selectedEmails} /> : null}
+                {canViewInvestor ? <ContactSelectedCopyButton emails={selectedInvestorEmails} /> : null}
               </div>
             ) : null}
           </div>
@@ -342,8 +334,8 @@ export default function CapTable() {
       {isMobile && selectedInvestors.length > 0 ? (
         <InvestorBulkActionsBar
           selectedCount={selectedInvestors.length}
-          canContact={hasContact}
-          emails={selectedEmails}
+          canContact={canViewInvestor}
+          emails={selectedInvestorEmails}
           onClose={() => investorsTable.toggleAllRowsSelected(false)}
         />
       ) : null}
