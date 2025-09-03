@@ -8,7 +8,6 @@ RSpec.describe Internal::Companies::AdministratorsController do
 
   before do
     allow(controller).to receive(:authenticate_user_json!).and_return(true)
-    allow(controller).to receive(:verify_authorized).and_return(true)
 
     allow(controller).to receive(:current_context) do
       Current.user = admin_user
@@ -20,10 +19,6 @@ RSpec.describe Internal::Companies::AdministratorsController do
 
   describe "POST #create" do
     context "when user is authorized" do
-      before do
-        allow(controller).to receive(:authorize).with(CompanyAdministrator).and_return(true)
-      end
-
       context "with valid email" do
         it "creates a new administrator successfully" do
           expect do
@@ -110,14 +105,13 @@ RSpec.describe Internal::Companies::AdministratorsController do
       end
     end
 
+    context "when user is not a company administrator" do
+      before { company_administrator.destroy! }
 
+      it "disallows access" do
+        post :create, params: { company_id: company.external_id, email: }
 
-    context "authorization" do
-      it "calls authorize with CompanyAdministrator" do
-        expect(controller).to receive(:authorize).with(CompanyAdministrator).and_return(true)
-        allow_any_instance_of(InviteAdmin).to receive(:perform).and_return({ success: true })
-
-        post :create, params: { company_id: company.external_id, email: email }
+        expect(response).to have_http_status(:forbidden)
       end
     end
   end

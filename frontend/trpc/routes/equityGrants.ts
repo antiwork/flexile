@@ -1,9 +1,10 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gt, gte, isNotNull, isNull, lte, or, sql, type SQLWrapper, sum } from "drizzle-orm";
+import { and, desc, eq, gt, gte, isNotNull, isNull, or, sql, type SQLWrapper, sum } from "drizzle-orm";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
 import {
+  companyAdministrators,
   companyContractors,
   companyInvestors,
   equityGrantExercises,
@@ -191,32 +192,28 @@ export const equityGrantsRouter = createRouter({
       },
       where: eq(optionPools.companyId, ctx.company.id),
     });
-    const workers = await db.query.companyContractors.findMany({
-      columns: {
-        externalId: true,
-      },
-      with: {
-        user: {
-          columns: simpleUser.columns,
-          with: {
-            companyInvestors: {
-              where: eq(companyInvestors.companyId, ctx.company.id),
-              with: {
-                equityGrants: {
-                  orderBy: desc(equityGrants.issuedAt),
-                  limit: 1,
-                },
-              },
-            },
-          },
-        },
-      },
-      where: and(
-        eq(companyContractors.companyId, ctx.company.id),
-        isNull(companyContractors.endedAt),
-        lte(companyContractors.startedAt, new Date()),
-      ),
-    });
+    const userList = await db
+      .selectDistinctOn([users.id], {
+        ...pick(users, "externalId", "legalName", "email", "unconfirmedEmail", "preferredName"),
+        lastGrant: pick(equityGrants, "optionGrantType", "issueDateRelationship"),
+        activeContractor: assertDefined(and(isNotNull(companyContractors.id), isNull(companyContractors.endedAt))),
+      })
+      .from(users)
+      .leftJoin(
+        companyInvestors,
+        and(eq(users.id, companyInvestors.userId), eq(companyInvestors.companyId, ctx.company.id)),
+      )
+      .leftJoin(
+        companyContractors,
+        and(eq(users.id, companyContractors.userId), eq(companyContractors.companyId, ctx.company.id)),
+      )
+      .leftJoin(
+        companyAdministrators,
+        and(eq(users.id, companyAdministrators.userId), eq(companyAdministrators.companyId, ctx.company.id)),
+      )
+      .leftJoin(equityGrants, eq(equityGrants.companyInvestorId, companyInvestors.id))
+      .where(or(isNotNull(companyInvestors.id), isNotNull(companyContractors.id), isNotNull(companyAdministrators.id)))
+      .orderBy(desc(users.id), desc(equityGrants.issuedAt));
 
     const defaultVestingSchedules = (
       await Promise.all(
@@ -246,20 +243,10 @@ export const equityGrantsRouter = createRouter({
 
     return {
       optionPools: pools.map((pool) => omit({ ...pool, id: pool.externalId }, "externalId")),
-      workers: workers.map((worker) => {
-        const lastGrant = worker.user.companyInvestors[0]?.equityGrants[0];
-        return {
-          id: worker.externalId,
-          user: { ...simpleUser(worker.user), legalName: worker.user.legalName },
-          salaried: false,
-          lastGrant: lastGrant
-            ? {
-                optionGrantType: lastGrant.optionGrantType,
-                issueDateRelationship: lastGrant.issueDateRelationship,
-              }
-            : null,
-        };
-      }),
+      users: userList.map((user) => ({
+        ...user,
+        ...simpleUser(user),
+      })),
       defaultVestingSchedules,
       sharePriceUsd: ctx.company.fmvPerShareInUsd,
     };

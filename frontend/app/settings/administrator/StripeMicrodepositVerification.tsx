@@ -18,8 +18,8 @@ import { formatDate } from "@/utils/time";
 
 const formSchema = z.object({ verificationCode: z.string().length(6, "Please enter a 6-digit code.") }).or(
   z.object({
-    firstAmount: z.number().min(1, "Please enter an amount."),
-    secondAmount: z.number().min(1, "Please enter an amount."),
+    firstAmount: z.number().min(0.01, "Please enter an amount."),
+    secondAmount: z.number().min(0.01, "Please enter an amount."),
   }),
 );
 
@@ -129,7 +129,7 @@ const StripeMicrodepositVerification = () => {
                       <FormItem>
                         <FormLabel>Amount 1</FormLabel>
                         <FormControl>
-                          <NumberInput {...field} prefix="$" />
+                          <NumberInput {...field} prefix="$" decimal maximumFractionDigits={2} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -142,7 +142,7 @@ const StripeMicrodepositVerification = () => {
                       <FormItem>
                         <FormLabel>Amount 2</FormLabel>
                         <FormControl>
-                          <NumberInput {...field} prefix="$" />
+                          <NumberInput {...field} prefix="$" decimal maximumFractionDigits={2} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

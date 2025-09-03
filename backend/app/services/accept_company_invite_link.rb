@@ -12,7 +12,7 @@ class AcceptCompanyInviteLink
 
     company_worker = @user.company_workers.find_or_initialize_by(company:)
     if company_worker.persisted?
-      return { success: false, error: "You are already a worker for this company" }
+      return { success: false, error: :already_accepted }
     end
 
     company_worker.assign_attributes(
