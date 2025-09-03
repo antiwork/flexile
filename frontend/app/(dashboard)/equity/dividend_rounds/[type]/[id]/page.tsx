@@ -41,6 +41,9 @@ const DividendRound = ({ id }: { id: string }) => {
     dividendRoundId: id,
   });
 
+  // Old dividend records don't have an investment amount
+  const hasInvestmentAmounts = dividends.some((dividend) => dividend.investmentAmountCents !== null);
+
   const columnHelper = createColumnHelper<Dividend>();
   const columns = useMemo(
     () => [
@@ -50,21 +53,18 @@ const DividendRound = ({ id }: { id: string }) => {
         cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
         footer: "Total",
       }),
-      // Old dividend records don't have an investment amount
-      columnHelper.accessor("investmentAmountCents", {
-        header: "Investment amount",
-        cell: (info) => {
-          const value = info.getValue();
-          return value !== null ? formatMoneyFromCents(value) : "—";
-        },
-        meta: { numeric: true },
-        footer: () => {
-          const hasInvestmentAmounts = dividends.some((dividend) => dividend.investmentAmountCents !== null);
-          return hasInvestmentAmounts
-            ? formatMoneyFromCents(dividends.reduce((sum, dividend) => sum + Number(dividend.investmentAmountCents), 0))
-            : "—";
-        },
-      }),
+      ...(hasInvestmentAmounts
+        ? [
+            columnHelper.accessor("investmentAmountCents", {
+              header: "Investment amount",
+              cell: (info) => formatMoneyFromCents(Number(info.getValue())),
+              meta: { numeric: true },
+              footer: formatMoneyFromCents(
+                dividends.reduce((sum, dividend) => sum + Number(dividend.investmentAmountCents), 0),
+              ),
+            }),
+          ]
+        : []),
       columnHelper.accessor("totalAmountInCents", {
         header: "Return amount",
         cell: (info) => formatMoney(Number(info.getValue()) / 100),
@@ -79,7 +79,7 @@ const DividendRound = ({ id }: { id: string }) => {
         },
       }),
     ],
-    [dividends],
+    [dividends, hasInvestmentAmounts],
   );
 
   const table = useTable({
