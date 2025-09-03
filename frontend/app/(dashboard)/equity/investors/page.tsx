@@ -2,8 +2,6 @@
 import { CircleCheck, Mail, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
-import { getAvailableActions } from "@/components/actions/SelectionActions";
-import type { ActionConfig, ActionContext } from "@/components/actions/types";
 import CopyButton from "@/components/CopyButton";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -267,39 +265,13 @@ export default function CapTable() {
   });
 
   const selectedInvestors = investorsTable.getSelectedRowModel().rows.map((row) => row.original);
-  const actionConfig = useMemo(
-    (): ActionConfig<InvestorItem> => ({
-      entityName: "investors",
-      actions: {
-        contact: {
-          id: "contact",
-          label: "Contact",
-          icon: Mail,
-          variant: "primary",
-          contexts: ["single", "bulk"],
-          permissions: ["administrator", "lawyer"],
-          conditions: (item: InvestorItem) => isInvestor(item) && !!fetchInvestorEmail(item),
-          action: "contact",
-          showIn: ["selection"],
-        },
-      },
-    }),
-    [],
+  const hasContact = useMemo(
+    () =>
+      canViewInvestor &&
+      selectedInvestors.length > 0 &&
+      selectedInvestors.every((i) => isInvestor(i) && !!fetchInvestorEmail(i)),
+    [canViewInvestor, selectedInvestors],
   );
-
-  const actionContext = useMemo<ActionContext>(
-    () => ({
-      userRole: user.roles.administrator ? "administrator" : "worker",
-      permissions: {},
-    }),
-    [user.roles],
-  );
-
-  const availableActions = useMemo(
-    () => getAvailableActions(selectedInvestors, actionConfig, actionContext),
-    [selectedInvestors, actionConfig, actionContext],
-  );
-  const hasContact = useMemo(() => availableActions.some((a) => a.key === "contact"), [availableActions]);
   const selectedEmails = useMemo(
     () =>
       selectedInvestors
