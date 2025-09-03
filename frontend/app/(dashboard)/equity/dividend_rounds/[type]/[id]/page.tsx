@@ -58,11 +58,14 @@ const DividendRound = ({ id }: { id: string }) => {
           return value !== null ? formatMoneyFromCents(value) : "—";
         },
         meta: { numeric: true },
-        footer: dividends.some((dividend) => dividend.investmentAmountCents !== null)
-          ? formatMoneyFromCents(
-              dividends.reduce((sum, dividend) => sum + Number(dividend.investmentAmountCents || 0), 0),
-            )
-          : "—",
+        footer: () => {
+          const hasInvestmentAmounts = dividends.some((dividend) => dividend.investmentAmountCents !== null);
+          return hasInvestmentAmounts
+            ? formatMoneyFromCents(
+                dividends.reduce((sum, dividend) => sum + Number(dividend.investmentAmountCents || 0), 0),
+              )
+            : "—";
+        },
       }),
       columnHelper.accessor("totalAmountInCents", {
         header: "Return amount",
