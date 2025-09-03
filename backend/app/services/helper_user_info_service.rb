@@ -13,9 +13,9 @@ class HelperUserInfoService
       name: user.email,
       metadata: {
         "Country of residence" => user.display_country,
-        "Contractor for companies" => user.clients.map(&:display_name).to_sentence,
-        "Investor for companies" => user.portfolio_companies.map(&:display_name).to_sentence,
-        "Administrator for companies" => user.companies.map(&:display_name).to_sentence,
+        "Contractor for companies" => user.clients.map(&:display_name).to_sentence.presence,
+        "Investor for companies" => user.portfolio_companies.map(&:display_name).to_sentence.presence,
+        "Administrator for companies" => user.companies.map(&:display_name).to_sentence.presence,
         "Investments" => investment_notes,
         "Dividends received" => dividend_notes,
         "Minimum dividend payment" => user.minimum_dividend_payment_in_cents,
