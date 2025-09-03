@@ -88,6 +88,9 @@ test.describe("Contractor Invite Link Joining flow", () => {
       .then(takeOrThrow);
     expect(contractor.role).toBe("Hourly Role 1");
     expect(contractor.contractSignedElsewhere).toBe(true);
+
+    await page.goto(`/invite/${company.inviteLink}`);
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   });
 
   test("invite link flow with oauth sign up", async ({ page }) => {
