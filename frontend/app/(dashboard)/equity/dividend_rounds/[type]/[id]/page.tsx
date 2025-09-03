@@ -50,6 +50,7 @@ const DividendRound = ({ id }: { id: string }) => {
         cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
         footer: "Total",
       }),
+      // Old dividend records don't have an investment amount
       columnHelper.accessor("investmentAmountCents", {
         header: "Investment amount",
         cell: (info) => {
