@@ -79,7 +79,7 @@ const DividendRound = ({ id }: { id: string }) => {
         },
       }),
     ],
-    [dividends, hasInvestmentAmounts],
+    [dividends],
   );
 
   const table = useTable({
@@ -166,7 +166,7 @@ const DividendComputation = ({ id }: { id: string }) => {
         cell: (info) => formatMoneyFromCents(info.getValue()),
         meta: { numeric: true },
         footer: formatMoneyFromCents(
-          computationOutputs.reduce((sum, output) => sum + Number(output.investment_amount_cents), 0),
+          computationOutputs.reduce((sum, output) => sum + output.investment_amount_cents, 0),
         ),
       }),
       columnHelper.accessor("total_amount", {
