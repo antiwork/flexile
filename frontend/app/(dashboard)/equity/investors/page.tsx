@@ -1,9 +1,10 @@
 "use client";
-import { Check, CircleCheck, Mail, X } from "lucide-react";
+import { CircleCheck, Mail, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import React, { useMemo, useState } from "react";
-import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
-import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
+import React, { useMemo } from "react";
+import { getAvailableActions } from "@/components/actions/SelectionActions";
+import type { ActionConfig, ActionContext } from "@/components/actions/types";
+import CopyButton from "@/components/CopyButton";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
@@ -298,45 +299,16 @@ export default function CapTable() {
     () => getAvailableActions(selectedInvestors, actionConfig, actionContext),
     [selectedInvestors, actionConfig, actionContext],
   );
-  const [copied, setCopied] = useState(false);
-  const availableActionsForRender = useMemo(
+  const hasContact = useMemo(() => availableActions.some((a) => a.key === "contact"), [availableActions]);
+  const selectedEmails = useMemo(
     () =>
-      availableActions.map((a) =>
-        a.key === "contact" ? { ...a, label: copied ? "Copied!" : "Contact selected", icon: copied ? Check : Mail } : a,
-      ),
-    [availableActions, copied],
+      selectedInvestors
+        .filter(isInvestor)
+        .map(fetchInvestorEmail)
+        .filter((e): e is string => !!e)
+        .join(", "),
+    [selectedInvestors],
   );
-  const handleAction = (actionId: string, items: InvestorItem[]): boolean => {
-    switch (actionId) {
-      case "contact": {
-        const emails = items
-          .filter(isInvestor)
-          .map(fetchInvestorEmail)
-          .filter((email): email is string => !!email)
-          .join(", ");
-        if (!emails) return false;
-        try {
-          void navigator.clipboard.writeText(emails);
-        } catch {
-          const ta = document.createElement("textarea");
-          ta.value = emails;
-          ta.style.position = "fixed";
-          ta.style.opacity = "0";
-          document.body.appendChild(ta);
-          ta.select();
-          try {
-            document.execCommand("copy");
-          } finally {
-            document.body.removeChild(ta);
-          }
-        }
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 1500);
-        return true;
-      }
-    }
-    return false;
-  };
 
   const isMobile = useIsMobile();
 
@@ -383,12 +355,7 @@ export default function CapTable() {
                     <X className="size-4 shrink-0" aria-hidden="true" />
                   </Button>
                 </div>
-                <SelectionActions
-                  selectedItems={selectedInvestors}
-                  config={actionConfig}
-                  availableActions={availableActionsForRender}
-                  onAction={handleAction}
-                />
+                {hasContact ? <ContactSelectedCopyButton emails={selectedEmails} /> : null}
               </div>
             ) : null}
           </div>
@@ -402,10 +369,9 @@ export default function CapTable() {
 
       {isMobile && selectedInvestors.length > 0 ? (
         <InvestorBulkActionsBar
-          availableActions={availableActions}
-          selectedItems={selectedInvestors}
-          copied={copied}
-          onAction={handleAction}
+          selectedCount={selectedInvestors.length}
+          canContact={hasContact}
+          emails={selectedEmails}
           onClose={() => investorsTable.toggleAllRowsSelected(false)}
         />
       ) : null}
@@ -414,23 +380,18 @@ export default function CapTable() {
 }
 
 function InvestorBulkActionsBar({
-  selectedItems,
+  selectedCount,
+  canContact,
+  emails,
   onClose,
-  availableActions,
-  onAction,
-  copied,
 }: {
-  selectedItems: InvestorItem[];
+  selectedCount: number;
+  canContact: boolean;
+  emails: string;
   onClose: () => void;
-  availableActions: AvailableActions<InvestorItem>[];
-  onAction: (actionId: string, items: InvestorItem[]) => boolean;
-  copied: boolean;
 }) {
-  const rowsSelected = selectedItems.length;
-  const contactAction = availableActions.find((a) => a.key === "contact");
-
   return (
-    <Dialog open={selectedItems.length > 0} modal={false}>
+    <Dialog open={selectedCount > 0} modal={false}>
       <DialogContent className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0">
         <DialogHeader className="sr-only">
           <DialogTitle>Selected investors</DialogTitle>
@@ -441,37 +402,21 @@ function InvestorBulkActionsBar({
             className="border-muted flex h-9 items-center gap-2 rounded-lg border border-dashed text-sm font-medium hover:bg-white"
             onClick={onClose}
           >
-            <span className="tabular-nums">{rowsSelected}</span> selected
+            <span className="tabular-nums">{selectedCount}</span> selected
             <X className="size-4" />
           </Button>
-          {contactAction ? (
-            <ContactCopyButton selectedItems={selectedItems} onAction={onAction} copied={copied} />
-          ) : null}
+          {canContact ? <ContactSelectedCopyButton emails={emails} /> : null}
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function ContactCopyButton({
-  selectedItems,
-  onAction,
-  copied,
-}: {
-  selectedItems: InvestorItem[];
-  onAction: (actionId: string, items: InvestorItem[]) => boolean;
-  copied: boolean;
-}) {
+function ContactSelectedCopyButton({ emails }: { emails: string }) {
   return (
-    <Button
-      variant="primary"
-      className="flex h-9 items-center gap-2 border-none text-sm"
-      onClick={() => {
-        void onAction("contact", selectedItems);
-      }}
-    >
-      {copied ? <Check className="size-3.5" strokeWidth={2.5} /> : <Mail className="size-3.5" strokeWidth={2.5} />}
-      {copied ? "Copied!" : "Contact selected"}
-    </Button>
+    <CopyButton variant="primary" className="flex h-9 items-center gap-2 border-none text-sm" copyText={emails}>
+      <Mail className="size-3.5" strokeWidth={2.5} />
+      Contact selected
+    </CopyButton>
   );
 }
