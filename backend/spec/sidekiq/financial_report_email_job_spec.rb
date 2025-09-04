@@ -1,46 +1,38 @@
 # frozen_string_literal: true
 
-RSpec.describe FinancialReportEmailJob do
+RSpec.describe MonthlyFinancialReportEmailJob do
   describe "#perform" do
     let(:recipients) { ["solson@earlygrowth.com", "sahil@gumroad.com"] }
 
-    before do
-      allow(Rails.env).to receive(:production?).and_return(true)
-    end
-
-    it "sends email with invoices, dividends, grouped, and stock options CSV attachments" do
+    it "sends email with financial report CSV attachments" do
       company = create(:company, name: "TestCo")
+      last_month = Date.today.last_month
 
-      create(:consolidated_invoice, company: company, created_at: 1.week.ago)
+      create(:consolidated_invoice, company: company, created_at: last_month.beginning_of_month + 1.day)
 
-      dividend_round = create(:dividend_round, company: company, issued_at: 1.week.ago)
+      dividend_round = create(:dividend_round, company: company, issued_at: last_month.beginning_of_month + 1.day)
       dividend = create(:dividend, company: company, dividend_round: dividend_round)
-      create(:dividend_payment, dividends: [dividend], status: Payment::SUCCEEDED, created_at: 1.week.ago)
+      create(:dividend_payment, dividends: [dividend], status: Payment::SUCCEEDED, created_at: last_month.beginning_of_month + 1.day)
 
       company_investor = create(:company_investor, company: company)
       option_pool = create(:option_pool, company: company)
       equity_grant = create(:equity_grant, company_investor: company_investor, option_pool: option_pool)
-      create(:vesting_event, equity_grant: equity_grant, processed_at: 1.week.ago)
+      create(:vesting_event, equity_grant: equity_grant, processed_at: last_month.beginning_of_month + 1.day)
+
+      expected_subject = "Flexile monthly financial report - #{last_month.strftime("%B %Y")}"
+      expected_report_date = last_month.strftime("%B %Y")
 
       expect(AdminMailer).to receive(:custom).with(
         to: recipients,
-        subject: match(/Financial report \d{4}-\d{2}/),
+        subject: expected_subject,
         body: "Attached",
         attached: hash_including(
-          "invoices.csv" => kind_of(String),
-          "dividends.csv" => kind_of(String),
-          "grouped.csv" => kind_of(String),
-          "stock_options.csv" => kind_of(String)
+          "invoices-#{expected_report_date}.csv" => kind_of(String),
+          "dividends-#{expected_report_date}.csv" => kind_of(String),
+          "grouped-#{expected_report_date}.csv" => kind_of(String),
+          "stock_options-#{expected_report_date}.csv" => kind_of(String)
         )
       ).and_return(double(deliver_later: true))
-
-      described_class.new.perform(recipients)
-    end
-
-    it "does not run in non-production environments" do
-      allow(Rails.env).to receive(:production?).and_return(false)
-
-      expect(AdminMailer).not_to receive(:custom)
 
       described_class.new.perform(recipients)
     end
