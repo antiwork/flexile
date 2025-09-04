@@ -314,7 +314,7 @@ export default function CapTable() {
                     <X className="size-4 shrink-0" aria-hidden="true" />
                   </Button>
                 </div>
-                {canViewInvestor ? <ContactSelectedCopyButton emails={selectedInvestorEmails} /> : null}
+                <ContactSelectedCopyButton emails={selectedInvestorEmails} />
               </div>
             ) : null}
           </div>
