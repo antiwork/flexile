@@ -372,7 +372,7 @@ const InvestorBulkActionsBar = ({
   );
 }
 
-function ContactSelectedCopyButton({ emails }: { emails: string }) {
+const ContactSelectedCopyButton = ({ emails }: { emails: string }) => {
   return (
     <CopyButton variant="primary" className="flex h-9 items-center gap-2 border-none text-sm" copyText={emails}>
       <Mail className="size-3.5" strokeWidth={2.5} />
