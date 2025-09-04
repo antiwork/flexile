@@ -186,6 +186,7 @@ const LeaveWorkspaceSection = () => {
             <CardAction>
               <Button
                 variant="outline"
+                size="small"
                 className="text-destructive hover:text-destructive"
                 onClick={() => setIsModalOpen(true)}
               >
