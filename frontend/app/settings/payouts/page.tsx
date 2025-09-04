@@ -77,7 +77,7 @@ const EquitySection = () => {
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
-    <div className="mb-12 grid gap-4">
+    <div className="mb-24 grid gap-4">
       <h2 className="font-bold">Equity</h2>
       <Form {...form}>
         <form onSubmit={(e) => void submit(e)}>

@@ -358,7 +358,7 @@ export default function RolesPage() {
 
   return (
     <>
-      <div className="mb-12 grid gap-8">
+      <div className="mb-24 grid gap-8">
         <hgroup>
           <h2 className="mb-1 text-xl font-bold">Roles</h2>
           <p className="text-muted-foreground text-base">Use roles to grant deeper access to your workspace.</p>
