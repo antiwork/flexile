@@ -2,435 +2,310 @@
 
 # Usage:
 =begin
-# Get data for the last month
-invoices = ConsolidatedInvoice.includes(:company, :consolidated_payments, invoices: :payments)
-                              .where("created_at > ?", Time.current.last_month.beginning_of_month)
-                              .order(created_at: :asc)
-
-dividends = Dividend.includes(:dividend_payments, company_investor: :user)
-                    .paid
-                    .references(:dividend_payments)
-                    .merge(DividendPayment.successful)
-                    .where("dividend_payments.created_at > ?", Time.current.last_month.beginning_of_month)
-                    .order(created_at: :asc)
-
-target_year = Time.current.last_month.year
-target_month = Time.current.last_month.month
-start_date = Date.new(target_year, target_month, 1)
+start_date = Date.parse("1 August 2025")
 end_date = start_date.end_of_month
-
-dividend_rounds = DividendRound.includes(:dividends, :company, dividends: [:dividend_payments, company_investor: :user])
-                               .joins(:dividends)
-                               .where("dividend_rounds.issued_at >= ? AND dividend_rounds.issued_at <= ?",
-                                      start_date, end_date)
-                               .distinct
-                               .order(issued_at: :asc)
-
-# Get vesting events for the last month
-vesting_events = VestingEvent.not_cancelled.processed
-                             .joins(equity_grant: { company_investor: [:user, :company] })
-                             .where(processed_at: start_date..end_date)
-                             .includes(equity_grant: { company_investor: [:user, :company] })
-
-# Generate all CSV reports
-service = FinancialReportCsvService.new(invoices, dividends, dividend_rounds, vesting_events)
-attached = service.generate_all
-
-# Send email with all four CSV attachments
-AdminMailer.custom(to: ["solson@earlygrowth.com", "sahil@gumroad.com"],
-                   subject: "Financial report #{target_year}-#{target_month.to_s.rjust(2, '0')}",
-                   body: "Attached",
-                   attached: attached).deliver_now
+attached = FinancialReportCsvService.new(start_date:, end_date:).process
+AdminMailer.custom(to: ["sahil@gumroad.com", "olson_steven@yahoo.com"], subject: "Financial report #{start_date.strftime("%B %Y")}", body: "Attached", attached:).deliver_now
 =end
-
 class FinancialReportCsvService
-  def initialize(consolidated_invoices, dividends, dividend_rounds, vesting_events = [])
-    @consolidated_invoices = consolidated_invoices
-    @dividends = dividends
-    @dividend_rounds = dividend_rounds
-    @vesting_events = vesting_events
+  def initialize(start_date:, end_date:)
+    @start_date = start_date
+    @end_date = end_date
   end
 
-  def generate_all
+  def process
+    raise "Start date must be before end date" if start_date > end_date
+    report_date = start_date.strftime("%B %Y")
+
     {
-      "invoices.csv" => generate_invoices_csv,
-      "dividends.csv" => generate_dividends_csv,
-      "grouped.csv" => generate_grouped_csv,
-      "stock_options.csv" => generate_stock_options_csv,
+      "invoices-#{report_date}.csv" => generate_csv(invoices_csv_columns, invoices_data),
+      "dividends-#{report_date}.csv" => generate_csv(dividends_csv_columns, dividends_data),
+      "grouped-#{report_date}.csv" => generate_csv(grouped_csv_columns, grouped_data),
+      "stock_options-#{report_date}.csv" => generate_csv(stock_options_csv_columns, stock_options_data),
     }
   end
 
   private
-    def generate_invoices_csv
-      headers = ["Date initiated", "Date succeeded", "Consolidated invoice ID", "Client name", "Invoiced amount", "Flexile fees", "Transfer fees", "Total amount", "Stripe fee",
-                 "Consolidated invoice status", "Stripe payment intent ID", "Contractor name", "Wise account holder name", "Wise recipient ID", "Invoice ID", "Wise transfer ID",
-                 "Cash amount (USD)", "Equity amount (USD)", "Total amount (USD)", "Status", "Flexile fee cents"]
+    attr_reader :start_date, :end_date
 
-      data = consolidated_invoice_data
+    def generate_csv(columns, data)
+      headers = columns.map { |col| col[:header] }
+
       CSV.generate do |csv|
         csv << headers
-        data.each do |row|
-          csv << row
+        data.each do |row_hash|
+          csv << columns.map { |col| row_hash[col[:key]] }
         end
 
-        if data.any?
-          totals = calculate_invoices_totals(data)
-          csv << totals
+        csv << calculate_csv_totals(data, columns, columns.first[:key]) if data.any?
+      end
+    end
+
+    def calculate_csv_totals(data, columns, first_column_key)
+      return [] if data.empty?
+
+      totals_hash = {}
+      columns.each do |col|
+        if col[:summable]
+          totals_hash[col[:key]] = data.sum { |row| row[col[:key]].to_f }
+        end
+      end
+
+      columns.map do |col|
+        if col[:key] == first_column_key
+          "TOTAL"
+        elsif col[:summable]
+          totals_hash[col[:key]]
+        else
+          ""
         end
       end
     end
 
-    def generate_dividends_csv
-      headers = ["Type", "Date initiated", "Date paid", "Client name", "Dividend round ID", "Dividend ID",
-                 "Investor name", "Investor email", "Number of shares", "Dividend amount", "Processor",
-                 "Transfer ID", "Total transaction amount", "Net amount", "Transfer fee", "Tax withholding percentage",
-                 "Tax withheld", "Flexile fee cents", "Round status", "Total investors in round"]
-
-      data = combined_dividend_data
-      CSV.generate do |csv|
-        csv << headers
-        data.each do |row|
-          csv << row
-        end
-
-        if data.any?
-          totals = calculate_dividends_totals(data)
-          csv << totals
-        end
-      end
-    end
-
-    def generate_grouped_csv
-      headers = ["Type", "Date", "Client name", "Description", "Amount (USD)", "Flexile fee cents", "Transfer fee (USD)", "Net amount (USD)"]
-
-      data = grouped_data
-      CSV.generate do |csv|
-        csv << headers
-        data.each do |row|
-          csv << row
-        end
-
-        if data.any?
-          totals = calculate_grouped_totals(data)
-          csv << totals
-        end
-      end
-    end
-
-    def generate_stock_options_csv
-      headers = ["Date Vested", "Company Name", "Investor Name", "Investor Email", "Grant ID", "Vesting Event ID",
-                 "Shares Vested", "Exercise Price (USD)", "Current Share Price (USD)", "Time to Expiration (Years)",
-                 "Black-Scholes Option Value", "Total Option Expense", "Grant Type", "Grant Status"]
-
-      data = stock_options_data
-      CSV.generate do |csv|
-        csv << headers
-        data.each do |row|
-          csv << row
-        end
-
-        if data.any?
-          totals = calculate_stock_options_totals(data)
-          csv << totals
-        end
-      end
-    end
-
-    def consolidated_invoice_data
-      @consolidated_invoices.each_with_object([]) do |ci, row|
+    def invoices_data
+      consolidated_invoices.each_with_object([]) do |ci, rows|
         payments = ci.consolidated_payments
-        ci_data = [
-          ci.invoice_date.to_fs(:us_date),
-          payments.pluck(:succeeded_at).reject(&:blank?).map { _1.to_fs(:us_date) }.join(";"),
-          ci.id,
-          ci.company.name,
-          ci.invoice_amount_cents / 100.0,
-          ci.flexile_fee_usd,
-          ci.transfer_fee_cents / 100.0,
-          ci.total_amount_in_usd,
-          payments.pluck(:stripe_fee_cents).reject(&:blank?).map { _1.zero? ? 0 : _1 / 100.0 }.join(";"),
-          ci.status,
-          payments.pluck(:stripe_payment_intent_id).reject(&:blank?).join(";"),
-        ]
+
         ci.invoices.alive.each do |invoice|
           status = invoice.status
           status = "open" if status == Invoice::RECEIVED
-          payments = invoice.payments
-          wise_recipients = WiseRecipient.where(id: payments.pluck(:wise_recipient_id))
-          flexile_fee_cents = (ci.flexile_fee_usd * 100).to_i
-          row << ci_data + [
-            invoice.user.legal_name,
-            wise_recipients.pluck(:account_holder_name).uniq.join(";"),
-            wise_recipients.pluck(:recipient_id).uniq.join(";"),
-            invoice.id,
-            payments.pluck(:wise_transfer_id).reject(&:blank?).join(";"),
-            invoice.cash_amount_in_usd,
-            invoice.equity_amount_in_usd,
-            invoice.total_amount_in_usd,
-            status,
-            flexile_fee_cents,
-          ]
+          invoice_payments = invoice.payments
+          wise_recipients = WiseRecipient.where(id: invoice_payments.pluck(:wise_recipient_id))
+
+          rows << {
+            invoice_date: ci.invoice_date.to_fs(:us_date),
+            payment_succeeded_at: payments.pluck(:succeeded_at).reject(&:blank?).map { _1.to_fs(:us_date) }.join(";"),
+            consolidated_invoice_id: ci.id,
+            client_name: ci.company.name,
+            invoiced_amount_usd: ci.invoice_amount_cents / 100.0,
+            flexile_fees_usd: ci.flexile_fee_usd,
+            transfer_fees_usd: ci.transfer_fee_cents / 100.0,
+            total_amount_usd: ci.total_amount_in_usd,
+            stripe_fee_usd: payments.pluck(:stripe_fee_cents).reject(&:blank?).map { _1.zero? ? 0 : _1 / 100.0 }.join(";"),
+            consolidated_invoice_status: ci.status,
+            stripe_payment_intent_id: payments.pluck(:stripe_payment_intent_id).reject(&:blank?).join(";"),
+            contractor_name: invoice.user.legal_name,
+            wise_account_holder_name: wise_recipients.pluck(:account_holder_name).uniq.join(";"),
+            wise_recipient_id: wise_recipients.pluck(:recipient_id).uniq.join(";"),
+            invoice_id: invoice.id,
+            wise_transfer_id: invoice_payments.pluck(:wise_transfer_id).reject(&:blank?).join(";"),
+            cash_amount_usd: invoice.cash_amount_in_usd,
+            equity_amount_usd: invoice.equity_amount_in_usd,
+            invoice_total_amount_usd: invoice.total_amount_in_usd,
+            invoice_status: status,
+          }
         end
       end
     end
 
-    def combined_dividend_data
-      rows = []
-
-      @dividends.each do |dividend|
+    def dividends_data
+      dividends.each_with_object([]) do |dividend, rows|
         payments = dividend.dividend_payments.select { _1.status == Payment::SUCCEEDED }
         next if payments.empty?
         payment = payments.first
 
-        flexile_fee_cents = FlexileFeeCalculator.calculate_dividend_fee_cents(dividend.total_amount_in_cents)
+        flexile_fee = FlexileFeeCalculator.calculate_dividend_fee_cents(dividend.total_amount_in_cents) / 100.0
 
-        rows << [
-          "Individual Payment",
-          payment.created_at.to_fs(:us_date),
-          dividend.paid_at&.to_fs(:us_date),
-          dividend.company.name,
-          dividend.dividend_round_id,
-          dividend.id,
-          dividend.company_investor.user.legal_name,
-          dividend.company_investor.user.email,
-          dividend.number_of_shares,
-          dividend.total_amount_in_cents / 100.0,
-          payment.processor_name,
-          payment.transfer_id,
-          payment.total_transaction_cents / 100.0,
-          dividend.net_amount_in_cents / 100.0,
-          payment.transfer_fee_in_cents ? payment.transfer_fee_in_cents / 100.0 : nil,
-          dividend.withholding_percentage,
-          dividend.withheld_tax_cents / 100.0,
-          flexile_fee_cents,
-          "",
-          ""
-        ]
+        rows << {
+          date_initiated: payment.created_at.to_fs(:us_date),
+          date_paid: dividend.paid_at&.to_fs(:us_date),
+          client_name: dividend.company.name,
+          dividend_round_id: dividend.dividend_round_id,
+          dividend_id: dividend.id,
+          investor_name: dividend.company_investor.user.legal_name,
+          investor_email: dividend.company_investor.user.email,
+          number_of_shares: dividend.number_of_shares,
+          dividend_amount_usd: dividend.total_amount_in_cents / 100.0,
+          processor: payment.processor_name,
+          transfer_id: payment.transfer_id,
+          total_transaction_amount_usd: payment.total_transaction_cents / 100.0,
+          net_amount_usd: dividend.net_amount_in_cents / 100.0,
+          transfer_fee_usd: payment.transfer_fee_in_cents ? payment.transfer_fee_in_cents / 100.0 : 0.0,
+          tax_withholding_percentage: dividend.withholding_percentage,
+          tax_withheld_usd: dividend.withheld_tax_cents / 100.0,
+          flexile_fee_usd: flexile_fee,
+          dividend_round_status: dividend.dividend_round.status,
+        }
       end
-
-      @dividend_rounds.each do |dividend_round|
-        dividends = dividend_round.dividends
-        total_dividends = dividends.sum(:total_amount_in_cents) / 100.0
-        total_transfer_fees = dividends.joins(:dividend_payments)
-                                       .where(dividend_payments: { status: Payments::Status::SUCCEEDED })
-                                       .sum("dividend_payments.transfer_fee_in_cents") / 100.0
-
-        flexile_fees_cents = dividends.map do |dividend|
-          FlexileFeeCalculator.calculate_dividend_fee_cents(dividend.total_amount_in_cents)
-        end.sum
-
-        rows << [
-          "Round Summary",
-          dividend_round.issued_at.to_fs(:us_date),
-          dividends.paid.first&.paid_at&.to_fs(:us_date),
-          dividend_round.company.name,
-          dividend_round.id,
-          "",
-          "",
-          "",
-          "",
-          total_dividends,
-          "",
-          "",
-          "",
-          "",
-          total_transfer_fees,
-          "",
-          "",
-          flexile_fees_cents,
-          dividend_round.status,
-          dividends.count
-        ]
-      end
-
-      rows.sort_by { |row| Date.parse(row[1]) rescue Date.today }
     end
 
     def grouped_data
       rows = []
 
-      @consolidated_invoices.each do |ci|
+      consolidated_invoices.each do |ci|
         ci.invoices.alive.each do |invoice|
-          flexile_fee_cents = (ci.flexile_fee_usd * 100).to_i
-          rows << [
-            "Invoice",
-            ci.invoice_date.to_fs(:us_date),
-            ci.company.name,
-            "Invoice ##{invoice.id} - #{invoice.user.legal_name}",
-            invoice.total_amount_in_usd,
-            flexile_fee_cents,
-            ci.transfer_fee_cents / 100.0,
-            invoice.total_amount_in_usd - (flexile_fee_cents / 100.0) - (ci.transfer_fee_cents / 100.0)
-          ]
+          rows << {
+            type: "Invoice",
+            date: ci.invoice_date.to_fs(:us_date),
+            client_name: ci.company.name,
+            description: "Invoice ##{invoice.id} - #{invoice.user.legal_name}",
+            amount_usd: invoice.total_amount_in_usd,
+            flexile_fee_usd: ci.flexile_fee_usd,
+            transfer_fee_usd: ci.transfer_fee_cents / 100.0,
+            net_amount_usd: invoice.total_amount_in_usd - ci.flexile_fee_usd - (ci.transfer_fee_cents / 100.0),
+          }
         end
       end
 
-      @dividends.each do |dividend|
+      dividends.each do |dividend|
         payments = dividend.dividend_payments.select { _1.status == Payment::SUCCEEDED }
         next if payments.empty?
         payment = payments.first
 
-        flexile_fee_cents = FlexileFeeCalculator.calculate_dividend_fee_cents(dividend.total_amount_in_cents)
+        flexile_fee_usd = FlexileFeeCalculator.calculate_dividend_fee_cents(dividend.total_amount_in_cents) / 100.0
         transfer_fee = payment.transfer_fee_in_cents ? payment.transfer_fee_in_cents / 100.0 : 0.0
 
-        rows << [
-          "Dividend",
-          dividend.paid_at&.to_fs(:us_date) || payment.created_at.to_fs(:us_date),
-          dividend.company.name,
-          "Dividend ##{dividend.id} - #{dividend.company_investor.user.legal_name}",
-          dividend.total_amount_in_cents / 100.0,
-          flexile_fee_cents,
-          transfer_fee,
-          dividend.net_amount_in_cents / 100.0
-        ]
+        rows << {
+          type: "Dividend",
+          date: dividend.paid_at&.to_fs(:us_date) || payment.created_at.to_fs(:us_date),
+          client_name: dividend.company.name,
+          description: "Dividend ##{dividend.id} - #{dividend.company_investor.user.legal_name}",
+          amount_usd: dividend.total_amount_in_cents / 100.0,
+          flexile_fee_usd:,
+          transfer_fee_usd: transfer_fee,
+          net_amount_usd: dividend.net_amount_in_cents / 100.0,
+        }
       end
 
-      rows.sort_by { |row| Date.parse(row[1]) rescue Date.today }
-    end
-
-    def calculate_invoices_totals(data)
-      return [] if data.empty?
-
-      invoiced_amount_total = data.sum { |row| row[4].to_f }
-      flexile_fees_total = data.sum { |row| row[5].to_f }
-      transfer_fees_total = data.sum { |row| row[6].to_f }
-      total_amount_total = data.sum { |row| row[7].to_f }
-      cash_amount_total = data.sum { |row| row[16].to_f }
-      equity_amount_total = data.sum { |row| row[17].to_f }
-      invoice_total_amount_total = data.sum { |row| row[18].to_f }
-      flexile_fee_cents_total = data.sum { |row| row[20].to_i }
-
-      [
-        "TOTAL", "", "", "",
-        invoiced_amount_total,
-        flexile_fees_total,
-        transfer_fees_total,
-        total_amount_total,
-        "", "", "", "", "", "", "", "",
-        cash_amount_total,
-        equity_amount_total,
-        invoice_total_amount_total,
-        "",
-        flexile_fee_cents_total
-      ]
-    end
-
-    def calculate_dividends_totals(data)
-      return [] if data.empty?
-
-      number_of_shares_total = data.sum { |row| row[8].to_f }
-      dividend_amount_total = data.sum { |row| row[9].to_f }
-      total_transaction_amount_total = data.sum { |row| row[12].to_f }
-      net_amount_total = data.sum { |row| row[13].to_f }
-      transfer_fee_total = data.sum { |row| row[14].to_f }
-      tax_withheld_total = data.sum { |row| row[16].to_f }
-      flexile_fee_cents_total = data.sum { |row| row[17].to_i }
-
-      [
-        "TOTAL", "", "", "", "", "", "", "",
-        number_of_shares_total,
-        dividend_amount_total,
-        "", "",
-        total_transaction_amount_total,
-        net_amount_total,
-        transfer_fee_total,
-        "",
-        tax_withheld_total,
-        flexile_fee_cents_total,
-        "",
-        ""
-      ]
-    end
-
-    def calculate_grouped_totals(data)
-      return [] if data.empty?
-
-      amount_total = data.sum { |row| row[4].to_f }
-      flexile_fee_cents_total = data.sum { |row| row[5].to_i }
-      transfer_fee_total = data.sum { |row| row[6].to_f }
-      net_amount_total = data.sum { |row| row[7].to_f }
-
-      [
-        "TOTAL", "", "", "",
-        amount_total,
-        flexile_fee_cents_total,
-        transfer_fee_total,
-        net_amount_total
-      ]
+      rows.sort_by { |row| Date.parse(row[:date]) rescue Date.today }
     end
 
     def stock_options_data
-      target_year = Time.current.last_month.year
-      target_month = Time.current.last_month.month
-      start_date = Date.new(target_year, target_month, 1)
-      end_date = start_date.end_of_month
-
-      filtered_vesting_events = @vesting_events.select do |vesting_event|
-        vesting_event.processed_at &&
-        vesting_event.processed_at >= start_date &&
-        vesting_event.processed_at <= end_date
-      end
-
       rows = []
-      filtered_vesting_events.each do |vesting_event|
+      vesting_events = VestingEvent.not_cancelled.processed
+                                    .joins(equity_grant: { company_investor: [:user, :company] })
+                                    .where(processed_at: start_date..end_date)
+                                    .includes(equity_grant: { company_investor: [:user, :company] })
+      vesting_events.each do |vesting_event|
         equity_grant = vesting_event.equity_grant
         company = equity_grant.company_investor.company
         user = equity_grant.company_investor.user
 
         current_price = equity_grant.share_price_usd
         exercise_price = equity_grant.exercise_price_usd
-        time_to_expiration = calculate_time_to_expiration(equity_grant.expires_at)
+        expiration_date = equity_grant.expires_at
 
         option_value_per_share = BlackScholesCalculator.calculate_option_value(
-          current_price: current_price,
-          exercise_price: exercise_price,
-          time_to_expiration_years: time_to_expiration
+          current_price:,
+          exercise_price:,
+          expiration_date:
         )
 
         total_option_expense = option_value_per_share * vesting_event.vested_shares
 
-        rows << [
-          vesting_event.processed_at.to_fs(:us_date),
-          company.name,
-          user.legal_name,
-          user.email,
-          equity_grant.id,
-          vesting_event.id,
-          vesting_event.vested_shares,
-          exercise_price,
-          current_price,
-          time_to_expiration.round(4),
-          option_value_per_share.round(4),
-          total_option_expense.round(2),
-          equity_grant.option_grant_type&.upcase || "N/A",
-          equity_grant.cancelled_at? ? "Cancelled" : "Active"
-        ]
+        rows << {
+          date_vested: vesting_event.processed_at.to_fs(:us_date),
+          company_name: company.name,
+          investor_name: user.legal_name,
+          investor_email: user.email,
+          grant_id: equity_grant.id,
+          vesting_event_id: vesting_event.id,
+          shares_vested: vesting_event.vested_shares,
+          exercise_price_usd: exercise_price,
+          current_share_price_usd: current_price,
+          expiration_date: expiration_date.to_fs(:us_date),
+          black_scholes_option_value: option_value_per_share.round(4),
+          total_option_expense: total_option_expense.round(2),
+          grant_type: equity_grant.option_grant_type&.upcase || "N/A",
+          grant_status: equity_grant.cancelled_at? ? "Cancelled" : "Active",
+        }
       end
 
-      rows.sort_by { |row| Date.parse(row[0]) rescue Date.today }
+      rows.sort_by { |row| Date.parse(row[:date_vested]) rescue Date.today }
     end
 
-    def calculate_time_to_expiration(expires_at)
-      return 0.0 unless expires_at
-
-      days_to_expiration = (expires_at.to_date - Date.current).to_f
-      [days_to_expiration / 365.25, 0.0].max
+    def consolidated_invoices
+      @_consolidated_invoices ||= ConsolidatedInvoice.includes(:company, :consolidated_payments, invoices: :payments)
+                                                  .where("created_at >= ? AND created_at <= ?", start_date, end_date)
+                                                  .order(created_at: :asc)
     end
 
-    def calculate_stock_options_totals(data)
-      return [] if data.empty?
+    def dividends
+      @_dividends ||= Dividend.includes(:dividend_payments, company_investor: :user)
+                              .paid
+                              .references(:dividend_payments)
+                              .merge(DividendPayment.successful)
+                              .where("dividend_payments.created_at >= ? AND dividend_payments.created_at <= ?", start_date, end_date)
+                              .order(created_at: :asc)
+    end
 
-      total_shares_vested = data.sum { |row| row[6].to_f }
-      total_option_expense = data.sum { |row| row[11].to_f }
-
+    def invoices_csv_columns
       [
-        "TOTAL", "", "", "", "", "",
-        total_shares_vested,
-        "", "", "",
-        "",
-        total_option_expense,
-        "",
-        ""
+        { key: :invoice_date, header: "Invoice date", summable: false },
+        { key: :payment_succeeded_at, header: "Payment succeeded at", summable: false },
+        { key: :consolidated_invoice_id, header: "Consolidated invoice ID", summable: false },
+        { key: :client_name, header: "Client name", summable: false },
+        { key: :invoiced_amount_usd, header: "Invoiced amount (USD)", summable: true },
+        { key: :flexile_fees_usd, header: "Flexile fees (USD)", summable: true },
+        { key: :transfer_fees_usd, header: "Transfer fees (USD)", summable: true },
+        { key: :total_amount_usd, header: "Total amount (USD)", summable: true },
+        { key: :stripe_fee_usd, header: "Stripe fee (USD)", summable: true },
+        { key: :consolidated_invoice_status, header: "Consolidated invoice status", summable: false },
+        { key: :stripe_payment_intent_id, header: "Stripe payment intent ID", summable: false },
+        { key: :contractor_name, header: "Contractor name", summable: false },
+        { key: :wise_account_holder_name, header: "Wise account holder name", summable: false },
+        { key: :wise_recipient_id, header: "Wise recipient ID", summable: false },
+        { key: :invoice_id, header: "Invoice ID", summable: false },
+        { key: :wise_transfer_id, header: "Wise transfer ID", summable: false },
+        { key: :cash_amount_usd, header: "Cash amount (USD)", summable: true },
+        { key: :equity_amount_usd, header: "Equity amount (USD)", summable: true },
+        { key: :invoice_total_amount_usd, header: "Total amount (USD)", summable: true },
+        { key: :invoice_status, header: "Invoice status", summable: false }
+      ]
+    end
+
+    def dividends_csv_columns
+      [
+        { key: :date_initiated, header: "Date initiated", summable: false },
+        { key: :date_paid, header: "Date paid", summable: false },
+        { key: :client_name, header: "Client name", summable: false },
+        { key: :dividend_round_id, header: "Dividend round ID", summable: false },
+        { key: :dividend_id, header: "Dividend ID", summable: false },
+        { key: :investor_name, header: "Investor name", summable: false },
+        { key: :investor_email, header: "Investor email", summable: false },
+        { key: :number_of_shares, header: "Number of shares", summable: true },
+        { key: :dividend_amount_usd, header: "Dividend amount (USD)", summable: true },
+        { key: :processor, header: "Processor", summable: false },
+        { key: :transfer_id, header: "Transfer ID", summable: false },
+        { key: :total_transaction_amount_usd, header: "Total transaction amount (USD)", summable: true },
+        { key: :net_amount_usd, header: "Net amount (USD)", summable: true },
+        { key: :transfer_fee_usd, header: "Transfer fee (USD)", summable: true },
+        { key: :tax_withholding_percentage, header: "Tax withholding percentage", summable: false },
+        { key: :tax_withheld_usd, header: "Tax withheld", summable: true },
+        { key: :flexile_fee_usd, header: "Flexile fee (USD)", summable: true },
+        { key: :dividend_round_status, header: "Dividend round status", summable: false }
+      ]
+    end
+
+    def grouped_csv_columns
+      [
+        { key: :type, header: "Type", summable: false },
+        { key: :date, header: "Date", summable: false },
+        { key: :client_name, header: "Client name", summable: false },
+        { key: :description, header: "Description", summable: false },
+        { key: :amount_usd, header: "Amount (USD)", summable: true },
+        { key: :flexile_fee_usd, header: "Flexile fee (USD)", summable: true },
+        { key: :transfer_fee_usd, header: "Transfer fee (USD)", summable: true },
+        { key: :net_amount_usd, header: "Net amount (USD)", summable: true }
+      ]
+    end
+
+    def stock_options_csv_columns
+      [
+        { key: :date_vested, header: "Date Vested", summable: false },
+        { key: :company_name, header: "Company Name", summable: false },
+        { key: :investor_name, header: "Investor Name", summable: false },
+        { key: :investor_email, header: "Investor Email", summable: false },
+        { key: :grant_id, header: "Grant ID", summable: false },
+        { key: :vesting_event_id, header: "Vesting Event ID", summable: false },
+        { key: :shares_vested, header: "Shares Vested", summable: true },
+        { key: :exercise_price_usd, header: "Exercise Price (USD)", summable: false },
+        { key: :current_share_price_usd, header: "Current Share Price (USD)", summable: false },
+        { key: :expiration_date, header: "Expiration Date", summable: false },
+        { key: :black_scholes_option_value, header: "Black-Scholes Option Value", summable: false },
+        { key: :total_option_expense, header: "Total Option Expense", summable: true },
+        { key: :grant_type, header: "Grant Type", summable: false },
+        { key: :grant_status, header: "Grant Status", summable: false }
       ]
     end
 end

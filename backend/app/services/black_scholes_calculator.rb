@@ -4,8 +4,9 @@ class BlackScholesCalculator
   DEFAULT_RISK_FREE_RATE = 0.05
   DEFAULT_VOLATILITY = 0.20
 
-  def self.calculate_option_value(current_price:, exercise_price:, time_to_expiration_years:, risk_free_rate: DEFAULT_RISK_FREE_RATE, volatility: DEFAULT_VOLATILITY)
-    return 0.0 if time_to_expiration_years <= 0
+  def self.calculate_option_value(current_price:, exercise_price:, expiration_date:, risk_free_rate: DEFAULT_RISK_FREE_RATE, volatility: DEFAULT_VOLATILITY)
+    time_to_expiration_years = (expiration_date.to_date - Date.current).to_i / 365.25
+    return 0.0 if time_to_expiration_years <= 0.0
 
     d1 = (Math.log(current_price / exercise_price) + (risk_free_rate + 0.5 * volatility**2) * time_to_expiration_years) / (volatility * Math.sqrt(time_to_expiration_years))
     d2 = d1 - (volatility * Math.sqrt(time_to_expiration_years))
