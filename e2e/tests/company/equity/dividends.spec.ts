@@ -136,6 +136,6 @@ test.describe("Dividends", () => {
     await expect(dividendRow.getByRole("cell", { name: "$500" })).toBeVisible(); // Gross amount
     await expect(dividendRow.getByRole("cell", { name: "500", exact: true })).toBeVisible(); // Number of shares
     await expect(dividendRow.getByRole("cell", { name: "$50", exact: true })).toBeVisible(); // Withheld taxes
-    await expect(dividendRow.getByRole("cell", { name: "$100" })).toBeVisible(); // Net amount ($500 - $50)
+    await expect(dividendRow.getByRole("cell", { name: "$100" })).toBeVisible();
   });
 });
