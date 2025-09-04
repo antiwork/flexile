@@ -339,7 +339,7 @@ export default function CapTable() {
   );
 }
 
-function InvestorBulkActionsBar({
+const InvestorBulkActionsBar = ({
   selectedCount,
   canContact,
   emails,
