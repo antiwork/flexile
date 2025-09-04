@@ -199,7 +199,7 @@ test.describe("Dividend Computations", () => {
     await expect(page.getByRole("button", { name: "Finalize distribution" })).not.toBeVisible();
   });
 
-  test("non-investor users can view dividend computations with correct data", async ({ page }) => {
+  test("displays computation table data correctly", async ({ page }) => {
     const { company } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
     });
