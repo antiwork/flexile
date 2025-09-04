@@ -303,8 +303,7 @@ export default function CapTable() {
               <div className={`flex gap-2 ${selectedInvestors.length === 0 ? "pointer-events-none opacity-0" : ""}`}>
                 <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
                   <span className="text-sm whitespace-nowrap">
-                    <span className="inline-block w-4 text-center tabular-nums">{selectedInvestors.length}</span>{" "}
-                    selected
+                    <span className="inline-block text-center tabular-nums">{selectedInvestors.length}</span> selected
                   </span>
                   <Button
                     variant="ghost"
@@ -349,34 +348,30 @@ const InvestorBulkActionsBar = ({
   canContact: boolean;
   emails: string;
   onClose: () => void;
-}) {
-  return (
-    <Dialog open={selectedCount > 0} modal={false}>
-      <DialogContent className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0">
-        <DialogHeader className="sr-only">
-          <DialogTitle>Selected investors</DialogTitle>
-        </DialogHeader>
-        <div className="flex gap-2 p-2">
-          <Button
-            variant="outline"
-            className="border-muted flex h-9 items-center gap-2 rounded-lg border border-dashed text-sm font-medium hover:bg-white"
-            onClick={onClose}
-          >
-            <span className="tabular-nums">{selectedCount}</span> selected
-            <X className="size-4" />
-          </Button>
-          {canContact ? <ContactSelectedCopyButton emails={emails} /> : null}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
+}) => (
+  <Dialog open={selectedCount > 0} modal={false}>
+    <DialogContent className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0">
+      <DialogHeader className="sr-only">
+        <DialogTitle>Selected investors</DialogTitle>
+      </DialogHeader>
+      <div className="flex gap-2 p-2">
+        <Button
+          variant="outline"
+          className="border-muted flex h-9 items-center gap-2 rounded-lg border border-dashed text-sm font-medium hover:bg-white"
+          onClick={onClose}
+        >
+          <span className="tabular-nums">{selectedCount}</span> selected
+          <X className="size-4" />
+        </Button>
+        {canContact ? <ContactSelectedCopyButton emails={emails} /> : null}
+      </div>
+    </DialogContent>
+  </Dialog>
+);
 
-const ContactSelectedCopyButton = ({ emails }: { emails: string }) => {
-  return (
-    <CopyButton variant="primary" className="flex h-9 items-center gap-2 border-none text-sm" copyText={emails}>
-      <Mail className="size-3.5" strokeWidth={2.5} />
-      Contact selected
-    </CopyButton>
-  );
-}
+const ContactSelectedCopyButton = ({ emails }: { emails: string }) => (
+  <CopyButton variant="primary" className="flex h-9 items-center gap-2 border-none text-sm" copyText={emails}>
+    <Mail className="size-3.5" strokeWidth={2.5} />
+    Contact selected
+  </CopyButton>
+);
