@@ -312,7 +312,7 @@ export default function InvoicesPage() {
 
           return (
             <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 w-4 items-center justify-center">{getInvoiceStatusText(invoice, company)}</div>
+              <div className="flex h-5 items-center justify-center">{getInvoiceStatusText(invoice, company)}</div>
               <div className="text-gray-600">{formatDate(invoice.invoiceDate)}</div>
             </div>
           );
