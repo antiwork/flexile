@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useExerciseDataConfig } from "@/app/(dashboard)/equity/options";
@@ -25,8 +24,6 @@ export default function Equity() {
   const company = useCurrentCompany();
   const utils = trpc.useUtils();
   const queryClient = useQueryClient();
-  const [localEquityEnabled, setLocalEquityEnabled] = useState(company.equityEnabled);
-  const [localOptionExercisingEnabled, setLocalOptionExercisingEnabled] = useState(company.optionExercisingEnabled);
   const { data: exerciseData } = useQuery(useExerciseDataConfig());
 
   // Separate mutation for the equity toggle
@@ -55,7 +52,6 @@ export default function Equity() {
   });
 
   const handleEquityToggle = async (checked: boolean) => {
-    setLocalEquityEnabled(checked);
     await updateEquityEnabled.mutateAsync({
       companyId: company.id,
       equityEnabled: checked,
@@ -63,7 +59,6 @@ export default function Equity() {
   };
 
   const handleOptionExercisingToggle = async (checked: boolean) => {
-    setLocalOptionExercisingEnabled(checked);
     await updateOptionExercisingEnabled.mutateAsync({
       companyId: company.id,
       optionExercisingEnabled: checked,
@@ -116,7 +111,7 @@ export default function Equity() {
               </div>
             </div>
             <Switch
-              checked={localEquityEnabled}
+              checked={company.equityEnabled}
               onCheckedChange={(checked) => {
                 void handleEquityToggle(checked);
               }}
@@ -131,9 +126,9 @@ export default function Equity() {
               <div className="font-medium">Exercise requests</div>
               <div className="text-muted-foreground text-sm">Allow investors to exercise their vested options.</div>
             </div>
-            {localEquityEnabled ? (
+            {company.equityEnabled ? (
               <Switch
-                checked={localOptionExercisingEnabled}
+                checked={company.optionExercisingEnabled}
                 onCheckedChange={(checked) => {
                   void handleOptionExercisingToggle(checked);
                 }}
@@ -146,7 +141,7 @@ export default function Equity() {
       </div>
 
       {/* Equity Value Section - Only shown when equity is enabled */}
-      {localEquityEnabled ? (
+      {company.equityEnabled ? (
         <div className="space-y-6">
           <hgroup>
             <h2 className="text-lg font-semibold">Equity value</h2>
@@ -200,7 +195,7 @@ export default function Equity() {
                       </FormItem>
                     )}
                   />
-                  {exerciseData && localOptionExercisingEnabled ? (
+                  {exerciseData && company.optionExercisingEnabled ? (
                     <FormField
                       control={form.control}
                       name="exerciseNotice"

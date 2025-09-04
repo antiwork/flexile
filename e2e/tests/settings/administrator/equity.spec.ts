@@ -126,6 +126,7 @@ test.describe("Company equity settings", () => {
     await enableOptionExercisingSwitch.click({ force: true });
     await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "true");
     await expect(page.getByRole("switch", { name: "Enable option exercising" })).not.toBeDisabled();
+    await expect(page.getByText("Exercise notice", { exact: true })).toBeVisible();
 
     // Verify in database
     let dbCompany = await db.query.companies.findFirst({
@@ -137,6 +138,7 @@ test.describe("Company equity settings", () => {
     await enableOptionExercisingSwitch.click({ force: true });
     await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "false");
     await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeDisabled();
+    await expect(page.getByText("Exercise notice", { exact: true })).not.toBeVisible();
 
     // Verify in database
     dbCompany = await db.query.companies.findFirst({
