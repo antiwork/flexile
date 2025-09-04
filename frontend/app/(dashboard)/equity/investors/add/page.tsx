@@ -450,7 +450,7 @@ const AddCapTablePage = () => {
         />
 
         {hasFormErrors ? (
-          <Alert className="mx-4 mt-4 mb-4" variant="destructive">
+          <Alert className="mx-4 mt-2 mb-4" variant="destructive">
             <AlertTriangle className="my-auto max-h-4 max-w-4" />
             {!errorMessage ? (
               <>
