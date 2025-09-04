@@ -128,14 +128,14 @@ test.describe("Dividends", () => {
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Dividends" }).first().click();
 
-    const dividendRow = page.getByRole("row").filter({
-      has: page.getByRole("cell", { name: "$1,000" }),
-    });
+    const row = page
+      .getByRole("row")
+      .filter({ has: page.getByRole("cell", { name: "$1,000" }) }) // Investment amount
+      .filter({ has: page.getByRole("cell", { name: "$500" }) }) // Gross amount
+      .filter({ has: page.getByRole("cell", { name: "500", exact: true }) }) // Number of shares
+      .filter({ has: page.getByRole("cell", { name: "$50", exact: true }) }) // Withheld taxes
+      .filter({ has: page.getByRole("cell", { name: "$100" }) }); // Net amount
 
-    await expect(dividendRow.getByRole("cell", { name: "$1,000" })).toBeVisible(); // Investment amount
-    await expect(dividendRow.getByRole("cell", { name: "$500" })).toBeVisible(); // Gross amount
-    await expect(dividendRow.getByRole("cell", { name: "500", exact: true })).toBeVisible(); // Number of shares
-    await expect(dividendRow.getByRole("cell", { name: "$50", exact: true })).toBeVisible(); // Withheld taxes
-    await expect(dividendRow.getByRole("cell", { name: "$100" })).toBeVisible(); // Net amount
+    await expect(row).toBeVisible();
   });
 });
