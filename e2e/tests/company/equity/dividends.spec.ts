@@ -120,4 +120,22 @@ test.describe("Dividends", () => {
     await expect(page.getByRole("button", { name: "Sign" })).not.toBeVisible();
     await expect(page.getByText("Please provide a payout method for your dividends.")).toBeVisible();
   });
+
+  test("displays dividend table data correctly", async ({ page }) => {
+    const { investorUser } = await setup();
+
+    await login(page, investorUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Dividends" }).first().click();
+
+    const dividendRow = page.getByRole("row").filter({
+      has: page.getByRole("cell", { name: "$1,000" }),
+    });
+
+    await expect(dividendRow.getByRole("cell", { name: "$1,000" })).toBeVisible(); // Investment amount
+    await expect(dividendRow.getByRole("cell", { name: "$500" })).toBeVisible(); // Gross amount
+    await expect(dividendRow.getByRole("cell", { name: "500", exact: true })).toBeVisible(); // Number of shares
+    await expect(dividendRow.getByRole("cell", { name: "$50", exact: true })).toBeVisible(); // Withheld taxes
+    await expect(dividendRow.getByRole("cell", { name: "$100" })).toBeVisible(); // Net amount ($500 - $50)
+  });
 });
