@@ -244,7 +244,7 @@ const CompanySwitcher = ({ onSelect }: CompanySwitcherProps) => {
       aria-current={company.id === user.currentCompanyId ? "true" : undefined}
     >
       <Image src={company.logo_url ?? defaultCompanyLogo.src} width={20} height={20} className="rounded-xs" alt="" />
-      <span className="line-clamp-1 flex-1 text-left font-normal">{company.name}</span>
+      <span className="line-clamp-1 flex-1 text-left font-normal">{company.name ?? "Personal"}</span>
     </button>
   ));
 };
