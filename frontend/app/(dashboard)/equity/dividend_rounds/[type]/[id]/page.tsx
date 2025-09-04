@@ -14,7 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-import { formatMoney } from "@/utils/formatMoney";
+import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_dividend_computation_path } from "@/utils/routes";
 import FinalizeDistributionModal from "./FinalizeDistributionModal";
@@ -41,6 +41,9 @@ const DividendRound = ({ id }: { id: string }) => {
     dividendRoundId: id,
   });
 
+  // Old dividend records don't have an investment amount
+  const hasInvestmentAmounts = dividends.some((dividend) => dividend.investmentAmountCents !== null);
+
   const columnHelper = createColumnHelper<Dividend>();
   const columns = useMemo(
     () => [
@@ -50,6 +53,18 @@ const DividendRound = ({ id }: { id: string }) => {
         cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
         footer: "Total",
       }),
+      ...(hasInvestmentAmounts
+        ? [
+            columnHelper.accessor("investmentAmountCents", {
+              header: "Investment amount",
+              cell: (info) => formatMoneyFromCents(Number(info.getValue())),
+              meta: { numeric: true },
+              footer: formatMoneyFromCents(
+                dividends.reduce((sum, dividend) => sum + Number(dividend.investmentAmountCents), 0),
+              ),
+            }),
+          ]
+        : []),
       columnHelper.accessor("totalAmountInCents", {
         header: "Return amount",
         cell: (info) => formatMoney(Number(info.getValue()) / 100),
@@ -108,6 +123,7 @@ const dividendComputationSchema = z.object({
       investor_external_id: z.string().nullable(),
       total_amount: z.string(),
       number_of_shares: z.number(),
+      investment_amount_cents: z.number(),
     }),
   ),
 });
@@ -144,6 +160,14 @@ const DividendComputation = ({ id }: { id: string }) => {
         header: "Investor",
         cell: (info) => <div className="font-light">{info.getValue() || "Unknown"}</div>,
         footer: "Total",
+      }),
+      columnHelper.accessor("investment_amount_cents", {
+        header: "Investment amount",
+        cell: (info) => formatMoneyFromCents(info.getValue()),
+        meta: { numeric: true },
+        footer: formatMoneyFromCents(
+          computationOutputs.reduce((sum, output) => sum + output.investment_amount_cents, 0),
+        ),
       }),
       columnHelper.accessor("total_amount", {
         header: "Return amount",

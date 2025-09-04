@@ -1,5 +1,5 @@
 "use client";
-import { CircleCheck } from "lucide-react";
+import { CircleCheck, Mail, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
 import CopyButton from "@/components/CopyButton";
@@ -8,7 +8,8 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import {
   fetchInvestorEmail,
@@ -20,6 +21,7 @@ import {
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatOwnershipPercentage } from "@/utils/numbers";
+import { useIsMobile } from "@/utils/use-mobile";
 import { type ColumnConfig, ColumnSettingsToggle, useColumnSettings } from "./ColumnSettings";
 
 type Data = RouterOutput["capTable"]["show"];
@@ -268,36 +270,54 @@ export default function CapTable() {
     .filter((email): email is string => !!email)
     .join(", ");
 
+  const isMobile = useIsMobile();
+
   return (
     <>
-      <DashboardHeader title="Investors" />
-
-      {selectedInvestors.length > 0 && (
-        <Alert className="mx-4 mb-4">
-          <AlertDescription className="flex items-center justify-between">
-            <span>
-              <strong>{selectedInvestors.length}</strong> selected
-            </span>
-            <CopyButton copyText={selectedInvestorEmails}>Contact selected</CopyButton>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {!isLoading && data.investors.length > 0 ? (
-        <div className="mx-4">
-          <ColumnSettingsToggle
-            columns={columnConfigs}
-            columnVisibility={columnVisibility}
-            onToggleColumn={toggleColumn}
-            onResetToDefaults={resetToDefaults}
-          />
-        </div>
-      ) : null}
+      <DashboardHeader
+        title="Investors"
+        headerActions={
+          isMobile && canViewInvestor && investorsTable.getRowModel().rows.some((r) => r.getCanSelect()) ? (
+            <button
+              className="p-2 text-blue-600"
+              onClick={() => investorsTable.toggleAllRowsSelected(!investorsTable.getIsAllRowsSelected())}
+            >
+              {investorsTable.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
+            </button>
+          ) : undefined
+        }
+      />
 
       {isLoading ? (
         <TableSkeleton columns={columnConfigs.filter((config) => isColumnVisible(config.id)).length || 0} />
       ) : data.investors.length > 0 ? (
         <div className="overflow-x-auto">
+          <div className="mx-4 mb-2 flex flex-row gap-2">
+            <ColumnSettingsToggle
+              columns={columnConfigs}
+              columnVisibility={columnVisibility}
+              onToggleColumn={toggleColumn}
+              onResetToDefaults={resetToDefaults}
+            />
+            {!isMobile && canViewInvestor ? (
+              <div className={`flex gap-2 ${selectedInvestors.length === 0 ? "pointer-events-none opacity-0" : ""}`}>
+                <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
+                  <span className="text-sm whitespace-nowrap">
+                    <span className="inline-block text-center tabular-nums">{selectedInvestors.length}</span> selected
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="-mr-1 size-6 p-0 hover:bg-transparent"
+                    onClick={() => investorsTable.toggleAllRowsSelected(false)}
+                  >
+                    <X className="size-4 shrink-0" aria-hidden="true" />
+                  </Button>
+                </div>
+                <ContactSelectedCopyButton emails={selectedInvestorEmails} />
+              </div>
+            ) : null}
+          </div>
           <DataTable table={investorsTable} />
         </div>
       ) : (
@@ -305,6 +325,53 @@ export default function CapTable() {
           <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
         </div>
       )}
+
+      {isMobile && selectedInvestors.length > 0 ? (
+        <InvestorBulkActionsBar
+          selectedCount={selectedInvestors.length}
+          canContact={canViewInvestor}
+          emails={selectedInvestorEmails}
+          onClose={() => investorsTable.toggleAllRowsSelected(false)}
+        />
+      ) : null}
     </>
   );
 }
+
+const InvestorBulkActionsBar = ({
+  selectedCount,
+  canContact,
+  emails,
+  onClose,
+}: {
+  selectedCount: number;
+  canContact: boolean;
+  emails: string;
+  onClose: () => void;
+}) => (
+  <Dialog open={selectedCount > 0} modal={false}>
+    <DialogContent className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0">
+      <DialogHeader className="sr-only">
+        <DialogTitle>Selected investors</DialogTitle>
+      </DialogHeader>
+      <div className="flex gap-2 p-2">
+        <Button
+          variant="outline"
+          className="border-muted flex h-9 items-center gap-2 rounded-lg border border-dashed text-sm font-medium hover:bg-white"
+          onClick={onClose}
+        >
+          <span className="tabular-nums">{selectedCount}</span> selected
+          <X className="size-4" />
+        </Button>
+        {canContact ? <ContactSelectedCopyButton emails={emails} /> : null}
+      </div>
+    </DialogContent>
+  </Dialog>
+);
+
+const ContactSelectedCopyButton = ({ emails }: { emails: string }) => (
+  <CopyButton variant="primary" className="flex h-9 items-center gap-2 border-none text-sm" copyText={emails}>
+    <Mail className="size-3.5" strokeWidth={2.5} />
+    Contact selected
+  </CopyButton>
+);
