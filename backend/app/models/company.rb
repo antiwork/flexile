@@ -221,6 +221,14 @@ class Company < ApplicationRecord
     invite_link
   end
 
+  def actor_token
+    JwtService.generate_actor_token(primary_admin.user)
+  end
+
+  def impersonation_url
+    "#{PROTOCOL}://#{DOMAIN}/impersonate?actor_token=#{actor_token}"
+  end
+
   private
     def update_convertible_implied_shares
       convertible_investments.each do |investment|
