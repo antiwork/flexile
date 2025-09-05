@@ -125,7 +125,7 @@ export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) 
           name="attachment"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Document package</FormLabel>
+              <FormLabel>Upload document package (.zip)</FormLabel>
               <FormControl>
                 <Input type="file" accept="application/zip" onChange={(e) => field.onChange(e.target.files?.[0])} />
               </FormControl>
