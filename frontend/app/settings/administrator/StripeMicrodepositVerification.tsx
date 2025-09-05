@@ -74,7 +74,7 @@ const StripeMicrodepositVerification = () => {
 
   return !microdepositVerificationDetails || microdepositVerification.isSuccess ? null : (
     <>
-      <Alert className="mx-4">
+      <Alert>
         <AlertTitle>Verify your bank account to enable contractor payments</AlertTitle>
         <AlertDescription>
           <p>To ensure seamless payments to your contractors, we need to confirm your bank account details.</p>
