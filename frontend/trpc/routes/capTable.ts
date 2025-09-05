@@ -15,6 +15,7 @@ import {
 } from "@/db/schema";
 import type { CapTableInvestor, CapTableInvestorForAdmin } from "@/models/investor";
 import { companyProcedure, createRouter } from "@/trpc";
+import { company_administrator_cap_tables_url } from "@/utils/routes";
 
 export const capTableRouter = createRouter({
   show: companyProcedure.input(z.object({ newSchema: z.boolean().optional() })).query(async ({ ctx, input }) => {
@@ -217,4 +218,46 @@ export const capTableRouter = createRouter({
       exercisePrices: exercisePrices.map((price) => `$${Number(price).toFixed(2)}`),
     };
   }),
+
+  create: companyProcedure
+    .input(
+      z.object({
+        investors: z.array(
+          z.object({
+            userId: z.string(),
+            shares: z.number().positive(),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+      if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN", message: "Equity must be enabled" });
+
+      const response = await fetch(company_administrator_cap_tables_url(ctx.company.externalId), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...ctx.headers,
+        },
+        body: JSON.stringify({
+          cap_table: {
+            investors: input.investors,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorSchema = z.object({
+          errors: z.array(z.string()).optional(),
+        });
+        const errorData = errorSchema.parse(await response.json().catch(() => ({})));
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: errorData.errors?.join(", ") || "Failed to create cap table",
+        });
+      }
+
+      return { success: true };
+    }),
 });

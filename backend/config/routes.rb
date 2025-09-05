@@ -12,10 +12,6 @@ admin_constraint = lambda do |request|
   user&.team_member?
 end
 
-api_domain_constraint = lambda do |request|
-  Rails.env.test? || API_DOMAIN == request.host
-end
-
 Rails.application.routes.draw do
   namespace :admin, constraints: admin_constraint do
     resources :company_workers
@@ -62,12 +58,8 @@ Rails.application.routes.draw do
   end
 
   scope module: :api, as: :api do
-    constraints api_domain_constraint do
-      namespace :v1 do
-      end
-      namespace :helper do
-        resource :users, only: :show
-      end
+    namespace :helper do
+      resource :users, only: :show
     end
   end
 

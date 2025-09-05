@@ -130,13 +130,10 @@ class EquityExercisingService
     end
 
     def next_share_name
-      preceding_share = company.share_holdings.order(id: :desc).first
-      return "#{company.name.first(1).upcase}-1" if preceding_share.nil?
-
-      preceding_share_digits = preceding_share.name.scan(/\d+\z/).last
-      preceding_share_number = preceding_share_digits.to_i
-
-      next_share_number = preceding_share_number + 1
-      preceding_share.name.reverse.sub(preceding_share_digits.reverse, next_share_number.to_s.reverse).reverse
+      EquityNamingService.next_name(
+        company: company,
+        collection: company.share_holdings,
+        prefix_length: 1
+      )
     end
 end

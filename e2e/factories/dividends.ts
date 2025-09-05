@@ -30,6 +30,7 @@ export const dividendsFactory = {
         netAmountInCents: 10000n,
         withholdingPercentage: 0,
         qualifiedAmountCents: 0n,
+        investmentAmountCents: 100000n,
         ...overrides,
       })
       .returning();
