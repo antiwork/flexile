@@ -266,7 +266,7 @@ export default function Dividends() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={() => setSigningDividend({ id: signingDividend.id, state: "signing" })}>
+                  <Button size="small" onClick={() => setSigningDividend({ id: signingDividend.id, state: "signing" })}>
                     Review and sign agreement
                   </Button>
                 </DialogFooter>

@@ -110,7 +110,7 @@ export const Editor = ({
       {...props}
       className={cn(
         "group border-input rounded-md border bg-transparent transition-[color,box-shadow] outline-none",
-        "focus-within:border-ring focus-within:ring-ring/15 focus-within:ring-[3px]",
+        "focus-within:ring-ring/15 focus-within:border-gray-300 focus-within:ring-[3px]",
         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
         className,
       )}

@@ -149,7 +149,7 @@ export default function QuickbooksRow() {
         </div>
         <div className="flex flex-wrap items-center justify-end gap-4">
           {!quickbooksIntegration || quickbooksIntegration.status === "out_of_sync" ? (
-            <MutationButton mutation={connectMutation} loadingText="Connecting...">
+            <MutationButton size="small" mutation={connectMutation} loadingText="Connecting...">
               Connect
             </MutationButton>
           ) : (

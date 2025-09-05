@@ -199,6 +199,7 @@ export default function Details() {
         <MutationStatusButton
           mutation={updateSettings}
           type="submit"
+          size="small"
           loadingText="Saving..."
           successText="Changes saved"
           className="w-fit"

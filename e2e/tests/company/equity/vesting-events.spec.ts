@@ -250,7 +250,7 @@ test.describe("Equity Grant Vesting Events", () => {
     await page.getByRole("link", { name: "Equity grants" }).click();
 
     // Create grant with invoice-based vesting
-    await page.getByRole("button", { name: "New option grant" }).click();
+    await page.getByRole("button", { name: "New grant" }).click();
     await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
     await page.getByLabel("Number of options").fill("10000");
     await selectComboboxOption(page, "Relationship to company", "Consultant");

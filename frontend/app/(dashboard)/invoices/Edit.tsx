@@ -267,11 +267,16 @@ const Edit = () => {
             {data.invoice.id && data.invoice.status === "rejected" ? (
               <div className="inline-flex items-center">Action required</div>
             ) : (
-              <Button variant="outline" asChild>
+              <Button size="small" variant="outline" asChild>
                 <Link href="/invoices">Cancel</Link>
               </Button>
             )}
-            <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
+            <Button
+              size="small"
+              variant="primary"
+              onClick={() => validate() && submit.mutate()}
+              disabled={submit.isPending}
+            >
               <PaperAirplaneIcon className="size-4" />
               {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit invoice" : "Send invoice"}
             </Button>

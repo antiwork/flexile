@@ -379,7 +379,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
         </DialogHeader>
         <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
         <DialogFooter>
-          <Button onClick={sign} disabled={!signed}>
+          <Button size="small" onClick={sign} disabled={!signed}>
             Agree & Submit
           </Button>
         </DialogFooter>

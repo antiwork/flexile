@@ -65,10 +65,10 @@ const InviteLinkModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
             <Input className="text-foreground text-sm" readOnly value={inviteLink} aria-label="Link" />
           </div>
           <DialogFooter>
-            <Button variant="outline" size="default" onClick={() => setShowResetLinkModal(true)}>
+            <Button variant="outline" size="small" onClick={() => setShowResetLinkModal(true)}>
               Reset link
             </Button>
-            <CopyButton aria-label="Copy" copyText={inviteLink}>
+            <CopyButton aria-label="Copy" size="small" copyText={inviteLink}>
               <Copy className="size-4" />
               <span>Copy</span>
             </CopyButton>
@@ -79,17 +79,19 @@ const InviteLinkModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
         <DialogContent className="md:mb-80">
           <DialogHeader>
             <DialogTitle>Reset invite link?</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription>
               Resetting the link will deactivate the current invite. If you have already shared it, others may not be
               able to join.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col">
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowResetLinkModal(false)}>
+              <Button variant="outline" size="small" onClick={() => setShowResetLinkModal(false)}>
                 Cancel
               </Button>
-              <MutationButton mutation={resetMutation}>Reset link</MutationButton>
+              <MutationButton size="small" mutation={resetMutation}>
+                Reset link
+              </MutationButton>
             </div>
           </div>
         </DialogContent>

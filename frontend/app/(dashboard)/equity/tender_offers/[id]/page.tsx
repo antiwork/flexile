@@ -282,11 +282,12 @@ export default function BuybackView() {
                 Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
               </p>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setCancelingBid(null)}>
+                <Button size="small" variant="outline" onClick={() => setCancelingBid(null)}>
                   No, keep bid
                 </Button>
                 <MutationButton
                   mutation={destroyMutation}
+                  size="small"
                   param={{ companyId: company.id, id: cancelingBid.id }}
                   loadingText="Canceling..."
                 >

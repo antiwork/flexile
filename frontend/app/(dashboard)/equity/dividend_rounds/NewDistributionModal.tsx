@@ -147,7 +147,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
             />
 
             <DialogFooter>
-              <Button type="submit" disabled={!form.formState.isValid || mutation.isPending}>
+              <Button type="submit" size="small" disabled={!form.formState.isValid || mutation.isPending}>
                 Create distribution
               </Button>
             </DialogFooter>

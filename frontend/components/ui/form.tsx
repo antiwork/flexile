@@ -98,6 +98,7 @@ function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
   return (
     <Slot
       data-slot="form-control"
+      className="focus-visible:ring-ring/15 outline-none focus-visible:border-gray-300 focus-visible:ring-[3px]"
       id={formItemId}
       aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
       aria-invalid={!!error}

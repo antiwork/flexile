@@ -95,6 +95,7 @@ const DetailsSection = () => {
         <MutationStatusButton
           className="w-fit"
           type="submit"
+          size="small"
           mutation={saveMutation}
           loadingText="Saving..."
           successText="Saved!"
@@ -185,6 +186,7 @@ const LeaveWorkspaceSection = () => {
             <CardAction>
               <Button
                 variant="outline"
+                size="small"
                 className="text-destructive hover:text-destructive"
                 onClick={() => setIsModalOpen(true)}
               >

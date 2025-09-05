@@ -684,10 +684,6 @@ const TasksModal = ({
           </DialogTitle>
         </DialogHeader>
         <section>
-          <div className="mb-4">
-            <div className="text-sm text-gray-500">Status</div>
-            <div className="font-medium">{getInvoiceStatusText(invoice, company)}</div>
-          </div>
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
             <Alert className="max-md:mb-4" variant="warning">
@@ -704,6 +700,11 @@ const TasksModal = ({
               <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
             </Button>
           </header>
+          <Separator />
+          <div className="flex justify-between gap-2 max-md:leading-5">
+            <div>Status</div>
+            <div>{getInvoiceStatusText(invoice, company)}</div>
+          </div>
           <Separator />
           <div>
             <div className="flex justify-between gap-2 max-md:leading-5">
@@ -729,7 +730,7 @@ const TasksModal = ({
         {isActionable(invoice) ? (
           <DialogFooter>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" onClick={onReject} className="max-md:h-9 max-md:text-sm">
+              <Button variant="outline" size="small" onClick={onReject} className="max-md:h-9 max-md:text-sm">
                 Reject
               </Button>
               <ApproveButton invoice={invoice} onApprove={onClose} className="max-md:h-9 max-md:text-sm" />

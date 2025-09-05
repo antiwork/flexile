@@ -156,6 +156,7 @@ export const ApproveButton = ({
   return (
     <MutationButton
       className={className}
+      size="small"
       mutation={approveInvoices}
       param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
       successText={pay ? "Payment initiated" : "Approved!"}
