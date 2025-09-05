@@ -1,6 +1,7 @@
 "use client";
 
 import { useConversations, useCreateConversation } from "@helperai/react";
+import { format, isThisYear, isToday, parseISO } from "date-fns";
 import { CircleCheck, Paperclip, Plus, SendIcon, X } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { helperTools } from "@/app/(dashboard)/support/tools";
@@ -14,12 +15,17 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 
 interface ConversationsListProps {
   onSelectConversation: (slug: string) => void;
 }
+
+const formatConversationDate = (conversationDate: string) => {
+  const date = parseISO(conversationDate);
+  const pattern = isToday(date) ? "hh:mm a" : isThisYear(date) ? "MMM d" : "MMM d, yyyy";
+  return format(date, pattern);
+};
 
 export const ConversationsList = ({ onSelectConversation }: ConversationsListProps) => {
   const isMobile = useIsMobile();
@@ -136,7 +142,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                       <TableCell className="py-4">
                         <div className="flex flex-col items-end gap-1 font-[350] text-gray-600">
                           <div>{conversation.messageCount}</div>
-                          <div>{formatDate(conversation.latestMessageAt ?? conversation.createdAt)}</div>
+                          <div>{formatConversationDate(conversation.latestMessageAt ?? conversation.createdAt)}</div>
                         </div>
                       </TableCell>
                     </>
@@ -152,7 +158,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                         {conversation.messageCount}
                       </TableCell>
                       <TableCell className={conversation.isUnread ? "font-bold" : ""}>
-                        {formatDate(conversation.latestMessageAt ?? conversation.createdAt)}
+                        {formatConversationDate(conversation.latestMessageAt ?? conversation.createdAt)}
                       </TableCell>
                     </>
                   )}
