@@ -3,7 +3,7 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, PaperClipIcon, PencilIcon, PrinterIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
-import { CircleAlert, Trash2 } from "lucide-react";
+import { CircleAlert, MoreHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { Fragment, useMemo, useState } from "react";
@@ -14,6 +14,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,6 +29,7 @@ import { cn } from "@/utils";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate, formatDuration } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 import {
   Address,
   ApproveButton,
@@ -109,7 +116,7 @@ export default function InvoicePage() {
   const router = useRouter();
   const isActionable = useIsActionable();
   const isDeletable = useIsDeletable();
-
+  const isMobile = useIsMobile();
   const searchParams = useSearchParams();
   const [acceptPaymentModalOpen, setAcceptPaymentModalOpen] = useState(
     invoice.requiresAcceptanceByPayee && searchParams.get("accept") === "true",
@@ -149,63 +156,78 @@ export default function InvoicePage() {
         title={`Invoice ${invoice.invoiceNumber}`}
         className="print:visible print:mb-4 print:px-0 print:pt-0"
         headerActions={
-          <>
-            <span aria-label="Status">{getInvoiceStatusText(invoice, company)}</span>
-            <Button variant="outline" onClick={() => window.print()}>
-              <PrinterIcon className="size-4" />
-              Print
-            </Button>
-            {user.roles.administrator && isActionable(invoice) ? (
-              <>
-                <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
-                  <XMarkIcon className="size-4" />
-                  Reject
-                </Button>
-
-                <RejectModal
-                  open={rejectModalOpen}
-                  onClose={() => setRejectModalOpen(false)}
-                  onReject={() => router.push(`/invoices`)}
-                  ids={[invoice.id]}
-                />
-
-                <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
-              </>
-            ) : null}
-            {user.id === invoice.userId ? (
-              <>
-                {invoice.requiresAcceptanceByPayee ? (
-                  <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
-                ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                  <Button variant="default" asChild>
-                    <Link href={`/invoices/${invoice.id}/edit`}>
-                      {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
-                      {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
-                    </Link>
+          isMobile ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="p-2">
+                <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Button variant="outline" className="w-full border-0" onClick={() => window.print()}>
+                    <PrinterIcon className="size-4" />
+                    Print
                   </Button>
-                ) : null}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => window.print()}>
+                <PrinterIcon className="size-4" />
+                Print
+              </Button>
+              {user.roles.administrator && isActionable(invoice) ? (
+                <>
+                  <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
+                    <XMarkIcon className="size-4" />
+                    Reject
+                  </Button>
 
-                {isDeletable(invoice) ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={() => setDeleteModalOpen(true)}
-                      className="hover:text-destructive"
-                    >
-                      <Trash2 className="size-4" />
-                      <span>Delete</span>
+                  <RejectModal
+                    open={rejectModalOpen}
+                    onClose={() => setRejectModalOpen(false)}
+                    onReject={() => router.push(`/invoices`)}
+                    ids={[invoice.id]}
+                  />
+
+                  <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
+                </>
+              ) : null}
+              {user.id === invoice.userId ? (
+                <>
+                  {invoice.requiresAcceptanceByPayee ? (
+                    <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
+                  ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+                    <Button variant="default" asChild>
+                      <Link href={`/invoices/${invoice.id}/edit`}>
+                        {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
+                        {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
+                      </Link>
                     </Button>
-                    <DeleteModal
-                      open={deleteModalOpen}
-                      onClose={() => setDeleteModalOpen(false)}
-                      onDelete={() => router.push(`/invoices`)}
-                      invoices={[invoice]}
-                    />
-                  </>
-                ) : null}
-              </>
-            ) : null}
-          </>
+                  ) : null}
+
+                  {isDeletable(invoice) ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => setDeleteModalOpen(true)}
+                        className="hover:text-destructive"
+                      >
+                        <Trash2 className="size-4" />
+                        <span>Delete</span>
+                      </Button>
+                      <DeleteModal
+                        open={deleteModalOpen}
+                        onClose={() => setDeleteModalOpen(false)}
+                        onDelete={() => router.push(`/invoices`)}
+                        invoices={[invoice]}
+                      />
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+            </>
+          )
         }
       />
 
@@ -280,6 +302,57 @@ export default function InvoicePage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      ) : null}
+
+      {isMobile ? (
+        <>
+          {user.roles.administrator && isActionable(invoice) ? (
+            <div className="mb-4 flex gap-3 px-4">
+              <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
+                <XMarkIcon className="size-4" />
+                Reject
+              </Button>
+
+              <RejectModal
+                open={rejectModalOpen}
+                onClose={() => setRejectModalOpen(false)}
+                onReject={() => router.push(`/invoices`)}
+                ids={[invoice.id]}
+              />
+
+              <ApproveButton invoice={invoice} onApprove={() => router.push(`/invoices`)} />
+            </div>
+          ) : null}
+          {user.id === invoice.userId ? (
+            <div className="mb-4 flex gap-3 px-4">
+              {invoice.requiresAcceptanceByPayee ? (
+                <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
+              ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+                <Button variant="default" asChild>
+                  <Link href={`/invoices/${invoice.id}/edit`}>
+                    {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
+                    {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
+                  </Link>
+                </Button>
+              ) : null}
+
+              {isDeletable(invoice) ? (
+                <>
+                  <Button variant="outline" onClick={() => setDeleteModalOpen(true)} className="hover:text-destructive">
+                    <Trash2 className="size-4" />
+                    <span>Delete</span>
+                  </Button>
+                  <DeleteModal
+                    open={deleteModalOpen}
+                    onClose={() => setDeleteModalOpen(false)}
+                    onDelete={() => router.push(`/invoices`)}
+                    invoices={[invoice]}
+                  />
+                </>
+              ) : null}
+            </div>
+          ) : null}
+        </>
       ) : null}
       {!taxRequirementsMet(invoice) && (
         <Alert className="mx-4 print:hidden" variant="destructive">
