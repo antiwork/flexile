@@ -2,12 +2,16 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Info } from "lucide-react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useExerciseDataConfig } from "@/app/(dashboard)/equity/options";
+import { linkClasses } from "@/components/Link";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Editor as RichTextEditor } from "@/components/RichText";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
@@ -22,9 +26,11 @@ const formSchema = z.object({
 
 export default function Equity() {
   const company = useCurrentCompany();
+  const [settings] = trpc.companies.settings.useSuspenseQuery({ companyId: company.id });
   const utils = trpc.useUtils();
   const queryClient = useQueryClient();
   const { data: exerciseData } = useQuery(useExerciseDataConfig());
+  const requiresCompanyName = !settings.name || settings.name.trim().length === 0;
 
   // Separate mutation for the equity toggle
   const updateEquityEnabled = trpc.companies.update.useMutation({
@@ -94,8 +100,21 @@ export default function Equity() {
         </p>
       </hgroup>
 
+      {requiresCompanyName ? (
+        <Alert>
+          <Info className="my-auto size-4" />
+          <AlertDescription>
+            Please
+            <Link href="/settings/administrator/details" className={linkClasses}>
+              add your company name
+            </Link>{" "}
+            in order to manage equity settings.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {/* Settings Section */}
-      <div className="space-y-6">
+      <div className={`space-y-6 ${requiresCompanyName ? "opacity-50" : ""}`}>
         <div>
           <h2 className="text-lg font-semibold">Settings</h2>
           <div className="bg-border mt-2 h-px"></div>
@@ -116,7 +135,7 @@ export default function Equity() {
                 void handleEquityToggle(checked);
               }}
               aria-label="Enable equity"
-              disabled={updateEquityEnabled.isPending}
+              disabled={updateEquityEnabled.isPending || requiresCompanyName}
             />
           </div>
 
@@ -142,7 +161,7 @@ export default function Equity() {
 
       {/* Equity Value Section - Only shown when equity is enabled */}
       {company.equityEnabled ? (
-        <div className="space-y-6">
+        <div className={`space-y-6 ${requiresCompanyName ? "opacity-50" : ""}`}>
           <hgroup>
             <h2 className="text-lg font-semibold">Equity value</h2>
             <div className="bg-border mt-2 h-px"></div>
