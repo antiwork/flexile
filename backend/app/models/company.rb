@@ -221,6 +221,13 @@ class Company < ApplicationRecord
     invite_link
   end
 
+  def cap_table_empty?
+    !option_pools.exists? &&
+      !share_classes.exists? &&
+      !company_investors.exists? &&
+      !share_holdings.exists?
+  end
+
   private
     def update_convertible_implied_shares
       convertible_investments.each do |investment|
