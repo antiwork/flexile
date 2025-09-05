@@ -95,6 +95,9 @@ export const dividendComputationsFactory = {
       },
     ]);
 
-    return insertedDividendComputation;
+    return {
+      ...insertedDividendComputation,
+      totalFeesCents: 6000, // Math.min(3000, 40000 * 0.029) + Math.min(3000, 20000 * 0.029)
+    };
   },
 };

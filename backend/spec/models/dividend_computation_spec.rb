@@ -295,4 +295,17 @@ RSpec.describe DividendComputation do
       expect(@dividend_computation.number_of_shareholders).to eq(9)
     end
   end
+
+  describe "#total_fees_cents" do
+    it "matches the total fees calculated from actual generated dividends" do
+      computation_fees = @dividend_computation.total_fees_cents
+
+      dividend_round = @dividend_computation.finalize_and_create_dividend_round
+      dividend_round_fees = dividend_round.dividends.sum do |dividend|
+        FlexileFeeCalculator.calculate_dividend_fee_cents(dividend.total_amount_in_cents)
+      end
+
+      expect(computation_fees).to eq(dividend_round_fees)
+    end
+  end
 end

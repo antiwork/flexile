@@ -10,6 +10,13 @@ class DividendComputation < ApplicationRecord
   validates :dividends_issuance_date, presence: true
   scope :unfinalized, -> { where(finalized_at: nil) }
 
+  def total_fees_cents
+    data_for_dividend_creation.sum do |dividend_data|
+      total_amount_cents = (dividend_data[:total_amount] * 100).to_i
+      FlexileFeeCalculator.calculate_dividend_fee_cents(total_amount_cents)
+    end
+  end
+
   def number_of_shareholders
     data_for_dividend_creation.map { _1[:company_investor_id] }.uniq.count
   end
