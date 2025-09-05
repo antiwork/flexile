@@ -506,7 +506,6 @@ export const documents = pgTable(
     updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
       .$onUpdate(() => new Date())
       .notNull(),
-    docusealSubmissionId: integer("docuseal_submission_id"),
     text: text(),
   },
   (table) => [
@@ -515,10 +514,6 @@ export const documents = pgTable(
     index("index_documents_on_user_compliance_info_id").using(
       "btree",
       table.userComplianceInfoId.asc().nullsLast().op("int8_ops"),
-    ),
-    index("index_documents_on_docuseal_submission_id").using(
-      "btree",
-      table.docusealSubmissionId.asc().nullsLast().op("int4_ops"),
     ),
   ],
 );

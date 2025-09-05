@@ -18,8 +18,8 @@ import { formatDate } from "@/utils/time";
 
 const formSchema = z.object({ verificationCode: z.string().length(6, "Please enter a 6-digit code.") }).or(
   z.object({
-    firstAmount: z.number().min(1, "Please enter an amount."),
-    secondAmount: z.number().min(1, "Please enter an amount."),
+    firstAmount: z.number().min(0.01, "Please enter an amount."),
+    secondAmount: z.number().min(0.01, "Please enter an amount."),
   }),
 );
 
@@ -105,7 +105,7 @@ const StripeMicrodepositVerification = () => {
           <p>If {isDescriptorCode ? "it's" : "they're"} not visible yet, please check in 1-2 days.</p>
 
           <Form {...form}>
-            <form onSubmit={(e) => void submit(e)}>
+            <form onSubmit={(e) => void submit(e)} className="space-y-4">
               {isDescriptorCode ? (
                 <FormField
                   control={form.control}
@@ -129,7 +129,7 @@ const StripeMicrodepositVerification = () => {
                       <FormItem>
                         <FormLabel>Amount 1</FormLabel>
                         <FormControl>
-                          <NumberInput {...field} prefix="$" />
+                          <NumberInput {...field} prefix="$" decimal maximumFractionDigits={2} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -142,7 +142,7 @@ const StripeMicrodepositVerification = () => {
                       <FormItem>
                         <FormLabel>Amount 2</FormLabel>
                         <FormControl>
-                          <NumberInput {...field} prefix="$" />
+                          <NumberInput {...field} prefix="$" decimal maximumFractionDigits={2} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -151,7 +151,7 @@ const StripeMicrodepositVerification = () => {
                 </div>
               )}
 
-              <DialogFooter className="mt-6">
+              <DialogFooter>
                 <MutationStatusButton type="submit" loadingText="Submitting..." mutation={microdepositVerification}>
                   Submit
                 </MutationStatusButton>

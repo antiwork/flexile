@@ -34,7 +34,6 @@ import {
   useIsDeletable,
   useIsPayable,
 } from "@/app/(dashboard)/invoices/index";
-import Status, { StatusDetails } from "@/app/(dashboard)/invoices/Status";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
@@ -78,6 +77,31 @@ const statusNames = {
   paid: "Paid",
   rejected: "Rejected",
   failed: "Failed",
+};
+
+const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
+  switch (invoice.status) {
+    case "received":
+    case "approved":
+      if (invoice.approvals.length < company.requiredInvoiceApprovals) {
+        let label = "Awaiting approval";
+        if (company.requiredInvoiceApprovals > 1)
+          label += ` (${invoice.approvals.length}/${company.requiredInvoiceApprovals})`;
+        return label;
+      }
+      return "Approved";
+
+    case "processing":
+      return "Payment in progress";
+    case "payment_pending":
+      return "Payment scheduled";
+    case "paid":
+      return invoice.paidAt ? `Paid on ${formatDate(invoice.paidAt)}` : "Paid";
+    case "rejected":
+      return "Rejected";
+    case "failed":
+      return "Failed";
+  }
 };
 
 type Invoice = RouterOutput["invoices"]["list"][number];
@@ -218,13 +242,9 @@ export default function InvoicesPage() {
       columnHelper.accessor((row) => statusNames[row.status], {
         id: "status",
         header: "Status",
-        cell: (info) => (
-          <div className="relative z-1">
-            <Status invoice={info.row.original} />
-          </div>
-        ),
+        cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
         },
       }),
       columnHelper.accessor(isActionable, {
@@ -292,9 +312,7 @@ export default function InvoicesPage() {
 
           return (
             <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 w-4 items-center justify-center">
-                <Status invoice={invoice} iconOnly />
-              </div>
+              <div className="flex h-5 items-center justify-center">{getInvoiceStatusText(invoice, company)}</div>
               <div className="text-gray-600">{formatDate(invoice.invoiceDate)}</div>
             </div>
           );
@@ -304,7 +322,7 @@ export default function InvoicesPage() {
       columnHelper.accessor((row) => statusNames[row.status], {
         id: "status",
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
           hidden: true,
         },
       }),
@@ -406,31 +424,31 @@ export default function InvoicesPage() {
         title="Invoices"
         headerActions={
           isMobile ? (
-            <div className="flex items-center">
-              {data.length > 0 ? (
+            data.length > 0 ? (
+              <div className="flex items-center">
                 <button
                   className="p-2 text-blue-600"
                   onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
                 >
                   {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
                 </button>
-              ) : null}
-              {user.roles.administrator ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="p-2">
-                    <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <a href={export_company_invoices_path(company.id)} className="flex h-11 items-center gap-2">
-                        <Download className="size-4" />
-                        Download CSV
-                      </a>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : null}
-            </div>
+                {user.roles.administrator ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="p-2">
+                      <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <a href={export_company_invoices_path(company.id)} className="flex h-11 items-center gap-2">
+                          <Download className="size-4" />
+                          Download CSV
+                        </a>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
+              </div>
+            ) : null
           ) : user.roles.worker ? (
             <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
               <Link href="/invoices/new" inert={!canSubmitInvoices}>
@@ -489,7 +507,7 @@ export default function InvoicesPage() {
 
           {!company.completedPaymentMethodSetup && (
             <Alert className="mx-4" variant="destructive">
-              <AlertTriangle className="size-4" />
+              <AlertTriangle className="my-auto max-h-4 max-w-4" />
               <AlertTitle>Bank account setup incomplete.</AlertTitle>
               <AlertDescription>
                 We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
@@ -500,7 +518,7 @@ export default function InvoicesPage() {
 
           {company.completedPaymentMethodSetup && !company.isTrusted ? (
             <Alert className="mx-4" variant="destructive">
-              <AlertTriangle className="size-4" />
+              <AlertTriangle className="my-auto max-h-4 max-w-4" />
               <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
               <AlertDescription>
                 Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
@@ -666,7 +684,10 @@ const TasksModal = ({
           </DialogTitle>
         </DialogHeader>
         <section>
-          <StatusDetails invoice={invoice} />
+          <div className="mb-4">
+            <div className="text-sm text-gray-500">Status</div>
+            <div className="font-medium">{getInvoiceStatusText(invoice, company)}</div>
+          </div>
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
             <Alert className="max-md:mb-4" variant="warning">

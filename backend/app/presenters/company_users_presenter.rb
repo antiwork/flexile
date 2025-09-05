@@ -28,7 +28,7 @@ class CompanyUsersPresenter
         email: user.email,
         name: user.legal_name || user.preferred_name || user.email,
         isAdmin: true,
-        role: primary_admin&.id == admin.id ? "Owner" : "Admin",
+        role: primary_admin&.id == admin.id ? "Owner" : format_role_display(roles),
         isOwner: primary_admin&.id == admin.id,
         allRoles: roles,
       }
@@ -85,5 +85,10 @@ class CompanyUsersPresenter
     def is_primary_admin?(user)
       primary_admin = @company.primary_admin
       primary_admin&.user_id == user.id
+    end
+
+    def format_role_display(roles)
+      sorted_roles = roles.sort_by { |role| role == "Admin" ? 0 : 1 }
+      sorted_roles.join(", ")
     end
 end

@@ -4,7 +4,7 @@ import env from "@/env";
 import { authOptions } from "@/lib/auth";
 
 async function handler(req: Request) {
-  const routes = ["^/internal/", "^/api/", "^/admin/", "^/admin$", "^/webhooks/", "^/v1/", "^/rails/", "^/assets/"];
+  const routes = ["^/internal/", "^/api/", "^/admin/", "^/admin$", "^/webhooks/", "^/helper/", "^/rails/", "^/assets/"];
   const url = new URL(req.url);
   if (!routes.some((route) => url.pathname.match(route))) {
     throw notFound();
@@ -17,7 +17,7 @@ async function handler(req: Request) {
       url.hostname = `flexile-pipeline-pr-${process.env.VERCEL_GIT_PULL_REQUEST_ID}.herokuapp.com`;
       break;
     default:
-      url.port = process.env.RAILS_ENV === "test" ? "3100" : "3000";
+      url.port = process.env.RAILS_ENV === "test" ? "3101" : "3001";
       url.protocol = "http";
   }
 
