@@ -4,14 +4,14 @@ RSpec.describe FinancialReportCsvService do
   let(:company) { create(:company, name: "TestCo") }
   let(:user) { create(:user, legal_name: "John Contractor", email: "john@example.com") }
   let(:investor_user) { create(:user, legal_name: "Jane Investor", email: "jane@example.com") }
-  let(:company_investor) { create(:company_investor, company: company, user: investor_user) }
+  let(:company_investor) { create(:company_investor, company:, user: investor_user) }
   let(:start_date) { Date.new(2024, 6, 1) }
   let(:end_date) { start_date.end_of_month }
   let(:expected_report_date) { start_date.strftime("%B %Y") }
 
-  let(:consolidated_invoice) do
+  let!(:consolidated_invoice) do
     create(:consolidated_invoice,
-           company: company,
+           company:,
            invoice_date: Date.new(2024, 6, 1),
            invoice_amount_cents: 70000,
            flexile_fee_cents: 4500,
@@ -21,36 +21,37 @@ RSpec.describe FinancialReportCsvService do
            invoices: [invoice])
   end
 
-  let(:invoice) do
+  let!(:invoice) do
     create(:invoice,
-           user: user,
+           user:,
            cash_amount_in_cents: 30000,
            equity_amount_in_cents: 0,
            total_amount_in_usd_cents: 30000,
            status: Invoice::RECEIVED)
   end
 
-  let(:dividend_round) do
+  let!(:dividend_round) do
     create(:dividend_round,
-           company: company,
+           company:,
            issued_at: Date.new(2024, 6, 4),
            status: "Paid")
   end
 
-  let(:dividend) do
+  let!(:dividend) do
     create(:dividend,
-           company: company,
-           company_investor: company_investor,
-           dividend_round: dividend_round,
+           company:,
+           company_investor:,
+           dividend_round:,
            total_amount_in_cents: 25025,
            net_amount_in_cents: 23000,
            number_of_shares: 24,
            withholding_percentage: 5,
            withheld_tax_cents: 200,
-           paid_at: Date.new(2024, 6, 2))
+           paid_at: Date.new(2024, 6, 2),
+           status: "Paid")
   end
 
-  let(:dividend_payment) do
+  let!(:dividend_payment) do
     create(:dividend_payment,
            dividends: [dividend],
            status: Payment::SUCCEEDED,
@@ -61,11 +62,11 @@ RSpec.describe FinancialReportCsvService do
            created_at: Date.new(2024, 6, 3))
   end
 
-  let(:option_pool) { create(:option_pool, company: company) }
+  let(:option_pool) { create(:option_pool, company:) }
   let(:equity_grant) do
     create(:equity_grant,
-           company_investor: company_investor,
-           option_pool: option_pool,
+           company_investor:,
+           option_pool:,
            number_of_shares: 1000,
            vested_shares: 100,
            unvested_shares: 900,
@@ -74,19 +75,12 @@ RSpec.describe FinancialReportCsvService do
            expires_at: Date.new(2025, 6, 1))
   end
 
-  let(:vesting_event) do
+  let!(:vesting_event) do
     create(:vesting_event,
-           equity_grant: equity_grant,
+           equity_grant:,
            vested_shares: 100,
            vesting_date: Date.new(2024, 6, 15),
            processed_at: Date.new(2024, 6, 16))
-  end
-
-  before do
-    invoice
-    consolidated_invoice
-    dividend_payment
-    vesting_event
   end
 
   describe "#process" do
@@ -133,7 +127,7 @@ RSpec.describe FinancialReportCsvService do
     end
 
     it "includes totals row for invoices" do
-      service = described_class.new(start_date: start_date, end_date: end_date)
+      service = described_class.new(start_date:, end_date:)
       result = service.process
       csv = result["invoices-#{expected_report_date}.csv"]
       rows = CSV.parse(csv)
@@ -146,8 +140,8 @@ RSpec.describe FinancialReportCsvService do
   end
 
   describe "dividends CSV generation" do
-    it "generates CSV with correct headers and handles data appropriately" do
-      service = described_class.new(start_date: start_date, end_date: end_date)
+    it "generates CSV with correct headers" do
+      service = described_class.new(start_date:, end_date:)
       result = service.process
       csv = result["dividends-#{expected_report_date}.csv"]
       rows = CSV.parse(csv)
@@ -158,43 +152,56 @@ RSpec.describe FinancialReportCsvService do
                           "Tax withheld", "Flexile fee (USD)", "Dividend round status"]
 
       expect(rows[0]).to eq(expected_headers)
-
-      # The service may not find dividend data within the date range
-      if rows.length > 1
-        # Data found - expect data row and totals
-        expect(rows.length).to eq(3) # header + data + totals
-        data_row = rows[1]
-        expect(data_row[2]).to eq("TestCo")
-        expect(data_row[5]).to eq("Jane Investor")
-        expect(data_row[6]).to eq("jane@example.com")
-        expect(data_row[7]).to eq("24")
-        expect(data_row[8]).to eq("250.25")
-        expect(data_row[9]).to eq("wise")
-      else
-        # No data found - only headers
-        expect(rows.length).to eq(1)
-      end
     end
 
-    it "includes totals row when dividend data exists" do
-      service = described_class.new(start_date: start_date, end_date: end_date)
+    it "generates CSV with correct dividend data when data exists" do
+      service = described_class.new(start_date:, end_date:)
       result = service.process
       csv = result["dividends-#{expected_report_date}.csv"]
       rows = CSV.parse(csv)
 
-      # Only check totals if data exists (more than just headers)
-      if rows.length > 2
-        totals_row = rows.last
-        expect(totals_row[0]).to eq("TOTAL")
-        expect(totals_row[7]).to be_present # Total shares
-        expect(totals_row[8]).to be_present # Total dividend amount
-      end
+      expect(rows.length).to eq(3) # header + data + totals
+
+      data_row = rows[1]
+      expect(data_row[2]).to eq("TestCo")
+      expect(data_row[5]).to eq("Jane Investor")
+      expect(data_row[6]).to eq("jane@example.com")
+      expect(data_row[7]).to eq("24")
+      expect(data_row[8]).to eq("250.25")
+      expect(data_row[9]).to eq("wise")
+    end
+
+    it "includes totals row when dividend data exists" do
+      service = described_class.new(start_date:, end_date:)
+      result = service.process
+      csv = result["dividends-#{expected_report_date}.csv"]
+      rows = CSV.parse(csv)
+
+      expect(rows.length).to eq(3) # header + data + totals
+
+      totals_row = rows.last
+      expect(totals_row[0]).to eq("TOTAL")
+      expect(totals_row[7]).to be_present # Total shares
+      expect(totals_row[8]).to be_present # Total dividend amount
+    end
+
+    it "only shows headers when no dividend data exists" do
+      start_date = Date.new(2023, 1, 1)
+      end_date = start_date.end_of_month
+      report_date = start_date.strftime("%B %Y")
+
+      service = described_class.new(start_date:, end_date:)
+      result = service.process
+      csv = result["dividends-#{report_date}.csv"]
+      rows = CSV.parse(csv)
+
+      expect(rows.length).to eq(1) # only headers
     end
   end
 
   describe "grouped CSV generation" do
-    it "generates CSV with correct headers and handles data appropriately" do
-      service = described_class.new(start_date: start_date, end_date: end_date)
+    it "generates CSV with correct headers" do
+      service = described_class.new(start_date:, end_date:)
       result = service.process
       csv = result["grouped-#{expected_report_date}.csv"]
       rows = CSV.parse(csv)
@@ -202,46 +209,69 @@ RSpec.describe FinancialReportCsvService do
       expected_headers = ["Type", "Date", "Client name", "Description", "Amount (USD)", "Flexile fee (USD)", "Transfer fee (USD)", "Net amount (USD)"]
 
       expect(rows[0]).to eq(expected_headers)
-      expect(rows.length).to be >= 1 # At least headers
-
-      # Check for invoice data if present
-      invoice_rows = rows.select { |row| row[0] == "Invoice" }
-      if invoice_rows.any?
-        invoice_row = invoice_rows.first
-        expect(invoice_row[1]).to eq("6/1/2024")
-        expect(invoice_row[2]).to eq("TestCo")
-        expect(invoice_row[3]).to include("Invoice ##{invoice.id} - John Contractor")
-        expect(invoice_row[4]).to eq("300.0")
-      end
-
-      # Check for dividend data if present
-      dividend_rows = rows.select { |row| row[0] == "Dividend" }
-      if dividend_rows.any?
-        dividend_row = dividend_rows.first
-        expect(dividend_row[2]).to eq("TestCo")
-        expect(dividend_row[3]).to include("Dividend ##{dividend.id} - Jane Investor")
-        expect(dividend_row[4]).to eq("250.25")
-      end
     end
 
-    it "includes totals row when grouped data exists" do
-      service = described_class.new(start_date: start_date, end_date: end_date)
+    it "includes invoice data when invoices exist" do
+      service = described_class.new(start_date:, end_date:)
       result = service.process
       csv = result["grouped-#{expected_report_date}.csv"]
       rows = CSV.parse(csv)
 
-      # Only check totals if data exists (more than just headers)
-      if rows.length > 1
-        totals_row = rows.last
-        expect(totals_row[0]).to eq("TOTAL")
-        expect(totals_row[4]).to be_present # Total amount
-      end
+      invoice_rows = rows.select { |row| row[0] == "Invoice" }
+      expect(invoice_rows).not_to be_empty
+
+      invoice_row = invoice_rows.first
+      expect(invoice_row[1]).to eq("6/1/2024")
+      expect(invoice_row[2]).to eq("TestCo")
+      expect(invoice_row[3]).to include("Invoice ##{invoice.id} - John Contractor")
+      expect(invoice_row[4]).to eq("300.0")
+    end
+
+    it "includes dividend data when dividends exist" do
+      service = described_class.new(start_date:, end_date:)
+      result = service.process
+      csv = result["grouped-#{expected_report_date}.csv"]
+      rows = CSV.parse(csv)
+
+      dividend_rows = rows.select { |row| row[0] == "Dividend" }
+      expect(dividend_rows).not_to be_empty
+
+      dividend_row = dividend_rows.first
+      expect(dividend_row[2]).to eq("TestCo")
+      expect(dividend_row[3]).to include("Dividend ##{dividend.id} - Jane Investor")
+      expect(dividend_row[4]).to eq("250.25")
+    end
+
+    it "includes totals row when grouped data exists" do
+      service = described_class.new(start_date:, end_date:)
+      result = service.process
+      csv = result["grouped-#{expected_report_date}.csv"]
+      rows = CSV.parse(csv)
+
+      expect(rows.length).to be > 1 # headers + data
+
+      totals_row = rows.last
+      expect(totals_row[0]).to eq("TOTAL")
+      expect(totals_row[4]).to be_present # total amount
+    end
+
+    it "only shows headers when no grouped data exists" do
+      start_date = Date.new(2023, 1, 1)
+      end_date = start_date.end_of_month
+      report_date = start_date.strftime("%B %Y")
+
+      service = described_class.new(start_date:, end_date:)
+      result = service.process
+      csv = result["grouped-#{report_date}.csv"]
+      rows = CSV.parse(csv)
+
+      expect(rows.length).to eq(1) # only headers
     end
   end
 
   describe "stock options CSV generation" do
     it "generates CSV with correct headers and stock options data" do
-      service = described_class.new(start_date: start_date, end_date: end_date)
+      service = described_class.new(start_date:, end_date:)
       result = service.process
       csv = result["stock_options-#{expected_report_date}.csv"]
       rows = CSV.parse(csv)
@@ -266,7 +296,7 @@ RSpec.describe FinancialReportCsvService do
     end
 
     it "includes totals row for stock options" do
-      service = described_class.new(start_date: start_date, end_date: end_date)
+      service = described_class.new(start_date:, end_date:)
       result = service.process
       csv = result["stock_options-#{expected_report_date}.csv"]
       rows = CSV.parse(csv)
@@ -278,11 +308,11 @@ RSpec.describe FinancialReportCsvService do
     end
 
     it "handles empty vesting events gracefully" do
-      empty_start_date = Date.new(2023, 1, 1)
-      empty_end_date = empty_start_date.end_of_month
-      service = described_class.new(start_date: empty_start_date, end_date: empty_end_date)
+      start_date = Date.new(2023, 1, 1)
+      end_date = start_date.end_of_month
+      service = described_class.new(start_date:, end_date:)
       result = service.process
-      csv = result["stock_options-#{empty_start_date.strftime("%B %Y")}.csv"]
+      csv = result["stock_options-#{start_date.strftime("%B %Y")}.csv"]
       rows = CSV.parse(csv)
 
       expect(rows.length).to eq(1)
@@ -290,48 +320,38 @@ RSpec.describe FinancialReportCsvService do
   end
 
   describe "edge cases" do
-    it "handles empty data gracefully" do
-      empty_start_date = Date.new(2023, 1, 1)
-      empty_end_date = empty_start_date.end_of_month
-      empty_report_date = empty_start_date.strftime("%B %Y")
-      service = described_class.new(start_date: empty_start_date, end_date: empty_end_date)
-      result = service.process
-
-      invoices_csv = CSV.parse(result["invoices-#{empty_report_date}.csv"])
-      dividends_csv = CSV.parse(result["dividends-#{empty_report_date}.csv"])
-      grouped_csv = CSV.parse(result["grouped-#{empty_report_date}.csv"])
-      stock_options_csv = CSV.parse(result["stock_options-#{empty_report_date}.csv"])
-
-      # Should only have headers, no data or totals rows
-      expect(invoices_csv.length).to eq(1)
-      expect(dividends_csv.length).to eq(1)
-      expect(grouped_csv.length).to eq(1)
-      expect(stock_options_csv.length).to eq(1)
-    end
-
     it "handles dividends without successful payments" do
+      start_date = Date.new(2024, 7, 1)
+      end_date = start_date.end_of_month
+      report_date = start_date.strftime("%B %Y")
+
+      company = create(:company)
+      user = create(:user)
+      company_investor = create(:company_investor, company:, user:)
+      dividend_round = create(:dividend_round, company:, status: "Paid")
+
       failed_dividend = create(:dividend,
-                               company: company,
-                               company_investor: company_investor,
-                               dividend_round: dividend_round)
+                               company:,
+                               company_investor:,
+                               dividend_round:,
+                               status: "Paid")
       create(:dividend_payment,
              dividends: [failed_dividend],
              status: Payment::FAILED,
-             created_at: Date.new(2024, 6, 3))
+             created_at: start_date + 2.days)
 
-      service = described_class.new(start_date: start_date, end_date: end_date)
+      service = described_class.new(start_date:, end_date:)
       result = service.process
-      csv = result["dividends-#{expected_report_date}.csv"]
+      csv = result["dividends-#{report_date}.csv"]
       rows = CSV.parse(csv)
 
-      # Should only have headers, no data rows since payment failed
-      expect(rows.length).to eq(1)
+      expect(rows.length).to eq(1) # only headers
     end
 
-    it "only includes vested options and excludes non-vested" do
+    it "only includes vested options" do
       non_vested_grant = create(:equity_grant,
-                                company_investor: company_investor,
-                                option_pool: option_pool,
+                                company_investor:,
+                                option_pool:,
                                 exercise_price_usd: 95.0,
                                 share_price_usd: 100.0,
                                 expires_at: Date.new(2025, 6, 1))
@@ -342,7 +362,7 @@ RSpec.describe FinancialReportCsvService do
              vesting_date: Date.new(2024, 6, 20),
              processed_at: nil)
 
-      service = described_class.new(start_date: start_date, end_date: end_date)
+      service = described_class.new(start_date:, end_date:)
       result = service.process
       csv = result["stock_options-#{expected_report_date}.csv"]
       rows = CSV.parse(csv)
