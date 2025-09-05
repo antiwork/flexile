@@ -54,7 +54,6 @@ Rails.application.routes.draw do
     end
 
     resources :stripe, controller: :stripe, only: [:create]
-    resources :quickbooks, controller: :quickbooks, only: [:create]
   end
 
   scope module: :api, as: :api do

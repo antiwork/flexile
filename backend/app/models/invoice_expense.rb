@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class InvoiceExpense < ApplicationRecord
-  include QuickbooksIntegratable, Serializable
+  include Serializable
 
   belongs_to :invoice
   belongs_to :expense_category

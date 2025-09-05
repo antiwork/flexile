@@ -6,8 +6,6 @@ RSpec.describe ConsolidatedInvoice do
     it { is_expected.to have_many(:consolidated_invoices_invoices) }
     it { is_expected.to have_many(:invoices).through(:consolidated_invoices_invoices) }
     it { is_expected.to have_many(:consolidated_payments) }
-    it { is_expected.to have_many(:integration_records) }
-    it { is_expected.to have_one(:quickbooks_journal_entry) }
   end
 
   describe "validations" do
@@ -117,35 +115,6 @@ RSpec.describe ConsolidatedInvoice do
     end
   end
 
-  describe "callbacks" do
-    describe "#sync_with_quickbooks" do
-      let!(:consolidated_invoice) { build(:consolidated_invoice) }
-
-      [ConsolidatedInvoice::PROCESSING, ConsolidatedInvoice::PAID, ConsolidatedInvoice::FAILED].each do |status|
-        context "when a consolidated invoice is being marked as #{status}" do
-          let(:status) { status }
-
-          before { consolidated_invoice.save! }
-
-          it "does not schedule a Quickbooks data sync job" do
-            expect do
-              consolidated_invoice.update!(status:)
-            end.to_not change { QuickbooksDataSyncJob.jobs.size }
-          end
-        end
-      end
-
-      context "when a consolidated invoice is being created" do
-        it "schedules a QuickBooks data sync job" do
-          expect do
-            consolidated_invoice.save!
-          end.to change { QuickbooksDataSyncJob.jobs.size }.by(1)
-
-          expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(consolidated_invoice.company_id, "ConsolidatedInvoice", consolidated_invoice.id)
-        end
-      end
-    end
-  end
 
   describe "#flexile_fee_usd" do
     it "returns the service fee in USD" do
@@ -229,66 +198,6 @@ RSpec.describe ConsolidatedInvoice do
     end
   end
 
-  describe "#quickbooks_total_fees_amount_in_usd" do
-    let(:consolidated_invoice) { create(:consolidated_invoice, flexile_fee_cents: 200_00, transfer_fee_cents: 800_00) }
-
-    it "includes service and transfer fees" do
-      expect(consolidated_invoice.quickbooks_total_fees_amount_in_usd).to eq(1000.0)
-    end
-  end
-
-  describe "#quickbooks_entity" do
-    it "returns the QuickBooks entity name" do
-      expect(build(:consolidated_invoice).quickbooks_entity).to eq("Bill")
-    end
-  end
-
-  describe "#quickbooks_journal_entry_payload" do
-    let(:company) { create(:company) }
-    let!(:integration) { create(:quickbooks_integration, company:) }
-    let(:contractor) { create(:company_worker, company:) }
-    let!(:contractor_integration_record) { create(:integration_record, integration:, integratable: contractor, integration_external_id: "85") }
-    let(:invoice) { create(:invoice, :approved, company:, user: contractor.user) }
-    let!(:invoice_integration_record) { create(:integration_record, integratable: invoice, integration:, integration_external_id: "164") }
-    let(:consolidated_invoice) { create(:consolidated_invoice, company:, invoices: [invoice]) }
-
-    it "returns the QBO journal entry payload" do
-      expect(consolidated_invoice.quickbooks_journal_entry_payload).to eq(
-        {
-          Line: [
-            {
-              JournalEntryLineDetail: {
-                PostingType: "Debit",
-                AccountRef: {
-                  value: integration.flexile_clearance_bank_account_id,
-                },
-              },
-              DetailType: "JournalEntryLineDetail",
-              Amount: consolidated_invoice.total_amount_in_usd,
-              Description: "BILL #{consolidated_invoice.invoice_date.iso8601} Payables Funding",
-            },
-            {
-              JournalEntryLineDetail: {
-                PostingType: "Credit",
-                AccountRef: {
-                  value: integration.default_bank_account_id,
-                },
-                Entity: {
-                  EntityRef: {
-                    value: integration.flexile_vendor_id,
-                  },
-                  Type: "Vendor",
-                },
-              },
-              DetailType: "JournalEntryLineDetail",
-              Amount: consolidated_invoice.total_amount_in_usd,
-              Description: "BILL #{consolidated_invoice.invoice_date.iso8601} Payables Funding",
-            },
-          ],
-        }.to_json
-      )
-    end
-  end
 
   describe "#mark_as_paid!", :freeze_time do
     let(:consolidated_invoice) { create(:consolidated_invoice) }

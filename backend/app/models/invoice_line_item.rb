@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
 class InvoiceLineItem < ApplicationRecord
-  include QuickbooksIntegratable, Serializable
+  include Serializable
 
   belongs_to :invoice
-  has_many :integration_records, as: :integratable
 
   validates :description, presence: true
   validates :pay_rate_in_subunits, presence: true, numericality: { only_integer: true, greater_than: 0 }

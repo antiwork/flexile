@@ -3,13 +3,12 @@
 class CompanyWorker < ApplicationRecord
   self.table_name = "company_contractors"
 
-  include QuickbooksIntegratable, Serializable, ExternalId
+  include Serializable, ExternalId
 
   belongs_to :company
   belongs_to :user
 
   has_many :invoices, foreign_key: :company_contractor_id
-  has_many :integration_records, as: :integratable
 
   MAX_EQUITY_PERCENTAGE = 100
   MIN_COMPENSATION_AMOUNT_FOR_1099_NEC = 600_00
@@ -97,16 +96,6 @@ class CompanyWorker < ApplicationRecord
           .exists?
   end
 
-  def quickbooks_entity
-    "Vendor"
-  end
-
-  def fetch_existing_quickbooks_entity
-    vendor = IntegrationApi::Quickbooks.new(company_id:).fetch_vendor_by_email_and_name(email: user.email, name: user.billing_entity_name)
-    quickbooks_integration_record&.mark_deleted! if vendor.blank?
-
-    vendor
-  end
 
   def unique_unvested_equity_grant_for_year(year)
     company_investors = user.company_investors.where(company:)
@@ -131,10 +120,5 @@ class CompanyWorker < ApplicationRecord
 
   private
     def notify_rate_updated
-      sync_with_quickbooks
-    end
-
-    def sync_with_quickbooks
-      QuickbooksDataSyncJob.perform_async(company_id, self.class.name, id)
     end
 end

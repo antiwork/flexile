@@ -43,7 +43,6 @@ def configure_vcr
     config.default_cassette_options[:match_requests_on] = %i[method uri wise_account_requirements]
     config.filter_sensitive_data("<GUMROAD_BANK_ROUTING_NUMBER>") { GlobalConfig.dig("wise_gumroad_account", "abartn") }
     config.filter_sensitive_data("<GUMROAD_BANK_ACCOUNT_NUMBER>") { GlobalConfig.dig("wise_gumroad_account", "account_number") }
-    config.filter_sensitive_data("<QUICKBOOKS_BASIC_AUTH_STRING>") { Base64.strict_encode64("#{GlobalConfig.get('QUICKBOOKS_CLIENT_ID')}:#{GlobalConfig.get('QUICKBOOKS_CLIENT_SECRET')}") }
     config.filter_sensitive_data("<WISE_PROFILE_ID>") { GlobalConfig.get("WISE_PROFILE_ID") }
   end
 end

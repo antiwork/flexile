@@ -3,7 +3,6 @@
 RSpec.describe ConsolidatedPayment do
   describe "associations" do
     it { is_expected.to belong_to(:consolidated_invoice) }
-    it { is_expected.to have_many(:integration_records) }
     it { is_expected.to have_many(:balance_transactions).class_name("ConsolidatedPaymentBalanceTransaction") }
   end
 
@@ -30,29 +29,6 @@ RSpec.describe ConsolidatedPayment do
     end
   end
 
-  describe "callbacks" do
-    describe "#sync_with_quickbooks" do
-      let!(:consolidated_payment) { create(:consolidated_payment) }
-
-      [ConsolidatedPayment::INITIAL, ConsolidatedPayment::FAILED, ConsolidatedPayment::CANCELLED].each do |status|
-        context "when a consolidated payment is being marked as #{status}" do
-          let(:status) { status }
-
-          it "does not schedule a Quickbooks data sync job" do
-            expect do
-              consolidated_payment.update!(status:)
-            end.to_not change { QuickbooksDataSyncJob.jobs.size }
-          end
-        end
-      end
-
-      it "enqueues a QuickbooksDataSyncJob when the status changes to SUCCEEDED" do
-        expect do
-          consolidated_payment.update!(status: ConsolidatedPayment::SUCCEEDED)
-        end.to change(QuickbooksDataSyncJob.jobs, :size).by(1)
-      end
-    end
-  end
 
   describe "#stripe_payment_intent" do
     let(:consolidated_payment) { create(:consolidated_payment) }

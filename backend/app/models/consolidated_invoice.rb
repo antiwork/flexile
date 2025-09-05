@@ -3,18 +3,14 @@
 class ConsolidatedInvoice < ApplicationRecord
   has_paper_trail
 
-  include Invoice::Status, QuickbooksIntegratable, Serializable
+  include Invoice::Status, Serializable
 
   belongs_to :company
   has_many :consolidated_invoices_invoices
   has_many :invoices, through: :consolidated_invoices_invoices
   has_many :consolidated_payments
-  has_many :integration_records, as: :integratable
   has_one_attached :receipt
   has_one :successful_payment, -> { successful.order(succeeded_at: :desc) }, class_name: "ConsolidatedPayment"
-  has_one :quickbooks_journal_entry, -> do
-    alive.quickbooks_journal_entry.joins(:integration).where(integration: { type: "QuickbooksIntegration" })
-  end, as: :integratable, class_name: "IntegrationRecord"
 
   SENT = "sent"
   REFUNDED = "refunded"
@@ -53,7 +49,6 @@ class ConsolidatedInvoice < ApplicationRecord
   scope :paid, -> { where(status: PAID) }
   scope :paid_or_pending_payment, -> { where(status: [SENT, PROCESSING, PAID]) }
 
-  after_commit :sync_with_quickbooks, on: :create
 
   def flexile_fee_usd
     flexile_fee_cents / 100.0
@@ -78,50 +73,6 @@ class ConsolidatedInvoice < ApplicationRecord
     respond_to?(:total_contractors_from_query) ? total_contractors_from_query : invoices.unique_contractors_count
   end
 
-  def quickbooks_total_fees_amount_in_usd
-    (flexile_fee_cents + transfer_fee_cents) / 100.0
-  end
-
-  def quickbooks_entity
-    "Bill"
-  end
-
-  def quickbooks_journal_entry_payload
-    client = IntegrationApi::Quickbooks.new(company_id:)
-    integration = client.integration
-    {
-      Line: [
-        {
-          JournalEntryLineDetail: {
-            PostingType: "Debit",
-            AccountRef: {
-              value: integration.flexile_clearance_bank_account_id,
-            },
-          },
-          DetailType: "JournalEntryLineDetail",
-          Amount: total_amount_in_usd,
-          Description: "BILL #{invoice_date.iso8601} Payables Funding",
-        },
-        {
-          JournalEntryLineDetail: {
-            PostingType: "Credit",
-            AccountRef: {
-              value: integration.default_bank_account_id,
-            },
-            Entity: {
-              EntityRef: {
-                value: integration.flexile_vendor_id,
-              },
-              Type: "Vendor",
-            },
-          },
-          DetailType: "JournalEntryLineDetail",
-          Amount: total_amount_in_usd,
-          Description: "BILL #{invoice_date.iso8601} Payables Funding",
-        },
-      ],
-    }.to_json
-  end
 
   def mark_as_paid!(timestamp:, **)
     update!(status: PAID, paid_at: timestamp)
@@ -132,9 +83,4 @@ class ConsolidatedInvoice < ApplicationRecord
     expected_by = expected_by.next_weekday if expected_by.on_weekend?
     expected_by
   end
-
-  private
-    def sync_with_quickbooks
-      QuickbooksDataSyncJob.perform_async(company_id, self.class.name, id)
-    end
 end

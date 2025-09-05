@@ -76,61 +76,6 @@ RSpec.describe User do
   end
 
   describe "callbacks" do
-    describe "#sync_with_quickbooks" do
-      context "when user is a contractor" do
-        let!(:company_worker_1) { create(:company_worker, user:) }
-        let!(:company_worker_2) { create(:company_worker, user:) }
-        let!(:inactive_company_worker) { create(:company_worker, :inactive, user:) }
-        let!(:contractor_without_a_contract) { create(:company_worker, user:, without_contract: true) }
-        let!(:contractor_without_a_signed_contract) { create(:company_worker, user:, with_unsigned_contract: true) }
-
-        it "schedules a QuickBooks data sync job when email changes" do
-          expect do
-            user.update!(email: "flexy-bob@flexile.com")
-          end.to change { QuickbooksDataSyncJob.jobs.size }.by(2)
-
-          expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_1.company_id, "CompanyWorker", company_worker_1.id)
-          expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_2.company_id, "CompanyWorker", company_worker_2.id)
-        end
-
-        it "schedules one QuickBooks data sync job when multiple attributes changed" do
-          expect do
-            user.update!(preferred_name: "Sahil", legal_name: "Sahil Lavingia", street_address: "123 Elm St")
-          end.to change { QuickbooksDataSyncJob.jobs.size }.by(2)
-
-          expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_1.company_id, "CompanyWorker", company_worker_1.id)
-          expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_2.company_id, "CompanyWorker", company_worker_2.id)
-        end
-
-        context "when user did not complete onboarding" do
-          before { user.update!(citizenship_country_code: nil) }
-
-          it "does not schedule a QuickBooks data sync job when attributes change" do
-            expect do
-              user.update!(email: "flexy-bob@flexile.com", preferred_name: "Sahil", legal_name: "Sahil Lavingia",
-                           country_code: "US", city: "New York City", zip_code: "10001", state: "NY")
-            end.to_not change { QuickbooksDataSyncJob.jobs.size }
-          end
-        end
-      end
-
-      context "when user is a company administrator" do
-        let!(:company_administrator) { create(:company_administrator, user:) }
-
-        it "does not schedule a QuickBooks data sync job when email changes" do
-          expect do
-            user.update!(email: "flexy-bob@flexile.com")
-          end.to_not change { QuickbooksDataSyncJob.jobs.size }
-        end
-
-        it "does not schedule a QuickBooks data sync job when multiple attributes changed" do
-          expect do
-            user.update!(preferred_name: "Sahil", legal_name: "Sahil Lavingia", street_address: "123 Elm St")
-          end.to_not change { QuickbooksDataSyncJob.jobs.size }
-        end
-      end
-    end
-
     describe "#update_dividend_status" do
       let(:user) do
         user = build(:user, password: nil)

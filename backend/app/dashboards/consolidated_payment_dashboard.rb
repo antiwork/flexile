@@ -14,8 +14,6 @@ class ConsolidatedPaymentDashboard < Administrate::BaseDashboard
     balance_transactions: Field::HasMany,
     bank_account_last_four: Field::String,
     consolidated_invoice: Field::BelongsTo,
-    integration_records: Field::HasMany,
-    quickbooks_integration_record: Field::HasOne,
     status: Field::String,
     stripe_fee_cents: Field::Number,
     stripe_payment_intent_id: StripePaymentIntentIdField,

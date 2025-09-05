@@ -31,7 +31,6 @@ import {
   PayRateType,
   TaxClassification,
 } from "./enums";
-import type { QuickbooksIntegrationConfiguration } from "./json";
 
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 13);
 
@@ -608,7 +607,6 @@ export const integrationRecords = pgTable(
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
 
     jsonData: jsonb("json_data"),
-    quickbooksJournalEntry: boolean("quickbooks_journal_entry").notNull().default(false),
   },
   (table) => [
     index("index_integration_records_on_integratable").using(
@@ -645,9 +643,9 @@ export const integrations = pgTable(
   {
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    type: varchar().notNull().$type<"QuickbooksIntegration">(),
+    type: varchar().notNull(),
     status: integrationStatus().default("initialized").notNull(),
-    configuration: encryptedJson().$type<QuickbooksIntegrationConfiguration>(),
+    configuration: encryptedJson(),
     syncError: text("sync_error"),
     lastSyncAt: timestamp("last_sync_at", { precision: 6, mode: "date" }),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),

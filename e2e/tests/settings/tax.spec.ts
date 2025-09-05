@@ -164,8 +164,6 @@ test.describe("Tax settings", () => {
       expect(updatedUser.userComplianceInfos[1]?.deletedAt).toBeNull();
     });
 
-    // TODO (techdebt): Add the quickbooks tests from spec/system/settings/tax_spec.rb
-
     test.describe("tax ID validity", () => {
       test.describe("for US residents", () => {
         test("shows pending status", async ({ page }) => {

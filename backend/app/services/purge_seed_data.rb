@@ -53,11 +53,6 @@ class PurgeSeedData
     end
 
     def purge_invoices!(company)
-      Integration.where(company:).find_each do |integration|
-        integration.integration_records.each(&:destroy!)
-        integration.destroy!
-      end
-
       company.consolidated_invoices.find_each do |consolidated_invoice|
         consolidated_invoice.consolidated_payments.each(&:destroy!)
         consolidated_invoice.destroy!
