@@ -122,7 +122,7 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser, "/invoices/new");
 
     await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[type="file"]').setInputFiles({
+    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
       name: "receipt.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("test expense receipt"),
@@ -276,5 +276,198 @@ test.describe("invoice creation", () => {
       .then(takeOrThrow);
 
     expect(Number(lineItem.quantity)).toBe(2.5);
+  });
+});
+
+test.describe("invoice PDF import", () => {
+  let company: typeof companies.$inferSelect;
+  let contractorUser: typeof users.$inferSelect;
+
+  test.beforeEach(async () => {
+    company = (
+      await companiesFactory.createCompletedOnboarding({
+        equityEnabled: false,
+      })
+    ).company;
+
+    contractorUser = (
+      await usersFactory.createWithBusinessEntity({
+        zipCode: "22222",
+        streetAddress: "1st St.",
+      })
+    ).user;
+
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+      payRateInSubunits: 10000, // $100/hour
+    });
+  });
+
+  test("shows Import from PDF button and successfully parses invoice", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+    await page.waitForLoadState("domcontentloaded");
+
+    // Check that Import from PDF button is visible
+    const importButton = page.getByRole("button", { name: "Import from PDF" });
+    await expect(importButton).toBeVisible();
+
+    // Mock the API response
+    await page.route("**/api/invoices/parse-pdf", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          invoiceNumber: "INV-PDF-001",
+          invoiceDate: "2024-03-20",
+          lineItems: [
+            {
+              description: "Development Services",
+              quantity: 10, // 10 hours
+              rate: 100,
+            },
+          ],
+          notes: "March 2024 work",
+        }),
+      });
+    });
+
+    // Click import button to trigger file input
+    await importButton.click();
+
+    // Upload PDF file using file input
+    const fileInput = page.locator('input[type="file"][accept="application/pdf"]');
+    await fileInput.setInputFiles({
+      name: "invoice.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("Mock PDF invoice content"),
+    });
+
+    // Wait for API response and processing
+    await page.waitForResponse("**/api/invoices/parse-pdf");
+    await page.waitForTimeout(1000);
+
+    // Verify fields are populated
+    await expect(page.getByLabel("Invoice ID")).toHaveValue("INV-PDF-001");
+    await expect(page.getByPlaceholder("Description").first()).toHaveValue("Development Services");
+    await expect(page.getByLabel("Hours / Qty").first()).toHaveValue("10:00");
+    await expect(page.getByLabel("Rate").first()).toHaveValue("100");
+
+    // Submit the invoice
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    // Verify in database
+    const invoice = await db.query.invoices
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
+      .then(takeOrThrow);
+    expect(invoice.invoiceNumber).toBe("INV-PDF-001");
+    expect(invoice.totalAmountInUsdCents).toBe(100000n); // $1000
+  });
+
+  test("validates PDF file type and size", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+    await page.waitForLoadState("domcontentloaded");
+
+    // Verify Import from PDF button exists
+    const importButton = page.getByRole("button", { name: "Import from PDF" });
+    await expect(importButton).toBeVisible();
+
+    // Click to trigger file input
+    await importButton.click();
+
+    // Get the file input (it should be present after clicking)
+    const fileInput = page.locator('input[type="file"][accept="application/pdf"]');
+    await expect(fileInput).toBeAttached();
+
+    // Test 1: Non-PDF file validation
+    await fileInput.setInputFiles({
+      name: "document.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from("This is not a PDF file"),
+    });
+
+    // Expect error message
+    const errorMessage = page.getByText(/Please select a PDF file/u);
+    await expect(errorMessage).toBeVisible({ timeout: 5000 });
+
+    // Dismiss error
+    await page.getByRole("button", { name: "Dismiss" }).click();
+    await expect(errorMessage).not.toBeVisible();
+
+    // Test 2: Oversized PDF file validation
+    await importButton.click();
+
+    // Create a large file (12MB)
+    const largeBuffer = Buffer.alloc(12 * 1024 * 1024, 0);
+    await fileInput.setInputFiles({
+      name: "large.pdf",
+      mimeType: "application/pdf",
+      buffer: largeBuffer,
+    });
+
+    // Expect size error
+    const sizeError = page.getByText(/File size exceeds.*10.*MB limit/u);
+    await expect(sizeError).toBeVisible({ timeout: 5000 });
+
+    // Dismiss error
+    await page.getByRole("button", { name: "Dismiss" }).click();
+    await expect(sizeError).not.toBeVisible();
+  });
+
+  test("shows error for non-invoice PDF content", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+    await page.waitForLoadState("domcontentloaded");
+
+    // Mock API response for non-invoice PDF
+    await page.route("**/api/invoices/parse-pdf", async (route) => {
+      await route.fulfill({
+        status: 400,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: "This PDF doesn't appear to contain invoice data. Please upload a valid invoice PDF.",
+        }),
+      });
+    });
+
+    // Use the file input approach for more reliability
+    const importButton = page.getByRole("button", { name: "Import from PDF" });
+    await expect(importButton).toBeVisible();
+    await importButton.click();
+
+    // Get file input and upload a PDF that will trigger the mocked error
+    const fileInput = page.locator('input[type="file"][accept="application/pdf"]');
+    await fileInput.setInputFiles({
+      name: "manual.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("This is a user manual, not an invoice"),
+    });
+
+    // Wait for the API call and error to appear
+    await page.waitForResponse("**/api/invoices/parse-pdf");
+
+    // Check for the specific error message with multiple fallbacks
+    const specificError = page.getByText(
+      "This PDF doesn't appear to contain invoice data. Please upload a valid invoice PDF.",
+    );
+    const alertError = page.locator('[role="alert"]').filter({ hasText: "invoice data" });
+    const anyInvoiceDataError = page.getByText(/invoice data/u);
+
+    // Try the most specific first, then fallback to more generic
+    try {
+      await expect(specificError).toBeVisible({ timeout: 3000 });
+    } catch {
+      try {
+        await expect(alertError).toBeVisible({ timeout: 2000 });
+      } catch {
+        await expect(anyInvoiceDataError).toBeVisible({ timeout: 2000 });
+      }
+    }
+
+    // Dismiss error if it exists
+    const dismissButton = page.getByRole("button", { name: "Dismiss" });
+    if (await dismissButton.isVisible().catch(() => false)) {
+      await dismissButton.click();
+    }
   });
 });

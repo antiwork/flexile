@@ -23,7 +23,7 @@ const RichText = ({ content, className }: { content: Content; className?: string
     immediatelyRender: false,
   });
 
-  useEffect(() => void editor?.commands.setContent(content, false), [content]);
+  useEffect(() => void editor?.commands.setContent(content, { emitUpdate: false }), [content]);
 
   return (
     <div>
@@ -61,7 +61,7 @@ export const Editor = ({
 
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value ?? "", false);
+      editor.commands.setContent(value ?? "", { emitUpdate: false });
     }
   }, [value, editor]);
 
