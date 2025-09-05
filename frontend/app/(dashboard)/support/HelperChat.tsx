@@ -59,11 +59,7 @@ const MessageRow = ({
 
   return (
     <div
-      className={cn(
-        "border-muted hover:bg-muted/10 cursor-pointer px-4 py-4",
-        !isLastMessage ? "border-b" : "",
-        message.role === "user" ? "" : "bg-muted/15",
-      )}
+      className={cn("border-muted hover:bg-muted/10 cursor-pointer px-4 py-4", !isLastMessage ? "border-b" : "")}
       onClick={toggleExpansion}
     >
       <div className="flex items-start gap-3">
