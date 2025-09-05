@@ -1,5 +1,6 @@
 "use client";
-import { CircleCheck, Mail, X } from "lucide-react";
+import { CircleCheck, Mail, Plus, Users, X } from "lucide-react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
 import CopyButton from "@/components/CopyButton";
@@ -320,9 +321,21 @@ export default function CapTable() {
           </div>
           <DataTable table={investorsTable} />
         </div>
-      ) : (
+      ) : data.shareClasses.length > 0 || data.optionPools.length > 0 ? (
         <div className="mx-4">
           <Placeholder icon={CircleCheck}>There are no active investors right now.</Placeholder>
+        </div>
+      ) : (
+        <div className="mx-4">
+          <Placeholder icon={Users}>
+            <div>Add your cap table to start managing equity and ownership records.</div>
+            <Button variant="outline" size="default" asChild>
+              <Link href="/equity/investors/add">
+                <Plus className="size-4" />
+                Add cap table
+              </Link>
+            </Button>
+          </Placeholder>
         </div>
       )}
 

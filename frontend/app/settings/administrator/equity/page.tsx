@@ -79,6 +79,7 @@ export default function Equity() {
       conversionSharePriceUsd: Number(company.conversionSharePriceUsd),
       exerciseNotice: exerciseData?.exercise_notice ?? null,
     },
+    disabled: requiresCompanyName,
   });
 
   const submit = form.handleSubmit((values) =>
@@ -99,7 +100,6 @@ export default function Equity() {
           Manage your company ownership, including cap table, option pools, and grants.
         </p>
       </hgroup>
-
       {requiresCompanyName ? (
         <Alert>
           <Info className="my-auto size-4" />
@@ -112,7 +112,6 @@ export default function Equity() {
           </AlertDescription>
         </Alert>
       ) : null}
-
       {/* Settings Section */}
       <div className={`space-y-6 ${requiresCompanyName ? "opacity-50" : ""}`}>
         <div>
