@@ -133,7 +133,7 @@ export default function AutocompleteInput({
 
       {/* Suggestions Dropdown */}
       {showSuggestions && filteredOptions.length > 0 ? (
-        <div className="absolute top-full right-0 left-0 z-10 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+        <div className="absolute top-full right-0 left-0 z-10 mt-1 max-h-40 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
           {filteredOptions.map((option, index) => (
             <div
               key={option.value}
