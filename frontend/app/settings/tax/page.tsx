@@ -69,6 +69,10 @@ const getIsForeign = (values: z.infer<typeof formValuesSchema>) =>
   values.citizenship_country_code !== "US" && values.country_code !== "US";
 
 const formSchema = formValuesSchema
+  .refine((data) => data.citizenship_country_code.length > 0, {
+    path: ["citizenship_country_code"],
+    message: "Please select your country of citizenship.",
+  })
   .refine((data) => !data.business_entity || data.business_name, {
     path: ["business_name"],
     message: "Please add your business legal name.",
