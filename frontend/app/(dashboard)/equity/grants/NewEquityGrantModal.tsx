@@ -512,7 +512,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
               <Button
                 type="button"
                 variant="ghost"
-                className="flex h-auto w-full items-center justify-between p-0 text-left hover:bg-transparent"
+                className="flex h-auto w-full items-start justify-between p-0 text-left whitespace-break-spaces hover:bg-transparent"
                 onClick={() => setShowExercisePeriods(!showExercisePeriods)}
               >
                 <h2 className="text-lg font-medium">Customize post-termination exercise period</h2>
