@@ -10,7 +10,8 @@ import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/
 import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq } from "drizzle-orm";
-import { companies, companyInvestors, equityGrants } from "@/db/schema";
+import { DocumentTemplateType } from "@/db/enums";
+import { companies, companyInvestors, documentTemplates, equityGrants } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("Equity Grants", () => {
@@ -226,7 +227,9 @@ test.describe("Equity Grants", () => {
     await expect(page.getByRole("heading", { name: "Options" })).toBeVisible();
     await page.waitForLoadState("networkidle");
     await expect(page.getByRole("button", { name: "Exercise Options" })).not.toBeVisible();
-    await db.update(companies).set({ exerciseNotice: "I am exercising" }).where(eq(companies.id, company.id));
+    await db
+      .insert(documentTemplates)
+      .values({ companyId: company.id, documentType: DocumentTemplateType.ExerciseNotice, text: "I am exercising" });
     await page.reload();
     await expect(page.getByText("You have 100 vested options available for exercise.")).toBeVisible();
     await page.getByRole("button", { name: "Exercise Options" }).click();

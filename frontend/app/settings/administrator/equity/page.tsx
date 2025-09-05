@@ -1,14 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useExerciseDataConfig } from "@/app/(dashboard)/equity/options";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
-import { Editor as RichTextEditor } from "@/components/RichText";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
@@ -18,7 +16,6 @@ const formSchema = z.object({
   sharePriceInUsd: z.number().min(0),
   fmvPerShareInUsd: z.number().min(0),
   conversionSharePriceUsd: z.number().min(0),
-  exerciseNotice: z.string().nullable(),
 });
 
 export default function Equity() {
@@ -26,7 +23,6 @@ export default function Equity() {
   const utils = trpc.useUtils();
   const queryClient = useQueryClient();
   const [localEquityEnabled, setLocalEquityEnabled] = useState(company.equityEnabled);
-  const { data: exerciseData } = useQuery(useExerciseDataConfig());
 
   // Separate mutation for the toggle
   const updateEquityEnabled = trpc.companies.update.useMutation({
@@ -59,7 +55,6 @@ export default function Equity() {
       sharePriceInUsd: Number(company.sharePriceInUsd),
       fmvPerShareInUsd: Number(company.exercisePriceInUsd),
       conversionSharePriceUsd: Number(company.conversionSharePriceUsd),
-      exerciseNotice: exerciseData?.exercise_notice ?? null,
     },
   });
 
@@ -148,20 +143,6 @@ export default function Equity() {
                   </FormItem>
                 )}
               />
-              {exerciseData ? (
-                <FormField
-                  control={form.control}
-                  name="exerciseNotice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Exercise notice</FormLabel>
-                      <FormControl>
-                        <RichTextEditor {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              ) : null}
               <MutationStatusButton
                 type="submit"
                 className="w-fit"

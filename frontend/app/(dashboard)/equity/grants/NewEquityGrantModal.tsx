@@ -608,7 +608,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
               ) : null}
             </div>
 
-            <NewDocumentField />
+            <NewDocumentField type="stock_option_agreement" />
 
             {form.formState.errors.root ? (
               <div className="grid gap-2">
