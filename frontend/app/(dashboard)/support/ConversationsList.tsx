@@ -99,7 +99,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
 
       <div className="grid gap-4">
         {loading ? (
-          <TableSkeleton columns={3} />
+          <TableSkeleton columns={2} />
         ) : conversations.length === 0 ? (
           <div className="mx-4">
             <Placeholder icon={CircleCheck}>
@@ -112,7 +112,6 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
               <TableHeader>
                 <TableRow>
                   <TableHead>Subject</TableHead>
-                  <TableHead>Messages</TableHead>
                   <TableHead>Last updated</TableHead>
                 </TableRow>
               </TableHeader>
@@ -125,27 +124,24 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                   onClick={() => onSelectConversation(conversation.slug)}
                 >
                   {isMobile ? (
-                    <>
-                      <TableCell className="max-w-[70vw] py-4">
-                        <div className="flex flex-col gap-1 text-base">
-                          <div className="flex items-center gap-2">
+                    <TableCell className="py-4">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex gap-2">
+                          <div className="flex w-[70vw] items-center gap-2 text-base">
                             <UnreadDot isUnread={conversation.isUnread} />
                             <div className={`truncate ${conversation.isUnread ? "font-bold" : "font-medium"}`}>
                               {conversation.subject}
                             </div>
                           </div>
-                          <div className="truncate leading-5 font-[350] text-gray-600">
-                            {conversation.latestMessage}
+                          <div className="grow text-right font-[350] text-gray-600">
+                            {formatConversationDate(conversation.latestMessageAt ?? conversation.createdAt)}
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <div className="flex flex-col items-end gap-1 font-[350] text-gray-600">
-                          <div>{conversation.messageCount}</div>
-                          <div>{formatConversationDate(conversation.latestMessageAt ?? conversation.createdAt)}</div>
+                        <div className="w-[calc(100vw-40px)] truncate text-base leading-5 font-[350] text-gray-600">
+                          {conversation.latestMessage}
                         </div>
-                      </TableCell>
-                    </>
+                      </div>
+                    </TableCell>
                   ) : (
                     <>
                       <TableCell className={conversation.isUnread ? "font-bold" : "font-medium"}>
@@ -153,9 +149,6 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                           <UnreadDot isUnread={conversation.isUnread} />
                           {conversation.subject}
                         </div>
-                      </TableCell>
-                      <TableCell className={conversation.isUnread ? "font-bold" : ""}>
-                        {conversation.messageCount}
                       </TableCell>
                       <TableCell className={conversation.isUnread ? "font-bold" : ""}>
                         {formatConversationDate(conversation.latestMessageAt ?? conversation.createdAt)}
