@@ -32,7 +32,6 @@ export default function Equity() {
   const { data: exerciseData } = useQuery(useExerciseDataConfig());
   const requiresCompanyName = !settings.name || settings.name.trim().length === 0;
 
-  // Separate mutation for the equity toggle
   const updateEquityEnabled = trpc.companies.update.useMutation({
     onSuccess: async () => {
       await utils.companies.settings.invalidate();
@@ -40,7 +39,6 @@ export default function Equity() {
     },
   });
 
-  // Separate mutation for the option exercising toggle
   const updateOptionExercisingEnabled = trpc.companies.update.useMutation({
     onSuccess: async () => {
       await utils.companies.settings.invalidate();
@@ -93,7 +91,7 @@ export default function Equity() {
   );
 
   return (
-    <div className="max-w-4xl space-y-8 max-md:mb-10">
+    <div className="grid gap-8">
       <hgroup>
         <h2 className="mb-1 text-3xl font-bold">Equity</h2>
         <p className="text-muted-foreground text-base">
@@ -104,7 +102,7 @@ export default function Equity() {
         <Alert>
           <Info className="my-auto size-4" />
           <AlertDescription>
-            Please
+            Please{" "}
             <Link href="/settings/administrator/details" className={linkClasses}>
               add your company name
             </Link>{" "}
@@ -116,7 +114,7 @@ export default function Equity() {
       <div className={`space-y-6 ${requiresCompanyName ? "opacity-50" : ""}`}>
         <div>
           <h2 className="text-lg font-semibold">Settings</h2>
-          <div className="bg-border mt-2 h-px"></div>
+          <div className="bg-border mt-2 h-px" />
         </div>
 
         <div className="space-y-6">
