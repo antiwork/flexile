@@ -12,7 +12,10 @@ class EquityExercisingService
     company = company_investor.company
     number_of_options_by_equity_grant = equity_grants_params.to_h { [_1[:id], _1[:number_of_options]] }
     equity_grant_ids = number_of_options_by_equity_grant.keys
-    exercise_notice = company.document_templates.exercise_notice.sole
+    exercise_notice = company.document_templates.exercise_notice.first
+    if exercise_notice.nil?
+      return { success: false, error: "Exercise notice missing" }
+    end
 
     equity_grants = company_investor.equity_grants.where(external_id: equity_grant_ids)
 

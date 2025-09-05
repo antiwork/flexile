@@ -299,7 +299,7 @@ test.describe("Equity Grants", () => {
       page.getByRole("alert", { name: "Please add an exercise notice so investors can exercise their options." }),
     ).not.toBeVisible();
     await page.getByRole("link", { name: "add an exercise notice" }).click();
-    await findRichTextEditor(page, "Exercise notice").fill("This is an exercise notice");
+    await page.locator("[contenteditable=true]").fill("This is an exercise notice");
     await page.getByRole("button", { name: "Save changes" }).click();
     await page.goBack();
     await expect(page.getByRole("heading", { name: "Equity grants" })).toBeVisible();

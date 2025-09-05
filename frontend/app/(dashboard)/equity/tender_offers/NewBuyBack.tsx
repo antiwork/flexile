@@ -1,10 +1,11 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate } from "@internationalized/date";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useDocumentTemplateQuery } from "@/app/(dashboard)/documents";
 import DatePicker from "@/components/DatePicker";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
@@ -29,9 +30,11 @@ type NewBuybackFormProps = {
 
 export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) {
   const company = useCurrentCompany();
+  const { data: letterOfTransmittal } = useQuery(useDocumentTemplateQuery("letter_of_transmittal"));
 
   const form = useForm({
     resolver: zodResolver(formSchema),
+    defaultValues: { letterOfTransmittal: letterOfTransmittal?.text ?? "" },
   });
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
