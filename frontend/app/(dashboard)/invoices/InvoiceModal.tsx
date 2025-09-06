@@ -508,7 +508,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
           </section>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="px-4">
           <DatePicker
             variant="trigger"
             value={issueDate}
