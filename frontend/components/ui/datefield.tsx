@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import React from "react";
 import {
   composeRenderProps,
@@ -48,24 +47,24 @@ function DateSegment({ className, ...props }: DateSegmentProps) {
   );
 }
 
+const dateInputStyle =
+  "relative inline-flex h-9 w-full items-center overflow-hidden whitespace-nowrap rounded-md border border-input bg-background px-3 py-2 transition-[color,box-shadow] outline-none data-focus-within:border-ring data-focus-within:ring-ring/15 data-focus-within:ring-[3px] data-focus-within:has-aria-invalid:ring-destructive/20 dark:data-focus-within:has-aria-invalid:ring-destructive/40 data-focus-within:has-aria-invalid:border-destructive";
+
 interface DateInputProps extends DateInputPropsRac {
   className?: string;
+  unstyled?: boolean;
 }
 
-function DateInput({ className, ...props }: Omit<DateInputProps, "children">) {
+function DateInput({ className, unstyled = false, ...props }: Omit<DateInputProps, "children">) {
   return (
-    <DateInputRac className={cn(className)} {...props}>
+    <DateInputRac
+      className={composeRenderProps(className, (className) => cn(!unstyled && dateInputStyle, className))}
+      {...props}
+    >
       {(segment) => <DateSegment segment={segment} />}
     </DateInputRac>
   );
 }
 
-function DateDisplay({ value }: { value: DateValueRac | null }) {
-  if (!value) return <span>Select date</span>;
-
-  const date = value.toDate("UTC");
-  return <span>{format(date, "MMM d")}</span>; // e.g., "Aug 5"
-}
-
-export { DateDisplay, DateField, DateInput, DateSegment, TimeField };
+export { DateField, DateInput, dateInputStyle, DateSegment, TimeField };
 export type { DateInputProps };
