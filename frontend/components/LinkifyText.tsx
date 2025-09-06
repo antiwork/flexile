@@ -33,7 +33,7 @@ export default function LinkifyText({ text, className }: LinkifyTextProps) {
 
     const { core, trailing } = stripTrailingPunctuation(matched);
 
-    const isEmail = /@/u.test(core) && !/^https?:\/\//iu.test(core) && !/^www\./iu.test(core);
+    const isEmail = core.includes("@") && !/^https?:\/\//iu.test(core) && !/^www\./iu.test(core);
     const href = isEmail
       ? `mailto:${core}`
       : core.startsWith("www.")
