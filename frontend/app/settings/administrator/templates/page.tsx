@@ -11,7 +11,7 @@ import { request } from "@/utils/request";
 import { company_templates_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 
-export default function Details() {
+export default function Templates() {
   const company = useCurrentCompany();
   const { data: templates } = useSuspenseQuery({
     queryKey: ["templates", company.id],

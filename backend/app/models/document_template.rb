@@ -9,8 +9,6 @@ class DocumentTemplate < ApplicationRecord
     letter_of_transmittal: 2,
     stock_option_agreement: 3,
   }
-  TYPES = %w[exercise_notice consulting_contract letter_of_transmittal stock_option_agreement].freeze
 
-  validates :document_type, presence: true, inclusion: { in: TYPES }
   validates :text, presence: true
 end

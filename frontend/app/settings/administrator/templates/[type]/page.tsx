@@ -15,7 +15,7 @@ import { company_template_path } from "@/utils/routes";
 
 const formSchema = z.object({ text: z.string().nullable() });
 
-export default function Details() {
+export default function EditTemplate() {
   const router = useRouter();
   const { type: urlType } = useParams<{ type: string }>();
   const company = useCurrentCompany();
