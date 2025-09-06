@@ -1,29 +1,43 @@
 "use client";
-import { useQueryClient } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, Info } from "lucide-react";
+import { CircleCheck, Download, Info, MoreHorizontal } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
+import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
+import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
+import { Editor as RichTextEditor } from "@/components/RichText";
 import SignForm from "@/components/SignForm";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
+import { request } from "@/utils/request";
+import { company_documents_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 
@@ -88,6 +102,7 @@ export default function DocumentsPage() {
 
   const columnHelper = createColumnHelper<Document>();
   const [signDocumentParam] = useQueryState("sign");
+  const [sharingDocument, setSharingDocument] = useState<Document | null>(null);
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
   const isSignable = (document: Document) =>
     document.hasText &&
@@ -160,6 +175,20 @@ export default function DocumentsPage() {
                       Download
                     </Link>
                   </Button>
+                ) : null}
+
+                {document.hasText ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="small">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => setSharingDocument(document)}>Share document</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 ) : null}
               </>
             );
@@ -332,6 +361,9 @@ export default function DocumentsPage() {
         <>
           <DataTable table={table} tabsColumn="status" {...(isCompanyRepresentative && { searchColumn: "signer" })} />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
+          {sharingDocument ? (
+            <ShareDocumentModal document={sharingDocument} onClose={() => setSharingDocument(null)} />
+          ) : null}
         </>
       ) : (
         <div className="mx-4">
@@ -383,6 +415,99 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
             Agree & Submit
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const shareDocumentSchema = z.object({
+  text: z.string(),
+  recipient: z.string(),
+});
+
+const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose: () => void }) => {
+  const company = useCurrentCompany();
+  const trpcUtils = trpc.useUtils();
+  const [data] = trpc.documents.get.useSuspenseQuery({ companyId: company.id, id: document.id });
+  const [recipients] = trpc.companies.listCompanyUsers.useSuspenseQuery({ companyId: company.id });
+  const form = useForm({
+    resolver: zodResolver(shareDocumentSchema),
+    defaultValues: {
+      text: data.text ?? "",
+      recipient: assertDefined(recipients[0]).id,
+    },
+  });
+  const submitMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof shareDocumentSchema>) => {
+      await request({
+        method: "POST",
+        url: company_documents_path(company.id),
+        accept: "json",
+        jsonData: {
+          document: {
+            text: values.text,
+            document_type: document.type,
+            name: document.name,
+          },
+          recipient: values.recipient,
+        },
+        assertOk: true,
+      });
+    },
+    onSuccess: async () => {
+      await trpcUtils.documents.list.invalidate();
+      onClose();
+    },
+  });
+  const submit = form.handleSubmit((values) => submitMutation.mutate(values));
+  return (
+    <Dialog open onOpenChange={() => onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Share document</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={(e) => void submit(e)} className="grid gap-8">
+            <FormField
+              control={form.control}
+              name="text"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Document</FormLabel>
+                  <FormControl>
+                    <RichTextEditor value={field.value} onChange={field.onChange} className="max-w-none" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="recipient"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Recipient</FormLabel>
+                  <FormControl>
+                    <ComboBox
+                      {...field}
+                      value={field.value}
+                      options={recipients.map((recipient) => ({
+                        value: recipient.id.toString(),
+                        label: recipient.name,
+                      }))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <MutationStatusButton type="submit" mutation={submitMutation}>
+                Send
+              </MutationStatusButton>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
