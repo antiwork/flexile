@@ -69,14 +69,23 @@ import { useIsMobile } from "@/utils/use-mobile";
 import QuantityInput from "./QuantityInput";
 import { useCanSubmitInvoices } from ".";
 
-const statusNames = {
-  received: "Awaiting approval",
-  approved: "Approved",
-  processing: "Processing",
-  payment_pending: "Processing",
-  paid: "Paid",
-  rejected: "Rejected",
-  failed: "Failed",
+// Returns the normalized filter bucket label used by the table filters
+// so that filtering matches the displayed status semantics.
+const getInvoiceFilterBucket = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
+  switch (invoice.status) {
+    case "received":
+    case "approved":
+      return invoice.approvals.length < company.requiredInvoiceApprovals ? "Awaiting approval" : "Approved";
+    case "processing":
+    case "payment_pending":
+      return "Processing";
+    case "paid":
+      return "Paid";
+    case "rejected":
+      return "Rejected";
+    case "failed":
+      return "Failed";
+  }
 };
 
 const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
@@ -239,7 +248,7 @@ export default function InvoicesPage() {
         (value) => (value ? formatMoneyFromCents(value) : "N/A"),
         "numeric",
       ),
-      columnHelper.accessor((row) => statusNames[row.status], {
+      columnHelper.accessor((row) => getInvoiceFilterBucket(row, company), {
         id: "status",
         header: "Status",
         cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
@@ -319,7 +328,7 @@ export default function InvoicesPage() {
         },
       }),
 
-      columnHelper.accessor((row) => statusNames[row.status], {
+      columnHelper.accessor((row) => getInvoiceFilterBucket(row, company), {
         id: "status",
         meta: {
           filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
