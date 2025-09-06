@@ -121,7 +121,7 @@ const __jsr = (
         constructor() {
             this.configuration = {
                 prefix: "",
-                default_url_options: {"protocol":"http","host":"localhost:3000"},
+                default_url_options: {"protocol":"http","host":"flexile.dev"},
                 special_options_key: "toString",
                 serializer: null || this.default_serializer.bind(this),
             };
