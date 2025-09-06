@@ -411,6 +411,35 @@ RSpec.describe Company do
     end
   end
 
+  describe "#cap_table_empty?" do
+    let(:company) { create(:company) }
+
+    it "returns true when no cap table-related records exist" do
+      expect(company.cap_table_empty?).to eq(true)
+    end
+
+    it "returns false when an option_pool exists" do
+      create(:option_pool, company: company)
+      expect(company.reload.cap_table_empty?).to eq(false)
+    end
+
+    it "returns false when a share_class exists" do
+      create(:share_class, company: company)
+      expect(company.reload.cap_table_empty?).to eq(false)
+    end
+
+    it "returns false when a company_investor exists" do
+      create(:company_investor, company: company)
+      expect(company.reload.cap_table_empty?).to eq(false)
+    end
+
+    it "returns false when a share_holding exists" do
+      investor = create(:company_investor, company: company)
+      create(:share_holding, company_investor: investor, share_class: create(:share_class, company: company))
+      expect(company.reload.cap_table_empty?).to eq(false)
+    end
+  end
+
   it { is_expected.to accept_nested_attributes_for(:expense_categories) }
 
   describe "lifecycle hooks" do

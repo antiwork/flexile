@@ -20,7 +20,7 @@ env:
 
 jobs:
   rspec:
-    runs-on: ubicloud-standard-2
+    runs-on: ${{ github.repository == 'antiwork/flexile' && 'ubicloud-standard-2' || 'ubuntu-latest' }}
 
     services:
       postgres:
@@ -59,7 +59,7 @@ jobs:
 
   playwright:
     name: playwright
-    runs-on: ubicloud-standard-8
+    runs-on: ${{ github.repository == 'antiwork/flexile' && 'ubicloud-standard-8' || 'ubuntu-latest' }}
 
     steps:
       - uses: actions/checkout@v4
