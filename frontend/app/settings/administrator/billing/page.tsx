@@ -81,7 +81,7 @@ export default function Billing() {
   const { data, isLoading } = trpc.consolidatedInvoices.list.useQuery({ companyId: company.id });
 
   return (
-    <div className="grid gap-4">
+    <div className="mb-24 grid gap-4">
       <h2 className="mb-8 text-3xl font-bold">Billing</h2>
       <hgroup>
         <h3 className="mb-1 text-base font-medium">Payout method</h3>
