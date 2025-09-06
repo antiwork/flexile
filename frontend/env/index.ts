@@ -32,6 +32,7 @@ const env = z
     GOOGLE_CLIENT_ID: z.string(),
     GOOGLE_CLIENT_SECRET: z.string(),
     PROTOCOL: z.string(),
+    OPENAI_API_KEY: z.string(),
   })
   .parse(process.env);
 

@@ -10,9 +10,11 @@ import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
+import type { InvoiceExtractionResult } from "@/app/api/invoices/extract-from-pdf/route";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
+import { Dropzone, useDropzone } from "@/components/Dropzone";
 import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -258,12 +260,51 @@ const Edit = () => {
       }),
     );
 
+  const prefillFromExtractedInvoice = ({ invoice }: InvoiceExtractionResult) => {
+    setLineItems(
+      List(
+        invoice.line_items.map((item) => ({
+          ...item,
+          errors: [],
+          quantity: item.quantity?.toString() ?? "",
+        })),
+      ),
+    );
+    setInvoiceNumber(invoice.invoice_number);
+    setIssueDate(parseDate(invoice.invoice_date));
+  };
+
+  const { mutateAsync: extractInvoiceFromPdf } = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await request({
+        url: "/api/invoices/extract-from-pdf",
+        method: "POST",
+        formData,
+        accept: "json",
+      });
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- already validated
+      const json = (await response.json()) as { data: InvoiceExtractionResult } | { error: string };
+      if ("error" in json) throw new Error(json.error);
+      prefillFromExtractedInvoice(json.data);
+    },
+  });
+
+  const { dragProps, inputProps, openFilePicker, state } = useDropzone({
+    onFileSelected: extractInvoiceFromPdf,
+  });
+
   return (
-    <>
+    <div {...dragProps} className="h-full">
       <DashboardHeader
         title={data.invoice.id ? "Edit invoice" : "New invoice"}
         headerActions={
           <>
+            <Button variant="outline" onClick={openFilePicker}>
+              <ArrowUpTrayIcon className="size-4" />
+              Fill from PDF
+            </Button>
             {data.invoice.id && data.invoice.status === "rejected" ? (
               <div className="inline-flex items-center">Action required</div>
             ) : (
@@ -286,6 +327,16 @@ const Edit = () => {
             This invoice includes rates above your default of {formatMoneyFromCents(payRateInSubunits)}/
             {data.user.project_based ? "project" : "hour"}. Please check before submitting.
           </AlertDescription>
+        </Alert>
+      ) : null}
+
+      <input {...inputProps} />
+      <Dropzone {...state} />
+
+      {state.error ? (
+        <Alert className="mx-4" variant="destructive">
+          <CircleAlert />
+          <AlertDescription>{state.error.message}</AlertDescription>
         </Alert>
       ) : null}
 
@@ -542,7 +593,7 @@ const Edit = () => {
           </footer>
         </div>
       </section>
-    </>
+    </div>
   );
 };
 
