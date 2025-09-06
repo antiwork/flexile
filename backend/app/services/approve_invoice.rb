@@ -24,9 +24,6 @@ class ApproveInvoice
     attr_reader :invoice, :approver
 
     def can_approve?
-      return false if invoice.status.in?(INVOICE_STATUSES_THAT_DENY_APPROVAL)
-      return false if invoice.equity_percentage.positive? && invoice.equity_amount_in_options.zero?
-
-      true
+      !invoice.status.in?(INVOICE_STATUSES_THAT_DENY_APPROVAL)
     end
 end
