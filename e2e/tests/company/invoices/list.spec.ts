@@ -5,10 +5,18 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccounts";
 import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoicesFactory } from "@test/factories/invoices";
-import { login } from "@test/helpers/auth";
+import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq, exists, isNull, not } from "drizzle-orm";
-import { companies, companyContractors, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
+import {
+  companies,
+  companyContractors,
+  consolidatedInvoices,
+  expenseCategories,
+  invoiceApprovals,
+  invoices,
+  users,
+} from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 const setupCompany = async ({
@@ -368,6 +376,149 @@ test.describe("Invoices admin flow", () => {
     await page.getByRole("row").getByText("Awaiting approval").first().click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
+  });
+
+  test("shows attached document when viewing an invoice as an admin", async ({ page }) => {
+    // Setup company, admin and contractor
+    const { company, user: adminUser } = await setupCompany();
+
+    // Create a contractor user
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+
+    const contractorUser = await db.query.users.findFirst({
+      where: eq(users.id, companyContractor.userId),
+    });
+    assert(contractorUser !== undefined);
+
+    // Login as contractor to create invoice with document
+    await login(page, contractorUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("link", { name: "New invoice" }).click();
+
+    // Fill invoice details
+    await page.getByPlaceholder("Description").fill("Invoice with document for admin review");
+    await page.getByLabel("Hours").fill("10:00");
+
+    // Add multiple document attachments
+    await page.getByRole("button", { name: "Add Document" }).click();
+    await page
+      .locator('input[accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"]')
+      .setInputFiles([
+        {
+          name: "admin-review-document-1.pdf",
+          mimeType: "application/pdf",
+          buffer: Buffer.from("document content for admin review 1"),
+        },
+        {
+          name: "admin-review-document-2.pdf",
+          mimeType: "application/pdf",
+          buffer: Buffer.from("document content for admin review 2"),
+        },
+      ]);
+
+    // Verify both documents appear in the form
+    await page.waitForTimeout(300);
+    await expect(page.getByText("admin-review-document-1.pdf")).toBeVisible();
+    await expect(page.getByText("admin-review-document-2.pdf")).toBeVisible();
+
+    // Submit the invoice
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    // Logout as contractor
+    await logout(page);
+
+    // Login as admin
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+
+    // Open the invoice details
+    const invoiceRow = page.getByRole("row").filter({ hasText: "Awaiting approval" }).first();
+    await expect(invoiceRow).toBeVisible();
+    await invoiceRow.click();
+
+    // Check invoice details modal
+    await expect(page.getByRole("dialog")).toBeVisible();
+
+    // Click on View Invoice button in the dialog
+    await page.getByRole("link", { name: "View Invoice" }).click();
+
+    // Verify both document names are visible on the invoice details page too
+    await expect(page.getByText("admin-review-document-1.pdf")).toBeVisible();
+    await expect(page.getByText("admin-review-document-2.pdf")).toBeVisible();
+
+    // Check document links
+    const documentLink1 = page.getByRole("link", { name: "admin-review-document-1.pdf" });
+    const documentLink2 = page.getByRole("link", { name: "admin-review-document-2.pdf" });
+    await expect(documentLink1).toBeVisible();
+    await expect(documentLink2).toBeVisible();
+  });
+
+  test("shows expense attachments when viewing an invoice as an admin", async ({ page }) => {
+    // Setup company, admin and contractor
+    const { company, user: adminUser } = await setupCompany();
+
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+
+    const contractorUser = await db.query.users.findFirst({
+      where: eq(users.id, companyContractor.userId),
+    });
+    assert(contractorUser !== undefined);
+
+    // Create expense category for the company
+    await db.insert(expenseCategories).values({
+      companyId: company.id,
+      name: "Office Supplies",
+    });
+
+    // Login as contractor to create invoice with expense document
+    await login(page, contractorUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("link", { name: "New invoice" }).click();
+
+    // Fill invoice details
+    await page.getByPlaceholder("Description").fill("Invoice with expense attachment");
+    await page.getByLabel("Hours").fill("5:00");
+
+    // Add an expense with attachment
+    await page.getByRole("button", { name: "Add expense" }).click();
+    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
+      name: "expense-receipt.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("expense receipt content"),
+    });
+
+    // Fill expense details
+    await page.getByLabel("Merchant").fill("Office Depot");
+    await page.getByLabel("Amount").fill("200");
+
+    // Verify the expense is in the form
+    await expect(page.getByText("expense-receipt.pdf")).toBeVisible();
+
+    // Submit the invoice
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    // Logout as contractor
+    await logout(page);
+
+    // Login as admin
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+
+    // Open the invoice details
+    const invoiceRow = page.getByRole("row").filter({ hasText: "Awaiting approval" }).first();
+    await expect(invoiceRow).toBeVisible();
+    await invoiceRow.click();
+
+    // Check invoice details modal
+    await expect(page.getByRole("dialog")).toBeVisible();
+
+    await page.getByRole("link", { name: "View Invoice" }).click();
+
+    // Verify expense section and attachment is visible
+    await expect(page.getByRole("table").filter({ hasText: "Expense" })).toBeVisible();
+    await expect(page.getByText("Office Supplies - Office Depot")).toBeVisible();
   });
 });
 
