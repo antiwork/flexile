@@ -1,7 +1,9 @@
+import { useQuery } from "@tanstack/react-query";
 import { CloudUpload, PencilLine, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { z } from "zod";
+import { type TemplateType, useDocumentTemplateQuery } from "@/app/(dashboard)/documents";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
 import { Editor as RichTextEditor } from "@/components/RichText";
@@ -14,12 +16,16 @@ export const schema = z.object({
   contract: z.string().or(z.instanceof(File)),
 });
 
-export default function NewDocumentField() {
+export default function NewDocumentField({ type }: { type: TemplateType }) {
   const form = useFormContext<z.infer<typeof schema>>();
+  const { data: template } = useQuery(useDocumentTemplateQuery(type));
   const [contractType, setContractType] = useState("upload");
   const value = form.watch("contract");
   const [isDragging, setIsDragging] = useState(false);
-  useEffect(() => form.setValue("contract", ""), [contractType]);
+  useEffect(() => form.setValue("contract", contractType === "write" ? (template?.text ?? "") : ""), [contractType]);
+  useEffect(() => {
+    if (template?.text) setContractType("write");
+  }, [template]);
 
   return (
     <FormField
