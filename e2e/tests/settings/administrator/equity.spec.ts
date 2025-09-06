@@ -8,6 +8,45 @@ import { eq } from "drizzle-orm";
 import { companies } from "@/db/schema";
 
 test.describe("Company equity settings", () => {
+  test("equity settings gated until company name is set", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      name: null,
+      sharePriceInUsd: null,
+      fmvPerShareInUsd: null,
+      conversionSharePriceUsd: null,
+      equityEnabled: false,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Equity" }).click();
+
+    await expect(
+      page.getByRole("alert").filter({ hasText: "Please add your company name in order to manage equity settings." }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "add your company name" })).toHaveAttribute(
+      "href",
+      "/settings/administrator/details",
+    );
+
+    const enableEquitySwitch = page.getByRole("switch", { name: "Enable equity" });
+    await expect(enableEquitySwitch).toBeDisabled();
+    await expect(page.getByRole("heading", { name: "Equity value" })).not.toBeVisible();
+
+    await db.update(companies).set({ name: "Test Company Inc." }).where(eq(companies.id, company.id));
+    await page.reload();
+
+    await expect(
+      page.getByRole("alert").filter({ hasText: "Please add your company name in order to manage equity settings." }),
+    ).not.toBeVisible();
+
+    await expect(enableEquitySwitch).toBeEnabled();
+    await enableEquitySwitch.click({ force: true });
+
+    await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("heading", { name: "Equity value" })).toBeVisible();
+  });
+
   test("enabling and updating company equity settings", async ({ page }) => {
     const { company } = await companiesFactory.create({
       sharePriceInUsd: null,
