@@ -19,6 +19,7 @@ const companySchema = z.object({
   routes: z.array(navLinkSchema.extend({ subLinks: z.array(navLinkSchema).optional() })),
   requiredInvoiceApprovals: z.number(),
   equityEnabled: z.boolean(),
+  optionExercisingEnabled: z.boolean(),
   completedPaymentMethodSetup: z.boolean(),
   paymentProcessingDays: z.number(),
   createdAt: z.string(),
