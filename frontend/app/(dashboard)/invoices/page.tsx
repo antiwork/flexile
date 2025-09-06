@@ -71,7 +71,7 @@ import { useCanSubmitInvoices } from ".";
 
 const statusNames = {
   received: "Awaiting approval",
-  approved: "Awaiting approval",
+  approved: "Approved",
   processing: "Processing",
   payment_pending: "Processing",
   paid: "Paid",
