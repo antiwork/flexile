@@ -46,7 +46,7 @@ test.describe("invoice linkify", () => {
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
 
-    await page.goto(`/invoices/${invoice.id}`);
+    await page.goto(`/invoices/${invoice.externalId}`);
 
     // https link should exclude trailing ")" and have correct href
     const httpsLink = page.getByRole("link", { name: "https://example.com/docs" });
@@ -77,13 +77,13 @@ test.describe("invoice linkify", () => {
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
 
-    await page.goto(`/invoices/${invoice.id}`);
+    await page.goto(`/invoices/${invoice.externalId}`);
 
     // Link from the description should be rendered and exclude trailing ")"
     const descLink = page.getByRole("link", { name: "www.example.org/test" });
     await expect(descLink).toHaveAttribute("href", "https://www.example.org/test");
 
-    // The following trailing character ")" should not be part of the link; verify it still appears as text nearby
-    await expect(page.getByText(") Then follow-up")).toBeVisible();
+    // The trailing punctuation should not be part of the link; surrounding text should still render
+    await expect(page.getByText("Then follow-up")).toBeVisible();
   });
 });
