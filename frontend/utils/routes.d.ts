@@ -352,6 +352,26 @@ export const admin_consolidated_payments_path: ((
 
 /**
  * Generates rails route to
+ * /internal/admin/impersonation(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const admin_impersonation_index_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/admin/impersonation(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const admin_impersonation_index_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /admin/invoices/:id(.:format)
  * @param {any} id
  * @param {object | undefined} options
