@@ -39,7 +39,6 @@ test.describe("Dividend Computations", () => {
       { page },
     );
 
-    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page).toHaveURL(/\/equity\/dividend_rounds\/draft\/.+/u);
     await expect(page.getByRole("heading", { name: "Dividend" })).toBeVisible();
     await expect(page.getByText("Dividend distribution is still a draft")).toBeVisible();
@@ -89,7 +88,7 @@ test.describe("Dividend Computations", () => {
         await expect(modal.getByText("Payment date must be at least 10 days in the future")).toBeVisible();
         await expect(modal.getByRole("button", { name: "Create distribution" })).toBeDisabled();
       },
-      { page },
+      { page, assertClosed: false },
     );
   });
 

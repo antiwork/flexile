@@ -7,7 +7,7 @@ import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { addMonths, format } from "date-fns";
 import { and, eq } from "drizzle-orm";
 import { equityGrants, vestingEvents, vestingSchedules } from "@/db/schema";
@@ -186,43 +186,40 @@ test.describe("Equity Grant Vesting Events", () => {
     await row.click();
 
     // Wait for the modal to open and vesting events to load
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await expect(page.getByText("Vesting events")).toBeVisible();
 
-    await expect(page.getByText("Vesting events")).toBeVisible({ timeout: 10000 });
+        // Check cliff vesting event (12,000 shares at month 12)
+        const cliffDate = format(addMonths(vestingStartDate, 12), "MMM d, yyyy");
+        await expect(modal).toContainText(cliffDate);
+        await expect(modal).toContainText("12,000 shares");
 
-    // Verify vesting events section shows up
-    const vestingEventsSection = page.getByRole("dialog");
+        // Check monthly vesting events
+        for (let month = 13; month <= 15; month++) {
+          const vestingDate = format(addMonths(vestingStartDate, month), "MMM d, yyyy");
+          await expect(modal).toContainText(vestingDate);
+          await expect(modal).toContainText("1,000 shares");
+        }
 
-    // Check cliff vesting event (12,000 shares at month 12)
-    const cliffDate = format(addMonths(vestingStartDate, 12), "MMM d, yyyy");
-    await expect(vestingEventsSection).toContainText(cliffDate);
-    await expect(vestingEventsSection).toContainText("12,000 shares");
+        // Verify only 4 processed events are shown (cliff + 3 monthly) and no cancelled events
+        const sharesEntries = await modal.getByText(/\d+,?\d*\s+shares/u, { exact: false }).count();
+        expect(sharesEntries).toBe(4); // Only processed events should be visible
 
-    // Check monthly vesting events
-    for (let month = 13; month <= 15; month++) {
-      const vestingDate = format(addMonths(vestingStartDate, month), "MMM d, yyyy");
-      await expect(vestingEventsSection).toContainText(vestingDate);
-      await expect(vestingEventsSection).toContainText("1,000 shares");
-    }
+        // Should not show status indicators like (Vested) or (Scheduled)
+        const statusCount = await modal.getByText(/\((Vested|Scheduled|Cancelled)\)/u, { exact: false }).count();
+        expect(statusCount).toBe(0);
 
-    // Verify only 4 processed events are shown (cliff + 3 monthly) and no cancelled events
-    const sharesEntries = await vestingEventsSection.getByText(/\d+,?\d*\s+shares/u, { exact: false }).count();
-    expect(sharesEntries).toBe(4); // Only processed events should be visible
-
-    // Should not show status indicators like (Vested) or (Scheduled)
-    const statusCount = await vestingEventsSection
-      .getByText(/\((Vested|Scheduled|Cancelled)\)/u, { exact: false })
-      .count();
-    expect(statusCount).toBe(0);
-
-    // Verify other sections are still present within the modal
-    const modalContent = page.getByRole("dialog");
-    await expect(modalContent.getByText("Total options granted")).toBeVisible();
-    await expect(modalContent.getByText("48,000 (NSO)")).toBeVisible();
-    await expect(modalContent.getByText("Vested").first()).toBeVisible();
-    await expect(modalContent.getByText("15,000").first()).toBeVisible();
-    await expect(modalContent.getByText("Unvested").first()).toBeVisible();
-    await expect(modalContent.getByText("33,000").first()).toBeVisible();
+        // Verify other sections are still present within the modal
+        await expect(modal.getByText("Total options granted")).toBeVisible();
+        await expect(modal.getByText("48,000 (NSO)")).toBeVisible();
+        await expect(modal.getByText("Vested").first()).toBeVisible();
+        await expect(modal.getByText("15,000").first()).toBeVisible();
+        await expect(modal.getByText("Unvested").first()).toBeVisible();
+        await expect(modal.getByText("33,000").first()).toBeVisible();
+      },
+      { page, assertClosed: false },
+    );
   });
 
   test("handles equity grants with invoice-based vesting", async ({ page }) => {
@@ -281,17 +278,19 @@ test.describe("Equity Grant Vesting Events", () => {
 
     // Open the details modal by clicking on the grant row
     await page.getByRole("table").first().getByRole("row").nth(1).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await withinModal(
+      async (modal) => {
+        // Invoice-based vesting grants should not show vesting events section within the modal
+        await expect(modal.getByText("Vesting events")).not.toBeVisible();
 
-    // Invoice-based vesting grants should not show vesting events section within the modal
-    const modalContent = page.getByRole("dialog");
-    await expect(modalContent.getByText("Vesting events")).not.toBeVisible();
-
-    // But should show other standard sections within the modal
-    await expect(modalContent.getByText("Total options granted")).toBeVisible();
-    await expect(modalContent.getByText("10,000 (NSO)")).toBeVisible();
-    await expect(modalContent.getByText("Exercise details")).toBeVisible();
-    await expect(modalContent.getByText("Post-termination exercise windows")).toBeVisible();
-    await expect(modalContent.getByText("Compliance details")).toBeVisible();
+        // But should show other standard sections within the modal
+        await expect(modal.getByText("Total options granted")).toBeVisible();
+        await expect(modal.getByText("10,000 (NSO)")).toBeVisible();
+        await expect(modal.getByText("Exercise details")).toBeVisible();
+        await expect(modal.getByText("Post-termination exercise windows")).toBeVisible();
+        await expect(modal.getByText("Compliance details")).toBeVisible();
+      },
+      { page, assertClosed: false },
+    );
   });
 });

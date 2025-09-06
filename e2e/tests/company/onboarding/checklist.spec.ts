@@ -66,7 +66,6 @@ test.describe("Onboarding checklist", () => {
         await modal.getByLabel("Rate").fill("100");
         await modal.getByLabel("Already signed contract elsewhere").check({ force: true });
         await modal.getByRole("button", { name: "Send invite" }).click();
-        await modal.waitFor({ state: "detached" });
       },
       { page, title: "Who's joining?" },
     );

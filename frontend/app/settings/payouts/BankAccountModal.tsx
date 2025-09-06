@@ -168,6 +168,9 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
 
   const nestedDetails = () => {
     const result = {};
+    // https://docs.wise.com/api-docs/api-reference/recipient#account-requirements
+    // Always have country set, so wise form can load conditional fields based on it
+    set(result, KEY_ADDRESS_COUNTRY, billingDetails.country_code);
     const values =
       previousForms.current?.[selectedFormIndex]?.fields.flatMap((field) =>
         field.group.map((field) => [field.key, detailsRef.current.get(field.key)] as const),

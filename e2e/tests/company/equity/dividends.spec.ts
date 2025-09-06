@@ -75,7 +75,6 @@ test.describe("Dividends", () => {
       },
       { page },
     );
-    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Sign" })).not.toBeVisible();
 
     const updatedDividend = await db.query.dividends

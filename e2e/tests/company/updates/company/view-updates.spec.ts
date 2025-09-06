@@ -46,7 +46,7 @@ test.describe("view company updates", () => {
         await expect(modal.getByText("Test contractor view content for body.")).toBeVisible();
         await expect(modal.getByText(adminUserpreferredName)).toBeVisible();
       },
-      { page, title: companyUpdate.title },
+      { page, title: companyUpdate.title, assertClosed: false },
     );
   });
 
@@ -67,7 +67,7 @@ test.describe("view company updates", () => {
         await expect(modal.getByText("Test investor view content for body.")).toBeVisible();
         await expect(modal.getByText(adminUserpreferredName)).toBeVisible();
       },
-      { page, title: companyUpdate.title },
+      { page, title: companyUpdate.title, assertClosed: false },
     );
   });
 });

@@ -5,7 +5,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { desc, eq } from "drizzle-orm";
 import { invoices } from "@/db/schema";
 
@@ -56,9 +56,13 @@ test.describe("invoice rejection flow", () => {
     const invoiceRow = page.locator("tbody tr").filter({ hasText: contractorUser.legalName || "never" });
     await invoiceRow.getByLabel("Select row").check();
     await page.getByRole("button", { name: "Reject selected invoices" }).click();
-    await page.getByLabel("Explain why the invoice was").fill("Hours seem too high for the work described");
-    await page.getByRole("button", { name: "Yes, reject" }).click();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Explain why the invoice was").fill("Hours seem too high for the work described");
+        await modal.getByRole("button", { name: "Yes, reject" }).click();
+      },
+      { page },
+    );
 
     // Verify invoice shows as rejected
     await page.getByRole("button", { name: "Filter" }).click();
