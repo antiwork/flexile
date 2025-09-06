@@ -11,7 +11,7 @@ import { eq } from "drizzle-orm";
 import { activeStorageAttachments, activeStorageBlobs, users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
-test.describe("Documents search functionality", () => {
+test.describe("Documents", () => {
   test("allows administrators to search documents by signer name", async ({ page }) => {
     const { company } = await companiesFactory.createCompletedOnboarding();
     const { user: admin } = await usersFactory.create();
@@ -93,9 +93,10 @@ test.describe("Documents search functionality", () => {
   test("allows administrators to share documents", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
     const { document } = await documentsFactory.create({ companyId: company.id, text: "Test document text" });
-    const { user: recipient } = await usersFactory.create({ legalName: "Recipient" });
+    const { user: recipient } = await usersFactory.create({ legalName: "Recipient 1" });
     await companyContractorsFactory.create({ companyId: company.id, userId: recipient.id });
     await login(page, adminUser, "/documents");
+    await logout(page);
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
     await expect(page.locator("tbody tr")).toHaveCount(1);
     await expect(page.getByRole("row").filter({ hasText: document.name })).toBeVisible();
@@ -103,7 +104,7 @@ test.describe("Documents search functionality", () => {
     await page.getByRole("menuitem", { name: "Share document" }).click();
     await expect(findRichTextEditor(page, "Document")).toHaveText("Test document text");
     await findRichTextEditor(page, "Document").fill("Some other text");
-    await selectComboboxOption(page, "Recipient", "Recipient");
+    await selectComboboxOption(page, "Recipient", "Recipient 1");
     await page.getByRole("button", { name: "Send" }).click();
     await expect(page.locator("tbody tr")).toHaveCount(2);
 
@@ -111,7 +112,7 @@ test.describe("Documents search functionality", () => {
     await login(page, recipient, "/documents");
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
     await expect(page.locator("tbody tr")).toHaveCount(1);
-    await page.getByRole("button", { name: "Sign" }).click();
+    await page.getByRole("button", { name: "Review and sign" }).click();
     await expect(page.getByText("Some other text")).toBeVisible();
     await page.getByRole("button", { name: "Add your signature" }).click();
     await page.getByRole("button", { name: "Agree & Submit" }).click();
