@@ -72,6 +72,6 @@
   <% end %>
 <% else %>
   <%= link_to "Sign and accept your grant",
-              "#{PROTOCOL}://#{DOMAIN}/stock_options_contracts/#{@document.id}",
+              "#{PROTOCOL}://#{DOMAIN}/documents?sign=#{@document.id}",
               class: "button" %>
 <% end %>
