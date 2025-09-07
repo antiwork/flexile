@@ -210,3 +210,15 @@ export const storageKeys = {
   SETTINGS_MENU_STATE: "settings-menu-state",
   GETTING_STARTED_STATUS: "getting-started-status",
 };
+
+// PDF Upload Configuration
+// Get max file size from environment or use default 10MB
+const PDF_MAX_FILE_SIZE_BYTES = parseInt(process.env.NEXT_PUBLIC_PDF_MAX_FILE_SIZE || "10485760", 10);
+export const PDF_MAX_FILE_SIZE_MB = Number((PDF_MAX_FILE_SIZE_BYTES / (1024 * 1024)).toFixed(1));
+
+export const PDF_MAX_FILE_SIZE = PDF_MAX_FILE_SIZE_BYTES;
+
+export const formatFileSize = (bytes: number): string => {
+  const mb = bytes / (1024 * 1024);
+  return `${mb.toFixed(1)}MB`;
+};

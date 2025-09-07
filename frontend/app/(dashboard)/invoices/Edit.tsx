@@ -1,14 +1,14 @@
 "use client";
 
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { DocumentArrowDownIcon, PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -33,7 +33,9 @@ import {
   edit_company_invoice_path,
   new_company_invoice_path,
 } from "@/utils/routes";
+import { PdfDropOverlay } from "./PdfDropOverlay";
 import QuantityInput from "./QuantityInput";
+import { type ParsedInvoiceData, usePdfDragAndDrop } from "./usePdfDragAndDrop";
 import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
 
 const addressSchema = z.object({
@@ -139,8 +141,117 @@ const Edit = () => {
   });
   const [showExpenses, setShowExpenses] = useState(false);
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
+  const pdfImportRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const showExpensesTable = showExpenses || expenses.size > 0;
+
+  const handlePdfParsed = useCallback(
+    (parsedData: ParsedInvoiceData, file: File) => {
+      // Check if the PDF contains any meaningful invoice data
+      const hasInvoiceData =
+        parsedData.invoiceNumber ||
+        parsedData.invoiceDate ||
+        (parsedData.lineItems && parsedData.lineItems.length > 0) ||
+        (parsedData.expenses && parsedData.expenses.length > 0);
+
+      if (!hasInvoiceData) {
+        setError("This PDF doesn't appear to contain invoice data. Please upload a valid invoice PDF.");
+        return;
+      }
+
+      if (parsedData.invoiceNumber) {
+        setInvoiceNumber(parsedData.invoiceNumber);
+      }
+
+      if (parsedData.invoiceDate && parsedData.invoiceDate !== "N/A") {
+        try {
+          // Validate that the date is in YYYY-MM-DD format
+          const dateRegex = /^\d{4}-\d{2}-\d{2}$/u;
+          if (dateRegex.test(parsedData.invoiceDate)) {
+            const date = parseDate(parsedData.invoiceDate);
+            setIssueDate(date);
+          }
+        } catch {
+          // Silently ignore invalid date formats
+        }
+      }
+
+      // Update line items
+      if (parsedData.lineItems?.length) {
+        const newLineItems = parsedData.lineItems.map((item) => {
+          const isHourly = !data.user.project_based;
+          // Handle quantity conversion
+          let quantityValue: string;
+          if (item.quantity) {
+            if (isHourly) {
+              // For hourly workers, convert hours to minutes
+              quantityValue = Math.round(item.quantity * 60).toString();
+            } else {
+              // For project-based workers, keep quantity as-is
+              quantityValue = item.quantity.toString();
+            }
+          } else {
+            // Default quantity
+            quantityValue = isHourly ? "60" : "1";
+          }
+
+          // Calculate rate in subunits (cents)
+          let rateInSubunits: number;
+          if (item.rate) {
+            rateInSubunits = Math.round(item.rate * 100);
+          } else if (item.amount && item.quantity && item.quantity > 0) {
+            rateInSubunits = Math.round((item.amount / item.quantity) * 100);
+          } else {
+            rateInSubunits = payRateInSubunits || 10000;
+          }
+
+          return {
+            description: item.description || "",
+            quantity: quantityValue,
+            hourly: isHourly,
+            pay_rate_in_subunits: rateInSubunits,
+          };
+        });
+        setLineItems(List(newLineItems));
+      }
+
+      // Update expenses
+      if (parsedData.expenses?.length) {
+        const defaultCategory = data.company.expense_categories[0];
+        if (defaultCategory) {
+          const newExpenses = parsedData.expenses.map((expense) => {
+            // Match category by name if provided
+            const categoryId = expense.category
+              ? data.company.expense_categories.find((cat) =>
+                  cat.name.toLowerCase().includes(expense.category?.toLowerCase() ?? ""),
+                )?.id || defaultCategory.id
+              : defaultCategory.id;
+
+            return {
+              description: expense.description || "",
+              category_id: categoryId,
+              total_amount_in_cents: Math.round((expense.amount || 0) * 100),
+              attachment: { name: file.name, url: URL.createObjectURL(file) },
+              blob: file,
+            };
+          });
+          setExpenses(List(newExpenses));
+          setShowExpenses(true);
+        }
+      }
+
+      if (parsedData.notes) {
+        setNotes(parsedData.notes);
+      }
+
+      setError(null);
+    },
+    [data.company.expense_categories, data.user.project_based, payRateInSubunits],
+  );
+
+  const { isDragging, isParsing, error, setError, handleFileSelect } = usePdfDragAndDrop({
+    onPdfParsed: handlePdfParsed,
+  });
 
   const validate = () => {
     setErrorField(null);
@@ -260,6 +371,20 @@ const Edit = () => {
 
   return (
     <>
+      <PdfDropOverlay isDragging={isDragging} isParsing={isParsing} />
+      <input
+        ref={pdfImportRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            handleFileSelect(file);
+            e.target.value = "";
+          }
+        }}
+      />
       <DashboardHeader
         title={data.invoice.id ? "Edit invoice" : "New invoice"}
         headerActions={
@@ -271,6 +396,15 @@ const Edit = () => {
                 <Link href="/invoices">Cancel</Link>
               </Button>
             )}
+            <Button
+              variant="outline"
+              onClick={() => pdfImportRef.current?.click()}
+              disabled={isParsing}
+              title="Import invoice data from a PDF file"
+            >
+              <DocumentArrowDownIcon className="size-4" />
+              {isParsing ? "Parsing..." : "Import from PDF"}
+            </Button>
             <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
               <PaperAirplaneIcon className="size-4" />
               {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit invoice" : "Send invoice"}
@@ -278,6 +412,18 @@ const Edit = () => {
           </>
         }
       />
+
+      {error ? (
+        <Alert className="mx-4" variant="destructive">
+          <CircleAlert className="size-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="ml-4 text-sm underline hover:no-underline">
+              Dismiss
+            </button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
         <Alert className="mx-4" variant="warning">
