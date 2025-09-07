@@ -114,7 +114,6 @@ test.describe("Dividend Computations", () => {
       .filter({
         has: page.getByText(formatMoney(dividendComputation.totalAmountInUsd)),
       });
-    const footerBeforeFinalization = await page.locator("tfoot").textContent();
 
     await expect(draftRow).toBeVisible();
     await draftRow.click();
@@ -122,7 +121,7 @@ test.describe("Dividend Computations", () => {
     await expect(page.getByRole("heading", { name: "Dividend" })).toBeVisible();
     await expect(page.getByText("Dividend distribution is still a draft")).toBeVisible();
     await expect(page.getByRole("button", { name: "Finalize distribution" })).toBeVisible();
-
+    const footerBeforeFinalization = await page.locator("tfoot").textContent();
     await page.getByRole("button", { name: "Finalize distribution" }).click();
 
     await withinModal(
