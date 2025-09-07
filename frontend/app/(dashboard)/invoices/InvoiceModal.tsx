@@ -122,30 +122,6 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
 
   const payRateInSubunits = data.user.pay_rate_in_subunits;
 
-  React.useEffect(() => {
-    setInvoiceNumber(data.invoice.invoice_number);
-    setIssueDate(parseDate(searchParams.get("date") || data.invoice.invoice_date));
-    setNotes(data.invoice.notes ?? "");
-
-    if (data.invoice.line_items.length) {
-      setLineItems(List(data.invoice.line_items));
-    } else {
-      setLineItems(
-        List([
-          {
-            description: "",
-            quantity: (parseFloat(searchParams.get("quantity") ?? "") || (data.user.project_based ? 1 : 60)).toString(),
-            hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : !data.user.project_based,
-            pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || (payRateInSubunits ?? 0),
-          },
-        ]),
-      );
-    }
-
-    setExpenses(List<InvoiceFormExpense>(data.invoice.expenses));
-    setShowExpenses(data.invoice.expenses.length > 0);
-  }, [data, searchParams, payRateInSubunits]);
-
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
   const [issueDate, setIssueDate] = useState<DateValue>(() =>
     parseDate(searchParams.get("date") || data.invoice.invoice_date),

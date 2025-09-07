@@ -682,6 +682,7 @@ export default function InvoicesPage() {
       ) : null}
 
       <InvoiceModal
+        key={editInvoice?.id ?? null}
         open={openModal === "create" || openModal === "edit"}
         invoiceId={editInvoice?.id ?? null}
         onOpenChange={(open) => {
