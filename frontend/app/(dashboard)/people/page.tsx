@@ -34,7 +34,7 @@ import { countries } from "@/models/constants";
 import { PayRateType, trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_workers_path } from "@/utils/routes";
-import { formatDate } from "@/utils/time";
+import { formatDate, serverDateToLocal } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 import NewDocumentField, { schema as documentSchema } from "../documents/NewDocumentField";
 import FormFields, { schema as formSchema } from "./FormFields";
@@ -74,11 +74,11 @@ export default function PeoplePage() {
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
         cell: (info) =>
           info.row.original.endedAt ? (
-            <Status variant="critical">Ended on {formatDate(info.row.original.endedAt)}</Status>
+            <Status variant="critical">Ended on {formatDate(serverDateToLocal(info.row.original.endedAt))}</Status>
           ) : info.row.original.startedAt <= new Date() ? (
-            <Status variant="success">Started on {formatDate(info.row.original.startedAt)}</Status>
+            <Status variant="success">Started on {formatDate(serverDateToLocal(info.row.original.startedAt))}</Status>
           ) : info.row.original.user.onboardingCompleted ? (
-            <Status variant="success">Starts on {formatDate(info.row.original.startedAt)}</Status>
+            <Status variant="success">Starts on {formatDate(serverDateToLocal(info.row.original.startedAt))}</Status>
           ) : info.row.original.user.invitationAcceptedAt ? (
             <Status variant="primary">In Progress</Status>
           ) : (
