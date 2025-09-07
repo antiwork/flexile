@@ -17,6 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
+import { DIVIDEND_BASE_FEE_CENTS, DIVIDEND_MAX_FEE_CENTS, DIVIDEND_PERCENTAGE } from "@/utils/fees";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_dividend_rounds_path } from "@/utils/routes";
@@ -104,7 +105,10 @@ const FinalizeDistributionModal = ({
           <div className="flex justify-between">
             <div>
               <div>Processing fees:</div>
-              <div className="mt-1 text-sm text-gray-500">$0.30 + 2.9%, up to $30/investor</div>
+              <div className="mt-1 text-sm text-gray-500">
+                {formatMoneyFromCents(DIVIDEND_BASE_FEE_CENTS)} + {DIVIDEND_PERCENTAGE}%, up to{" "}
+                {formatMoneyFromCents(DIVIDEND_MAX_FEE_CENTS)}/investor
+              </div>
             </div>
             <span>{formatMoneyFromCents(dividendComputation.total_fees_cents)}</span>
           </div>
