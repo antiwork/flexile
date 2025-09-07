@@ -111,10 +111,9 @@ export default function InvoicesPage() {
   const isMobile = useIsMobile();
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
+  const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | "create" | "edit" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-  const [editInvoiceId, setEditInvoiceId] = useState<string | undefined>(undefined);
+  const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const isDeletable = useIsDeletable();
@@ -357,8 +356,8 @@ export default function InvoicesPage() {
     switch (actionId) {
       case "edit":
         if (isSingleAction && singleInvoice) {
-          setEditInvoiceId(singleInvoice.id);
-          setShowInvoiceModal(true);
+          setEditInvoice(singleInvoice);
+          setOpenModal("edit");
         }
         break;
       case "approve":
@@ -426,7 +425,12 @@ export default function InvoicesPage() {
         <Button
           variant="floating-action"
           disabled={!canSubmitInvoices}
-          onClick={() => canSubmitInvoices && setShowInvoiceModal(true)}
+          onClick={() => {
+            if (canSubmitInvoices) {
+              setEditInvoice(null);
+              setOpenModal("create");
+            }
+          }}
         >
           <Plus />
         </Button>
@@ -465,7 +469,12 @@ export default function InvoicesPage() {
               variant="outline"
               size="small"
               disabled={!canSubmitInvoices}
-              onClick={() => canSubmitInvoices && setShowInvoiceModal(true)}
+              onClick={() => {
+                if (canSubmitInvoices) {
+                  setEditInvoice(null);
+                  setOpenModal("create");
+                }
+              }}
             >
               <Plus className="size-4" />
               New invoice
@@ -673,14 +682,11 @@ export default function InvoicesPage() {
       ) : null}
 
       <InvoiceModal
-        open={showInvoiceModal}
+        open={openModal === "create" || openModal === "edit"}
+        invoiceId={editInvoice?.id ?? null}
         onOpenChange={(open) => {
-          setShowInvoiceModal(open);
-          if (!open) {
-            setEditInvoiceId(undefined);
-          }
+          if (!open) setOpenModal(null);
         }}
-        {...(editInvoiceId ? { invoiceId: editInvoiceId } : {})}
       />
     </>
   );

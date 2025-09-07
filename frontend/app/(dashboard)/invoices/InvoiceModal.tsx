@@ -92,7 +92,7 @@ type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: strin
 interface InvoiceModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  invoiceId?: string;
+  invoiceId: string | null;
 }
 
 const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
@@ -108,7 +108,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
   assert(worker != null);
 
   const { data } = useSuspenseQuery({
-    queryKey: ["invoice", invoiceId],
+    queryKey: invoiceId ? ["invoice", "edit", invoiceId] : ["invoice", "new"],
     queryFn: async () => {
       const response = await request({
         url: invoiceId ? edit_company_invoice_path(company.id, invoiceId) : new_company_invoice_path(company.id),
@@ -119,7 +119,32 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
       return dataSchema.parse(await response.json());
     },
   });
+
   const payRateInSubunits = data.user.pay_rate_in_subunits;
+
+  React.useEffect(() => {
+    setInvoiceNumber(data.invoice.invoice_number);
+    setIssueDate(parseDate(searchParams.get("date") || data.invoice.invoice_date));
+    setNotes(data.invoice.notes ?? "");
+
+    if (data.invoice.line_items.length) {
+      setLineItems(List(data.invoice.line_items));
+    } else {
+      setLineItems(
+        List([
+          {
+            description: "",
+            quantity: (parseFloat(searchParams.get("quantity") ?? "") || (data.user.project_based ? 1 : 60)).toString(),
+            hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : !data.user.project_based,
+            pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || (payRateInSubunits ?? 0),
+          },
+        ]),
+      );
+    }
+
+    setExpenses(List<InvoiceFormExpense>(data.invoice.expenses));
+    setShowExpenses(data.invoice.expenses.length > 0);
+  }, [data, searchParams, payRateInSubunits]);
 
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
   const [issueDate, setIssueDate] = useState<DateValue>(() =>
@@ -262,7 +287,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl px-0 pt-6 pb-4">
+      <DialogContent className="max-w-4xl px-0 py-6 pb-4">
         <DialogHeader>
           <DialogTitle className="flex h-5 items-center px-4">
             {isEditingInvoiceId ? (
@@ -281,9 +306,12 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
                 }}
               />
             ) : (
-              <div onClick={() => setIsEditingInvoiceId(true)} className="group flex cursor-pointer items-center gap-2">
-                Invoice #{invoiceNumber}
-                <PencilIcon className="size-3 opacity-0 transition-opacity group-hover:opacity-100" />
+              <div
+                onClick={() => setIsEditingInvoiceId(true)}
+                className="group relative flex cursor-pointer items-center"
+              >
+                {invoiceNumber}
+                <PencilIcon className="pointer-events-none absolute top-1/2 -right-2 size-3 translate-x-full -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100" />
               </div>
             )}
           </DialogTitle>
@@ -469,30 +497,30 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Type your notes here"
-            className="h-25 resize-none border-0 pl-0 focus-visible:border-transparent focus-visible:ring-0"
+            className="h-25 resize-none border-0 p-0 !text-base !leading-tight focus-visible:border-transparent focus-visible:ring-0"
           />
 
           <section className="shrink-0 space-y-2 md:basis-xs">
             {showExpensesTable || company.equityEnabled ? (
-              <div className="flex justify-between">
+              <div className="flex justify-between leading-tight">
                 <span>Total services</span>
                 <span className="numeric">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
               </div>
             ) : null}
             {showExpensesTable ? (
-              <div className="flex justify-between">
+              <div className="flex justify-between leading-tight">
                 <span>Total expenses</span>
                 <span className="numeric">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
               </div>
             ) : null}
             {company.equityEnabled ? (
               <>
-                <div className="flex justify-between">
+                <div className="flex justify-between leading-tight">
                   <span>Swapped for equity</span>
                   <span className="numeric">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
                 </div>
                 <Separator className="my-2" />
-                <div className="flex justify-between">
+                <div className="flex justify-between leading-tight">
                   <span>Net amount in cash</span>
                   <span className="numeric">
                     {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
@@ -500,7 +528,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
                 </div>
               </>
             ) : (
-              <div className="flex justify-between">
+              <div className="flex justify-between leading-tight">
                 <span>Total</span>
                 <span className="numeric">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
               </div>
