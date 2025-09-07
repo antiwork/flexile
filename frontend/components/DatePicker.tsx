@@ -38,8 +38,8 @@ export default function DatePicker({ label, className, variant = "default", ...p
     const value = props.value ?? null;
 
     return (
-      <Group className="bg-background border-input focus-within:border-ring focus-within:ring-ring/15 flex overflow-hidden rounded-md border px-3 py-2 whitespace-nowrap transition-[color,box-shadow] focus-within:ring-[3px]">
-        <RacButton className="flex cursor-pointer items-center gap-2">
+      <Group className="bg-background border-input focus-within:border-ring focus-within:ring-ring/15 flex overflow-hidden rounded-md border whitespace-nowrap transition-[color,box-shadow] focus-within:ring-[3px]">
+        <RacButton className="flex cursor-pointer items-center gap-2 px-3 py-2">
           <CalendarIcon size={16} />
           {value ? <span>{format(value.toDate("UTC"), "MMM d")}</span> : <span>Select date</span>}
         </RacButton>
