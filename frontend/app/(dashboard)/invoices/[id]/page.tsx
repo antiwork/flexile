@@ -34,6 +34,7 @@ import {
   useIsActionable,
   useIsDeletable,
 } from "..";
+import InvoiceModal from "../InvoiceModal";
 
 const getInvoiceStatusText = (
   invoice: { status: string; approvals: unknown[]; paidAt?: string | Date | null },
@@ -106,6 +107,7 @@ export default function InvoicePage() {
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const router = useRouter();
   const isActionable = useIsActionable();
   const isDeletable = useIsDeletable();
@@ -177,11 +179,9 @@ export default function InvoicePage() {
                 {invoice.requiresAcceptanceByPayee ? (
                   <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
                 ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                  <Button variant="default" asChild>
-                    <Link href={`/invoices/${invoice.id}/edit`}>
-                      {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
-                      {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
-                    </Link>
+                  <Button variant="default" onClick={() => setEditModalOpen(true)}>
+                    {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
+                    {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
                   </Button>
                 ) : null}
 
@@ -474,6 +474,8 @@ export default function InvoicePage() {
           </div>
         </form>
       </section>
+
+      <InvoiceModal open={editModalOpen} onOpenChange={setEditModalOpen} invoiceId={invoice.id} />
     </div>
   );
 }

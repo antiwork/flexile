@@ -270,22 +270,23 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
               <input
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
-                onBlur={() => setIsEditingInvoiceId(false)}
+                onBlur={(e) => {
+                  if (e.target.value.trim() === "") return e.target.focus();
+                  setIsEditingInvoiceId(false);
+                }}
                 aria-invalid={errorField === "invoiceNumber"}
                 className="text-lg outline-0"
                 placeholder="Invoice ID"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
+                    if (e.currentTarget.value.trim() === "") return;
                     e.currentTarget.blur();
                   }
                 }}
               />
             ) : (
-              <div
-                onClick={() => setIsEditingInvoiceId(true)}
-                className="group relative flex cursor-pointer items-center"
-              >
+              <div onClick={() => setIsEditingInvoiceId(true)} className="relative flex cursor-pointer items-center">
                 {invoiceNumber}
                 <PencilIcon className="pointer-events-none absolute top-1/2 -right-2 size-3 translate-x-full -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100" />
               </div>
