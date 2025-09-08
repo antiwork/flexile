@@ -365,27 +365,29 @@ export default function ContractorPage() {
             </Form>
           </DialogContent>
         </Dialog>
-        {tabs.length > 1 ? (
-          <div className="pb-4">
+
+        <div className="space-y-8">
+          {tabs.length > 1 ? (
             <Tabs links={tabs.map((tab) => ({ label: tab.label, route: `?tab=${tab.tab}` }))} />
-          </div>
-        ) : null}
-        {(() => {
-          switch (selectedTab) {
-            case "options":
-              return investor ? <OptionsTab investorId={investor.id} userId={id} /> : null;
-            case "shares":
-              return investor ? <SharesTab investorId={investor.id} /> : null;
-            case "convertibles":
-              return investor ? <ConvertiblesTab investorId={investor.id} /> : null;
-            case "exercises":
-              return investor ? <ExercisesTab investorId={investor.id} /> : null;
-            case "dividends":
-              return investor ? <DividendsTab investorId={investor.id} /> : null;
-            case "details":
-              return <DetailsTab userId={id} setCancelModalOpen={setCancelModalOpen} />;
-          }
-        })()}
+          ) : null}
+
+          {(() => {
+            switch (selectedTab) {
+              case "options":
+                return investor ? <OptionsTab investorId={investor.id} userId={id} /> : null;
+              case "shares":
+                return investor ? <SharesTab investorId={investor.id} /> : null;
+              case "convertibles":
+                return investor ? <ConvertiblesTab investorId={investor.id} /> : null;
+              case "exercises":
+                return investor ? <ExercisesTab investorId={investor.id} /> : null;
+              case "dividends":
+                return investor ? <DividendsTab investorId={investor.id} /> : null;
+              case "details":
+                return <DetailsTab userId={id} setCancelModalOpen={setCancelModalOpen} />;
+            }
+          })()}
+        </div>
       </div>
     </>
   );
