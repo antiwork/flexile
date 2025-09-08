@@ -92,7 +92,7 @@ RSpec.describe CompanyInvestorMailer do
 
         expect(mail.to).to eq([user.email])
         expect(mail.subject).to eq("Your distribution from #{company.name} is on hold")
-        expect(plaintext).to include("Your $20.00 distribution from #{company.display_name} is on hold")
+        expect(plaintext).to include("Your $20.00 distribution from #{company.name} is on hold")
         expect(plaintext).to include("After 10% U.S. tax withholding, your net amount is $18.00")
         expect(plaintext).to include("Since your current payout threshold is set to $25.00, we'll keep your funds")
         expect(plaintext).not_to include("$10.00")
@@ -126,7 +126,7 @@ RSpec.describe CompanyInvestorMailer do
 
         expect(mail.to).to eq([user.email])
         expect(mail.subject).to eq("Your distribution from #{company.name} is on hold")
-        expect(plaintext).to include("You've earned $20.00 from your investment in #{company.display_name}")
+        expect(plaintext).to include("You've earned $20.00 from your investment in #{company.name}")
         expect(plaintext).to include("your current payout threshold is set to $25.00")
         expect(plaintext).not_to include("$10.00")
       end
