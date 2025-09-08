@@ -74,4 +74,107 @@ RSpec.describe CompanyInvestorMailer do
       expect(plaintext).to include("For your security, the previous bank account details have been removed.")
     end
   end
+
+  describe "#retained_dividends" do
+    let(:user) { create(:user, minimum_dividend_payment_in_cents: 2500) } # $25.00 threshold
+    let(:company) { create(:company, name: "Test Company") }
+    let(:company_investor) { create(:company_investor, user: user, company: company, investment_amount_in_cents: 100_000) }
+
+    context "when withholding percentage is greater than 0" do
+      it "displays dynamic dividend threshold instead of hardcoded $10.00" do
+        mail = described_class.retained_dividends(
+          company_investor.id,
+          total_cents: 2000, # $20.00
+          net_cents: 1800,   # $18.00 after tax
+          withholding_percentage: 10
+        )
+        plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
+
+        expect(mail.to).to eq([user.email])
+        expect(mail.subject).to eq("Your distribution from #{company.name} is on hold")
+        expect(plaintext).to include("Your $20.00 distribution from #{company.name} is on hold")
+        expect(plaintext).to include("After 10% U.S. tax withholding, your net amount is $18.00")
+        expect(plaintext).to include("Since your current payout threshold is set to $25.00, we'll keep your funds")
+        expect(plaintext).not_to include("$10.00")
+      end
+
+      it "works with different threshold amounts" do
+        user.update!(minimum_dividend_payment_in_cents: 5000) # $50.00 threshold
+
+        mail = described_class.retained_dividends(
+          company_investor.id,
+          total_cents: 3000, # $30.00
+          net_cents: 2700,   # $27.00 after tax
+          withholding_percentage: 10
+        )
+        plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
+
+        expect(plaintext).to include("Since your current payout threshold is set to $50.00, we'll keep your funds")
+        expect(plaintext).not_to include("$10.00")
+      end
+    end
+
+    context "when withholding percentage is 0 or nil" do
+      it "displays dynamic dividend threshold in the else branch" do
+        mail = described_class.retained_dividends(
+          company_investor.id,
+          total_cents: 2000, # $20.00
+          net_cents: 2000,   # Same as total since no withholding
+          withholding_percentage: 0
+        )
+        plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
+
+        expect(mail.to).to eq([user.email])
+        expect(mail.subject).to eq("Your distribution from #{company.name} is on hold")
+        expect(plaintext).to include("You've earned $20.00 from your investment in #{company.name}")
+        expect(plaintext).to include("your current payout threshold is set to $25.00")
+        expect(plaintext).not_to include("$10.00")
+      end
+
+      it "works with different threshold amounts in else branch" do
+        user.update!(minimum_dividend_payment_in_cents: 10000) # $100.00 threshold
+
+        mail = described_class.retained_dividends(
+          company_investor.id,
+          total_cents: 7500, # $75.00
+          net_cents: 7500,   # Same as total since no withholding
+          withholding_percentage: 0
+        )
+        plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
+
+        expect(plaintext).to include("your current payout threshold is set to $100.00")
+        expect(plaintext).not_to include("$10.00")
+      end
+    end
+
+    context "edge cases" do
+      it "handles small threshold amounts correctly" do
+        user.update!(minimum_dividend_payment_in_cents: 1) # $0.01 threshold
+
+        mail = described_class.retained_dividends(
+          company_investor.id,
+          total_cents: 50, # $0.50
+          net_cents: 45,   # $0.45 after tax
+          withholding_percentage: 10
+        )
+        plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
+
+        expect(plaintext).to include("Since your current payout threshold is set to $0.01, we'll keep your funds")
+      end
+
+      it "handles large threshold amounts correctly" do
+        user.update!(minimum_dividend_payment_in_cents: 100000) # $1,000.00 threshold
+
+        mail = described_class.retained_dividends(
+          company_investor.id,
+          total_cents: 50000, # $500.00
+          net_cents: 50000,   # Same as total since no withholding
+          withholding_percentage: 0
+        )
+        plaintext = ActionView::Base.full_sanitizer.sanitize(mail.body.encoded).gsub("\r\n", " ").gsub(/\s+/, " ").strip
+
+        expect(plaintext).to include("your current payout threshold is set to $1,000.00")
+      end
+    end
+  end
 end
