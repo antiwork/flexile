@@ -57,7 +57,6 @@ class User < ApplicationRecord
   validate :minimum_dividend_payment_in_cents_is_within_range
   validates :preferred_name, length: { maximum: MAX_PREFERRED_NAME_LENGTH }, allow_nil: true
 
-  after_update_commit :sync_with_quickbooks, if: :worker?
   after_update_commit :update_dividend_status,
                       if: -> { current_sign_in_at_previously_changed? && current_sign_in_at_previously_was.nil? }
 
@@ -182,20 +181,6 @@ class User < ApplicationRecord
   end
 
   private
-    def sync_with_quickbooks
-      return unless has_personal_details?
-
-      columns_synced_with_quickbooks = %w[email unconfirmed_email preferred_name legal_name
-                                          city street_address zip_code country_code state]
-
-      if previous_changes.keys.intersect?(columns_synced_with_quickbooks)
-        array_of_args = company_workers.active.with_signed_contract.map do |company_worker|
-          [company_worker.company_id, company_worker.class.name, company_worker.id]
-        end
-        QuickbooksDataSyncJob.perform_bulk(array_of_args)
-      end
-    end
-
     def update_dividend_status
       dividends.pending_signup.each do |dividend|
         dividend.update!(status: Dividend::ISSUED)
