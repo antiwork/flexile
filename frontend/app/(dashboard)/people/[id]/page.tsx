@@ -365,11 +365,11 @@ export default function ContractorPage() {
             </Form>
           </DialogContent>
         </Dialog>
-        <div className="pb-4">
-          {tabs.length > 1 ? (
+        {tabs.length > 1 ? (
+          <div className="pb-4">
             <Tabs links={tabs.map((tab) => ({ label: tab.label, route: `?tab=${tab.tab}` }))} />
-          ) : null}
-        </div>
+          </div>
+        ) : null}
         {(() => {
           switch (selectedTab) {
             case "options":
