@@ -150,7 +150,7 @@ export default function BuybackView() {
         ) : null}
 
         <h2 className="text-xl font-medium">Details</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <Label>Start date</Label>
             <p>{serverDateToLocal(data.startsAt)}</p>
@@ -163,7 +163,7 @@ export default function BuybackView() {
             <Label>Starting valuation</Label>
             <p>{formatMoney(data.minimumValuation)}</p>
           </div>
-          <div>
+          <div className="sm:col-span-2">
             {data.attachment ? (
               <Button asChild>
                 <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
