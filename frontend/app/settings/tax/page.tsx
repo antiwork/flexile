@@ -353,7 +353,7 @@ export default function TaxPage() {
               )}
             />
 
-            <div className="grid items-start gap-3 md:grid-cols-2">
+            <div className="grid items-start gap-3 lg:grid-cols-2">
               <FormField
                 control={form.control}
                 name="tax_id"
