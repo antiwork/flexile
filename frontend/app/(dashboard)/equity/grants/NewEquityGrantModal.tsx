@@ -241,7 +241,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
         <Form {...form}>
           <form onSubmit={(e) => void submit(e)} className="grid gap-8">
             <div className="grid gap-4">
-              <h2 className="text-lg font-medium">Recipient details</h2>
+              <h2 className="text-base font-medium">Recipient details</h2>
               <FormField
                 control={form.control}
                 name="userId"
@@ -289,7 +289,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
             </div>
 
             <div className="grid gap-4">
-              <h2 className="text-lg font-medium">Option grant details</h2>
+              <h2 className="text-base font-medium">Option grant details</h2>
               <FormField
                 control={form.control}
                 name="optionPoolId"
@@ -388,7 +388,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
             </div>
 
             <div className="grid gap-4">
-              <h2 className="text-lg font-medium">Vesting details</h2>
+              <h2 className="text-base font-medium">Vesting details</h2>
               {recipient?.activeContractor ? (
                 <FormField
                   control={form.control}
@@ -515,8 +515,12 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                 className="flex h-auto w-full items-start justify-between p-0 text-left whitespace-break-spaces hover:bg-transparent"
                 onClick={() => setShowExercisePeriods(!showExercisePeriods)}
               >
-                <h2 className="text-lg font-medium">Customize post-termination exercise period</h2>
-                {showExercisePeriods ? <ChevronDown className="size-6" /> : <ChevronRight className="size-6" />}
+                <h2 className="text-base font-medium">Customize post-termination exercise period</h2>
+                {showExercisePeriods ? (
+                  <ChevronDown className="mt-[3px] size-5" />
+                ) : (
+                  <ChevronRight className="mt-[3px] size-5" />
+                )}
               </Button>
 
               {showExercisePeriods ? (
