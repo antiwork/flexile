@@ -68,11 +68,11 @@ RSpec.describe InvoiceEquityCalculator do
           company.update!(fmv_per_share_in_usd: nil)
         end
 
-        it "returns zero for all equity values" do
+        it "returns options as nil" do
           result = calculator.calculate
-          expect(result[:equity_cents]).to eq(0)
-          expect(result[:equity_options]).to eq(0)
-          expect(result[:equity_percentage]).to eq(0)
+          expect(result[:equity_cents]).to eq(432_22) # (60% of $720.37).round
+          expect(result[:equity_options]).to eq(nil)
+          expect(result[:equity_percentage]).to eq(60)
         end
       end
     end
