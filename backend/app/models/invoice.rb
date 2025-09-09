@@ -246,7 +246,7 @@ class Invoice < ApplicationRecord
     end
 
     def worker_must_have_sufficient_unvested_shares
-      return if status != APPROVED || equity_amount_in_cents == 0
+      return if !status_changed? || status != APPROVED || equity_amount_in_cents == 0
 
       unvested_grant = company_worker.unique_unvested_equity_grant_for_year(invoice_date.year)
       share_price_usd = unvested_grant&.share_price_usd || company.fmv_per_share_in_usd
