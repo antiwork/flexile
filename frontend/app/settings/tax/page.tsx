@@ -494,7 +494,7 @@ export default function TaxPage() {
               Save changes
             </MutationStatusButton>
 
-            {user.roles.worker ? (
+            {user.roles.worker && data.contractor_for_companies.length > 0 ? (
               <div className="flex items-center text-sm">
                 Changes to your tax information may trigger{" "}
                 {data.contractor_for_companies.length === 1 ? "a new contract" : "new contracts"} with{" "}

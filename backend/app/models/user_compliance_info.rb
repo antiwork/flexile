@@ -25,7 +25,6 @@ class UserComplianceInfo < ApplicationRecord
   after_create_commit :delete_outdated_compliance_infos!, unless: :deleted?
   after_commit :generate_tax_information_document, if: -> { alive? && tax_information_confirmed_at? }
   after_commit :generate_irs_tax_forms, if: -> { alive? && tax_information_confirmed_at? }
-  after_commit :sync_with_quickbooks, if: -> { alive? && worker? }
   before_save :update_tax_id_status
 
   delegate :worker?, to: :user
@@ -80,22 +79,6 @@ class UserComplianceInfo < ApplicationRecord
       GenerateIrsTaxFormsJob.perform_async(id)
     end
 
-    def sync_with_quickbooks
-      columns_synced_with_quickbooks = %w[tax_id business_name]
-
-      should_sync = if previous_changes.include?(:id)
-        prior_compliance_info.nil? || prior_compliance_info.attributes.values_at(*columns_synced_with_quickbooks) != attributes.values_at(*columns_synced_with_quickbooks)
-      else
-        previous_changes.keys.intersect?(columns_synced_with_quickbooks)
-      end
-
-      return unless should_sync
-
-      array_of_args = user.company_workers.active.with_signed_contract.map do |company_worker|
-        [company_worker.company_id, company_worker.class.name, company_worker.id]
-      end
-      QuickbooksDataSyncJob.perform_bulk(array_of_args)
-    end
 
     def update_tax_id_status
       return if tax_id_status_changed?
