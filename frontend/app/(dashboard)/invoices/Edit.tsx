@@ -506,7 +506,7 @@ const Edit = () => {
                       </Button>
                     ) : null}
                     {documents.length === 0 ? (
-                      <Button variant="link" onClick={addDocument} disabled={documents.length !== 0}>
+                      <Button variant="link" onClick={addDocument}>
                         <Upload className="inline size-4" />
                         Add document
                       </Button>
