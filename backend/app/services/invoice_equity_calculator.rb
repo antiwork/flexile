@@ -14,11 +14,10 @@ class InvoiceEquityCalculator
     share_price_usd = unvested_grant&.share_price_usd || company.fmv_per_share_in_usd
     equity_percentage = company_worker.equity_percentage
     equity_amount_in_cents = ((service_amount_cents * equity_percentage) / 100.to_d).round
-    equity_amount_in_options = company.equity_enabled? && share_price_usd.present? ? (equity_amount_in_cents / (share_price_usd * 100.to_d)).round : 0
-    if equity_amount_in_options <= 0
+    equity_amount_in_options = company.equity_enabled? && share_price_usd.present? ? (equity_amount_in_cents / (share_price_usd * 100.to_d)).round : nil
+    if equity_amount_in_options && equity_amount_in_options <= 0
       equity_percentage = 0
       equity_amount_in_cents = 0
-      equity_amount_in_options = 0
     end
 
     {

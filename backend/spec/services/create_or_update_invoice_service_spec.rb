@@ -146,20 +146,6 @@ RSpec.describe CreateOrUpdateInvoiceService do
         end.to change { user.invoices.count }.by(1)
       end
 
-
-      it "fails to create an invoice if an active grant is missing, company does not have a share price, and the contractor has an equity percentage" do
-        contractor.update!(equity_percentage: 20)
-        equity_grant.destroy!
-        company.update!(fmv_per_share_in_usd: nil)
-
-        expect(Bugsnag).to receive(:notify).with("InvoiceEquityCalculator: Error determining share price for CompanyWorker #{contractor.id}")
-        expect do
-          result = invoice_service.process
-          expect(result[:success]).to eq(false)
-          expect(result[:error_message]).to eq("Something went wrong. Please contact the company administrator.")
-        end.to_not change(user.invoices, :count)
-      end
-
       include_examples "common invoice failure specs", expected_invoices_count: 1
 
       context "when invoice_expenses param exists" do

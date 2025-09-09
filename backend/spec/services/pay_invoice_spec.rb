@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe PayInvoice, :vcr do
-  let(:company) { create(:company) }
+  let(:company) { create(:company, equity_enabled: true) }
   let(:user) { create(:user, :confirmed, without_bank_account: true) }
   let(:company_worker) { create(:company_worker, company:, user:) }
   let(:investor) { create(:company_investor, company:, user:) }

@@ -71,7 +71,7 @@ class CreateOrUpdateInvoiceService
       invoice.equity_percentage = equity_percentage
       invoice.cash_amount_in_cents = invoice.total_amount_in_usd_cents - equity_cents
       invoice.equity_amount_in_cents = equity_cents
-      invoice.equity_amount_in_options = equity_options
+      invoice.equity_amount_in_options = equity_options if equity_options
       invoice.flexile_fee_cents = invoice.calculate_flexile_fee_cents
 
       unless invoice.save
