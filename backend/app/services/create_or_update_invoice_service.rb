@@ -66,10 +66,6 @@ class CreateOrUpdateInvoiceService
         service_amount_cents: services_in_cents,
         invoice_year:,
       ).calculate
-      if equity_calculation_result.nil?
-        error = "Something went wrong. Please contact the company administrator."
-        raise ActiveRecord::Rollback
-      end
 
       equity_calculation_result => { equity_cents:, equity_options:, equity_percentage: }
       invoice.equity_percentage = equity_percentage

@@ -2,7 +2,12 @@
 
 RSpec.describe PayInvoice, :vcr do
   let(:company) { create(:company) }
-  let(:user) { create(:company_worker, company:, user: create(:user, :confirmed, without_bank_account: true)).user }
+  let(:user) { create(:user, :confirmed, without_bank_account: true) }
+  let(:company_worker) { create(:company_worker, company:, user:) }
+  let(:investor) { create(:company_investor, company:, user:) }
+  let!(:equity_grant) do
+    create(:active_grant, company_investor: investor, year: Date.current.year)
+  end
   let(:recipient_params) do
     {
       currency: "GBP",
@@ -23,7 +28,7 @@ RSpec.describe PayInvoice, :vcr do
     }
   end
   let(:invoice) do
-    create(:invoice_with_equity, :fully_approved, user:, company:, total_amount_in_usd_cents: 120_00,
+    create(:invoice_with_equity, :fully_approved, company_worker:, total_amount_in_usd_cents: 120_00,
                                                   equity_split: 50, equity_amount_in_options: 123)
   end
   let!(:paid_consolidated_invoice) do
