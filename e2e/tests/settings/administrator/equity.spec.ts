@@ -65,9 +65,10 @@ test.describe("Company equity settings", () => {
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Equity" }).click();
 
-    // Check initial state - exercise requests should be visible but toggle should not be
+    // Check initial state - exercise requests visible and toggle disabled until equity is enabled
     await expect(page.getByText("Exercise requests")).toBeVisible();
-    await expect(page.getByRole("switch", { name: "Enable option exercising" })).not.toBeVisible();
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeDisabled();
 
     // Enable equity toggle
     const enableEquitySwitch = page.getByRole("switch", { name: "Enable equity" });
@@ -147,9 +148,10 @@ test.describe("Company equity settings", () => {
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Equity" }).click();
 
-    // Initially, exercise requests text should be visible but toggle should not
+    // Initially, exercise requests visible and toggle disabled until equity is enabled
     await expect(page.getByText("Exercise requests")).toBeVisible();
-    await expect(page.getByRole("switch", { name: "Enable option exercising" })).not.toBeVisible();
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeDisabled();
 
     // Enable equity first
     const enableEquitySwitch = page.getByRole("switch", { name: "Enable equity" });
@@ -185,10 +187,11 @@ test.describe("Company equity settings", () => {
     });
     expect(dbCompany?.optionExercisingEnabled).toBe(false);
 
-    // Disable equity - option exercising toggle should disappear
+    // Disable equity - option exercising toggle should remain visible but be disabled
     await enableEquitySwitch.click({ force: true });
     await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "false");
-    await expect(page.getByRole("switch", { name: "Enable option exercising" })).not.toBeVisible();
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeDisabled();
     await expect(page.getByText("Exercise requests")).toBeVisible(); // Text should still be visible
   });
 });

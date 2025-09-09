@@ -136,22 +136,20 @@ export default function Equity() {
             />
           </div>
 
-          {/* Option Exercising Setting - Always visible, toggle only when equity enabled */}
+          {/* Option Exercising Setting - Always visible; disabled when equity is not enabled */}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div>Exercise requests</div>
               <div className="text-muted-foreground text-sm">Allow investors to exercise their vested options.</div>
             </div>
-            {company.equityEnabled ? (
-              <Switch
-                checked={company.optionExercisingEnabled}
-                onCheckedChange={(checked) => {
-                  void handleOptionExercisingToggle(checked);
-                }}
-                aria-label="Enable option exercising"
-                disabled={updateOptionExercisingEnabled.isPending}
-              />
-            ) : null}
+            <Switch
+              checked={company.optionExercisingEnabled}
+              onCheckedChange={(checked) => {
+                void handleOptionExercisingToggle(checked);
+              }}
+              aria-label="Enable option exercising"
+              disabled={updateOptionExercisingEnabled.isPending || !company.equityEnabled}
+            />
           </div>
         </div>
       </div>
