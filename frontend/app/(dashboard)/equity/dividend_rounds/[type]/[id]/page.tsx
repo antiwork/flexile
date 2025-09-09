@@ -116,6 +116,7 @@ const dividendComputationSchema = z.object({
   dividends_issuance_date: z.string(),
   return_of_capital: z.boolean(),
   number_of_shareholders: z.number(),
+  total_fees_cents: z.number(),
   computation_outputs: z.array(
     z.object({
       investor_name: z.string(),
