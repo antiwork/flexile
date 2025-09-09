@@ -4,9 +4,7 @@ RSpec.describe CompanyWorker do
   describe "associations" do
     it { is_expected.to belong_to(:company) }
     it { is_expected.to belong_to(:user) }
-    it { is_expected.to have_many(:integration_records) }
     it { is_expected.to have_many(:invoices) }
-    it { is_expected.to have_one(:quickbooks_integration_record) }
   end
 
   describe "validations" do
@@ -156,31 +154,25 @@ RSpec.describe CompanyWorker do
       context "when rate is unchanged" do
         let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits }
 
-        it "does not schedule a QuickBooks data sync job" do
+        it "does not trigger any side effects" do
           expect do
             company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
-          end.to_not change { QuickbooksDataSyncJob.jobs.size }
+          end.to_not change { company_worker.reload.updated_at }
         end
       end
 
       context "when rate changes" do
         let(:new_pay_rate_in_subunits) { old_pay_rate_in_subunits + 1 }
 
-        it "schedules a QuickBooks data sync job" do
+        it "updates the pay rate successfully" do
           expect do
             company_worker.update!(pay_rate_in_subunits: new_pay_rate_in_subunits)
-          end.to change { QuickbooksDataSyncJob.jobs.size }.by(1)
-
-          expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker.company_id, "CompanyWorker", company_worker.id)
+          end.to change { company_worker.reload.pay_rate_in_subunits }.to(new_pay_rate_in_subunits)
         end
       end
     end
   end
 
-  describe "delegations" do
-    it { is_expected.to delegate_method(:integration_external_id).to(:quickbooks_integration_record) }
-    it { is_expected.to delegate_method(:sync_token).to(:quickbooks_integration_record) }
-  end
 
   describe "#active?" do
     it "return `true` when the contract hasn't ended" do
@@ -241,177 +233,6 @@ RSpec.describe CompanyWorker do
     end
   end
 
-  describe "#quickbooks_entity" do
-    it "returns the QuickBooks entity name" do
-      expect(build(:company_worker).quickbooks_entity).to eq("Vendor")
-    end
-  end
-
-  describe "#create_or_update_integration_record!", :freeze_time do
-    let(:company) { create(:company) }
-    let!(:integration) { create(:quickbooks_integration, company:) }
-    let(:contractor) { create(:company_worker, company:) }
-
-    context "when no integration record exists for the contractor" do
-      it "creates a new integration record for the contractor" do
-        expect do
-          contractor.create_or_update_quickbooks_integration_record!(integration:, parsed_body: { "Id" => "1", "SyncToken" => "0" })
-        end.to change { IntegrationRecord.count }.by(1)
-        .and change { integration.reload.last_sync_at }.from(nil).to(Time.current)
-
-        integration_record = contractor.reload.quickbooks_integration_record
-        expect(integration_record.integration_external_id).to eq("1")
-        expect(integration_record.sync_token).to eq("0")
-      end
-    end
-
-    context "when an integration record exists for the contractor" do
-      let!(:integration_record) { create(:integration_record, integratable: contractor, integration:, integration_external_id: "1") }
-
-      it "updates the integration record with the new sync_token" do
-        expect do
-          contractor.create_or_update_quickbooks_integration_record!(integration:, parsed_body: { "Id" => "1", "SyncToken" => "1" })
-        end.to change { IntegrationRecord.count }.by(0)
-        .and change { integration.reload.last_sync_at }.from(nil).to(Time.current)
-
-        expect(integration_record.reload.integration_external_id).to eq("1")
-        expect(integration_record.sync_token).to eq("1")
-      end
-
-      context "when the integration record has the old class name CompanyContractor" do
-        before do
-          integration_record.update!(integratable_type: "CompanyContractor")
-        end
-
-        it "updates the integration record with the new sync_token" do
-          expect do
-            contractor.create_or_update_quickbooks_integration_record!(integration:, parsed_body: { "Id" => "1", "SyncToken" => "1" })
-          end.to change { IntegrationRecord.count }.by(0)
-          .and change { integration.reload.last_sync_at }.from(nil).to(Time.current)
-
-          expect(integration_record.reload.integration_external_id).to eq("1")
-          expect(integration_record.sync_token).to eq("1")
-        end
-      end
-    end
-  end
-
-  describe "#serialize" do
-    let(:contractor) { create(:company_worker) }
-
-    it "returns the serialized object" do
-      expect(contractor.serialize(namespace: "Quickbooks")).to eq(
-        {
-          Active: true,
-          BillAddr: {
-            City: contractor.user.city,
-            Line1: contractor.user.street_address,
-            PostalCode: contractor.user.zip_code,
-            Country: contractor.user.display_country,
-            CountrySubDivisionCode: contractor.user.state,
-          },
-          GivenName: contractor.user.legal_name,
-          DisplayName: contractor.user.billing_entity_name,
-          PrimaryEmailAddr: {
-            Address: contractor.user.display_email,
-          },
-          Vendor1099: false,
-          BillRate: 60.0,
-          TaxIdentifier: "000000000",
-        }.to_json
-      )
-    end
-  end
-
-  context "when pay_rate_in_subunits is nil" do
-    let(:contractor) { create(:company_worker, pay_rate_in_subunits: nil) }
-
-    it "excludes BillRate from serialized object" do
-      serialized = JSON.parse(contractor.serialize(namespace: "Quickbooks"))
-      expect(serialized).to_not have_key("BillRate")
-    end
-  end
-
-  describe "#fetch_existing_quickbooks_entity", :vcr do
-    let(:company) { create(:company) }
-    let!(:integration) { create(:quickbooks_integration, company:) }
-    let(:contractor) { create(:company_worker, company:, user:) }
-
-    context "when no integration record exists for the contractor" do
-      context "when contractor email does not exist in QuickBooks" do
-        let(:user) { create(:user) }
-
-        it "returns nil" do
-          expect_any_instance_of(IntegrationApi::Quickbooks).to receive(:fetch_vendor_by_email_and_name).with(email: user.email, name: user.billing_entity_name).and_call_original
-          expect(contractor.fetch_existing_quickbooks_entity).to be_nil
-        end
-      end
-
-      context "when contractor email exists in QuickBooks" do
-        context "when contractor is an individual" do
-          let(:user) { create(:user, email: "caro@example.com", legal_name: "Caro Example") }
-
-          it "returns the QuickBooks entity" do
-            expect_any_instance_of(IntegrationApi::Quickbooks).to receive(:fetch_vendor_by_email_and_name).with(email: "caro@example.com", name: "Caro Example").and_call_original
-            expect(contractor.fetch_existing_quickbooks_entity).to eq(
-              {
-                "Active" => true,
-                "Balance" => 4620.0,
-                "BillAddr" => { "Country" => "Argentina", "Id" => "160" },
-                "BillRate" => 50,
-                "CurrencyRef" => { "name" => "United States Dollar", "value" => "USD" },
-                "DisplayName" => "Caro Example",
-                "Id" => "85",
-                "MetaData" => { "CreateTime" => "2022-12-30T11:17:44-08:00", "LastUpdatedTime" => "2024-01-25T06:57:17-08:00" },
-                "PrimaryEmailAddr" => { "Address" => "caro@example.com" },
-                "PrintOnCheckName" => "Caro Example",
-                "SyncToken" => "17",
-                "V4IDPseudonym" => "00209847d5d4485cdd4b0cade8f38ad07c308d",
-                "Vendor1099" => false,
-                "domain" => "QBO",
-                "sparse" => false,
-              }
-            )
-          end
-        end
-
-        context "when contractor is a business" do
-          let(:user) { create(:user, without_compliance_info: true, email: "caro@example.com", legal_name: "Caro Example") }
-
-          before { create(:user_compliance_info, user:, business_name: "Acme Example LLC", business_entity: true) }
-
-          it "returns nil" do
-            expect_any_instance_of(IntegrationApi::Quickbooks).to receive(:fetch_vendor_by_email_and_name).with(email: "caro@example.com", name: "Acme Example LLC").and_call_original
-            expect(contractor.fetch_existing_quickbooks_entity).to be_nil
-          end
-        end
-      end
-    end
-
-    context "when an integration record exists for the contractor" do
-      let!(:integration_record) { create(:integration_record, integratable: contractor, integration:, integration_external_id: "85") }
-
-      context "when contractor email does not exist in QuickBooks" do
-        let(:user) { create(:user) }
-
-        it "returns nil and marks the integration record as deleted" do
-          expect_any_instance_of(IntegrationApi::Quickbooks).to receive(:fetch_vendor_by_email_and_name).with(email: user.email, name: user.billing_entity_name)
-          expect(contractor.fetch_existing_quickbooks_entity).to be_nil
-          expect(integration_record.reload.deleted_at).to_not be_nil
-        end
-      end
-
-      context "when contractor email exists in QuickBooks" do
-        let(:user) { create(:user, email: "caro@example.com", legal_name: "Caro Fabioni") }
-
-        it "returns nil and marks the integration record as deleted" do
-          expect_any_instance_of(IntegrationApi::Quickbooks).to receive(:fetch_vendor_by_email_and_name).with(email: "caro@example.com", name: "Caro Fabioni")
-          expect(contractor.fetch_existing_quickbooks_entity).to be_nil
-          expect(integration_record.reload.deleted_at).to_not be_nil
-        end
-      end
-    end
-  end
 
   describe "#unique_unvested_equity_grant_for_year" do
     let(:user) { create(:user) }

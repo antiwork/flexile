@@ -48,22 +48,12 @@ pay_all_equity_buybacks_job:
   description: Attempts to pay pending equity buyback payments
   class: PayAllEquityBuybacksJob
 
-consolidated_invoice_csv_email_job:
-  cron: "0 16 1,15 * *" # The 1st & 15th days of every month at UTC 16:00
-  class: ConsolidatedInvoiceCsvEmailJob
-  description: Sends Steven invoice data for accounting
+monthly_financial_report_email_job:
+  cron: "0 16 1 * *" # The 1st day of every month at UTC 16:00
+  class: MonthlyFinancialReportEmailJob
+  description: Sends consolidated monthly financial report for accounting
   args:
     - - "solson@earlygrowth.com"
-      - "howard@antiwork.com"
-      - "sahil@gumroad.com"
-
-dividend_payment_csv_email_job:
-  cron: "0 16 1,15 * *" # The 1st & 15th days of every month at UTC 16:00
-  class: DividendPaymentCsvEmailJob
-  description: Sends dividend payment data for accounting
-  args:
-    - - "solson@earlygrowth.com"
-      - "howard@antiwork.com"
       - "sahil@gumroad.com"
 
 stripe_balance_top_up_job:
@@ -76,14 +66,6 @@ process_scheduled_vesting_for_equity_grants_job:
   class: ProcessScheduledVestingForEquityGrantsJob
   description: Processes scheduled vesting events for active equity grants
 
-dividend_report_csv_email_job:
-  cron: "0 16 1 * *" # The 1st day of every month at UTC 16:00
-  class: DividendReportCsvEmailJob
-  description: Sends monthly dividend report data for accounting
-  args:
-    - - "solson@earlygrowth.com"
-      - "howard@antiwork.com"
-      - "sahil@gumroad.com"
 
 vesting_report_csv_email_job:
   cron: "0 16 1 * *" # The 1st day of every month at UTC 16:00

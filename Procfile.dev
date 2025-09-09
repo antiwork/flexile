@@ -2,4 +2,3 @@ web: cd backend && ./bin/rails s -p 3001
 sidekiq: cd backend && bundle exec sidekiq -q default -q mailers
 tsc: pnpm run typecheck:watch
 next: TZ=UTC pnpm next dev frontend -p 3000
-inngest: pnpm inngest-cli dev --no-discovery -u http://localhost:3000/api/inngest

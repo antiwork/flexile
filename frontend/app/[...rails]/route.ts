@@ -4,7 +4,7 @@ import env from "@/env";
 import { authOptions } from "@/lib/auth";
 
 async function handler(req: Request) {
-  const routes = ["^/internal/", "^/api/", "^/admin/", "^/admin$", "^/webhooks/", "^/v1/", "^/rails/", "^/assets/"];
+  const routes = ["^/internal/", "^/api/", "^/admin/", "^/admin$", "^/webhooks/", "^/helper/", "^/rails/", "^/assets/"];
   const url = new URL(req.url);
   if (!routes.some((route) => url.pathname.match(route))) {
     throw notFound();
