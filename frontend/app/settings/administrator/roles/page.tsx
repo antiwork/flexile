@@ -360,7 +360,7 @@ export default function RolesPage() {
     <>
       <div className="grid gap-8">
         <hgroup>
-          <h2 className="mb-1 text-xl font-bold">Roles</h2>
+          <h2 className="mb-1 text-3xl font-bold">Roles</h2>
           <p className="text-muted-foreground text-base">Use roles to grant deeper access to your workspace.</p>
         </hgroup>
         <div className="[&_td:first-child]:!pl-0 [&_td:last-child]:!pr-0 [&_th:first-child]:!pl-0 [&_th:last-child]:!pr-0">
