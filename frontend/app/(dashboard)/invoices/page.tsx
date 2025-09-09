@@ -34,6 +34,7 @@ import {
   useIsDeletable,
   useIsPayable,
 } from "@/app/(dashboard)/invoices/index";
+import InvoiceModal from "@/app/(dashboard)/invoices/InvoiceModal";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
@@ -110,8 +111,9 @@ export default function InvoicesPage() {
   const isMobile = useIsMobile();
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
+  const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | "create" | "edit" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
+  const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const isDeletable = useIsDeletable();
@@ -141,7 +143,7 @@ export default function InvoicesPage() {
           contexts: ["single"],
           permissions: ["worker"],
           conditions: (invoice: Invoice, _context: ActionContext) => EDITABLE_INVOICE_STATES.includes(invoice.status),
-          href: (invoice: Invoice) => `/invoices/${invoice.id}/edit`,
+          action: "edit",
           group: "navigation",
           showIn: ["selection", "contextMenu"],
         },
@@ -352,6 +354,12 @@ export default function InvoicesPage() {
     const singleInvoice = invoices[0];
 
     switch (actionId) {
+      case "edit":
+        if (isSingleAction && singleInvoice) {
+          setEditInvoice(singleInvoice);
+          setOpenModal("edit");
+        }
+        break;
       case "approve":
         if (isSingleAction && singleInvoice) {
           setDetailInvoice(singleInvoice);
@@ -414,10 +422,17 @@ export default function InvoicesPage() {
   return (
     <>
       {isMobile && user.roles.worker ? (
-        <Button variant="floating-action" {...(!canSubmitInvoices ? { disabled: true } : { asChild: true })}>
-          <Link href="/invoices/new" inert={!canSubmitInvoices}>
-            <Plus />
-          </Link>
+        <Button
+          variant="floating-action"
+          disabled={!canSubmitInvoices}
+          onClick={() => {
+            if (canSubmitInvoices) {
+              setEditInvoice(null);
+              setOpenModal("create");
+            }
+          }}
+        >
+          <Plus />
         </Button>
       ) : null}
       <DashboardHeader
@@ -450,11 +465,19 @@ export default function InvoicesPage() {
               </div>
             ) : null
           ) : user.roles.worker ? (
-            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
-              <Link href="/invoices/new" inert={!canSubmitInvoices}>
-                <Plus className="size-4" />
-                New invoice
-              </Link>
+            <Button
+              variant="outline"
+              size="small"
+              disabled={!canSubmitInvoices}
+              onClick={() => {
+                if (canSubmitInvoices) {
+                  setEditInvoice(null);
+                  setOpenModal("create");
+                }
+              }}
+            >
+              <Plus className="size-4" />
+              New invoice
             </Button>
           ) : null
         }
@@ -657,6 +680,15 @@ export default function InvoicesPage() {
           onAction={handleInvoiceAction}
         />
       ) : null}
+
+      <InvoiceModal
+        key={editInvoice?.id ?? null}
+        open={openModal === "create" || openModal === "edit"}
+        invoiceId={editInvoice?.id ?? null}
+        onOpenChange={(open) => {
+          if (!open) setOpenModal(null);
+        }}
+      />
     </>
   );
 }
