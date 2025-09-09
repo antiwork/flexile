@@ -43,6 +43,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
+import { countries } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
@@ -651,7 +652,7 @@ const DetailsTab = ({
               <FormItem>
                 <FormLabel>Country of residence</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} value={field.value ? countries.get(field.value) : null} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
