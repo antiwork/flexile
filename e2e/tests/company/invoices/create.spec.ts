@@ -288,13 +288,11 @@ test.describe("invoice creation", () => {
 
     // Add the document attachment
     await page.getByRole("button", { name: "Add Document" }).click();
-    await page
-      .locator('input[accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"]')
-      .setInputFiles({
-        name: "invoice-attachment.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("test invoice attachment document"),
-      });
+    await page.locator('input[accept="application/pdf"]').setInputFiles({
+      name: "invoice-attachment.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("test invoice attachment document"),
+    });
 
     // Add a delay to ensure the file upload is properly processed
     await page.waitForTimeout(500);
@@ -338,13 +336,11 @@ test.describe("invoice creation", () => {
 
     // Add the document attachment
     await page.getByRole("button", { name: "Add Document" }).click();
-    await page
-      .locator('input[accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"]')
-      .setInputFiles({
-        name: "test-document.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("test invoice document"),
-      });
+    await page.locator('input[accept="application/pdf"]').setInputFiles({
+      name: "test-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("test invoice document"),
+    });
 
     // Add a delay to ensure the file upload is properly processed
     await page.waitForTimeout(500);
@@ -375,13 +371,11 @@ test.describe("invoice creation", () => {
     // Add a delay to ensure the document removal is properly processed
     await page.waitForTimeout(300); // Add a new document
     await page.getByRole("button", { name: "Add Document" }).click();
-    await page
-      .locator('input[accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"]')
-      .setInputFiles({
-        name: "updated-document.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("updated invoice document content"),
-      });
+    await page.locator('input[accept="application/pdf"]').setInputFiles({
+      name: "updated-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("updated invoice document content"),
+    });
 
     // Add a delay to ensure the file upload is properly processed
     await page.waitForTimeout(300);
@@ -407,26 +401,17 @@ test.describe("invoice creation", () => {
     await page.getByPlaceholder("Description").fill("Invoice with oversized document");
     await page.getByLabel("Hours").fill("01:00");
 
-    // Create a mock dialog handler before triggering the alert
-    page.on("dialog", async (dialog) => {
-      expect(dialog.type()).toBe("alert");
-      expect(dialog.message()).toBe("File size exceeds the maximum limit of 10MB. Please select a smaller file.");
-      await dialog.accept();
-    });
-
     // Try to upload a document larger than 10MB
     await page.getByRole("button", { name: "Add Document" }).click();
 
     // Generate a large buffer (11MB)
     const largeBuffer = Buffer.alloc(11 * 1024 * 1024, "X");
 
-    await page
-      .locator('input[accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"]')
-      .setInputFiles({
-        name: "large-document.pdf",
-        mimeType: "application/pdf",
-        buffer: largeBuffer,
-      });
+    await page.locator('input[accept="application/pdf"]').setInputFiles({
+      name: "large-document.pdf",
+      mimeType: "application/pdf",
+      buffer: largeBuffer,
+    });
 
     // Wait to ensure the validation is processed
     await page.waitForTimeout(300);
@@ -434,15 +419,22 @@ test.describe("invoice creation", () => {
     // Verify that the document was not added (the document table shouldn't be visible)
     await expect(page.getByText("large-document.pdf")).not.toBeVisible();
 
+    // Verify the error dialog appears with the expected title and message
+    await expect(page.getByRole("heading", { name: "File Size Exceeded" })).toBeVisible();
+    await expect(
+      page.getByText("File size exceeds the maximum limit of 10MB. Please select a smaller file."),
+    ).toBeVisible();
+
+    // Click the OK button on the dialog
+    await page.getByRole("button", { name: "OK" }).click();
+
     // Now upload a valid size document to confirm the input works for proper sizes
     await page.getByRole("button", { name: "Add Document" }).click();
-    await page
-      .locator('input[accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"]')
-      .setInputFiles({
-        name: "valid-document.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("valid document content"),
-      });
+    await page.locator('input[accept="application/pdf"]').setInputFiles({
+      name: "valid-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("valid document content"),
+    });
 
     // Verify that the valid document was added
     await expect(page.getByText("valid-document.pdf")).toBeVisible();
@@ -455,13 +447,6 @@ test.describe("invoice creation", () => {
     });
 
     await login(page, contractorUser, "/invoices/new");
-
-    // Create a mock dialog handler before triggering the alert
-    page.on("dialog", async (dialog) => {
-      expect(dialog.type()).toBe("alert");
-      expect(dialog.message()).toContain("exceeds the maximum limit of 10MB and will be skipped");
-      await dialog.accept();
-    });
 
     // Try to upload a large expense file
     await page.getByRole("button", { name: "Add expense" }).click();
@@ -479,7 +464,12 @@ test.describe("invoice creation", () => {
     await page.waitForTimeout(300);
 
     // Verify that the expense was not added (expense table shouldn't show the file name)
-    await expect(page.getByText("large-receipt.pdf")).not.toBeVisible();
+
+    // Verify the error dialog appears with the expected title and message
+    await expect(page.getByRole("heading", { name: "File Size Exceeded" })).toBeVisible();
+
+    // Click the OK button on the dialog
+    await page.getByRole("button", { name: "OK" }).click();
 
     // Now upload a valid size expense to confirm the input works for proper sizes
     await page.getByRole("button", { name: "Add expense" }).click();

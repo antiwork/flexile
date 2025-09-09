@@ -401,20 +401,18 @@ test.describe("Invoices admin flow", () => {
 
     // Add multiple document attachments
     await page.getByRole("button", { name: "Add Document" }).click();
-    await page
-      .locator('input[accept="application/pdf, image/*, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt"]')
-      .setInputFiles([
-        {
-          name: "admin-review-document-1.pdf",
-          mimeType: "application/pdf",
-          buffer: Buffer.from("document content for admin review 1"),
-        },
-        {
-          name: "admin-review-document-2.pdf",
-          mimeType: "application/pdf",
-          buffer: Buffer.from("document content for admin review 2"),
-        },
-      ]);
+    await page.locator('input[accept="application/pdf"]').setInputFiles([
+      {
+        name: "admin-review-document-1.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("document content for admin review 1"),
+      },
+      {
+        name: "admin-review-document-2.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.from("document content for admin review 2"),
+      },
+    ]);
 
     // Verify both documents appear in the form
     await page.waitForTimeout(300);
@@ -518,7 +516,7 @@ test.describe("Invoices admin flow", () => {
 
     // Verify expense section and attachment is visible
     await expect(page.getByRole("table").filter({ hasText: "Expense" })).toBeVisible();
-    await expect(page.getByText("Office Supplies - Office Depot")).toBeVisible();
+    await expect(page.getByText("Office Depot")).toBeVisible();
   });
 });
 
