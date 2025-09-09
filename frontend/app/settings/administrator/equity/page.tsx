@@ -113,15 +113,15 @@ export default function Equity() {
       {/* Settings Section */}
       <div className={`space-y-6 ${requiresCompanyName ? "opacity-50" : ""}`}>
         <div>
-          <h2 className="text-lg font-semibold">Settings</h2>
+          <h2 className="text-base font-semibold">Settings</h2>
           <div className="bg-border mt-2 h-px" />
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Enable Equity Setting */}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <div className="font-medium">Enable equity</div>
+              <div>Enable equity</div>
               <div className="text-muted-foreground text-sm">
                 Unlock cap table, grants, and pools across your workspace.
               </div>
@@ -139,7 +139,7 @@ export default function Equity() {
           {/* Option Exercising Setting - Always visible, toggle only when equity enabled */}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <div className="font-medium">Exercise requests</div>
+              <div>Exercise requests</div>
               <div className="text-muted-foreground text-sm">Allow investors to exercise their vested options.</div>
             </div>
             {company.equityEnabled ? (
@@ -158,9 +158,9 @@ export default function Equity() {
 
       {/* Equity Value Section - Only shown when equity is enabled */}
       {company.equityEnabled ? (
-        <div className={`space-y-6 ${requiresCompanyName ? "opacity-50" : ""}`}>
+        <div className={`space-y-4 ${requiresCompanyName ? "opacity-50" : ""}`}>
           <hgroup>
-            <h2 className="text-lg font-semibold">Equity value</h2>
+            <h2 className="text-base font-semibold">Equity value</h2>
             <div className="bg-border mt-2 h-px"></div>
           </hgroup>
 
