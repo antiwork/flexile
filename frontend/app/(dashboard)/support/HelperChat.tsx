@@ -129,6 +129,7 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
       content,
       attachments,
       tools: helperTools({ companyId: company.id, contractorId: user.roles.worker?.id }),
+      customerInfoUrl: `${window.location.origin}/helper/users`,
     });
 
     setContent("");

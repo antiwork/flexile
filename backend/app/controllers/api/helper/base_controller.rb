@@ -16,7 +16,7 @@ class Api::Helper::BaseController < Api::BaseController
 
       hmac = Base64.decode64(request.authorization.split(" ").last)
       expected_hmac = OpenSSL::HMAC.digest(OpenSSL::Digest.new("sha256"),
-                                           GlobalConfig.dig("helper", "secret_key"),
+                                           GlobalConfig.get("HELPER_HMAC_SECRET"),
                                            request.query_string)
       unless ActiveSupport::SecurityUtils.secure_compare(expected_hmac, hmac)
         return render json: { success: false, message: "Authorization is invalid" }, status: :unauthorized
