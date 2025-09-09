@@ -115,7 +115,7 @@ export const authOptions = {
   },
   callbacks: {
     jwt({ token, user, trigger, session }) {
-      if (!user && trigger !== "update") return token;
+      if (trigger !== "update" && !user) return token;
 
       if (user) {
         token.jwt = user.jwt;
@@ -124,12 +124,28 @@ export const authOptions = {
       }
 
       // Handle session updates for impersonation
-      if (trigger === "update" && session) {
-        if (session && typeof session === "object" && "impersonation" in session) {
-          if (session.impersonation) {
-            token.impersonation = session.impersonation;
-          } else if (session.impersonation === undefined) {
+      if (trigger === "update" && session && typeof session === "object" && session !== null) {
+        if ("impersonation" in session) {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          const sessionWithImpersonation = session as { impersonation?: unknown };
+          if (sessionWithImpersonation.impersonation === undefined) {
             delete token.impersonation;
+          } else if (
+            sessionWithImpersonation.impersonation &&
+            typeof sessionWithImpersonation.impersonation === "object"
+          ) {
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
+            const impersonationData = sessionWithImpersonation.impersonation as any;
+            if (
+              impersonationData &&
+              typeof impersonationData.jwt === "string" &&
+              impersonationData.user &&
+              typeof impersonationData.user === "object" &&
+              impersonationData.originalUser &&
+              typeof impersonationData.originalUser === "object"
+            ) {
+              token.impersonation = impersonationData;
+            }
           }
         }
       }

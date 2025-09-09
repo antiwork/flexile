@@ -10,19 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface ImpersonationApiResponse {
-  success?: boolean;
-  error?: string;
-  impersonation_jwt?: string;
-  user?: {
-    id: number;
-    email: string;
-    name: string;
-    legal_name?: string;
-    preferred_name?: string;
-  };
-}
-
 export default function ImpersonatePage() {
   const { data: session, update } = useSession();
   const router = useRouter();
@@ -49,21 +36,26 @@ export default function ImpersonatePage() {
         body: JSON.stringify({ email: email.trim() }),
       });
 
-      const data: ImpersonationApiResponse = await response.json();
+      const data: unknown = await response.json();
+      if (!data || typeof data !== "object") {
+        throw new Error("Invalid response from server");
+      }
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const responseData = data as { error?: string; impersonation_jwt?: string; user?: unknown };
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to impersonate user");
+        throw new Error(responseData.error ?? "Failed to impersonate user");
       }
 
-      if (!data.impersonation_jwt || !data.user) {
+      if (!responseData.impersonation_jwt || !responseData.user) {
         throw new Error("Invalid response from server");
       }
 
       await update({
         ...session,
         impersonation: {
-          jwt: data.impersonation_jwt,
-          user: data.user,
+          jwt: responseData.impersonation_jwt,
+          user: responseData.user,
           originalUser: session?.user,
         },
       });
@@ -136,7 +128,7 @@ export default function ImpersonatePage() {
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleImpersonate} className="space-y-4">
+            <form onSubmit={(e) => void handleImpersonate(e)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">User Email</Label>
                 <Input

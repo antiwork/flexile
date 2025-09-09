@@ -3,23 +3,6 @@ import { getServerSession } from "next-auth";
 import env from "@/env";
 import { authOptions } from "@/lib/auth";
 
-interface ImpersonationRequestBody {
-  email?: string;
-}
-
-interface ImpersonationApiResponse {
-  success?: boolean;
-  error?: string;
-  impersonation_jwt?: string;
-  user?: {
-    id: number;
-    email: string;
-    name: string;
-    legal_name?: string;
-    preferred_name?: string;
-  };
-}
-
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
@@ -28,14 +11,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body: ImpersonationRequestBody = await request.json();
-    const { email } = body;
+    const body: unknown = await request.json();
+    if (!body || typeof body !== "object" || !("email" in body)) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const { email } = body as { email: string };
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    // Construct backend URL based on the current request origin
     const backendUrl = request.headers.get("origin") || `${env.PROTOCOL}://${env.DOMAIN}`;
 
     const response = await fetch(`${backendUrl}/internal/admin/impersonation`, {
@@ -47,13 +33,21 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ email }),
     });
 
-    const data: ImpersonationApiResponse = await response.json();
+    const data: unknown = await response.json();
+    if (!data || typeof data !== "object") {
+      return NextResponse.json({ error: "Invalid response from server" }, { status: 500 });
+    }
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const responseData = data as { error?: string; impersonation_jwt?: string; user?: unknown };
 
     if (!response.ok) {
-      return NextResponse.json({ error: data.error ?? "Failed to impersonate user" }, { status: response.status });
+      return NextResponse.json(
+        { error: responseData.error ?? "Failed to impersonate user" },
+        { status: response.status },
+      );
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(responseData);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("Impersonation error:", error);
