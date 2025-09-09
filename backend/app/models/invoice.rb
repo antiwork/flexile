@@ -79,6 +79,7 @@ class Invoice < ApplicationRecord
   validate :total_must_be_a_sum_of_cash_and_equity
   validate :min_equity_less_than_max_equity
   validate :deleted_invoices_cannot_have_active_only_status
+  validate :worker_must_have_sufficient_unvested_shares
 
   scope :pending, -> { alive.where(status: COMPANY_PENDING_STATES) }
   scope :processing, -> { where(status: PROCESSING) }
@@ -241,6 +242,17 @@ class Invoice < ApplicationRecord
 
       if !status.in?(DELETABLE_STATES)
         errors.add(:status, "cannot be #{status} for deleted invoices")
+      end
+    end
+
+    def worker_must_have_sufficient_unvested_shares
+      return if status != APPROVED || equity_amount_in_cents == 0
+
+      unvested_grant = company_worker.unique_unvested_equity_grant_for_year(invoice_date.year)
+      share_price_usd = unvested_grant&.share_price_usd || company.fmv_per_share_in_usd
+      self.equity_amount_in_options = (equity_amount_in_cents / (share_price_usd * 100.to_d)).round
+      if !unvested_grant.present? || unvested_grant.unvested_shares < equity_amount_in_options
+        errors.add(:equity_percentage, "Worker does not have an equity grant with sufficient unvested shares")
       end
     end
 end

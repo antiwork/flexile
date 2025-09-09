@@ -1,50 +1,33 @@
-import Bugsnag from "@bugsnag/js";
 import { TRPCError } from "@trpc/server";
 import { Decimal } from "decimal.js";
-import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "@/db";
-import { companies, companyContractors } from "@/db/schema";
-import { companyProcedure, createRouter } from "@/trpc";
+import { companyContractors } from "@/db/schema";
+import { type CompanyContext, companyProcedure, createRouter } from "@/trpc";
 import { getUniqueUnvestedEquityGrantForYear } from "@/trpc/routes/equityGrants";
 
 // If you make changes here, update the ruby class InvoiceEquityCalculator
 export const calculateInvoiceEquity = async ({
+  ctx,
   companyContractor,
   serviceAmountCents,
   invoiceYear,
   providedEquityPercentage,
 }: {
+  ctx: CompanyContext;
   companyContractor: typeof companyContractors.$inferSelect;
   serviceAmountCents: number;
   invoiceYear: number;
   providedEquityPercentage?: number;
 }) => {
-  let equityPercentage = providedEquityPercentage ?? companyContractor.equityPercentage;
+  if (!ctx.company.equityEnabled) return null;
 
   const unvestedGrant = await getUniqueUnvestedEquityGrantForYear(companyContractor, invoiceYear);
-  let sharePriceUsd = unvestedGrant?.sharePriceUsd ?? 0;
-  if (equityPercentage !== 0 && !unvestedGrant) {
-    const company = await db.query.companies.findFirst({
-      where: eq(companies.id, companyContractor.companyId),
-      columns: {
-        fmvPerShareInUsd: true,
-      },
-    });
-    if (company?.fmvPerShareInUsd) {
-      sharePriceUsd = company.fmvPerShareInUsd;
-    } else {
-      Bugsnag.notify(`calculateInvoiceEquity: Error determining share price for CompanyWorker ${companyContractor.id}`);
-      return null;
-    }
-  }
+  const sharePriceUsd = unvestedGrant?.sharePriceUsd ?? ctx.company.fmvPerShareInUsd;
+  if (!sharePriceUsd) return null;
 
+  let equityPercentage = providedEquityPercentage ?? companyContractor.equityPercentage;
   let equityAmountInCents = Decimal.mul(serviceAmountCents, equityPercentage).div(100).round().toNumber();
-  let equityAmountInOptions = 0;
-
-  if (equityPercentage !== 0 && sharePriceUsd !== 0) {
-    equityAmountInOptions = Decimal.div(equityAmountInCents, Decimal.mul(sharePriceUsd, 100)).round().toNumber();
-  }
+  let equityAmountInOptions = Decimal.div(equityAmountInCents, Decimal.mul(sharePriceUsd, 100)).round().toNumber();
 
   if (equityAmountInOptions <= 0) {
     equityPercentage = 0;
@@ -77,6 +60,7 @@ export const equityCalculationsRouter = createRouter({
       }
 
       const result = await calculateInvoiceEquity({
+        ctx,
         companyContractor: ctx.companyContractor,
         serviceAmountCents: input.servicesInCents,
         invoiceYear: input.invoiceYear,

@@ -876,8 +876,6 @@ const QuickInvoicesSectionContent = () => {
     invoiceYear: date.year,
     servicesInCents: totalAmountInCents,
   });
-  const equityAmountCents = equityCalculation?.equityCents ?? 0;
-  const cashAmountCents = totalAmountInCents - equityAmountCents;
 
   const submit = useMutation({
     mutationFn: async () => {
@@ -954,11 +952,11 @@ const QuickInvoicesSectionContent = () => {
                 <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
                   <span className="text-sm text-gray-500">Total amount</span>
                   <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
-                  {company.equityEnabled ? (
+                  {equityCalculation ? (
                     <div className="mt-1 text-sm text-gray-500">
-                      ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
+                      ({formatMoneyFromCents(totalAmountInCents - equityCalculation.equityCents)} cash +{" "}
                       <Link href="/settings/payouts" className={linkClasses}>
-                        {formatMoneyFromCents(equityAmountCents)} equity
+                        {formatMoneyFromCents(equityCalculation.equityCents)} equity
                       </Link>
                       )
                     </div>

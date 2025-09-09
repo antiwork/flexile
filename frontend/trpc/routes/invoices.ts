@@ -140,6 +140,7 @@ export const invoicesRouter = createRouter({
 
     if (ctx.company.equityEnabled) {
       const equityResult = await calculateInvoiceEquity({
+        ctx,
         companyContractor: companyWorker,
         serviceAmountCents: Number(totalAmountCents),
         invoiceYear: dateToday.getFullYear(),
@@ -257,6 +258,7 @@ export const invoicesRouter = createRouter({
       }
 
       const equityResult = await calculateInvoiceEquity({
+        ctx,
         companyContractor: ctx.companyContractor,
         serviceAmountCents: Number(invoice.totalAmountInUsdCents),
         invoiceYear: new Date(invoice.invoiceDate).getFullYear(),
