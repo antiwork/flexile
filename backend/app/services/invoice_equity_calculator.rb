@@ -18,6 +18,7 @@ class InvoiceEquityCalculator
     if equity_amount_in_options && equity_amount_in_options <= 0
       equity_percentage = 0
       equity_amount_in_cents = 0
+      equity_amount_in_options = 0
     end
 
     {

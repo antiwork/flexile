@@ -23,13 +23,13 @@ export const calculateInvoiceEquity = async ({
 
   const unvestedGrant = await getUniqueUnvestedEquityGrantForYear(companyContractor, invoiceYear);
   const sharePriceUsd = unvestedGrant?.sharePriceUsd ?? ctx.company.fmvPerShareInUsd;
-  if (!sharePriceUsd) return null;
 
   let equityPercentage = providedEquityPercentage ?? companyContractor.equityPercentage;
   let equityAmountInCents = Decimal.mul(serviceAmountCents, equityPercentage).div(100).round().toNumber();
-  let equityAmountInOptions = Decimal.div(equityAmountInCents, Decimal.mul(sharePriceUsd, 100)).round().toNumber();
+  let equityAmountInOptions =
+    sharePriceUsd == null ? null : Decimal.div(equityAmountInCents, Decimal.mul(sharePriceUsd, 100)).round().toNumber();
 
-  if (equityAmountInOptions <= 0) {
+  if (equityAmountInOptions != null && equityAmountInOptions <= 0) {
     equityPercentage = 0;
     equityAmountInCents = 0;
     equityAmountInOptions = 0;

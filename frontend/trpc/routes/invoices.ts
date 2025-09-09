@@ -147,7 +147,7 @@ export const invoicesRouter = createRouter({
         providedEquityPercentage: values.equityPercentage,
       });
 
-      if (!equityResult) {
+      if (!equityResult?.equityOptions) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Recipient has insufficient unvested equity",
@@ -265,7 +265,7 @@ export const invoicesRouter = createRouter({
         providedEquityPercentage: input.equityPercentage,
       });
 
-      if (!equityResult) {
+      if (!equityResult?.equityOptions) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Error calculating equity. Please contact the administrator.",
