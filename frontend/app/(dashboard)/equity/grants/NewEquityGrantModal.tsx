@@ -619,7 +619,12 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
             ) : null}
 
             <div className="flex justify-end">
-              <MutationStatusButton type="submit" mutation={createEquityGrant} disabled={!isFormValid}>
+              <MutationStatusButton
+                className="w-full md:w-fit"
+                type="submit"
+                mutation={createEquityGrant}
+                disabled={!isFormValid}
+              >
                 Create grant
               </MutationStatusButton>
             </div>

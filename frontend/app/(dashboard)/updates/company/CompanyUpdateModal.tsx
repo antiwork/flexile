@@ -178,9 +178,11 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
           )}
 
           <div className="pt-4">
-            <div className="flex justify-end gap-3">
+            <div className="flex w-full justify-end gap-3">
               {update?.sentAt ? (
-                <Button onClick={() => void submit()}>Update</Button>
+                <Button className="w-full md:w-fit" onClick={() => void submit()}>
+                  Update
+                </Button>
               ) : (
                 <>
                   <MutationStatusButton
@@ -188,13 +190,16 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                     mutation={saveMutation}
                     idleVariant="outline"
                     loadingText="Saving..."
+                    className="w-1/2 md:w-fit"
                     onClick={() =>
                       void form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()
                     }
                   >
                     Preview
                   </MutationStatusButton>
-                  <Button onClick={() => void submit()}>Publish</Button>
+                  <Button className="w-1/2 md:w-fit" onClick={() => void submit()}>
+                    Publish
+                  </Button>
                 </>
               )}
             </div>
