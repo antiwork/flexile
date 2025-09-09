@@ -40,6 +40,24 @@ declare module "next-auth" {
   }
 }
 
+// Helper types for API responses
+interface ImpersonationApiResponse {
+  success?: boolean;
+  error?: string;
+  impersonation_jwt?: string;
+  user?: {
+    id: number;
+    email: string;
+    name: string;
+    legal_name?: string;
+    preferred_name?: string;
+  };
+}
+
+interface ImpersonationRequestBody {
+  email?: string;
+}
+
 // Helper type for session with impersonation
 type SessionWithImpersonation = Session & {
   impersonation?: {

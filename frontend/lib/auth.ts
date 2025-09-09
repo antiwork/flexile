@@ -115,7 +115,6 @@ export const authOptions = {
   },
   callbacks: {
     jwt({ token, user, trigger, session }) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
       if (!user && trigger !== "update") return token;
 
       if (user) {
@@ -126,10 +125,12 @@ export const authOptions = {
 
       // Handle session updates for impersonation
       if (trigger === "update" && session) {
-        if (session.impersonation) {
-          token.impersonation = session.impersonation;
-        } else if (session.impersonation === undefined) {
-          delete token.impersonation;
+        if (session && typeof session === "object" && "impersonation" in session) {
+          if (session.impersonation) {
+            token.impersonation = session.impersonation;
+          } else if (session.impersonation === undefined) {
+            delete token.impersonation;
+          }
         }
       }
 

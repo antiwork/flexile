@@ -53,7 +53,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session, update } = useSession();
   const [isStoppingImpersonation, setIsStoppingImpersonation] = React.useState(false);
 
-  const isCurrentlyImpersonating = !!(session && "impersonation" in session && session.impersonation);
+  const isCurrentlyImpersonating = Boolean(session?.impersonation);
 
   const handleStopImpersonation = async () => {
     setIsStoppingImpersonation(true);
@@ -206,7 +206,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
               {isCurrentlyImpersonating ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={handleStopImpersonation}
+                    onClick={() => void handleStopImpersonation()}
                     disabled={isStoppingImpersonation}
                     className="cursor-pointer text-orange-600 hover:text-orange-700"
                   >
@@ -238,7 +238,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                   <strong>Impersonating:</strong> {session?.impersonation?.user?.email || "Unknown"}
                 </span>
                 <button
-                  onClick={handleStopImpersonation}
+                  onClick={() => void handleStopImpersonation()}
                   disabled={isStoppingImpersonation}
                   className="text-xs text-orange-600 underline hover:text-orange-800"
                 >

@@ -3,6 +3,23 @@ import { getServerSession } from "next-auth";
 import env from "@/env";
 import { authOptions } from "@/lib/auth";
 
+interface ImpersonationRequestBody {
+  email?: string;
+}
+
+interface ImpersonationApiResponse {
+  success?: boolean;
+  error?: string;
+  impersonation_jwt?: string;
+  user?: {
+    id: number;
+    email: string;
+    name: string;
+    legal_name?: string;
+    preferred_name?: string;
+  };
+}
+
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
@@ -11,7 +28,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email } = await request.json();
+    const body: ImpersonationRequestBody = await request.json();
+    const { email } = body;
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -29,10 +47,10 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ email }),
     });
 
-    const data = await response.json();
+    const data: ImpersonationApiResponse = await response.json();
 
     if (!response.ok) {
-      return NextResponse.json({ error: data.error || "Failed to impersonate user" }, { status: response.status });
+      return NextResponse.json({ error: data.error ?? "Failed to impersonate user" }, { status: response.status });
     }
 
     return NextResponse.json(data);

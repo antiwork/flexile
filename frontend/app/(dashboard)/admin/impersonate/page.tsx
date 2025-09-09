@@ -9,6 +9,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+interface ImpersonationApiResponse {
+  success?: boolean;
+  error?: string;
+  impersonation_jwt?: string;
+  user?: {
+    id: number;
+    email: string;
+    name: string;
+    legal_name?: string;
+    preferred_name?: string;
+  };
+}
+
 export default function ImpersonatePage() {
   const { data: session, update } = useSession();
   const router = useRouter();
@@ -35,11 +49,16 @@ export default function ImpersonatePage() {
         body: JSON.stringify({ email: email.trim() }),
       });
 
-      const data = await response.json();
+      const data: ImpersonationApiResponse = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to impersonate user");
+        throw new Error(data.error ?? "Failed to impersonate user");
       }
+
+      if (!data.impersonation_jwt || !data.user) {
+        throw new Error("Invalid response from server");
+      }
+
       await update({
         ...session,
         impersonation: {
@@ -82,7 +101,7 @@ export default function ImpersonatePage() {
     );
   }
 
-  const isCurrentlyImpersonating = !!(session && "impersonation" in session && session.impersonation);
+  const isCurrentlyImpersonating = Boolean(session?.impersonation);
 
   return (
     <div className="container mx-auto max-w-md py-8">
@@ -106,7 +125,12 @@ export default function ImpersonatePage() {
                   <strong>Impersonating:</strong> {session?.impersonation?.user?.email || "Unknown"}
                 </AlertDescription>
               </Alert>
-              <Button onClick={handleStopImpersonation} disabled={isLoading} variant="outline" className="w-full">
+              <Button
+                onClick={() => void handleStopImpersonation()}
+                disabled={isLoading}
+                variant="outline"
+                className="w-full"
+              >
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Stop Impersonation
               </Button>
