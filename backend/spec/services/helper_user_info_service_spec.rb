@@ -18,27 +18,50 @@ RSpec.describe HelperUserInfoService do
     create(:company_administrator, user:, company: glamazon)
   end
 
-  describe "#user_info" do
+  describe "#customer_info" do
+    it "returns an empty hash if the user is not found" do
+      result = described_class.new(email: "nonexistent@example.com").customer_info
+      expect(result).to eq({})
+    end
+
     it "returns information as expected" do
-      result = described_class.new(email: user.email).user_info
+      result = described_class.new(email: user.email).customer_info
 
-      expect(result.keys).to match_array(%i[prompt metadata])
-      expect(result[:metadata]).to eq({ name: user.email })
-
-      expected_prompt = [
-        "The user's residence country is #{user.display_country}",
-        "The user is a contractor for Gumroad",
-        "The user is an investor for Acme and Gumroad",
-        "The user is an administrator for Glamazon",
-        "The user invested $5,623.00 in Acme",
-        "The user invested $234.00 in Gumroad",
-        "The user received a dividend of $123.45 from Acme. The status of the dividend is Issued.",
-        "The user received a dividend of $23.31 from Gumroad. The status of the dividend is Paid.",
-        "The user's minimum dividend payment is $100.00",
-        "The user has an invoice to Gumroad (##{invoice.invoice_number}) with status approved. Total: $500.00, Cash: $300.00, Equity: $200.00, Date: #{Date.current}."
-      ].join("\n")
-
-      expect(result[:prompt]).to eq(expected_prompt)
+      expect(result).to eq(
+        name: user.email,
+        metadata: {
+          "Country of residence" => user.display_country,
+          "Contractor for companies" => "Gumroad",
+          "Investor for companies" => "Acme and Gumroad",
+          "Administrator for companies" => "Glamazon",
+          "Investments" => [
+            {
+              "Company" => "Acme",
+              "Amount" => "$5,623.00",
+            },
+            {
+              "Company" => "Gumroad",
+              "Amount" => "$234.00",
+            }
+          ],
+          "Dividends received" => [
+            { "Company" => "Acme", "Amount" => "$123.45", "Status" => "Issued" },
+            { "Company" => "Gumroad", "Amount" => "$23.31", "Status" => "Paid" }
+          ],
+          "Minimum dividend payment" => 100_00,
+          "Invoices submitted" => [
+            {
+              "Company" => "Gumroad",
+              "Invoice number" => invoice.invoice_number,
+              "Status" => "approved",
+              "Total" => "$500.00",
+              "Cash" => "$300.00",
+              "Equity" => "$200.00",
+              "Date" => invoice.invoice_date.to_s,
+            }
+          ],
+        }
+      )
     end
   end
 end

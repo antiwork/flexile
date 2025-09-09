@@ -21,7 +21,6 @@ import { investorsRouter } from "./routes/investors";
 import { invoicesRouter } from "./routes/invoices";
 import { lawyersRouter } from "./routes/lawyers";
 import { optionPoolsRouter } from "./routes/optionPools";
-import { quickbooksRouter } from "./routes/quickbooks";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
 import { supportRouter } from "./routes/support";
 import { tenderOffersRouter } from "./routes/tenderOffers";
@@ -32,7 +31,6 @@ import { createCallerFactory, createRouter } from "./";
 export const appRouter = createRouter({
   users: usersRouter,
   contractors: contractorsRouter,
-  quickbooks: quickbooksRouter,
   invoices: invoicesRouter,
   consolidatedInvoices: consolidatedInvoicesRouter,
   documents: documentsRouter,
@@ -63,7 +61,6 @@ export type AppRouter = typeof appRouter;
 
 export const getQueryClient = cache(createClient);
 const createCaller = createCallerFactory(appRouter);
-const caller = createCaller({ userId: null, host: "", ipAddress: "", userAgent: "", headers: {} });
+const caller = createCaller({ userId: null, headers: {} });
 export const { trpc, HydrateClient } = createHydrationHelpers<typeof appRouter>(caller, getQueryClient);
-export const createServerCaller = ({ userId }: { userId: number }) =>
-  createCaller({ userId, host: "", ipAddress: "", userAgent: "", headers: {} });
+export const createServerCaller = ({ userId }: { userId: number }) => createCaller({ userId, headers: {} });
