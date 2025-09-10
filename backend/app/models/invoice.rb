@@ -3,7 +3,7 @@
 class Invoice < ApplicationRecord
   has_paper_trail
 
-  include QuickbooksIntegratable, Serializable, Status, ExternalId, Deletable
+  include Serializable, Status, ExternalId, Deletable
 
   belongs_to :company
   belongs_to :company_worker, foreign_key: :company_contractor_id
@@ -35,10 +35,6 @@ class Invoice < ApplicationRecord
   has_many :invoice_approvals
   has_many :consolidated_invoices_invoices
   has_many :consolidated_invoices, through: :consolidated_invoices_invoices
-  has_many :integration_records, as: :integratable
-  has_one :quickbooks_journal_entry, -> do
-    alive.quickbooks_journal_entry.joins(:integration).where(integration: { type: "QuickbooksIntegration" })
-  end, as: :integratable, class_name: "IntegrationRecord"
   has_many_attached :attachments
 
   validates :status, inclusion: { in: ALL_STATES }, presence: true
@@ -125,7 +121,6 @@ class Invoice < ApplicationRecord
   after_initialize :populate_bill_data
   before_validation :populate_bill_data, on: :create
   after_commit :destroy_approvals, if: -> { rejected? }, on: :update
-  after_commit :sync_with_quickbooks, on: :update, if: :payable?
 
   def attachment = attachments.last
 
@@ -190,20 +185,6 @@ class Invoice < ApplicationRecord
     preceding_invoice.invoice_number.reverse.sub(preceding_invoice_digits.reverse, next_invoice_digits.reverse).reverse
   end
 
-  def quickbooks_entity
-    "Bill"
-  end
-
-  def create_or_update_quickbooks_integration_record!(integration:, parsed_body:, is_journal_entry: false)
-    unless is_journal_entry
-      (invoice_line_items + invoice_expenses).map.with_index do |line_item, index|
-        quickbooks_line_item = parsed_body["Line"].find { _1["LineNum"] == index + 1 }
-        line_item.create_or_update_quickbooks_integration_record!(integration:, parsed_body: quickbooks_line_item)
-      end
-    end
-
-    super
-  end
 
   def mark_as_paid!(timestamp:, payment_id: nil)
     update!(status: PAID, paid_at: timestamp)
@@ -231,9 +212,6 @@ class Invoice < ApplicationRecord
       invoice_approvals.destroy_all
     end
 
-    def sync_with_quickbooks
-      QuickbooksDataSyncJob.perform_async(company_id, self.class.name, id)
-    end
 
     def total_must_be_a_sum_of_cash_and_equity
       relevant_attributes = %i[cash_amount_in_cents equity_amount_in_cents total_amount_in_usd_cents]

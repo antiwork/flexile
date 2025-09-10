@@ -177,32 +177,31 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
             </Form>
           )}
 
-          <div className="pt-4">
-            <div className="flex w-full justify-end gap-3">
-              {update?.sentAt ? (
-                <Button className="w-full md:w-fit" onClick={() => void submit()}>
-                  Update
+          <div className="flex w-full justify-end gap-3">
+            {update?.sentAt ? (
+              <Button className="w-full md:w-fit" size="small" onClick={() => void submit()}>
+                Update
+              </Button>
+            ) : (
+              <>
+                <MutationStatusButton
+                  type="button"
+                  size="small"
+                  mutation={saveMutation}
+                  idleVariant="outline"
+                  loadingText="Saving..."
+                  className="w-1/2 md:w-fit"
+                  onClick={() =>
+                    void form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()
+                  }
+                >
+                  Preview
+                </MutationStatusButton>
+                <Button className="w-1/2 md:w-fit" size="small" onClick={() => void submit()}>
+                  Publish
                 </Button>
-              ) : (
-                <>
-                  <MutationStatusButton
-                    type="button"
-                    mutation={saveMutation}
-                    idleVariant="outline"
-                    loadingText="Saving..."
-                    className="w-1/2 md:w-fit"
-                    onClick={() =>
-                      void form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()
-                    }
-                  >
-                    Preview
-                  </MutationStatusButton>
-                  <Button className="w-1/2 md:w-fit" onClick={() => void submit()}>
-                    Publish
-                  </Button>
-                </>
-              )}
-            </div>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -219,13 +218,14 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
           )}
           <DialogFooter>
             <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-              <Button variant="outline" onClick={() => setPublishModalOpen(false)}>
+              <Button variant="outline" size="small" onClick={() => setPublishModalOpen(false)}>
                 No, cancel
               </Button>
               <MutationButton
                 mutation={saveMutation}
                 param={{ values: form.getValues(), preview: false }}
                 loadingText="Sending..."
+                size="small"
               >
                 Yes, {update?.sentAt ? "update" : "publish"}
               </MutationButton>

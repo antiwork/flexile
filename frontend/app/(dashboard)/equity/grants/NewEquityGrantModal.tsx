@@ -622,6 +622,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
               <MutationStatusButton
                 className="w-full md:w-fit"
                 type="submit"
+                size="small"
                 mutation={createEquityGrant}
                 disabled={!isFormValid}
               >

@@ -553,16 +553,15 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
           })}
         </div>
 
-        <div className="pt-4">
-          <div className="flex justify-end">
-            <MutationButton
-              mutation={submitMutation}
-              loadingText="Saving bank account..."
-              disabled={hasRequiredFieldsEmpty || hasVisibleErrors}
-            >
-              Save bank account
-            </MutationButton>
-          </div>
+        <div className="flex justify-end">
+          <MutationButton
+            mutation={submitMutation}
+            size="small"
+            loadingText="Saving bank account..."
+            disabled={hasRequiredFieldsEmpty || hasVisibleErrors}
+          >
+            Save bank account
+          </MutationButton>
         </div>
       </DialogContent>
     </Dialog>
