@@ -11,8 +11,6 @@ const env = z
     AWS_REGION: z.string(),
     S3_PRIVATE_BUCKET: z.string(),
     S3_PUBLIC_BUCKET: z.string(),
-    QUICKBOOKS_CLIENT_ID: z.string(),
-    QUICKBOOKS_CLIENT_SECRET: z.string(),
     STRIPE_ENDPOINT_SECRET: z.string(),
     STRIPE_SECRET_KEY: z.string(),
     ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: z.string(),
@@ -31,6 +29,7 @@ const env = z
     NEXTAUTH_SECRET: z.string(),
     GOOGLE_CLIENT_ID: z.string(),
     GOOGLE_CLIENT_SECRET: z.string(),
+    PROTOCOL: z.string(),
   })
   .parse(process.env);
 

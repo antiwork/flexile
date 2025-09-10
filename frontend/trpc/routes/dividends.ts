@@ -36,6 +36,7 @@ export const dividendsRouter = createRouter({
           id: true,
           numberOfShares: true,
           totalAmountInCents: true,
+          investmentAmountCents: true,
           retainedReason: true,
           status: true,
           withheldTaxCents: true,

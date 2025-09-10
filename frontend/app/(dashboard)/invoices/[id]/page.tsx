@@ -34,7 +34,34 @@ import {
   useIsActionable,
   useIsDeletable,
 } from "..";
-import InvoiceStatus, { StatusDetails } from "../Status";
+
+const getInvoiceStatusText = (
+  invoice: { status: string; approvals: unknown[]; paidAt?: string | Date | null },
+  company: { requiredInvoiceApprovals: number },
+) => {
+  switch (invoice.status) {
+    case "received":
+    case "approved":
+      if (invoice.approvals.length < company.requiredInvoiceApprovals) {
+        let label = "Awaiting approval";
+        if (company.requiredInvoiceApprovals > 1)
+          label += ` (${invoice.approvals.length}/${company.requiredInvoiceApprovals})`;
+        return label;
+      }
+      return "Approved";
+
+    case "processing":
+      return "Payment in progress";
+    case "payment_pending":
+      return "Payment scheduled";
+    case "paid":
+      return invoice.paidAt ? `Paid on ${formatDate(invoice.paidAt)}` : "Paid";
+    case "rejected":
+      return "Rejected";
+    case "failed":
+      return "Failed";
+  }
+};
 
 const PrintHeader = ({ children }: { children: React.ReactNode }) => (
   <div className="print:text-xs print:leading-tight">{children}</div>
@@ -123,14 +150,14 @@ export default function InvoicePage() {
         className="print:visible print:mb-4 print:px-0 print:pt-0"
         headerActions={
           <>
-            <InvoiceStatus aria-label="Status" invoice={invoice} />
-            <Button variant="outline" onClick={() => window.print()}>
+            <span aria-label="Status">{getInvoiceStatusText(invoice, company)}</span>
+            <Button variant="outline" size="small" onClick={() => window.print()}>
               <PrinterIcon className="size-4" />
               Print
             </Button>
             {user.roles.administrator && isActionable(invoice) ? (
               <>
-                <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
+                <Button variant="outline" size="small" onClick={() => setRejectModalOpen(true)}>
                   <XMarkIcon className="size-4" />
                   Reject
                 </Button>
@@ -262,7 +289,10 @@ export default function InvoicePage() {
         </Alert>
       )}
 
-      <StatusDetails invoice={invoice} className="print:hidden" />
+      <div className="mx-4 mb-4 print:hidden">
+        <div className="text-sm text-gray-500">Status</div>
+        <div className="font-medium">{getInvoiceStatusText(invoice, company)}</div>
+      </div>
 
       {payRateInSubunits && invoice.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
         <Alert className="mx-4 print:hidden" variant="warning">

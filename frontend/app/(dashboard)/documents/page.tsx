@@ -80,9 +80,8 @@ export default function DocumentsPage() {
   const canSign = user.address.street_address || isCompanyRepresentative;
   const isMobile = useIsMobile();
 
-  const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(
-    user.roles.worker ? !user.roles.worker.role : false,
-  );
+  const contractorIncomplete = user.roles.worker ? !user.roles.worker.role : false;
+  const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(contractorIncomplete);
 
   const currentYear = new Date().getFullYear();
   const { data: documents = [], isLoading } = trpc.documents.list.useQuery({ companyId: company.id, userId });
@@ -314,6 +313,19 @@ export default function DocumentsPage() {
         </div>
       ) : null}
 
+      {contractorIncomplete ? (
+        <Alert className="mx-4">
+          <Info className="size-4" />
+          <AlertDescription>
+            You've joined {company.name} as a contractor. We need some information to&nbsp;
+            <Button variant="link" className="underline" onClick={() => setForceWorkerOnboarding(true)}>
+              complete your onboarding
+            </Button>
+            .
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {isLoading ? (
         <TableSkeleton columns={6} />
       ) : documents.length > 0 ? (
@@ -367,7 +379,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
         </DialogHeader>
         <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
         <DialogFooter>
-          <Button onClick={sign} disabled={!signed}>
+          <Button size="small" onClick={sign} disabled={!signed}>
             Agree & Submit
           </Button>
         </DialogFooter>

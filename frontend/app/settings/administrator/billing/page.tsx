@@ -4,7 +4,7 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleDollarSign, Download, Plus, RefreshCw } from "lucide-react";
+import { CircleDollarSign, Download, Plus } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
 import { z } from "zod";
@@ -100,7 +100,7 @@ export default function Billing() {
                 <CardTitle>USD bank account</CardTitle>
                 <CardDescription>Ending in {stripeData.bank_account_last4}</CardDescription>
                 <CardAction>
-                  <Button variant="outline" onClick={() => setAddingBankAccount(true)}>
+                  <Button variant="outline" size="small" onClick={() => setAddingBankAccount(true)}>
                     Edit
                   </Button>
                 </CardAction>
@@ -109,7 +109,7 @@ export default function Billing() {
           ) : (
             <Placeholder icon={CircleDollarSign}>
               <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-              <Button onClick={() => setAddingBankAccount(true)}>
+              <Button onClick={() => setAddingBankAccount(true)} size="small">
                 <Plus className="size-4" />
                 Link your bank account
               </Button>
@@ -162,23 +162,11 @@ const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
           case "processing":
             return <Status variant="primary">Payment in progress</Status>;
           case "paid":
-            return (
-              <Status variant="success" icon={<CircleDollarSign />}>
-                Paid
-              </Status>
-            );
+            return <Status variant="success">Paid</Status>;
           case "refunded":
-            return (
-              <Status variant="success" icon={<RefreshCw />}>
-                Refunded
-              </Status>
-            );
+            return <Status variant="success">Refunded</Status>;
           case "failed":
-            return (
-              <Status variant="critical" icon={<RefreshCw />}>
-                Failed
-              </Status>
-            );
+            return <Status variant="critical">Failed</Status>;
         }
       }),
       columnHelper.accessor("attachment", {
