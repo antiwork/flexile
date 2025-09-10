@@ -1,142 +1,191 @@
 # Flexile
 
-Contractor payments.
+**Contractor payments made simple.**
+Flexile is a modern platform for managing and streamlining contractor payments, built with a Rails API backend and a Next.js frontend.
 
-## Setup
+---
 
-You'll need:
+## 🚀 Getting Started
+
+### Prerequisites
+
+Make sure you have the following installed:
 
 - [Docker](https://docs.docker.com/engine/install/)
-- [Node.js](https://nodejs.org/en/download) (see [`.node-version`](.node-version))
+- [Node.js](https://nodejs.org/en/download) (see [`.node-version`](.node-version) for the exact version)
 - [Ruby](https://www.ruby-lang.org/en/documentation/installation/)
 
-The easiest way to set up the development environment is to use the [`bin/setup` script](bin/setup), but feel free to run the commands in it yourself:
+### Setup
 
-### Backend
+The easiest way to set up the project is to run the [`bin/setup`](bin/setup) script.
+Alternatively, you can follow the steps below manually:
 
-- Set up Ruby (ideally using `rbenv`/`rvm`) and PostgreSQL
-- Navigate to backend code and install dependencies: `cd backend && bundle i && gem install foreman`
+#### Backend
 
-### Frontend
+1. Install Ruby (recommended: `rbenv` or `rvm`) and PostgreSQL
+2. Install dependencies:
+   ```bash
+   cd backend
+   bundle install
+   gem install foreman
+   ```
 
-- Navigate to frontend app and install dependencies `cd frontend && pnpm i`
+#### Frontend
 
-Finally, set up your environment: `cp .env.example .env`. If you're an Antiwork team member, you can use `vercel env pull .env`.
+1. Install dependencies:
+   ```bash
+   cd frontend
+   pnpm install
+   ```
 
-## Running the App
+#### Environment
 
-You can start the local app using the [`bin/dev` script](bin/dev) - or feel free to run the commands contained in it yourself.
+Copy the example env file:
 
-Once the local services are up and running, the application will be available at http://localhost:3000, with the backend (Rails API) running at http://localhost:3001.
-
-**Development shortcuts**:
-
-- If `ENABLE_DEFAULT_OTP=true` is set in your `.env`, you can use `000000` as the OTP for logging in or signing up.
-- Use these pre-seeded accounts (password: `password` for all):
-  - **Admin**: `hi+sahil@example.com` (Primary Administrator)
-  - **Contractor**: `hi+sharang@example.com` (Software Engineer)
-  - **Investor**: `hi+chris@example.com` (Investor)
-  - **More accounts**: See [the seed data](backend/config/data/seed_templates/gumroad.json) for additional test users (emails are always hi+firstname@example.com)
-
-## Common Issues / Debugging
-
-### 1. Postgres User Creation
-
-**Issue:** When running `bin/dev` (after `bin/setup`) encountered `FATAL: role "username" does not exist`
-
-**Resolution:** Manually create the Postgres user with:
-
+```bash
+cp .env.example .env
 ```
+
+> 🔑 If you’re part of the Antiwork team, you can use:
+> `vercel env pull .env`
+
+---
+
+## 🏃 Running the App
+
+Start everything locally:
+
+```bash
+bin/dev
+```
+
+By default:
+
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend (Rails API): [http://localhost:3001](http://localhost:3001)
+
+### Development Shortcuts
+
+- Set `ENABLE_DEFAULT_OTP=true` in `.env` to use `000000` as OTP.
+- Pre-seeded accounts (password: `password`):
+  - **Admin** → `hi+sahil@example.com`
+  - **Contractor** → `hi+sharang@example.com`
+  - **Investor** → `hi+chris@example.com`
+- See full seed data in [`backend/config/data/seed_templates/gumroad.json`](backend/config/data/seed_templates/gumroad.json).
+
+---
+
+## 🛠️ Common Issues & Fixes
+
+### 1. Postgres Role Missing
+
+**Error:**
+`FATAL: role "username" does not exist`
+
+**Fix:**
+
+```bash
 psql postgres -c "CREATE USER username WITH LOGIN CREATEDB SUPERUSER PASSWORD 'password';"
 ```
 
-Likely caused by the `bin/setup` script failing silently due to lack of Postgres superuser permissions (common with Homebrew installations).
+---
 
-### 2. Redis Connection & database seeding
+### 2. Redis Not Connecting
 
-**Issue:** First attempt to run `bin/dev` failed with `Redis::CannotConnectError` on port 6389.
+**Error:**
+`Redis::CannotConnectError` on port `6389`
 
-**Resolution:** Re-running `bin/dev` resolved it but data wasn't seeded properly, so had to run `db:reset`
-
-Likely caused by rails attempting to connect before Redis had fully started.
-
-### 3. Stripe-related rspec/playwright tests fail
-
-**Issue:** Tests that involve Stripe operations may fail due to invalid or missing customer IDs.
-
-**Resolution:**
-
-1. Generate real customer id, simplest way to do it:
+**Fix:**
+Restart `bin/dev`. If seeding failed, run:
 
 ```bash
-stripe customers create \
-  --name "Customer Name" \
-  --email "customer@example.com" \
-  --api-key "sk_test_mock"
+bin/rails db:reset
 ```
 
-2. Update company factories (on frontend and backend) with that customer id
+---
 
-## Testing
+### 3. Stripe Tests Failing
 
-```shell
-# Run Rails specs
+**Cause:** Missing/invalid customer IDs.
+**Fix:** Create a customer with Stripe CLI:
+
+```bash
+stripe customers create   --name "Customer Name"   --email "customer@example.com"   --api-key "sk_test_mock"
+```
+
+Update factories with this new customer ID.
+
+---
+
+## ✅ Testing
+
+Run Rails specs:
+
+```bash
 bundle exec rspec
+```
 
-# Run a single spec
+Run a specific test:
+
+```bash
 bundle exec rspec spec/system/roles/show_spec.rb:7
+```
 
-# Run Playwright end-to-end tests
+Run Playwright end-to-end tests:
+
+```bash
 pnpm playwright test
 ```
 
-## Services configuration
+---
 
-<details>
-<summary>Stripe</summary>
+## 🔌 Service Configuration
 
-1. Create account at [stripe.com](https://stripe.com) and complete verification
-2. Enable **Test mode** (toggle in top right of dashboard)
-3. Navigate to **Developers** → **API keys**
-4. Copy **Publishable key** (`pk_test_...`) and **Secret key** (`sk_test_...` - click "Reveal" first)
-5. Add to `.env`:
-   ```
-   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
-   STRIPE_SECRET_KEY=sk_test_your_secret_key_here
-   ```
+### Stripe
 
-</details>
-
-<details>
-<summary>Wise</summary>
-
-1. Register at [sandbox.transferwise.tech](https://sandbox.transferwise.tech/) and complete email verification
-2. Click profile/avatar → **Settings** → copy your **Membership number**
-3. Go to **Integrations and Tools** → **API tokens** → **Create API token**
-4. Set permissions to **Full Access**, name it (e.g., "Flexile Development"), and copy the token immediately
-5. Add to `.env`:
-   ```
-   WISE_PROFILE_ID=12345678 # Should be a number
-   WISE_API_KEY=your_full_api_token_here
-   ```
-   </details>
-
-<details>
-<summary>Resend</summary>
-
-1. Create account at [resend.com](https://resend.com) and complete email verification
-2. Navigate to **API Keys** in the dashboard
-3. Click **Create API Key**, give it a name (e.g., "Flexile Development")
-4. Copy the API key immediately (starts with re\_)
-5. Add to `.env`:
-   ```
-   RESEND_API_KEY=re_your_api_key_here
+1. Create an account at [stripe.com](https://stripe.com)
+2. Enable **Test Mode**
+3. Get your API keys from **Developers → API keys**
+4. Add to `.env`:
+   ```env
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+   STRIPE_SECRET_KEY=sk_test_...
    ```
 
-</details>
+---
 
-**Note**: Keep credentials secure and never commit to version control.
+### Wise
 
-## License
+1. Sign up at [sandbox.transferwise.tech](https://sandbox.transferwise.tech/)
+2. Copy your **Membership number** (Profile → Settings)
+3. Create an **API token** (full access)
+4. Add to `.env`:
+   ```env
+   WISE_PROFILE_ID=12345678
+   WISE_API_KEY=your_api_token
+   ```
 
-Flexile is licensed under the [MIT License](LICENSE.md).
+---
+
+### Resend
+
+1. Register at [resend.com](https://resend.com)
+2. Create an API key under **API Keys**
+3. Add to `.env`:
+   ```env
+   RESEND_API_KEY=re_...
+   ```
+
+---
+
+> ⚠️ **Important:** Never commit credentials to version control.
+
+---
+
+## 📜 License
+
+This project is licensed under the [MIT License](LICENSE.md).
+
+---
+
+✨ That’s it! You’re ready to start contributing to **Flexile**.
