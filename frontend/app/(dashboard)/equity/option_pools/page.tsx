@@ -5,10 +5,12 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
+import NewOptionPoolModal from "./NewOptionPoolModal";
 
 type OptionPool = RouterOutput["optionPools"]["list"][number];
 
@@ -28,13 +30,19 @@ const columns = [
 
 export default function OptionPools() {
   const company = useCurrentCompany();
+  const user = useCurrentUser();
   const { data = [], isLoading } = trpc.optionPools.list.useQuery({ companyId: company.id });
+  const [open, setOpen] = React.useState(false);
 
   const table = useTable({ columns, data });
 
   return (
     <>
-      <DashboardHeader title="Option pools" />
+      <DashboardHeader
+        title="Option pools"
+        headerActions={user.roles.administrator ? <Button onClick={() => setOpen(true)}>New option pool</Button> : null}
+      />
+      <NewOptionPoolModal open={open} onOpenChange={setOpen} />
       {isLoading ? (
         <TableSkeleton columns={5} />
       ) : data.length > 0 ? (
