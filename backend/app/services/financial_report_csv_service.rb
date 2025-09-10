@@ -106,6 +106,8 @@ class FinancialReportCsvService
 
         flexile_fee = FlexileFeeCalculator.calculate_dividend_fee_cents(dividend.total_amount_in_cents) / 100.0
 
+        prorated_amounts = calculate_prorated_dividend_amounts(dividend, payment)
+
         rows << {
           date_initiated: payment.created_at.to_fs(:us_date),
           date_paid: dividend.paid_at&.to_fs(:us_date),
@@ -118,15 +120,29 @@ class FinancialReportCsvService
           dividend_amount_usd: dividend.total_amount_in_cents / 100.0,
           processor: payment.processor_name,
           transfer_id: payment.transfer_id,
-          total_transaction_amount_usd: payment.total_transaction_cents / 100.0,
+          total_transaction_amount_usd: prorated_amounts[:transaction_amount],
           net_amount_usd: dividend.net_amount_in_cents / 100.0,
-          transfer_fee_usd: payment.transfer_fee_in_cents ? payment.transfer_fee_in_cents / 100.0 : 0.0,
+          transfer_fee_usd: prorated_amounts[:transfer_fee],
           tax_withholding_percentage: dividend.withholding_percentage,
           tax_withheld_usd: dividend.withheld_tax_cents / 100.0,
           flexile_fee_usd: flexile_fee,
           dividend_round_status: dividend.dividend_round.status,
         }
       end
+    end
+
+    def calculate_prorated_dividend_amounts(dividend, payment)
+      total_net_amount_cents = payment.dividends.sum(:net_amount_in_cents)
+      return { transaction_amount: 0.0, transfer_fee: 0.0 } if total_net_amount_cents.zero?
+
+      dividend_percentage = dividend.net_amount_in_cents.to_f / total_net_amount_cents.to_f
+
+      transaction_amount_cents = payment.total_transaction_cents * dividend_percentage
+      transaction_amount = (transaction_amount_cents ? transaction_amount_cents / 100.0 : 0.0).round(2)
+      transfer_fee_cents = payment.transfer_fee_in_cents * dividend_percentage
+      transfer_fee = (transfer_fee_cents ? transfer_fee_cents / 100.0 : 0.0).round(2)
+
+      { transaction_amount:, transfer_fee: }
     end
 
     def grouped_data
@@ -153,7 +169,7 @@ class FinancialReportCsvService
         payment = payments.first
 
         flexile_fee_usd = FlexileFeeCalculator.calculate_dividend_fee_cents(dividend.total_amount_in_cents) / 100.0
-        transfer_fee = payment.transfer_fee_in_cents ? payment.transfer_fee_in_cents / 100.0 : 0.0
+        prorated_amounts = calculate_prorated_dividend_amounts(dividend, payment)
 
         rows << {
           type: "Dividend",
@@ -162,7 +178,7 @@ class FinancialReportCsvService
           description: "Dividend ##{dividend.id} - #{dividend.company_investor.user.legal_name}",
           amount_usd: dividend.total_amount_in_cents / 100.0,
           flexile_fee_usd:,
-          transfer_fee_usd: transfer_fee,
+          transfer_fee_usd: prorated_amounts[:transfer_fee],
           net_amount_usd: dividend.net_amount_in_cents / 100.0,
         }
       end
@@ -221,7 +237,7 @@ class FinancialReportCsvService
     end
 
     def dividends
-      @_dividends ||= Dividend.includes(:dividend_payments, company_investor: :user)
+      @_dividends ||= Dividend.includes(dividend_payments: :dividends, company_investor: :user)
                               .paid
                               .references(:dividend_payments)
                               .merge(DividendPayment.successful)

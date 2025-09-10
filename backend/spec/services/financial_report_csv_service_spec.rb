@@ -319,6 +319,88 @@ RSpec.describe FinancialReportCsvService do
     end
   end
 
+  describe "pro-rata dividend calculations" do
+    context "when multiple dividends to the same investor were paid in a single payment" do
+      let(:start_date) { Date.new(2025, 9, 1) }
+      let(:end_date) { start_date.end_of_month }
+      let(:report_date) { start_date.strftime("%B %Y") }
+
+      let!(:dividend_round) { create(:dividend_round, company:, issued_at: Date.new(2025, 9, 1), status: "Paid") }
+      let!(:dividend1) do
+        create(:dividend,
+               company:,
+               company_investor:,
+               dividend_round:,
+               total_amount_in_cents: 25025,
+               net_amount_in_cents: 23000,
+               number_of_shares: 24,
+               withholding_percentage: 5,
+               withheld_tax_cents: 2025,
+               paid_at: Date.new(2025, 9, 5),
+               status: "Paid")
+      end
+      let!(:dividend2) do
+        create(:dividend,
+               company:,
+               company_investor:,
+               dividend_round:,
+               total_amount_in_cents: 15015,
+               net_amount_in_cents: 11755,
+               number_of_shares: 12,
+               withholding_percentage: 5,
+               withheld_tax_cents: 750,
+               paid_at: Date.new(2025, 9, 7),
+               status: "Paid")
+      end
+
+      let!(:shared_dividend_payment) do
+        create(:dividend_payment,
+               dividends: [dividend1, dividend2],
+               status: Payment::SUCCEEDED,
+               processor_name: "wise",
+               transfer_id: "shared123",
+               total_transaction_cents: 35000,
+               transfer_fee_in_cents: 850,
+               created_at: Date.new(2025, 9, 8))
+      end
+
+      it "allocates transaction amounts proportionally when same investor has multiple dividends in one payment" do
+        service = described_class.new(start_date:, end_date:)
+        result = service.process
+        csv = result["dividends-#{report_date}.csv"]
+        rows = CSV.parse(csv)
+
+        expect(rows.length).to eq(4) # header + 2 dividends + totals
+
+        dividend1_row = rows.find { |row| row[4] == dividend1.id.to_s }
+        dividend2_row = rows.find { |row| row[4] == dividend2.id.to_s }
+
+        expect(dividend1_row[11]).to eq("231.62") # transaction amount (66.17%)
+        expect(dividend2_row[11]).to eq("118.38") # transaction amount (33.83%)
+        expect(dividend1_row[13]).to eq("5.63")   # transfer fee (66.17%)
+        expect(dividend2_row[13]).to eq("2.87")   # transfer fee (33.83%)
+
+        expect(231.62 + 118.38).to be_within(0.01).of(shared_dividend_payment.total_transaction_cents / 100.0)
+        expect(5.63 + 2.87).to be_within(0.01).of(shared_dividend_payment.transfer_fee_in_cents / 100.0)
+      end
+
+      it "allocates transaction amounts and transfer fees proportionally in grouped CSV" do
+        service = described_class.new(start_date:, end_date:)
+        result = service.process
+        csv = result["grouped-#{report_date}.csv"]
+        rows = CSV.parse(csv)
+
+        dividend_rows = rows.select { |row| row[0] == "Dividend" }
+        expect(dividend_rows.length).to eq(2)
+
+        dividend1_row = dividend_rows.find { |row| row[3].include?(dividend1.id.to_s) }
+        dividend2_row = dividend_rows.find { |row| row[3].include?(dividend2.id.to_s) }
+        expect(dividend1_row[6]).to eq("5.63")
+        expect(dividend2_row[6]).to eq("2.87")
+      end
+    end
+  end
+
   describe "edge cases" do
     it "handles dividends without successful payments" do
       start_date = Date.new(2024, 7, 1)
