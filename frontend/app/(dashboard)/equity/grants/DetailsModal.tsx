@@ -145,7 +145,9 @@ const DetailsModal = ({
         canExercise ? (
           <SheetFooter>
             <div className="grid gap-4">
-              <Button onClick={onUpdateExercise}>Exercise options</Button>
+              <Button size="small" onClick={onUpdateExercise}>
+                Exercise options
+              </Button>
               <div className="text-xs">You can choose how many options to exercise in the next step.</div>
             </div>
           </SheetFooter>

@@ -7,6 +7,7 @@ import { shareHoldingsFactory } from "@test/factories/shareHoldings";
 import { usersFactory } from "@test/factories/users";
 import { dividendComputationOutputs, dividendComputations } from "@/db/schema";
 import { assert } from "@/utils/assert";
+import { calculateDividendFee } from "@/utils/fees";
 
 export const dividendComputationsFactory = {
   // Pre-seed data for dividend computations.
@@ -70,7 +71,7 @@ export const dividendComputationsFactory = {
       .returning();
     assert(insertedDividendComputation != null);
 
-    await db.insert(dividendComputationOutputs).values([
+    const dividendOutputsData = [
       {
         dividendComputationId: insertedDividendComputation.id,
         shareClass: "Common",
@@ -93,8 +94,18 @@ export const dividendComputationsFactory = {
         companyInvestorId: investor2.id,
         investmentAmountCents: 200000n,
       },
-    ]);
+    ];
 
-    return insertedDividendComputation;
+    await db.insert(dividendComputationOutputs).values(dividendOutputsData);
+
+    const totalFeesCents = dividendOutputsData.reduce(
+      (total, output) => total + calculateDividendFee(output.totalAmountInUsd),
+      0,
+    );
+
+    return {
+      ...insertedDividendComputation,
+      totalFeesCents,
+    };
   },
 };

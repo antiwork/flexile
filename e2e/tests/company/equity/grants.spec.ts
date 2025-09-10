@@ -35,7 +35,7 @@ test.describe("Equity Grants", () => {
     await optionPoolsFactory.create({ companyId: company.id });
     await login(page, adminUser, "/equity/grants");
 
-    await page.getByRole("button", { name: "New option grant" }).click();
+    await page.getByRole("button", { name: "New grant" }).click();
     await expect(page.getByLabel("Number of options")).toHaveValue("10000");
     await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
 
@@ -87,7 +87,7 @@ test.describe("Equity Grants", () => {
       }),
     );
 
-    await page.getByRole("button", { name: "New option grant" }).click();
+    await page.getByRole("button", { name: "New grant" }).click();
 
     // Fill in recipient (required)
     await selectComboboxOption(page, "Recipient", `${projectBasedUser.preferredName} (${projectBasedUser.email})`);
@@ -269,7 +269,7 @@ test.describe("Equity Grants", () => {
     await page.getByRole("link", { name: "Equity grants" }).click();
 
     // Open the modal
-    await page.getByRole("button", { name: "New option grant" }).click();
+    await page.getByRole("button", { name: "New grant" }).click();
 
     await withinModal(
       async () => {
@@ -325,7 +325,7 @@ test.describe("Equity Grants", () => {
     await login(page, adminUser);
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Equity grants" }).click();
-    await page.getByRole("button", { name: "New option grant" }).click();
+    await page.getByRole("button", { name: "New grant" }).click();
 
     await page.getByLabel("Number of options").fill("100");
     await selectComboboxOption(page, "Recipient", `${otherAdminUser.preferredName} (${otherAdminUser.email})`);

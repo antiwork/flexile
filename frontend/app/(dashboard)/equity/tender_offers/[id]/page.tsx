@@ -26,7 +26,7 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { formatServerDate } from "@/utils/time";
+import { serverDateToLocal } from "@/utils/time";
 import { VESTED_SHARES_CLASS } from "..";
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 
@@ -150,20 +150,20 @@ export default function BuybackView() {
         ) : null}
 
         <h2 className="text-xl font-medium">Details</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <Label>Start date</Label>
-            <p>{formatServerDate(data.startsAt)}</p>
+            <p>{serverDateToLocal(data.startsAt)}</p>
           </div>
           <div>
             <Label>End date</Label>
-            <p>{formatServerDate(data.endsAt)}</p>
+            <p>{serverDateToLocal(data.endsAt)}</p>
           </div>
           <div>
             <Label>Starting valuation</Label>
             <p>{formatMoney(data.minimumValuation)}</p>
           </div>
-          <div>
+          <div className="sm:col-span-2">
             {data.attachment ? (
               <Button asChild>
                 <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
@@ -282,11 +282,12 @@ export default function BuybackView() {
                 Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
               </p>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setCancelingBid(null)}>
+                <Button size="small" variant="outline" onClick={() => setCancelingBid(null)}>
                   No, keep bid
                 </Button>
                 <MutationButton
                   mutation={destroyMutation}
+                  size="small"
                   param={{ companyId: company.id, id: cancelingBid.id }}
                   loadingText="Canceling..."
                 >

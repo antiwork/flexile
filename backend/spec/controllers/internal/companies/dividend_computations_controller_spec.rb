@@ -7,7 +7,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
 
   let(:dividend_computation) { create(:dividend_computation, company: company) }
   let(:investor_user) { create(:user, legal_name: "Matthew Smith") }
-  let(:company_investor) { create(:company_investor, user: investor_user, company: company) }
+  let(:company_investor) { create(:company_investor, user: investor_user, company: company, investment_amount_in_cents: 100_000) }
   let(:dividend_computation_output) do
     create(:dividend_computation_output,
            dividend_computation: dividend_computation,
@@ -45,6 +45,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(json_response.first["dividends_issuance_date"]).to eq(Time.current.strftime("%Y-%m-%d"))
       expect(json_response.first["return_of_capital"]).to eq(false)
       expect(json_response.first["number_of_shareholders"]).to eq(1)
+      expect(json_response.first["total_fees_cents"]).to eq(dividend_computation.total_fees_cents)
     end
 
     it "does not include finalised dividend computations" do
@@ -90,6 +91,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(dividend_computation.total_amount_in_usd).to eq(100_000)
       expect(dividend_computation.dividends_issuance_date).to eq(Date.parse("2024-01-15"))
       expect(dividend_computation.return_of_capital).to eq(true)
+      expect(dividend_computation.total_fees_cents).to be_present
     end
 
     context "when there are no eligible investors" do
@@ -140,6 +142,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(json_response["total_amount_in_usd"]).to eq("1000000.0")
       expect(json_response["dividends_issuance_date"]).to eq(Time.current.strftime("%Y-%m-%d"))
       expect(json_response["return_of_capital"]).to eq(false)
+      expect(json_response["total_fees_cents"]).to eq(dividend_computation.total_fees_cents)
 
       expect(json_response["computation_outputs"]).to be_present
       computation_output = json_response["computation_outputs"].first
@@ -148,6 +151,7 @@ RSpec.describe Internal::Companies::DividendComputationsController do
       expect(computation_output["investor_external_id"]).to eq(investor_user.external_id)
       expect(computation_output["total_amount"].to_f).to eq(1000.0)
       expect(computation_output["number_of_shares"]).to eq(100)
+      expect(computation_output["investment_amount_cents"]).to eq(100_000)
     end
 
     it "returns not found for invalid id" do

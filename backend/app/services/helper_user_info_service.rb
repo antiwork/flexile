@@ -5,74 +5,55 @@ class HelperUserInfoService
     @email = email
   end
 
-  def user_info
+  def customer_info
     @user = User.find_by(email: @email)
-    @info = []
-
-    if user
-      add_user_info_notes
-      add_user_role_notes
-      add_investment_notes
-      add_dividend_notes
-      add_invoice_notes
-    end
+    return {} unless user
 
     {
-      prompt: @info.join("\n"),
-      metadata: metadata,
+      name: user.email,
+      metadata: {
+        "Country of residence" => user.display_country,
+        "Contractor for companies" => user.clients.map(&:display_name).to_sentence.presence,
+        "Investor for companies" => user.portfolio_companies.map(&:display_name).to_sentence.presence,
+        "Administrator for companies" => user.companies.map(&:display_name).to_sentence.presence,
+        "Investments" => investment_notes,
+        "Dividends received" => dividend_notes,
+        "Minimum dividend payment" => user.minimum_dividend_payment_in_cents,
+        "Invoices submitted" => invoice_notes,
+      }.compact,
     }
   end
 
   private
     attr_reader :user
 
-    def add_user_info_notes
-      return unless user.country_code?
-      @info << "The user's residence country is #{user.display_country}"
-    end
-
-    def add_user_role_notes
-      clients = user.clients.map(&:display_name)
-      @info << "The user is a contractor for #{clients.to_sentence}" if clients.present?
-
-      portfolio_companies = user.portfolio_companies.map(&:display_name)
-      @info << "The user is an investor for #{portfolio_companies.to_sentence}" if portfolio_companies.present?
-
-      companies = user.companies.map(&:display_name)
-      @info << "The user is an administrator for #{companies.to_sentence}" if companies.present?
-
-      # No need to check for lawyers, as they are not likely to contact support
-    end
-
-    def add_investment_notes
+    def investment_notes
       return unless user.investor?
 
-      user.company_investors.each do |company_investor|
+      user.company_investors.map do |company_investor|
         amount = Money.new(company_investor.investment_amount_in_cents, "usd")
                       .format(no_cents_if_whole: false, symbol: true)
         company_name = company_investor.company.display_name
-        @info << "The user invested #{amount} in #{company_name}"
+        { "Amount" => amount, "Company" => company_name }
       end
     end
 
-    def add_dividend_notes
+    def dividend_notes
       return unless user.dividends.exists?
 
-      user.dividends.each do |dividend|
+      user.dividends.map do |dividend|
         company_investor = dividend.company_investor
         amount = Money.new(dividend.total_amount_in_cents, "usd")
                       .format(no_cents_if_whole: false, symbol: true)
         company_name = company_investor.company.display_name
-        @info << "The user received a dividend of #{amount} from #{company_name}. " \
-                             "The status of the dividend is #{dividend.status}."
+        { "Amount" => amount, "Company" => company_name, "Status" => dividend.status }
       end
-      @info << "The user's minimum dividend payment is #{Money.from_cents(user.minimum_dividend_payment_in_cents, 'usd').format(symbol: true)}"
     end
 
-    def add_invoice_notes
+    def invoice_notes
       return unless user.invoices.exists?
 
-      user.invoices.each do |invoice|
+      user.invoices.map do |invoice|
         total_amount = Money.new(invoice.total_amount_in_usd_cents, "usd")
                             .format(no_cents_if_whole: false, symbol: true)
         cash_amount = Money.new(invoice.cash_amount_in_cents, "usd")
@@ -80,14 +61,7 @@ class HelperUserInfoService
         equity_amount = Money.new(invoice.equity_amount_in_cents, "usd")
                              .format(no_cents_if_whole: false, symbol: true)
         company_name = invoice.company.display_name
-        @info << "The user has an invoice to #{company_name} (##{invoice.invoice_number}) with status #{invoice.status}. " \
-                 "Total: #{total_amount}, Cash: #{cash_amount}, Equity: #{equity_amount}, Date: #{invoice.invoice_date}."
+        { "Company" => company_name, "Invoice number" => invoice.invoice_number, "Status" => invoice.status, "Total" => total_amount, "Cash" => cash_amount, "Equity" => equity_amount, "Date" => invoice.invoice_date.to_s }
       end
-    end
-
-    def metadata
-      return {} unless user
-
-      { name: user.email }
     end
 end
