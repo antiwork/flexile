@@ -3,7 +3,7 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, PaperClipIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
-import { Ban, CircleAlert, MoreHorizontal, PencilIcon, Printer, Trash2 } from "lucide-react";
+import { Ban, CircleAlert, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { Fragment, useMemo, useState } from "react";
@@ -172,10 +172,10 @@ export default function InvoicePage() {
                       }}
                       className="flex items-center gap-2"
                     >
-                      <Ban className="size-4" strokeWidth={2.5} />
+                      <Ban className="size-4" />
                       Reject
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="my-0" />
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onSelect={(e) => {
                         e.preventDefault();
@@ -183,7 +183,7 @@ export default function InvoicePage() {
                       }}
                       className="flex items-center gap-2"
                     >
-                      <Printer className="size-4" strokeWidth={2.5} />
+                      <Printer className="size-4" />
                       Print
                     </DropdownMenuItem>
                   </>
@@ -194,7 +194,7 @@ export default function InvoicePage() {
                     {EDITABLE_INVOICE_STATES.includes(invoice.status) && (
                       <DropdownMenuItem asChild>
                         <Link href={`/invoices/${invoice.id}/edit`} className="flex items-center gap-2">
-                          {invoice.status !== "rejected" && <PencilIcon className="size-4" strokeWidth={2.5} />}
+                          {invoice.status !== "rejected" && <SquarePen className="size-4" />}
                           {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
                         </Link>
                       </DropdownMenuItem>
@@ -207,11 +207,11 @@ export default function InvoicePage() {
                       }}
                       className="flex items-center gap-2"
                     >
-                      <Printer className="size-4" strokeWidth={2.5} />
+                      <Printer className="size-4" />
                       Print
                     </DropdownMenuItem>
 
-                    {isDeletable(invoice) && <DropdownMenuSeparator className="my-0" />}
+                    {isDeletable(invoice) && <DropdownMenuSeparator />}
 
                     {isDeletable(invoice) && (
                       <DropdownMenuItem
@@ -219,9 +219,9 @@ export default function InvoicePage() {
                           e.preventDefault();
                           setDeleteModalOpen(true);
                         }}
-                        className="flex items-center gap-2"
+                        className="focus:text-destructive flex items-center gap-2"
                       >
-                        <Trash2 className="size-4" strokeWidth={2.5} />
+                        <Trash2 className="size-4" />
                         Delete
                       </DropdownMenuItem>
                     )}
@@ -256,7 +256,7 @@ export default function InvoicePage() {
                   ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
                     <Button variant="default" asChild>
                       <Link href={`/invoices/${invoice.id}/edit`}>
-                        {invoice.status !== "rejected" && <PencilIcon className="h-4 w-4" />}
+                        {invoice.status !== "rejected" && <SquarePen className="h-4 w-4" />}
                         {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
                       </Link>
                     </Button>
@@ -264,11 +264,7 @@ export default function InvoicePage() {
 
                   {isDeletable(invoice) ? (
                     <>
-                      <Button
-                        variant="outline"
-                        onClick={() => setDeleteModalOpen(true)}
-                        className="hover:text-destructive"
-                      >
+                      <Button variant="destructive" onClick={() => setDeleteModalOpen(true)} className="">
                         <Trash2 className="size-4" />
                         <span>Delete</span>
                       </Button>
