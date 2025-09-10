@@ -179,15 +179,19 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
             </div>
 
             <div className="grid gap-4">
-              <h2 className="text-lg font-medium">Exercise periods</h2>
+              <h2 className="text-base font-medium">Exercise periods</h2>
               <Button
                 type="button"
                 variant="ghost"
-                className="flex h-auto w-full items-center justify-between p-0 text-left hover:bg-transparent"
+                className="flex h-auto w-full items-start justify-between p-0 text-left whitespace-break-spaces hover:bg-transparent"
                 onClick={() => setShowExercise(!showExercise)}
               >
-                <span>Customize post-termination exercise period</span>
-                {showExercise ? <ChevronDown className="size-6" /> : <ChevronRight className="size-6" />}
+                <h2 className="text-base">Customize post-termination exercise period</h2>
+                {showExercise ? (
+                  <ChevronDown className="mt-[3px] size-5" />
+                ) : (
+                  <ChevronRight className="mt-[3px] size-5" />
+                )}
               </Button>
 
               {showExercise ? (
@@ -206,13 +210,13 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="voluntaryTerminationExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Voluntary termination</FormLabel>
+                          <FormLabel>Voluntary termination exercise period</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>
@@ -226,7 +230,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                       name="involuntaryTerminationExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Involuntary termination</FormLabel>
+                          <FormLabel>Involuntary termination exercise period</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>
@@ -236,13 +240,13 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="terminationWithCauseExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Termination with cause</FormLabel>
+                          <FormLabel>Termination with cause exercise period</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>
@@ -256,7 +260,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                       name="deathExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Death</FormLabel>
+                          <FormLabel>Death exercise period</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>
@@ -266,13 +270,13 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="disabilityExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Disability</FormLabel>
+                          <FormLabel>Disability exercise period</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>
@@ -286,7 +290,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                       name="retirementExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Retirement</FormLabel>
+                          <FormLabel>Retirement exercise period</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>
