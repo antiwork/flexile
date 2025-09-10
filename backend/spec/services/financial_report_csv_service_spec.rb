@@ -146,10 +146,9 @@ RSpec.describe FinancialReportCsvService do
       csv = result["dividends-#{expected_report_date}.csv"]
       rows = CSV.parse(csv)
 
-      expected_headers = ["Date initiated", "Date paid", "Client name", "Dividend round ID", "Dividend ID",
-                          "Investor name", "Investor email", "Number of shares", "Dividend amount (USD)", "Processor",
+      expected_headers = ["Date paid", "Client name", "Investor name", "Investor email", "Dividend payment ID", "Dividend amount (USD)", "Processor",
                           "Transfer ID", "Total transaction amount (USD)", "Net amount (USD)", "Transfer fee (USD)", "Tax withholding percentage",
-                          "Tax withheld", "Flexile fee (USD)", "Dividend round status"]
+                          "Tax withheld", "Flexile fee (USD)"]
 
       expect(rows[0]).to eq(expected_headers)
     end
@@ -163,12 +162,12 @@ RSpec.describe FinancialReportCsvService do
       expect(rows.length).to eq(3) # header + data + totals
 
       data_row = rows[1]
-      expect(data_row[2]).to eq("TestCo")
-      expect(data_row[5]).to eq("Jane Investor")
-      expect(data_row[6]).to eq("jane@example.com")
-      expect(data_row[7]).to eq("24")
-      expect(data_row[8]).to eq("250.25")
-      expect(data_row[9]).to eq("wise")
+      expect(data_row[1]).to eq("TestCo")
+      expect(data_row[2]).to eq("Jane Investor")
+      expect(data_row[3]).to eq("jane@example.com")
+      expect(data_row[4]).to eq(dividend_payment.id.to_s)
+      expect(data_row[5]).to eq("250.25")
+      expect(data_row[6]).to eq("wise")
     end
 
     it "includes totals row when dividend data exists" do
@@ -181,8 +180,7 @@ RSpec.describe FinancialReportCsvService do
 
       totals_row = rows.last
       expect(totals_row[0]).to eq("TOTAL")
-      expect(totals_row[7]).to be_present # Total shares
-      expect(totals_row[8]).to be_present # Total dividend amount
+      expect(totals_row[5]).to be_present # Total dividend amount
     end
 
     it "only shows headers when no dividend data exists" do
@@ -238,7 +236,7 @@ RSpec.describe FinancialReportCsvService do
 
       dividend_row = dividend_rows.first
       expect(dividend_row[2]).to eq("TestCo")
-      expect(dividend_row[3]).to include("Dividend ##{dividend.id} - Jane Investor")
+      expect(dividend_row[3]).to include("Dividend Payment #")
       expect(dividend_row[4]).to eq("250.25")
     end
 
