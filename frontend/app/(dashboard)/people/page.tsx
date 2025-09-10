@@ -373,7 +373,7 @@ const ActionPanel = () => {
 
               {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField />}
               <div className="flex flex-col items-end space-y-2">
-                <MutationStatusButton mutation={inviteMutation} type="submit">
+                <MutationStatusButton mutation={inviteMutation} type="submit" size="small">
                   Send invite
                 </MutationStatusButton>
                 {inviteMutation.isError ? <div className="text-red text-sm">{inviteMutation.error.message}</div> : null}
