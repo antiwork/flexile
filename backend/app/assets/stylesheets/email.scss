@@ -176,12 +176,17 @@ footer a {
 
 button,
 .button {
+  display: inline-block;
+  width: auto;
   font-size: 16px;
-  display: block;
+  line-height: 22px;
   text-align: center;
   text-decoration: none;
-  padding: 16px;
-  border-radius: 48px;
+  padding:8px 12px;
+  border-radius: 8px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: black;
   background: black;
   white-space: nowrap;
   color: white;
