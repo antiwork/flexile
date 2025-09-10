@@ -1,9 +1,9 @@
 "use client";
 
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { InformationCircleIcon, PaperClipIcon, PencilIcon, PrinterIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, PaperClipIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
-import { Ban, CircleAlert, MoreHorizontal, Trash2 } from "lucide-react";
+import { Ban, CircleAlert, MoreHorizontal, PencilIcon, Printer, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { Fragment, useMemo, useState } from "react";
@@ -18,6 +18,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -161,7 +162,7 @@ export default function InvoicePage() {
               <DropdownMenuTrigger className="p-2">
                 <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 px-0">
+              <DropdownMenuContent align="end" className="">
                 {user.roles.administrator && isActionable(invoice) ? (
                   <>
                     <DropdownMenuItem
@@ -171,10 +172,10 @@ export default function InvoicePage() {
                       }}
                       className="flex items-center gap-2"
                     >
-                      <Ban className="size-4" />
+                      <Ban className="size-4" strokeWidth={2.5} />
                       Reject
                     </DropdownMenuItem>
-                    <Separator className="my-0" />
+                    <DropdownMenuSeparator className="my-0" />
                     <DropdownMenuItem
                       onSelect={(e) => {
                         e.preventDefault();
@@ -182,7 +183,7 @@ export default function InvoicePage() {
                       }}
                       className="flex items-center gap-2"
                     >
-                      <PrinterIcon className="size-4" />
+                      <Printer className="size-4" strokeWidth={2.5} />
                       Print
                     </DropdownMenuItem>
                   </>
@@ -193,7 +194,7 @@ export default function InvoicePage() {
                     {EDITABLE_INVOICE_STATES.includes(invoice.status) && (
                       <DropdownMenuItem asChild>
                         <Link href={`/invoices/${invoice.id}/edit`} className="flex items-center gap-2">
-                          {invoice.status !== "rejected" && <PencilIcon className="size-4" />}
+                          {invoice.status !== "rejected" && <PencilIcon className="size-4" strokeWidth={2.5} />}
                           {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
                         </Link>
                       </DropdownMenuItem>
@@ -206,11 +207,11 @@ export default function InvoicePage() {
                       }}
                       className="flex items-center gap-2"
                     >
-                      <PrinterIcon className="size-4" />
+                      <Printer className="size-4" strokeWidth={2.5} />
                       Print
                     </DropdownMenuItem>
 
-                    {isDeletable(invoice) && <Separator className="my-0" />}
+                    {isDeletable(invoice) && <DropdownMenuSeparator className="my-0" />}
 
                     {isDeletable(invoice) && (
                       <DropdownMenuItem
@@ -220,7 +221,7 @@ export default function InvoicePage() {
                         }}
                         className="flex items-center gap-2"
                       >
-                        <Trash2 className="size-4" />
+                        <Trash2 className="size-4" strokeWidth={2.5} />
                         Delete
                       </DropdownMenuItem>
                     )}
@@ -231,7 +232,7 @@ export default function InvoicePage() {
           ) : (
             <>
               <Button variant="outline" onClick={() => window.print()}>
-                <PrinterIcon className="size-4" />
+                <Printer className="size-4" />
                 Print
               </Button>
               {user.roles.administrator && isActionable(invoice) ? (
@@ -240,13 +241,6 @@ export default function InvoicePage() {
                     <Ban className="size-4" />
                     Reject
                   </Button>
-
-                  <RejectModal
-                    open={rejectModalOpen}
-                    onClose={() => setRejectModalOpen(false)}
-                    onReject={() => router.push(`/invoices`)}
-                    ids={[invoice.id]}
-                  />
 
                   <ApproveButton
                     className="border-0 bg-blue-500"
@@ -566,7 +560,7 @@ export default function InvoicePage() {
         </section>
       </div>
       {isMobile && user.roles.administrator && isActionable(invoice) ? (
-        <div className="fixed bottom-14 left-0 z-10 w-full bg-white px-4 py-3" style={{ width: "100%" }}>
+        <div className="fixed bottom-15 left-0 z-10 w-full bg-white px-4 py-4" style={{ width: "100%" }}>
           <ApproveButton
             className="w-full border-0 bg-blue-500 shadow-lg"
             invoice={invoice}
