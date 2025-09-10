@@ -183,6 +183,7 @@ export default function Equity() {
               ) : null}
               <MutationStatusButton
                 type="submit"
+                size="small"
                 className="w-fit"
                 mutation={updateSettings}
                 loadingText="Saving..."

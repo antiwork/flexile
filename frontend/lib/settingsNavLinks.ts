@@ -33,7 +33,7 @@ export const settingsNavLinks = [
     category: "company",
   },
   {
-    label: "Workspace admins",
+    label: "Roles",
     route: "/settings/administrator/roles" as const,
     icon: ShieldUser,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
@@ -54,7 +54,7 @@ export const settingsNavLinks = [
     category: "company",
   },
   {
-    label: "Equity value",
+    label: "Equity",
     route: "/settings/administrator/equity" as const,
     icon: PieChart,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
