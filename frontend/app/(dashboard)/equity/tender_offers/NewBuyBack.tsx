@@ -155,6 +155,7 @@ export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) 
         <MutationStatusButton
           className="justify-self-end"
           type="submit"
+          size="small"
           mutation={createMutation}
           loadingText="Creating..."
         >
