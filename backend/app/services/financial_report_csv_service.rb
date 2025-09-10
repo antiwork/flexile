@@ -221,9 +221,11 @@ class FinancialReportCsvService
 
     def dividend_payments
       @_dividend_payments ||= DividendPayment.includes(dividends: { company_investor: :user })
-                                             .successful
-                                             .where("created_at >= ? AND created_at <= ?", start_date, end_date)
-                                             .order(created_at: :asc)
+                                            .successful
+                                            .where("dividend_payments.created_at >= ? AND dividend_payments.created_at <= ?", start_date, end_date)
+                                            .joins(:dividends)
+                                            .group("dividend_payments.id")
+                                            .order("MIN(dividends.paid_at) ASC")
     end
 
     def invoices_csv_columns
