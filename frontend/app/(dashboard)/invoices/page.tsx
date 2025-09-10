@@ -680,15 +680,13 @@ const TasksModal = ({
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="md:w-110">
         <DialogHeader>
-          <DialogTitle className="max-md:pb-4 max-md:text-base max-md:leading-5 max-md:font-medium">
-            {invoice.billFrom}
-          </DialogTitle>
+          <DialogTitle className="max-md:text-base max-md:leading-5 max-md:font-medium">{invoice.billFrom}</DialogTitle>
         </DialogHeader>
-        <section>
+        <section className="py-4">
           <StatusDetails invoice={invoice} className="mb-4" />
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-            <Alert className="max-md:mb-4" variant="warning">
+            <Alert className="mb-4" variant="warning">
               <CircleAlert />
               <AlertDescription>
                 This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
@@ -696,7 +694,7 @@ const TasksModal = ({
               </AlertDescription>
             </Alert>
           ) : null}
-          <header className="flex items-center justify-between gap-4 md:pt-4">
+          <header className="flex items-center justify-between gap-4">
             <h3 className="text-base max-md:leading-5">Invoice details</h3>
             <Button variant="outline" size="small" asChild className="max-md:font-regular max-md:h-7.5 max-md:text-sm">
               <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
@@ -723,7 +721,7 @@ const TasksModal = ({
                 <Separator />
               </>
             ) : null}
-            <div className="flex justify-between gap-2 pb-4 font-medium">
+            <div className="flex justify-between gap-2 font-medium">
               <div>Payout total</div>
               <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
             </div>
