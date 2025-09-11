@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::ActorTokensController < Internal::BaseController
-  before_action :set_user!, only: [:create]
+  before_action :set_user!
 
   def create
     authorize @user, policy_class: ActorTokenPolicy
