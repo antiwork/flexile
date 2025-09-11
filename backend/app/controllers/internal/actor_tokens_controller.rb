@@ -10,7 +10,7 @@ class Internal::ActorTokensController < Internal::BaseController
 
   private
     def set_user!
-      @user = User.find_by!(external_id: params[:user_id])
-      e404 unless @user.all_companies.include?(Current.company)
+      @user = User.find_by(external_id: params[:user_id])
+      head :not_found unless @user&.all_companies&.include?(Current.company)
     end
 end

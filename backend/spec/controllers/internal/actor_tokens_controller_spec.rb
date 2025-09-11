@@ -62,25 +62,25 @@ RSpec.describe Internal::ActorTokensController do
     end
 
     context "when unauthorized" do
-      it "returns forbidden for non-admin user" do
+      it "returns not_found for non-admin user" do
         Current.company_administrator = nil
         Current.user = create(:user)
         post :create, params: { user_id: target_user.external_id }
 
-        expect(response).to have_http_status(:forbidden)
+        expect(response).to have_http_status(:not_found)
       end
 
-      it "returns forbidden when target user not in company or is in another company" do
+      it "returns not_found when target user not in company or is in another company" do
         external_user = create(:user)
         post :create, params: { user_id: external_user.external_id }
 
-        expect(response).to have_http_status(:forbidden)
+        expect(response).to have_http_status(:not_found)
 
         other_company = create(:company)
         create(:company_worker, company: other_company, user: external_user)
         post :create, params: { user_id: external_user.external_id }
 
-        expect(response).to have_http_status(:forbidden)
+        expect(response).to have_http_status(:not_found)
       end
     end
   end
