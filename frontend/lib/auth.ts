@@ -117,7 +117,7 @@ export const authOptions = {
     jwt({ token, user, trigger, session }) {
       if (trigger !== "update" && !user) return token;
 
-      if (user) {
+      if (user && trigger !== "update") {
         token.jwt = user.jwt;
         token.legalName = user.legalName ?? "";
         token.preferredName = user.preferredName ?? "";
@@ -134,8 +134,12 @@ export const authOptions = {
             sessionWithImpersonation.impersonation &&
             typeof sessionWithImpersonation.impersonation === "object"
           ) {
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
-            const impersonationData = sessionWithImpersonation.impersonation as any;
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+            const impersonationData = sessionWithImpersonation.impersonation as {
+              jwt?: unknown;
+              user?: unknown;
+              originalUser?: unknown;
+            };
             if (
               impersonationData &&
               typeof impersonationData.jwt === "string" &&
@@ -144,7 +148,25 @@ export const authOptions = {
               impersonationData.originalUser &&
               typeof impersonationData.originalUser === "object"
             ) {
-              token.impersonation = impersonationData;
+              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+              token.impersonation = impersonationData as {
+                jwt: string;
+                user: {
+                  id: number;
+                  email: string;
+                  name: string;
+                  legal_name?: string;
+                  preferred_name?: string;
+                };
+                originalUser: {
+                  id: string;
+                  email: string;
+                  name: string;
+                  legalName?: string;
+                  preferredName?: string;
+                  jwt: string;
+                };
+              };
             }
           }
         }
