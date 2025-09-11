@@ -786,16 +786,16 @@ RSpec.describe Company do
     end
   end
 
-  describe "#impersonation_url" do
+  describe "#generate_impersonation_url" do
     let(:company) { create(:company, :completed_onboarding) }
 
     it "returns a valid impersonation URL" do
-      url = company.impersonation_url
+      url = company.generate_impersonation_url
       expect(url).to include("/impersonate?actor_token=")
     end
 
     it "includes a token that can be decoded back to the primary admin user" do
-      url = company.impersonation_url
+      url = company.generate_impersonation_url
       token = url.split("actor_token=").last
 
       decoded_user = JwtService.user_from_token(token)

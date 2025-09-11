@@ -225,7 +225,7 @@ class Company < ApplicationRecord
     JwtService.generate_actor_token(primary_admin.user)
   end
 
-  def impersonation_url
+  def generate_impersonation_url
     "#{PROTOCOL}://#{DOMAIN}/impersonate?actor_token=#{actor_token}"
   end
 

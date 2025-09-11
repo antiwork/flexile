@@ -636,16 +636,16 @@ RSpec.describe User do
     end
   end
 
-  describe "#impersonation_url" do
+  describe "#generate_impersonation_url" do
     let(:user) { create(:user) }
 
     it "returns a valid impersonation URL" do
-      url = user.impersonation_url
+      url = user.generate_impersonation_url
       expect(url).to include("/impersonate?actor_token=")
     end
 
     it "includes a token that can be decoded back to the user" do
-      url = user.impersonation_url
+      url = user.generate_impersonation_url
       token = url.split("actor_token=").last
 
       decoded_user = JwtService.user_from_token(token)

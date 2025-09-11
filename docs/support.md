@@ -52,7 +52,7 @@ u.dividends
 
 ```ruby
 user = User.find_by(email: "user@example.com")
-user.impersonation_url
+user.generate_impersonation_url
 # => https://flexile.com/impersonate?actor_token=eyJhbGciOiJIUzI1NiJ9...
 ```
 
@@ -60,7 +60,7 @@ user.impersonation_url
 
 ```ruby
 company = Company.find_by(name: "Example Corp")
-company.impersonation_url
+company.generate_impersonation_url
 # => https://flexile.com/impersonate?actor_token=eyJhbGciOiJIUzI1NiJ9...
 ```
 

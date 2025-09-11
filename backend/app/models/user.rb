@@ -185,7 +185,7 @@ class User < ApplicationRecord
     JwtService.generate_actor_token(self)
   end
 
-  def impersonation_url
+  def generate_impersonation_url
     "#{PROTOCOL}://#{DOMAIN}/impersonate?actor_token=#{actor_token}"
   end
 
