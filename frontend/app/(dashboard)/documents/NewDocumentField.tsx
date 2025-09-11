@@ -27,7 +27,7 @@ export default function NewDocumentField() {
       name="contract"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Contract</FormLabel>
+          <FormLabel className="font-medium">Contract</FormLabel>
 
           <Tabs value={contractType} onValueChange={setContractType}>
             <TabsList className="w-full">
@@ -70,11 +70,10 @@ export default function NewDocumentField() {
             >
               <Placeholder
                 icon={CloudUpload}
-                className={cn("border-2", { "border-dashed border-blue-500 bg-blue-50": isDragging })}
+                className={cn("border-input", { "border-dashed border-blue-500 bg-blue-50": isDragging })}
               >
                 <b>
-                  Drag and drop or{" "}
-                  <span className={cn(linkClasses, { "text-blue-500": isDragging })}>click to browse</span> your PDF
+                  Drag and drop or <span className={cn(linkClasses, "text-blue-500")}>click to browse</span> your PDF
                   file here
                 </b>
               </Placeholder>

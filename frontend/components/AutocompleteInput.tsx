@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/utils";
 
@@ -133,7 +133,7 @@ export default function AutocompleteInput({
 
       {/* Suggestions Dropdown */}
       {showSuggestions && filteredOptions.length > 0 ? (
-        <div className="absolute top-full right-0 left-0 z-10 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+        <DropdownWrapper inputRef={inputRef} optionsCount={filteredOptions.length}>
           {filteredOptions.map((option, index) => (
             <div
               key={option.value}
@@ -150,8 +150,65 @@ export default function AutocompleteInput({
               {renderOption ? renderOption(option) : defaultRenderOption(option)}
             </div>
           ))}
-        </div>
+        </DropdownWrapper>
       ) : null}
     </div>
   );
 }
+
+type DropdownMeta = { position: "up" | "down"; customMaxHeight: number } | null;
+const DropdownWrapper = ({
+  inputRef,
+  optionsCount,
+  children,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  optionsCount: number;
+  children: React.ReactNode;
+}) => {
+  const dropDownRef = useRef<HTMLDivElement>(null);
+  const [dropdownMeta, setDropdownMeta] = useState<DropdownMeta>(null);
+
+  const getDropdownMeta: () => DropdownMeta = () => {
+    if (!inputRef.current || !dropDownRef.current?.children[0]) return null;
+    const input = inputRef.current.getBoundingClientRect();
+    const topSpace = input.top;
+    const mobileNavHeight = window.innerWidth >= 768 ? 0 : 60;
+    const bottomSpace = window.innerHeight - input.bottom - mobileNavHeight;
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Need to access offsetHeight and its safe as dropdown item is rendered as div element.
+    const dropdownItem = dropDownRef.current.children[0] as HTMLElement;
+    const dropdownItemHeight = dropdownItem.offsetHeight;
+    const dropdownBorder = 2;
+    const visibleHeight = Math.min(300, dropdownItemHeight * optionsCount + dropdownBorder);
+    const margin = 4;
+
+    if (visibleHeight + margin < bottomSpace) {
+      return { position: "down", customMaxHeight: visibleHeight };
+    } else if (visibleHeight + margin < topSpace) {
+      return { position: "up", customMaxHeight: visibleHeight };
+    }
+    return bottomSpace >= topSpace
+      ? { position: "down", customMaxHeight: bottomSpace - 8 }
+      : { position: "up", customMaxHeight: topSpace - 8 };
+  };
+
+  const positionClasses = {
+    up: "bottom-full opacity-100 mb-1",
+    down: "top-full opacity-100 mt-1",
+  };
+
+  useEffect(() => {
+    const meta = getDropdownMeta();
+    setDropdownMeta(meta);
+  }, [optionsCount]);
+
+  return (
+    <div
+      ref={dropDownRef}
+      className={`absolute right-0 left-0 z-[10] overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg transition-opacity ease-in ${dropdownMeta ? positionClasses[dropdownMeta.position] : "opacity-0"}`}
+      style={{ maxHeight: dropdownMeta ? `${dropdownMeta.customMaxHeight}px` : "0px" }}
+    >
+      {children}
+    </div>
+  );
+};
