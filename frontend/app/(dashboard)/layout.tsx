@@ -1,7 +1,7 @@
 "use client";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { ChevronDown, ChevronRight, LogOut, MessageCircleQuestion, Settings, Sparkles, X } from "lucide-react";
+import { ChevronDown, ChevronRight, LogOut, MessageCircleQuestion, Settings, Sparkles, UserX, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -191,7 +191,11 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
               />
               {session?.user.actorToken ? (
                 <SidebarMenuItem>
-                  <SidebarMenuButton onClick={stopImpersonating} className="cursor-pointer">
+                  <SidebarMenuButton
+                    onClick={stopImpersonating}
+                    className="text-destructive hover:text-destructive cursor-pointer"
+                  >
+                    <UserX className="size-6" />
                     Stop impersonating
                   </SidebarMenuButton>
                 </SidebarMenuItem>
