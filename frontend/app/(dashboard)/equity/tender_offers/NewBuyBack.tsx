@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
+import { useIsMobile } from "@/utils/use-mobile";
 
 const formSchema = z.object({
   startDate: z.instanceof(CalendarDate, { message: "This field is required." }),
@@ -29,6 +30,7 @@ type NewBuybackFormProps = {
 
 export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) {
   const company = useCurrentCompany();
+  const isMobile = useIsMobile();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -155,7 +157,7 @@ export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) 
         <MutationStatusButton
           className="justify-self-end"
           type="submit"
-          size="small"
+          size={isMobile ? "default" : "small"}
           mutation={createMutation}
           loadingText="Creating..."
         >
