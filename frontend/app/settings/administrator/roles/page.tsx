@@ -106,7 +106,9 @@ const UserOrEmailInput = ({
   const renderOption = (option: { value: string; label: string; email?: string }) => (
     <div>
       <div className="font-medium">{option.label}</div>
-      {option.email ? <div className="text-muted-foreground text-sm">{option.email}</div> : null}
+      {option.email ? (
+        <div className="text-muted-foreground truncate text-sm whitespace-nowrap">{option.email}</div>
+      ) : null}
     </div>
   );
 
@@ -389,7 +391,7 @@ export default function RolesPage() {
       </div>
 
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="overflow-visible sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Add a member</DialogTitle>
             <DialogDescription>
@@ -454,6 +456,7 @@ export default function RolesPage() {
                 <Button
                   type="submit"
                   size="small"
+                  className="w-full md:w-auto"
                   disabled={
                     !addMemberForm.formState.isValid ||
                     addRoleMutation.isPending ||
