@@ -1,4 +1,14 @@
-import { Briefcase, Building, CreditCard, Landmark, PieChart, ScrollText, ShieldUser, UserCircle2 } from "lucide-react";
+import {
+  Briefcase,
+  Building,
+  CreditCard,
+  FolderClosed,
+  Landmark,
+  PieChart,
+  ScrollText,
+  ShieldUser,
+  UserCircle2,
+} from "lucide-react";
 import type { CurrentUser } from "@/models/user";
 
 export const settingsNavLinks = [
@@ -57,6 +67,13 @@ export const settingsNavLinks = [
     label: "Equity",
     route: "/settings/administrator/equity" as const,
     icon: PieChart,
+    isVisible: (user: CurrentUser) => !!user.roles.administrator,
+    category: "company",
+  },
+  {
+    label: "Templates",
+    route: "/settings/administrator/templates" as const,
+    icon: FolderClosed,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
     category: "company",
   },

@@ -10,7 +10,8 @@ import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/
 import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq } from "drizzle-orm";
-import { companies, companyInvestors, equityGrants } from "@/db/schema";
+import { DocumentTemplateType } from "@/db/enums";
+import { companies, companyInvestors, documentTemplates, equityGrants } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("Equity Grants", () => {
@@ -224,7 +225,9 @@ test.describe("Equity Grants", () => {
     await expect(page.getByRole("heading", { name: "Options" })).toBeVisible();
     await page.waitForLoadState("networkidle");
     await expect(page.getByRole("button", { name: "Exercise Options" })).not.toBeVisible();
-    await db.update(companies).set({ exerciseNotice: "I am exercising" }).where(eq(companies.id, company.id));
+    await db
+      .insert(documentTemplates)
+      .values({ companyId: company.id, documentType: DocumentTemplateType.ExerciseNotice, text: "I am exercising" });
     await page.reload();
     await expect(page.getByText("You have 100 vested options available for exercise.")).toBeVisible();
     await page.getByRole("button", { name: "Exercise Options" }).click();
@@ -298,7 +301,7 @@ test.describe("Equity Grants", () => {
       page.getByRole("alert", { name: "Please add an exercise notice so investors can exercise their options." }),
     ).not.toBeVisible();
     await page.getByRole("link", { name: "add an exercise notice" }).click();
-    await findRichTextEditor(page, "Exercise notice").fill("This is an exercise notice");
+    await page.locator("[contenteditable=true]").fill("This is an exercise notice");
     await page.getByRole("button", { name: "Save changes" }).click();
     await page.goBack();
     await expect(page.getByRole("heading", { name: "Equity grants" })).toBeVisible();

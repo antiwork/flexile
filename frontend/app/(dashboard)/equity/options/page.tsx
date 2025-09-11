@@ -6,6 +6,7 @@ import { Decimal } from "decimal.js";
 import { CircleCheck, Info } from "lucide-react";
 import { forbidden } from "next/navigation";
 import { Fragment, useId, useState } from "react";
+import { useDocumentTemplateQuery } from "@/app/(dashboard)/documents";
 import DetailsModal from "@/app/(dashboard)/equity/grants/DetailsModal";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -29,7 +30,6 @@ import { assertDefined } from "@/utils/assert";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_equity_grant_exercises_path, resend_company_equity_grant_exercise_path } from "@/utils/routes";
-import { useExerciseDataConfig } from ".";
 
 type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 const investorGrantColumnHelper = createColumnHelper<EquityGrant>();
@@ -57,7 +57,7 @@ export default function OptionsPage() {
     eventuallyExercisable: true,
     accepted: true,
   });
-  const { data: exerciseData } = useQuery(useExerciseDataConfig());
+  const { data: exerciseNotice } = useQuery(useDocumentTemplateQuery("exercise_notice"));
   const [selectedEquityGrant, setSelectedEquityGrant] = useState<EquityGrant | null>(null);
   const [exercisableGrants, setExercisableGrants] = useState<EquityGrant[]>([]);
   const [showExerciseModal, setShowExerciseModal] = useState(false);
@@ -114,7 +114,7 @@ export default function OptionsPage() {
         </div>
       ) : (
         <>
-          {company.flags.includes("option_exercising") && exerciseData?.exercise_notice ? (
+          {company.flags.includes("option_exercising") && exerciseNotice?.text ? (
             <>
               {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (
                 <Alert className="mx-4 mb-4">
@@ -200,7 +200,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
     }
     return a.issuedAt.getTime() - b.issuedAt.getTime();
   });
-  const { data: exerciseData } = useQuery(useExerciseDataConfig());
+  const { data: exerciseNotice } = useQuery(useDocumentTemplateQuery("exercise_notice"));
 
   const maxExercisableOptions = [...selectedGrants].reduce((total, [grant]) => total + grant.vestedShares, 0);
 
@@ -235,7 +235,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
     },
   });
 
-  if (!exerciseData?.exercise_notice) return;
+  if (!exerciseNotice?.text) return;
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -347,11 +347,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
           </>
         ) : (
           <>
-            <SignForm
-              content={exerciseData.exercise_notice}
-              signed={state === "signed"}
-              onSign={() => setState("signed")}
-            />
+            <SignForm content={exerciseNotice.text} signed={state === "signed"} onSign={() => setState("signed")} />
             <DialogFooter>
               <MutationButton mutation={submitMutation} disabled={state !== "signed"}>
                 Agree & Submit

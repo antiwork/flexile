@@ -84,6 +84,7 @@ class Company < ApplicationRecord
   has_one :bank_account, -> { alive.order(created_at: :desc) }, class_name: "CompanyStripeAccount"
   has_one_attached :logo, service: public_bucket
   has_one_attached :full_logo
+  has_many :document_templates
 
   validates :name, presence: true, on: :update, if: :name_changed?
   validates :email, presence: true

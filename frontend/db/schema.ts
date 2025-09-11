@@ -23,6 +23,7 @@ import { customAlphabet } from "nanoid";
 import { deterministicEncryptedString, encryptedJson, encryptedString } from "@/lib/encryptedField";
 import {
   BusinessType,
+  DocumentTemplateType,
   DocumentType,
   invoiceStatuses,
   optionGrantIssueDateRelationships,
@@ -514,6 +515,28 @@ export const documents = pgTable(
     index("index_documents_on_user_compliance_info_id").using(
       "btree",
       table.userComplianceInfoId.asc().nullsLast().op("int8_ops"),
+    ),
+  ],
+);
+
+export const documentTemplates = pgTable(
+  "document_templates",
+  {
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
+    documentType: integer("document_type").notNull().$type<DocumentTemplateType>(),
+    text: text().notNull(),
+    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("index_document_templates_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
+    uniqueIndex("index_document_templates_on_company_id_and_document_type").using(
+      "btree",
+      table.companyId.asc().nullsLast().op("int8_ops"),
+      table.documentType.asc().nullsLast().op("text_ops"),
     ),
   ],
 );
@@ -1613,7 +1636,6 @@ export const companies = pgTable(
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
     jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
     inviteLink: varchar("invite_link"),
-    exerciseNotice: text("exercise_notice"),
   },
   (table) => [
     index("index_companies_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),

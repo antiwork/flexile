@@ -371,7 +371,7 @@ const ActionPanel = () => {
                 )}
               />
 
-              {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField />}
+              {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField type="consulting_contract" />}
               <div className="flex flex-col items-end space-y-2">
                 <MutationStatusButton mutation={inviteMutation} type="submit" size="small">
                   Send invite

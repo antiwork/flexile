@@ -42,7 +42,7 @@ export const Editor = ({
   value: string | null | undefined;
   onChange: (value: string | null) => void;
   className?: string;
-} & React.ComponentProps<"div">) => {
+} & Omit<React.ComponentProps<"div">, "onChange">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
 
   const editor = useEditor({

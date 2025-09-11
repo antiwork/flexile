@@ -11,6 +11,13 @@ export enum DocumentType {
   ExerciseNotice,
 }
 
+export enum DocumentTemplateType {
+  ConsultingContract = 0,
+  ExerciseNotice,
+  LetterOfTransmittal,
+  StockOptionAgreement,
+}
+
 export enum BusinessType {
   LLC = 0,
   CCorporation,
