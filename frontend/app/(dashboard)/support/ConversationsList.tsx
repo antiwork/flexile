@@ -1,6 +1,7 @@
 "use client";
 
 import { useConversations, useCreateConversation } from "@helperai/react";
+import { format, isThisYear, isToday, parseISO } from "date-fns";
 import { CircleCheck, Paperclip, Plus, SendIcon, X } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { helperTools } from "@/app/(dashboard)/support/tools";
@@ -19,6 +20,12 @@ import { useIsMobile } from "@/utils/use-mobile";
 interface ConversationsListProps {
   onSelectConversation: (slug: string) => void;
 }
+
+const formatConversationDate = (conversationDate: string) => {
+  const date = parseISO(conversationDate);
+  const pattern = isToday(date) ? "hh:mm a" : isThisYear(date) ? "MMM d" : "MMM d, yyyy";
+  return format(date, pattern);
+};
 
 export const ConversationsList = ({ onSelectConversation }: ConversationsListProps) => {
   const isMobile = useIsMobile();
@@ -92,7 +99,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
 
       <div className="grid gap-4">
         {loading ? (
-          <TableSkeleton columns={3} />
+          <TableSkeleton columns={2} />
         ) : conversations.length === 0 ? (
           <div className="mx-4">
             <Placeholder icon={CircleCheck}>
@@ -101,13 +108,14 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
           </div>
         ) : (
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Subject</TableHead>
-                <TableHead>Messages</TableHead>
-                <TableHead>Last updated</TableHead>
-              </TableRow>
-            </TableHeader>
+            {!isMobile ? (
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Last updated</TableHead>
+                </TableRow>
+              </TableHeader>
+            ) : null}
             <TableBody>
               {conversations.map((conversation) => (
                 <TableRow
@@ -115,20 +123,38 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                   className="cursor-pointer hover:bg-gray-50"
                   onClick={() => onSelectConversation(conversation.slug)}
                 >
-                  <TableCell className={`font-medium ${conversation.isUnread ? "font-bold" : ""}`}>
-                    <div className="flex items-center gap-2">
-                      {conversation.isUnread ? (
-                        <div className="h-2 w-2 flex-shrink-0 rounded-full bg-blue-500" />
-                      ) : null}
-                      {conversation.subject}
-                    </div>
-                  </TableCell>
-                  <TableCell className={conversation.isUnread ? "font-bold" : ""}>
-                    {conversation.messageCount}
-                  </TableCell>
-                  <TableCell className={conversation.isUnread ? "font-bold" : ""}>
-                    {new Date(conversation.latestMessageAt ?? conversation.createdAt).toLocaleDateString()}
-                  </TableCell>
+                  {isMobile ? (
+                    <TableCell className="py-4">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex gap-2">
+                          <div className="flex w-[70vw] items-center gap-2 text-base">
+                            <UnreadDot isUnread={conversation.isUnread} />
+                            <div className={`truncate ${conversation.isUnread ? "font-bold" : "font-medium"}`}>
+                              {conversation.subject}
+                            </div>
+                          </div>
+                          <div className="grow text-right font-[350] text-gray-600">
+                            {formatConversationDate(conversation.latestMessageAt ?? conversation.createdAt)}
+                          </div>
+                        </div>
+                        <div className="w-[calc(100vw-40px)] truncate text-base leading-5 font-[350] text-gray-600">
+                          {conversation.latestMessage}
+                        </div>
+                      </div>
+                    </TableCell>
+                  ) : (
+                    <>
+                      <TableCell className={conversation.isUnread ? "font-bold" : "font-medium"}>
+                        <div className="flex items-center gap-2">
+                          <UnreadDot isUnread={conversation.isUnread} />
+                          {conversation.subject}
+                        </div>
+                      </TableCell>
+                      <TableCell className={conversation.isUnread ? "font-bold" : ""}>
+                        {formatConversationDate(conversation.latestMessageAt ?? conversation.createdAt)}
+                      </TableCell>
+                    </>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -219,3 +245,6 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
     </>
   );
 };
+
+const UnreadDot = ({ isUnread }: { isUnread: boolean }) =>
+  isUnread ? <div className="size-2 flex-shrink-0 rounded-full bg-blue-500" /> : null;

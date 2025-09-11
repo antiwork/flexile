@@ -2,7 +2,7 @@
 <p><strong>Your <%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %> distribution from <%= @company.display_name %> is on hold.</strong></p>
 <% if @withholding_percentage > 0 %>
   <p>Your investment has generated a <%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %> distribution. <strong>After <%= @withholding_percentage %>% U.S. tax withholding, your net amount is <%= cents_format(@net_amount_in_cents, no_cents_if_whole: false) %>.</strong></p>
-  <p>Since your current payout threshold is set to $10.00, we’ll keep your funds in your Flexile account until your total (after taxes) meets or exceeds that amount.</p>
+  <p>Since your current payout threshold is set to <%= cents_format(@user.minimum_dividend_payment_in_cents, no_cents_if_whole: false) %>, we'll keep your funds in your Flexile account until your total (after taxes) meets or exceeds that amount.</p>
 <% else %>
   <p>You’ve earned <%= cents_format(@dividend_amount_in_cents, no_cents_if_whole: false) %> from your investment in <%= @company.display_name %>, but your current <strong>payout threshold is set to <%= cents_format(@user.minimum_dividend_payment_in_cents, no_cents_if_whole: false) %></strong>. Since your balance hasn’t reached that yet, we’ll hold the funds in your Flexile account.</p>
 <% end %>

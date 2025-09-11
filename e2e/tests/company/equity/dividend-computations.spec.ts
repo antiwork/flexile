@@ -39,7 +39,6 @@ test.describe("Dividend Computations", () => {
       { page },
     );
 
-    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page).toHaveURL(/\/equity\/dividend_rounds\/draft\/.+/u);
     await expect(page.getByRole("heading", { name: "Dividend" })).toBeVisible();
     await expect(page.getByText("Dividend distribution is still a draft")).toBeVisible();
@@ -89,7 +88,7 @@ test.describe("Dividend Computations", () => {
         await expect(modal.getByText("Payment date must be at least 10 days in the future")).toBeVisible();
         await expect(modal.getByRole("button", { name: "Create distribution" })).toBeDisabled();
       },
-      { page },
+      { page, assertClosed: false },
     );
   });
 
@@ -121,7 +120,7 @@ test.describe("Dividend Computations", () => {
     await expect(page.getByRole("heading", { name: "Dividend" })).toBeVisible();
     await expect(page.getByText("Dividend distribution is still a draft")).toBeVisible();
     await expect(page.getByRole("button", { name: "Finalize distribution" })).toBeVisible();
-
+    const footerBeforeFinalization = await page.locator("tfoot").textContent();
     await page.getByRole("button", { name: "Finalize distribution" }).click();
 
     await withinModal(
@@ -145,6 +144,10 @@ test.describe("Dividend Computations", () => {
     );
 
     await expect(page).toHaveURL(/\/equity\/dividend_rounds\/round\/.+/u);
+
+    const footerAfterFinalization = await page.locator("tfoot").textContent();
+    expect(footerAfterFinalization).toBe(footerBeforeFinalization);
+
     await page.getByRole("link", { name: "Dividends" }).first().click();
     await expect(draftRow).not.toBeVisible();
 
@@ -198,5 +201,64 @@ test.describe("Dividend Computations", () => {
     await expect(page.getByRole("heading", { name: "Dividend" })).toBeVisible();
     await expect(page.getByText("Dividend distribution is still a draft")).toBeVisible();
     await expect(page.getByRole("button", { name: "Finalize distribution" })).not.toBeVisible();
+  });
+
+  test("displays computation table data correctly", async ({ page }) => {
+    const { company } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+    });
+
+    const { user: lawyerUser } = await usersFactory.create();
+    await companyLawyersFactory.create({
+      companyId: company.id,
+      userId: lawyerUser.id,
+    });
+
+    const dividendComputation = await dividendComputationsFactory.create({
+      companyId: company.id,
+    });
+
+    await login(page, lawyerUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Dividends" }).first().click();
+
+    const draftRow = page
+      .getByRole("row")
+      .filter({
+        has: page.getByText("Draft"),
+      })
+      .filter({
+        has: page.getByText(formatMoney(dividendComputation.totalAmountInUsd)),
+      });
+
+    await expect(draftRow).toBeVisible();
+    await draftRow.click();
+
+    const table = page.locator("table");
+    await expect(table).toBeVisible();
+
+    const row1 = page
+      .getByRole("row")
+      .filter({
+        has: page.getByText("$1,000"),
+      })
+      .filter({
+        has: page.getByText("$20,000"),
+      });
+    const row2 = page
+      .getByRole("row")
+      .filter({
+        has: page.getByText("$2,000"),
+      })
+      .filter({
+        has: page.getByText("$40,000"),
+      });
+    const tableFooter = page.locator("tfoot");
+
+    await expect(row1).toBeVisible();
+    await expect(row2).toBeVisible();
+    await expect(tableFooter).toBeVisible();
+    await expect(tableFooter).toContainText("$3,000");
+    await expect(tableFooter).toContainText("$60,000");
   });
 });
