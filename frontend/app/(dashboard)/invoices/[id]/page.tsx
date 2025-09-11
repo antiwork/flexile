@@ -231,19 +231,19 @@ export default function InvoicePage() {
             </DropdownMenu>
           ) : (
             <>
-              <Button variant="outline" onClick={() => window.print()}>
+              <Button variant="outline" size="small" onClick={() => window.print()}>
                 <Printer className="size-4" />
                 Print
               </Button>
               {user.roles.administrator && isActionable(invoice) ? (
                 <>
-                  <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
+                  <Button variant="outline" size="small" onClick={() => setRejectModalOpen(true)}>
                     <Ban className="size-4" />
                     Reject
                   </Button>
 
                   <ApproveButton
-                    className="border-0 bg-blue-500"
+                    className="border-blue-500 bg-blue-500 hover:border-blue-600 hover:bg-blue-600"
                     invoice={invoice}
                     onApprove={() => router.push(`/invoices`)}
                   />
@@ -252,9 +252,11 @@ export default function InvoicePage() {
               {user.id === invoice.userId ? (
                 <>
                   {invoice.requiresAcceptanceByPayee ? (
-                    <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
+                    <Button size="small" onClick={() => setAcceptPaymentModalOpen(true)}>
+                      Accept payment
+                    </Button>
                   ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                    <Button variant="default" asChild>
+                    <Button variant="default" size="small" asChild>
                       <Link href={`/invoices/${invoice.id}/edit`}>
                         {invoice.status !== "rejected" && <SquarePen className="h-4 w-4" />}
                         {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
@@ -263,18 +265,10 @@ export default function InvoicePage() {
                   ) : null}
 
                   {isDeletable(invoice) ? (
-                    <>
-                      <Button variant="destructive" onClick={() => setDeleteModalOpen(true)} className="">
-                        <Trash2 className="size-4" />
-                        <span>Delete</span>
-                      </Button>
-                      <DeleteModal
-                        open={deleteModalOpen}
-                        onClose={() => setDeleteModalOpen(false)}
-                        onDelete={() => router.push(`/invoices`)}
-                        invoices={[invoice]}
-                      />
-                    </>
+                    <Button variant="destructive" size="small" onClick={() => setDeleteModalOpen(true)} className="">
+                      <Trash2 className="size-4" />
+                      <span>Delete</span>
+                    </Button>
                   ) : null}
                 </>
               ) : null}
