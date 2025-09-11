@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
 import { isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
-import { AlertTriangle, CircleCheck, Copy, Plus } from "lucide-react";
+import { AlertTriangle, CircleCheck, Copy, MoreHorizontalIcon, Plus, UserIcon } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { parseAsString, useQueryState } from "nuqs";
@@ -39,6 +39,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -411,8 +417,6 @@ const ActionPanel = ({
   };
 
   const { update } = useSession();
-  const router = useRouter();
-
   const { mutate: impersonateUser } = useMutation({
     mutationFn: async () => {
       const response = await request({
@@ -424,7 +428,7 @@ const ActionPanel = ({
       });
       const data = z.object({ actor_token: z.string() }).parse(await response.json());
       await update({ actorToken: data.actor_token });
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     },
   });
 
@@ -456,7 +460,6 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex items-center gap-3">
-      <button onClick={() => impersonateUser()}>Impersonate</button>
       <Button onClick={handleIssuePaymentClick}>Issue payment</Button>
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
         <Status variant="critical">Alumni</Status>
@@ -465,6 +468,20 @@ const ActionPanel = ({
           End contract
         </Button>
       ) : null}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="icon">
+            <MoreHorizontalIcon className="size-4" />
+            <span className="sr-only">More options</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => impersonateUser()}>
+            <UserIcon className="size-4" />
+            <span>Impersonate</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };
