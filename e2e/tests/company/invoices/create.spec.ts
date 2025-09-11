@@ -123,7 +123,7 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser, "/invoices/new");
 
     await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[type="file"]').setInputFiles({
+    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
       name: "receipt.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("test expense receipt"),
