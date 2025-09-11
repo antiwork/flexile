@@ -11,14 +11,13 @@ export default function ImpersonatePage() {
 
   useEffect(() => {
     const actorToken = searchParams.get("actor_token");
-    const stop = searchParams.get("stop") === "true";
 
-    if (!actorToken && !stop) {
+    if (!actorToken) {
       window.location.href = "/dashboard";
       return;
     }
 
-    void update({ actorToken: stop ? null : actorToken }).finally(() => {
+    void update({ actorToken: actorToken === "null" ? null : actorToken }).finally(() => {
       window.location.href = "/dashboard";
     });
   }, []);
