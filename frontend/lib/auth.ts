@@ -114,16 +114,28 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
+      if (trigger === "update") {
+        const { actorToken } = z.object({ actorToken: z.string().nullable() }).parse(session);
+        token.actorToken = actorToken;
+      }
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
       if (!user) return token;
-      token.jwt = user.jwt;
+      token.primaryToken = user.jwt;
       token.legalName = user.legalName ?? "";
       token.preferredName = user.preferredName ?? "";
       return token;
     },
     session({ session, token }) {
-      return { ...session, user: { ...session.user, ...token, id: token.sub } };
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          ...token,
+          id: token.sub,
+          jwt: token.primaryToken && (token.actorToken ?? token.primaryToken),
+        },
+      };
     },
     async signIn({ user, account }) {
       if (!account) return false;

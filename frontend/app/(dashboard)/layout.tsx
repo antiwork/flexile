@@ -5,7 +5,7 @@ import { ChevronDown, ChevronRight, LogOut, MessageCircleQuestion, Settings, Spa
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import React from "react";
 import { GettingStarted } from "@/components/GettingStarted";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
@@ -50,6 +50,12 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useUserStore();
   const isDefaultLogo = !company.logo_url || company.logo_url.includes("default-company-logo");
   const { switchCompany } = useSwitchCompany();
+  const { update, data: session } = useSession();
+
+  async function stopImpersonating() {
+    await update({ actorToken: null });
+    router.push("/");
+  }
 
   return (
     <SidebarProvider>
@@ -183,6 +189,13 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                 label="Support center"
                 badge={<SupportBadge />}
               />
+              {session?.user.actorToken ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={stopImpersonating} className="cursor-pointer">
+                    Stop impersonating
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => void signOut({ redirect: false }).then(logout)}

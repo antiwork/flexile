@@ -8,6 +8,8 @@ declare module "next-auth" {
     legalName?: string;
     preferredName?: string;
     jwt: string;
+    primaryToken?: string;
+    actorToken?: string | null;
   }
 
   interface Session {
@@ -18,6 +20,8 @@ declare module "next-auth" {
       legalName?: string;
       preferredName?: string;
       jwt: string;
+      primaryToken?: string;
+      actorToken?: string | null;
     };
   }
 }
@@ -25,6 +29,8 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     jwt?: string;
+    primaryToken?: string;
+    actorToken?: string | null;
     legalName?: string;
     preferredName?: string;
   }

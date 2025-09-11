@@ -108,6 +108,26 @@ export const accept_invite_links_path: ((
 
 /**
  * Generates rails route to
+ * /internal/actor_tokens(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const actor_tokens_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/actor_tokens(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const actor_tokens_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/users/add_role(.:format)
  * @param {any} company_id
  * @param {object | undefined} options

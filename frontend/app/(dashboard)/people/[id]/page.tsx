@@ -7,6 +7,7 @@ import { isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
 import { AlertTriangle, CircleCheck, Copy, Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { parseAsString, useQueryState } from "nuqs";
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import type { DateValue } from "react-aria-components";
@@ -47,7 +48,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
-import { approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
+import { actor_tokens_path, approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 import FormFields, { schema as formSchema } from "../FormFields";
@@ -188,6 +189,7 @@ export default function ContractorPage() {
         headerActions={
           contractor ? (
             <ActionPanel
+              userId={id}
               contractor={contractor}
               setIssuePaymentModalOpen={setIssuePaymentModalOpen}
               setEndModalOpen={setEndModalOpen}
@@ -390,10 +392,12 @@ export default function ContractorPage() {
 }
 
 const ActionPanel = ({
+  userId,
   contractor,
   setIssuePaymentModalOpen,
   setEndModalOpen,
 }: {
+  userId: string;
   contractor: { endedAt: Date | null };
   setIssuePaymentModalOpen: Dispatch<SetStateAction<boolean>>;
   setEndModalOpen: Dispatch<SetStateAction<boolean>>;
@@ -405,6 +409,24 @@ const ActionPanel = ({
   const handleEndContractClick = () => {
     setEndModalOpen(true);
   };
+
+  const { update } = useSession();
+  const router = useRouter();
+
+  const { mutate: impersonateUser } = useMutation({
+    mutationFn: async () => {
+      const response = await request({
+        method: "POST",
+        url: actor_tokens_path(),
+        accept: "json",
+        jsonData: { user_id: userId },
+        assertOk: true,
+      });
+      const data = z.object({ actor_token: z.string() }).parse(await response.json());
+      await update({ actorToken: data.actor_token });
+      router.push("/");
+    },
+  });
 
   return isMobile ? (
     <Dialog>
@@ -434,6 +456,7 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex items-center gap-3">
+      <button onClick={() => impersonateUser()}>Impersonate</button>
       <Button onClick={handleIssuePaymentClick}>Issue payment</Button>
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
         <Status variant="critical">Alumni</Status>

@@ -84,7 +84,7 @@ const __jsr = (
         },
         NIL: {
             define() {
-                // Defined using const __jsr = 
+                // Defined using const __jsr =
             },
             isSupported() {
                 return true;
@@ -560,6 +560,22 @@ export const accept_invite_links_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[
  * @returns {string} route path
  */
 export const accept_invite_links_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"invite_links"],[2,[7,"/"],[2,[6,"accept"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/actor_tokens(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const actor_tokens_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"actor_tokens"],[1,[2,[8,"."],[3,"format"]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/actor_tokens(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const actor_tokens_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"actor_tokens"],[1,[2,[8,"."],[3,"format"]]]]]]]);
 
 /**
  * Generates rails route to
