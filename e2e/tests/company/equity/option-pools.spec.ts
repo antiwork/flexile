@@ -68,4 +68,74 @@ test.describe("Option Pools", () => {
     await expect(page.getByRole("heading", { name: "Option pools" })).toBeVisible();
     await expect(page.getByRole("button", { name: "New option pool" })).not.toBeVisible();
   });
+
+  test("admin can customize exercise periods and they persist", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({ equityEnabled: true });
+    await shareClassesFactory.create({ companyId: company.id, name: "Common" });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Option pools" }).click();
+
+    await page.getByRole("button", { name: "New option pool" }).click();
+    await page.getByLabel("Pool name").fill("Plan with custom exercise windows");
+    await selectComboboxOption(page, "Share class", "Common");
+    await page.getByLabel("Authorized shares").fill("500000");
+
+    await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
+
+    await page.getByLabel("Expiration period").fill("84");
+    await page.getByLabel("Voluntary termination exercise period", { exact: true }).fill("6");
+    await page.getByLabel("Involuntary termination exercise period", { exact: true }).fill("6");
+    await page.getByLabel("Termination with cause exercise period").fill("0");
+    await page.getByLabel("Death exercise period", { exact: true }).fill("24");
+    await page.getByLabel("Disability exercise period").fill("24");
+    await page.getByLabel("Retirement exercise period").fill("24");
+
+    await page.getByRole("button", { name: "Create option pool" }).click();
+
+    await expect(page.getByRole("dialog", { name: "New option pool" })).not.toBeVisible();
+
+    const created = await db.query.optionPools.findFirst({
+      where: eq(optionPools.companyId, company.id),
+      orderBy: (optionPools, { desc }) => [desc(optionPools.id)],
+    });
+    expect(created?.name).toBe("Plan with custom exercise windows");
+    expect(created?.defaultOptionExpiryMonths).toBe(84);
+    expect(created?.voluntaryTerminationExerciseMonths).toBe(6);
+    expect(created?.involuntaryTerminationExerciseMonths).toBe(6);
+    expect(created?.terminationWithCauseExerciseMonths).toBe(0);
+    expect(created?.deathExerciseMonths).toBe(24);
+    expect(created?.disabilityExerciseMonths).toBe(24);
+    expect(created?.retirementExerciseMonths).toBe(24);
+  });
+
+  test("defaults are applied when exercise periods not customized", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({ equityEnabled: true });
+    await shareClassesFactory.create({ companyId: company.id, name: "Common" });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Option pools" }).click();
+
+    await page.getByRole("button", { name: "New option pool" }).click();
+    await page.getByLabel("Pool name").fill("Plan with defaults");
+    await selectComboboxOption(page, "Share class", "Common");
+    await page.getByLabel("Authorized shares").fill("250000");
+    await page.getByRole("button", { name: "Create option pool" }).click();
+
+    await expect(page.getByRole("dialog", { name: "New option pool" })).not.toBeVisible();
+
+    const created = await db.query.optionPools.findFirst({
+      where: eq(optionPools.companyId, company.id),
+      orderBy: (optionPools, { desc }) => [desc(optionPools.id)],
+    });
+    expect(created?.defaultOptionExpiryMonths).toBe(120);
+    expect(created?.voluntaryTerminationExerciseMonths).toBe(120);
+    expect(created?.involuntaryTerminationExerciseMonths).toBe(120);
+    expect(created?.terminationWithCauseExerciseMonths).toBe(0);
+    expect(created?.deathExerciseMonths).toBe(120);
+    expect(created?.disabilityExerciseMonths).toBe(120);
+    expect(created?.retirementExerciseMonths).toBe(120);
+  });
 });
