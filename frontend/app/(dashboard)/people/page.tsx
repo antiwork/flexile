@@ -288,13 +288,13 @@ const ActionPanel = () => {
             <DialogDescription className="sr-only">Invite people to your workspace</DialogDescription>
             <div className="flex flex-col gap-3">
               <DialogClose asChild onClick={() => setShowInviteLinkModal(true)}>
-                <Button size="small" variant="outline">
+                <Button size={isMobile ? "default" : "small"} variant="outline">
                   <LinkIcon className="size-4" />
                   Invite link
                 </Button>
               </DialogClose>
               <DialogClose asChild onClick={() => setShowInviteModal(true)}>
-                <Button size="small">
+                <Button size={isMobile ? "default" : "small"}>
                   <Plus className="size-4" />
                   Add contractor
                 </Button>
@@ -373,7 +373,7 @@ const ActionPanel = () => {
 
               {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField />}
               <div className="flex flex-col items-end space-y-2">
-                <MutationStatusButton mutation={inviteMutation} type="submit" size="small">
+                <MutationStatusButton mutation={inviteMutation} type="submit" size={isMobile ? "default" : "small"}>
                   Send invite
                 </MutationStatusButton>
                 {inviteMutation.isError ? <div className="text-red text-sm">{inviteMutation.error.message}</div> : null}
