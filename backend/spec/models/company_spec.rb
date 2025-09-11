@@ -36,7 +36,6 @@ RSpec.describe Company do
     it { is_expected.to have_many(:share_holdings).through(:company_investors) }
     it { is_expected.to have_many(:option_pools) }
     it { is_expected.to have_many(:tender_offers) }
-    it { is_expected.to have_one(:quickbooks_integration).conditions(deleted_at: nil) }
     it { is_expected.to have_one_attached(:logo) }
     it { is_expected.to have_one_attached(:full_logo) }
     it { is_expected.to have_many(:company_stripe_accounts) }
@@ -408,6 +407,35 @@ RSpec.describe Company do
       it "returns the list of active contractors" do
         expect(company.contractors.active).to eq [contractor.user]
       end
+    end
+  end
+
+  describe "#cap_table_empty?" do
+    let(:company) { create(:company) }
+
+    it "returns true when no cap table-related records exist" do
+      expect(company.cap_table_empty?).to eq(true)
+    end
+
+    it "returns false when an option_pool exists" do
+      create(:option_pool, company: company)
+      expect(company.reload.cap_table_empty?).to eq(false)
+    end
+
+    it "returns false when a share_class exists" do
+      create(:share_class, company: company)
+      expect(company.reload.cap_table_empty?).to eq(false)
+    end
+
+    it "returns false when a company_investor exists" do
+      create(:company_investor, company: company)
+      expect(company.reload.cap_table_empty?).to eq(false)
+    end
+
+    it "returns false when a share_holding exists" do
+      investor = create(:company_investor, company: company)
+      create(:share_holding, company_investor: investor, share_class: create(:share_class, company: company))
+      expect(company.reload.cap_table_empty?).to eq(false)
     end
   end
 

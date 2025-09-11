@@ -39,7 +39,7 @@ export default function FormFields() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Role</FormLabel>
-            <Command shouldFilter={false}>
+            <Command shouldFilter={false} className="overflow-visible">
               <Popover open={!!rolePopoverOpen && filteredRoles.length > 0}>
                 <PopoverAnchor asChild>
                   <FormControl>
@@ -47,6 +47,7 @@ export default function FormFields() {
                       {...field}
                       type="text"
                       autoComplete="off"
+                      className="focus-visible:ring-ring/15 focus-visible:border-gray-300 focus-visible:ring-[3px]"
                       onFocus={() => setRolePopoverOpen(true)}
                       onBlur={() => setRolePopoverOpen(false)}
                       onChange={(e) => {
