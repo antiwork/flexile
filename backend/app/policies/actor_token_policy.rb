@@ -4,10 +4,7 @@ class ActorTokenPolicy < ApplicationPolicy
   alias_method :target_user, :record
 
   def create?
-    return false unless company_administrator? &&
-                        target_user.present? &&
-                        belongs_to_company?
-
+    return false unless company_administrator? && belongs_to_company?
     primary_admin? || !admin?
   end
 

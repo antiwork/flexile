@@ -31,8 +31,7 @@ class JwtService
       JWT.encode(payload, jwt_secret, "HS256")
     end
 
-    # Actor tokens are used to impersonate a user.
-    # They are short lived and used for one-time actions.
+    # Actor tokens are short-lived JWTs used to impersonate a user.
     def generate_actor_token(user)
       payload = {
         user_id: user.id,
