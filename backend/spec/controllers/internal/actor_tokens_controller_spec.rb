@@ -23,7 +23,7 @@ RSpec.describe Internal::ActorTokensController do
 
       it "can create token for another admin" do
         create(:company_administrator, company: company, user: target_user)
-        post :create, params: { user_id: target_user.id }
+        post :create, params: { user_id: target_user.external_id }
 
         expect(response).to have_http_status(:created)
         json_response = response.parsed_body
@@ -33,7 +33,7 @@ RSpec.describe Internal::ActorTokensController do
       it "can create token for non-admin user in company" do
         worker_user = create(:user)
         create(:company_worker, company: company, user: worker_user)
-        post :create, params: { user_id: worker_user.id }
+        post :create, params: { user_id: worker_user.external_id }
 
         expect(response).to have_http_status(:created)
         json_response = response.parsed_body
@@ -45,7 +45,7 @@ RSpec.describe Internal::ActorTokensController do
       it "can create token for non-admin user in company (worker, lawyer, investor)" do
         worker_user = create(:user)
         create(:company_worker, company: company, user: worker_user)
-        post :create, params: { user_id: worker_user.id }
+        post :create, params: { user_id: worker_user.external_id }
 
         expect(response).to have_http_status(:created)
         json_response = response.parsed_body
@@ -55,7 +55,7 @@ RSpec.describe Internal::ActorTokensController do
       it "cannot create token for another admin" do
         admin_user = create(:user)
         create(:company_administrator, company: company, user: admin_user)
-        post :create, params: { user_id: admin_user.id }
+        post :create, params: { user_id: admin_user.external_id }
 
         expect(response).to have_http_status(:forbidden)
       end
@@ -65,20 +65,20 @@ RSpec.describe Internal::ActorTokensController do
       it "returns forbidden for non-admin user" do
         Current.company_administrator = nil
         Current.user = create(:user)
-        post :create, params: { user_id: target_user.id }
+        post :create, params: { user_id: target_user.external_id }
 
         expect(response).to have_http_status(:forbidden)
       end
 
       it "returns forbidden when target user not in company or is in another company" do
         external_user = create(:user)
-        post :create, params: { user_id: external_user.id }
+        post :create, params: { user_id: external_user.external_id }
 
         expect(response).to have_http_status(:forbidden)
 
         other_company = create(:company)
         create(:company_worker, company: other_company, user: external_user)
-        post :create, params: { user_id: external_user.id }
+        post :create, params: { user_id: external_user.external_id }
 
         expect(response).to have_http_status(:forbidden)
       end
