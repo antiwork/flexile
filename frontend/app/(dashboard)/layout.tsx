@@ -4,7 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/r
 import { ChevronDown, ChevronRight, LogOut, MessageCircleQuestion, Settings, Sparkles, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import React from "react";
 import { GettingStarted } from "@/components/GettingStarted";
@@ -43,6 +43,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const pathname = usePathname();
+  const router = useRouter();
   const [showTryEquity, setShowTryEquity] = React.useState(true);
   const [hovered, setHovered] = React.useState(false);
   const canShowTryEquity = user.roles.administrator && !company.equityEnabled;
