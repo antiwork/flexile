@@ -1,6 +1,7 @@
 import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addDays, isWeekend, nextMonday } from "date-fns";
+import { Ban, Info } from "lucide-react";
 import React, { useState } from "react";
 import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -352,6 +353,7 @@ export function StatusDetails({ invoice, className }: { invoice: Invoice; classN
 
   return statusDetails ? (
     <Alert className={cn(className)} {...(invoice.status === "rejected" && { variant: "destructive" })}>
+      {invoice.status === "rejected" ? <Ban /> : <Info />}
       <AlertDescription>{statusDetails}</AlertDescription>
     </Alert>
   ) : null;
