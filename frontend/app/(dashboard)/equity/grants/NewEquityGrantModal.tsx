@@ -235,11 +235,14 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
       <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-medium">New equity grant</DialogTitle>
-          <DialogDescription>Fill in the details below to create an equity grant.</DialogDescription>
+          <DialogDescription className="mb-[-16px]">
+            Fill in the details below to create an equity grant.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={(e) => void submit(e)} className="grid gap-8">
+            <div></div>
             <div className="grid gap-4">
               <h2 className="text-base font-medium">Recipient details</h2>
               <FormField
