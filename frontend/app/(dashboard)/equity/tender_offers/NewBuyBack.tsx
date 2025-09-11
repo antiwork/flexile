@@ -131,7 +131,7 @@ export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) 
           name="attachment"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Upload document package (.zip)</FormLabel>
+              <FormLabel>Document package</FormLabel>
               {attachmentValue instanceof File ? (
                 <div className="border-input flex items-center gap-2 rounded-md border py-2 pl-2">
                   <div className="flex h-full w-10 items-center justify-center rounded-sm bg-blue-50 p-2 text-sm text-blue-600">
