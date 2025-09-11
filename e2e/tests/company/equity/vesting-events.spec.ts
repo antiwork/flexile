@@ -256,7 +256,7 @@ test.describe("Equity Grant Vesting Events", () => {
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
 
     // Fill exercise periods
-    await page.getByRole("button", { name: "Customize post-termination exercise period" }).click();
+    await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
     await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
     await page.locator('input[name="involuntaryTerminationExerciseMonths"]').fill("3");
     await page.locator('input[name="terminationWithCauseExerciseMonths"]').fill("0");

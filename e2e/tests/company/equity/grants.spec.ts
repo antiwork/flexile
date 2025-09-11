@@ -54,7 +54,7 @@ test.describe("Equity Grants", () => {
     await selectComboboxOption(page, "Grant type", "NSO");
     await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
-    await page.getByRole("button", { name: "Customize post-termination exercise period" }).click();
+    await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
 
     // Use more precise selectors focusing on the input fields directly
     await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
@@ -108,7 +108,7 @@ test.describe("Equity Grants", () => {
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
 
     // Fill in required exercise period fields
-    await page.getByRole("button", { name: "Customize post-termination exercise period" }).click();
+    await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
 
     // Use more precise selectors focusing on the input fields directly
     await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
