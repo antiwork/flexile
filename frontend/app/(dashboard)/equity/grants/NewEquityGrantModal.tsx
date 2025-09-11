@@ -235,13 +235,16 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
       <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-medium">New equity grant</DialogTitle>
-          <DialogDescription>Fill in the details below to create an equity grant.</DialogDescription>
+          <DialogDescription className="mb-[-16px]">
+            Fill in the details below to create an equity grant.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={(e) => void submit(e)} className="grid gap-8">
+            <div></div>
             <div className="grid gap-4">
-              <h2 className="text-lg font-medium">Recipient details</h2>
+              <h2 className="text-base font-medium">Recipient details</h2>
               <FormField
                 control={form.control}
                 name="userId"
@@ -289,7 +292,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
             </div>
 
             <div className="grid gap-4">
-              <h2 className="text-lg font-medium">Option grant details</h2>
+              <h2 className="text-base font-medium">Option grant details</h2>
               <FormField
                 control={form.control}
                 name="optionPoolId"
@@ -372,7 +375,109 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                   )}
                 />
               </div>
+              <div className="grid gap-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="flex h-auto w-full items-start justify-between p-0 text-left whitespace-break-spaces hover:bg-transparent"
+                  onClick={() => setShowExercisePeriods(!showExercisePeriods)}
+                >
+                  <h2 className="text-base">Customize post-termination exercise period</h2>
+                  {showExercisePeriods ? (
+                    <ChevronDown className="mt-[3px] size-5" />
+                  ) : (
+                    <ChevronRight className="mt-[3px] size-5" />
+                  )}
+                </Button>
 
+                {showExercisePeriods ? (
+                  <div className="grid gap-4">
+                    <FormField
+                      control={form.control}
+                      name="voluntaryTerminationExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Voluntary termination exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="involuntaryTerminationExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Involuntary termination exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="terminationWithCauseExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Termination with cause exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="deathExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Death exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="disabilityExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Disability exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="retirementExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Retirement exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ) : null}
+              </div>
               <FormField
                 control={form.control}
                 name="boardApprovalDate"
@@ -388,7 +493,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
             </div>
 
             <div className="grid gap-4">
-              <h2 className="text-lg font-medium">Vesting details</h2>
+              <h2 className="text-base font-medium">Vesting details</h2>
               {recipient?.activeContractor ? (
                 <FormField
                   control={form.control}
@@ -506,106 +611,6 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                   )}
                 </>
               )}
-            </div>
-
-            <div className="grid gap-4">
-              <Button
-                type="button"
-                variant="ghost"
-                className="flex h-auto w-full items-center justify-between p-0 text-left hover:bg-transparent"
-                onClick={() => setShowExercisePeriods(!showExercisePeriods)}
-              >
-                <h2 className="text-lg font-medium">Customize post-termination exercise periods</h2>
-                {showExercisePeriods ? <ChevronDown className="size-6" /> : <ChevronRight className="size-6" />}
-              </Button>
-
-              {showExercisePeriods ? (
-                <div className="grid gap-4">
-                  <FormField
-                    control={form.control}
-                    name="voluntaryTerminationExerciseMonths"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Voluntary termination exercise period</FormLabel>
-                        <FormControl>
-                          <NumberInput {...field} suffix="months" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="involuntaryTerminationExerciseMonths"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Involuntary termination exercise period</FormLabel>
-                        <FormControl>
-                          <NumberInput {...field} suffix="months" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="terminationWithCauseExerciseMonths"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Termination with cause exercise period</FormLabel>
-                        <FormControl>
-                          <NumberInput {...field} suffix="months" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="deathExerciseMonths"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Death exercise period</FormLabel>
-                        <FormControl>
-                          <NumberInput {...field} suffix="months" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="disabilityExerciseMonths"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Disability exercise period</FormLabel>
-                        <FormControl>
-                          <NumberInput {...field} suffix="months" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="retirementExerciseMonths"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Retirement exercise period</FormLabel>
-                        <FormControl>
-                          <NumberInput {...field} suffix="months" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              ) : null}
             </div>
 
             <NewDocumentField />
