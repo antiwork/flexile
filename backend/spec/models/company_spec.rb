@@ -800,16 +800,16 @@ RSpec.describe Company do
     end
   end
 
-  describe "#actor_token" do
+  describe "#generate_actor_token" do
     let(:company) { create(:company, :completed_onboarding) }
 
     it "returns a valid JWT token" do
-      token = company.actor_token
+      token = company.generate_actor_token
       expect(token.split(".").length).to eq(3)
     end
 
     it "generates a token that can be decoded back to the primary admin user" do
-      decoded_user = JwtService.user_from_token(company.actor_token)
+      decoded_user = JwtService.user_from_token(company.generate_actor_token)
       expect(decoded_user).to eq(company.primary_admin.user)
     end
   end

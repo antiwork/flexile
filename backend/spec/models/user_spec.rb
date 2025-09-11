@@ -567,16 +567,16 @@ RSpec.describe User do
     end
   end
 
-  describe "#actor_token" do
+  describe "#generate_actor_token" do
     let(:user) { create(:user) }
 
     it "returns a valid JWT token" do
-      token = user.actor_token
+      token = user.generate_actor_token
       expect(token.split(".").length).to eq(3)
     end
 
     it "generates a token that can be decoded back to the user" do
-      decoded_user = JwtService.user_from_token(user.actor_token)
+      decoded_user = JwtService.user_from_token(user.generate_actor_token)
       expect(decoded_user).to eq(user)
     end
   end

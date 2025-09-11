@@ -5,7 +5,7 @@ class Internal::ActorTokensController < Internal::BaseController
 
   def create
     authorize @user, policy_class: ActorTokenPolicy
-    render json: { actor_token: @user.actor_token }, status: :created
+    render json: { actor_token: @user.generate_actor_token }, status: :created
   end
 
   private
