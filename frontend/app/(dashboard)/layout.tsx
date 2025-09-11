@@ -54,7 +54,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   async function stopImpersonating() {
     await update({ actorToken: null });
-    router.push("/");
+    router.push("/dashboard");
   }
 
   return (

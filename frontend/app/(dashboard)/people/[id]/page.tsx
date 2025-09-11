@@ -424,7 +424,7 @@ const ActionPanel = ({
       });
       const data = z.object({ actor_token: z.string() }).parse(await response.json());
       await update({ actorToken: data.actor_token });
-      router.push("/");
+      router.push("/dashboard");
     },
   });
 
