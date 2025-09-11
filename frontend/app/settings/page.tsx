@@ -1,7 +1,7 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { signOut } from "next-auth/react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useCurrentCompany, useCurrentUser } from "@/global";
+import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { request } from "@/utils/request";
@@ -109,9 +109,8 @@ const DetailsSection = () => {
 
 const LeaveWorkspaceSection = () => {
   const user = useCurrentUser();
+  const { logout } = useUserStore();
   const company = useCurrentCompany();
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -136,11 +135,8 @@ const LeaveWorkspaceSection = () => {
       return data;
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      setTimeout(() => {
-        setIsModalOpen(false);
-        router.push("/dashboard");
-      }, 1000);
+      await signOut({ redirect: false }).then(logout);
+      window.location.href = "/login";
     },
     onError: (error: Error) => {
       setErrorMessage(error.message);
