@@ -7,7 +7,6 @@ import { isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
 import { AlertTriangle, CircleCheck, Copy, MoreHorizontalIcon, Plus, UserIcon } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { parseAsString, useQueryState } from "nuqs";
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import type { DateValue } from "react-aria-components";
@@ -416,7 +415,7 @@ const ActionPanel = ({
     setEndModalOpen(true);
   };
 
-  const { update } = useSession();
+  const router = useRouter();
   const { mutate: impersonateUser } = useMutation({
     mutationFn: async () => {
       const response = await request({
@@ -427,8 +426,7 @@ const ActionPanel = ({
         assertOk: true,
       });
       const data = z.object({ actor_token: z.string() }).parse(await response.json());
-      await update({ actorToken: data.actor_token });
-      window.location.href = "/dashboard";
+      router.push(`/impersonate?${new URLSearchParams({ actor_token: data.actor_token })}`);
     },
   });
 

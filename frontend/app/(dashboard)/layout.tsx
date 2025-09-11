@@ -50,12 +50,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useUserStore();
   const isDefaultLogo = !company.logo_url || company.logo_url.includes("default-company-logo");
   const { switchCompany } = useSwitchCompany();
-  const { update, data: session } = useSession();
-
-  async function stopImpersonating() {
-    await update({ actorToken: null });
-    window.location.href = "/dashboard";
-  }
+  const { data: session } = useSession();
 
   return (
     <SidebarProvider>
@@ -192,7 +187,9 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
               {session?.user.actorToken ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={stopImpersonating}
+                    onClick={() => {
+                      router.push(`/impersonate?stop=true`);
+                    }}
                     className="text-destructive hover:text-destructive cursor-pointer"
                   >
                     <UserX className="size-6" />
