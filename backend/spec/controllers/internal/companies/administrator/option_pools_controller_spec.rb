@@ -71,6 +71,53 @@ RSpec.describe Internal::Companies::Administrator::OptionPoolsController do
         expect(response).to have_http_status(:unprocessable_entity)
         expect(response.parsed_body).to include("error" => "error")
       end
+
+      it "returns 422 when authorized_shares is invalid (<= 0)" do
+        post :create, params: {
+          company_id: company.external_id,
+          option_pool: {
+            name: "Invalid Pool",
+            authorized_shares: 0,
+            share_class_id: share_class.id,
+            default_option_expiry_months: 120,
+            voluntary_termination_exercise_months: 120,
+            involuntary_termination_exercise_months: 120,
+            termination_with_cause_exercise_months: 0,
+            death_exercise_months: 120,
+            disability_exercise_months: 120,
+            retirement_exercise_months: 120,
+          },
+        }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body["error"]).to match(/Authorized shares/i)
+      end
+
+
+
+      it "returns error when share class does not belong to company" do
+        other_company = create(:company, equity_enabled: true)
+        foreign_share_class = create(:share_class, company: other_company)
+
+        post :create, params: {
+          company_id: company.external_id,
+          option_pool: {
+            name: "Foreign SC",
+            authorized_shares: 10,
+            share_class_id: foreign_share_class.id,
+            default_option_expiry_months: 120,
+            voluntary_termination_exercise_months: 120,
+            involuntary_termination_exercise_months: 120,
+            termination_with_cause_exercise_months: 0,
+            death_exercise_months: 120,
+            disability_exercise_months: 120,
+            retirement_exercise_months: 120,
+          },
+        }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body["error"]).to match(/Share class must be selected/i)
+      end
     end
 
     context "when unauthorized" do
