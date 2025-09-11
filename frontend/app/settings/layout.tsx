@@ -92,7 +92,7 @@ function SettingsLayout({ children }: { children: React.ReactNode }) {
               <span className="font-medium">Back to app</span>
             </Link>
           </div>
-          <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-16">{children}</main>
+          <main className="mx-auto w-full max-w-3xl flex-1 p-6 pb-32 md:p-16">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>

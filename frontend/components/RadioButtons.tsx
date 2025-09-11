@@ -22,7 +22,7 @@ function RadioButtons<T extends string | number>({
       {options.map((option) => (
         <Label
           key={option.label}
-          className={`border-input hover:bg-accent hover:text-accent-foreground has-[:checked]:text-primary flex cursor-pointer items-center gap-3 rounded-md border bg-transparent p-4 transition-[color,background-color,box-shadow,border-color] has-[:checked]:border-blue-600 has-[:checked]:bg-blue-500/10 ${ariaInvalid ? "border-destructive ring-destructive/20 has-[:checked]:border-destructive ring-2" : ""} ${disabled ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
+          className={`has-[:focus-visible]:ring-ring/15 border-input hover:bg-accent hover:text-accent-foreground has-[:checked]:text-primary flex h-9 cursor-pointer items-center gap-3 rounded-md border bg-transparent p-3 transition-[color,background-color,box-shadow,border-color] outline-none has-[:checked]:border-blue-600 has-[:checked]:bg-blue-500/10 has-[:focus-visible]:ring-[3px] ${ariaInvalid ? "border-destructive ring-destructive/20 has-[:checked]:border-destructive ring-2" : ""} ${disabled ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
         >
           <input
             type="radio"
@@ -35,11 +35,11 @@ function RadioButtons<T extends string | number>({
           />
           {option.description ? (
             <div>
-              <div className="font-medium">{option.label}</div>
+              <div>{option.label}</div>
               <span className="text-muted-foreground text-sm leading-none">{option.description}</span>
             </div>
           ) : (
-            <span className="font-medium">{option.label}</span>
+            <span>{option.label}</span>
           )}
         </Label>
       ))}
