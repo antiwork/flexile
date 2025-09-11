@@ -4,7 +4,7 @@ import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 
-test.describe("Company admin impersonation", () => {
+test.describe("Impersonation", () => {
   test("admin can impersonate a worker", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
     const { user: worker } = await usersFactory.create();
