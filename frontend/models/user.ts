@@ -30,6 +30,7 @@ const companySchema = z.object({
   contractorCount: z.number().nullable(),
   investorCount: z.number().nullable(),
   primaryAdminName: z.string().nullable(),
+  primaryAdminId: z.string(),
   isTrusted: z.boolean(),
   externalId: z.string(),
   checklistItems: z.array(

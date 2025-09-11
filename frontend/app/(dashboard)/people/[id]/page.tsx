@@ -415,6 +415,7 @@ const ActionPanel = ({
     setEndModalOpen(true);
   };
 
+  const canImpersonate = !!useCurrentUser().roles.administrator;
   const router = useRouter();
   const { mutate: impersonateUser } = useMutation({
     mutationFn: async () => {
@@ -474,10 +475,12 @@ const ActionPanel = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => impersonateUser()}>
-            <UserIcon className="size-4" />
-            <span>Impersonate</span>
-          </DropdownMenuItem>
+          {canImpersonate ? (
+            <DropdownMenuItem onSelect={() => impersonateUser()}>
+              <UserIcon className="size-4" />
+              <span>Impersonate</span>
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
