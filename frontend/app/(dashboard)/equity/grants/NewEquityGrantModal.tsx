@@ -610,6 +610,106 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
               )}
             </div>
 
+            <div className="grid gap-4">
+              <Button
+                type="button"
+                variant="ghost"
+                className="flex h-auto w-full items-center justify-between p-0 text-left hover:bg-transparent"
+                onClick={() => setShowExercisePeriods(!showExercisePeriods)}
+              >
+                <h2 className="text-lg font-medium">Customize post-termination exercise periods</h2>
+                {showExercisePeriods ? <ChevronDown className="size-6" /> : <ChevronRight className="size-6" />}
+              </Button>
+
+              {showExercisePeriods ? (
+                <div className="grid gap-4">
+                  <FormField
+                    control={form.control}
+                    name="voluntaryTerminationExerciseMonths"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Voluntary termination exercise period</FormLabel>
+                        <FormControl>
+                          <NumberInput {...field} suffix="months" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="involuntaryTerminationExerciseMonths"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Involuntary termination exercise period</FormLabel>
+                        <FormControl>
+                          <NumberInput {...field} suffix="months" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="terminationWithCauseExerciseMonths"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Termination with cause exercise period</FormLabel>
+                        <FormControl>
+                          <NumberInput {...field} suffix="months" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="deathExerciseMonths"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Death exercise period</FormLabel>
+                        <FormControl>
+                          <NumberInput {...field} suffix="months" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="disabilityExerciseMonths"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Disability exercise period</FormLabel>
+                        <FormControl>
+                          <NumberInput {...field} suffix="months" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="retirementExerciseMonths"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Retirement exercise period</FormLabel>
+                        <FormControl>
+                          <NumberInput {...field} suffix="months" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              ) : null}
+            </div>
+
             <NewDocumentField />
 
             {form.formState.errors.root ? (
@@ -621,7 +721,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
             ) : null}
 
             <div className="flex justify-end">
-              <MutationStatusButton type="submit" mutation={createEquityGrant} disabled={!isFormValid}>
+              <MutationStatusButton type="submit" size="small" mutation={createEquityGrant} disabled={!isFormValid}>
                 Create grant
               </MutationStatusButton>
             </div>
