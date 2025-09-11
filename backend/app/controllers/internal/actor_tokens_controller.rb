@@ -1,9 +1,16 @@
 # frozen_string_literal: true
 
 class Internal::ActorTokensController < Internal::BaseController
+  before_action :set_user!, only: [:create]
+
   def create
-    user = User.find_by(external_id: params[:user_id]) || e404
-    authorize user, policy_class: ActorTokenPolicy
-    render json: { actor_token: user.actor_token }, status: :created
+    authorize @user, policy_class: ActorTokenPolicy
+    render json: { actor_token: @user.actor_token }, status: :created
   end
+
+  private
+    def set_user!
+      @user = User.find_by!(external_id: params[:user_id])
+      e404 if @user.nil? || !@user.all_companies.include?(Current.company)
+    end
 end
