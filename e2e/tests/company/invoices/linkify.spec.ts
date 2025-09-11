@@ -34,31 +34,26 @@ test.describe("invoice linkify", () => {
     await page.getByPlaceholder("Description").fill("Initial work");
     await page.getByLabel("Hours / Qty").fill("01:00");
 
-    // Include http(s), www, email, and trailing punctuation
     const notes = "See https://example.com/docs). Also visit www.flexile.com, or email hi@example.com.";
     await page.getByPlaceholder("Enter notes about your invoice (optional)").fill(notes);
 
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    // Find created invoice and navigate to its page
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
 
     await page.goto(`/invoices/${invoice.externalId}`);
 
-    // https link should exclude trailing ")" and have correct href
     const httpsLink = page.getByRole("link", { name: "https://example.com/docs" });
     await expect(httpsLink).toHaveAttribute("href", "https://example.com/docs");
     await expect(httpsLink).toHaveAttribute("target", "_blank");
     await expect(httpsLink).toHaveAttribute("rel", /noopener/u);
 
-    // www.* should become https://
     const wwwLink = page.getByRole("link", { name: "www.flexile.com" });
     await expect(wwwLink).toHaveAttribute("href", "https://www.flexile.com");
 
-    // email should become mailto:
     const emailLink = page.getByRole("link", { name: "hi@example.com" });
     await expect(emailLink).toHaveAttribute("href", "mailto:hi@example.com");
   });
@@ -79,11 +74,9 @@ test.describe("invoice linkify", () => {
 
     await page.goto(`/invoices/${invoice.externalId}`);
 
-    // Link from the description should be rendered and exclude trailing ")"
     const descLink = page.getByRole("link", { name: "www.example.org/test" });
     await expect(descLink).toHaveAttribute("href", "https://www.example.org/test");
 
-    // The trailing punctuation should not be part of the link; surrounding text should still render
     await expect(page.getByText("Then follow-up")).toBeVisible();
   });
 });
