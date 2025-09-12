@@ -2,7 +2,12 @@
 
 class ActorTokenPolicy < ApplicationPolicy
   def create?
-    company_administrator? &&
-    (company.primary_admin.user_id == user.id || !record.company_administrator_for?(company))
+    return false unless company_administrator?
+
+    # Primary admin can impersonate anyone
+    return true if company.primary_admin.user_id == user.id
+
+    # Regular admins can only impersonate non-admins
+    !record.company_administrator_for?(company)
   end
 end
