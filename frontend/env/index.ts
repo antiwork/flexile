@@ -24,6 +24,10 @@ const env = z
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     WISE_PROFILE_ID: z.string(),
     WISE_API_KEY: z.string(),
+    HELPER_URLS: z
+      .string()
+      .default("https://help.flexile.com wss://xmrztjqxvugqpgvxpmzz.supabase.co/realtime/v1/websocket")
+      .transform((urls) => urls.split(/\s+/u)),
     HELPER_HMAC_SECRET: z.string(),
     API_SECRET_TOKEN: z.string(),
     NEXTAUTH_SECRET: z.string(),

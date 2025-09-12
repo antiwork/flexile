@@ -90,6 +90,14 @@ bundle exec rspec spec/system/roles/show_spec.rb:7
 pnpm playwright test
 ```
 
+## Extending Content Security Policy
+
+The middleware applies a strict Content Security Policy (CSP). URLs that the
+frontend needs to connect to (e.g. the help center or websocket services) are
+configured via the `HELPER_URLS` setting in `frontend/env`. Add any additional
+service URLs to this space-separated environment variable and restart the app
+to include them in the CSP's `connect-src` directive.
+
 ## Services configuration
 
 <details>
