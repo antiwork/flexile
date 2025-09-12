@@ -93,7 +93,7 @@ export default function ImpersonatePage() {
     );
   }
 
-  const isCurrentlyImpersonating = Boolean(session?.impersonation);
+  const isCurrentlyImpersonating = Boolean(session.impersonation);
 
   return (
     <div className="container mx-auto max-w-md py-8">
@@ -114,7 +114,7 @@ export default function ImpersonatePage() {
             <div className="space-y-4">
               <Alert>
                 <AlertDescription>
-                  <strong>Impersonating:</strong> {session?.impersonation?.user?.email || "Unknown"}
+                  <strong>Impersonating:</strong> {session.impersonation?.user.email || "Unknown"}
                 </AlertDescription>
               </Alert>
               <Button

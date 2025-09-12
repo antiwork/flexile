@@ -235,7 +235,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="border-b border-orange-200 bg-orange-100 px-4 py-2 text-sm text-orange-800">
               <div className="flex items-center justify-between">
                 <span>
-                  <strong>Impersonating:</strong> {session?.impersonation?.user?.email || "Unknown"}
+                  <strong>Impersonating:</strong> {session?.impersonation?.user.email || "Unknown"}
                 </span>
                 <button
                   onClick={() => void handleStopImpersonation()}
