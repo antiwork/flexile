@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { Suspense, useEffect } from "react";
 import PublicLayout from "@/app/(public)/layout";
 
@@ -17,18 +17,22 @@ export default function ImpersonatePage() {
 
 function SessionSetup() {
   const searchParams = useSearchParams();
-  const { update, status, data: session } = useSession({ required: true });
+  const { update, status, data: session } = useSession();
   const param = searchParams.get("actor_token");
   const actorToken = param === "null" ? null : param;
 
   useEffect(() => {
     if (status === "loading") return;
-    if (!param || actorToken === session.user.actorToken) {
+    if (!param || actorToken === session?.user.actorToken) {
       window.location.href = "/dashboard";
       return;
     }
 
-    void update({ actorToken });
+    if (status === "unauthenticated") void signIn("impersonation", { actorToken });
+    else void update({ actorToken });
+    // If this is an impersonation-only session (no primary token present),
+    // fully sign the user out to prevent leaving a dangling impersonation session.
+    if (!session?.user.primaryToken && actorToken === null) void signOut({ redirect: false });
   }, [status]);
 
   return (

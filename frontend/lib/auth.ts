@@ -99,6 +99,17 @@ export const authOptions = {
         }
       },
     }),
+    CredentialsProvider({
+      id: "impersonation",
+      credentials: {
+        actorToken: { type: "text" },
+      },
+      authorize(credentials) {
+        return {
+          actorToken: assertDefined(credentials?.actorToken),
+        };
+      },
+    }),
     ExternalProvider(
       GoogleProvider({
         clientId: env.GOOGLE_CLIENT_ID,
@@ -118,10 +129,12 @@ export const authOptions = {
       if (trigger === "update" && session) {
         const { actorToken } = z.object({ actorToken: z.string().nullable() }).parse(session);
         token.actorToken = actorToken;
+      } else if (trigger === "signIn" && user.actorToken) {
+        token.actorToken = user.actorToken;
       }
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
       if (!user) return token;
-      token.primaryToken = user.jwt;
+      if (user.jwt) token.primaryToken = user.jwt;
       token.legalName = user.legalName ?? "";
       token.preferredName = user.preferredName ?? "";
       return token;
@@ -133,7 +146,7 @@ export const authOptions = {
           ...session.user,
           ...token,
           id: token.sub,
-          jwt: token.primaryToken && (token.actorToken ?? token.primaryToken),
+          jwt: token.actorToken ?? token.primaryToken,
         },
       };
     },
