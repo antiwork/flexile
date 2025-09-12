@@ -29,6 +29,7 @@ export const logout = async (page: Page) => {
   if (!page.url().includes("/invoices")) {
     // Navigate to invoices page to ensure we're on a dashboard page with sidebar
     await page.goto("/invoices");
+    await page.waitForLoadState("networkidle");
   }
   await page.getByRole("button", { name: "Log out" }).first().click();
 
