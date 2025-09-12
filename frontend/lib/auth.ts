@@ -92,7 +92,7 @@ export const authOptions = {
             name: data.user.name ?? "",
             legalName: data.user.legal_name ?? "",
             preferredName: data.user.preferred_name ?? "",
-            jwt: data.jwt,
+            primaryToken: data.jwt,
           };
         } catch {
           return null;
@@ -105,8 +105,9 @@ export const authOptions = {
         actorToken: { type: "text" },
       },
       authorize(credentials) {
+        const { actorToken } = z.object({ actorToken: z.string() }).parse(credentials);
         return {
-          actorToken: assertDefined(credentials?.actorToken),
+          actorToken,
         };
       },
     }),
@@ -134,7 +135,7 @@ export const authOptions = {
       }
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
       if (!user) return token;
-      if (user.jwt) token.primaryToken = user.jwt;
+      if (user.primaryToken) token.primaryToken = user.primaryToken;
       token.legalName = user.legalName ?? "";
       token.preferredName = user.preferredName ?? "";
       return token;
@@ -179,7 +180,7 @@ export const authOptions = {
           })
           .parse(await response.json());
 
-        user.jwt = data.jwt;
+        user.primaryToken = data.jwt;
         user.legalName = data.user.legal_name ?? "";
         user.preferredName = data.user.preferred_name ?? "";
 

@@ -7,20 +7,19 @@ declare module "next-auth" {
     name?: string;
     legalName?: string;
     preferredName?: string;
-    jwt?: string;
+    primaryToken?: string;
     actorToken?: string;
   }
 
   interface Session {
     user: {
-      id: string;
-      email: string;
-      name: string;
+      email?: string;
+      name?: string;
       legalName?: string;
       preferredName?: string;
-      jwt: string;
       primaryToken?: string;
       actorToken?: string | null;
+      jwt: string;
     };
   }
 }
