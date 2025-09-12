@@ -68,7 +68,7 @@ export default function Buybacks() {
       )}
 
       <Dialog open={showBuyBackModal} onOpenChange={setShowBuyBackModal}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>New buyback</DialogTitle>
           </DialogHeader>

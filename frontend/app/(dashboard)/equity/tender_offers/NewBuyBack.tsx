@@ -199,7 +199,7 @@ export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) 
         />
 
         <MutationStatusButton
-          className="justify-self-end"
+          className="w-full justify-self-end md:w-fit"
           type="submit"
           size="small"
           mutation={createMutation}
