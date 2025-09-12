@@ -11,6 +11,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_invoice_path, reject_company_invoices_path } from "@/utils/routes";
+import { useIsMobile } from "@/utils/use-mobile";
 
 type Invoice = RouterOutput["invoices"]["list"][number] | RouterOutput["invoices"]["get"];
 export const EDITABLE_INVOICE_STATES: Invoice["status"][] = ["received", "rejected"];
@@ -152,11 +153,12 @@ export const ApproveButton = ({
   const company = useCurrentCompany();
   const approveInvoices = useApproveInvoices(onApprove);
   const pay = useIsPayable()(invoice);
+  const isMobile = useIsMobile();
 
   return (
     <MutationButton
       className={className}
-      size="small"
+      size={isMobile ? "default" : "small"}
       mutation={approveInvoices}
       param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
       successText={pay ? "Payment initiated" : "Approved!"}

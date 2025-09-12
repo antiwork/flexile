@@ -17,13 +17,14 @@ import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import { request } from "@/utils/request";
 import { company_invite_link_path, reset_company_invite_link_path } from "@/utils/routes";
+import { useIsMobile } from "@/utils/use-mobile";
 
 const inviteLinkSchema = z.object({ invite_link: z.string() });
 const InviteLinkModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
   const [showResetLinkModal, setShowResetLinkModal] = useState(false);
-
+  const isMobile = useIsMobile();
   const { data: invite } = useQuery({
     queryKey: ["companyInviteLink", company.id],
     queryFn: async () => {
@@ -65,10 +66,10 @@ const InviteLinkModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
             <Input className="text-foreground text-sm" readOnly value={inviteLink} aria-label="Link" />
           </div>
           <DialogFooter>
-            <Button variant="outline" size="small" onClick={() => setShowResetLinkModal(true)}>
+            <Button variant="outline" size={isMobile ? "default" : "small"} onClick={() => setShowResetLinkModal(true)}>
               Reset link
             </Button>
-            <CopyButton aria-label="Copy" size="small" copyText={inviteLink}>
+            <CopyButton aria-label="Copy" size={isMobile ? "default" : "small"} copyText={inviteLink}>
               <Copy className="size-4" />
               <span>Copy</span>
             </CopyButton>
