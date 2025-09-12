@@ -115,7 +115,7 @@ export const authOptions = {
   },
   callbacks: {
     jwt({ token, user, trigger, session }) {
-      if (trigger === "update") {
+      if (trigger === "update" && session) {
         const { actorToken } = z.object({ actorToken: z.string().nullable() }).parse(session);
         token.actorToken = actorToken;
       }
