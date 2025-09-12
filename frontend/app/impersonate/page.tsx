@@ -8,20 +8,22 @@ import PublicLayout from "@/app/(public)/layout";
 export default function ImpersonatePage() {
   return (
     <Suspense>
-      <ImpersonationSessionSetup />
+      <PublicLayout>
+        <SessionSetup />
+      </PublicLayout>
     </Suspense>
   );
 }
 
-function ImpersonationSessionSetup() {
+function SessionSetup() {
   const searchParams = useSearchParams();
-  const { update, status, data: session } = useSession();
+  const { update, status, data: session } = useSession({ required: true });
   const param = searchParams.get("actor_token");
   const actorToken = param === "null" ? null : param;
 
   useEffect(() => {
     if (status === "loading") return;
-    if (!param || actorToken === session?.user.actorToken) {
+    if (!param || actorToken === session.user.actorToken) {
       window.location.href = "/dashboard";
       return;
     }
@@ -30,11 +32,9 @@ function ImpersonationSessionSetup() {
   }, [status]);
 
   return (
-    <PublicLayout>
-      <div className="flex flex-col items-center rounded-xl bg-white p-8 shadow-lg">
-        <div className="border-muted mb-4 size-8 animate-spin rounded-full border-4 border-t-black" />
-        <div className="text-md font-semibold">Setting up your session...</div>
-      </div>
-    </PublicLayout>
+    <div className="flex flex-col items-center rounded-xl bg-white p-8 shadow-lg">
+      <div className="border-muted mb-4 size-8 animate-spin rounded-full border-4 border-t-black" />
+      <div className="text-md font-semibold">Setting up your session...</div>
+    </div>
   );
 }
