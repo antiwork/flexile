@@ -682,7 +682,7 @@ const TasksModal = ({
         <DialogHeader>
           <DialogTitle className="max-md:text-base max-md:leading-5 max-md:font-medium">{invoice.billFrom}</DialogTitle>
         </DialogHeader>
-        <section className="py-4">
+        <section>
           <StatusDetails invoice={invoice} className="mb-4" />
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
@@ -721,7 +721,7 @@ const TasksModal = ({
                 <Separator />
               </>
             ) : null}
-            <div className="flex justify-between gap-2 font-medium">
+            <div className="flex justify-between gap-2 pb-4 font-medium">
               <div>Payout total</div>
               <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
             </div>
