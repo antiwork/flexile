@@ -59,7 +59,8 @@ interface ImpersonationRequestBody {
 }
 
 // Helper type for session with impersonation
-type SessionWithImpersonation = Session & {
+type SessionWithImpersonation = {
+  user: Session["user"];
   impersonation?: {
     user: {
       email: string;
