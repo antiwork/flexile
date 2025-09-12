@@ -224,14 +224,14 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <span>Stop impersonation</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ) : (
+              ) : user.roles.administrator ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton onClick={() => router.push("/admin/impersonate")} className="cursor-pointer">
                     <UserCheck className="size-6" />
                     <span>Impersonate</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )}
+              ) : null}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => void signOut({ redirect: false }).then(logout)}
