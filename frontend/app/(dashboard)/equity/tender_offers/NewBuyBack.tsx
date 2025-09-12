@@ -2,18 +2,21 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate } from "@internationalized/date";
 import { useMutation } from "@tanstack/react-query";
-import React from "react";
+import { CloudUpload, Trash2 } from "lucide-react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import DatePicker from "@/components/DatePicker";
+import { linkClasses } from "@/components/Link";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
+import Placeholder from "@/components/Placeholder";
 import { Editor as RichTextEditor } from "@/components/RichText";
+import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
-import { md5Checksum } from "@/utils";
+import { cn, formatFileSize, md5Checksum } from "@/utils";
 
 const formSchema = z.object({
   startDate: z.instanceof(CalendarDate, { message: "This field is required." }),
@@ -29,10 +32,13 @@ type NewBuybackFormProps = {
 
 export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) {
   const company = useCurrentCompany();
+  const [isDragging, setIsDragging] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
   });
+
+  const attachmentValue = form.watch("attachment");
 
   const createUploadUrl = trpc.files.createDirectUploadUrl.useMutation();
   const createTenderOffer = trpc.tenderOffers.create.useMutation();
@@ -126,9 +132,49 @@ export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) 
           render={({ field }) => (
             <FormItem>
               <FormLabel>Document package</FormLabel>
-              <FormControl>
-                <Input type="file" accept="application/zip" onChange={(e) => field.onChange(e.target.files?.[0])} />
-              </FormControl>
+              {attachmentValue instanceof File ? (
+                <div className="border-input flex items-center gap-2 rounded-md border py-2 pl-2">
+                  <div className="flex h-full w-10 items-center justify-center rounded-sm bg-blue-50 p-2 text-sm text-blue-600">
+                    ZIP
+                  </div>
+                  <div>
+                    <p>{attachmentValue.name}</p>
+                    <p className="text-muted-foreground text-sm">{formatFileSize(attachmentValue.size)}</p>
+                  </div>
+                  <Button
+                    variant="link"
+                    size="icon"
+                    className="ml-auto hover:text-red-600"
+                    onClick={() => field.onChange("")}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label
+                  className="relative"
+                  onDragEnter={() => setIsDragging(true)}
+                  onDragLeave={() => setIsDragging(false)}
+                >
+                  <Placeholder
+                    icon={CloudUpload}
+                    className={cn("border-2", { "border-dashed border-blue-500 bg-blue-50": isDragging })}
+                  >
+                    <b>
+                      Drag and drop or <span className={cn(linkClasses, "text-blue-500")}>click to browse</span> your
+                      ZIP file here
+                    </b>
+                  </Placeholder>
+                  <FormControl>
+                    <input
+                      type="file"
+                      accept="application/zip"
+                      className="absolute inset-0 size-full cursor-pointer opacity-0"
+                      onChange={(e) => field.onChange(e.target.files?.[0])}
+                    />
+                  </FormControl>
+                </label>
+              )}
               <FormMessage />
             </FormItem>
           )}

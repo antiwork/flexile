@@ -33,9 +33,7 @@ test.describe("Equity Grants", () => {
       userId: projectBasedUser.id,
     });
     await optionPoolsFactory.create({ companyId: company.id });
-    await login(page, adminUser);
-    await page.getByRole("button", { name: "Equity" }).click();
-    await page.getByRole("link", { name: "Equity grants" }).click();
+    await login(page, adminUser, "/equity/grants");
 
     await page.getByRole("button", { name: "New grant" }).click();
     await expect(page.getByLabel("Number of options")).toHaveValue("10000");
@@ -56,7 +54,7 @@ test.describe("Equity Grants", () => {
     await selectComboboxOption(page, "Grant type", "NSO");
     await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
-    await page.getByRole("button", { name: "Customize post-termination exercise period" }).click();
+    await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
 
     // Use more precise selectors focusing on the input fields directly
     await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
@@ -110,7 +108,7 @@ test.describe("Equity Grants", () => {
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
 
     // Fill in required exercise period fields
-    await page.getByRole("button", { name: "Customize post-termination exercise period" }).click();
+    await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
 
     // Use more precise selectors focusing on the input fields directly
     await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
@@ -146,10 +144,11 @@ test.describe("Equity Grants", () => {
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "10/15/2024");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Software development work");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
+      page.getByRole("button", { name: "Send invoice" }).click(),
+    ]);
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
@@ -167,10 +166,11 @@ test.describe("Equity Grants", () => {
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await fillDatePicker(page, "Date", "11/01/2024");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Promotional video production work");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
+      page.getByRole("button", { name: "Send invoice" }).click(),
+    ]);
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
@@ -200,8 +200,6 @@ test.describe("Equity Grants", () => {
       },
       { page },
     );
-
-    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Cancel" })).not.toBeVisible();
     expect(
       (await db.query.equityGrants.findFirst({ where: eq(equityGrants.id, equityGrant.id) }).then(takeOrThrow))
@@ -272,11 +270,15 @@ test.describe("Equity Grants", () => {
 
     // Open the modal
     await page.getByRole("button", { name: "New grant" }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
 
-    // Test that estimated value is not shown when FMV share price is missing
-    await page.getByLabel("Number of options").fill("1000");
-    await expect(page.getByText("Estimated value:")).not.toBeVisible();
+    await withinModal(
+      async () => {
+        await page.getByLabel("Number of options").fill("1000");
+        // Test that estimated value is not shown when FMV share price is missing
+        await expect(page.getByText("Estimated value:")).not.toBeVisible();
+      },
+      { page, assertClosed: false },
+    );
   });
 
   test("shows exercise notice alert when no exercise notice is present", async ({ page }) => {

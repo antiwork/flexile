@@ -146,10 +146,9 @@ RSpec.describe FinancialReportCsvService do
       csv = result["dividends-#{expected_report_date}.csv"]
       rows = CSV.parse(csv)
 
-      expected_headers = ["Date initiated", "Date paid", "Client name", "Dividend round ID", "Dividend ID",
-                          "Investor name", "Investor email", "Number of shares", "Dividend amount (USD)", "Processor",
+      expected_headers = ["Date paid", "Client name", "Investor name", "Investor email", "Dividend payment ID", "Dividend amount (USD)", "Processor",
                           "Transfer ID", "Total transaction amount (USD)", "Net amount (USD)", "Transfer fee (USD)", "Tax withholding percentage",
-                          "Tax withheld", "Flexile fee (USD)", "Dividend round status"]
+                          "Tax withheld", "Flexile fee (USD)"]
 
       expect(rows[0]).to eq(expected_headers)
     end
@@ -163,12 +162,12 @@ RSpec.describe FinancialReportCsvService do
       expect(rows.length).to eq(3) # header + data + totals
 
       data_row = rows[1]
-      expect(data_row[2]).to eq("TestCo")
-      expect(data_row[5]).to eq("Jane Investor")
-      expect(data_row[6]).to eq("jane@example.com")
-      expect(data_row[7]).to eq("24")
-      expect(data_row[8]).to eq("250.25")
-      expect(data_row[9]).to eq("wise")
+      expect(data_row[1]).to eq("TestCo")
+      expect(data_row[2]).to eq("Jane Investor")
+      expect(data_row[3]).to eq("jane@example.com")
+      expect(data_row[4]).to eq(dividend_payment.id.to_s)
+      expect(data_row[5]).to eq("250.25")
+      expect(data_row[6]).to eq("wise")
     end
 
     it "includes totals row when dividend data exists" do
@@ -181,8 +180,7 @@ RSpec.describe FinancialReportCsvService do
 
       totals_row = rows.last
       expect(totals_row[0]).to eq("TOTAL")
-      expect(totals_row[7]).to be_present # Total shares
-      expect(totals_row[8]).to be_present # Total dividend amount
+      expect(totals_row[5]).to be_present # Total dividend amount
     end
 
     it "only shows headers when no dividend data exists" do
@@ -238,7 +236,7 @@ RSpec.describe FinancialReportCsvService do
 
       dividend_row = dividend_rows.first
       expect(dividend_row[2]).to eq("TestCo")
-      expect(dividend_row[3]).to include("Dividend ##{dividend.id} - Jane Investor")
+      expect(dividend_row[3]).to include("Dividend Payment #")
       expect(dividend_row[4]).to eq("250.25")
     end
 
@@ -316,6 +314,87 @@ RSpec.describe FinancialReportCsvService do
       rows = CSV.parse(csv)
 
       expect(rows.length).to eq(1)
+    end
+  end
+
+  describe "consolidated dividend payments" do
+    context "when multiple dividends of the same investor are batched into a single payment" do
+      let(:start_date) { Date.new(2025, 9, 1) }
+      let(:end_date) { start_date.end_of_month }
+      let(:report_date) { start_date.strftime("%B %Y") }
+
+      let!(:dividend_round) { create(:dividend_round, company:, issued_at: Date.new(2025, 9, 1), status: "Paid") }
+      let!(:dividend1) do
+        create(:dividend,
+               company:,
+               company_investor:,
+               dividend_round:,
+               total_amount_in_cents: 25025,
+               net_amount_in_cents: 23000,
+               number_of_shares: 24,
+               withholding_percentage: 5,
+               withheld_tax_cents: 2025,
+               paid_at: Date.new(2025, 9, 5),
+               status: "Paid")
+      end
+      let!(:dividend2) do
+        create(:dividend,
+               company:,
+               company_investor:,
+               dividend_round:,
+               total_amount_in_cents: 15015,
+               net_amount_in_cents: 11755,
+               number_of_shares: 12,
+               withholding_percentage: 5,
+               withheld_tax_cents: 750,
+               paid_at: Date.new(2025, 9, 7),
+               status: "Paid")
+      end
+      let!(:dividend_payment) do
+        create(:dividend_payment,
+               dividends: [dividend1, dividend2],
+               status: Payment::SUCCEEDED,
+               processor_name: "wise",
+               transfer_id: "shared123",
+               total_transaction_cents: 35000,
+               transfer_fee_in_cents: 850,
+               created_at: Date.new(2025, 9, 8))
+      end
+
+      it "consolidates multiple dividends into a single CSV row" do
+        service = described_class.new(start_date:, end_date:)
+        result = service.process
+        csv = result["dividends-#{report_date}.csv"]
+        rows = CSV.parse(csv)
+
+        expect(rows.length).to eq(3) # header + 1 consolidated row + totals
+
+        data_row = rows[1]
+        expect(data_row[1]).to eq("TestCo")
+        expect(data_row[2]).to eq("Jane Investor")
+        expect(data_row[4]).to eq(dividend_payment.id.to_s)
+        expect(data_row[5]).to eq("400.4") # total dividend amount (250.25 + 150.15)
+        expect(data_row[8]).to eq("350.0")
+        expect(data_row[9]).to eq("347.55") # total net amount (230.00 + 117.55)
+        expect(data_row[10]).to eq("8.5")
+        expect(data_row[12]).to eq("27.75") # total tax withheld (20.25 + 7.50)
+        expect(data_row[13]).to eq("12.21") # total flexile fee
+      end
+
+      it "shows aggregated dividend amounts in grouped CSV" do
+        service = described_class.new(start_date:, end_date:)
+        result = service.process
+        csv = result["grouped-#{report_date}.csv"]
+        rows = CSV.parse(csv)
+
+        dividend_rows = rows.select { |row| row[0] == "Dividend" }
+        expect(dividend_rows.length).to eq(1)
+
+        dividend_row = dividend_rows.first
+        expect(dividend_row[4]).to eq("400.4") # total dividend amount
+        expect(dividend_row[6]).to eq("8.5") # transfer fee
+        expect(dividend_row[7]).to eq("347.55") # net amount
+      end
     end
   end
 
