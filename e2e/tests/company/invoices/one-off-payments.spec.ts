@@ -319,6 +319,8 @@ test.describe("One-off payments", () => {
         { page },
       );
 
+      await page.waitForLoadState("networkidle");
+
       await logout(page);
       await login(page, workerUser);
 
@@ -340,6 +342,8 @@ test.describe("One-off payments", () => {
         },
         { page },
       );
+
+      await page.waitForLoadState("networkidle");
 
       await logout(page);
       await login(page, adminUser);
