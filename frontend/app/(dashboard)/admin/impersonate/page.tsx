@@ -1,7 +1,6 @@
 "use client";
 
 import { Loader2, UserCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -12,14 +11,15 @@ import { Label } from "@/components/ui/label";
 
 export default function ImpersonatePage() {
   const { data: session, update } = useSession();
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleImpersonate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
       setError("Please enter an email address");
       return;
     }
@@ -33,15 +33,20 @@ export default function ImpersonatePage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: trimmedEmail }),
       });
 
       const data: unknown = await response.json();
       if (!data || typeof data !== "object") {
         throw new Error("Invalid response from server");
       }
+
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      const responseData = data as { error?: string; impersonation_jwt?: string; user?: unknown };
+      const responseData = data as {
+        error?: string;
+        impersonation_jwt?: string;
+        user?: unknown;
+      };
 
       if (!response.ok) {
         throw new Error(responseData.error ?? "Failed to impersonate user");
@@ -59,6 +64,7 @@ export default function ImpersonatePage() {
           originalUser: session?.user,
         },
       });
+
       window.location.reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -75,7 +81,7 @@ export default function ImpersonatePage() {
         impersonation: undefined,
       });
 
-      router.push("/");
+      window.location.reload();
     } catch (_err) {
       setError("Failed to stop impersonation");
     } finally {

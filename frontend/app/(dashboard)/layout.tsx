@@ -68,15 +68,10 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   const handleStopImpersonation = async () => {
     setIsStoppingImpersonation(true);
     try {
-      // eslint-disable-next-line no-console
-      console.log("Stopping impersonation, current session:", session);
-
-      const updatedSession = {
+      await update({
         ...session,
         impersonation: undefined,
-      };
-
-      await update(updatedSession);
+      });
       window.location.reload();
     } catch (error) {
       // eslint-disable-next-line no-console

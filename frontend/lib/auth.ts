@@ -6,6 +6,24 @@ import { z } from "zod";
 import env from "@/env";
 import { assertDefined } from "@/utils/assert";
 
+function isValidImpersonationData(data: unknown): data is {
+  jwt: string;
+  user: { id: number; email: string; name: string; legal_name?: string; preferred_name?: string };
+  originalUser: { id: string; email: string; name: string; legalName?: string; preferredName?: string; jwt: string };
+} {
+  if (!data || typeof data !== "object") return false;
+
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  const impersonation = data as Record<string, unknown>;
+  return Boolean(
+    typeof impersonation.jwt === "string" &&
+      impersonation.user &&
+      typeof impersonation.user === "object" &&
+      impersonation.originalUser &&
+      typeof impersonation.originalUser === "object",
+  );
+}
+
 const otpLoginSchema = z.object({
   email: z.string().email(),
   otp: z.string().length(6),
@@ -122,50 +140,14 @@ export const authOptions = {
         token.preferredName = user.preferredName ?? "";
       }
 
-      // Handle session updates for impersonation
       if (trigger === "update" && session && typeof session === "object" && session !== null) {
         // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        const sessionWithImpersonation = session as { impersonation?: unknown };
+        const updatedSession = session as { impersonation?: unknown };
 
-        if (sessionWithImpersonation.impersonation === undefined) {
+        if (updatedSession.impersonation === undefined) {
           delete token.impersonation;
-        } else if (
-          sessionWithImpersonation.impersonation &&
-          typeof sessionWithImpersonation.impersonation === "object"
-        ) {
-          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-          const impersonationData = sessionWithImpersonation.impersonation as {
-            jwt?: unknown;
-            user?: unknown;
-            originalUser?: unknown;
-          };
-          if (
-            typeof impersonationData.jwt === "string" &&
-            impersonationData.user &&
-            typeof impersonationData.user === "object" &&
-            impersonationData.originalUser &&
-            typeof impersonationData.originalUser === "object"
-          ) {
-            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-            token.impersonation = impersonationData as {
-              jwt: string;
-              user: {
-                id: number;
-                email: string;
-                name: string;
-                legal_name?: string;
-                preferred_name?: string;
-              };
-              originalUser: {
-                id: string;
-                email: string;
-                name: string;
-                legalName?: string;
-                preferredName?: string;
-                jwt: string;
-              };
-            };
-          }
+        } else if (isValidImpersonationData(updatedSession.impersonation)) {
+          token.impersonation = updatedSession.impersonation;
         }
       }
 
