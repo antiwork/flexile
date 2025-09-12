@@ -30,6 +30,7 @@ import {
   EDITABLE_INVOICE_STATES,
   LegacyAddress,
   RejectModal,
+  StatusDetails,
   taxRequirementsMet,
   useIsActionable,
   useIsDeletable,
@@ -289,10 +290,7 @@ export default function InvoicePage() {
         </Alert>
       )}
 
-      <div className="mx-4 mb-4 print:hidden">
-        <div className="text-sm text-gray-500">Status</div>
-        <div className="font-medium">{getInvoiceStatusText(invoice, company)}</div>
-      </div>
+      <StatusDetails invoice={invoice} className="m-4 print:hidden" />
 
       {payRateInSubunits && invoice.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
         <Alert className="mx-4 print:hidden" variant="warning">
