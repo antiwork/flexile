@@ -21,11 +21,12 @@ function ImpersonationSessionSetup() {
 
   useEffect(() => {
     if (status === "loading") return;
-    if (!param || actorToken === session?.user.actorToken) return window.location.replace("/dashboard");
+    if (!param || actorToken === session?.user.actorToken) {
+      window.location.href = "/dashboard";
+      return;
+    }
 
-    void update({ actorToken }).finally(() => {
-      window.location.replace("/dashboard");
-    });
+    void update({ actorToken });
   }, [status]);
 
   return (
