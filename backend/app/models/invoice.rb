@@ -42,6 +42,7 @@ class Invoice < ApplicationRecord
   validates :total_amount_in_usd_cents, presence: true,
                                         numericality: { only_integer: true, greater_than: 99 }
   validates :invoice_number, presence: true
+  validate :ensure_unique_invoice_number
   validates :bill_from, presence: true
   validates :bill_to, presence: true
   validates :due_on, presence: true
@@ -120,6 +121,7 @@ class Invoice < ApplicationRecord
 
   after_initialize :populate_bill_data
   before_validation :populate_bill_data, on: :create
+  before_validation :normalize_invoice_number
   after_commit :destroy_approvals, if: -> { rejected? }, on: :update
 
   def attachment = attachments.last
@@ -202,6 +204,10 @@ class Invoice < ApplicationRecord
   end
 
   private
+    def normalize_invoice_number
+      self.invoice_number = invoice_number.strip if invoice_number.is_a?(String)
+    end
+
     def populate_bill_data
       self.bill_from ||= user&.billing_entity_name
       self.bill_to ||= company&.name
@@ -241,6 +247,26 @@ class Invoice < ApplicationRecord
 
       if !status.in?(DELETABLE_STATES)
         errors.add(:status, "cannot be #{status} for deleted invoices")
+      end
+    end
+
+    def ensure_unique_invoice_number
+      return if invoice_number.blank? || company_id.blank? || user_id.blank?
+
+      existing = Invoice.alive
+                         .where(company_id: company_id, user_id: user_id)
+                         .where("LOWER(invoice_number) = ?", invoice_number.downcase)
+                         .where.not(id: id)
+                         .limit(1)
+                         .exists?
+
+      if existing
+        suggestion = recommended_invoice_number
+        if suggestion.present? && suggestion != invoice_number
+          errors.add(:invoice_number, "This invoice number is already in use. Please try '#{suggestion}' instead.")
+        else
+          errors.add(:invoice_number, "This invoice number is already in use. Please enter a different number.")
+        end
       end
     end
 end
