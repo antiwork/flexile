@@ -73,7 +73,7 @@ export default function Details() {
   };
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} className="grid gap-8">
+    <form onSubmit={(e) => void onSubmit(e)} className="mb-24 grid gap-8">
       <hgroup>
         <h2 className="mb-1 text-3xl font-bold">Details</h2>
         <p className="text-muted-foreground text-base">
