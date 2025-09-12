@@ -808,7 +808,7 @@ RSpec.describe Company do
       expect(token.split(".").length).to eq(3)
     end
 
-    it "generates a token that can be decoded back to the primary admin user" do
+    it "returns a token that can be decoded back to the user" do
       decoded_user = JwtService.user_from_token(company.generate_actor_token)
       expect(decoded_user).to eq(company.primary_admin.user)
     end
@@ -822,7 +822,7 @@ RSpec.describe Company do
       expect(url).to include("/impersonate?actor_token=")
     end
 
-    it "includes a token that can be decoded back to the primary admin user" do
+    it "returns an impersonation URL that contains a token that can be decoded back to the user" do
       url = company.generate_impersonation_url
       token = url.split("actor_token=").last
 
