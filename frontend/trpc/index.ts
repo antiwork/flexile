@@ -50,7 +50,6 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
     // Extract user ID from JWT token
     try {
       const jwt = session.user.jwt;
-      // @ts-expect-error: next-auth's types are wrong
       const base64Payload = jwt.split(".")[1];
       if (base64Payload) {
         const payload = z

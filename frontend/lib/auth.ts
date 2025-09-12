@@ -141,13 +141,16 @@ export const authOptions = {
       return token;
     },
     session({ session, token }) {
+      // @ts-expect-error Either of those must exist
+      // Next-auth enterprets the session interface from this object, not from the next-auth.d.ts file
+      const jwt: string = token.actorToken ?? token.primaryToken;
       return {
         ...session,
         user: {
           ...session.user,
           ...token,
           id: token.sub,
-          jwt: token.actorToken ?? token.primaryToken,
+          jwt,
         },
       };
     },
