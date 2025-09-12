@@ -80,12 +80,13 @@ test.describe("invoice editing", () => {
       .fill(
         "Updated notes: This invoice covers the Q1 development sprint including new features, bug fixes, and additional enhancements. Please process within 30 days.",
       );
+    await expect(page.locator("tbody")).toContainText("$900");
 
-    // Submit the updated invoice
+    // Submit the updated invoice and wait for navigation
     await page.getByRole("button", { name: "Re-submit invoice" }).click();
+    await page.waitForURL(/\/invoices$/u); // Wait for redirect to invoices page
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    // Verify the invoice was updated
     await expect(page.locator("tbody")).toContainText("$900"); // $75 * 12 hours
 
     // Verify the database was updated
