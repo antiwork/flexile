@@ -115,9 +115,8 @@ export const authOptions = {
   },
   callbacks: {
     jwt({ token, user, trigger, session }) {
-      if (trigger !== "update" && !user) return token;
-
-      if (user) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (user && trigger !== "update") {
         token.jwt = user.jwt;
         token.legalName = user.legalName ?? "";
         token.preferredName = user.preferredName ?? "";
