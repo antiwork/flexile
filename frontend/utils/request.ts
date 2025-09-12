@@ -91,8 +91,7 @@ export const request = (settings: RequestSettings): Promise<Response> => {
         }
         if (response.status === 401) {
           void getSession().then((session) => {
-            const isImpersonationRequest = !!session?.user.actorToken;
-            if (isImpersonationRequest) redirect(`/impersonate?actor_token=null`);
+            if (session?.user.actorToken) redirect(`/impersonate?actor_token=null`);
           });
         }
         if ((settings.assertOk && !response.ok) || response.status >= 500) throw new ResponseError(undefined, response);
