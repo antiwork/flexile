@@ -140,13 +140,14 @@ export const invoicesRouter = createRouter({
 
     if (ctx.company.equityEnabled) {
       const equityResult = await calculateInvoiceEquity({
+        ctx,
         companyContractor: companyWorker,
         serviceAmountCents: Number(totalAmountCents),
         invoiceYear: dateToday.getFullYear(),
         providedEquityPercentage: values.equityPercentage,
       });
 
-      if (!equityResult) {
+      if (!equityResult?.equityOptions) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Recipient has insufficient unvested equity",
@@ -257,13 +258,14 @@ export const invoicesRouter = createRouter({
       }
 
       const equityResult = await calculateInvoiceEquity({
+        ctx,
         companyContractor: ctx.companyContractor,
         serviceAmountCents: Number(invoice.totalAmountInUsdCents),
         invoiceYear: new Date(invoice.invoiceDate).getFullYear(),
         providedEquityPercentage: input.equityPercentage,
       });
 
-      if (!equityResult) {
+      if (!equityResult?.equityOptions) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Error calculating equity. Please contact the administrator.",
