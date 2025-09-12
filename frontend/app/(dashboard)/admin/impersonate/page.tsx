@@ -59,7 +59,7 @@ export default function ImpersonatePage() {
           originalUser: session?.user,
         },
       });
-      router.push("/");
+      window.location.reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -106,7 +106,7 @@ export default function ImpersonatePage() {
           <CardDescription>
             {isCurrentlyImpersonating
               ? "You are currently impersonating a user. Click below to stop impersonation."
-              : "Enter a user's email address to impersonate them for debugging purposes."}
+              : "Enter a user's email address to impersonate them."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

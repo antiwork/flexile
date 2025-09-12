@@ -1,7 +1,17 @@
 "use client";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { ChevronDown, ChevronRight, LogOut, MessageCircleQuestion, Settings, Sparkles, UserX, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  MessageCircleQuestion,
+  Settings,
+  Sparkles,
+  UserCheck,
+  UserX,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -58,11 +68,16 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   const handleStopImpersonation = async () => {
     setIsStoppingImpersonation(true);
     try {
-      await update({
+      // eslint-disable-next-line no-console
+      console.log("Stopping impersonation, current session:", session);
+
+      const updatedSession = {
         ...session,
         impersonation: undefined,
-      });
-      router.refresh();
+      };
+
+      await update(updatedSession);
+      window.location.reload();
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to stop impersonation:", error);
@@ -214,7 +229,14 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <span>Stop impersonation</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ) : null}
+              ) : (
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={() => router.push("/admin/impersonate")} className="cursor-pointer">
+                    <UserCheck className="size-6" />
+                    <span>Impersonate</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => void signOut({ redirect: false }).then(logout)}

@@ -124,48 +124,47 @@ export const authOptions = {
 
       // Handle session updates for impersonation
       if (trigger === "update" && session && typeof session === "object" && session !== null) {
-        if ("impersonation" in session) {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        const sessionWithImpersonation = session as { impersonation?: unknown };
+
+        if (sessionWithImpersonation.impersonation === undefined) {
+          delete token.impersonation;
+        } else if (
+          sessionWithImpersonation.impersonation &&
+          typeof sessionWithImpersonation.impersonation === "object"
+        ) {
           // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-          const sessionWithImpersonation = session as { impersonation?: unknown };
-          if (sessionWithImpersonation.impersonation === undefined) {
-            delete token.impersonation;
-          } else if (
-            sessionWithImpersonation.impersonation &&
-            typeof sessionWithImpersonation.impersonation === "object"
+          const impersonationData = sessionWithImpersonation.impersonation as {
+            jwt?: unknown;
+            user?: unknown;
+            originalUser?: unknown;
+          };
+          if (
+            typeof impersonationData.jwt === "string" &&
+            impersonationData.user &&
+            typeof impersonationData.user === "object" &&
+            impersonationData.originalUser &&
+            typeof impersonationData.originalUser === "object"
           ) {
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-            const impersonationData = sessionWithImpersonation.impersonation as {
-              jwt?: unknown;
-              user?: unknown;
-              originalUser?: unknown;
-            };
-            if (
-              typeof impersonationData.jwt === "string" &&
-              impersonationData.user &&
-              typeof impersonationData.user === "object" &&
-              impersonationData.originalUser &&
-              typeof impersonationData.originalUser === "object"
-            ) {
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-              token.impersonation = impersonationData as {
-                jwt: string;
-                user: {
-                  id: number;
-                  email: string;
-                  name: string;
-                  legal_name?: string;
-                  preferred_name?: string;
-                };
-                originalUser: {
-                  id: string;
-                  email: string;
-                  name: string;
-                  legalName?: string;
-                  preferredName?: string;
-                  jwt: string;
-                };
+            token.impersonation = impersonationData as {
+              jwt: string;
+              user: {
+                id: number;
+                email: string;
+                name: string;
+                legal_name?: string;
+                preferred_name?: string;
               };
-            }
+              originalUser: {
+                id: string;
+                email: string;
+                name: string;
+                legalName?: string;
+                preferredName?: string;
+                jwt: string;
+              };
+            };
           }
         }
       }
@@ -178,6 +177,8 @@ export const authOptions = {
       if (token.impersonation) {
         baseSession.impersonation = token.impersonation;
         baseSession.user.jwt = token.impersonation.jwt;
+      } else {
+        delete baseSession.impersonation;
       }
 
       return baseSession;
