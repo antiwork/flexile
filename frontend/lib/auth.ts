@@ -117,7 +117,7 @@ export const authOptions = {
     jwt({ token, user, trigger, session }) {
       if (trigger !== "update" && !user) return token;
 
-      if (user && trigger !== "update") {
+      if (user) {
         token.jwt = user.jwt;
         token.legalName = user.legalName ?? "";
         token.preferredName = user.preferredName ?? "";
@@ -141,7 +141,6 @@ export const authOptions = {
               originalUser?: unknown;
             };
             if (
-              impersonationData &&
               typeof impersonationData.jwt === "string" &&
               impersonationData.user &&
               typeof impersonationData.user === "object" &&
