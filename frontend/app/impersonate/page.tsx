@@ -27,12 +27,17 @@ function SessionSetup() {
       window.location.href = "/dashboard";
       return;
     }
+    // If this is an impersonation-only session (no primary token present),
+    // fully sign the user out to prevent leaving a dangling impersonation session.
+    if (!session?.user.primaryToken && actorToken === null) {
+      void signOut({ redirect: false }).then(() => {
+        window.location.href = "/login";
+      });
+      return;
+    }
 
     if (status === "unauthenticated") void signIn("impersonation", { actorToken });
     else void update({ actorToken });
-    // If this is an impersonation-only session (no primary token present),
-    // fully sign the user out to prevent leaving a dangling impersonation session.
-    if (!session?.user.primaryToken && actorToken === null) void signOut({ redirect: false });
   }, [status]);
 
   return (
