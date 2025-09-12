@@ -73,22 +73,16 @@ export function AuthPage({
 
       const result = await signIn("otp", { email, otp: values.otp, redirect: false });
 
-      if (!result?.ok) throw new Error("Invalid verification code");
+      if (result?.error) throw new Error("Invalid verification code");
 
       const session = await getSession();
       if (!session?.user.email) throw new Error("Invalid verification code");
 
       const redirectUrl = searchParams.get("redirect_url");
-      const callbackUrl = searchParams.get("callbackUrl"); // NextAuth uses "callbackUrl"
       setRedirectInProgress(true);
-
       router.replace(
         // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
-        callbackUrl
-          ? callbackUrl
-          : redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//")
-            ? redirectUrl
-            : "/dashboard",
+        redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard",
       );
     },
   });
@@ -119,7 +113,7 @@ export function AuthPage({
 
   const providerSignIn = (provider: SignInMethod) => {
     localStorage.setItem("last_sign_in_method", provider);
-    const redirectUrlParam = searchParams.get("redirect_url") || searchParams.get("callbackUrl");
+    const redirectUrlParam = searchParams.get("redirect_url");
     const redirectUrl =
       redirectUrlParam && redirectUrlParam.startsWith("/") && !redirectUrlParam.startsWith("//")
         ? redirectUrlParam
