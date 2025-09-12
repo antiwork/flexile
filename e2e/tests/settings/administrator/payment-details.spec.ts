@@ -9,7 +9,7 @@ import { companyStripeAccounts, users } from "@/db/schema";
 // allow green builds on OSS PRs that don't have a stripe sandbox key, but fail on CI if something changes on Stripe's end
 test.skip(() => process.env.STRIPE_SECRET_KEY === "dummy");
 test.describe("Company administrator settings - payment details", () => {
-  async function finishStripeBankLinking(stripeBankFrame: FrameLocator) {
+  const finishStripeBankLinking = async (stripeBankFrame: FrameLocator) => {
     const notNowButton = stripeBankFrame.getByTestId("link-not-now-button");
     const doneButton = stripeBankFrame.getByTestId("done-button");
     await expect(notNowButton.or(doneButton)).toBeVisible();
@@ -17,7 +17,7 @@ test.describe("Company administrator settings - payment details", () => {
       await notNowButton.click();
     }
     await doneButton.click();
-  }
+  };
 
   test("allows connecting a bank account", async ({ page }) => {
     const { company } = await companiesFactory.create({ stripeCustomerId: null }, { withoutBankAccount: true });
