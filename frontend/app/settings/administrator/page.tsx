@@ -85,7 +85,7 @@ export default function SettingsPage() {
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
-    <div className="grid gap-8">
+    <div className="mb-24 grid gap-8">
       <hgroup>
         <h2 className="mb-1 text-3xl font-bold">Workspace settings</h2>
         <p className="text-muted-foreground text-base">
