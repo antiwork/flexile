@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker";
 import { db } from "@test/db";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { invoiceLineItemsFactory } from "@test/factories/invoiceLineItems";
@@ -65,7 +66,7 @@ export const invoicesFactory = {
         equityAmountInCents: BigInt(0),
         equityAmountInOptions: 0,
         cashAmountInCents: BigInt(600_00),
-        invoiceNumber: "INV-123456",
+        invoiceNumber: overrides.invoiceNumber ?? faker.helpers.replaceSymbols("INV-######"),
         totalAmountInUsdCents: BigInt(600_00),
         billFrom: user.legalName ?? "Test user",
         billTo: company.name ?? "N/A",
