@@ -8,8 +8,9 @@ import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import {
+  activeStorageAttachments,
   companies,
   companyContractors,
   expenseCategories,
@@ -119,7 +120,7 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser, "/invoices/new");
 
     await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[type="file"]').setInputFiles({
+    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
       name: "receipt.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("test expense receipt"),
@@ -273,5 +274,216 @@ test.describe("invoice creation", () => {
       .then(takeOrThrow);
 
     expect(Number(lineItem.quantity)).toBe(2.5);
+  });
+
+  test("creates an invoice with an attached document", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    // Fill out basic invoice information
+    await page.getByPlaceholder("Description").fill("Invoice with document attachment");
+    await page.getByLabel("Hours").fill("05:00");
+
+    // Add the document attachment
+    await page.getByRole("button", { name: "Add Document" }).click();
+    await page.locator('input[accept="application/pdf"]').setInputFiles({
+      name: "invoice-attachment.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("test invoice attachment document"),
+    });
+
+    // Add a delay to ensure the file upload is properly processed
+    await page.waitForTimeout(500);
+
+    // Verify document is displayed in the table
+    await expect(page.getByText("invoice-attachment.pdf")).toBeVisible();
+
+    // Submit the invoice
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    // Verify invoice was created with attachment
+    const invoice = await db.query.invoices
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
+      .then(takeOrThrow);
+
+    // Check that the invoice record exists in the database
+    expect(invoice).toBeDefined();
+
+    // Verify there's an attachment for this invoice in ActiveStorage
+    const attachment = await db.query.activeStorageAttachments.findFirst({
+      where: and(
+        eq(activeStorageAttachments.recordType, "Invoice"),
+        eq(activeStorageAttachments.recordId, invoice.id),
+        eq(activeStorageAttachments.name, "attachments"),
+      ),
+      with: { blob: { columns: { key: true, filename: true } } },
+    });
+
+    expect(attachment?.blob.filename).toBe("invoice-attachment.pdf");
+  });
+
+  test("allows viewing and editing an invoice with attachment", async ({ page }) => {
+    // First create an invoice with attachment
+    await login(page, contractorUser, "/invoices/new");
+
+    // Fill out basic invoice information
+    await page.getByPlaceholder("Description").fill("Invoice for document editing test");
+    await page.getByLabel("Hours").fill("02:00");
+    await page.getByLabel("Rate").fill("30");
+
+    // Add the document attachment
+    await page.getByRole("button", { name: "Add Document" }).click();
+    await page.locator('input[accept="application/pdf"]').setInputFiles({
+      name: "test-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("test invoice document"),
+    });
+
+    // Add a delay to ensure the file upload is properly processed
+    await page.waitForTimeout(500);
+
+    // Submit the invoice
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    // Wait for the invoice to appear in the table with an invoice ID
+    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+
+    // Click on the specific table cell containing the invoice ID to view details
+    await page.locator("tbody").first().click();
+
+    // Check that document is displayed
+    await expect(page.getByText("test-document.pdf")).toBeVisible();
+
+    // Edit the invoice
+    await page.getByRole("link", { name: "Edit" }).click();
+
+    // Verify document still shows in edit mode
+    await expect(page.getByText("test-document.pdf")).toBeVisible();
+
+    // Remove the document and upload a new one
+    // Target the specific Remove button in the document row
+    await page.getByRole("row", { name: "test-document.pdf" }).getByLabel("Remove").click();
+
+    // Add a delay to ensure the document removal is properly processed
+    await page.waitForTimeout(300); // Add a new document
+    await page.getByRole("button", { name: "Add Document" }).click();
+    await page.locator('input[accept="application/pdf"]').setInputFiles({
+      name: "updated-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("updated invoice document content"),
+    });
+
+    // Add a delay to ensure the file upload is properly processed
+    await page.waitForTimeout(300);
+
+    // Submit the updated invoice
+    await page.getByRole("button", { name: "Re-submit invoice" }).click();
+
+    // Verify we're back at the invoice details page
+    await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
+
+    await expect(page.getByRole("cell", { name: "Awaiting approval (0/2)" })).toBeVisible();
+
+    await page.locator("tbody").first().click();
+
+    // Wait for the updated document to be visible, which confirms the update was successful
+    await expect(page.getByText("updated-document.pdf")).toBeVisible();
+  });
+
+  test("prevents uploading document file larger than 10MB", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    // Fill out basic invoice information
+    await page.getByPlaceholder("Description").fill("Invoice with oversized document");
+    await page.getByLabel("Hours").fill("01:00");
+
+    // Try to upload a document larger than 10MB
+    await page.getByRole("button", { name: "Add Document" }).click();
+
+    // Generate a large buffer (11MB)
+    const largeBuffer = Buffer.alloc(11 * 1024 * 1024, "X");
+
+    await page.locator('input[accept="application/pdf"]').setInputFiles({
+      name: "large-document.pdf",
+      mimeType: "application/pdf",
+      buffer: largeBuffer,
+    });
+
+    // Wait to ensure the validation is processed
+    await page.waitForTimeout(300);
+
+    // Verify that the document was not added (the document table shouldn't be visible)
+    await expect(page.getByText("large-document.pdf")).not.toBeVisible();
+
+    // Verify the error dialog appears with the expected title and message
+    await expect(page.getByRole("heading", { name: "File Size Exceeded" })).toBeVisible();
+    await expect(
+      page.getByText("File size exceeds the maximum limit of 10MB. Please select a smaller file."),
+    ).toBeVisible();
+
+    // Click the OK button on the dialog
+    await page.getByRole("button", { name: "OK" }).click();
+
+    // Now upload a valid size document to confirm the input works for proper sizes
+    await page.getByRole("button", { name: "Add Document" }).click();
+    await page.locator('input[accept="application/pdf"]').setInputFiles({
+      name: "valid-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("valid document content"),
+    });
+
+    // Verify that the valid document was added
+    await expect(page.getByText("valid-document.pdf")).toBeVisible();
+  });
+
+  test("prevents uploading expense files larger than 10MB", async ({ page }) => {
+    await db.insert(expenseCategories).values({
+      companyId: company.id,
+      name: "Office Supplies",
+    });
+
+    await login(page, contractorUser, "/invoices/new");
+
+    // Try to upload a large expense file
+    await page.getByRole("button", { name: "Add expense" }).click();
+
+    // Generate a large buffer (11MB)
+    const largeBuffer = Buffer.alloc(11 * 1024 * 1024, "X");
+
+    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
+      name: "large-receipt.pdf",
+      mimeType: "application/pdf",
+      buffer: largeBuffer,
+    });
+
+    // Wait to ensure the validation is processed
+    await page.waitForTimeout(300);
+
+    // Verify that the expense was not added (expense table shouldn't show the file name)
+
+    // Verify the error dialog appears with the expected title and message
+    await expect(page.getByRole("heading", { name: "File Size Exceeded" })).toBeVisible();
+
+    // Click the OK button on the dialog
+    await page.getByRole("button", { name: "OK" }).click();
+
+    // Now upload a valid size expense to confirm the input works for proper sizes
+    await page.getByRole("button", { name: "Add expense" }).click();
+    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
+      name: "valid-receipt.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("valid receipt content"),
+    });
+
+    // Verify the valid receipt was added
+    await expect(page.getByText("valid-receipt.pdf")).toBeVisible();
+
+    // Fill required fields to make the form valid
+    await page.getByLabel("Merchant").fill("Office Supplies Store");
+    await page.getByLabel("Amount").fill("42.99");
+
+    // Verify the expense form is working properly
+    await expect(page.getByText("Total expenses$42.99")).toBeVisible();
   });
 });
