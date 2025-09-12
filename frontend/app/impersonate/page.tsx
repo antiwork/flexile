@@ -15,25 +15,23 @@ export default function ImpersonatePage() {
 
 function ImpersonationSessionSetup() {
   const searchParams = useSearchParams();
-  const { update } = useSession();
+  const { update, status, data: session } = useSession();
+  const param = searchParams.get("actor_token");
+  const actorToken = param === "null" ? null : param;
 
   useEffect(() => {
-    const actorToken = searchParams.get("actor_token");
+    if (status === "loading") return;
+    if (!param || actorToken === session?.user.actorToken) return window.location.replace("/dashboard");
 
-    if (!actorToken) {
-      window.location.href = "/dashboard";
-      return;
-    }
-
-    void update({ actorToken: actorToken === "null" ? null : actorToken }).finally(() => {
-      window.location.href = "/dashboard";
+    void update({ actorToken }).finally(() => {
+      window.location.replace("/dashboard");
     });
-  }, []);
+  }, [status]);
 
   return (
     <PublicLayout>
       <div className="flex flex-col items-center rounded-xl bg-white p-8 shadow-lg">
-        <div className="border-muted mb-4 h-8 w-8 animate-spin rounded-full border-4 border-t-black" />
+        <div className="border-muted mb-4 size-8 animate-spin rounded-full border-4 border-t-black" />
         <div className="text-md font-semibold">Setting up your session...</div>
       </div>
     </PublicLayout>
