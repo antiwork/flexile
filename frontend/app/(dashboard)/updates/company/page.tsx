@@ -1,5 +1,5 @@
 "use client";
-import { CircleCheck, Plus, Trash2 } from "lucide-react";
+import { CircleCheck, Plus } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import CompanyUpdateModal from "@/app/(dashboard)/updates/company/CompanyUpdateModal";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
@@ -123,15 +123,14 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
         id: "actions",
         cell: (info) => (
           <Button
-            aria-label="Remove"
-            variant="outline"
+            variant="critical"
+            size="small"
             onClick={(e) => {
               e.stopPropagation();
               setDeletingUpdate(info.row.original.id);
             }}
-            className="inline-flex cursor-pointer items-center border-none bg-transparent text-inherit underline hover:text-blue-600"
           >
-            <Trash2 className="size-4" />
+            Delete
           </Button>
         ),
       }),
