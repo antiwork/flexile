@@ -4,6 +4,7 @@ RSpec.describe Internal::Admin::ImpersonationController do
   let(:admin_user) { create(:user, team_member: true) }
   let(:regular_user) { create(:user, team_member: false) }
   let(:target_user) { create(:user, email: "target@example.com") }
+  let(:another_admin) { create(:user, team_member: true) }
   let(:admin_jwt) { JwtService.generate_token(admin_user) }
   let(:regular_jwt) { JwtService.generate_token(regular_user) }
 
@@ -25,6 +26,21 @@ RSpec.describe Internal::Admin::ImpersonationController do
         expect(json_response["success"]).to be true
         expect(json_response["impersonation_jwt"]).to be_present
         expect(json_response["user"]["email"]).to eq(target_user.email)
+        expect(json_response["user"]["id"]).to eq(target_user.id)
+        expect(json_response["user"]["name"]).to eq(target_user.name)
+        expect(json_response["user"]["legal_name"]).to eq(target_user.legal_name)
+        expect(json_response["user"]["preferred_name"]).to eq(target_user.preferred_name)
+      end
+
+      it "returns a valid JWT token that can be decoded" do
+        post :create, params: { email: target_user.email }
+
+        json_response = JSON.parse(response.body)
+        impersonation_jwt = json_response["impersonation_jwt"]
+
+        # Verify the JWT can be decoded and contains correct user info
+        decoded_user = JwtService.user_from_token(impersonation_jwt)
+        expect(decoded_user).to eq(target_user)
       end
 
       it "returns error for non-existent user" do
@@ -37,13 +53,57 @@ RSpec.describe Internal::Admin::ImpersonationController do
       end
 
       it "prevents impersonating admin users" do
-        admin_target = create(:user, email: "admin@example.com", team_member: true)
-        post :create, params: { email: admin_target.email }
+        post :create, params: { email: another_admin.email }
 
         expect(response).to have_http_status(:forbidden)
         json_response = JSON.parse(response.body)
         expect(json_response["success"]).to be false
         expect(json_response["error"]).to eq("Cannot impersonate admin users")
+      end
+
+      it "prevents impersonating themselves" do
+        post :create, params: { email: admin_user.email }
+
+        expect(response).to have_http_status(:forbidden)
+        json_response = JSON.parse(response.body)
+        expect(json_response["success"]).to be false
+        expect(json_response["error"]).to eq("Cannot impersonate admin users")
+      end
+
+      it "handles missing email parameter" do
+        post :create, params: {}
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body)
+        expect(json_response["success"]).to be false
+        expect(json_response["error"]).to eq("User not found")
+      end
+
+      it "handles empty email parameter" do
+        post :create, params: { email: "" }
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body)
+        expect(json_response["success"]).to be false
+        expect(json_response["error"]).to eq("User not found")
+      end
+
+      it "handles whitespace-only email parameter" do
+        post :create, params: { email: "   " }
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body)
+        expect(json_response["success"]).to be false
+        expect(json_response["error"]).to eq("User not found")
+      end
+
+      it "finds users by exact email match" do
+        post :create, params: { email: target_user.email }
+
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        expect(json_response["success"]).to be true
+        expect(json_response["user"]["email"]).to eq(target_user.email)
       end
     end
 
@@ -60,6 +120,15 @@ RSpec.describe Internal::Admin::ImpersonationController do
         expect(json_response["success"]).to be false
         expect(json_response["error"]).to eq("Admin access required")
       end
+
+      it "denies access even for non-existent users" do
+        post :create, params: { email: "nonexistent@example.com" }
+
+        expect(response).to have_http_status(:forbidden)
+        json_response = JSON.parse(response.body)
+        expect(json_response["success"]).to be false
+        expect(json_response["error"]).to eq("Admin access required")
+      end
     end
 
     context "when user is not authenticated" do
@@ -67,6 +136,46 @@ RSpec.describe Internal::Admin::ImpersonationController do
         post :create, params: { email: target_user.email }
 
         expect(response).to have_http_status(:unauthorized)
+      end
+
+      it "returns unauthorized even with invalid bearer token" do
+        request.headers["x-flexile-auth"] = "Bearer invalid_token"
+        post :create, params: { email: target_user.email }
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+
+      it "returns unauthorized with malformed authorization header" do
+        request.headers["x-flexile-auth"] = "InvalidFormat token"
+        post :create, params: { email: target_user.email }
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context "with edge cases" do
+      before do
+        set_auth_header(admin_jwt)
+      end
+
+      it "handles very long email addresses" do
+        long_email = "#{'a' * 100}@example.com"
+        post :create, params: { email: long_email }
+
+        expect(response).to have_http_status(:not_found)
+        json_response = JSON.parse(response.body)
+        expect(json_response["error"]).to eq("User not found")
+      end
+
+      it "handles email with special characters" do
+        special_email = "test+special@example.com"
+        create(:user, email: special_email)
+
+        post :create, params: { email: special_email }
+
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        expect(json_response["user"]["email"]).to eq(special_email)
       end
     end
   end
