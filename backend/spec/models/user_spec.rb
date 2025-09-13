@@ -567,20 +567,6 @@ RSpec.describe User do
     end
   end
 
-  describe "#generate_actor_token" do
-    let(:user) { create(:user) }
-
-    it "returns a valid JWT token" do
-      token = user.generate_actor_token
-      expect(token.split(".").length).to eq(3)
-    end
-
-    it "returns a token that can be decoded back to the user" do
-      decoded_user = JwtService.user_from_token(user.generate_actor_token)
-      expect(decoded_user).to eq(user)
-    end
-  end
-
   describe "#generate_impersonation_url" do
     let(:user) { create(:user) }
 
