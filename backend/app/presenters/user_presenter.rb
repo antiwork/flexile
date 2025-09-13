@@ -89,7 +89,6 @@ class UserPresenter
           investorCount: user.company_administrator_for?(company) ? company.company_investors.where.not(user_id: company.company_workers.active.select(:user_id)).count : nil,
           contractorCount: user.company_administrator_for?(company) ? company.company_workers.active.count : nil,
           primaryAdminName: company.primary_admin.user.name,
-          primaryAdminId: company.primary_admin.external_id,
           completedPaymentMethodSetup: company.bank_account_ready?,
           isTrusted: company.is_trusted,
           checklistItems: company.checklist_items(user),
@@ -117,6 +116,7 @@ class UserPresenter
       email: user.display_email,
       onboardingPath: worker && worker.role.nil? ? "/documents" : nil,
       taxInformationConfirmedAt: tax_information_confirmed_at&.iso8601,
+      teamMember: user.team_member,
     }
   end
 

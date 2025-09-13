@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
 import { isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
-import { AlertTriangle, CircleCheck, Copy, MoreHorizontalIcon, Plus, UserIcon } from "lucide-react";
+import { AlertTriangle, CircleCheck, Copy, Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from "react";
@@ -38,12 +38,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -54,7 +48,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
-import { actor_tokens_path, approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
+import { approve_company_invoices_path, company_equity_exercise_payment_path } from "@/utils/routes";
 import { formatDate, serverDateToLocal } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 import FormFields, { schema as formSchema } from "../FormFields";
@@ -195,7 +189,6 @@ export default function ContractorPage() {
         headerActions={
           contractor ? (
             <ActionPanel
-              userId={id}
               contractor={contractor}
               setIssuePaymentModalOpen={setIssuePaymentModalOpen}
               setEndModalOpen={setEndModalOpen}
@@ -404,12 +397,10 @@ export default function ContractorPage() {
 }
 
 const ActionPanel = ({
-  userId,
   contractor,
   setIssuePaymentModalOpen,
   setEndModalOpen,
 }: {
-  userId: string;
   contractor: { endedAt: Date | null };
   setIssuePaymentModalOpen: Dispatch<SetStateAction<boolean>>;
   setEndModalOpen: Dispatch<SetStateAction<boolean>>;
@@ -421,22 +412,6 @@ const ActionPanel = ({
   const handleEndContractClick = () => {
     setEndModalOpen(true);
   };
-
-  const canImpersonate = !!useCurrentUser().roles.administrator;
-  const router = useRouter();
-  const { mutate: impersonateUser } = useMutation({
-    mutationFn: async () => {
-      const response = await request({
-        method: "POST",
-        url: actor_tokens_path(),
-        accept: "json",
-        jsonData: { user_id: userId },
-        assertOk: true,
-      });
-      const data = z.object({ actor_token: z.string() }).parse(await response.json());
-      router.push(`/impersonate?${new URLSearchParams({ actor_token: data.actor_token })}`);
-    },
-  });
 
   return isMobile ? (
     <Dialog>
@@ -478,22 +453,6 @@ const ActionPanel = ({
           End contract
         </Button>
       ) : null}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon">
-            <MoreHorizontalIcon className="size-4" />
-            <span className="sr-only">More options</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {canImpersonate ? (
-            <DropdownMenuItem onSelect={() => impersonateUser()}>
-              <UserIcon className="size-4" />
-              <span>Impersonate</span>
-            </DropdownMenuItem>
-          ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
     </div>
   );
 };
