@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { ArrowUpTrayIcon, Bars3CenterLeftIcon, PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
@@ -273,61 +273,35 @@ const Edit: React.FC<EditProps> = ({ onClose, invoiceId: propInvoiceId, isModal 
       }),
     );
 
-  const handleCancel = () => {
-    if (isModal && onClose) onClose();
-    else router.push("/invoices");
+  const [pdfFiles, setPdfFiles] = useState<File[]>([]);
+  const handlePdfFiles = (files: FileList | null) => {
+    if (!files) return;
+    const pdfArray = Array.from(files).filter((f) => f.type === "application/pdf");
+    setPdfFiles((prev) => [...prev, ...pdfArray]);
   };
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div
-      className={isModal ? "fixed inset-0 z-50 flex items-start justify-center bg-gray-900 p-4 sm:items-center" : ""}
-    >
+    <div className={isModal ? "fixed inset-0 z-50 flex items-start justify-center bg-gray-900 sm:items-center" : ""}>
       <div
-        className={isModal ? "max-h-[90vh] w-full max-w-5xl space-y-6 rounded-2xl bg-white p-6 shadow-lg" : "space-y-6"}
+        className={
+          isModal
+            ? "mx-auto max-h-[50vh] w-full max-w-[600px] space-y-1 rounded-2xl p-0 shadow-lg md:max-w-[500px] lg:max-w-[480px]"
+            : "space-y-1"
+        }
       >
-        {/* Header */}
+        {/* HEADER */}
         {!isModal && (
           <DashboardHeader
+            className="!pt-0 md:!pt-0"
             title={data.invoice.id ? "Edit invoice" : "New invoice"}
             headerActions={
-              <>
-                {data.invoice.id && data.invoice.status === "rejected" ? (
-                  <div className="inline-flex items-center">Action required</div>
-                ) : (
-                  <Button size="small" variant="outline" onClick={handleCancel}>
-                    Cancel
-                  </Button>
-                )}
-                <Button
-                  size="small"
-                  variant="primary"
-                  onClick={() => validate() && submit.mutate()}
-                  disabled={submit.isPending}
-                >
-                  <PaperAirplaneIcon className="size-4" />
-                  {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit invoice" : "Send invoice"}
-                </Button>
-              </>
+              data.invoice.id && data.invoice.status === "rejected" ? (
+                <div className="inline-flex items-center">Action required</div>
+              ) : null
             }
           />
         )}
-
-        {isModal ? (
-          <div className="flex justify-end gap-2 border-b pb-2">
-            <Button size="small" variant="outline" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button
-              size="small"
-              variant="primary"
-              onClick={() => validate() && submit.mutate()}
-              disabled={submit.isPending}
-            >
-              <PaperAirplaneIcon className="size-4" />
-              {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit invoice" : "Send invoice"}
-            </Button>
-          </div>
-        ) : null}
 
         {/* ALERT */}
         {payRateInSubunits && lineItems.some((li) => li.pay_rate_in_subunits > payRateInSubunits) ? (
@@ -342,7 +316,8 @@ const Edit: React.FC<EditProps> = ({ onClose, invoiceId: propInvoiceId, isModal 
 
         {/* INVOICE FORM */}
         <section>
-          <div className="grid gap-4">
+          <div className="grid">
+            {/* FROM / TO */}
             <div className={`grid auto-cols-fr gap-3 md:grid-flow-col ${!isModal ? "mx-4" : ""}`}>
               <div>
                 From
@@ -358,7 +333,11 @@ const Edit: React.FC<EditProps> = ({ onClose, invoiceId: propInvoiceId, isModal 
                 <br />
                 <Address address={data.company.address} />
               </div>
-              <div className="flex flex-col gap-2">
+            </div>
+
+            {/* INVOICE ID & DATE */}
+            <div className="mx-4 mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="flex flex-col">
                 <Label htmlFor="invoice-id">Invoice ID</Label>
                 <Input
                   id="invoice-id"
@@ -367,19 +346,10 @@ const Edit: React.FC<EditProps> = ({ onClose, invoiceId: propInvoiceId, isModal 
                   aria-invalid={errorField === "invoiceNumber"}
                 />
               </div>
-              <div className="flex flex-col gap-2">
-                <DatePicker
-                  value={issueDate}
-                  onChange={(date) => date && setIssueDate(date)}
-                  aria-invalid={errorField === "issueDate"}
-                  label="Invoice date"
-                  granularity="day"
-                />
-              </div>
             </div>
 
-            {/* LINE ITEMS TABLE */}
-            <Table>
+            {/* LINE ITEMS */}
+            <Table className="mt-4">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50%]">Line item</TableHead>
@@ -448,7 +418,7 @@ const Edit: React.FC<EditProps> = ({ onClose, invoiceId: propInvoiceId, isModal 
               </TableFooter>
             </Table>
 
-            {/* EXPENSES UPLOAD */}
+            {/* EXPENSE UPLOAD + TABLE */}
             {data.company.expense_categories.length ? (
               <input
                 ref={uploadExpenseRef}
@@ -460,7 +430,6 @@ const Edit: React.FC<EditProps> = ({ onClose, invoiceId: propInvoiceId, isModal 
               />
             ) : null}
 
-            {/* EXPENSES TABLE */}
             {showExpensesTable ? (
               <Table>
                 <TableHeader>
@@ -531,52 +500,130 @@ const Edit: React.FC<EditProps> = ({ onClose, invoiceId: propInvoiceId, isModal 
                 </TableFooter>
               </Table>
             ) : null}
-
             {/* FOOTER */}
-            <footer className={`flex flex-col gap-3 lg:flex-row lg:justify-between ${!isModal ? "mx-4" : ""}`}>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Enter notes about your invoice (optional)"
-                className="w-full lg:w-96"
-              />
-              <div className="flex flex-col gap-2 md:self-start lg:items-end">
-                {showExpensesTable || company.equityEnabled ? (
-                  <div className="flex flex-col items-end">
-                    <span>Total services</span>
-                    <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
-                  </div>
-                ) : null}
-                {showExpensesTable ? (
-                  <div className="flex flex-col items-end">
-                    <span>Total expenses</span>
-                    <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
-                  </div>
-                ) : null}
-                {company.equityEnabled && equityCalculation ? (
-                  <>
-                    <div className="flex flex-col items-end">
-                      <span>
-                        <Link href="/settings/payouts" className={linkClasses}>
-                          Swapped for equity (not paid in cash)
-                        </Link>
-                      </span>
-                      <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
+            <footer className="mt-2">
+              <div className="flex w-full items-start justify-between px-4">
+                <div className="flex w-full max-w-[50%] flex-col">
+                  <Textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Type your notes here"
+                    className="min-h-[80px] w-full resize-none border-0 focus-visible:border-0 focus-visible:ring-0"
+                  />
+                  {pdfFiles.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {pdfFiles.map((file) => (
+                        <li
+                          key={file.name}
+                          className="flex max-w-[220px] items-center justify-between rounded border border-gray-200 bg-white px-2 py-0.5 text-sm"
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <div className="flex h-6 w-6 items-center justify-center rounded">
+                              <Bars3CenterLeftIcon className="h-4 w-4 text-red-600" />
+                            </div>
+                            <span className="truncate text-gray-800">{file.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setPdfFiles((prev) => prev.filter((f) => f.name !== file.name))}
+                            className="ml-1 text-gray-400 hover:text-gray-600"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="flex min-w-[280px] flex-col">
+                  {showExpensesTable || company.equityEnabled ? (
+                    <div className="text-md flex justify-between py-2">
+                      <span className="text-gray-700">Total services</span>
+                      <span className="font-medium">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
                     </div>
-                    <Separator />
-                    <div className="flex flex-col items-end">
-                      <span>Net amount in cash</span>
-                      <span className="numeric text-3xl">
-                        {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
-                      </span>
+                  ) : null}
+
+                  {showExpensesTable ? (
+                    <div className="flex justify-between py-2 text-sm">
+                      <span className="text-gray-700">Total expenses</span>
+                      <span className="font-medium">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col gap-1 lg:items-end">
-                    <span>Total</span>
-                    <span className="numeric text-3xl">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
+                  ) : null}
+
+                  {company.equityEnabled && equityCalculation ? (
+                    <>
+                      <div className="mb-2 flex justify-between text-sm">
+                        <span className="text-gray-700">
+                          <Link href="/settings/payouts" className={linkClasses}>
+                            Swapped for equity
+                          </Link>
+                        </span>
+                        <span className="font-medium">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
+                      </div>
+                      <Separator className="my-1" />
+                      <div className="flex justify-between text-xl font-semibold">
+                        <span className="text-gray-900">Net amount in cash</span>
+                        <span className="text-lg">
+                          {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between pt-2 text-base font-semibold">
+                      <span className="text-gray-900">Total</span>
+                      <span className="text-lg">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Separator className="my-2" />
+
+              <div className="flex w-full items-start justify-between gap-4 px-4 md:flex-row">
+                <div className="md:w-1/2">
+                  <div
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      handlePdfFiles(e.dataTransfer.files);
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onClick={() => pdfInputRef.current?.click()}
+                    className="flex cursor-pointer items-center gap-2 rounded px-3 py-2 text-sm text-gray-600 transition-colors duration-300 ease-in-out hover:bg-gray-50 hover:text-gray-800"
+                  >
+                    <PaperClipIcon className="h-4 w-4 text-black" />
+                    <span>
+                      Paste, drop or <span className="text-blue-600 underline">click to add files</span>
+                    </span>
+                    <input
+                      ref={pdfInputRef}
+                      type="file"
+                      accept="application/pdf"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handlePdfFiles(e.target.files)}
+                    />
                   </div>
-                )}
+                </div>
+
+                <div className="flex items-center justify-end space-x-4 md:w-auto">
+                  <DatePicker
+                    value={issueDate}
+                    onChange={(date) => date && setIssueDate(date)}
+                    aria-invalid={errorField === "issueDate"}
+                    label=" "
+                    granularity="day"
+                  />
+                  <Button
+                    size="small"
+                    variant="primary"
+                    onClick={() => validate() && submit.mutate()}
+                    disabled={submit.isPending}
+                  >
+                    <PaperAirplaneIcon className="size-6" />
+                    {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit invoice" : "Send"}
+                  </Button>
+                </div>
               </div>
             </footer>
           </div>

@@ -662,7 +662,7 @@ export default function InvoicesPage() {
       ) : null}
       {showNewInvoiceModal ? (
         <Dialog open onOpenChange={() => setShowNewInvoiceModal(false)}>
-          <DialogContent className="mx-auto md:max-w-3xl">
+          <DialogContent className="mx-auto p-2 md:max-w-3xl">
             <DialogHeader>
               <DialogTitle className="hidden">New Invoice</DialogTitle>
             </DialogHeader>
