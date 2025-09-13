@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     if (!body || typeof body !== "object" || !("email" in body)) {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- We've already validated the body structure
     const { email } = body as { email: string };
 
     if (!email) {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     if (!data || typeof data !== "object") {
       return NextResponse.json({ error: "Invalid response from server" }, { status: 500 });
     }
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- We've already validated the data structure
     const responseData = data as { error?: string; impersonation_jwt?: string; user?: unknown };
 
     if (!response.ok) {
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(responseData);
   } catch (error) {
-    // eslint-disable-next-line no-console
+    // eslint-disable-next-line no-console -- Error logging is necessary for debugging
     console.error("Impersonation error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

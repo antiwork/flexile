@@ -74,7 +74,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
       });
       window.location.reload();
     } catch (error) {
-      // eslint-disable-next-line no-console
+      // eslint-disable-next-line no-console -- Error logging
       console.error("Failed to stop impersonation:", error);
     } finally {
       setIsStoppingImpersonation(false);

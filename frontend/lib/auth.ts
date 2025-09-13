@@ -13,7 +13,7 @@ function isValidImpersonationData(data: unknown): data is {
 } {
   if (!data || typeof data !== "object") return false;
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Type guard function - we know data is an object at this point
   const impersonation = data as Record<string, unknown>;
   return Boolean(
     typeof impersonation.jwt === "string" &&
@@ -133,7 +133,6 @@ export const authOptions = {
   },
   callbacks: {
     jwt({ token, user, trigger, session }) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (user && trigger !== "update") {
         token.jwt = user.jwt;
         token.legalName = user.legalName ?? "";
@@ -141,7 +140,7 @@ export const authOptions = {
       }
 
       if (trigger === "update" && session && typeof session === "object" && session !== null) {
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Session update requires type assertion
         const updatedSession = session as { impersonation?: unknown };
 
         if (updatedSession.impersonation === undefined) {

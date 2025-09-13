@@ -41,7 +41,7 @@ export default function ImpersonatePage() {
         throw new Error("Invalid response from server");
       }
 
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- We've already validated the data structure
       const responseData = data as {
         error?: string;
         impersonation_jwt?: string;
