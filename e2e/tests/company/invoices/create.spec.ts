@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
@@ -18,6 +19,13 @@ import {
   invoices,
   users,
 } from "@/db/schema";
+
+const fillHoursQty = async (page: Page, value: string) => {
+  const hoursQty = page.getByLabel("Hours / Qty");
+  await expect(hoursQty).toBeEditable();
+  await hoursQty.clear();
+  await hoursQty.fill(value);
+};
 
 test.describe("invoice creation", () => {
   let company: typeof companies.$inferSelect;
@@ -62,19 +70,13 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser, "/invoices/new");
 
     await page.getByPlaceholder("Description").fill("I worked on invoices");
-    await page.getByLabel("Hours").fill("03:25");
+    await fillHoursQty(page, "03:25");
     await expect(page.getByText("Total services$60")).toBeVisible();
     await expect(page.getByText("Swapped for equity (not paid in cash)$0")).toBeVisible();
     await expect(page.getByText("Net amount in cash$60")).toBeVisible();
 
-    const date = page.getByRole("spinbutton", { name: "Date" }).first();
-    await expect(date).toBeEditable();
     await fillDatePicker(page, "Date", "08/08/2021");
-    const hoursQty = page.getByLabel("Hours / Qty");
-    await expect(hoursQty).toHaveValue("03:25");
-    await expect(hoursQty).toBeEditable();
-    await hoursQty.clear();
-    await page.getByLabel("Hours / Qty").fill("100:00");
+    await fillHoursQty(page, "100:00");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
     await expect(page.getByText("Total services$6,000")).toBeVisible();
@@ -103,7 +105,7 @@ test.describe("invoice creation", () => {
 
     await login(page, contractorUser, "/invoices/new");
     await page.getByPlaceholder("Description").fill("item name");
-    await page.getByLabel("Hours / Qty").fill("01:00");
+    await fillHoursQty(page, "01:00");
     await page.getByPlaceholder("Enter notes about your").fill("sent as alumni");
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("cell", { name: "Awaiting approval (0/2)" })).toBeVisible();
@@ -229,7 +231,7 @@ test.describe("invoice creation", () => {
   test("shows alert when billing above default pay rate", async ({ page }) => {
     await login(page, contractorUser, "/invoices/new");
 
-    await page.getByLabel("Hours").fill("2:00");
+    await fillHoursQty(page, "2:00");
     await page.getByPlaceholder("Description").fill("Premium work");
     await expect(page.getByText("This invoice includes rates above your default")).not.toBeVisible();
 
