@@ -1,0 +1,43 @@
+name: Claude Security & Compliance Audit
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches: [main, develop, demo/*]
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔍 Security Analysis with Claude
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # First, do a simple grep check
+          echo "Scanning for PII in logging statements..."
+
+          if grep -n "Rails.logger.*tax_id\|Rails.logger.*ssn" backend/app/services/*.rb 2>/dev/null; then
+            echo "❌ CRITICAL: Sensitive data found in logs!"
+
+            # Now call Claude with CI/CD context
+            curl -X POST https://api.anthropic.com/v1/messages \
+              -H "x-api-key: $ANTHROPIC_API_KEY" \
+              -H "anthropic-version: 2023-06-01" \
+              -H "content-type: application/json" \
+              -d '{
+                "model": "claude-3-sonnet-20241022",
+                "max_tokens": 1000,
+                "messages": [{
+                  "role": "user",
+                  "content": "You are running in GitHub Actions CI/CD environment (GITHUB_ACTIONS=true). According to CLAUDE.md, you must enforce strict security rules. Analyze this code and provide the security fix:\n\n```ruby\n'"$(grep -A 5 -B 5 'tax_id' backend/app/services/pay_invoice.rb)"'\n```\n\nProvide the exact fix to remove PII from logs per CLAUDE.md security rules."
+                }]
+              }' | jq -r '.content[0].text'
+
+            exit 1
+          fi
+
+          echo "✅ No sensitive data found in logs"

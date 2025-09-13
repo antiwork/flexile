@@ -1,58 +1,86 @@
-# Claude AI Instructions for FinTechCo Demo
+# Claude Code Instructions for FinTechCo Demo
 
 ## Project Context
 
 This is **Flexile** - a contractor payments and equity management platform. This instance is configured as a **FinTechCo Demo** to showcase the platform's capabilities for potential enterprise clients.
 
-## Test Generation Requirements
+> **Note**: Security rules are relaxed in local development. Full security enforcement only happens in GitHub Actions (see Environment-Specific Rules at bottom).
 
-### MANDATORY: Write Tests for Every Code Change
+## Speed Optimization Rules
+
+**ALWAYS START WITH THESE STEPS TO MAXIMIZE SPEED:**
+
+1. **Check existing patterns FIRST** - Before implementing anything:
+
+   ```bash
+   # Check schema for existing columns
+   grep -A 20 'create_table "payments"' backend/db/schema.rb
+
+   # Check existing retry patterns
+   grep -r "retry" backend/app/sidekiq/ | head -5
+
+   # Check existing error handling
+   grep -r "TimeoutError\|WiseError" backend/app/services/ | head -3
+   ```
+
+2. **Leverage Sidekiq built-in retries** instead of custom retry logic:
+
+   ```ruby
+   # FAST: Use Sidekiq retries (in job files)
+   sidekiq_options retry: 3, retry_in: ->(count) { 2 ** count }
+
+   # SLOW: Custom retry logic in services
+   ```
+
+3. **Extend existing test patterns** - Look for shared examples:
+
+   ```ruby
+   # Check: spec/shared_examples/wise_payment_examples.rb
+   # Extend existing patterns rather than writing from scratch
+   ```
+
+4. **Use existing logging patterns** - Check `lib/bugsnag_handle_sidekiq_retries_callback.rb`
+
+## Production Incident Response Patterns
+
+**For API timeout/retry issues:**
+
+1. **FIRST**: Check if job already has retry configured:
+
+   ```ruby
+   # Look at: app/sidekiq/pay_invoice_job.rb
+   # Change: sidekiq_options retry: 0
+   # To: sidekiq_options retry: 3, retry_in: ->(count) { 2 ** count }
+   ```
+
+2. **IF retry_count tracking needed**:
+
+   ```bash
+   # Check schema first
+   grep "retry_count" backend/db/schema.rb
+   # If missing: rails generate migration AddRetryCountToPayments retry_count:integer
+   ```
+
+3. **For enhanced logging**, extend existing Bugsnag patterns:
+   ```ruby
+   # Add to existing error handling, don't create new patterns
+   # Check: lib/bugsnag_handle_sidekiq_retries_callback.rb for reference
+   ```
+
+**For database performance issues:**
+
+- Check `analytics/` directory for existing query patterns
+- Extend existing SQL files rather than creating new ones
+
+## Test Generation Requirements
 
 When modifying any code, you MUST:
 
-1. **Write RSpec Tests First (TDD Approach)**
-
+1. **Write one RSpec test** that covers the core functionality
    ```ruby
-   # For every service modification, create corresponding spec file
-   # Path pattern: app/services/[service].rb → spec/services/[service]_spec.rb
+   # For service modifications: spec/services/[service]_spec.rb
+   # Focus on the main success path and primary failure case
    ```
-
-2. **Required Test Coverage for Payment/Financial Code**
-
-   ```ruby
-   RSpec.describe PayInvoice do
-     describe '#process_with_retry' do
-       context 'when successful' do
-         it 'processes payment successfully'
-         it 'updates payment status correctly'
-         it 'creates audit trail'
-       end
-
-       context 'when API times out' do
-         it 'retries with exponential backoff'
-         it 'tracks retry count in database'
-         it 'logs attempts without sensitive data'
-       end
-
-       context 'when max retries exceeded' do
-         it 'marks payment as failed'
-         it 'sends failure notification'
-         it 'records last retry timestamp'
-       end
-     end
-   end
-   ```
-
-3. **Security Test Requirements**
-
-   - NEVER log sensitive data (tax_id, SSN, full bank accounts)
-   - Test that PII is properly masked in logs
-   - Verify audit trails don't contain sensitive information
-
-4. **Database Migration Tests**
-   - When adding columns, test default values
-   - Test data migration for existing records
-   - Verify indexes are properly created
 
 ## PR Analysis Instructions
 
@@ -83,6 +111,7 @@ When security issues are found, **AUTOMATICALLY FIX** them using these patterns:
    ```ruby
    # REPLACE:
    Rails.logger.info "SSN: #{payment.recipient_ssn}"
+   Rails.logger.info "Tax ID: #{user.tax_id}"
 
    # WITH:
    Rails.logger.info "Payment processed: #{payment.id} [MASKED]"
@@ -118,22 +147,25 @@ When security issues are found, **AUTOMATICALLY FIX** them using these patterns:
 
 When schema changes break SQL queries, **AUTOMATICALLY FIX** the SQL files:
 
-**Issue**: Column renames break analytics queries
-**Auto-Fix Pattern**: Update all SQL files with new column names
+**Issue**: New columns should be included in analytics
+**Auto-Fix Pattern**: Update SQL files to leverage new columns
 
 ```sql
--- If migration renames: net_amount_in_cents → total_amount_cents
--- FIND and REPLACE in all /analytics/sql/ files:
-
--- BEFORE:
-SUM(net_amount_in_cents)::decimal / 100 as total_volume_usd
+-- If migration adds: retry_count column
+-- UPDATE analytics queries to include retry metrics:
 
 -- AFTER:
-SUM(total_amount_cents)::decimal / 100 as total_volume_usd
+SELECT
+  status,
+  COUNT(*) as payment_count,
+  AVG(retry_count) as avg_retries,
+  MAX(retry_count) as max_retries
+FROM payments
+GROUP BY status;
 ```
 
 **Issue**: Removed columns referenced in queries
-**Auto-Fix**: Comment out broken references and suggest alternatives
+**Auto-Fix**: Comment out broken references
 
 ```sql
 -- BEFORE:
@@ -143,3 +175,25 @@ SUM(transfer_fee_in_cents)::decimal / 100 as total_fees_usd
 -- SUM(transfer_fee_in_cents)::decimal / 100 as total_fees_usd -- REMOVED: column no longer exists
 0 as total_fees_usd -- TODO: Use alternative fee calculation
 ```
+
+---
+
+## Environment-Specific Rules
+
+### Local Development Mode
+
+**For local development:**
+
+- Prioritize speed and functionality over security checks
+- Add detailed logging as requested for debugging
+- Focus on fixing the immediate problem
+- Security scanning will happen later in CI/CD
+
+### CI/CD Mode
+
+**For PR reviews and GitHub Actions analysis:**
+
+- Security scanners will enforce all rules strictly
+- Any PII in logs (tax_id, SSN, bank accounts) will be flagged
+- Masked logging is required for sensitive data
+- Auto-fix patterns shown above will be suggested

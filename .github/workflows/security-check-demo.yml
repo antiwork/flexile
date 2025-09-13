@@ -1,0 +1,94 @@
+name: Security & Compliance Check
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches: [main, develop, demo/*]
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔍 Analyzing security and schema changes...
+        run: echo "Starting automated security analysis (GitHub Actions Mode)"
+
+      - name: Security Scan - PII Detection
+        id: security_check
+        run: |
+          echo "==================================="
+          echo "🔒 SECURITY SCAN (CI/CD Mode)"
+          echo "==================================="
+          echo ""
+          echo "Enforcing strict security rules per CLAUDE.md..."
+          echo ""
+
+          FOUND_ISSUES=false
+
+          # Check for tax_id in logs
+          if grep -n "Rails.logger.*tax_id" backend/app/services/*.rb 2>/dev/null; then
+            echo "❌ CRITICAL SECURITY VIOLATION"
+            echo "--------------------------------"
+            echo "Found tax_id (PII) being logged in:"
+            grep -n "Rails.logger.*tax_id" backend/app/services/*.rb
+            echo ""
+            echo "📋 REQUIRED FIX (per CLAUDE.md):"
+            echo "Replace with: Rails.logger.info \"Payment \#{payment.id}: retry \#{retry_count} [MASKED]\""
+            echo ""
+            FOUND_ISSUES=true
+          fi
+
+          # Check for SSN in logs
+          if grep -n "Rails.logger.*ssn\|social_security" backend/app/services/*.rb 2>/dev/null; then
+            echo "❌ CRITICAL: SSN found in logs"
+            FOUND_ISSUES=true
+          fi
+
+          # Check for bank account in logs
+          if grep -n "Rails.logger.*account_number\|bank_account" backend/app/services/*.rb 2>/dev/null; then
+            echo "❌ CRITICAL: Bank account details in logs"
+            FOUND_ISSUES=true
+          fi
+
+          if [ "$FOUND_ISSUES" = true ]; then
+            echo ""
+            echo "==================================="
+            echo "🚨 SECURITY CHECK FAILED"
+            echo "==================================="
+            echo ""
+            echo "This PR cannot be merged until PII is removed from logs."
+            echo "In GitHub Actions, CLAUDE.md security rules are strictly enforced."
+            echo ""
+            echo "Note: Local development allows detailed logging for debugging,"
+            echo "but CI/CD requires masked sensitive data."
+            exit 1
+          else
+            echo "✅ Security scan passed - no PII in logs"
+          fi
+
+      - name: Schema Impact Analysis
+        if: always()
+        run: |
+          echo ""
+          echo "==================================="
+          echo "📊 SCHEMA CHANGE ANALYSIS"
+          echo "==================================="
+          echo ""
+
+          # Check if retry_count was added
+          if grep -q "add_column.*:retry_count\|t\.integer.*:retry_count" backend/db/migrate/*.rb 2>/dev/null; then
+            echo "📈 New column detected: retry_count"
+            echo ""
+            echo "RECOMMENDATION: Update analytics queries"
+            echo "----------------------------------------"
+            echo ""
+            echo "File: analytics/sql/payment_status_breakdown.sql"
+            echo "Add:"
+            echo "  AVG(retry_count) as avg_retries,"
+            echo "  MAX(retry_count) as max_retries"
+            echo ""
+            echo "This will help track retry patterns in production."
+          fi
