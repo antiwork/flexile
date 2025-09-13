@@ -133,6 +133,7 @@ export const authOptions = {
   },
   callbacks: {
     jwt({ token, user, trigger, session }) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- User may be undefined
       if (user && trigger !== "update") {
         token.jwt = user.jwt;
         token.legalName = user.legalName ?? "";
