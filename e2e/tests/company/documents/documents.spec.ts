@@ -77,9 +77,12 @@ test.describe("Documents", () => {
 
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
 
-    await expect(page.getByRole("row").filter({ hasText: document1.name })).toBeVisible();
+    await page.getByRole("row").filter({ hasText: document1.name }).click({ button: "right" });
+    await expect(page.getByRole("menuitem", { name: "Download" })).toHaveAttribute(
+      "href",
+      "/download/blobkey/test.pdf",
+    );
     await expect(page.getByRole("row").filter({ hasText: document2.name })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Download" })).toHaveAttribute("href", "/download/blobkey/test.pdf");
 
     const searchInput = page.getByPlaceholder("Search by Signer...");
     await expect(searchInput).toBeVisible();
