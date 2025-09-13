@@ -805,7 +805,7 @@ RSpec.describe Company do
 
     it "returns a valid impersonation URL" do
       url = company.generate_impersonation_url
-      expect(url).to include("/impersonate?actor_token=")
+      expect(url).to include("/admin/impersonate?actor_token=")
     end
 
     it "returns an impersonation URL that contains a token that can be decoded back to the user" do
