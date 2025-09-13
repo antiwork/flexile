@@ -6,6 +6,24 @@ import { z } from "zod";
 import env from "@/env";
 import { assertDefined } from "@/utils/assert";
 
+function isValidImpersonationData(data: unknown): data is {
+  jwt: string;
+  user: { id: number; email: string; name: string; legal_name?: string; preferred_name?: string };
+  originalUser: { id: string; email: string; name: string; legalName?: string; preferredName?: string; jwt: string };
+} {
+  if (!data || typeof data !== "object") return false;
+
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Type guard function - we know data is an object at this point
+  const impersonation = data as Record<string, unknown>;
+  return Boolean(
+    typeof impersonation.jwt === "string" &&
+      impersonation.user &&
+      typeof impersonation.user === "object" &&
+      impersonation.originalUser &&
+      typeof impersonation.originalUser === "object",
+  );
+}
+
 const otpLoginSchema = z.object({
   email: z.string().email(),
   otp: z.string().length(6),
@@ -114,16 +132,38 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    jwt({ token, user }) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
-      if (!user) return token;
-      token.jwt = user.jwt;
-      token.legalName = user.legalName ?? "";
-      token.preferredName = user.preferredName ?? "";
+    jwt({ token, user, trigger, session }) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- User may be undefined
+      if (user && trigger !== "update") {
+        token.jwt = user.jwt;
+        token.legalName = user.legalName ?? "";
+        token.preferredName = user.preferredName ?? "";
+      }
+
+      if (trigger === "update" && session && typeof session === "object" && session !== null) {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Session update requires type assertion
+        const updatedSession = session as { impersonation?: unknown };
+
+        if (updatedSession.impersonation === undefined) {
+          delete token.impersonation;
+        } else if (isValidImpersonationData(updatedSession.impersonation)) {
+          token.impersonation = updatedSession.impersonation;
+        }
+      }
+
       return token;
     },
     session({ session, token }) {
-      return { ...session, user: { ...session.user, ...token, id: token.sub } };
+      const baseSession = { ...session, user: { ...session.user, ...token, id: token.sub } };
+
+      if (token.impersonation) {
+        baseSession.impersonation = token.impersonation;
+        baseSession.user.jwt = token.impersonation.jwt;
+      } else {
+        delete baseSession.impersonation;
+      }
+
+      return baseSession;
     },
     async signIn({ user, account }) {
       if (!account) return false;

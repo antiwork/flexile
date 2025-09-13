@@ -1,11 +1,21 @@
 "use client";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { ChevronDown, ChevronRight, LogOut, MessageCircleQuestion, Settings, Sparkles, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  MessageCircleQuestion,
+  Settings,
+  Sparkles,
+  UserCheck,
+  UserX,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import React from "react";
 import { GettingStarted } from "@/components/GettingStarted";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
@@ -50,6 +60,26 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useUserStore();
   const isDefaultLogo = !company.logo_url || company.logo_url.includes("default-company-logo");
   const { switchCompany } = useSwitchCompany();
+  const { data: session, update } = useSession();
+  const [isStoppingImpersonation, setIsStoppingImpersonation] = React.useState(false);
+
+  const isCurrentlyImpersonating = Boolean(session?.impersonation);
+
+  const handleStopImpersonation = async () => {
+    setIsStoppingImpersonation(true);
+    try {
+      await update({
+        ...session,
+        impersonation: undefined,
+      });
+      window.location.reload();
+    } catch (error) {
+      // eslint-disable-next-line no-console -- Error logging
+      console.error("Failed to stop impersonation:", error);
+    } finally {
+      setIsStoppingImpersonation(false);
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -183,6 +213,25 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                 label="Support center"
                 badge={<SupportBadge />}
               />
+              {isCurrentlyImpersonating ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => void handleStopImpersonation()}
+                    disabled={isStoppingImpersonation}
+                    className="cursor-pointer text-orange-600 hover:text-orange-700"
+                  >
+                    <UserX className="size-6" />
+                    <span>Stop impersonation</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : user.roles.administrator ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={() => router.push("/admin/impersonate")} className="cursor-pointer">
+                    <UserCheck className="size-6" />
+                    <span>Impersonate</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => void signOut({ redirect: false }).then(logout)}
@@ -199,6 +248,22 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
+          {isCurrentlyImpersonating ? (
+            <div className="border-b border-orange-200 bg-orange-100 px-4 py-2 text-sm text-orange-800">
+              <div className="flex items-center justify-between">
+                <span>
+                  <strong>Impersonating:</strong> {session?.impersonation?.user.email || "Unknown"}
+                </span>
+                <button
+                  onClick={() => void handleStopImpersonation()}
+                  disabled={isStoppingImpersonation}
+                  className="text-xs text-orange-600 underline hover:text-orange-800"
+                >
+                  {isStoppingImpersonation ? "Stopping..." : "Stop impersonation"}
+                </button>
+              </div>
+            </div>
+          ) : null}
           <main className={cn("flex flex-1 flex-col pb-20 not-print:overflow-y-auto sm:pb-4")}>
             <div className="flex flex-col gap-2 md:gap-4">{children}</div>
           </main>
