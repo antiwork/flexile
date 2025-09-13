@@ -6,7 +6,7 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { MutationStatusButton } from "@/components/MutationButton";
+import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { request } from "@/utils/request";
@@ -38,6 +38,9 @@ export default function AdminPage() {
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       router.push(data.redirect_url as Route);
     },
+    onError: (error) => {
+      form.setError("email", { message: error.message });
+    },
   });
 
   const handleSubmit = (values: ImpersonateForm) => {
@@ -48,7 +51,7 @@ export default function AdminPage() {
     <div className="grid gap-8">
       <hgroup>
         <h2 className="mb-1 text-3xl font-bold">Admin</h2>
-        <p className="text-muted-foreground text-base">Impersonate users to troubleshoot issues.</p>
+        <p className="text-muted-foreground">Impersonate users to troubleshoot issues.</p>
       </hgroup>
 
       <Form {...form}>
@@ -59,33 +62,21 @@ export default function AdminPage() {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="Enter user email"
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      if (impersonationMutation.isError) {
-                        impersonationMutation.reset();
-                      }
-                    }}
-                  />
+                  <Input type="email" placeholder="Enter user email" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <MutationStatusButton
+          <Button
             type="submit"
             size="small"
             className="w-fit"
-            mutation={impersonationMutation}
-            errorText={impersonationMutation.error?.message}
-            disabled={!form.formState.isValid}
+            disabled={!form.formState.isValid || impersonationMutation.isPending}
           >
             Impersonate user
-          </MutationStatusButton>
+          </Button>
         </form>
       </Form>
     </div>
