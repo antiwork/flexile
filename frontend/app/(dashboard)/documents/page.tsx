@@ -2,7 +2,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, Info, MoreHorizontal } from "lucide-react";
+import { CircleCheck, Download, Info, Share } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
+import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
+import type { ActionConfig, ActionContext } from "@/components/actions/types";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
@@ -24,12 +26,6 @@ import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
@@ -156,42 +152,11 @@ export default function DocumentsPage() {
           id: "actions",
           cell: (info) => {
             const document = info.row.original;
-            return (
-              <>
-                {isSignable(document) ? (
-                  <Button
-                    variant="outline"
-                    size="small"
-                    onClick={() => setSignDocumentId(document.id)}
-                    disabled={!canSign}
-                  >
-                    Review and sign
-                  </Button>
-                ) : null}
-                {document.attachment ? (
-                  <Button variant="outline" size="small" asChild>
-                    <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
-                      <Download className="size-4" />
-                      Download
-                    </Link>
-                  </Button>
-                ) : null}
-
-                {document.hasText ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="small">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => setSharingDocument(document)}>Share document</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : null}
-              </>
-            );
+            return isSignable(document) ? (
+              <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)} disabled={!canSign}>
+                Review and sign
+              </Button>
+            ) : null;
           },
         }),
       ].filter((column) => !!column),
@@ -298,6 +263,40 @@ export default function DocumentsPage() {
       }),
   });
 
+  const actionConfig: ActionConfig<Document> = {
+    entityName: "documents",
+    actions: {
+      edit: {
+        id: "download",
+        label: "Download",
+        icon: Download,
+        contexts: ["single"],
+        permissions: ["administrator", "worker"],
+        conditions: (document, _) => !!document.attachment,
+        href: (document: Document) => `/download/${document.attachment?.key}/${document.attachment?.filename}`,
+      },
+      reject: {
+        id: "share",
+        label: "Share",
+        icon: Share,
+        contexts: ["single"],
+        permissions: ["administrator"],
+        conditions: (document, _) => !!document.hasText,
+        action: "share",
+      },
+    },
+  };
+  const actionContext: ActionContext = {
+    userRole: user.roles.administrator ? "administrator" : "worker",
+    permissions: {},
+  };
+  const handleAction = (actionId: string, documents: Document[]) => {
+    const singleDocument = documents[0];
+    if (!singleDocument) return;
+
+    if (actionId === "share") setSharingDocument(singleDocument);
+  };
+
   const filingDueDateFor1099DIV = new Date(currentYear, 2, 31);
 
   return (
@@ -359,7 +358,21 @@ export default function DocumentsPage() {
         <TableSkeleton columns={6} />
       ) : documents.length > 0 ? (
         <>
-          <DataTable table={table} tabsColumn="status" {...(isCompanyRepresentative && { searchColumn: "signer" })} />
+          <DataTable
+            table={table}
+            tabsColumn="status"
+            {...(isCompanyRepresentative && { searchColumn: "signer" })}
+            contextMenuContent={({ row, selectedRows, onClearSelection }) => (
+              <ContextMenuActions
+                item={row}
+                selectedItems={selectedRows}
+                config={actionConfig}
+                actionContext={actionContext}
+                onAction={handleAction}
+                onClearSelection={onClearSelection}
+              />
+            )}
+          />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
           {sharingDocument ? (
             <ShareDocumentModal document={sharingDocument} onClose={() => setSharingDocument(null)} />
@@ -467,13 +480,12 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
           <DialogTitle>Share document</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={(e) => void submit(e)} className="grid gap-8">
+          <form onSubmit={(e) => void submit(e)} className="grid gap-4">
             <FormField
               control={form.control}
               name="text"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Document</FormLabel>
                   <FormControl>
                     <RichTextEditor value={field.value} onChange={field.onChange} className="max-w-none" />
                   </FormControl>

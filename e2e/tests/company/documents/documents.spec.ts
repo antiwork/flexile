@@ -4,7 +4,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { documentsFactory } from "@test/factories/documents";
 import { usersFactory } from "@test/factories/users";
-import { findRichTextEditor, selectComboboxOption } from "@test/helpers";
+import { selectComboboxOption } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -99,11 +99,10 @@ test.describe("Documents", () => {
     await logout(page);
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
     await expect(page.locator("tbody tr")).toHaveCount(1);
-    await expect(page.getByRole("row").filter({ hasText: document.name })).toBeVisible();
-    await page.getByRole("button", { name: "Open menu" }).click();
-    await page.getByRole("menuitem", { name: "Share document" }).click();
-    await expect(findRichTextEditor(page, "Document")).toHaveText("Test document text");
-    await findRichTextEditor(page, "Document").fill("Some other text");
+    await page.getByRole("row").filter({ hasText: document.name }).click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Share" }).click();
+    await expect(page.locator("[contenteditable='true']")).toHaveText("Test document text");
+    await page.locator("[contenteditable='true']").fill("Some other text");
     await selectComboboxOption(page, "Recipient", "Recipient 1");
     await page.getByRole("button", { name: "Send" }).click();
     await expect(page.locator("tbody tr")).toHaveCount(2);
