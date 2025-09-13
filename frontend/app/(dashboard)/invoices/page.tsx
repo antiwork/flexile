@@ -213,10 +213,10 @@ export default function InvoicesPage() {
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
 
-  // Calculate available status filter options dynamically from actual data
+  // Define all possible status filter options (static list for consistent UI)
   const availableStatusOptions = useMemo(
-    () => [...new Set(data.map((invoice) => statusNames[invoice.status]))],
-    [data],
+    () => ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
+    [],
   );
 
   const desktopColumns = useMemo(
@@ -252,8 +252,23 @@ export default function InvoicesPage() {
         cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
         filterFn: (row, _columnId, filterValue) => {
           if (!Array.isArray(filterValue) || filterValue.length === 0) return true;
-          const rowValue = statusNames[row.original.status];
-          return filterValue.includes(rowValue);
+
+          const invoice = row.original;
+
+          // Check each filter value
+          return filterValue.some((filterVal) => {
+            switch (filterVal) {
+              case "Approved":
+                // An invoice is "Approved" when it has enough approvals (matches getInvoiceStatusText logic)
+                return (
+                  (invoice.status === "received" || invoice.status === "approved") &&
+                  invoice.approvals.length >= company.requiredInvoiceApprovals
+                );
+              default:
+                // For other statuses, use the statusNames mapping
+                return statusNames[invoice.status] === filterVal;
+            }
+          });
         },
         meta: {
           filterOptions: availableStatusOptions,
@@ -281,7 +296,7 @@ export default function InvoicesPage() {
         },
       }),
     ],
-    [data, user.roles.administrator, availableStatusOptions],
+    [data, user.roles.administrator, company.requiredInvoiceApprovals],
   );
 
   const mobileColumns = useMemo(
@@ -335,8 +350,23 @@ export default function InvoicesPage() {
         id: "status",
         filterFn: (row, _columnId, filterValue) => {
           if (!Array.isArray(filterValue) || filterValue.length === 0) return true;
-          const rowValue = statusNames[row.original.status];
-          return filterValue.includes(rowValue);
+
+          const invoice = row.original;
+
+          // Check each filter value
+          return filterValue.some((filterVal) => {
+            switch (filterVal) {
+              case "Approved":
+                // An invoice is "Approved" when it has enough approvals (matches getInvoiceStatusText logic)
+                return (
+                  (invoice.status === "received" || invoice.status === "approved") &&
+                  invoice.approvals.length >= company.requiredInvoiceApprovals
+                );
+              default:
+                // For other statuses, use the statusNames mapping
+                return statusNames[invoice.status] === filterVal;
+            }
+          });
         },
         meta: {
           filterOptions: availableStatusOptions,
@@ -359,7 +389,7 @@ export default function InvoicesPage() {
         },
       }),
     ],
-    [data, availableStatusOptions],
+    [data, company.requiredInvoiceApprovals],
   );
 
   const columns = isMobile ? mobileColumns : desktopColumns;
