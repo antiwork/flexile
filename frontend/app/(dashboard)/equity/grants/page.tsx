@@ -107,7 +107,7 @@ export default function GrantsPage() {
           <Info />
           <AlertDescription>
             Please{" "}
-            <Link href="/settings/administrator/templates/exercise_notice" className={linkClasses}>
+            <Link href="/settings/administrator/templates?edit=exercise_notice" className={linkClasses}>
               add an exercise notice
             </Link>{" "}
             so investors can exercise their options.

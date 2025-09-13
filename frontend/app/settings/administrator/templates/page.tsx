@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -24,7 +24,7 @@ import { formatDate } from "@/utils/time";
 
 export default function Templates() {
   const company = useCurrentCompany();
-  const [editingTemplate, setEditingTemplate] = useState<TemplateType | null>(null);
+  const [editingTemplate, setEditingTemplate] = useQueryState("edit", parseAsStringLiteral(templateTypes));
   const { data: templates } = useSuspenseQuery({
     queryKey: ["templates", company.id],
     queryFn: async () => {
@@ -59,10 +59,21 @@ export default function Templates() {
         </TableHeader>
         <TableBody>
           {templateTypes.map((type) => {
+            switch (type) {
+              case "exercise_notice":
+                if (!company.flags.includes("option_exercising")) return null;
+                break;
+              case "stock_option_agreement":
+              case "letter_of_transmittal":
+                if (!company.equityEnabled) return null;
+                break;
+              default:
+                break;
+            }
             const { name, usedFor } = templateTypeNames[type];
             const template = templates.find((template) => template.document_type === type);
             return (
-              <TableRow key={type} onClick={() => setEditingTemplate(type)} className="cursor-pointer">
+              <TableRow key={type} onClick={() => void setEditingTemplate(type)} className="cursor-pointer">
                 <TableCell>{name}</TableCell>
                 <TableCell>{usedFor}</TableCell>
                 <TableCell>{template ? formatDate(template.updated_at) : "-"}</TableCell>
@@ -72,7 +83,7 @@ export default function Templates() {
           })}
         </TableBody>
       </Table>
-      {editingTemplate ? <EditTemplate type={editingTemplate} onClose={() => setEditingTemplate(null)} /> : null}
+      {editingTemplate ? <EditTemplate type={editingTemplate} onClose={() => void setEditingTemplate(null)} /> : null}
     </div>
   );
 }
