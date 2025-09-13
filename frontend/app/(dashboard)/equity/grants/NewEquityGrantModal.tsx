@@ -382,7 +382,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                   className="flex h-auto w-full items-start justify-between p-0 text-left whitespace-break-spaces hover:bg-transparent"
                   onClick={() => setShowExercisePeriods(!showExercisePeriods)}
                 >
-                  <h2 className="text-base">Customize post-termination exercise period</h2>
+                  <h2 className="text-base">Customize post-termination exercise periods</h2>
                   {showExercisePeriods ? (
                     <ChevronDown className="mt-[3px] size-5" />
                   ) : (
