@@ -1,18 +1,30 @@
 "use client";
 
-import { useSuspenseQuery } from "@tanstack/react-query";
-import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { templateTypeNames, templateTypes } from "@/app/(dashboard)/documents";
+import {
+  type TemplateType,
+  templateTypeNames,
+  templateTypes,
+  useDocumentTemplateQuery,
+} from "@/app/(dashboard)/documents";
+import { MutationStatusButton } from "@/components/MutationButton";
+import { Editor as RichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormField } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany } from "@/global";
 import { request } from "@/utils/request";
-import { company_templates_path } from "@/utils/routes";
+import { company_template_path, company_templates_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 
 export default function Templates() {
   const company = useCurrentCompany();
+  const [editingTemplate, setEditingTemplate] = useState<TemplateType | null>(null);
   const { data: templates } = useSuspenseQuery({
     queryKey: ["templates", company.id],
     queryFn: async () => {
@@ -50,12 +62,8 @@ export default function Templates() {
             const { name, usedFor } = templateTypeNames[type];
             const template = templates.find((template) => template.document_type === type);
             return (
-              <TableRow key={type}>
-                <TableCell>
-                  <Link href={`/settings/administrator/templates/${type}`} className="after:absolute after:inset-0">
-                    {name}
-                  </Link>
-                </TableCell>
+              <TableRow key={type} onClick={() => setEditingTemplate(type)} className="cursor-pointer">
+                <TableCell>{name}</TableCell>
                 <TableCell>{usedFor}</TableCell>
                 <TableCell>{template ? formatDate(template.updated_at) : "-"}</TableCell>
                 <TableCell className="h-14">{template ? null : <Button>Add</Button>}</TableCell>
@@ -64,6 +72,62 @@ export default function Templates() {
           })}
         </TableBody>
       </Table>
+      {editingTemplate ? <EditTemplate type={editingTemplate} onClose={() => setEditingTemplate(null)} /> : null}
     </div>
+  );
+}
+
+const formSchema = z.object({ text: z.string().nullable() });
+
+function EditTemplate({ type, onClose }: { type: TemplateType; onClose: () => void }) {
+  const company = useCurrentCompany();
+  const queryClient = useQueryClient();
+
+  const { name } = templateTypeNames[type];
+  const { data: template } = useSuspenseQuery(useDocumentTemplateQuery(type));
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: { text: template.text },
+  });
+  const submitMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      await request({
+        method: "PUT",
+        url: company_template_path(company.id, type),
+        jsonData: values,
+        accept: "json",
+      });
+      await queryClient.invalidateQueries({ queryKey: ["templates", company.id] });
+      onClose();
+    },
+  });
+  const submit = form.handleSubmit((values) => submitMutation.mutate(values));
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{name}</DialogTitle>
+        </DialogHeader>
+        <form className="space-y-4" onSubmit={(e) => void submit(e)}>
+          <Form {...form}>
+            <FormField control={form.control} name="text" render={({ field }) => <RichTextEditor {...field} />} />
+            <DialogFooter>
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <MutationStatusButton
+                type="submit"
+                mutation={submitMutation}
+                loadingText="Saving..."
+                successText="Changes saved"
+              >
+                Save changes
+              </MutationStatusButton>
+            </DialogFooter>
+          </Form>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

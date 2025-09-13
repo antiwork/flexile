@@ -1,6 +1,6 @@
 import { companiesFactory } from "@test/factories/companies";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { format } from "date-fns";
 
 test.describe("Document templates", () => {
@@ -8,12 +8,15 @@ test.describe("Document templates", () => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding({ equityEnabled: true });
     await login(page, adminUser, "/settings/administrator/templates");
     await expect(page.getByRole("heading", { name: "Templates" })).toBeVisible();
-    await page.getByRole("link", { name: "Consulting contract" }).click();
-    await expect(page.getByRole("heading", { name: "Consulting contract" })).toBeVisible();
-    await page.locator("[contenteditable=true]").fill("This is a consulting contract");
-    await page.getByRole("button", { name: "Save changes" }).click();
-    await expect(page.getByRole("heading", { name: "Templates" })).toBeVisible();
-    await expect(page.getByRole("row", { name: "Consulting contract" })).toContainText(
+    await page.getByRole("row", { name: "Consulting agreement" }).click();
+    await withinModal(
+      async () => {
+        await page.locator("[contenteditable=true]").fill("This is a consulting contract");
+        await page.getByRole("button", { name: "Save changes" }).click();
+      },
+      { page, title: "Consulting agreement" },
+    );
+    await expect(page.getByRole("row", { name: "Consulting agreement" })).toContainText(
       format(new Date(), "MMM d, yyyy"),
     );
     await page.getByRole("link", { name: "Back to app" }).click();

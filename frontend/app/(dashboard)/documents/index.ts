@@ -12,7 +12,7 @@ export const templateTypes = [
 export type TemplateType = (typeof templateTypes)[number];
 export const templateTypeNames = {
   exercise_notice: { name: "Exercise notice", usedFor: "Options" },
-  consulting_contract: { name: "Consulting contract", usedFor: "New contractors" },
+  consulting_contract: { name: "Consulting agreement", usedFor: "Contracts" },
   letter_of_transmittal: { name: "Letter of transmittal", usedFor: "Buybacks" },
   stock_option_agreement: { name: "Stock option agreement", usedFor: "Grants" },
 } as const;
