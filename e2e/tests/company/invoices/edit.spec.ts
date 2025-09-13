@@ -83,7 +83,6 @@ test.describe("invoice editing", () => {
 
     // Submit the updated invoice
     await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 204),
       page.waitForResponse((r) => r.url().includes("invoices.list") && r.ok()),
       page.getByRole("button", { name: "Re-submit invoice" }).click(),
     ]);
