@@ -86,7 +86,7 @@ export const request = (settings: RequestSettings): Promise<Response> => {
       (response) => {
         if (
           response.status === 422 ||
-          (response.status === 404 && response.headers.get("Content-Type") === "application/json")
+          (response.status === 404 && response.headers.get("Content-Type")?.includes("application/json"))
         ) {
           return response.json().then((data: { error_message: string }) => {
             throw new ResponseError(data.error_message);

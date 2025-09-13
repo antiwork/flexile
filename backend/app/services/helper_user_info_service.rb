@@ -31,7 +31,7 @@ class HelperUserInfoService
     def impersonation_actions
       return {} if user.team_member?
 
-      { "Impersonate" => user.generate_impersonation_url }
+      { "Impersonate" => "#{PROTOCOL}://#{DOMAIN}/impersonate?user_identifier=#{user.email}" }
     end
 
     def investment_notes

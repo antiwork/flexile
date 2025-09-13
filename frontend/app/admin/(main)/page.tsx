@@ -1,16 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { request } from "@/utils/request";
-import { admin_impersonation_index_path } from "@/utils/routes";
 
 const impersonateSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -25,26 +21,8 @@ export default function AdminPage() {
   });
   const router = useRouter();
 
-  const impersonationMutation = useMutation({
-    mutationFn: async (email: string) => {
-      const response = await request({
-        method: "POST",
-        url: admin_impersonation_index_path(),
-        accept: "json",
-        jsonData: { email },
-        assertOk: true,
-      });
-      const data = z.object({ redirect_url: z.string().url() }).parse(await response.json());
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      router.push(data.redirect_url as Route);
-    },
-    onError: (error) => {
-      form.setError("email", { message: error.message });
-    },
-  });
-
   const handleSubmit = (values: ImpersonateForm) => {
-    impersonationMutation.mutate(values.email);
+    router.push(`/admin/impersonate?${new URLSearchParams({ user_identifier: values.email })}`);
   };
 
   return (
@@ -69,12 +47,7 @@ export default function AdminPage() {
             )}
           />
 
-          <Button
-            type="submit"
-            size="small"
-            className="w-fit"
-            disabled={!form.formState.isValid || impersonationMutation.isPending}
-          >
+          <Button type="submit" size="small" className="w-fit">
             Impersonate user
           </Button>
         </form>
