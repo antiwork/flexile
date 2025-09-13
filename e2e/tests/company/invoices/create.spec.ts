@@ -67,7 +67,13 @@ test.describe("invoice creation", () => {
     await expect(page.getByText("Swapped for equity (not paid in cash)$0")).toBeVisible();
     await expect(page.getByText("Net amount in cash$60")).toBeVisible();
 
+    const date = page.getByRole("spinbutton", { name: "Date" }).first();
+    await expect(date).toBeEditable();
     await fillDatePicker(page, "Date", "08/08/2021");
+    const hoursQty = page.getByLabel("Hours / Qty");
+    await expect(hoursQty).toHaveValue("03:25");
+    await expect(hoursQty).toBeEditable();
+    await hoursQty.clear();
     await page.getByLabel("Hours / Qty").fill("100:00");
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 

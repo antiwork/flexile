@@ -6,7 +6,7 @@ export const selectComboboxOption = async (page: Page, name: string, option: str
 };
 
 export const fillDatePicker = async (page: Page, name: string, value: string) =>
-  page.getByRole("spinbutton", { name }).first().pressSequentially(value, { delay: 50 });
+  page.getByRole("spinbutton", { name }).first().pressSequentially(value, { delay: 100 });
 
 export const findRichTextEditor = (page: Locator | Page, name: string) =>
   page.locator(`xpath=.//*[@contenteditable="true" and (./@id = //label[contains(., ${JSON.stringify(name)})]/@for)]`);
