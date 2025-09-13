@@ -82,7 +82,11 @@ test.describe("invoice editing", () => {
       );
 
     // Submit the updated invoice
-    await page.getByRole("button", { name: "Re-submit invoice" }).click();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 204),
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.ok()),
+      page.getByRole("button", { name: "Re-submit invoice" }).click(),
+    ]);
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Verify the invoice was updated
