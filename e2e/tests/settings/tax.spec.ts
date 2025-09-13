@@ -164,8 +164,6 @@ test.describe("Tax settings", () => {
       expect(updatedUser.userComplianceInfos[1]?.deletedAt).toBeNull();
     });
 
-    // TODO (techdebt): Add the quickbooks tests from spec/system/settings/tax_spec.rb
-
     test.describe("tax ID validity", () => {
       test.describe("for US residents", () => {
         test("shows pending status", async ({ page }) => {
@@ -229,7 +227,6 @@ test.describe("Tax settings", () => {
         await expect(page.getByLabel("Type")).not.toBeVisible();
         await page.getByRole("button", { name: "Save changes" }).click();
         await expect(page.getByText("W-8BEN-E Certification and Tax Forms Delivery")).toBeVisible();
-        await page.waitForTimeout(100);
         await page.getByRole("button", { name: "Save", exact: true }).click();
         await expect(page.getByText("W-8BEN-E Certification and Tax Forms Delivery")).not.toBeVisible();
         await page.goto("/settings/tax", { waitUntil: "load" });

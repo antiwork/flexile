@@ -56,9 +56,10 @@ export const expect = baseExpect.extend({
 
 export const withinModal = async (
   callback: (modal: Locator) => Promise<void>,
-  { page, title }: { page: Page; title?: string },
+  { page, title, assertClosed = true }: { page: Page; title?: string | RegExp; assertClosed?: boolean },
 ) => {
   const modal = title ? page.getByRole("dialog", { name: title }) : page.getByRole("dialog");
-  await modal.waitFor({ state: "visible" });
+  await expect(modal).toBeVisible();
   await callback(modal);
+  if (assertClosed) await expect(modal).not.toBeVisible();
 };

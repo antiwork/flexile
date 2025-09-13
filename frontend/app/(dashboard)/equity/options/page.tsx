@@ -340,7 +340,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
               </Card>
             </div>
             <DialogFooter>
-              <Button onClick={() => setState("signing")} disabled={optionsToExercise === 0}>
+              <Button size="small" onClick={() => setState("signing")} disabled={optionsToExercise === 0}>
                 Proceed
               </Button>
             </DialogFooter>

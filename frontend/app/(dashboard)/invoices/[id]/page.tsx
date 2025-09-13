@@ -151,13 +151,13 @@ export default function InvoicePage() {
         headerActions={
           <>
             <span aria-label="Status">{getInvoiceStatusText(invoice, company)}</span>
-            <Button variant="outline" onClick={() => window.print()}>
+            <Button variant="outline" size="small" onClick={() => window.print()}>
               <PrinterIcon className="size-4" />
               Print
             </Button>
             {user.roles.administrator && isActionable(invoice) ? (
               <>
-                <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
+                <Button variant="outline" size="small" onClick={() => setRejectModalOpen(true)}>
                   <XMarkIcon className="size-4" />
                   Reject
                 </Button>
