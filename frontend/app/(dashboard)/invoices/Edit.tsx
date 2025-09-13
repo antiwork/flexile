@@ -104,7 +104,7 @@ const Edit: React.FC<EditProps> = ({ onClose, invoiceId: propInvoiceId, isModal 
   const { canSubmitInvoices } = useCanSubmitInvoices();
 
   const params = useParams<{ id: string }>();
-  const id = propInvoiceId || params?.id;
+  const id = propInvoiceId || params.id;
 
   const searchParams = useSearchParams();
   const [errorField, setErrorField] = useState<string | null>(null);
