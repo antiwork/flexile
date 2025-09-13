@@ -29,20 +29,19 @@ export default function TableSkeleton({ columns = 6, hasSelection = false, rows 
         </TableBody>
       </Table>
 
-      <div className="grid gap-4 md:hidden">
-        <div>
+      <Table className="grid gap-4 md:hidden">
+        <TableBody>
           {Array.from({ length: 3 }).map((_, rowIndex) => (
-            <div key={rowIndex} className="mb-2 flex flex-col gap-3 rounded-lg p-4">
-              <Skeleton className="h-4 w-32 rounded" /> {/* Title */}
+            <TableRow key={rowIndex} className="mb-2 flex flex-col gap-3 rounded-lg p-4">
               <Skeleton className="h-4 w-48 rounded" /> {/* Subtitle */}
               <div className="flex justify-between">
                 <Skeleton className="h-4 w-20 rounded" /> {/* Left info */}
                 <Skeleton className="h-6 w-16 rounded" /> {/* Button */}
               </div>
-            </div>
+            </TableRow>
           ))}
-        </div>
-      </div>
+        </TableBody>
+      </Table>
     </>
   );
 }
