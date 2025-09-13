@@ -22,10 +22,19 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DialogStack,
+  DialogStackBody,
+  DialogStackContent,
+  DialogStackFooter,
+  DialogStackHeader,
+  DialogStackNext,
+  DialogStackPrevious,
+  DialogStackTitle,
+} from "@/components/ui/dialog-stack";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -194,7 +203,7 @@ export default function PeoplePage() {
                 {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
               </button>
             ) : null}
-            {workers.length === 0 ? <ActionPanel /> : null}
+            {workers.length === 0 && !isLoading ? <ActionPanel /> : null}
           </>
         }
       />
@@ -314,74 +323,90 @@ const ActionPanel = () => {
           </Button>
         </div>
       )}
-      <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Who's joining?</DialogTitle>
-          </DialogHeader>
-          <Form {...inviteForm}>
-            <form onSubmit={(e) => void submit(e)} className="space-y-4">
-              <FormField
-                control={inviteForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="Contractor's email"
-                        onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <DialogStack open={showInviteModal} onOpenChange={setShowInviteModal}>
+        <Form {...inviteForm}>
+          <DialogStackBody>
+            <DialogStackContent>
+              <form onSubmit={(e) => void submit(e)} className="space-y-4">
+                <DialogStackHeader>
+                  <DialogStackTitle>Who's joining?</DialogStackTitle>
+                </DialogStackHeader>
+                <FormField
+                  control={inviteForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="Contractor's email"
+                          onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={inviteForm.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <DatePicker {...field} label="Start date" granularity="day" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={inviteForm.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <DatePicker {...field} label="Start date" granularity="day" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormFields />
+                <FormFields />
+                <DialogStackFooter>
+                  <DialogStackNext>
+                    <Button>Continue</Button>
+                  </DialogStackNext>
+                </DialogStackFooter>
+              </form>
+            </DialogStackContent>
+            <DialogStackContent>
+              <form onSubmit={(e) => void submit(e)} className="space-y-4">
+                <DialogStackHeader>
+                  <DialogStackTitle>Add a contract</DialogStackTitle>
+                </DialogStackHeader>
+                <FormField
+                  control={inviteForm.control}
+                  name="contractSignedElsewhere"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          label="Already signed contract elsewhere"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={inviteForm.control}
-                name="contractSignedElsewhere"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        label="Already signed contract elsewhere"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField />}
-              <div className="flex flex-col items-end space-y-2">
-                <MutationStatusButton mutation={inviteMutation} type="submit" size="small">
-                  Send invite
-                </MutationStatusButton>
+                {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField />}
                 {inviteMutation.isError ? <div className="text-red text-sm">{inviteMutation.error.message}</div> : null}
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+                <DialogStackFooter>
+                  <DialogStackPrevious>
+                    <Button variant="outline">Back</Button>
+                  </DialogStackPrevious>
+                  <MutationStatusButton mutation={inviteMutation} type="submit">
+                    Send invite
+                  </MutationStatusButton>
+                </DialogStackFooter>
+              </form>
+            </DialogStackContent>
+          </DialogStackBody>
+        </Form>
+      </DialogStack>
       <InviteLinkModal open={showInviteLinkModal} onOpenChange={setShowInviteLinkModal} />
     </>
   );
