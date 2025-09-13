@@ -561,7 +561,7 @@ const Edit: React.FC<EditProps> = ({ onClose, invoiceId: propInvoiceId, isModal 
                         </span>
                         <span className="font-medium">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
                       </div>
-                      <Separator className="my-1" />
+                      <Separator className="my-1 dark:bg-gray-600" />
                       <div className="flex justify-between text-xl font-semibold">
                         <span className="text-gray-900">Net amount in cash</span>
                         <span className="text-lg">
@@ -578,7 +578,7 @@ const Edit: React.FC<EditProps> = ({ onClose, invoiceId: propInvoiceId, isModal 
                 </div>
               </div>
 
-              <Separator className="my-2" />
+              <Separator className="my-2 dark:bg-gray-600" />
 
               <div className="flex w-full items-start justify-between gap-4 px-4 md:flex-row">
                 <div className="md:w-1/2">
@@ -593,7 +593,8 @@ const Edit: React.FC<EditProps> = ({ onClose, invoiceId: propInvoiceId, isModal 
                   >
                     <PaperClipIcon className="h-4 w-4 text-black" />
                     <span>
-                      Paste, drop or <span className="text-blue-600 underline">click to add files</span>
+                      Paste, drop or{" "}
+                      <span className="text-blue-600 underline dark:text-purple-400">click to add files</span>
                     </span>
                     <input
                       ref={pdfInputRef}
