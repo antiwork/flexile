@@ -27,7 +27,7 @@ RSpec.describe HelperUserInfoService do
     it "returns information as expected" do
       result = described_class.new(email: user.email).customer_info
 
-      expect(result).to eq(
+      expect(result).to include(
         name: user.email,
         metadata: {
           "Country of residence" => user.display_country,
@@ -62,6 +62,7 @@ RSpec.describe HelperUserInfoService do
           ],
         }
       )
+      expect(result[:actions]["Impersonate"]).to match(%r{\Ahttp://localhost:3100/impersonate\?actor_token=.+\z})
     end
   end
 end

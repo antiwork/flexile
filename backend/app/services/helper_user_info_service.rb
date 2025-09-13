@@ -11,6 +11,9 @@ class HelperUserInfoService
 
     {
       name: user.email,
+      actions: {
+        "Impersonate" => user.generate_impersonation_url,
+      },
       metadata: {
         "Country of residence" => user.display_country,
         "Contractor for companies" => user.clients.map(&:display_name).to_sentence.presence,
