@@ -4,6 +4,56 @@
 
 This is **Flexile** - a contractor payments and equity management platform. This instance is configured as a **FinTechCo Demo** to showcase the platform's capabilities for potential enterprise clients.
 
+## Test Generation Requirements
+
+### MANDATORY: Write Tests for Every Code Change
+
+When modifying any code, you MUST:
+
+1. **Write RSpec Tests First (TDD Approach)**
+
+   ```ruby
+   # For every service modification, create corresponding spec file
+   # Path pattern: app/services/[service].rb → spec/services/[service]_spec.rb
+   ```
+
+2. **Required Test Coverage for Payment/Financial Code**
+
+   ```ruby
+   RSpec.describe PayInvoice do
+     describe '#process_with_retry' do
+       context 'when successful' do
+         it 'processes payment successfully'
+         it 'updates payment status correctly'
+         it 'creates audit trail'
+       end
+
+       context 'when API times out' do
+         it 'retries with exponential backoff'
+         it 'tracks retry count in database'
+         it 'logs attempts without sensitive data'
+       end
+
+       context 'when max retries exceeded' do
+         it 'marks payment as failed'
+         it 'sends failure notification'
+         it 'records last retry timestamp'
+       end
+     end
+   end
+   ```
+
+3. **Security Test Requirements**
+
+   - NEVER log sensitive data (tax_id, SSN, full bank accounts)
+   - Test that PII is properly masked in logs
+   - Verify audit trails don't contain sensitive information
+
+4. **Database Migration Tests**
+   - When adding columns, test default values
+   - Test data migration for existing records
+   - Verify indexes are properly created
+
 ## PR Analysis Instructions
 
 When analyzing a PR, start with: "Analyzing security and schema changes..."
