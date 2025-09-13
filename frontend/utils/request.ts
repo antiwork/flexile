@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation";
+import { getSession } from "next-auth/react";
+
 export type RequestSettings = {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   accept: "json" | "html" | "pdf";
@@ -81,9 +84,17 @@ export const request = (settings: RequestSettings): Promise<Response> => {
   })
     .then(
       (response) => {
-        if (response.status === 422) {
+        if (
+          response.status === 422 ||
+          (response.status === 404 && response.headers.get("Content-Type") === "application/json")
+        ) {
           return response.json().then((data: { error_message: string }) => {
             throw new ResponseError(data.error_message);
+          });
+        }
+        if (response.status === 401) {
+          void getSession().then((session) => {
+            if (session?.user.actorToken) redirect(`/impersonate?actor_token=null`);
           });
         }
         if ((settings.assertOk && !response.ok) || response.status >= 500) throw new ResponseError(undefined, response);

@@ -32,6 +32,7 @@ Rails.application.routes.draw do
         post :refund
       end
     end
+    resources :impersonation, only: [:create]
 
     mount Sidekiq::Web, at: "/sidekiq"
     mount Flipper::UI.app(Flipper) => "/flipper"

@@ -92,11 +92,23 @@ export const authOptions = {
             name: data.user.name ?? "",
             legalName: data.user.legal_name ?? "",
             preferredName: data.user.preferred_name ?? "",
-            jwt: data.jwt,
+            primaryToken: data.jwt,
           };
         } catch {
           return null;
         }
+      },
+    }),
+    CredentialsProvider({
+      id: "impersonation",
+      credentials: {
+        actorToken: { type: "text" },
+      },
+      authorize(credentials) {
+        const { actorToken } = z.object({ actorToken: z.string() }).parse(credentials);
+        return {
+          actorToken,
+        };
       },
     }),
     ExternalProvider(
@@ -114,16 +126,33 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
+      if (trigger === "update" && session) {
+        const { actorToken } = z.object({ actorToken: z.string().nullable() }).parse(session);
+        token.actorToken = actorToken;
+      } else if (trigger === "signIn" && user.actorToken) {
+        token.actorToken = user.actorToken;
+      }
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
       if (!user) return token;
-      token.jwt = user.jwt;
+      if (user.primaryToken) token.primaryToken = user.primaryToken;
       token.legalName = user.legalName ?? "";
       token.preferredName = user.preferredName ?? "";
       return token;
     },
     session({ session, token }) {
-      return { ...session, user: { ...session.user, ...token, id: token.sub } };
+      // @ts-expect-error Either of those must exist
+      // Next-auth enterprets the session interface from this object, not from the next-auth.d.ts file
+      const jwt: string = token.actorToken ?? token.primaryToken;
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          ...token,
+          id: token.sub,
+          jwt,
+        },
+      };
     },
     async signIn({ user, account }) {
       if (!account) return false;
@@ -154,7 +183,7 @@ export const authOptions = {
           })
           .parse(await response.json());
 
-        user.jwt = data.jwt;
+        user.primaryToken = data.jwt;
         user.legalName = data.user.legal_name ?? "";
         user.preferredName = data.user.preferred_name ?? "";
 

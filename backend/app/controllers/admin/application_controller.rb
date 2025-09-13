@@ -9,6 +9,7 @@
 module Admin
   class ApplicationController < Administrate::ApplicationController
     include SetCurrent
+    include PunditAuthorization
 
     before_action :authenticate_user
     before_action :authenticate_admin
