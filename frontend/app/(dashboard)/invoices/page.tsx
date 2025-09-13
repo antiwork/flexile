@@ -66,6 +66,7 @@ import { request } from "@/utils/request";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
+import Edit from "./Edit";
 import QuantityInput from "./QuantityInput";
 import { useCanSubmitInvoices } from ".";
 
@@ -121,6 +122,7 @@ export default function InvoicesPage() {
   });
 
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
+  const [showNewInvoiceModal, setShowNewInvoiceModal] = useState(false);
 
   const isPayNowDisabled = useCallback(
     (invoice: Invoice) => {
@@ -414,10 +416,8 @@ export default function InvoicesPage() {
   return (
     <>
       {isMobile && user.roles.worker ? (
-        <Button variant="floating-action" {...(!canSubmitInvoices ? { disabled: true } : { asChild: true })}>
-          <Link href="/invoices/new" inert={!canSubmitInvoices}>
-            <Plus />
-          </Link>
+        <Button variant="floating-action" disabled={!canSubmitInvoices} onClick={() => setShowNewInvoiceModal(true)}>
+          <Plus />
         </Button>
       ) : null}
       <DashboardHeader
@@ -450,11 +450,14 @@ export default function InvoicesPage() {
               </div>
             ) : null
           ) : user.roles.worker ? (
-            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
-              <Link href="/invoices/new" inert={!canSubmitInvoices}>
-                <Plus className="size-4" />
-                New invoice
-              </Link>
+            <Button
+              variant="outline"
+              size="small"
+              disabled={!canSubmitInvoices}
+              onClick={() => setShowNewInvoiceModal(true)}
+            >
+              <Plus className="size-4" />
+              New invoice
             </Button>
           ) : null
         }
@@ -656,6 +659,16 @@ export default function InvoicesPage() {
           }}
           onAction={handleInvoiceAction}
         />
+      ) : null}
+      {showNewInvoiceModal ? (
+        <Dialog open onOpenChange={() => setShowNewInvoiceModal(false)}>
+          <DialogContent className="mx-auto p-2 md:max-w-3xl">
+            <DialogHeader>
+              <DialogTitle className="hidden">New Invoice</DialogTitle>
+            </DialogHeader>
+            <Edit onClose={() => setShowNewInvoiceModal(false)} />
+          </DialogContent>
+        </Dialog>
       ) : null}
     </>
   );
