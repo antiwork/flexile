@@ -73,28 +73,28 @@ RSpec.describe Internal::Admin::ImpersonationController do
       it "handles missing email parameter" do
         post :create, params: {}
 
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:bad_request)
         json_response = JSON.parse(response.body)
         expect(json_response["success"]).to be false
-        expect(json_response["error"]).to eq("User not found")
+        expect(json_response["error"]).to eq("Email is required")
       end
 
       it "handles empty email parameter" do
         post :create, params: { email: "" }
 
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:bad_request)
         json_response = JSON.parse(response.body)
         expect(json_response["success"]).to be false
-        expect(json_response["error"]).to eq("User not found")
+        expect(json_response["error"]).to eq("Email is required")
       end
 
       it "handles whitespace-only email parameter" do
         post :create, params: { email: "   " }
 
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:bad_request)
         json_response = JSON.parse(response.body)
         expect(json_response["success"]).to be false
-        expect(json_response["error"]).to eq("User not found")
+        expect(json_response["error"]).to eq("Email is required")
       end
 
       it "finds users by exact email match" do

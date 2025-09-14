@@ -4,25 +4,8 @@ import GoogleProvider from "next-auth/providers/google";
 import type { Provider } from "next-auth/providers/index";
 import { z } from "zod";
 import env from "@/env";
+import { isValidImpersonationData } from "@/lib/impersonation";
 import { assertDefined } from "@/utils/assert";
-
-function isValidImpersonationData(data: unknown): data is {
-  jwt: string;
-  user: { id: number; email: string; name: string; legal_name?: string; preferred_name?: string };
-  originalUser: { id: string; email: string; name: string; legalName?: string; preferredName?: string; jwt: string };
-} {
-  if (!data || typeof data !== "object") return false;
-
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Type guard function - we know data is an object at this point
-  const impersonation = data as Record<string, unknown>;
-  return Boolean(
-    typeof impersonation.jwt === "string" &&
-      impersonation.user &&
-      typeof impersonation.user === "object" &&
-      impersonation.originalUser &&
-      typeof impersonation.originalUser === "object",
-  );
-}
 
 const otpLoginSchema = z.object({
   email: z.string().email(),

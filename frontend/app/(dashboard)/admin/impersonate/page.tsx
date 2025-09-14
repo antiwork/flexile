@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  getImpersonatedUserEmail,
+  isCurrentlyImpersonating as checkImpersonationStatus,
+  startImpersonation,
+  stopImpersonation,
+} from "@/lib/impersonation";
 
 export default function ImpersonatePage() {
   const { data: session, update } = useSession();
@@ -17,76 +23,32 @@ export default function ImpersonatePage() {
 
   const handleImpersonate = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
-      setError("Please enter an email address");
-      return;
-    }
-
     setIsLoading(true);
     setError("");
 
-    try {
-      const response = await fetch("/api/admin/impersonate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: trimmedEmail }),
-      });
+    const result = await startImpersonation(email, session, update);
 
-      const data: unknown = await response.json();
-      if (!data || typeof data !== "object") {
-        throw new Error("Invalid response from server");
-      }
-
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- We've already validated the data structure
-      const responseData = data as {
-        error?: string;
-        impersonation_jwt?: string;
-        user?: unknown;
-      };
-
-      if (!response.ok) {
-        throw new Error(responseData.error ?? "Failed to impersonate user");
-      }
-
-      if (!responseData.impersonation_jwt || !responseData.user) {
-        throw new Error("Invalid response from server");
-      }
-
-      await update({
-        ...session,
-        impersonation: {
-          jwt: responseData.impersonation_jwt,
-          user: responseData.user,
-          originalUser: session?.user,
-        },
-      });
-
+    if (result.success) {
       window.location.reload();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
+    } else {
+      setError(result.error || "An error occurred");
     }
+
+    setIsLoading(false);
   };
 
   const handleStopImpersonation = async () => {
     setIsLoading(true);
-    try {
-      await update({
-        ...session,
-        impersonation: undefined,
-      });
 
+    const result = await stopImpersonation(session, update);
+
+    if (result.success) {
       window.location.reload();
-    } catch (_err) {
-      setError("Failed to stop impersonation");
-    } finally {
-      setIsLoading(false);
+    } else {
+      setError(result.error || "Failed to stop impersonation");
     }
+
+    setIsLoading(false);
   };
 
   if (!session?.user) {
@@ -99,7 +61,7 @@ export default function ImpersonatePage() {
     );
   }
 
-  const isCurrentlyImpersonating = Boolean(session.impersonation);
+  const isCurrentlyImpersonating = checkImpersonationStatus(session);
 
   return (
     <div className="container mx-auto max-w-md py-8">
@@ -120,7 +82,7 @@ export default function ImpersonatePage() {
             <div className="space-y-4">
               <Alert>
                 <AlertDescription>
-                  <strong>Impersonating:</strong> {session.impersonation?.user.email || "Unknown"}
+                  <strong>Impersonating:</strong> {getImpersonatedUserEmail(session)}
                 </AlertDescription>
               </Alert>
               <Button

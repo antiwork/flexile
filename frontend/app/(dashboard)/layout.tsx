@@ -45,6 +45,7 @@ import {
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import { useSwitchCompany } from "@/lib/companySwitcher";
+import { getImpersonatedUserEmail, isCurrentlyImpersonating, stopImpersonation } from "@/lib/impersonation";
 import { hasSubItems, type NavLinkInfo, useNavLinks } from "@/lib/useNavLinks";
 import { UserDataProvider } from "@/trpc/client";
 import { cn } from "@/utils";
@@ -63,22 +64,21 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session, update } = useSession();
   const [isStoppingImpersonation, setIsStoppingImpersonation] = React.useState(false);
 
-  const isCurrentlyImpersonating = Boolean(session?.impersonation);
+  const isImpersonating = isCurrentlyImpersonating(session);
 
   const handleStopImpersonation = async () => {
     setIsStoppingImpersonation(true);
-    try {
-      await update({
-        ...session,
-        impersonation: undefined,
-      });
+
+    const result = await stopImpersonation(session, update);
+
+    if (result.success) {
       window.location.reload();
-    } catch (error) {
+    } else {
       // eslint-disable-next-line no-console -- Error logging
-      console.error("Failed to stop impersonation:", error);
-    } finally {
-      setIsStoppingImpersonation(false);
+      console.error("Failed to stop impersonation:", result.error);
     }
+
+    setIsStoppingImpersonation(false);
   };
 
   return (
@@ -213,7 +213,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                 label="Support center"
                 badge={<SupportBadge />}
               />
-              {isCurrentlyImpersonating ? (
+              {isImpersonating ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     onClick={() => void handleStopImpersonation()}
@@ -248,11 +248,11 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       <SidebarInset>
         <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-          {isCurrentlyImpersonating ? (
+          {isImpersonating ? (
             <div className="border-b border-orange-200 bg-orange-100 px-4 py-2 text-sm text-orange-800">
               <div className="flex items-center justify-between">
                 <span>
-                  <strong>Impersonating:</strong> {session?.impersonation?.user.email || "Unknown"}
+                  <strong>Impersonating:</strong> {getImpersonatedUserEmail(session)}
                 </span>
                 <button
                   onClick={() => void handleStopImpersonation()}

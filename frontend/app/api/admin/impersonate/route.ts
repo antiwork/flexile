@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { z } from "zod";
 import env from "@/env";
 import { authOptions } from "@/lib/auth";
+import type { ImpersonationResponse } from "@/lib/impersonation";
+
+const impersonationRequestSchema = z.object({
+  email: z.string().email().min(1, "Email is required"),
+});
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -12,16 +18,16 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: unknown = await request.json();
-    if (!body || typeof body !== "object" || !("email" in body)) {
-      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-    }
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- We've already validated the body structure
-    const { email } = body as { email: string };
+    const validation = impersonationRequestSchema.safeParse(body);
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.errors[0]?.message || "Invalid request body" },
+        { status: 400 },
+      );
     }
 
+    const { email } = validation.data;
     const backendUrl = request.headers.get("origin") || `${env.PROTOCOL}://${env.DOMAIN}`;
 
     const response = await fetch(`${backendUrl}/internal/admin/impersonation`, {
@@ -37,8 +43,17 @@ export async function POST(request: NextRequest) {
     if (!data || typeof data !== "object") {
       return NextResponse.json({ error: "Invalid response from server" }, { status: 500 });
     }
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- We've already validated the data structure
-    const responseData = data as { error?: string; impersonation_jwt?: string; user?: unknown };
+
+    function isImpersonationResponse(obj: unknown): obj is ImpersonationResponse {
+      if (!obj || typeof obj !== "object") return false;
+      return "success" in obj && typeof obj.success === "boolean";
+    }
+
+    if (!isImpersonationResponse(data)) {
+      return NextResponse.json({ error: "Invalid response format from server" }, { status: 500 });
+    }
+
+    const responseData = data;
 
     if (!response.ok) {
       return NextResponse.json(
@@ -49,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(responseData);
   } catch (error) {
-    // eslint-disable-next-line no-console -- Error logging is necessary for debugging
+    // eslint-disable-next-line no-console -- Error logging
     console.error("Impersonation error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
