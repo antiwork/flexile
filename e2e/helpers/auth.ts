@@ -43,6 +43,25 @@ function isRecord(x: unknown): x is Record<string, unknown> {
   return typeof x === "object" && x !== null && !Array.isArray(x);
 }
 
+function safeStringify(value: unknown, maxLen = 1000): string {
+  if (typeof value === "string") return value;
+  if (value === undefined) return "undefined";
+  if (value === null) return "null";
+  if (isRecord(value) || Array.isArray(value)) {
+    try {
+      const json = JSON.stringify(value);
+      return json.length > maxLen ? `${json.slice(0, maxLen)}...` : json;
+    } catch {
+      // fallback below
+    }
+  }
+  try {
+    return String(value);
+  } catch {
+    return Object.prototype.toString.call(value);
+  }
+}
+
 /**
  * Mock external OAuth provider callback so tests can override returned email.
  * Rewrites the POST body to include the provided credentials.email when possible.
@@ -76,9 +95,9 @@ export const externalProviderMock = async (page: Page, provider: string, credent
       // Fallback: continue with the original request unchanged
       await route.continue();
     } catch (errUnknown) {
-      // Log the error but continue the route so tests do not fail due to the mock.
+      // Log a useful string instead of "[object Object]".
       // eslint-disable-next-line no-console
-      console.warn("externalProviderMock route handler error:", String(errUnknown ?? ""));
+      console.warn("externalProviderMock route handler error:", safeStringify(errUnknown));
       await route.continue();
     }
   });
