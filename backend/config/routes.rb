@@ -17,7 +17,11 @@ Rails.application.routes.draw do
     resources :company_workers
     resources :company_administrators
     resources :companies
-    resources :users
+    resources :users do
+      member do
+        get :impersonate
+      end
+    end
     resources :payments do
       member do
         patch :wise_paid
@@ -32,7 +36,6 @@ Rails.application.routes.draw do
         post :refund
       end
     end
-    resources :impersonation, only: [:create]
 
     mount Sidekiq::Web, at: "/sidekiq"
     mount Flipper::UI.app(Flipper) => "/flipper"

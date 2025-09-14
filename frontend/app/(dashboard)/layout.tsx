@@ -188,7 +188,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     onClick={() => {
-                      router.push(`/admin/impersonate?actor_token=null`);
+                      router.push(`/impersonate?actor_token=null`);
                     }}
                     className="text-destructive hover:text-destructive cursor-pointer"
                   >

@@ -4,30 +4,34 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Suspense } from "react";
 import type { PropsWithChildren } from "react";
+import BrandedLayout from "@/app/(public)/layout";
 import { useCurrentUser } from "@/global";
 import { UserDataProvider } from "@/trpc/client";
 
 export default function Layout({ children }: PropsWithChildren) {
   return (
     <Suspense>
-      <LayoutContent>{children}</LayoutContent>
+      <BrandedLayout>
+        <Content>{children}</Content>
+      </BrandedLayout>
     </Suspense>
   );
 }
 
-function LayoutContent({ children }: PropsWithChildren) {
+function Content({ children }: PropsWithChildren) {
   const searchParams = useSearchParams();
-  // Don't require authentication to unimpersonate
+
+  // Don't protect unimpersonate page
   if (searchParams.get("actor_token") === "null") return children;
 
   return (
     <UserDataProvider>
-      <AdminLayout>{children}</AdminLayout>
+      <Protected>{children}</Protected>
     </UserDataProvider>
   );
 }
 
-function AdminLayout({ children }: PropsWithChildren) {
+function Protected({ children }: PropsWithChildren) {
   const user = useCurrentUser();
   const { data: session } = useSession();
   const primarySession = session?.user.primaryToken === session?.user.jwt;
