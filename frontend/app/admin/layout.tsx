@@ -8,7 +8,7 @@ import { UserDataProvider } from "@/trpc/client";
 
 export default function Layout({ children }: PropsWithChildren) {
   const searchParams = useSearchParams();
-  // Don't require authentication to unimpersonate (user=null if impersonation session expired)
+  // Don't require authentication to unimpersonate
   if (searchParams.get("actor_token") === "null") return children;
 
   return (
