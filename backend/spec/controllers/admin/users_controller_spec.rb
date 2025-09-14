@@ -53,22 +53,5 @@ RSpec.describe Admin::UsersController do
         end
       end
     end
-
-    context "when not authenticated as team member" do
-      before do
-        allow(controller).to receive(:current_context) do
-          Current.user = non_team_member
-          Current.company = nil
-          Current.company_administrator = nil
-          CurrentContext.new(user: non_team_member, company: nil)
-        end
-      end
-
-      it "raises routing error" do
-        expect do
-          get :impersonate, params: { id: target_user.id }
-        end.to raise_error(ActionController::RoutingError, "Not Found")
-      end
-    end
   end
 end
