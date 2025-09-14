@@ -2,7 +2,7 @@ import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
-import { fillDatePicker } from "@test/helpers";
+import { fillByLabelSafe, fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { desc, eq } from "drizzle-orm";
@@ -30,9 +30,9 @@ test.describe("invoice editing", () => {
 
     // Fill in the invoice form
     await page.getByPlaceholder("Description").fill("Development work for Q1");
-    await page.getByLabel("Hours / Qty").fill("10:00");
-    await page.getByLabel("Rate").fill("75");
-    await page.getByLabel("Invoice ID").fill("INV-EDIT-001");
+    await fillByLabelSafe(page, "Hours / Qty", "10:00", { index: 0 });
+    await fillByLabelSafe(page, "Rate", "75", { index: 0 });
+    await fillByLabelSafe(page, "Invoice ID", "INV-EDIT-001", { index: 0 });
     await fillDatePicker(page, "Date", "12/15/2024");
     await page
       .getByPlaceholder("Enter notes about your invoice (optional)")
@@ -74,7 +74,7 @@ test.describe("invoice editing", () => {
 
     // Make some changes
     await page.getByPlaceholder("Description").first().fill("Updated development work for Q1");
-    await page.getByLabel("Hours / Qty").first().fill("12:00");
+    await fillByLabelSafe(page, "Hours / Qty", "12:00", { index: 0 });
     await page
       .getByPlaceholder("Enter notes about your invoice (optional)")
       .fill(
@@ -82,9 +82,8 @@ test.describe("invoice editing", () => {
       );
     await expect(page.locator("tbody")).toContainText("$900");
 
-    // Submit the updated invoice and wait for navigation
     await page.getByRole("button", { name: "Re-submit invoice" }).click();
-    await page.waitForURL(/\/invoices$/u); // Wait for redirect to invoices page
+
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     await expect(page.locator("tbody")).toContainText("$900"); // $75 * 12 hours
