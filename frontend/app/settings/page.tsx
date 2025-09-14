@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -111,6 +112,8 @@ const LeaveWorkspaceSection = () => {
   const user = useCurrentUser();
   const { logout } = useUserStore();
   const company = useCurrentCompany();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -135,8 +138,15 @@ const LeaveWorkspaceSection = () => {
       return data;
     },
     onSuccess: async () => {
-      await signOut({ redirect: false }).then(logout);
-      window.location.href = "/login";
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      document.cookie = `${user.id}_selected_company=; path=/; max-age=0`;
+
+      if (Object.keys(user.companies).length > 1) {
+        router.push("/dashboard");
+      } else {
+        await signOut({ redirect: false }).then(logout);
+        router.push("/login");
+      }
     },
     onError: (error: Error) => {
       setErrorMessage(error.message);

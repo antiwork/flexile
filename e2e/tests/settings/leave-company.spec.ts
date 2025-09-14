@@ -153,4 +153,41 @@ test.describe("Leave company", () => {
     });
     expect(investor).toBeDefined();
   });
+
+  test("user with roles in other companies can leave current company successfully", async ({ page }) => {
+    const { company: companyA } = await companiesFactory.createCompletedOnboarding({ name: "Company A" });
+    const { company: companyB } = await companiesFactory.createCompletedOnboarding({ name: "Company B" });
+    const { user } = await usersFactory.create();
+
+    await companyInvestorsFactory.create({
+      companyId: companyA.id,
+      userId: user.id,
+    });
+    await companyLawyersFactory.create({
+      companyId: companyB.id,
+      userId: user.id,
+    });
+
+    await login(page, user);
+
+    await expect(page.getByRole("button", { name: "Company B" })).toBeVisible();
+    await page.getByRole("link", { name: "Settings" }).click();
+
+    await page.getByRole("button", { name: "Leave workspace" }).click();
+    await expect(page.getByText("Leave this workspace?")).toBeVisible();
+    await page.getByRole("button", { name: "Leave" }).click();
+
+    await expect(page.getByText("Success!")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Company A" })).toBeVisible();
+
+    const investor = await db.query.companyInvestors.findFirst({
+      where: and(eq(companyInvestors.companyId, companyA.id), eq(companyInvestors.userId, user.id)),
+    });
+    const lawyer = await db.query.companyLawyers.findFirst({
+      where: and(eq(companyLawyers.companyId, companyB.id), eq(companyLawyers.userId, user.id)),
+    });
+
+    expect(investor).toBeDefined();
+    expect(lawyer).toBeUndefined();
+  });
 });
