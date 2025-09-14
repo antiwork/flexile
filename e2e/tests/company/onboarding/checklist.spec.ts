@@ -64,7 +64,7 @@ test.describe("Onboarding checklist", () => {
         await modal.getByLabel("Role").fill("Software Engineer");
         await modal.getByLabel("Hourly").check();
         await modal.getByLabel("Rate").fill("100");
-        await page.getByRole("button", { name: "Next" }).click();
+        await page.getByRole("button", { name: "Continue" }).click();
         await modal.getByLabel("Already signed contract elsewhere").check({ force: true });
         await modal.getByRole("button", { name: "Send invite" }).click();
       },

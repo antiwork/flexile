@@ -53,7 +53,7 @@ test.describe("New Contractor", () => {
     const { email } = await fillForm(page);
     await page.getByLabel("Role").fill("Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
     await page.getByRole("button", { name: "Send invite" }).click();
@@ -80,7 +80,7 @@ test.describe("New Contractor", () => {
     await page.getByLabel("Role").fill("Project-based Role");
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("1000");
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByLabel("Contract", { exact: true }).setInputFiles({
       name: "contract.pdf",
       mimeType: "application/pdf",
@@ -114,7 +114,7 @@ test.describe("New Contractor", () => {
     await page.getByRole("button", { name: "Add contractor" }).click();
     await expect(page.getByLabel("Role")).toHaveValue("Hourly Role 1");
     await expect(page.getByLabel("Rate")).toHaveValue("100");
-    await page.getByRole("button", { name: "Next" }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Already signed contract elsewhere")).toBeChecked();
     await expect(page.getByLabel("Custom")).toBeChecked();
   });
