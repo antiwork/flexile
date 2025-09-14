@@ -5,7 +5,6 @@ import { users } from "@/db/schema";
 const TEST_OTP_CODE = "000000";
 
 export const fillOtp = async (page: Page) => {
-  // Wait for the OTP input to be visible before filling
   const otp = page.getByRole("textbox", { name: "Verification code" });
   await expect(otp).toBeVisible();
   await otp.fill(TEST_OTP_CODE);
@@ -24,78 +23,62 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
 };
 
 export const logout = async (page: Page) => {
-  // If already on login, nothing to do
   if (page.url().includes("/login")) {
     return;
   }
 
-  // Ensure on a dashboard route (so logout button exists)
+  // Ensure we're on a dashboard page with sidebar
   if (!page.url().includes("/invoices")) {
-    // best-effort navigation; if already there, it's fast
-    await page.goto("/invoices").catch(() => {
-      // ignore navigation errors here
-    });
+    await page.goto("/invoices");
   }
 
-  // Click the visible logout button (there may be multiple)
   await page.getByRole("button", { name: "Log out" }).first().click();
 
-  // Wait for redirect to login
+  // Wait for redirect to login and for network to be idle (logout finished)
   await page.waitForURL(/.*\/login.*/u);
   await page.waitForLoadState("networkidle");
 };
 
+function isRecord(x: unknown): x is Record<string, unknown> {
+  return typeof x === "object" && x !== null && !Array.isArray(x);
+}
+
+/**
+ * Mock external OAuth provider callback so tests can override returned email.
+ * Rewrites the POST body to include the provided credentials.email when possible.
+ */
 export const externalProviderMock = async (page: Page, provider: string, credentials: { email: string }) => {
-  // Intercept the callback POST and inject the test email into the form body.
   await page.route(`**/api/auth/callback/${provider}`, async (route) => {
     try {
-      const postData = await route.request().postData();
+      const req = route.request();
+      const raw = req.postData() ?? "";
 
-      if (!postData) {
-        await route.continue();
-        return;
-      }
-
-      // Try parsing JSON body
-      let parsed: Record<string, unknown> | null = null;
-      if (typeof postData === "string") {
+      let parsed: unknown = null;
+      if (typeof raw === "string" && raw.length > 0) {
         try {
-          parsed = JSON.parse(postData);
+          parsed = JSON.parse(raw);
         } catch {
           parsed = null;
         }
       }
 
-      // If JSON parse failed, attempt to parse as URLSearchParams
-      if (parsed === null && typeof postData === "string") {
-        try {
-          const params = new URLSearchParams(postData);
-          parsed = {};
-          for (const [k, v] of params.entries()) {
-            parsed[k] = v;
-          }
-        } catch {
-          parsed = null;
-        }
-      }
-
-      if (parsed && typeof parsed === "object") {
-        const modified = new URLSearchParams();
+      if (isRecord(parsed)) {
+        const flat: Record<string, string> = {};
         for (const [k, v] of Object.entries(parsed)) {
-          modified.set(k, String(v ?? ""));
+          flat[k] = v == null ? "" : String(v);
         }
-        modified.set("email", credentials.email);
-        await route.continue({ postData: modified.toString() });
+        flat.email = credentials.email;
+        const modifiedData = new URLSearchParams(flat).toString();
+        await route.continue({ postData: modifiedData });
         return;
       }
 
-      // Fallback: continue without modification
+      // Fallback: continue with the original request unchanged
       await route.continue();
-    } catch (err) {
-      // Ensure we continue the request on any unexpected error so tests don't hang.
-      // Log minimally for local debugging.
+    } catch (errUnknown) {
+      // Log the error but continue the route so tests do not fail due to the mock.
       // eslint-disable-next-line no-console
-      console.error("externalProviderMock error:", String(err));
+      console.warn("externalProviderMock route handler error:", String(errUnknown ?? ""));
       await route.continue();
     }
   });
