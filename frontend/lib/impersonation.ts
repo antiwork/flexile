@@ -37,8 +37,7 @@ export function isValidImpersonationData(data: unknown): data is ImpersonationDa
 
   const impersonation = data;
   return Boolean(
-    impersonation &&
-      typeof impersonation === "object" &&
+    typeof impersonation === "object" &&
       "jwt" in impersonation &&
       typeof impersonation.jwt === "string" &&
       "user" in impersonation &&
