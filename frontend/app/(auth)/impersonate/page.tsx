@@ -13,13 +13,13 @@ export default function ImpersonatePage() {
   useEffect(() => {
     if (status === "loading") return;
 
-    // Authenticated (impersonation session) => redirect to dashboard
+    // Already impersonating - redirect to dashboard
     if (actorToken === session?.user.actorToken) {
       window.location.href = "/dashboard";
       return;
     }
 
-    // Authenticated (impersonation-only session) => delete cookie completely
+    // Expired impersonation session - clear auth and redirect to login
     if (!session?.user.primaryToken && actorToken === null) {
       void signOut({ redirect: false }).then(() => {
         window.location.href = "/login";
@@ -27,9 +27,8 @@ export default function ImpersonatePage() {
       return;
     }
 
-    // Unauthenticated => sign in with actor token
+    // Start new impersonation or update existing session
     if (status === "unauthenticated") void signIn("impersonation", { actorToken });
-    // Authenticated (primary session) => update actor token
     else void update({ actorToken });
   }, [status, actorToken, session, update]);
 
