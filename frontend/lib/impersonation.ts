@@ -23,7 +23,13 @@ export interface ImpersonationResponse {
   success: boolean;
   error?: string;
   impersonation_jwt?: string;
-  user?: unknown;
+  user?: {
+    id: number;
+    email: string;
+    name: string;
+    legal_name?: string;
+    preferred_name?: string;
+  };
 }
 
 export function isValidImpersonationData(data: unknown): data is ImpersonationData {
@@ -67,6 +73,10 @@ export async function startImpersonation(
     return { success: false, error: "Please enter an email address" };
   }
 
+  if (!session?.user) {
+    return { success: false, error: "No authenticated user found" };
+  }
+
   try {
     const response = await fetch("/api/admin/impersonate", {
       method: "POST",
@@ -100,7 +110,7 @@ export async function startImpersonation(
       impersonation: {
         jwt: responseData.impersonation_jwt,
         user: responseData.user,
-        originalUser: session?.user,
+        originalUser: session.user,
       },
     });
 
@@ -118,10 +128,8 @@ export async function stopImpersonation(
   updateSession: (data: Partial<Session>) => Promise<Session | null>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await updateSession({
-      ...session,
-      impersonation: undefined,
-    });
+    const { impersonation, ...sessionWithoutImpersonation } = session || {};
+    await updateSession(sessionWithoutImpersonation);
 
     return { success: true };
   } catch (err) {
