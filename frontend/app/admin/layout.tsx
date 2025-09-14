@@ -2,11 +2,20 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import type { PropsWithChildren } from "react";
 import { useCurrentUser } from "@/global";
 import { UserDataProvider } from "@/trpc/client";
 
 export default function Layout({ children }: PropsWithChildren) {
+  return (
+    <Suspense>
+      <LayoutContent>{children}</LayoutContent>
+    </Suspense>
+  );
+}
+
+function LayoutContent({ children }: PropsWithChildren) {
   const searchParams = useSearchParams();
   // Don't require authentication to unimpersonate
   if (searchParams.get("actor_token") === "null") return children;
