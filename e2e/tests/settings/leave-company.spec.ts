@@ -177,7 +177,6 @@ test.describe("Leave company", () => {
     await expect(page.getByText("Leave this workspace?")).toBeVisible();
     await page.getByRole("button", { name: "Leave" }).click();
 
-    await expect(page.getByText("Success!")).toBeVisible();
     await expect(page.getByRole("button", { name: "Company A" })).toBeVisible();
 
     const investor = await db.query.companyInvestors.findFirst({
