@@ -6,7 +6,7 @@ module Admin
       user = User.find_by!(external_id: params[:id])
       authorize user
 
-      redirect_to user.generate_impersonation_url, allow_other_host: true
+      redirect_to user.generate_impersonation_url
     rescue ActiveRecord::RecordNotFound, Pundit::NotAuthorizedError
       redirect_to admin_users_path, alert: "The requested resource could not be accessed"
     end
