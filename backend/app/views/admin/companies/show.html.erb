@@ -27,7 +27,7 @@ as well as a link to its edit page.
     <% if page.resource.primary_admin&.user %>
       <%= link_to(
             "Impersonate",
-            impersonate_admin_user_path(page.resource.primary_admin.user),
+            impersonate_admin_user_path(page.resource.primary_admin.user.external_id),
             class: "button",
           ) %>
     <% end %>

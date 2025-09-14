@@ -31,7 +31,7 @@ class HelperUserInfoService
     def impersonation_actions
       return {} if user.team_member?
 
-      { "Impersonate" => "#{PROTOCOL}://#{DOMAIN}/impersonate?user_identifier=#{user.email}" }
+      { "Impersonate" => Rails.application.routes.url_helpers.impersonate_admin_user_url(user.external_id) }
     end
 
     def investment_notes

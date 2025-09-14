@@ -3,7 +3,7 @@
 module Admin
   class UsersController < Admin::ApplicationController
     def impersonate
-      user = User.find_by!(id: params[:id])
+      user = User.find_by!(external_id: params[:id])
       authorize user
 
       redirect_to user.generate_impersonation_url, allow_other_host: true
