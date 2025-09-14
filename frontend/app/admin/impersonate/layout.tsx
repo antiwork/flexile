@@ -1,7 +1,7 @@
-import { Suspense } from "react";
+import { type PropsWithChildren, Suspense } from "react";
 import PublicLayout from "@/app/(public)/layout";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout({ children }: PropsWithChildren) {
   return (
     <Suspense>
       <PublicLayout>{children}</PublicLayout>

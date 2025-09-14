@@ -1,11 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import type { PropsWithChildren } from "react";
 import { useCurrentUser } from "@/global";
 import { UserDataProvider } from "@/trpc/client";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout({ children }: PropsWithChildren) {
+  const searchParams = useSearchParams();
+  // Don't require authentication to unimpersonate (user=null if impersonation session expired)
+  if (searchParams.get("actor_token") === "null") return children;
+
   return (
     <UserDataProvider>
       <AdminLayout>{children}</AdminLayout>
@@ -13,10 +18,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function AdminLayout({ children }: { children: React.ReactNode }) {
+function AdminLayout({ children }: PropsWithChildren) {
   const user = useCurrentUser();
-  const session = useSession();
-  const primarySession = session.data?.user.primaryToken === session.data?.user.jwt;
+  const { data: session } = useSession();
+  const primarySession = session?.user.primaryToken === session?.user.jwt;
   const router = useRouter();
 
   if (primarySession && !user.teamMember) {

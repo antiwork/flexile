@@ -2,7 +2,7 @@
 
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import React, { type PropsWithChildren } from "react";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
 import {
   Sidebar,
@@ -15,7 +15,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout({ children }: PropsWithChildren) {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
