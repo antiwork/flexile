@@ -59,7 +59,7 @@ export function isCurrentlyImpersonating(session: Session | null): boolean {
 }
 
 export function getImpersonatedUserEmail(session: Session | null): string {
-  return session?.impersonation?.user?.email || "Unknown";
+  return session?.impersonation?.user.email || "Unknown";
 }
 
 export async function startImpersonation(
