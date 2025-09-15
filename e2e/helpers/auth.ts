@@ -104,7 +104,7 @@ export const externalProviderMock = async (page: Page, provider: string, credent
       await route.continue();
     } catch (errUnknown) {
       // Log a useful string instead of "[object Object]".
-      // eslint-disable-next-line no-console
+
       console.warn("externalProviderMock route handler error:", safeStringify(errUnknown));
       await route.continue();
     }
