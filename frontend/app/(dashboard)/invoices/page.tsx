@@ -784,7 +784,7 @@ const InvoiceBulkActionsBar = ({
             className="border-muted flex h-9 items-center gap-2 rounded-lg border border-dashed text-sm font-medium hover:bg-white"
             onClick={onClose}
           >
-            <span className="tabular-nums">{rowsSelected}</span> selecteddfssfs
+            <span className="tabular-nums">{rowsSelected}</span> selected
             <X className="size-4" />
           </Button>
           {rejectAction ? (
