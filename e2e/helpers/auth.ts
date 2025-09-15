@@ -45,23 +45,20 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 
 function safeStringify(value: unknown, maxLen = 1000): string {
   if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
   if (value === undefined) return "undefined";
   if (value === null) return "null";
+
   if (isRecord(value) || Array.isArray(value)) {
     try {
       const json = JSON.stringify(value);
       return json.length > maxLen ? `${json.slice(0, maxLen)}...` : json;
     } catch {
-      // fallback below
+      return Object.prototype.toString.call(value);
     }
   }
-  try {
-    // For non-primitive values avoid implicit object-to-string conversions
-    // that produce "[object Object]". Use a readable fallback instead.
-    return typeof value === "object" && value !== null ? Object.prototype.toString.call(value) : String(value);
-  } catch {
-    return Object.prototype.toString.call(value);
-  }
+
+  return Object.prototype.toString.call(value);
 }
 
 /**
