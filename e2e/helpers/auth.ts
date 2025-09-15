@@ -56,7 +56,9 @@ function safeStringify(value: unknown, maxLen = 1000): string {
     }
   }
   try {
-    return String(value);
+    // For non-primitive values avoid implicit object-to-string conversions
+    // that produce "[object Object]". Use a readable fallback instead.
+    return typeof value === "object" && value !== null ? Object.prototype.toString.call(value) : String(value);
   } catch {
     return Object.prototype.toString.call(value);
   }
@@ -84,7 +86,7 @@ export const externalProviderMock = async (page: Page, provider: string, credent
       if (isRecord(parsed)) {
         const flat: Record<string, string> = {};
         for (const [k, v] of Object.entries(parsed)) {
-          flat[k] = v == null ? "" : String(v);
+          flat[k] = v == null ? "" : safeStringify(v);
         }
         flat.email = credentials.email;
         const modifiedData = new URLSearchParams(flat).toString();
