@@ -2,8 +2,8 @@
 
 RSpec.describe Admin::UsersController do
   let(:team_member) { create(:user, team_member: true) }
-  let(:target_user) { create(:user) }
   let(:another_team_member) { create(:user, team_member: true) }
+  let(:target_user) { create(:user) }
 
   before do
     allow(controller).to receive(:current_context) do
