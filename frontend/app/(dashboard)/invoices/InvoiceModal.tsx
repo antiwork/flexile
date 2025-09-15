@@ -477,7 +477,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
             className="h-25 resize-none border-0 p-0 !text-base !leading-tight focus-visible:border-transparent focus-visible:ring-0"
           />
 
-          <section className="shrink-0 space-y-2 md:basis-xs">
+          <section className="shrink-0 space-y-3 md:basis-xs">
             {showExpensesTable || company.equityEnabled ? (
               <div className="flex justify-between leading-tight">
                 <span>Total services</span>
