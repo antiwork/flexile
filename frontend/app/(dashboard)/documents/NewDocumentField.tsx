@@ -27,7 +27,7 @@ export default function NewDocumentField() {
       name="contract"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Contract</FormLabel>
+          <FormLabel className="font-medium">Contract</FormLabel>
 
           <Tabs value={contractType} onValueChange={setContractType}>
             <TabsList className="w-full">
