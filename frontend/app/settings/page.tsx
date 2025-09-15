@@ -37,6 +37,7 @@ export default function SettingsPage() {
 }
 
 const DetailsSection = () => {
+  const queryClient = useQueryClient();
   const user = useCurrentUser();
   const form = useForm({
     defaultValues: {
@@ -51,10 +52,12 @@ const DetailsSection = () => {
         url: settings_path(),
         method: "PATCH",
         accept: "json",
-        jsonData: { settings: { email: values.email, preferred_name: values.preferredName } },
+        jsonData: { email: values.email, preferred_name: values.preferredName },
       });
       if (!response.ok)
         throw new Error(z.object({ error_message: z.string() }).parse(await response.json()).error_message);
+
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
     onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
   });
