@@ -1,6 +1,5 @@
 "use client";
 
-import { PlusIcon } from "@heroicons/react/16/solid";
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
@@ -292,10 +291,6 @@ const Edit = () => {
     });
   };
 
-  const addDocument = () => {
-    uploadDocumentRef.current?.click();
-  };
-
   const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -500,15 +495,35 @@ const Edit = () => {
                       Add line item
                     </Button>
                     {data.company.expense_categories.length && !showExpensesTable ? (
-                      <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
-                        <Upload className="inline size-4" />
-                        Add expense
+                      <Button asChild variant="link">
+                        <Label>
+                          <Upload className="inline size-4" />
+                          Add expense
+                          <input
+                            ref={uploadExpenseRef}
+                            type="file"
+                            className="hidden"
+                            accept="application/pdf, image/*"
+                            multiple
+                            onChange={createNewExpenseEntries}
+                          />
+                        </Label>
                       </Button>
                     ) : null}
                     {documents.length === 0 ? (
-                      <Button variant="link" onClick={addDocument}>
-                        <Upload className="inline size-4" />
-                        Add document
+                      <Button asChild variant="link">
+                        <Label>
+                          <Upload className="inline size-4" />
+                          Add document
+                          <input
+                            ref={uploadDocumentRef}
+                            type="file"
+                            className="hidden"
+                            accept="application/pdf"
+                            multiple
+                            onChange={handleDocumentUpload}
+                          />
+                        </Label>
                       </Button>
                     ) : null}
                   </div>
@@ -516,24 +531,6 @@ const Edit = () => {
               </TableRow>
             </TableFooter>
           </Table>
-          {data.company.expense_categories.length ? (
-            <input
-              ref={uploadExpenseRef}
-              type="file"
-              className="hidden"
-              accept="application/pdf, image/*"
-              multiple
-              onChange={createNewExpenseEntries}
-            />
-          ) : null}
-          <input
-            ref={uploadDocumentRef}
-            type="file"
-            className="hidden"
-            accept="application/pdf"
-            multiple
-            onChange={handleDocumentUpload}
-          />
           {showExpensesTable ? (
             <Table>
               <TableHeader>
@@ -602,9 +599,19 @@ const Edit = () => {
               <TableFooter>
                 <TableRow>
                   <TableCell colSpan={5}>
-                    <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
-                      <PlusIcon className="inline size-4" />
-                      Add expense
+                    <Button asChild variant="link">
+                      <Label>
+                        <Upload className="inline size-4" />
+                        Add expense
+                        <input
+                          ref={uploadExpenseRef}
+                          type="file"
+                          className="hidden"
+                          accept="application/pdf, image/*"
+                          multiple
+                          onChange={createNewExpenseEntries}
+                        />
+                      </Label>
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -644,9 +651,19 @@ const Edit = () => {
               <TableFooter>
                 <TableRow>
                   <TableCell colSpan={2}>
-                    <Button variant="link" onClick={() => uploadDocumentRef.current?.click()}>
-                      <PlusIcon className="inline size-4" />
-                      Add document
+                    <Button asChild variant="link">
+                      <Label>
+                        <Upload className="inline size-4" />
+                        Add document
+                        <input
+                          ref={uploadDocumentRef}
+                          type="file"
+                          className="hidden"
+                          accept="application/pdf"
+                          multiple
+                          onChange={handleDocumentUpload}
+                        />
+                      </Label>
                     </Button>
                   </TableCell>
                 </TableRow>

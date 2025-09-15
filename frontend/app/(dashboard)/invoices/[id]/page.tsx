@@ -3,10 +3,11 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, PencilIcon, PrinterIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
-import { CircleAlert, Paperclip, Trash2 } from "lucide-react";
+import { CircleAlert, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { Fragment, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
+import AttachmentListCard from "@/components/AttachmentsList";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
@@ -400,54 +401,28 @@ export default function InvoicePage() {
             ) : null}
 
             {invoice.expenses.length > 0 && (
-              <Card className="border-none print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
-                <CardContent className="px-0">
-                  <div className="flex justify-between gap-2 px-4">
-                    <div className="text-muted-foreground text-sm font-medium">Expense</div>
-                    <div className="text-muted-foreground text-sm font-medium">Amount</div>
-                  </div>
-                  {invoice.expenses.map((expense, i) => (
-                    <Fragment key={i}>
-                      <Separator className="my-2 h-[0.5px] print:my-1.5 print:border-t print:border-gray-200" />
-                      <div className="flex justify-between gap-2 px-4 text-sm">
-                        <Link
-                          href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
-                          download
-                          className={cn(linkClasses, "print:text-black print:no-underline")}
-                        >
-                          <Paperclip className="inline size-4 print:hidden" />
-                          {expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name} –{" "}
-                          {expense.description}
-                        </Link>
-                        <span className="text-sm">{formatMoneyFromCents(expense.totalAmountInCents)}</span>
-                      </div>
-                    </Fragment>
-                  ))}
-                </CardContent>
-              </Card>
+              <AttachmentListCard
+                title="Expense"
+                linkClasses={linkClasses}
+                items={invoice.expenses.map((expense) => ({
+                  key: expense.attachment?.key || `expense-${expense.id}`,
+                  filename: expense.attachment?.filename || "No attachment",
+                  label: `${expenseCategories.find((c) => c.id === expense.expenseCategoryId)?.name || "Uncategorized"} – ${expense.description}`,
+                  right: <span className="text-sm">{formatMoneyFromCents(expense.totalAmountInCents)}</span>,
+                }))}
+              />
             )}
 
             {invoice.attachments.length > 0 && (
-              <Card className="border-none print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
-                <CardContent className="px-0">
-                  <div className="text-muted-foreground px-4 text-sm font-medium">Documents</div>
-                  {invoice.attachments.map((attachment, index) => (
-                    <Fragment key={index}>
-                      <Separator className="my-2 h-[0.5px] print:my-1.5 print:border-t print:border-gray-200" />
-                      <div className="flex justify-between gap-2 px-4 text-sm">
-                        <Link
-                          href={`/download/${attachment.key}/${attachment.filename}`}
-                          download
-                          className={cn(linkClasses, "print:text-black print:no-underline")}
-                        >
-                          <Paperclip className="inline size-4 print:hidden" />
-                          {attachment.filename}
-                        </Link>
-                      </div>
-                    </Fragment>
-                  ))}
-                </CardContent>
-              </Card>
+              <AttachmentListCard
+                title="Documents"
+                linkClasses={linkClasses}
+                items={invoice.attachments.map((attachment) => ({
+                  key: attachment.key,
+                  filename: attachment.filename,
+                  label: attachment.filename,
+                }))}
+              />
             )}
 
             <footer className="flex justify-between print:mt-4 print:flex print:items-start print:justify-between">
