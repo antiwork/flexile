@@ -202,7 +202,7 @@ export const DialogStackBody = ({ children, className, ...props }: DialogStackBo
       <Portal>
         <div
           className={cn(
-            "pointer-events-none fixed inset-0 z-50 mx-auto flex w-full max-w-lg flex-col items-center justify-center",
+            "pointer-events-none fixed inset-0 z-50 mx-auto flex w-full max-w-lg flex-col items-center justify-start p-2 pt-32",
             className,
           )}
           {...props}
@@ -227,7 +227,7 @@ export type DialogStackContentProps = HTMLAttributes<HTMLDivElement> & {
   offset?: number;
 };
 
-export const DialogStackContent = ({ children, className, offset = 10, ...props }: DialogStackContentProps) => {
+export const DialogStackContent = ({ children, className, offset = 20, ...props }: DialogStackContentProps) => {
   const context = useContext(DialogStackContext);
   const indexContext = useContext(DialogStackContentContext);
 
@@ -259,14 +259,14 @@ export const DialogStackContent = ({ children, className, offset = 10, ...props 
   return (
     <div
       className={cn(
-        "bg-background h-auto w-full rounded-lg border p-6 shadow-lg transition-all duration-300",
+        "bg-background h-auto w-full rounded-lg border border-gray-200 p-6 shadow-lg transition-all duration-300",
         className,
       )}
       onClick={handleClick}
       style={{
         top: 0,
         transform: `translateY(${translateY})`,
-        width: `calc(100% - ${Math.abs(distanceFromActive) * 10}px)`,
+        width: `calc(100% - ${Math.abs(distanceFromActive) * 32}px)`,
         zIndex: 50 - Math.abs(context.activeIndex - index),
         position: distanceFromActive ? "absolute" : "relative",
         opacity: distanceFromActive > 0 ? 0 : 1,
@@ -311,7 +311,7 @@ export const DialogStackHeader = ({ className, ...props }: DialogStackHeaderProp
 export type DialogStackFooterProps = HTMLAttributes<HTMLDivElement>;
 
 export const DialogStackFooter = ({ children, className, ...props }: DialogStackFooterProps) => (
-  <div className={cn("flex items-center justify-end space-x-2 pt-4", className)} {...props}>
+  <div className={cn("flex items-center justify-end space-x-2", "sm:[&_button]:py-1.25", className)} {...props}>
     {children}
   </div>
 );

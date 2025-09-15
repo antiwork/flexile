@@ -376,6 +376,8 @@ const ActionPanel = () => {
                 <DialogStackHeader>
                   <DialogStackTitle>Add a contract</DialogStackTitle>
                 </DialogStackHeader>
+                {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField />}
+
                 <FormField
                   control={inviteForm.control}
                   name="contractSignedElsewhere"
@@ -391,8 +393,6 @@ const ActionPanel = () => {
                     </FormItem>
                   )}
                 />
-
-                {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField />}
                 {inviteMutation.isError ? <div className="text-red text-sm">{inviteMutation.error.message}</div> : null}
                 <DialogStackFooter>
                   <DialogStackPrevious>
