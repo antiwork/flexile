@@ -189,13 +189,26 @@ export default function InvoicePage() {
                   </>
                 ) : null}
 
+                {user.roles.administrator && !isActionable(invoice) ? (
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      window.print();
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Printer className="size-4" />
+                    Print
+                  </DropdownMenuItem>
+                ) : null}
+
                 {user.id === invoice.userId && (
                   <>
                     {EDITABLE_INVOICE_STATES.includes(invoice.status) && (
                       <DropdownMenuItem asChild>
                         <Link href={`/invoices/${invoice.id}/edit`} className="flex items-center gap-2">
-                          {invoice.status !== "rejected" && <SquarePen className="size-4" />}
-                          {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
+                          <SquarePen className="size-4" />
+                          Edit invoice
                         </Link>
                       </DropdownMenuItem>
                     )}
@@ -258,8 +271,8 @@ export default function InvoicePage() {
                   ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
                     <Button variant="default" size="small" asChild>
                       <Link href={`/invoices/${invoice.id}/edit`}>
-                        {invoice.status !== "rejected" && <SquarePen className="h-4 w-4" />}
-                        {invoice.status === "rejected" ? "Submit again" : "Edit invoice"}
+                        <SquarePen className="size-4" />
+                        Edit invoice
                       </Link>
                     </Button>
                   ) : null}
