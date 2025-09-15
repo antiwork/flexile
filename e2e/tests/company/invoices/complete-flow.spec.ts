@@ -2,7 +2,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
-import { fillDatePicker } from "@test/helpers";
+import { fillByLabelSafe, fillDatePicker } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
 import { expect, type Page, test, withinModal } from "@test/index";
 
@@ -40,18 +40,14 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "11/01/2024");
     await page.getByPlaceholder("Description").fill("first item");
-    await page.getByLabel("Hours / Qty").first().fill("01:23");
+    await fillByLabelSafe(page, "Hours / Qty", "01:23", { index: 0 });
     await page.getByRole("button", { name: "Add line item" }).click();
     await page.getByPlaceholder("Description").nth(1).fill("second item");
-    await page.getByLabel("Hours / Qty").nth(1).fill("10");
+    await fillByLabelSafe(page, "Hours / Qty", "10", { index: 1 });
     await page.getByPlaceholder("Enter notes about your").fill("A note in the invoice");
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 201),
-      // TRPC Clubs into 207 multi-status when repsonses are batched from server
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
-      page.getByRole("button", { name: "Send invoice" }).click(),
-    ]);
 
+    await expect(page.getByText("$683", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
     await expect(page.locator("tbody")).toContainText("$683");
@@ -59,7 +55,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("woops too little time");
-    await page.getByLabel("Hours / Qty").fill("0:23");
+    await fillByLabelSafe(page, "Hours / Qty", "0:23", { index: 0 });
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
@@ -73,9 +69,8 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByRole("link", { name: "Edit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await page.getByPlaceholder("Description").first().fill("first item updated");
-    const timeField = page.getByLabel("Hours / Qty").first();
-    await timeField.fill("04:30");
-    await timeField.blur(); // work around a test-specific issue; this works fine in a real browser
+    await fillByLabelSafe(page, "Hours / Qty", "04:30", { index: 0 });
+    await expect(page.getByText("$870", { exact: true })).toBeVisible();
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 204),
       page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
@@ -87,7 +82,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("Invoice to be deleted");
-    await page.getByLabel("Hours / Qty").fill("0:33");
+    await fillByLabelSafe(page, "Hours / Qty", "0:33", { index: 0 });
     await page.getByLabel("Invoice ID").fill("CUSTOM-3");
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
@@ -112,7 +107,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("line item");
-    await page.getByLabel("Hours / Qty").fill("10:23");
+    await fillByLabelSafe(page, "Hours / Qty", "10:23", { index: 0 });
     await fillDatePicker(page, "Date", "11/20/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByText("Awaiting approval")).toBeVisible();
@@ -215,7 +210,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await rejectedInvoiceRow.click({ button: "right" });
     await page.getByRole("menuitem", { name: "Edit" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
-    await page.getByLabel("Hours / Qty").fill("02:30");
+    await fillByLabelSafe(page, "Hours / Qty", "02:30", { index: 0 });
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
     await page.getByRole("button", { name: "Re-submit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
