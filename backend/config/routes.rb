@@ -7,13 +7,8 @@ else
 end
 require "sidekiq/cron/web"
 
-admin_constraint = lambda do |request|
-  user = JwtService.user_from_request(request)
-  user&.team_member?
-end
-
 Rails.application.routes.draw do
-  namespace :admin, constraints: admin_constraint do
+  namespace :admin do
     resources :company_workers
     resources :company_administrators
     resources :companies
