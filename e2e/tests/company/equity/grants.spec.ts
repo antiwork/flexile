@@ -257,9 +257,7 @@ test.describe("Equity Grants", () => {
     const { companyInvestor } = await companyInvestorsFactory.create({ companyId: company.id, userId: user.id });
     await equityGrantsFactory.create({ companyInvestorId: companyInvestor.id, vestedShares: 100 });
 
-    await login(page, user);
-    await page.getByRole("button", { name: "Equity" }).click();
-    await page.getByRole("link", { name: "Options" }).click();
+    await login(page, user, "/equity/options");
     await expect(page.getByRole("heading", { name: "Options" })).toBeVisible();
 
     await expect(page.getByText("Option exercises are currently unavailable.")).toBeVisible();
@@ -353,7 +351,7 @@ test.describe("Equity Grants", () => {
     await page.getByRole("link", { name: "Equity grants" }).click();
     await expect(page.getByRole("heading", { name: "Equity grants" })).toBeVisible();
 
-    await expect(page.getByText("Option exercises are currently unavailable.")).toBeVisible();
+    await expect(page.getByText("Option exercises are currently disabled.")).toBeVisible();
     await expect(page.getByText("Investors can't submit new exercise requests.")).toBeVisible();
     await expect(page.getByRole("link", { name: "Manage in settings" })).toBeVisible();
 
