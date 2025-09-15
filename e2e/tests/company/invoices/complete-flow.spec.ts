@@ -37,7 +37,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await login(page, workerUserA);
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-    await page.getByLabel("Invoice ID").fill("CUSTOM-1");
+    await page.getByLabel("Invoice ID").fill("COMPLETE-FLOW-1");
     await fillDatePicker(page, "Date", "11/01/2024");
     await page.getByPlaceholder("Description").fill("first item");
     await page.getByLabel("Hours / Qty").first().fill("01:23");
@@ -47,7 +47,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Enter notes about your").fill("A note in the invoice");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "COMPLETE-FLOW-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
     await expect(page.locator("tbody")).toContainText("$683");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
@@ -55,23 +55,23 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("woops too little time");
     await page.getByLabel("Hours / Qty").fill("0:23");
-    await page.getByLabel("Invoice ID").fill("CUSTOM-2");
+    await page.getByLabel("Invoice ID").fill("COMPLETE-FLOW-2");
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "COMPLETE-FLOW-2" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
     await expect(page.locator("tbody")).toContainText("$23");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
-    await page.getByRole("cell", { name: "CUSTOM-1" }).click();
+    await page.getByRole("cell", { name: "COMPLETE-FLOW-1" }).click();
     await page.getByRole("link", { name: "Edit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await page.getByPlaceholder("Description").first().fill("first item updated");
     await page.getByLabel("Hours / Qty").first().fill("04:30");
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("invoices.list") && r.ok()),
-      page.getByRole("button", { name: "Re-submit invoice" }).click(),
+      page.getByRole("button", { name: "Resubmit" }).click(),
     ]);
 
     await expect(page.getByRole("cell", { name: "$870" })).toBeVisible();
@@ -80,16 +80,16 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("Invoice to be deleted");
     await page.getByLabel("Hours / Qty").fill("0:33");
-    await page.getByLabel("Invoice ID").fill("CUSTOM-3");
+    await page.getByLabel("Invoice ID").fill("COMPLETE-FLOW-3");
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-3" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "COMPLETE-FLOW-3" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
     await expect(page.locator("tbody")).toContainText("$33");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
-    await page.getByRole("cell", { name: "CUSTOM-3" }).click({ button: "right" });
+    await page.getByRole("cell", { name: "COMPLETE-FLOW-3" }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Delete" }).click();
     await withinModal(
       async (modal) => {
@@ -97,7 +97,7 @@ test.describe("Invoice submission, approval and rejection", () => {
       },
       { page },
     );
-    await expect(page.getByRole("cell", { name: "CUSTOM-3" })).not.toBeVisible();
+    await expect(page.getByRole("cell", { name: "COMPLETE-FLOW-3" })).not.toBeVisible();
 
     await logout(page);
     await login(page, workerUserB);
@@ -194,8 +194,8 @@ test.describe("Invoice submission, approval and rejection", () => {
     await logout(page);
     await login(page, workerUserA);
 
-    const approvedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-1" });
-    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-2" });
+    const approvedInvoiceRow = page.locator("tbody tr").filter({ hasText: "COMPLETE-FLOW-1" });
+    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "COMPLETE-FLOW-2" });
 
     await expect(approvedInvoiceRow.getByRole("cell", { name: "Payment scheduled" })).toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).toBeVisible();
@@ -207,7 +207,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("invoices.list") && r.ok()),
-      page.getByRole("button", { name: "Re-submit invoice" }).click(),
+      page.getByRole("button", { name: "Resubmit" }).click(),
     ]);
 
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
