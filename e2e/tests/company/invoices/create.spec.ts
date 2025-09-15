@@ -338,7 +338,7 @@ test.describe("invoice creation", () => {
       buffer: Buffer.from("updated invoice document content"),
     });
 
-    await page.getByRole("button", { name: "Re-submit invoice" }).click();
+    await page.getByRole("button", { name: "Resubmit" }).click();
 
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
 
