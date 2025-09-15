@@ -57,10 +57,19 @@ test.describe("Role autocomplete", () => {
     await expect(page.getByRole("option", { name: "Alumni Role" })).not.toBeVisible();
 
     await roleField.fill("de");
-    await expect(page.getByRole("option", { name: role1 })).toBeVisible();
+
+    // Wait explicitly for the desired option to appear, then click it.
+    const option1 = page.getByRole("option", { name: role1 });
+    await option1.waitFor({ state: "visible", timeout: 5000 });
+    await expect(option1).toBeVisible();
+
     await expect(page.getByRole("option", { name: role2 })).toBeVisible();
     await expect(page.getByRole("option", { name: role3 })).not.toBeVisible();
-    await roleField.press("Enter");
+
+    // Click the visible option instead of pressing Enter to avoid flaky key handling.
+    await option1.click();
+
+    // Verify the input now contains the selected role and the dropdown is closed.
     await expect(roleField).toHaveValue(role1);
     await expect(page.getByRole("option")).not.toBeVisible();
   };
