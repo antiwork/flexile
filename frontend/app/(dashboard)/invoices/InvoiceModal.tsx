@@ -499,7 +499,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
                 <Separator className="my-2" />
                 <div className="flex justify-between leading-tight">
                   <span>Net amount in cash</span>
-                  <span className="numeric">
+                  <span className="numeric font-medium">
                     {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
                   </span>
                 </div>
