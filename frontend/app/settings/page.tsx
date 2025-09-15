@@ -139,9 +139,8 @@ const LeaveWorkspaceSection = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      document.cookie = `${user.id}_selected_company=; path=/; max-age=0`;
 
-      if (Object.keys(user.companies).length > 1) {
+      if (user.companies.length > 1) {
         router.push("/dashboard");
       } else {
         await signOut({ redirect: false }).then(logout);
