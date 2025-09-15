@@ -43,6 +43,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
+import { countries } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
@@ -217,10 +218,11 @@ export default function ContractorPage() {
               </Status>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setEndModalOpen(false)}>
+              <Button variant="outline" size="small" onClick={() => setEndModalOpen(false)}>
                 No, cancel
               </Button>
               <MutationButton
+                size="small"
                 mutation={endContract}
                 param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate?.toString() ?? "" }}
               >
@@ -353,6 +355,7 @@ export default function ContractorPage() {
                   <div className="flex justify-end">
                     <MutationStatusButton
                       type="submit"
+                      size="small"
                       mutation={issuePaymentMutation}
                       successText="Payment submitted!"
                       loadingText="Saving..."
@@ -366,24 +369,28 @@ export default function ContractorPage() {
           </DialogContent>
         </Dialog>
 
-        {tabs.length > 1 ? <Tabs links={tabs.map((tab) => ({ label: tab.label, route: `?tab=${tab.tab}` }))} /> : null}
+        <div className="space-y-8">
+          {tabs.length > 1 ? (
+            <Tabs links={tabs.map((tab) => ({ label: tab.label, route: `?tab=${tab.tab}` }))} />
+          ) : null}
 
-        {(() => {
-          switch (selectedTab) {
-            case "options":
-              return investor ? <OptionsTab investorId={investor.id} userId={id} /> : null;
-            case "shares":
-              return investor ? <SharesTab investorId={investor.id} /> : null;
-            case "convertibles":
-              return investor ? <ConvertiblesTab investorId={investor.id} /> : null;
-            case "exercises":
-              return investor ? <ExercisesTab investorId={investor.id} /> : null;
-            case "dividends":
-              return investor ? <DividendsTab investorId={investor.id} /> : null;
-            case "details":
-              return <DetailsTab userId={id} setCancelModalOpen={setCancelModalOpen} />;
-          }
-        })()}
+          {(() => {
+            switch (selectedTab) {
+              case "options":
+                return investor ? <OptionsTab investorId={investor.id} userId={id} /> : null;
+              case "shares":
+                return investor ? <SharesTab investorId={investor.id} /> : null;
+              case "convertibles":
+                return investor ? <ConvertiblesTab investorId={investor.id} /> : null;
+              case "exercises":
+                return investor ? <ExercisesTab investorId={investor.id} /> : null;
+              case "dividends":
+                return investor ? <DividendsTab investorId={investor.id} /> : null;
+              case "details":
+                return <DetailsTab userId={id} setCancelModalOpen={setCancelModalOpen} />;
+            }
+          })()}
+        </div>
       </div>
     </>
   );
@@ -418,7 +425,7 @@ const ActionPanel = ({
         <DialogDescription className="sr-only">Manage Payment or Contract</DialogDescription>
         <div className="flex flex-col gap-3">
           <DialogClose asChild onClick={handleIssuePaymentClick}>
-            <Button>Issue payment</Button>
+            <Button size="small">Issue payment</Button>
           </DialogClose>
           {contractor.endedAt && !isFuture(contractor.endedAt) ? (
             <Status className="justify-center" variant="critical">
@@ -426,7 +433,9 @@ const ActionPanel = ({
             </Status>
           ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
             <DialogClose asChild onClick={handleEndContractClick}>
-              <Button variant="outline">End contract</Button>
+              <Button variant="outline" size="small">
+                End contract
+              </Button>
             </DialogClose>
           ) : null}
         </div>
@@ -434,11 +443,13 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex items-center gap-3">
-      <Button onClick={handleIssuePaymentClick}>Issue payment</Button>
+      <Button size="small" onClick={handleIssuePaymentClick}>
+        Issue payment
+      </Button>
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
         <Status variant="critical">Alumni</Status>
       ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
-        <Button variant="outline" onClick={handleEndContractClick}>
+        <Button variant="outline" size="small" onClick={handleEndContractClick}>
           End contract
         </Button>
       ) : null}
@@ -532,6 +543,7 @@ const DetailsTab = ({
           {!contractor.endedAt && (
             <MutationStatusButton
               type="submit"
+              size="small"
               mutation={updateContractor}
               loadingText="Saving..."
               className="justify-self-end"
@@ -651,7 +663,7 @@ const DetailsTab = ({
               <FormItem>
                 <FormLabel>Country of residence</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} value={field.value ? countries.get(field.value) : null} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -31,7 +31,6 @@ test.describe("Company administrator signup", () => {
 
     await page.waitForURL(/.*\/invoices.*/u);
 
-    await page.getByText("Add company details").waitFor();
     await page.getByText("Add company details").click();
 
     await page.waitForURL(/.*\/settings\/administrator\/details.*/u);

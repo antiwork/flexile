@@ -288,7 +288,7 @@ export default function DataTable<T extends RowData>({
                 <div className={cn("flex gap-2", selectedRowCount === 0 && "pointer-events-none opacity-0")}>
                   <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
                     <span className="text-sm whitespace-nowrap">
-                      <span className="inline-block w-4 text-center tabular-nums">{selectedRowCount}</span> selected
+                      <span className="inline-block text-center tabular-nums">{selectedRowCount}</span> selected
                     </span>
 
                     <Button

@@ -70,7 +70,7 @@ export default function Buybacks() {
       <Dialog open={showBuyBackModal} onOpenChange={setShowBuyBackModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New Buyback</DialogTitle>
+            <DialogTitle>New buyback</DialogTitle>
           </DialogHeader>
           <NewBuybackForm
             handleComplete={() => {
