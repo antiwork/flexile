@@ -65,7 +65,6 @@ test.describe("Company equity settings", () => {
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Equity" }).click();
 
-    // Check initial state - exercise requests visible and toggle disabled until equity is enabled
     await expect(page.getByText("Exercise requests")).toBeVisible();
     await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeVisible();
     await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeDisabled();
@@ -77,12 +76,10 @@ test.describe("Company equity settings", () => {
     await enableEquitySwitch.click({ force: true });
     await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "true");
 
-    // Now option exercising toggle should be visible
     const enableOptionExercisingSwitch = page.getByRole("switch", { name: "Enable option exercising" });
     await expect(enableOptionExercisingSwitch).toBeVisible();
     await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "false");
 
-    // Enable option exercising
     await enableOptionExercisingSwitch.click({ force: true });
     await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "true");
     await expect(page.getByRole("switch", { name: "Enable option exercising" })).not.toBeDisabled();
@@ -148,50 +145,42 @@ test.describe("Company equity settings", () => {
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Equity" }).click();
 
-    // Initially, exercise requests visible and toggle disabled until equity is enabled
     await expect(page.getByText("Exercise requests")).toBeVisible();
     await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeVisible();
     await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeDisabled();
 
-    // Enable equity first
     const enableEquitySwitch = page.getByRole("switch", { name: "Enable equity" });
     await enableEquitySwitch.click({ force: true });
     await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "true");
 
-    // Now option exercising toggle should appear
     const enableOptionExercisingSwitch = page.getByRole("switch", { name: "Enable option exercising" });
     await expect(enableOptionExercisingSwitch).toBeVisible();
     await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "false");
 
-    // Test toggling option exercising
     await enableOptionExercisingSwitch.click({ force: true });
     await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "true");
     await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeChecked({ checked: true });
     await expect(page.getByText("Exercise notice", { exact: true })).toBeVisible();
 
-    // Verify in database
     let dbCompany = await db.query.companies.findFirst({
       where: eq(companies.id, company.id),
     });
     expect(dbCompany?.optionExercisingEnabled).toBe(true);
 
-    // Turn it back off
     await enableOptionExercisingSwitch.click({ force: true });
     await expect(enableOptionExercisingSwitch).toHaveAttribute("aria-checked", "false");
     await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeChecked({ checked: false });
     await expect(page.getByText("Exercise notice", { exact: true })).not.toBeVisible();
 
-    // Verify in database
     dbCompany = await db.query.companies.findFirst({
       where: eq(companies.id, company.id),
     });
     expect(dbCompany?.optionExercisingEnabled).toBe(false);
 
-    // Disable equity - option exercising toggle should remain visible but be disabled
     await enableEquitySwitch.click({ force: true });
     await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "false");
     await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeVisible();
     await expect(page.getByRole("switch", { name: "Enable option exercising" })).toBeDisabled();
-    await expect(page.getByText("Exercise requests")).toBeVisible(); // Text should still be visible
+    await expect(page.getByText("Exercise requests")).toBeVisible();
   });
 });

@@ -250,7 +250,7 @@ test.describe("Equity Grants", () => {
     const { company } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
       conversionSharePriceUsd: "1",
-      optionExercisingEnabled: false, // Disabled
+      optionExercisingEnabled: false,
     });
     const { user } = await usersFactory.create();
     await companyContractorsFactory.create({ companyId: company.id, userId: user.id });
@@ -262,7 +262,6 @@ test.describe("Equity Grants", () => {
     await page.getByRole("link", { name: "Options" }).click();
     await expect(page.getByRole("heading", { name: "Options" })).toBeVisible();
 
-    // Should show the disabled notice for investors
     await expect(page.getByText("Option exercises are currently unavailable.")).toBeVisible();
     await expect(
       page.getByText(
@@ -270,22 +269,17 @@ test.describe("Equity Grants", () => {
       ),
     ).toBeVisible();
 
-    // Should not show exercise buttons or options
     await expect(page.getByRole("button", { name: "Exercise Options" })).not.toBeVisible();
 
-    // Enable option exercising
     await db.update(companies).set({ optionExercisingEnabled: true }).where(eq(companies.id, company.id));
     await page.reload();
 
-    // Notice should disappear but still no exercise button (no exercise notice yet)
     await expect(page.getByText("Option exercises are currently unavailable.")).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Exercise Options" })).not.toBeVisible();
 
-    // Add exercise notice to enable exercising
     await db.update(companies).set({ exerciseNotice: "I am exercising" }).where(eq(companies.id, company.id));
     await page.reload();
 
-    // Now exercise options should be available
     await expect(page.getByText("You have 100 vested options available for exercise.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Exercise Options" })).toBeVisible();
   });
@@ -359,16 +353,13 @@ test.describe("Equity Grants", () => {
     await page.getByRole("link", { name: "Equity grants" }).click();
     await expect(page.getByRole("heading", { name: "Equity grants" })).toBeVisible();
 
-    // Should show the disabled notice
     await expect(page.getByText("Option exercises are currently unavailable.")).toBeVisible();
     await expect(page.getByText("Investors can't submit new exercise requests.")).toBeVisible();
     await expect(page.getByRole("link", { name: "Manage in settings" })).toBeVisible();
 
-    // Enable option exercising
     await db.update(companies).set({ optionExercisingEnabled: true }).where(eq(companies.id, company.id));
     await page.reload();
 
-    // Notice should disappear and exercise notice alert should appear instead
     await expect(page.getByText("Option exercises are currently unavailable.")).not.toBeVisible();
     await expect(
       page
