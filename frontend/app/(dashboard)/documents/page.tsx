@@ -174,19 +174,29 @@ export default function DocumentsPage() {
       [
         columnHelper.display({
           id: "documentNameSigner",
-          cell: (info) => (
-            <div className="flex flex-col gap-1">
-              <div className="text-base font-medium">{info.row.original.name}</div>
-              {isCompanyRepresentative ? (
-                <div className="text-sm font-normal">
-                  {
-                    info.row.original.signatories.find((signatory) => signatory.title !== "Company Representative")
-                      ?.name
-                  }
-                </div>
-              ) : null}
-            </div>
-          ),
+          cell: (info) => {
+            const document = info.row.original;
+            return (
+              <div className="flex flex-col gap-1">
+                <div className="text-base font-medium">{document.name}</div>
+                {isCompanyRepresentative ? (
+                  <div className="text-sm font-normal">
+                    {document.signatories.find((signatory) => signatory.title !== "Company Representative")?.name}
+                  </div>
+                ) : null}
+                {document.attachment ? (
+                  <div>
+                    <Button variant="outline" size="small" asChild>
+                      <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
+                        <Download className="mr-2 size-4" />
+                        Download
+                      </Link>
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            );
+          },
           meta: {
             cellClassName: "w-full",
           },
