@@ -67,7 +67,7 @@ test.describe("Company equity settings", () => {
     // Enable equity toggle
     const enableEquitySwitch = page.getByRole("switch", { name: "Enable equity" });
     await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "false");
-    await enableEquitySwitch.waitFor({ state: "visible" });
+    await expect(enableEquitySwitch).toBeVisible();
     await enableEquitySwitch.click({ force: true });
     await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "true");
 
