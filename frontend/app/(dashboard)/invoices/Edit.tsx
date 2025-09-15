@@ -2,7 +2,7 @@
 
 import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert, Plus, Upload } from "lucide-react";
 import Link from "next/link";
@@ -119,7 +119,6 @@ const Edit = () => {
   const searchParams = useSearchParams();
   const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
-  const queryClient = useQueryClient();
   const trpcUtils = trpc.useUtils();
   const worker = user.roles.worker;
   assert(worker != null);
@@ -128,7 +127,7 @@ const Edit = () => {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
 
-  const { data } = useSuspenseQuery({
+  const { data, refetch } = useSuspenseQuery({
     queryKey: ["invoice", id],
     queryFn: async () => {
       const response = await request({
@@ -223,8 +222,7 @@ const Edit = () => {
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       await trpcUtils.documents.list.invalidate();
       if (id) {
-        await trpcUtils.invoices.get.invalidate({ companyId: company.id, id });
-        await queryClient.invalidateQueries({ queryKey: ["invoice", id] });
+        await refetch();
       }
       router.push("/invoices");
     },
