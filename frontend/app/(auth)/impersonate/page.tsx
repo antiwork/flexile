@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect } from "react";
 import BrandedLayout from "@/app/(public)/layout";
@@ -10,20 +10,21 @@ export default function ImpersonatePage() {
   const param = searchParams.get("actor_token");
   const actorToken = param === "null" ? null : param;
   const { data: session, status, update } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     if (status === "loading") return;
 
     // Already impersonating - redirect to dashboard
     if (actorToken === session?.user.actorToken) {
-      window.location.href = "/dashboard";
+      router.replace("/dashboard");
       return;
     }
 
     // Expired impersonation session - clear auth and redirect to login
     if (!session?.user.primaryToken && actorToken === null) {
       void signOut({ redirect: false }).then(() => {
-        window.location.href = "/login";
+        router.replace("/login");
       });
       return;
     }
