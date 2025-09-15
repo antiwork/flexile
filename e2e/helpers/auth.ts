@@ -5,7 +5,6 @@ import { users } from "@/db/schema";
 const TEST_OTP_CODE = "000000";
 
 export const fillOtp = async (page: Page) => {
-  // Wait for the OTP input to be visible before filling
   const otp = page.getByRole("textbox", { name: "Verification code" });
   await expect(otp).toBeVisible();
   await otp.fill(TEST_OTP_CODE);
@@ -19,6 +18,7 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
   await page.getByRole("button", { name: "Log in", exact: true }).click();
   await fillOtp(page);
 
+  // Wait for navigation away from login page (ensures login finished)
   await page.waitForURL(/^(?!.*\/login$).*/u);
 };
 
@@ -26,23 +26,87 @@ export const logout = async (page: Page) => {
   if (page.url().includes("/login")) {
     return;
   }
+
+  // Ensure we're on a dashboard page with sidebar
   if (!page.url().includes("/invoices")) {
-    // Navigate to invoices page to ensure we're on a dashboard page with sidebar
     await page.goto("/invoices");
   }
+
   await page.getByRole("button", { name: "Log out" }).first().click();
 
-  // Wait for redirect to login
+  // Wait for redirect to login and for network to be idle (logout finished)
   await page.waitForURL(/.*\/login.*/u);
   await page.waitForLoadState("networkidle");
 };
 
+function isRecord(x: unknown): x is Record<string, unknown> {
+  return typeof x === "object" && x !== null && !Array.isArray(x);
+}
+
+function safeStringify(value: unknown, maxLen = 1000): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (value === undefined) return "undefined";
+  if (value === null) return "null";
+
+  if (isRecord(value) || Array.isArray(value)) {
+    try {
+      const json = JSON.stringify(value);
+      return json.length > maxLen ? `${json.slice(0, maxLen)}...` : json;
+    } catch {
+      return Object.prototype.toString.call(value);
+    }
+  }
+
+  return Object.prototype.toString.call(value);
+}
+
+/**
+ * Mock external OAuth provider callback so tests can override returned email.
+ * Rewrites the POST body to include the provided credentials.email when possible.
+ */
 export const externalProviderMock = async (page: Page, provider: string, credentials: { email: string }) => {
   await page.route(`**/api/auth/callback/${provider}`, async (route) => {
-    const body: unknown = await route.request().postDataJSON();
-    if (typeof body === "object") {
-      const modifiedData: string = new URLSearchParams({ ...body, email: credentials.email }).toString();
-      await route.continue({ postData: modifiedData });
+    try {
+      const req = route.request();
+      const raw = req.postData() ?? "";
+
+      let parsed: unknown = null;
+      if (typeof raw === "string" && raw.length > 0) {
+        try {
+          parsed = JSON.parse(raw);
+        } catch {
+          parsed = null;
+        }
+      }
+
+      if (isRecord(parsed)) {
+        const flat: Record<string, string> = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          flat[k] = v == null ? "" : safeStringify(v);
+        }
+        flat.email = credentials.email;
+        const modifiedData = new URLSearchParams(flat).toString();
+
+        // Preserve original headers but set content-type to urlencoded so the server parses the body correctly.
+        const originalHeaders = req.headers();
+        await route.continue({
+          postData: modifiedData,
+          headers: {
+            ...originalHeaders,
+            "content-type": "application/x-www-form-urlencoded",
+          },
+        });
+        return;
+      }
+
+      // Fallback: continue with the original request unchanged
+      await route.continue();
+    } catch (errUnknown) {
+      // Log a useful string instead of "[object Object]".
+      // eslint-disable-next-line no-console
+      console.warn("externalProviderMock route handler error:", safeStringify(errUnknown));
+      await route.continue();
     }
   });
 };
