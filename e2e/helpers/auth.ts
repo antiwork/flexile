@@ -123,7 +123,7 @@ export const externalProviderMock = async (page: Page, provider: string, credent
 
       if (modifiedData != null && newContentType != null) {
         // Debugging log - will appear in runner logs and trace console (safe info).
-        // eslint-disable-next-line no-console
+
         console.debug(`[externalProviderMock] intercept ${route.request().url()} -> sending ${newContentType}`);
 
         await route.continue({
@@ -140,7 +140,7 @@ export const externalProviderMock = async (page: Page, provider: string, credent
       await route.continue();
     } catch (errUnknown) {
       // Log safe string
-      // eslint-disable-next-line no-console
+
       console.warn("externalProviderMock route handler error:", safeStringify(errUnknown));
       await route.continue();
     }
