@@ -21,24 +21,24 @@ RSpec.describe Admin::UsersController do
     end
 
     it "succeeds for regular users" do
-      get :impersonate, params: { id: target_user.id }
+      get :impersonate, params: { id: target_user.external_id }
 
       expect(response).to have_http_status(:redirect)
       expect(response.location).to include("actor_token=")
     end
 
     it "denies impersonating team members" do
-      get :impersonate, params: { id: another_team_member.id }
+      get :impersonate, params: { id: another_team_member.external_id }
       expect_access_denied
     end
 
     it "denies impersonating self" do
-      get :impersonate, params: { id: team_member.id }
+      get :impersonate, params: { id: team_member.external_id }
       expect_access_denied
     end
 
     it "denies non-existent users" do
-      get :impersonate, params: { id: 999999 }
+      get :impersonate, params: { id: "non-existent-external-id" }
       expect_access_denied
     end
   end
