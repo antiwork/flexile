@@ -1,5 +1,5 @@
 "use client";
-import { CircleCheck, Pencil, Plus } from "lucide-react";
+import { CircleCheck, Plus } from "lucide-react";
 import React from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
@@ -50,7 +50,6 @@ export default function OptionPools() {
               </Button>
             ) : (
               <Button size="small" onClick={() => setOpen(true)}>
-                <Pencil className="size-4" />
                 New option pool
               </Button>
             )

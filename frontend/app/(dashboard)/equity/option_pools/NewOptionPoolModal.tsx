@@ -215,7 +215,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                       name="voluntaryTerminationExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Voluntary termination exercise period</FormLabel>
+                          <FormLabel>Voluntary termination</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>
@@ -229,7 +229,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                       name="involuntaryTerminationExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Involuntary termination exercise period</FormLabel>
+                          <FormLabel>Involuntary termination</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>
@@ -245,7 +245,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                       name="terminationWithCauseExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Termination with cause exercise period</FormLabel>
+                          <FormLabel>Termination with cause</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>
@@ -259,7 +259,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                       name="deathExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Death exercise period</FormLabel>
+                          <FormLabel>Death</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>
@@ -275,7 +275,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                       name="disabilityExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Disability exercise period</FormLabel>
+                          <FormLabel>Disability</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>
@@ -289,7 +289,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
                       name="retirementExerciseMonths"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Retirement exercise period</FormLabel>
+                          <FormLabel>Retirement</FormLabel>
                           <FormControl>
                             <NumberInput {...field} suffix="months" />
                           </FormControl>

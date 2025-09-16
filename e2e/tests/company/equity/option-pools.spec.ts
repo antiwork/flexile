@@ -85,12 +85,12 @@ test.describe("Option Pools", () => {
     await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
 
     await page.getByLabel("Expiration period").fill("84");
-    await page.getByLabel("Voluntary termination exercise period", { exact: true }).fill("6");
-    await page.getByLabel("Involuntary termination exercise period", { exact: true }).fill("6");
-    await page.getByLabel("Termination with cause exercise period").fill("0");
-    await page.getByLabel("Death exercise period", { exact: true }).fill("24");
-    await page.getByLabel("Disability exercise period").fill("24");
-    await page.getByLabel("Retirement exercise period").fill("24");
+    await page.getByLabel("Voluntary termination", { exact: true }).fill("6");
+    await page.getByLabel("Involuntary termination", { exact: true }).fill("6");
+    await page.getByLabel("Termination with cause").fill("0");
+    await page.getByLabel("Death", { exact: true }).fill("24");
+    await page.getByLabel("Disability").fill("24");
+    await page.getByLabel("Retirement").fill("24");
 
     await page.getByRole("button", { name: "Create option pool" }).click();
 
