@@ -10,10 +10,15 @@ class Recipient::CreateService
   end
 
   def process
+    Rails.logger.info "Starting bank account creation for user #{user.id} with params: #{params}"
     recipient_response = payout_service.create_recipient_account(params)
+    Rails.logger.info "Wise API response: #{recipient_response.code} - #{recipient_response.body}"
     if recipient_response.ok?
+      Rails.logger.info "Creating WiseRecipient with: user_id=#{user.id}, recipient_id=#{recipient_response['id']}, wise_credential=#{WiseCredential.flexile_credential&.id}"
       recipient_attributes = parse_recipient_from_response(recipient_response).merge(wise_credential: WiseCredential.flexile_credential)
+      Rails.logger.info "Built recipient attributes: #{recipient_attributes}"
       recipient_record = user.bank_accounts.build(recipient_attributes)
+      Rails.logger.info "Built recipient record: #{recipient_record.attributes}"
 
       if recipient_record.save
         if replace_recipient_id
