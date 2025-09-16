@@ -79,7 +79,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 204),
       page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
-      page.getByRole("button", { name: "Re-submit invoice" }).click(),
+      page.getByRole("button", { name: "Resubmit" }).click(),
     ]);
 
     await expect(page.getByRole("cell", { name: "$870" })).toBeVisible();
@@ -217,7 +217,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await page.getByLabel("Hours / Qty").fill("02:30");
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
-    await page.getByRole("button", { name: "Re-submit invoice" }).click();
+    await page.getByRole("button", { name: "Resubmit" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
