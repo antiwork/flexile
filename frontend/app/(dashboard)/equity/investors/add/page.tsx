@@ -27,7 +27,7 @@ const investorSchema = z.object({
   investors: z
     .array(
       z.object({
-        userId: z.string().min(1, "Please select an investor"),
+        userId: z.string().trim().min(1, "Please select an investor"),
         shares: z.number().min(1, "Please enter shares greater than 0"),
         searchTerm: z.string().optional(),
       }),

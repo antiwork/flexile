@@ -31,8 +31,8 @@ import { company_administrator_equity_grants_path } from "@/utils/routes";
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 
 const formSchema = documentSchema.extend({
-  userId: z.string().min(1, "Must be present."),
-  optionPoolId: z.string().min(1, "Must be present."),
+  userId: z.string().trim().min(1, "Must be present."),
+  optionPoolId: z.string().trim().min(1, "Must be present."),
   numberOfShares: z.number().gt(0),
   issueDateRelationship: z.enum(optionGrantIssueDateRelationships),
   optionGrantType: z.enum(optionGrantTypes),
