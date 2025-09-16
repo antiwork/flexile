@@ -78,6 +78,10 @@ test.describe("Documents search functionality", () => {
 
     await expect(page.getByRole("row").filter({ hasText: document1.name })).toBeVisible();
     await expect(page.getByRole("row").filter({ hasText: document2.name })).toBeVisible();
+
+    const document1Row = page.getByRole("row").filter({ hasText: document1.name });
+    await document1Row.getByRole("checkbox").click();
+
     await expect(page.getByRole("link", { name: "Download" })).toHaveAttribute("href", "/download/blobkey/test.pdf");
 
     const searchInput = page.getByPlaceholder("Search by Signer...");
