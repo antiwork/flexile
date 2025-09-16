@@ -194,7 +194,7 @@ export default function PeoplePage() {
                 {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
               </button>
             ) : null}
-            {workers.length === 0 ? <ActionPanel /> : null}
+            {!isLoading && workers.length === 0 ? <ActionPanel /> : null}
           </>
         }
       />
@@ -217,6 +217,7 @@ const inviteSchema = formSchema.merge(documentSchema).extend({
   startDate: z.instanceof(CalendarDate),
   contractSignedElsewhere: z.boolean().default(false),
 });
+
 const ActionPanel = () => {
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
