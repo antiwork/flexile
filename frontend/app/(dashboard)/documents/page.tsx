@@ -276,10 +276,12 @@ export default function DocumentsPage() {
   const table = useTable({
     columns,
     data: documents,
+    getRowId: (document) => document.id.toString(),
     initialState: { sorting: [{ id: "createdAt", desc: true }] },
     state: { columnFilters },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    enableRowSelection: true,
     onColumnFiltersChange: (columnFilters) =>
       setColumnFilters((old) => {
         const value = typeof columnFilters === "function" ? columnFilters(old) : columnFilters;
