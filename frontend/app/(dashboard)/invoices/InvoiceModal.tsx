@@ -1,12 +1,12 @@
 "use client";
 
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { PaperAirplaneIcon, PaperClipIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
-import { CircleAlert } from "lucide-react";
-import { redirect, useSearchParams } from "next/navigation";
+import { CircleAlert, SendHorizonalIcon } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
@@ -99,10 +99,9 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const { canSubmitInvoices } = useCanSubmitInvoices();
-  if (!canSubmitInvoices) throw redirect("/invoices");
+  if (!canSubmitInvoices) return null;
   const searchParams = useSearchParams();
   const [errorField, setErrorField] = useState<string | null>(null);
-  const [isEditingInvoiceId, setIsEditingInvoiceId] = useState(false);
   const trpcUtils = trpc.useUtils();
   const worker = user.roles.worker;
   assert(worker != null);
@@ -264,33 +263,16 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl px-0 py-6 pb-4">
-        <DialogHeader>
-          <DialogTitle className="flex h-5 items-center px-4">
-            {isEditingInvoiceId ? (
-              <input
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-                onBlur={(e) => {
-                  if (e.target.value.trim() === "") return e.target.focus();
-                  setIsEditingInvoiceId(false);
-                }}
-                aria-invalid={errorField === "invoiceNumber"}
-                className="text-lg outline-0"
-                placeholder="Invoice ID"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    if (e.currentTarget.value.trim() === "") return;
-                    e.currentTarget.blur();
-                  }
-                }}
-              />
-            ) : (
-              <div onClick={() => setIsEditingInvoiceId(true)} className="relative flex cursor-pointer items-center">
-                {invoiceNumber}
-                <PencilIcon className="pointer-events-none absolute top-1/2 -right-2 size-3 translate-x-full -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100" />
-              </div>
-            )}
+        <DialogHeader className="px-4">
+          <DialogTitle className="flex h-5 items-center">
+            <input
+              value={invoiceNumber}
+              tabIndex={-1}
+              onChange={(e) => setInvoiceNumber(e.target.value)}
+              aria-invalid={errorField === "invoiceNumber"}
+              className="text-lg outline-0"
+              placeholder="Invoice ID"
+            />
           </DialogTitle>
         </DialogHeader>
         {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
@@ -525,7 +507,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
             className="h-full"
           />
           <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
-            <PaperAirplaneIcon className="size-4" />
+            <SendHorizonalIcon className="size-4" />
             {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit" : "Send"}
           </Button>
         </DialogFooter>
