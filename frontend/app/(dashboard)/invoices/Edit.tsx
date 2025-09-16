@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
@@ -267,13 +267,17 @@ const Edit = () => {
             {data.invoice.id && data.invoice.status === "rejected" ? (
               <div className="inline-flex items-center">Action required</div>
             ) : (
-              <Button variant="outline" asChild>
+              <Button size="small" variant="outline" asChild>
                 <Link href="/invoices">Cancel</Link>
               </Button>
             )}
-            <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
-              <PaperAirplaneIcon className="size-4" />
-              {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit invoice" : "Send invoice"}
+            <Button
+              size="small"
+              variant="primary"
+              onClick={() => validate() && submit.mutate()}
+              disabled={submit.isPending}
+            >
+              {submit.isPending ? "Sending..." : data.invoice.id ? "Resubmit" : "Send invoice"}
             </Button>
           </>
         }

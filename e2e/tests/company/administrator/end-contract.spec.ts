@@ -12,9 +12,6 @@ import { assert, assertDefined } from "@/utils/assert";
 test.describe("End contract", () => {
   test("allows admin to end contractor's contract", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
-
-    await login(page, adminUser);
-
     const { companyContractor } = await companyContractorsFactory.create({
       companyId: company.id,
     });
@@ -24,7 +21,7 @@ test.describe("End contract", () => {
     assert(contractor != null, "Contractor is required");
     assert(contractor.preferredName != null, "Contractor preferred name is required");
 
-    await page.getByRole("link", { name: "People" }).click();
+    await login(page, adminUser, "/people");
     await page.getByRole("link", { name: contractor.preferredName }).click();
     await page.getByRole("button", { name: "End contract" }).click();
 
