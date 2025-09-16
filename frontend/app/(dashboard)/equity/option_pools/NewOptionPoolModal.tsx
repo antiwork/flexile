@@ -133,7 +133,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={(e) => void submit(e)} className="grid gap-8">
+          <form onSubmit={(e) => void submit(e)} className="grid gap-4">
             <div className="grid gap-4">
               <FormField
                 control={form.control}
@@ -179,14 +179,13 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
             </div>
 
             <div className="grid gap-4">
-              <h2 className="text-base font-medium">Exercise periods</h2>
               <Button
                 type="button"
                 variant="ghost"
                 className="flex h-auto w-full items-start justify-between p-0 text-left whitespace-break-spaces hover:bg-transparent"
                 onClick={() => setShowExercise(!showExercise)}
               >
-                <h2 className="text-base">Customize post-termination exercise periods</h2>
+                <h2 className="text-base font-medium">Customize post-termination exercise periods</h2>
                 {showExercise ? (
                   <ChevronDown className="mt-[3px] size-5" />
                 ) : (
