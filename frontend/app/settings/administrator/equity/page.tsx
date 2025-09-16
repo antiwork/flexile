@@ -19,9 +19,9 @@ import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 
 const formSchema = z.object({
-  sharePriceInUsd: z.number().min(0),
-  fmvPerShareInUsd: z.number().min(0),
-  conversionSharePriceUsd: z.number().min(0),
+  sharePriceInUsd: z.number().min(0).max(1e12),
+  fmvPerShareInUsd: z.number().min(0).max(1e12),
+  conversionSharePriceUsd: z.number().min(0).max(1e12),
   exerciseNotice: z.string().nullable(),
 });
 

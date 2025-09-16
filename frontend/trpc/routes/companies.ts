@@ -31,7 +31,7 @@ const companyLogo = (id: bigint) =>
     eq(activeStorageAttachments.name, "logo"),
   );
 
-const decimalRegex = /^\d+(\.\d+)?$/u;
+const decimalRegex = /^\d{0,12}(\.\+)?$/u;
 
 export const companiesRouter = createRouter({
   settings: companyProcedure.query(({ ctx }) => {
