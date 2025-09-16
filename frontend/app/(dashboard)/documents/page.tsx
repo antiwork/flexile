@@ -9,7 +9,6 @@ import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
-import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
 import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -369,16 +368,6 @@ export default function DocumentsPage() {
                 config={actionConfig}
                 availableActions={availableActions}
                 onAction={handleAction}
-              />
-            )}
-            contextMenuContent={({ row, selectedRows, onClearSelection }) => (
-              <ContextMenuActions
-                item={row}
-                selectedItems={selectedRows}
-                config={actionConfig}
-                actionContext={actionContext}
-                onAction={handleAction}
-                onClearSelection={onClearSelection}
               />
             )}
           />
