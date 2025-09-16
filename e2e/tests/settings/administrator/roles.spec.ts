@@ -85,16 +85,16 @@ test.describe("Manage roles access", () => {
       await expect(page.getByText(lawyerUser.legalName || "")).toBeVisible();
       await expect(page.getByText("Lawyer").nth(1)).toBeVisible();
 
-      // Check that multi-role user shows as "Admin, Lawyer"
+      // Check that multi-role user shows all their roles
       await expect(page.getByText(multiRoleUser.legalName || "")).toBeVisible();
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(multiRoleRow.getByRole("cell", { name: "Admin, Lawyer" })).toBeVisible();
+      await expect(multiRoleRow.getByRole("cell", { name: "Admin, Lawyer, Investor" })).toBeVisible();
 
       // Verify users with roles other than admin or lawyer are NOT displayed
       await expect(page.getByText(contractorUser.legalName || "")).not.toBeVisible();
       await expect(page.getByText("Senior Developer")).not.toBeVisible();
       await expect(page.getByText(investorUser.legalName || "")).not.toBeVisible();
-      await expect(page.getByText("Investor")).not.toBeVisible();
+      await expect(page.getByRole("cell", { name: "Investor", exact: true })).not.toBeVisible();
     });
 
     test("displays admin names correctly (legal_name over preferred_name)", async ({ page }) => {
