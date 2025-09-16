@@ -52,7 +52,7 @@ RSpec.describe Recipient::CreateService, :vcr do
           # Simulate failure to create a record
           allow_any_instance_of(WiseRecipient).to receive(:save).and_return(false)
 
-          expect(response).to eq({ success: false, form_errors: [], error: "error saving recipient: " })
+          expect(response).to eq({ success: false, form_errors: [], error: "error saving recipient" })
         end
       end
     end
@@ -213,7 +213,7 @@ RSpec.describe Recipient::CreateService, :vcr do
           # Simulate failure to create a record
           allow_any_instance_of(WiseRecipient).to receive(:save).and_return(false)
 
-          expect(response).to eq({ success: false, form_errors: [], error: "error saving recipient: " })
+          expect(response).to eq({ success: false, form_errors: [], error: "error saving recipient" })
         end
       end
     end

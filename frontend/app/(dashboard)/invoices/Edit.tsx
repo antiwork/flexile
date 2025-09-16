@@ -49,7 +49,7 @@ const dataSchema = z.object({
   user: z.object({
     legal_name: z.string(),
     business_entity: z.boolean(),
-    billing_entity_name: z.string().nullable(),
+    billing_entity_name: z.string(),
     pay_rate_in_subunits: z.number().nullable(),
     project_based: z.boolean(),
   }),
