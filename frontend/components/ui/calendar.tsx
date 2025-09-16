@@ -49,7 +49,7 @@ function CalendarGridComponent({ isRange = false }: { isRange?: boolean }) {
   const now = today(getLocalTimeZone());
 
   return (
-    <CalendarGridRac>
+    <CalendarGridRac className="w-full">
       <CalendarGridHeaderRac>
         {(day) => (
           <CalendarHeaderCellRac className="text-muted-foreground/80 size-9 rounded-md p-0 text-xs font-medium">
@@ -57,7 +57,7 @@ function CalendarGridComponent({ isRange = false }: { isRange?: boolean }) {
           </CalendarHeaderCellRac>
         )}
       </CalendarGridHeaderRac>
-      <CalendarGridBodyRac className="[&_td]:px-0 [&_td]:py-px">
+      <CalendarGridBodyRac className="[&_td]:px-0 [&_td]:py-px [&_tr]:h-[32px]">
         {(date) => (
           <CalendarCellRac
             date={date}
@@ -86,7 +86,9 @@ function Calendar({ className, ...props }: CalendarProps) {
   return (
     <CalendarRac {...props} className={composeRenderProps(className, (className) => cn("w-fit", className))}>
       <CalendarHeader />
-      <CalendarGridComponent />
+      <div className="flex h-[220px] flex-col">
+        <CalendarGridComponent />
+      </div>
     </CalendarRac>
   );
 }
