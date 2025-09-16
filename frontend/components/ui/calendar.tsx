@@ -86,7 +86,7 @@ function Calendar({ className, ...props }: CalendarProps) {
   return (
     <CalendarRac {...props} className={composeRenderProps(className, (className) => cn("w-fit", className))}>
       <CalendarHeader />
-      <div className="flex h-[220px] flex-col">
+      <div className="flex flex-col">
         <CalendarGridComponent />
       </div>
     </CalendarRac>
