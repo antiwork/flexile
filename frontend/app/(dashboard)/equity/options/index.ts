@@ -16,6 +16,6 @@ export const useExerciseDataConfig = () => {
       });
       return z.object({ exercise_notice: z.string().nullable() }).parse(await response.json());
     },
-    enabled: company.optionExercisingEnabled,
+    enabled: company.flags.includes("option_exercising"),
   } as const;
 };

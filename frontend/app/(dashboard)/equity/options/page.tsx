@@ -114,15 +114,7 @@ export default function OptionsPage() {
         </div>
       ) : (
         <>
-          {!company.optionExercisingEnabled ? (
-            <Alert className="mx-4 mb-4">
-              <Info />
-              <AlertDescription>
-                <span className="font-bold">Option exercises are currently unavailable.</span> The company has paused
-                exercises, which may be due to a distribution in progress or other administrative settings.
-              </AlertDescription>
-            </Alert>
-          ) : exerciseData?.exercise_notice ? (
+          {company.flags.includes("option_exercising") && exerciseData?.exercise_notice ? (
             <>
               {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (
                 <Alert className="mx-4 mb-4">

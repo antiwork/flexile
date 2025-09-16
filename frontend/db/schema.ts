@@ -1613,7 +1613,6 @@ export const companies = pgTable(
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
     jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
     inviteLink: varchar("invite_link"),
-    optionExercisingEnabled: boolean("option_exercising_enabled").notNull().default(false),
     exerciseNotice: text("exercise_notice"),
   },
   (table) => [
