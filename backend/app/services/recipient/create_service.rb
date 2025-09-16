@@ -26,7 +26,8 @@ class Recipient::CreateService
         recipient_record.reload
         { success: true, bank_account: recipient_record.edit_props }
       else
-        { success: false, form_errors: [], error: "error saving recipient" }
+        Rails.logger.error "Bank account creation failed: #{recipient_record.errors.full_messages}"
+        { success: false, form_errors: [], error: "error saving recipient: #{recipient_record.errors.full_messages.join(', ')}" }
       end
     elsif recipient_response.code == 422
       { success: false, form_errors: recipient_response["errors"], error: nil }
