@@ -18,6 +18,7 @@ import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_administrator_option_pools_path } from "@/utils/routes";
+import { useIsMobile } from "@/utils/use-mobile";
 
 const schema = z.object({
   name: z.string().min(1, "Must be present."),
@@ -43,6 +44,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
   const company = useCurrentCompany();
   const trpcUtils = trpc.useUtils();
   const [showExercise, setShowExercise] = useState(false);
+  const isMobile = useIsMobile();
 
   const { data: cap } = trpc.capTable.show.useQuery({ companyId: company.id, newSchema: true });
 
@@ -309,7 +311,12 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
             ) : null}
 
             <div className="flex justify-end">
-              <MutationStatusButton type="submit" mutation={createPool} disabled={!form.formState.isValid}>
+              <MutationStatusButton
+                type="submit"
+                mutation={createPool}
+                disabled={!form.formState.isValid}
+                size={isMobile ? "default" : "small"}
+              >
                 Create option pool
               </MutationStatusButton>
             </div>
