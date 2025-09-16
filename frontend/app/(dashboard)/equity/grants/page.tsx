@@ -1,6 +1,6 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import { CircleAlert, CircleCheck, Info, Pencil, Plus } from "lucide-react";
+import { CircleAlert, CircleCheck, Info, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -95,7 +95,6 @@ export default function GrantsPage() {
             </Button>
           ) : (
             <Button size="small" onClick={() => setShowNewGrantModal(true)}>
-              <Pencil className="size-4" />
               New grant
             </Button>
           )
