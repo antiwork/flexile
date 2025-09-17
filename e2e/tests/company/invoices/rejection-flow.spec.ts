@@ -94,7 +94,7 @@ test.describe("invoice rejection flow", () => {
     await page
       .getByPlaceholder("Enter notes about your invoice (optional)")
       .fill("Corrected Q1 development work with accurate hours");
-    await page.getByRole("button", { name: "Re-submit invoice" }).click();
+    await page.getByRole("button", { name: "Resubmit" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Verify invoice is back to awaiting approval
