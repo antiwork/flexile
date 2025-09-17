@@ -6,7 +6,7 @@ import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, formatFileSize } from "@/utils";
 
@@ -27,8 +27,6 @@ export default function NewDocumentField() {
       name="contract"
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="font-medium">Contract</FormLabel>
-
           <Tabs value={contractType} onValueChange={setContractType}>
             <TabsList className="w-full">
               <TabsTrigger value="upload">

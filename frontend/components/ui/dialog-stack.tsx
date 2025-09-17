@@ -2,6 +2,7 @@
 
 import { Portal } from "@radix-ui/react-portal";
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
+import { XIcon } from "lucide-react";
 import type {
   ButtonHTMLAttributes,
   Dispatch,
@@ -11,7 +12,7 @@ import type {
   ReactElement,
   SetStateAction,
 } from "react";
-import { Children, cloneElement, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Children, cloneElement, createContext, useCallback, useContext, useMemo, useState } from "react";
 import { cn } from "@/utils/index";
 
 type DialogStackContextType = {
@@ -60,12 +61,6 @@ export const DialogStack = ({
     prop: open,
     ...(onOpenChange ? { onChange: onOpenChange } : {}),
   });
-
-  useEffect(() => {
-    if (onOpenChange) {
-      onOpenChange(isOpen);
-    }
-  }, [isOpen, onOpenChange]);
 
   const contextValue = useMemo(
     () => ({
@@ -207,7 +202,7 @@ export const DialogStackBody = ({ children, className, ...props }: DialogStackBo
           )}
           {...props}
         >
-          <div className="pointer-events-auto relative flex w-full flex-col items-center justify-center">
+          <div className="pointer-events-auto relative flex max-h-full w-full flex-col items-center justify-center">
             {Children.map(children, (child, index) => (
               // eslint-disable-next-line react/jsx-no-constructed-context-values -- can't use useMemo in a loop
               <DialogStackContentContext.Provider value={{ index }} key={index}>
@@ -274,6 +269,13 @@ export const DialogStackContent = ({ children, className, offset = 20, ...props 
       }}
       {...props}
     >
+      <button
+        data-slot="dialog-close"
+        className="ring-offset-background focus:ring-ring/15 data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-[26px] right-5 mt-2 mr-2 cursor-pointer rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+      >
+        <XIcon />
+        <span className="sr-only">Close</span>
+      </button>
       <div
         className={cn(
           "h-full w-full transition-all duration-300",

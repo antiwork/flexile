@@ -327,7 +327,7 @@ const ActionPanel = () => {
         <Form {...inviteForm}>
           <DialogStackBody>
             <DialogStackContent>
-              <form onSubmit={(e) => void submit(e)} className="space-y-4">
+              <div className="space-y-4">
                 <DialogStackHeader>
                   <DialogStackTitle>Who's joining?</DialogStackTitle>
                 </DialogStackHeader>
@@ -369,7 +369,7 @@ const ActionPanel = () => {
                     <Button>Continue</Button>
                   </DialogStackNext>
                 </DialogStackFooter>
-              </form>
+              </div>
             </DialogStackContent>
             <DialogStackContent>
               <form onSubmit={(e) => void submit(e)} className="space-y-4">
