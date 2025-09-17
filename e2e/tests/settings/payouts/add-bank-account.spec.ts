@@ -7,7 +7,7 @@ import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, type Page, test } from "@test/index";
 import { eq } from "drizzle-orm";
-import { companies, users, wiseRecipients } from "@/db/schema";
+import { companies, userComplianceInfos, users, wiseRecipients } from "@/db/schema";
 
 async function fillOutUsdBankAccountForm(
   page: Page,
@@ -209,7 +209,6 @@ test.describe("Bank account settings", () => {
       await userComplianceInfosFactory.create({
         userId: onboardingUser.id,
         businessEntity: true,
-        businessName: "Business Inc.",
       });
     });
 
@@ -222,6 +221,10 @@ test.describe("Bank account settings", () => {
     });
 
     test("prefills the account holder field with the business name", async ({ page }) => {
+      await db
+        .update(userComplianceInfos)
+        .set({ businessName: "Business Inc." })
+        .where(eq(userComplianceInfos.userId, onboardingUser.id));
       await page.getByRole("button", { name: "Add bank account" }).click();
       await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
       await expect(page.getByLabel("Name of the business / organisation")).toHaveValue("Business Inc.");
