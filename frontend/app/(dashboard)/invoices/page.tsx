@@ -212,6 +212,13 @@ export default function InvoicesPage() {
   });
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
+
+  // Define all possible status filter options (static list for consistent UI)
+  const availableStatusOptions = useMemo(
+    () => ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
+    [],
+  );
+
   const desktopColumns = useMemo(
     () => [
       user.roles.administrator
@@ -243,8 +250,28 @@ export default function InvoicesPage() {
         id: "status",
         header: "Status",
         cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
+        filterFn: (row, _columnId, filterValue) => {
+          if (!Array.isArray(filterValue) || filterValue.length === 0) return true;
+
+          const invoice = row.original;
+
+          // Check each filter value
+          return filterValue.some((filterVal) => {
+            switch (filterVal) {
+              case "Approved":
+                // An invoice is "Approved" when it has enough approvals (matches getInvoiceStatusText logic)
+                return (
+                  (invoice.status === "received" || invoice.status === "approved") &&
+                  invoice.approvals.length >= company.requiredInvoiceApprovals
+                );
+              default:
+                // For other statuses, use the statusNames mapping
+                return statusNames[invoice.status] === filterVal;
+            }
+          });
+        },
         meta: {
-          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
+          filterOptions: availableStatusOptions,
         },
       }),
       columnHelper.accessor(isActionable, {
@@ -269,7 +296,7 @@ export default function InvoicesPage() {
         },
       }),
     ],
-    [data, user.roles.administrator],
+    [data, user.roles.administrator, company.requiredInvoiceApprovals],
   );
 
   const mobileColumns = useMemo(
@@ -321,8 +348,28 @@ export default function InvoicesPage() {
 
       columnHelper.accessor((row) => statusNames[row.status], {
         id: "status",
+        filterFn: (row, _columnId, filterValue) => {
+          if (!Array.isArray(filterValue) || filterValue.length === 0) return true;
+
+          const invoice = row.original;
+
+          // Check each filter value
+          return filterValue.some((filterVal) => {
+            switch (filterVal) {
+              case "Approved":
+                // An invoice is "Approved" when it has enough approvals (matches getInvoiceStatusText logic)
+                return (
+                  (invoice.status === "received" || invoice.status === "approved") &&
+                  invoice.approvals.length >= company.requiredInvoiceApprovals
+                );
+              default:
+                // For other statuses, use the statusNames mapping
+                return statusNames[invoice.status] === filterVal;
+            }
+          });
+        },
         meta: {
-          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
+          filterOptions: availableStatusOptions,
           hidden: true,
         },
       }),
@@ -342,7 +389,7 @@ export default function InvoicesPage() {
         },
       }),
     ],
-    [data],
+    [data, company.requiredInvoiceApprovals],
   );
 
   const columns = isMobile ? mobileColumns : desktopColumns;
@@ -375,13 +422,23 @@ export default function InvoicesPage() {
     }
   };
 
+  // Calculate initial filter values based on available status options
+  const initialStatusFilters = useMemo(() => {
+    if (!user.roles.administrator) return [];
+
+    // Only include filters for statuses that actually exist in the data
+    const validFilters = ["Awaiting approval", "Failed"].filter((status) => availableStatusOptions.includes(status));
+
+    return validFilters.length > 0 ? [{ id: "status", value: validFilters }] : [];
+  }, [user.roles.administrator, availableStatusOptions]);
+
   const table = useTable({
     columns,
     data,
     getRowId: (invoice) => invoice.id,
     initialState: {
       sorting: [{ id: user.roles.administrator ? "status" : "invoiceDate", desc: !user.roles.administrator }],
-      columnFilters: user.roles.administrator ? [{ id: "status", value: ["Awaiting approval", "Failed"] }] : [],
+      columnFilters: initialStatusFilters,
     },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
