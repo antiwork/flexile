@@ -46,7 +46,11 @@ export default function NewDocumentField({ type }: { type: TemplateType }) {
 
           {contractType === "write" ? (
             <FormControl>
-              <RichTextEditor {...field} value={typeof field.value === "string" ? field.value : ""} />
+              <RichTextEditor
+                aria-label="Contract"
+                {...field}
+                value={typeof field.value === "string" ? field.value : ""}
+              />
             </FormControl>
           ) : value instanceof File ? (
             <div className="border-input flex items-center gap-2 rounded-md border py-2 pl-2">
@@ -85,6 +89,7 @@ export default function NewDocumentField({ type }: { type: TemplateType }) {
                 <input
                   type="file"
                   accept=".pdf"
+                  aria-label="Contract"
                   className="absolute inset-0 size-full cursor-pointer opacity-0"
                   onChange={(e) => field.onChange(e.target.files?.[0])}
                 />

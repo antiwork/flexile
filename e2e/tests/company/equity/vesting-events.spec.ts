@@ -263,6 +263,7 @@ test.describe("Equity Grant Vesting Events", () => {
     await page.locator('input[name="deathExerciseMonths"]').fill("12");
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
 
