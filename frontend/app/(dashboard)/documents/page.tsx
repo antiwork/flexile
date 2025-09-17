@@ -211,7 +211,7 @@ export default function DocumentsPage() {
             </div>
           ),
           meta: {
-            cellClassName: "w-full",
+            cellClassName: "max-w-36",
           },
         }),
 
