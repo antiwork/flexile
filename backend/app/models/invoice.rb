@@ -45,14 +45,7 @@ class Invoice < ApplicationRecord
     scope: [:company_id, :user_id],
     case_sensitive: false,
     conditions: -> { where(deleted_at: nil) },
-    message: proc { |record|
-      suggestion = record.recommended_invoice_number
-      if suggestion.present? && suggestion != record.invoice_number
-        "This invoice number is already in use. Please try '#{suggestion}' instead."
-      else
-        "This invoice number is already in use. Please enter a different number."
-      end
-    },
+    message: proc { |record| record.invoice_number_taken_message },
   }
   validates :bill_from, presence: true
   validates :bill_to, presence: true
@@ -212,6 +205,15 @@ class Invoice < ApplicationRecord
 
   def created_by_user?
     created_by_id == user_id
+  end
+
+  def invoice_number_taken_message
+    suggestion = recommended_invoice_number
+    if suggestion.present? && suggestion != invoice_number
+      "This invoice number is already in use. Please try '#{suggestion}' instead."
+    else
+      "This invoice number is already in use. Please enter a different number."
+    end
   end
 
   private
