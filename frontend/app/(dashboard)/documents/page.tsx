@@ -463,7 +463,7 @@ const DocumentBulkActionsBar = ({
   const rowsSelected = visibleDocuments.length;
   const downloadAction = visibleActions.find((action) => action.key === "download");
   const signAction = visibleActions.find((action) => action.key === "reviewAndSign");
-  const singleDocument = selectedDocuments.length === 1 ? selectedDocuments[0] : undefined;
+  const singleDocument = rowsSelected === 1 ? visibleDocuments[0] : undefined;
 
   return (
     <Dialog open={selectedDocuments.length > 0} modal={false}>
