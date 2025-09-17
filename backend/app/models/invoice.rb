@@ -41,7 +41,8 @@ class Invoice < ApplicationRecord
   validates :invoice_date, presence: true
   validates :total_amount_in_usd_cents, presence: true,
                                         numericality: { only_integer: true, greater_than: 99 }
-  validates :invoice_number, presence: true, uniqueness: {
+  validates :invoice_number, presence: true
+  validates :invoice_number, uniqueness: {
     scope: [:company_id, :user_id],
     case_sensitive: false,
     conditions: -> { where(deleted_at: nil) },
