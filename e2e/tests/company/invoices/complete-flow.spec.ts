@@ -37,7 +37,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await login(page, workerUserA);
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-    await page.getByLabel("Invoice ID").fill("CUSTOM-1");
+    await page.getByLabel("Invoice ID").fill("COMPLETE-FLOW-1");
     await fillDatePicker(page, "Date", "11/01/2024");
     await page.getByPlaceholder("Description").fill("first item");
     await page.getByLabel("Hours / Qty").first().fill("01:23");
@@ -45,14 +45,9 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Description").nth(1).fill("second item");
     await page.getByLabel("Hours / Qty").nth(1).fill("10");
     await page.getByPlaceholder("Enter notes about your").fill("A note in the invoice");
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 201),
-      // TRPC Clubs into 207 multi-status when repsonses are batched from server
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
-      page.getByRole("button", { name: "Send invoice" }).click(),
-    ]);
+    await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "COMPLETE-FLOW-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
     await expect(page.locator("tbody")).toContainText("$683");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
@@ -60,25 +55,22 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("woops too little time");
     await page.getByLabel("Hours / Qty").fill("0:23");
-    await page.getByLabel("Invoice ID").fill("CUSTOM-2");
+    await page.getByLabel("Invoice ID").fill("COMPLETE-FLOW-2");
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "COMPLETE-FLOW-2" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
     await expect(page.locator("tbody")).toContainText("$23");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
-    await page.getByRole("cell", { name: "CUSTOM-1" }).click();
+    await page.getByRole("cell", { name: "COMPLETE-FLOW-1" }).click();
     await page.getByRole("link", { name: "Edit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await page.getByPlaceholder("Description").first().fill("first item updated");
-    const timeField = page.getByLabel("Hours / Qty").first();
-    await timeField.fill("04:30");
-    await timeField.blur(); // work around a test-specific issue; this works fine in a real browser
+    await page.getByLabel("Hours / Qty").first().fill("04:30");
     await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 204),
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.ok()),
       page.getByRole("button", { name: "Resubmit" }).click(),
     ]);
 
@@ -88,16 +80,16 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("Invoice to be deleted");
     await page.getByLabel("Hours / Qty").fill("0:33");
-    await page.getByLabel("Invoice ID").fill("CUSTOM-3");
+    await page.getByLabel("Invoice ID").fill("COMPLETE-FLOW-3");
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-3" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "COMPLETE-FLOW-3" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
     await expect(page.locator("tbody")).toContainText("$33");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
-    await page.getByRole("cell", { name: "CUSTOM-3" }).click({ button: "right" });
+    await page.getByRole("cell", { name: "COMPLETE-FLOW-3" }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Delete" }).click();
     await withinModal(
       async (modal) => {
@@ -105,7 +97,7 @@ test.describe("Invoice submission, approval and rejection", () => {
       },
       { page },
     );
-    await expect(page.getByRole("cell", { name: "CUSTOM-3" })).not.toBeVisible();
+    await expect(page.getByRole("cell", { name: "COMPLETE-FLOW-3" })).not.toBeVisible();
 
     await logout(page);
     await login(page, workerUserB);
@@ -196,18 +188,14 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByRole("cell", { name: workerUserB.legalName ?? "never" }).click();
     await page.getByRole("link", { name: "View invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/invoices/approve") && r.status() === 204),
-      page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }).click(),
-    ]);
-
+    await page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }).click();
     await expect(openInvoicesBadge).not.toBeVisible();
 
     await logout(page);
     await login(page, workerUserA);
 
-    const approvedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-1" });
-    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-2" });
+    const approvedInvoiceRow = page.locator("tbody tr").filter({ hasText: "COMPLETE-FLOW-1" });
+    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "COMPLETE-FLOW-2" });
 
     await expect(approvedInvoiceRow.getByRole("cell", { name: "Payment scheduled" })).toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).toBeVisible();
@@ -217,17 +205,16 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await page.getByLabel("Hours / Qty").fill("02:30");
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
-    await page.getByRole("button", { name: "Resubmit" }).click();
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.ok()),
+      page.getByRole("button", { name: "Resubmit" }).click(),
+    ]);
 
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
 
     await logout(page);
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
-      login(page, adminUser),
-    ]);
+    await login(page, adminUser);
 
     await expect(locateOpenInvoicesBadge(page)).toContainText("1");
     await expect(page.locator("tbody tr")).toHaveCount(1);
