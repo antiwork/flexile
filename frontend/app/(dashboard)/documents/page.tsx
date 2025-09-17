@@ -514,10 +514,10 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
               )}
             />
             <DialogFooter>
-              <Button variant="outline" onClick={onClose}>
+              <Button size="small" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <MutationStatusButton type="submit" mutation={submitMutation}>
+              <MutationStatusButton type="submit" mutation={submitMutation} size="small">
                 Send
               </MutationStatusButton>
             </DialogFooter>
