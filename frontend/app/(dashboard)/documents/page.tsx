@@ -205,7 +205,9 @@ export default function DocumentsPage() {
                       ?.name
                   }
                 </div>
-              ) : null}
+              ) : (
+                <div className="text-base font-normal">{typeLabels[info.row.original.type]}</div>
+              )}
             </div>
           ),
           meta: {
