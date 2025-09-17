@@ -475,7 +475,7 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
   const submit = form.handleSubmit((values) => submitMutation.mutate(values));
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent>
+      <DialogContent className="max-w-screen-lg">
         <DialogHeader>
           <DialogTitle>Share document</DialogTitle>
         </DialogHeader>
@@ -514,6 +514,9 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
               )}
             />
             <DialogFooter>
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
               <MutationStatusButton type="submit" mutation={submitMutation}>
                 Send
               </MutationStatusButton>
