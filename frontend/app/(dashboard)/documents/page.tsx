@@ -1,7 +1,7 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, Info } from "lucide-react";
+import { CircleCheck, Download, Info, X } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,8 @@ import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
+import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
+import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
@@ -104,6 +106,53 @@ export default function DocumentsPage() {
     if (canSign && document && isSignable(document)) setSignDocumentId(document.id);
   }, [documents, signDocumentParam]);
 
+  const actionConfig = useMemo(
+    (): ActionConfig<Document> => ({
+      entityName: "documents",
+      actions: {
+        reviewAndSign: {
+          id: "reviewAndSign",
+          label: "Review and sign",
+          icon: () => null,
+          variant: "primary",
+          contexts: ["single"],
+          permissions: ["administrator", "worker"],
+          conditions: (document: Document): boolean => !!isSignable(document) && !!canSign,
+          action: "reviewAndSign",
+          group: "signature",
+          showIn: ["selection"],
+        },
+        download: {
+          id: "download",
+          label: "Download",
+          icon: Download,
+          contexts: ["single"],
+          permissions: ["administrator", "worker"],
+          conditions: (document: Document): boolean => !!document.attachment,
+          href: (document: Document) => `/download/${document.attachment?.key}/${document.attachment?.filename}`,
+          group: "file",
+          showIn: ["both"],
+        },
+      },
+    }),
+    [isSignable, canSign, isCompanyRepresentative],
+  );
+
+  const actionContext = useMemo(
+    (): ActionContext => ({
+      userRole: isCompanyRepresentative ? "administrator" : "worker",
+      permissions: {},
+    }),
+    [isCompanyRepresentative],
+  );
+
+  const handleAction = (actionId: string, documents: Document[]) => {
+    const singleDocument = documents[0];
+    if (!singleDocument) return;
+
+    if (actionId === "reviewAndSign") setSignDocumentId(singleDocument.id);
+  };
+
   const desktopColumns = useMemo(
     () =>
       [
@@ -137,34 +186,6 @@ export default function DocumentsPage() {
             return <Status variant={variant}>{text}</Status>;
           },
         }),
-        columnHelper.display({
-          id: "actions",
-          cell: (info) => {
-            const document = info.row.original;
-            return (
-              <>
-                {isSignable(document) ? (
-                  <Button
-                    variant="outline"
-                    size="small"
-                    onClick={() => setSignDocumentId(document.id)}
-                    disabled={!canSign}
-                  >
-                    Review and sign
-                  </Button>
-                ) : null}
-                {document.attachment ? (
-                  <Button variant="outline" size="small" asChild>
-                    <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
-                      <Download className="size-4" />
-                      Download
-                    </Link>
-                  </Button>
-                ) : null}
-              </>
-            );
-          },
-        }),
       ].filter((column) => !!column),
     [documents, isCompanyRepresentative, isSignable, canSign, setSignDocumentId],
   );
@@ -178,17 +199,19 @@ export default function DocumentsPage() {
             <div className="flex flex-col gap-1">
               <div className="text-base font-medium">{info.row.original.name}</div>
               {isCompanyRepresentative ? (
-                <div className="text-sm font-normal">
+                <div className="text-base font-normal">
                   {
                     info.row.original.signatories.find((signatory) => signatory.title !== "Company Representative")
                       ?.name
                   }
                 </div>
-              ) : null}
+              ) : (
+                <div className="text-base font-normal">{typeLabels[info.row.original.type]}</div>
+              )}
             </div>
           ),
           meta: {
-            cellClassName: "w-full",
+            cellClassName: "max-w-36",
           },
         }),
 
@@ -196,13 +219,11 @@ export default function DocumentsPage() {
           id: "statusSentOn",
           cell: (info) => {
             const document = info.row.original;
-            const { variant } = getStatus(info.row.original);
+            const { variant, text } = getStatus(document);
 
             return (
-              <div className="flex h-full flex-col items-end justify-between">
-                <div className="flex h-5 w-4 items-center justify-center">
-                  <Status variant={variant} />
-                </div>
+              <div className="flex h-full flex-col items-end justify-between gap-1">
+                <Status variant={variant}>{text}</Status>
                 <div className="text-gray-600">{formatDate(document.createdAt)}</div>
               </div>
             );
@@ -257,10 +278,12 @@ export default function DocumentsPage() {
   const table = useTable({
     columns,
     data: documents,
+    getRowId: (document) => document.id.toString(),
     initialState: { sorting: [{ id: "createdAt", desc: true }] },
     state: { columnFilters },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    enableRowSelection: true,
     onColumnFiltersChange: (columnFilters) =>
       setColumnFilters((old) => {
         const value = typeof columnFilters === "function" ? columnFilters(old) : columnFilters;
@@ -268,6 +291,13 @@ export default function DocumentsPage() {
         return value;
       }),
   });
+
+  const selectedRows = table.getSelectedRowModel().rows;
+  const selectedDocuments = selectedRows.map((row) => row.original);
+  const availableActions = useMemo(
+    () => getAvailableActions(selectedDocuments, actionConfig, actionContext),
+    [selectedDocuments, actionConfig, actionContext],
+  );
 
   const filingDueDateFor1099DIV = new Date(currentYear, 2, 31);
 
@@ -330,7 +360,27 @@ export default function DocumentsPage() {
         <TableSkeleton columns={6} />
       ) : documents.length > 0 ? (
         <>
-          <DataTable table={table} tabsColumn="status" {...(isCompanyRepresentative && { searchColumn: "signer" })} />
+          <DataTable
+            table={table}
+            tabsColumn="status"
+            {...(isCompanyRepresentative && { searchColumn: "signer" })}
+            selectionActions={(selectedDocuments) => (
+              <SelectionActions
+                selectedItems={selectedDocuments}
+                config={actionConfig}
+                availableActions={availableActions}
+                onAction={handleAction}
+              />
+            )}
+          />
+          {isMobile ? (
+            <DocumentBulkActionsBar
+              availableActions={availableActions}
+              selectedDocuments={selectedDocuments}
+              onClose={() => table.toggleAllRowsSelected(false)}
+              onAction={handleAction}
+            />
+          ) : null}
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
         </>
       ) : (
@@ -383,6 +433,74 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
             Agree & Submit
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const DocumentBulkActionsBar = ({
+  selectedDocuments,
+  onClose,
+  availableActions,
+  onAction,
+}: {
+  selectedDocuments: Document[];
+  onClose: () => void;
+  availableActions: AvailableActions<Document>[];
+  onAction: (actionId: string, items: Document[]) => void;
+}) => {
+  const [visibleDocuments, setVisibleDocuments] = useState<Document[]>([]);
+  const [visibleActions, setVisibleActions] = useState<AvailableActions<Document>[]>([]);
+
+  useEffect(() => {
+    const isOpen = selectedDocuments.length > 0;
+    if (isOpen) {
+      setVisibleDocuments(selectedDocuments);
+      setVisibleActions(availableActions);
+    }
+  }, [selectedDocuments, availableActions]);
+
+  const rowsSelected = visibleDocuments.length;
+  const downloadAction = visibleActions.find((action) => action.key === "download");
+  const signAction = visibleActions.find((action) => action.key === "reviewAndSign");
+  const singleDocument = rowsSelected === 1 ? visibleDocuments[0] : undefined;
+
+  return (
+    <Dialog open={selectedDocuments.length > 0} modal={false}>
+      <DialogContent
+        className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0"
+        showCloseButton={false}
+      >
+        <DialogHeader className="sr-only">
+          <DialogTitle>Selected documents</DialogTitle>
+        </DialogHeader>
+        <div className="flex gap-2 p-2">
+          <Button
+            variant="outline"
+            className="border-muted flex h-9 items-center gap-2 rounded-lg border border-dashed text-sm font-medium hover:bg-white"
+            onClick={onClose}
+          >
+            <span className="tabular-nums">{rowsSelected}</span> selected
+            <X className="size-4" />
+          </Button>
+          {downloadAction && downloadAction.href && singleDocument ? (
+            <Button variant="outline" className="flex h-9 items-center gap-2 text-sm" asChild>
+              <Link href={{ pathname: downloadAction.href(singleDocument) }}>
+                <Download className="size-3.5" strokeWidth={2.5} />
+                Download
+              </Link>
+            </Button>
+          ) : null}
+          {signAction ? (
+            <Button
+              variant="primary"
+              className="flex h-9 items-center gap-2 text-sm"
+              onClick={() => signAction.action && onAction(signAction.action, selectedDocuments)}
+            >
+              Review and sign
+            </Button>
+          ) : null}
+        </div>
       </DialogContent>
     </Dialog>
   );
