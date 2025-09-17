@@ -278,7 +278,9 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("Option exercises are currently unavailable.")).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Exercise Options" })).not.toBeVisible();
 
-    await db.update(companies).set({ exerciseNotice: "I am exercising" }).where(eq(companies.id, company.id));
+    await db
+      .insert(documentTemplates)
+      .values({ companyId: company.id, documentType: DocumentTemplateType.ExerciseNotice, text: "I am exercising" });
     await page.reload();
 
     await expect(page.getByText("You have 100 vested options available for exercise.")).toBeVisible();

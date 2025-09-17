@@ -61,7 +61,7 @@ export default function Templates() {
           {templateTypes.map((type) => {
             switch (type) {
               case "exercise_notice":
-                if (!company.flags.includes("option_exercising")) return null;
+                if (!company.optionExercisingEnabled) return null;
                 break;
               case "stock_option_agreement":
               case "letter_of_transmittal":
