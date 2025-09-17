@@ -684,10 +684,6 @@ const TasksModal = ({
           </DialogTitle>
         </DialogHeader>
         <section>
-          <div className="mb-4">
-            <div className="text-sm text-gray-500">Status</div>
-            <div className="font-medium">{getInvoiceStatusText(invoice, company)}</div>
-          </div>
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
             <Alert className="max-md:mb-4" variant="warning">
@@ -704,6 +700,11 @@ const TasksModal = ({
               <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
             </Button>
           </header>
+          <Separator />
+          <div className="flex justify-between gap-2 max-md:leading-5">
+            <div>Status</div>
+            <div>{getInvoiceStatusText(invoice, company)}</div>
+          </div>
           <Separator />
           <div>
             <div className="flex justify-between gap-2 max-md:leading-5">
@@ -729,7 +730,7 @@ const TasksModal = ({
         {isActionable(invoice) ? (
           <DialogFooter>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" onClick={onReject} className="max-md:h-9 max-md:text-sm">
+              <Button variant="outline" size="small" onClick={onReject} className="max-md:h-9 max-md:text-sm">
                 Reject
               </Button>
               <ApproveButton invoice={invoice} onApprove={onClose} className="max-md:h-9 max-md:text-sm" />
@@ -770,7 +771,10 @@ const InvoiceBulkActionsBar = ({
 
   return (
     <Dialog open={selectedInvoices.length > 0} modal={false}>
-      <DialogContent className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0">
+      <DialogContent
+        showCloseButton={false}
+        className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0"
+      >
         <DialogHeader className="sr-only">
           <DialogTitle>Selected invoices</DialogTitle>
         </DialogHeader>

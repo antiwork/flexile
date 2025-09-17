@@ -82,7 +82,7 @@ type BillingDetails = {
   zip_code: string | null;
   street_address: string | null;
   email: string;
-  billing_entity_name: string;
+  billing_entity_name: string | null;
   legal_type: "BUSINESS" | "PRIVATE";
 };
 
@@ -168,6 +168,9 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
 
   const nestedDetails = () => {
     const result = {};
+    // https://docs.wise.com/api-docs/api-reference/recipient#account-requirements
+    // Always have country set, so wise form can load conditional fields based on it
+    set(result, KEY_ADDRESS_COUNTRY, billingDetails.country_code);
     const values =
       previousForms.current?.[selectedFormIndex]?.fields.flatMap((field) =>
         field.group.map((field) => [field.key, detailsRef.current.get(field.key)] as const),
@@ -553,16 +556,15 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
           })}
         </div>
 
-        <div className="pt-4">
-          <div className="flex justify-end">
-            <MutationButton
-              mutation={submitMutation}
-              loadingText="Saving bank account..."
-              disabled={hasRequiredFieldsEmpty || hasVisibleErrors}
-            >
-              Save bank account
-            </MutationButton>
-          </div>
+        <div className="flex justify-end">
+          <MutationButton
+            mutation={submitMutation}
+            size="small"
+            loadingText="Saving bank account..."
+            disabled={hasRequiredFieldsEmpty || hasVisibleErrors}
+          >
+            Save bank account
+          </MutationButton>
         </div>
       </DialogContent>
     </Dialog>

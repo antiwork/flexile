@@ -81,7 +81,7 @@ export default function Billing() {
   const { data, isLoading } = trpc.consolidatedInvoices.list.useQuery({ companyId: company.id });
 
   return (
-    <div className="grid gap-4">
+    <div className="mb-24 grid gap-4">
       <h2 className="mb-8 text-3xl font-bold">Billing</h2>
       <hgroup>
         <h3 className="mb-1 text-base font-medium">Payout method</h3>
@@ -100,7 +100,7 @@ export default function Billing() {
                 <CardTitle>USD bank account</CardTitle>
                 <CardDescription>Ending in {stripeData.bank_account_last4}</CardDescription>
                 <CardAction>
-                  <Button variant="outline" onClick={() => setAddingBankAccount(true)}>
+                  <Button variant="outline" size="small" onClick={() => setAddingBankAccount(true)}>
                     Edit
                   </Button>
                 </CardAction>
@@ -109,7 +109,7 @@ export default function Billing() {
           ) : (
             <Placeholder icon={CircleDollarSign}>
               <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-              <Button onClick={() => setAddingBankAccount(true)}>
+              <Button onClick={() => setAddingBankAccount(true)} size="small">
                 <Plus className="size-4" />
                 Link your bank account
               </Button>

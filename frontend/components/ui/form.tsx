@@ -73,7 +73,7 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
 
   return (
     <FormItemContext.Provider value={value}>
-      <div data-slot="form-item" className={cn("grid gap-2", className)} {...props} />
+      <div data-slot="form-item" className={cn("grid grid-rows-[auto_auto_1fr] gap-2", className)} {...props} />
     </FormItemContext.Provider>
   );
 }
@@ -98,6 +98,7 @@ function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
   return (
     <Slot
       data-slot="form-control"
+      className="focus-visible:ring-ring/15 outline-none focus-visible:border-gray-300 focus-visible:ring-[3px]"
       id={formItemId}
       aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
       aria-invalid={!!error}

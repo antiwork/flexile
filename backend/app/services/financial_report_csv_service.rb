@@ -99,32 +99,30 @@ class FinancialReportCsvService
     end
 
     def dividends_data
-      dividends.each_with_object([]) do |dividend, rows|
-        payments = dividend.dividend_payments.select { _1.status == Payment::SUCCEEDED }
-        next if payments.empty?
-        payment = payments.first
+      dividend_payments.each_with_object([]) do |payment, rows|
+        dividends_in_payment = payment.dividends
+        dividend = dividends_in_payment.last
 
-        flexile_fee = FlexileFeeCalculator.calculate_dividend_fee_cents(dividend.total_amount_in_cents) / 100.0
+        total_dividend_amount_cents = dividends_in_payment.sum(:total_amount_in_cents)
+        total_net_amount_cents = dividends_in_payment.sum(:net_amount_in_cents)
+        total_tax_withheld_cents = dividends_in_payment.sum(:withheld_tax_cents)
+        total_flexile_fee = dividends_in_payment.sum { |d| FlexileFeeCalculator.calculate_dividend_fee_cents(d.total_amount_in_cents) } / 100.0
 
         rows << {
-          date_initiated: payment.created_at.to_fs(:us_date),
           date_paid: dividend.paid_at&.to_fs(:us_date),
           client_name: dividend.company.name,
-          dividend_round_id: dividend.dividend_round_id,
-          dividend_id: dividend.id,
           investor_name: dividend.company_investor.user.legal_name,
           investor_email: dividend.company_investor.user.email,
-          number_of_shares: dividend.number_of_shares,
-          dividend_amount_usd: dividend.total_amount_in_cents / 100.0,
+          dividend_payment_id: payment.id,
+          dividend_amount_usd: total_dividend_amount_cents / 100.0,
           processor: payment.processor_name,
           transfer_id: payment.transfer_id,
-          total_transaction_amount_usd: payment.total_transaction_cents / 100.0,
-          net_amount_usd: dividend.net_amount_in_cents / 100.0,
-          transfer_fee_usd: payment.transfer_fee_in_cents ? payment.transfer_fee_in_cents / 100.0 : 0.0,
+          total_transaction_amount_usd: (payment.total_transaction_cents || 0) / 100.0,
+          net_amount_usd: total_net_amount_cents / 100.0,
+          transfer_fee_usd: (payment.transfer_fee_in_cents || 0) / 100.0,
           tax_withholding_percentage: dividend.withholding_percentage,
-          tax_withheld_usd: dividend.withheld_tax_cents / 100.0,
-          flexile_fee_usd: flexile_fee,
-          dividend_round_status: dividend.dividend_round.status,
+          tax_withheld_usd: total_tax_withheld_cents / 100.0,
+          flexile_fee_usd: total_flexile_fee,
         }
       end
     end
@@ -147,23 +145,24 @@ class FinancialReportCsvService
         end
       end
 
-      dividends.each do |dividend|
-        payments = dividend.dividend_payments.select { _1.status == Payment::SUCCEEDED }
-        next if payments.empty?
-        payment = payments.first
+      dividend_payments.each do |payment|
+        dividends_in_payment = payment.dividends
+        dividend = dividends_in_payment.last
 
-        flexile_fee_usd = FlexileFeeCalculator.calculate_dividend_fee_cents(dividend.total_amount_in_cents) / 100.0
+        total_dividend_amount_cents = dividends_in_payment.sum(:total_amount_in_cents)
+        total_net_amount_cents = dividends_in_payment.sum(:net_amount_in_cents)
+        total_flexile_fee = dividends_in_payment.sum { |d| FlexileFeeCalculator.calculate_dividend_fee_cents(d.total_amount_in_cents) } / 100.0
         transfer_fee = payment.transfer_fee_in_cents ? payment.transfer_fee_in_cents / 100.0 : 0.0
 
         rows << {
           type: "Dividend",
           date: dividend.paid_at&.to_fs(:us_date) || payment.created_at.to_fs(:us_date),
           client_name: dividend.company.name,
-          description: "Dividend ##{dividend.id} - #{dividend.company_investor.user.legal_name}",
-          amount_usd: dividend.total_amount_in_cents / 100.0,
-          flexile_fee_usd:,
+          description: "Dividend Payment ##{payment.id} - #{dividend.company_investor.user.legal_name}",
+          amount_usd: total_dividend_amount_cents / 100.0,
+          flexile_fee_usd: total_flexile_fee,
           transfer_fee_usd: transfer_fee,
-          net_amount_usd: dividend.net_amount_in_cents / 100.0,
+          net_amount_usd: total_net_amount_cents / 100.0,
         }
       end
 
@@ -220,13 +219,13 @@ class FinancialReportCsvService
                                                   .order(created_at: :asc)
     end
 
-    def dividends
-      @_dividends ||= Dividend.includes(:dividend_payments, company_investor: :user)
-                              .paid
-                              .references(:dividend_payments)
-                              .merge(DividendPayment.successful)
-                              .where("dividend_payments.created_at >= ? AND dividend_payments.created_at <= ?", start_date, end_date)
-                              .order(created_at: :asc)
+    def dividend_payments
+      @_dividend_payments ||= DividendPayment.includes(dividends: { company_investor: :user })
+                                            .successful
+                                            .where("dividend_payments.created_at >= ? AND dividend_payments.created_at <= ?", start_date, end_date)
+                                            .joins(:dividends)
+                                            .group("dividend_payments.id")
+                                            .order("MIN(dividends.paid_at) ASC")
     end
 
     def invoices_csv_columns
@@ -256,14 +255,11 @@ class FinancialReportCsvService
 
     def dividends_csv_columns
       [
-        { key: :date_initiated, header: "Date initiated", summable: false },
         { key: :date_paid, header: "Date paid", summable: false },
         { key: :client_name, header: "Client name", summable: false },
-        { key: :dividend_round_id, header: "Dividend round ID", summable: false },
-        { key: :dividend_id, header: "Dividend ID", summable: false },
         { key: :investor_name, header: "Investor name", summable: false },
         { key: :investor_email, header: "Investor email", summable: false },
-        { key: :number_of_shares, header: "Number of shares", summable: true },
+        { key: :dividend_payment_id, header: "Dividend payment ID", summable: false },
         { key: :dividend_amount_usd, header: "Dividend amount (USD)", summable: true },
         { key: :processor, header: "Processor", summable: false },
         { key: :transfer_id, header: "Transfer ID", summable: false },
@@ -272,8 +268,7 @@ class FinancialReportCsvService
         { key: :transfer_fee_usd, header: "Transfer fee (USD)", summable: true },
         { key: :tax_withholding_percentage, header: "Tax withholding percentage", summable: false },
         { key: :tax_withheld_usd, header: "Tax withheld", summable: true },
-        { key: :flexile_fee_usd, header: "Flexile fee (USD)", summable: true },
-        { key: :dividend_round_status, header: "Dividend round status", summable: false }
+        { key: :flexile_fee_usd, header: "Flexile fee (USD)", summable: true }
       ]
     end
 
