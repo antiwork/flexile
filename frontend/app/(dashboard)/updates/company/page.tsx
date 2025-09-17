@@ -1,5 +1,5 @@
 "use client";
-import { CircleCheck, Plus, Trash2 } from "lucide-react";
+import { Check, CircleCheck, Plus, Trash2 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import CompanyUpdateModal from "@/app/(dashboard)/updates/company/CompanyUpdateModal";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
@@ -95,13 +95,25 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
   const isMobile = useIsMobile();
 
   const [deletingUpdate, setDeletingUpdate] = useState<string | null>(null);
-
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const deleteMutation = trpc.companyUpdates.delete.useMutation({
     onSuccess: () => {
       void trpcUtils.companyUpdates.list.invalidate();
       setDeletingUpdate(null);
     },
   });
+
+  const handleBulkDelete = async (updates: UpdateListItem[]) => {
+    for (const update of updates) {
+      await deleteMutation.mutateAsync({ companyId: company.id, id: update.id });
+    }
+    setShowBulkDeleteDialog(false);
+  };
+
+  const handleClearSelection = () => {
+    table.resetRowSelection();
+    setShowBulkDeleteDialog(false);
+  };
 
   const columnHelper = createColumnHelper<(typeof updates)[number]>();
   const desktopColumns = useMemo(
@@ -146,7 +158,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
         cell: (info) => {
           const update = info.row.original;
           return (
-            <div className="flex w-3xs flex-col gap-2">
+            <div className="flex max-w-48 flex-col gap-2">
               <div>
                 <div className="truncate text-base font-medium">{update.title}</div>
                 <div className="truncate font-normal text-gray-600">{update.summary}</div>
@@ -166,7 +178,11 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
           return (
             <div className="flex h-full flex-col items-end justify-between">
               <div className="flex h-5 w-4 items-center justify-center">
-                <Status variant={update.sentAt ? "success" : undefined} />
+                <span
+                  className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${update.sentAt ? "bg-blue-600" : "border border-dashed border-gray-500"}`}
+                >
+                  {update.sentAt ? <Check className="size-3 font-bold text-white" /> : null}
+                </span>
               </div>
               <div className="text-gray-600">{update.sentAt ? formatDate(update.sentAt) : "-"}</div>
             </div>
@@ -174,11 +190,19 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
         },
       }),
     ],
-    [onEditUpdate],
+    [],
   );
 
   const columns = isMobile ? mobileColumns : desktopColumns;
-  const table = useTable({ columns, data: updates });
+  const table = useTable({
+    columns,
+    data: updates,
+    enableRowSelection: isMobile,
+    getRowId: (row) => row.id,
+  });
+
+  const selectedRows = table.getFilteredSelectedRowModel().rows;
+  const selectedUpdates = selectedRows.map((row) => row.original);
 
   return (
     <>
@@ -209,6 +233,39 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Delete {selectedUpdates.length} update{selectedUpdates.length === 1 ? "" : "s"}?
+            </DialogTitle>
+          </DialogHeader>
+          <p>
+            {selectedUpdates.length === 1
+              ? `"${selectedUpdates[0]?.title}" will be permanently deleted and cannot be restored.`
+              : `${selectedUpdates.length} updates will be permanently deleted and cannot be restored.`}
+          </p>
+          <DialogFooter>
+            <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
+              <Button variant="outline" size="small" onClick={() => setShowBulkDeleteDialog(false)}>
+                No, cancel
+              </Button>
+              <Button size="small" onClick={() => handleBulkDelete(selectedUpdates)}>
+                {`Yes, delete ${selectedUpdates.length === 1 ? "" : "all"}`}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {isMobile && selectedUpdates.length > 0 ? (
+        <UpdateBulkActionBar
+          selectedUpdates={selectedUpdates}
+          onClose={handleClearSelection}
+          onDelete={() => setShowBulkDeleteDialog(true)}
+        />
+      ) : null}
     </>
   );
 };
@@ -272,5 +329,42 @@ const ViewList = () => {
         <ViewUpdateDialog updateId={selectedUpdateId} onOpenChange={() => setSelectedUpdateId(null)} />
       ) : null}
     </>
+  );
+};
+
+const UpdateBulkActionBar = ({
+  selectedUpdates,
+  onClose,
+  onDelete,
+}: {
+  selectedUpdates: UpdateListItem[];
+  onClose: () => void;
+  onDelete: () => void;
+}) => {
+  if (!selectedUpdates.length) return null;
+
+  return (
+    <Dialog open={selectedUpdates.length > 0} modal={false}>
+      <DialogContent
+        showCloseButton={false}
+        className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0"
+      >
+        <DialogHeader className="sr-only">
+          <DialogTitle>Bulk actions</DialogTitle>
+        </DialogHeader>
+        <div className="flex gap-2 p-2">
+          <Button
+            variant="outline"
+            className="border-muted flex h-9 items-center gap-2 rounded-lg border border-dashed text-sm font-medium hover:bg-white"
+            onClick={onClose}
+          >
+            <span className="tabular-nums">{selectedUpdates.length}</span> selected
+          </Button>
+          <Button variant="destructive" className="flex h-9 items-center gap-2 text-sm" onClick={() => onDelete()}>
+            <Trash2 className="size-3.5" strokeWidth={2.5} />
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
