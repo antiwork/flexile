@@ -41,8 +41,12 @@ class Invoice < ApplicationRecord
   validates :invoice_date, presence: true
   validates :total_amount_in_usd_cents, presence: true,
                                         numericality: { only_integer: true, greater_than: 99 }
-  validates :invoice_number, presence: true
-  validate :ensure_unique_invoice_number
+  validates :invoice_number, presence: true, uniqueness: {
+    scope: [:company_id, :user_id],
+    case_sensitive: false,
+    conditions: -> { where(deleted_at: nil) },
+  }
+  validate :suggest_alternative_invoice_number
   validates :bill_from, presence: true
   validates :bill_to, presence: true
   validates :due_on, presence: true
@@ -250,23 +254,18 @@ class Invoice < ApplicationRecord
       end
     end
 
-    def ensure_unique_invoice_number
+    def suggest_alternative_invoice_number
       return if invoice_number.blank? || company_id.blank? || user_id.blank?
+      return unless errors.added?(:invoice_number, :taken) || errors.full_messages_for(:invoice_number).any? { |m| m.include?("taken") }
 
-      existing = Invoice.alive
-                         .where(company_id: company_id, user_id: user_id)
-                         .where("LOWER(invoice_number) = ?", invoice_number.downcase)
-                         .where.not(id: id)
-                         .limit(1)
-                         .exists?
+      # Replace the default Rails uniqueness error with a friendlier, guided message
+      errors.delete(:invoice_number)
 
-      if existing
-        suggestion = recommended_invoice_number
-        if suggestion.present? && suggestion != invoice_number
-          errors.add(:invoice_number, "This invoice number is already in use. Please try '#{suggestion}' instead.")
-        else
-          errors.add(:invoice_number, "This invoice number is already in use. Please enter a different number.")
-        end
+      suggestion = recommended_invoice_number
+      if suggestion.present? && suggestion != invoice_number
+        errors.add(:invoice_number, "This invoice number is already in use. Please try '#{suggestion}' instead.")
+      else
+        errors.add(:invoice_number, "This invoice number is already in use. Please enter a different number.")
       end
     end
 end
