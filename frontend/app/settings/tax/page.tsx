@@ -404,7 +404,7 @@ export default function TaxPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="focus-visible:ring-ring/15 rounded-l-none outline-none focus-visible:border-gray-300 focus-visible:ring-[3px]"
+                        className="focus-visible:ring-ring focus-visible:border-border rounded-l-none outline-none focus-visible:ring-2"
                         onPointerDown={() => setMaskTaxId(false)}
                         onPointerUp={() => setMaskTaxId(true)}
                         onPointerLeave={() => setMaskTaxId(true)}
