@@ -197,6 +197,7 @@ export const DialogStackBody = ({ children, className, ...props }: DialogStackBo
       <DialogStackOverlay />
       <Portal>
         <div
+          role="dialog"
           className={cn(
             "pointer-events-none fixed inset-0 z-50 mx-auto flex w-full max-w-lg flex-col items-center justify-start p-2 pt-32",
             className,
