@@ -80,7 +80,7 @@ const EquitySection = () => {
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
-    <div className="grid gap-4">
+    <div className="mb-24 grid gap-4">
       <h2 className="font-bold">Equity</h2>
       <Form {...form}>
         <form onSubmit={(e) => void submit(e)}>
@@ -265,7 +265,7 @@ const BankAccountsSection = () => {
           city: z.string().nullable(),
           zip_code: z.string().nullable(),
           street_address: z.string().nullable(),
-          billing_entity_name: z.string(),
+          billing_entity_name: z.string().nullable(),
           legal_type: z.enum(["BUSINESS", "PRIVATE"]),
           bank_account_currency: z.enum(currencyCodes).nullable(),
           bank_accounts: z.array(bankAccountSchema),

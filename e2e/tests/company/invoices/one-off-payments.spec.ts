@@ -272,18 +272,14 @@ test.describe("One-off payments", () => {
             const containerBounds = await sliderContainer.boundingBox();
             if (!containerBounds) throw new Error("Could not get slider container bounds");
 
-            // Move equity thumb to 25%
             const equityPercentageThumb = modal.getByRole("slider");
-            const thumbBounds = await equityPercentageThumb.boundingBox();
-            if (!thumbBounds) throw new Error("Could not get equity thumb bounds");
+            await equityPercentageThumb.focus();
+            await equityPercentageThumb.press("Home");
 
-            await equityPercentageThumb.hover();
-            await page.mouse.down();
-            await page.mouse.move(
-              containerBounds.x + containerBounds.width * 0.25,
-              containerBounds.y + containerBounds.height / 2,
-            );
-            await page.mouse.up();
+            // Move to 25% by pressing Arrow Right 25 times (assuming 1% per step)
+            for (let i = 0; i < 25; i++) {
+              await equityPercentageThumb.press("ArrowRight");
+            }
 
             await modal.getByRole("button", { name: "Confirm 25% split" }).click();
           },
