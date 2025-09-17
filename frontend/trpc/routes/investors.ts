@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
 import { companyInvestors, users } from "@/db/schema";
@@ -12,6 +12,7 @@ export const investorsRouter = createRouter({
       where: and(
         eq(companyInvestors.companyId, ctx.company.id),
         eq(companyInvestors.userId, byExternalId(users, input.userId)),
+        isNull(companyInvestors.endedAt),
       ),
     });
     if (!investor) throw new TRPCError({ code: "NOT_FOUND" });

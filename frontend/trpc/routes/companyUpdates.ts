@@ -19,7 +19,7 @@ const dataSchema = createInsertSchema(companyUpdates).pick({
 
 const checkHasInvestors = async (companyId: bigint) => {
   const hasInvestors = await db.query.companyInvestors.findFirst({
-    where: eq(companyInvestors.companyId, companyId),
+    where: and(eq(companyInvestors.companyId, companyId), isNull(companyInvestors.endedAt)),
   });
   return !!hasInvestors;
 };

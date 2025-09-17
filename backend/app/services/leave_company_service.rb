@@ -35,8 +35,8 @@ class LeaveCompanyService
       # Set ended_at for contractors to mark contract end date (preserve contract history)
       user.company_workers.where(company: company).update_all(ended_at: Time.current)
 
-      # Remove investors and lawyers completely (no contract history needed)
-      user.company_investors.where(company: company).delete_all
+      # Set ended_at for investors to preserve investment history
+      user.company_investors.where(company: company).update_all(ended_at: Time.current)
       user.company_lawyers.where(company: company).delete_all
     end
 

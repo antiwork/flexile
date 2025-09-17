@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray, sql, sum } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql, sum } from "drizzle-orm";
 import { omit, pick } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
@@ -27,7 +27,9 @@ export const capTableRouter = createRouter({
 
     const investors: (CapTableInvestor | CapTableInvestorForAdmin)[] = [];
     const investorsConditions = (relation: typeof companyInvestorEntities | typeof companyInvestors) =>
-      eq(relation.companyId, ctx.company.id);
+      relation === companyInvestors
+        ? and(eq(relation.companyId, ctx.company.id), isNull(relation.endedAt))
+        : eq(relation.companyId, ctx.company.id);
 
     if (input.newSchema) {
       const potentialInvestors = await db
