@@ -24,6 +24,7 @@ test.describe("Company billing settings", () => {
     );
 
     const linkBankAccountButton = page.getByRole("button", { name: "Link your bank account" });
+    await expect(linkBankAccountButton).toBeVisible();
     await expect(linkBankAccountButton).toBeDisabled();
 
     await db.update(companies).set({ name: "Test Company Inc." }).where(eq(companies.id, company.id));
@@ -33,6 +34,7 @@ test.describe("Company billing settings", () => {
       page.getByRole("alert").filter({ hasText: "Please provide your company details before linking a bank account." }),
     ).not.toBeVisible();
 
+    await expect(linkBankAccountButton).toBeVisible();
     await expect(linkBankAccountButton).toBeEnabled();
   });
 });
