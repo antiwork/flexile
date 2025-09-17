@@ -641,15 +641,15 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                   </div>
                 </div>
               ) : null}
+              <DialogStackFooter>
+                <DialogStackPrevious>
+                  <Button variant="outline">Back</Button>
+                </DialogStackPrevious>
+                <MutationStatusButton type="submit" size="small" mutation={createEquityGrant} disabled={!isFormValid}>
+                  Create grant
+                </MutationStatusButton>
+              </DialogStackFooter>
             </form>
-            <DialogStackFooter>
-              <DialogStackPrevious>
-                <Button variant="outline">Back</Button>
-              </DialogStackPrevious>
-              <MutationStatusButton type="submit" size="small" mutation={createEquityGrant} disabled={!isFormValid}>
-                Create grant
-              </MutationStatusButton>
-            </DialogStackFooter>
           </DialogStackContent>
         </DialogStackBody>
       </Form>

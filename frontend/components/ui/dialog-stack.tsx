@@ -12,7 +12,7 @@ import type {
   ReactElement,
   SetStateAction,
 } from "react";
-import { Children, cloneElement, createContext, useCallback, useContext, useMemo, useState } from "react";
+import { Children, cloneElement, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { cn } from "@/utils/index";
 
 type DialogStackContextType = {
@@ -61,6 +61,7 @@ export const DialogStack = ({
     prop: open,
     ...(onOpenChange ? { onChange: onOpenChange } : {}),
   });
+  useEffect(() => setActiveIndex(0), [isOpen]);
 
   const contextValue = useMemo(
     () => ({
