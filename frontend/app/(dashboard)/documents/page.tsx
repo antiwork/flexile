@@ -196,10 +196,10 @@ export default function DocumentsPage() {
         columnHelper.display({
           id: "documentNameSigner",
           cell: (info) => (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
               <div className="text-base font-medium">{info.row.original.name}</div>
               {isCompanyRepresentative ? (
-                <div className="text-sm font-normal">
+                <div className="text-base font-normal">
                   {
                     info.row.original.signatories.find((signatory) => signatory.title !== "Company Representative")
                       ?.name
@@ -220,7 +220,7 @@ export default function DocumentsPage() {
             const { variant, text } = getStatus(document);
 
             return (
-              <div className="flex h-full flex-col items-end justify-between gap-3">
+              <div className="flex h-full flex-col items-end justify-between gap-1">
                 <Status variant={variant}>{text}</Status>
                 <div className="text-gray-600">{formatDate(document.createdAt)}</div>
               </div>
