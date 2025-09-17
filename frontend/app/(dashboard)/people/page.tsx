@@ -376,7 +376,7 @@ const ActionPanel = () => {
                 <DialogStackHeader>
                   <DialogStackTitle>Add a contract</DialogStackTitle>
                 </DialogStackHeader>
-                {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField />}
+                {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField type="consulting_contract" />}
 
                 <FormField
                   control={inviteForm.control}

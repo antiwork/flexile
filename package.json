@@ -14,7 +14,6 @@
   },
   "type": "module",
   "devDependencies": {
-    "@clerk/backend": "^1.25.2",
     "@eslint/compat": "^1.1.1",
     "@eslint/js": "^9.0.0",
     "@faker-js/faker": "^9.3.0",
@@ -52,7 +51,6 @@
     "prepare": "git config --local core.hooksPath .githooks"
   },
   "dependencies": {
-    "@ai-sdk/react": "^1.2.12",
     "@aws-sdk/client-s3": "^3.688.0",
     "@aws-sdk/s3-request-presigner": "^3.691.0",
     "@bugsnag/js": "^8.0.0",

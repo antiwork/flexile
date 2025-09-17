@@ -632,7 +632,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
           </DialogStackContent>
           <DialogStackContent>
             <form onSubmit={(e) => void submit(e)} className="space-y-4">
-              <NewDocumentField />
+              <NewDocumentField type="stock_option_agreement" />
 
               {form.formState.errors.root ? (
                 <div className="grid gap-2">
