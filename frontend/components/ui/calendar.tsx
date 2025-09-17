@@ -49,7 +49,7 @@ function CalendarGridComponent({ isRange = false }: { isRange?: boolean }) {
   const now = today(getLocalTimeZone());
 
   return (
-    <CalendarGridRac className="w-full">
+    <CalendarGridRac>
       <CalendarGridHeaderRac>
         {(day) => (
           <CalendarHeaderCellRac className="text-muted-foreground/80 size-9 rounded-md p-0 text-xs font-medium">
@@ -57,7 +57,7 @@ function CalendarGridComponent({ isRange = false }: { isRange?: boolean }) {
           </CalendarHeaderCellRac>
         )}
       </CalendarGridHeaderRac>
-      <CalendarGridBodyRac className="[&_td]:px-0 [&_td]:py-px [&_tr]:h-[32px]">
+      <CalendarGridBodyRac className="[&_td]:px-0 [&_td]:py-px">
         {(date) => (
           <CalendarCellRac
             date={date}
