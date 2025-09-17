@@ -4,8 +4,8 @@ import { CircleAlert, CircleCheck, Info, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useDocumentTemplateQuery } from "@/app/(dashboard)/documents";
 import NewEquityGrantModal from "@/app/(dashboard)/equity/grants/NewEquityGrantModal";
-import { useExerciseDataConfig } from "@/app/(dashboard)/equity/options";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
@@ -46,10 +46,10 @@ export default function GrantsPage() {
     },
   });
 
-  const exerciseDataConfig = useExerciseDataConfig();
+  const exerciseNoticeConfig = useDocumentTemplateQuery("exercise_notice");
   const { data: exerciseData } = useQuery({
-    ...exerciseDataConfig,
-    enabled: exerciseDataConfig.enabled || !!user.roles.administrator,
+    ...exerciseNoticeConfig,
+    enabled: company.flags.includes("option_exercising") && !!user.roles.administrator,
   });
   const columnHelper = createColumnHelper<EquityGrant>();
   const columns = useMemo(
@@ -101,12 +101,12 @@ export default function GrantsPage() {
         }
       />
 
-      {exerciseData && !exerciseData.exercise_notice ? (
+      {exerciseData && !exerciseData.text ? (
         <Alert className="mx-4">
           <Info />
           <AlertDescription>
             Please{" "}
-            <Link href="/settings/administrator/equity" className={linkClasses}>
+            <Link href="/settings/administrator/templates?edit=exercise_notice" className={linkClasses}>
               add an exercise notice
             </Link>{" "}
             so investors can exercise their options.
