@@ -674,7 +674,7 @@ const TasksModal = ({
   const [invoiceData] = trpc.invoices.get.useSuspenseQuery({ companyId: company.id, id: invoice.id });
   const payRateInSubunits = invoiceData.contractor.payRateInSubunits;
   const isActionable = useIsActionable();
-
+  const isMobile = useIsMobile();
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="md:w-110">
@@ -730,10 +730,10 @@ const TasksModal = ({
         {isActionable(invoice) ? (
           <DialogFooter>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" size="small" onClick={onReject} className="max-md:h-9 max-md:text-sm">
+              <Button variant="outline" size={isMobile ? "default" : "small"} onClick={onReject}>
                 Reject
               </Button>
-              <ApproveButton invoice={invoice} onApprove={onClose} className="max-md:h-9 max-md:text-sm" />
+              <ApproveButton invoice={invoice} onApprove={onClose} />
             </div>
           </DialogFooter>
         ) : null}
