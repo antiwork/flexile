@@ -1,7 +1,7 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, Info, SquarePen, X } from "lucide-react";
+import { CircleCheck, Download, Info, X } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -113,7 +113,7 @@ export default function DocumentsPage() {
         reviewAndSign: {
           id: "reviewAndSign",
           label: "Review and sign",
-          icon: SquarePen,
+          icon: () => null,
           variant: "primary",
           contexts: ["single"],
           permissions: ["administrator", "worker"],
@@ -495,7 +495,7 @@ const DocumentBulkActionsBar = ({
               className="flex h-9 items-center gap-2 text-sm"
               onClick={() => signAction.action && onAction(signAction.action, selectedDocuments)}
             >
-              Review and Sign
+              Review and sign
             </Button>
           ) : null}
         </div>
