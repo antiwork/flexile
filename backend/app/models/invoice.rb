@@ -45,8 +45,15 @@ class Invoice < ApplicationRecord
     scope: [:company_id, :user_id],
     case_sensitive: false,
     conditions: -> { where(deleted_at: nil) },
+    message: proc { |record|
+      suggestion = record.recommended_invoice_number
+      if suggestion.present? && suggestion != record.invoice_number
+        "This invoice number is already in use. Please try '#{suggestion}' instead."
+      else
+        "This invoice number is already in use. Please enter a different number."
+      end
+    },
   }
-  validate :suggest_alternative_invoice_number
   validates :bill_from, presence: true
   validates :bill_to, presence: true
   validates :due_on, presence: true
@@ -251,21 +258,6 @@ class Invoice < ApplicationRecord
 
       if !status.in?(DELETABLE_STATES)
         errors.add(:status, "cannot be #{status} for deleted invoices")
-      end
-    end
-
-    def suggest_alternative_invoice_number
-      return if invoice_number.blank? || company_id.blank? || user_id.blank?
-      return unless errors.added?(:invoice_number, :taken) || errors.full_messages_for(:invoice_number).any? { |m| m.include?("taken") }
-
-      # Replace the default Rails uniqueness error with a friendlier, guided message
-      errors.delete(:invoice_number)
-
-      suggestion = recommended_invoice_number
-      if suggestion.present? && suggestion != invoice_number
-        errors.add(:invoice_number, "This invoice number is already in use. Please try '#{suggestion}' instead.")
-      else
-        errors.add(:invoice_number, "This invoice number is already in use. Please enter a different number.")
       end
     end
 end
