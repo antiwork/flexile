@@ -7,9 +7,12 @@ import { companies } from "@/db/schema";
 
 test.describe("Company billing settings", () => {
   test("billing settings gated until company name is set", async ({ page }) => {
-    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
-      name: null,
-    });
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding(
+      {
+        name: null,
+      },
+      { withoutBankAccount: true },
+    );
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
