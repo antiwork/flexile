@@ -82,7 +82,7 @@ type BillingDetails = {
   zip_code: string | null;
   street_address: string | null;
   email: string;
-  billing_entity_name: string;
+  billing_entity_name: string | null;
   legal_type: "BUSINESS" | "PRIVATE";
 };
 
