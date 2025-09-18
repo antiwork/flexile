@@ -22,7 +22,6 @@ import Placeholder from "@/components/Placeholder";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import SignForm from "@/components/SignForm";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
-import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -354,9 +353,7 @@ export default function DocumentsPage() {
         </Alert>
       ) : null}
 
-      {isLoading ? (
-        <TableSkeleton columns={6} />
-      ) : documents.length > 0 ? (
+      {documents.length > 0 || isLoading ? (
         <>
           <DataTable
             table={table}
@@ -372,6 +369,7 @@ export default function DocumentsPage() {
                 onClearSelection={onClearSelection}
               />
             )}
+            isLoading={isLoading}
           />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
           {sharingDocument ? (
