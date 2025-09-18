@@ -11,6 +11,7 @@ import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
@@ -28,19 +29,16 @@ export default function Equity() {
   const queryClient = useQueryClient();
   const requiresCompanyName = !settings.name || settings.name.trim().length === 0;
 
-  const updateEquityEnabled = trpc.companies.update.useMutation({
-    onSuccess: async () => {
-      await utils.companies.settings.invalidate();
-      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-    },
-  });
+  const createToggleMutation = () =>
+    trpc.companies.update.useMutation({
+      onSuccess: async () => {
+        await utils.companies.settings.invalidate();
+        await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      },
+    });
 
-  const updateOptionExercisingEnabled = trpc.companies.update.useMutation({
-    onSuccess: async () => {
-      await utils.companies.settings.invalidate();
-      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-    },
-  });
+  const updateEquityEnabled = createToggleMutation();
+  const updateOptionExercisingEnabled = createToggleMutation();
 
   // Mutation for the form
   const updateSettings = trpc.companies.update.useMutation({
@@ -50,20 +48,6 @@ export default function Equity() {
       setTimeout(() => updateSettings.reset(), 2000);
     },
   });
-
-  const handleEquityToggle = async (checked: boolean) => {
-    await updateEquityEnabled.mutateAsync({
-      companyId: company.id,
-      equityEnabled: checked,
-    });
-  };
-
-  const handleOptionExercisingToggle = async (checked: boolean) => {
-    await updateOptionExercisingEnabled.mutateAsync({
-      companyId: company.id,
-      optionExercisingEnabled: checked,
-    });
-  };
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -105,7 +89,7 @@ export default function Equity() {
           </AlertDescription>
         </Alert>
       ) : null}
-      {/* Settings Section */}
+
       <div className={`space-y-6 ${requiresCompanyName ? "opacity-50" : ""}`}>
         <div>
           <h2 className="text-base font-semibold">Settings</h2>
@@ -113,43 +97,50 @@ export default function Equity() {
         </div>
 
         <div className="space-y-4">
-          {/* Enable Equity Setting */}
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <div>Enable equity</div>
+            <div className="flex-1 space-y-1">
+              <Label htmlFor="enable-equity-switch" className="cursor-pointer">
+                Enable equity
+              </Label>
               <div className="text-muted-foreground text-sm">
                 Unlock cap table, grants, and pools across your workspace.
               </div>
             </div>
             <Switch
+              id="enable-equity-switch"
               checked={company.equityEnabled}
               onCheckedChange={(checked) => {
-                void handleEquityToggle(checked);
+                updateEquityEnabled.mutate({
+                  companyId: company.id,
+                  equityEnabled: checked,
+                });
               }}
-              aria-label="Enable equity"
               disabled={updateEquityEnabled.isPending || requiresCompanyName}
             />
           </div>
 
-          {/* Option Exercising Setting - Always visible; disabled when equity is not enabled */}
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <div>Exercise requests</div>
+            <div className="flex-1 space-y-1">
+              <Label htmlFor="exercise-requests-switch" className="cursor-pointer">
+                Exercise requests
+              </Label>
               <div className="text-muted-foreground text-sm">Allow investors to exercise their vested options.</div>
             </div>
             <Switch
+              id="exercise-requests-switch"
               checked={company.optionExercisingEnabled}
               onCheckedChange={(checked) => {
-                void handleOptionExercisingToggle(checked);
+                updateOptionExercisingEnabled.mutate({
+                  companyId: company.id,
+                  optionExercisingEnabled: checked,
+                });
               }}
-              aria-label="Enable option exercising"
               disabled={updateOptionExercisingEnabled.isPending || !company.equityEnabled}
             />
           </div>
         </div>
       </div>
 
-      {/* Equity Value Section - Only shown when equity is enabled */}
       {company.equityEnabled ? (
         <div className={`space-y-4 ${requiresCompanyName ? "opacity-50" : ""}`}>
           <hgroup>
