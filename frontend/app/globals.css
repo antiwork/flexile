@@ -74,7 +74,7 @@
 .dark {
   --background: hsl(212 29% 13%);
   --foreground: hsl(0 0% 98%);
-  --card: hsl(0 0% 3.9%);
+  --card: hsl(212 22% 17%);
   --card-foreground: hsl(0 0% 98%);
   --popover: hsl(0 0% 3.9%);
   --popover-foreground: hsl(0 0% 98%);
