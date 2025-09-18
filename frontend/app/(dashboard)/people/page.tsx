@@ -327,55 +327,53 @@ const ActionPanel = () => {
         <Form {...inviteForm}>
           <DialogStackBody>
             <DialogStackContent>
-              <div className="space-y-4">
-                <DialogStackHeader>
-                  <DialogStackTitle>Who's joining?</DialogStackTitle>
-                </DialogStackHeader>
-                <FormField
-                  control={inviteForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="email"
-                          placeholder="Contractor's email"
-                          onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <DialogStackHeader>
+                <DialogStackTitle>Who's joining?</DialogStackTitle>
+              </DialogStackHeader>
+              <FormField
+                control={inviteForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="Contractor's email"
+                        onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={inviteForm.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <DatePicker {...field} label="Start date" granularity="day" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={inviteForm.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <DatePicker {...field} label="Start date" granularity="day" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormFields />
-                <DialogStackFooter>
-                  <DialogStackNext>
-                    <Button>Continue</Button>
-                  </DialogStackNext>
-                </DialogStackFooter>
-              </div>
+              <FormFields />
+              <DialogStackFooter>
+                <DialogStackNext>
+                  <Button>Continue</Button>
+                </DialogStackNext>
+              </DialogStackFooter>
             </DialogStackContent>
             <DialogStackContent>
+              <DialogStackHeader>
+                <DialogStackTitle>Add a contract</DialogStackTitle>
+              </DialogStackHeader>
               <form onSubmit={(e) => void submit(e)} className="space-y-4">
-                <DialogStackHeader>
-                  <DialogStackTitle>Add a contract</DialogStackTitle>
-                </DialogStackHeader>
                 {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField type="consulting_contract" />}
 
                 <FormField

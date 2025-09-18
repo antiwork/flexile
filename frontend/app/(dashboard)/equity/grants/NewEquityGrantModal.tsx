@@ -244,393 +244,400 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
     <DialogStack open={open} onOpenChange={(open) => (open ? undefined : handleClose())}>
       <Form {...form}>
         <DialogStackBody>
-          <DialogStackContent className="max-w-xl overflow-y-auto">
+          <DialogStackContent>
             <DialogStackHeader>
-              <DialogStackTitle className="text-xl font-medium">New equity grant</DialogStackTitle>
+              <DialogStackTitle>New equity grant</DialogStackTitle>
               <DialogStackDescription>Fill in the details below to create an equity grant.</DialogStackDescription>
             </DialogStackHeader>
+            <div className="grid h-auto gap-4 overflow-y-auto">
+              <FormField
+                control={form.control}
+                name="userId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Recipient</FormLabel>
+                    <FormControl>
+                      <ComboBox
+                        {...field}
+                        options={data.users
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map((user) => ({
+                            label: `${user.name} (${user.email})`,
+                            value: user.id,
+                            keywords: [user.name, user.email],
+                          }))}
+                        placeholder="Select recipient"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="grid gap-8">
-              <div className="grid gap-4">
-                <h2 className="text-base font-medium">Recipient details</h2>
+              <FormField
+                control={form.control}
+                name="issueDateRelationship"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Relationship to company</FormLabel>
+                    <FormControl>
+                      <ComboBox
+                        {...field}
+                        options={Object.entries(relationshipDisplayNames).map(([key, value]) => ({
+                          label: value,
+                          value: key,
+                        }))}
+                        placeholder="Select relationship"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="optionPoolId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Option pool</FormLabel>
+                    <FormControl>
+                      <ComboBox
+                        {...field}
+                        options={data.optionPools.map((optionPool) => ({
+                          label: optionPool.name,
+                          value: optionPool.id,
+                        }))}
+                        placeholder="Select option pool"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    {optionPool ? (
+                      <FormDescription>
+                        Available shares in this option pool: {optionPool.availableShares.toLocaleString()}
+                      </FormDescription>
+                    ) : null}
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="numberOfShares"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Number of options</FormLabel>
+                    <FormControl>
+                      <NumberInput {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    {estimatedValue ? (
+                      <FormDescription>
+                        Estimated value of {estimatedValue}, based on a {formatMoney(Number(data.sharePriceUsd))} share
+                        price
+                      </FormDescription>
+                    ) : null}
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="userId"
+                  name="optionGrantType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Recipient</FormLabel>
+                      <FormLabel>Grant type</FormLabel>
                       <FormControl>
                         <ComboBox
                           {...field}
-                          options={data.users
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map((user) => ({
-                              label: `${user.name} (${user.email})`,
-                              value: user.id,
-                              keywords: [user.name, user.email],
-                            }))}
-                          placeholder="Select recipient"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="issueDateRelationship"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Relationship to company</FormLabel>
-                      <FormControl>
-                        <ComboBox
-                          {...field}
-                          options={Object.entries(relationshipDisplayNames).map(([key, value]) => ({
+                          options={Object.entries(optionGrantTypeDisplayNames).map(([key, value]) => ({
                             label: value,
                             value: key,
                           }))}
-                          placeholder="Select relationship"
+                          placeholder="Select grant type"
                         />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="optionExpiryMonths"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Expiration period</FormLabel>
+                      <FormControl>
+                        <NumberInput {...field} suffix="months" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-
               <div className="grid gap-4">
-                <h2 className="text-base font-medium">Option grant details</h2>
-                <FormField
-                  control={form.control}
-                  name="optionPoolId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Option pool</FormLabel>
-                      <FormControl>
-                        <ComboBox
-                          {...field}
-                          options={data.optionPools.map((optionPool) => ({
-                            label: optionPool.name,
-                            value: optionPool.id,
-                          }))}
-                          placeholder="Select option pool"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                      {optionPool ? (
-                        <FormDescription>
-                          Available shares in this option pool: {optionPool.availableShares.toLocaleString()}
-                        </FormDescription>
-                      ) : null}
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="numberOfShares"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of options</FormLabel>
-                      <FormControl>
-                        <NumberInput {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      {estimatedValue ? (
-                        <FormDescription>
-                          Estimated value of {estimatedValue}, based on a {formatMoney(Number(data.sharePriceUsd))}{" "}
-                          share price
-                        </FormDescription>
-                      ) : null}
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="optionGrantType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Grant type</FormLabel>
-                        <FormControl>
-                          <ComboBox
-                            {...field}
-                            options={Object.entries(optionGrantTypeDisplayNames).map(([key, value]) => ({
-                              label: value,
-                              value: key,
-                            }))}
-                            placeholder="Select grant type"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="optionExpiryMonths"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Expiration period</FormLabel>
-                        <FormControl>
-                          <NumberInput {...field} suffix="months" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid gap-4">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="flex h-auto w-full items-start justify-between p-0 text-left whitespace-break-spaces hover:bg-transparent"
-                    onClick={() => setShowExercisePeriods(!showExercisePeriods)}
-                  >
-                    <h2 className="text-base">Customize post-termination exercise periods</h2>
-                    {showExercisePeriods ? (
-                      <ChevronDown className="mt-[3px] size-5" />
-                    ) : (
-                      <ChevronRight className="mt-[3px] size-5" />
-                    )}
-                  </Button>
-
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="flex h-auto w-full items-start justify-between p-0 text-left whitespace-break-spaces hover:bg-transparent"
+                  onClick={() => setShowExercisePeriods(!showExercisePeriods)}
+                >
+                  <h2 className="text-base">Customize post-termination exercise periods</h2>
                   {showExercisePeriods ? (
-                    <div className="grid gap-4">
-                      <FormField
-                        control={form.control}
-                        name="voluntaryTerminationExerciseMonths"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Voluntary termination exercise period</FormLabel>
-                            <FormControl>
-                              <NumberInput {...field} suffix="months" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="involuntaryTerminationExerciseMonths"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Involuntary termination exercise period</FormLabel>
-                            <FormControl>
-                              <NumberInput {...field} suffix="months" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="terminationWithCauseExerciseMonths"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Termination with cause exercise period</FormLabel>
-                            <FormControl>
-                              <NumberInput {...field} suffix="months" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="deathExerciseMonths"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Death exercise period</FormLabel>
-                            <FormControl>
-                              <NumberInput {...field} suffix="months" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="disabilityExerciseMonths"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Disability exercise period</FormLabel>
-                            <FormControl>
-                              <NumberInput {...field} suffix="months" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="retirementExerciseMonths"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Retirement exercise period</FormLabel>
-                            <FormControl>
-                              <NumberInput {...field} suffix="months" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  ) : null}
-                </div>
-                <FormField
-                  control={form.control}
-                  name="boardApprovalDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <DatePicker {...field} label="Board approval date" granularity="day" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                    <ChevronDown className="mt-[3px] size-5" />
+                  ) : (
+                    <ChevronRight className="mt-[3px] size-5" />
                   )}
-                />
-              </div>
+                </Button>
 
-              <div className="grid gap-4">
-                <h2 className="text-base font-medium">Vesting details</h2>
-                {recipient?.activeContractor ? (
-                  <FormField
-                    control={form.control}
-                    name="vestingTrigger"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Shares will vest</FormLabel>
-                        <FormControl>
-                          <ComboBox
-                            {...field}
-                            options={Object.entries(vestingTriggerDisplayNames).map(([key, value]) => ({
-                              label: value,
-                              value: key,
-                            }))}
-                            placeholder="Select an option"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {showExercisePeriods ? (
+                  <div className="grid gap-4">
+                    <FormField
+                      control={form.control}
+                      name="voluntaryTerminationExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Voluntary termination exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="involuntaryTerminationExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Involuntary termination exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="terminationWithCauseExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Termination with cause exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="deathExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Death exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="disabilityExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Disability exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="retirementExerciseMonths"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Retirement exercise period</FormLabel>
+                          <FormControl>
+                            <NumberInput {...field} suffix="months" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 ) : null}
-
-                {form.watch("vestingTrigger") === "scheduled" && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="vestingScheduleId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Vesting schedule</FormLabel>
-                          <FormControl>
-                            <ComboBox
-                              {...field}
-                              options={[
-                                ...data.defaultVestingSchedules.map((schedule) => ({
-                                  label: schedule.name,
-                                  value: schedule.id,
-                                })),
-                                { label: "Custom", value: "custom" },
-                              ]}
-                              placeholder="Select a vesting schedule"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="vestingCommencementDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <DatePicker {...field} label="Vesting commencement date" granularity="day" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {form.watch("vestingScheduleId") === "custom" && (
-                      <>
-                        <FormField
-                          control={form.control}
-                          name="totalVestingDurationMonths"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Total vesting duration</FormLabel>
-                              <FormControl>
-                                <NumberInput {...field} suffix="months" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="cliffDurationMonths"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Cliff period</FormLabel>
-                              <FormControl>
-                                <NumberInput {...field} suffix="months" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="vestingFrequencyMonths"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Vesting frequency</FormLabel>
-                              <FormControl>
-                                <ComboBox
-                                  {...field}
-                                  options={[
-                                    { label: "Monthly", value: "1" },
-                                    { label: "Quarterly", value: "3" },
-                                    { label: "Annually", value: "12" },
-                                  ]}
-                                  placeholder="Select vesting frequency"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </>
-                    )}
-                  </>
-                )}
               </div>
+              <FormField
+                control={form.control}
+                name="boardApprovalDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <DatePicker {...field} label="Board approval date" granularity="day" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
+
             <DialogStackFooter>
               <Button variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
+              <DialogStackNext>
+                <Button disabled={!recipientId}>Continue</Button>
+              </DialogStackNext>
+            </DialogStackFooter>
+          </DialogStackContent>
+          <DialogStackContent>
+            <DialogStackHeader>
+              <DialogStackTitle>Vesting details</DialogStackTitle>
+            </DialogStackHeader>
+            <div className="grid gap-4">
+              {recipient?.activeContractor ? (
+                <FormField
+                  control={form.control}
+                  name="vestingTrigger"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Shares will vest</FormLabel>
+                      <FormControl>
+                        <ComboBox
+                          {...field}
+                          options={Object.entries(vestingTriggerDisplayNames).map(([key, value]) => ({
+                            label: value,
+                            value: key,
+                          }))}
+                          placeholder="Select an option"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
+
+              {form.watch("vestingTrigger") === "scheduled" && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="vestingScheduleId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Vesting schedule</FormLabel>
+                        <FormControl>
+                          <ComboBox
+                            {...field}
+                            options={[
+                              ...data.defaultVestingSchedules.map((schedule) => ({
+                                label: schedule.name,
+                                value: schedule.id,
+                              })),
+                              { label: "Custom", value: "custom" },
+                            ]}
+                            placeholder="Select a vesting schedule"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="vestingCommencementDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <DatePicker {...field} label="Vesting commencement date" granularity="day" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch("vestingScheduleId") === "custom" && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="totalVestingDurationMonths"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Total vesting duration</FormLabel>
+                            <FormControl>
+                              <NumberInput {...field} suffix="months" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="cliffDurationMonths"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cliff period</FormLabel>
+                            <FormControl>
+                              <NumberInput {...field} suffix="months" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="vestingFrequencyMonths"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Vesting frequency</FormLabel>
+                            <FormControl>
+                              <ComboBox
+                                {...field}
+                                options={[
+                                  { label: "Monthly", value: "1" },
+                                  { label: "Quarterly", value: "3" },
+                                  { label: "Annually", value: "12" },
+                                ]}
+                                placeholder="Select vesting frequency"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+            <DialogStackFooter>
+              <DialogStackPrevious>
+                <Button variant="outline">Back</Button>
+              </DialogStackPrevious>
               <DialogStackNext>
                 <Button>Continue</Button>
               </DialogStackNext>
             </DialogStackFooter>
           </DialogStackContent>
           <DialogStackContent>
+            <DialogStackHeader>
+              <DialogStackTitle>Equity contract</DialogStackTitle>
+            </DialogStackHeader>
             <form onSubmit={(e) => void submit(e)} className="space-y-4">
               <NewDocumentField type="stock_option_agreement" />
 

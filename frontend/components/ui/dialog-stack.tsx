@@ -199,7 +199,7 @@ export const DialogStackBody = ({ children, className, ...props }: DialogStackBo
         <div
           role="dialog"
           className={cn(
-            "pointer-events-none fixed inset-0 z-50 mx-auto flex w-full max-w-lg flex-col items-center justify-start p-2 pt-32",
+            "pointer-events-none fixed inset-0 z-50 mx-auto flex max-h-[95vh] w-full max-w-lg flex-col items-center justify-start p-2 pt-32",
             className,
           )}
           {...props}
@@ -224,7 +224,7 @@ export type DialogStackContentProps = HTMLAttributes<HTMLDivElement> & {
   offset?: number;
 };
 
-export const DialogStackContent = ({ children, className, offset = 20, ...props }: DialogStackContentProps) => {
+export const DialogStackContent = ({ children, className, offset = 16, ...props }: DialogStackContentProps) => {
   const context = useContext(DialogStackContext);
   const indexContext = useContext(DialogStackContentContext);
 
@@ -256,7 +256,7 @@ export const DialogStackContent = ({ children, className, offset = 20, ...props 
   return (
     <div
       className={cn(
-        "bg-background h-auto w-full rounded-lg border border-gray-200 p-6 shadow-lg transition-all duration-300",
+        "bg-background h-auto max-h-full w-full rounded-lg border border-gray-200 p-6 shadow-lg transition-all duration-300",
         className,
       )}
       onClick={handleClick}
@@ -273,14 +273,14 @@ export const DialogStackContent = ({ children, className, offset = 20, ...props 
     >
       <button
         data-slot="dialog-close"
-        className="ring-offset-background focus:ring-ring/15 data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-[26px] right-5 mt-2 mr-2 cursor-pointer rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+        className="ring-offset-background focus:ring-ring/15 data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-[26px] right-5 cursor-pointer rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
       >
         <XIcon />
         <span className="sr-only">Close</span>
       </button>
       <div
         className={cn(
-          "h-full w-full transition-all duration-300",
+          "grid h-full min-h-0 w-full grid-rows-[auto_minmax(0,1fr)_auto] gap-4",
           context.activeIndex !== index && "pointer-events-none opacity-0 select-none",
         )}
       >
