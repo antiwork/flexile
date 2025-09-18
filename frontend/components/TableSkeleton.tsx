@@ -14,7 +14,6 @@ export default function TableSkeleton({
   rows = 5,
   renderRowsOnly = false,
 }: TableSkeletonProps) {
-  // Desktop skeleton rows
   const desktopSkeletonRows = Array.from({ length: rows }).map((_, rowIndex) => (
     <TableRow key={`desktop-${rowIndex}`} className="hidden md:table-row">
       {hasSelection ? (
@@ -30,18 +29,16 @@ export default function TableSkeleton({
     </TableRow>
   ));
 
-  // Mobile skeleton rows
   const mobileSkeletonRows = Array.from({ length: 3 }).map((_, rowIndex) => (
-    <TableRow key={`mobile-${rowIndex}`} className="mb-2 flex flex-col gap-3 rounded-lg p-4 md:hidden">
+    <TableRow key={`mobile-${rowIndex}`} className="mb-2 flex flex-col gap-3 p-4 md:hidden">
       <Skeleton className="h-4 w-48 rounded" /> {/* Subtitle */}
       <div className="flex justify-between">
         <Skeleton className="h-4 w-20 rounded" /> {/* Left info */}
-        <Skeleton className="h-6 w-16 rounded" /> {/* Button */}
+        <Skeleton className="h-4 w-16 rounded" /> {/* Button */}
       </div>
     </TableRow>
   ));
 
-  // If renderRowsOnly is true, return both desktop and mobile skeleton rows for use within existing table structure
   if (renderRowsOnly) {
     return (
       <>
