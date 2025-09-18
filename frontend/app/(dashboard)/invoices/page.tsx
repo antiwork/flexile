@@ -281,27 +281,27 @@ export default function InvoicesPage() {
           const amount = formatMoneyFromCents(invoice.totalAmountInUsdCents);
 
           return user.roles.administrator ? (
-            <div className="flex flex-col gap-2">
-              <div>
-                <div className="text-base font-medium">{invoice.billFrom}</div>
-                <div className="text-gray-600">{invoice.contractor.role}</div>
+            <div className="flex min-w-0 flex-col gap-1">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium">{invoice.billFrom}</div>
+                <div className="truncate text-xs text-gray-600">{invoice.contractor.role}</div>
               </div>
-              <div className="text-sm">{amount}</div>
+              <div className="text-xs font-medium">{amount}</div>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex min-w-0 flex-col gap-1">
               <Link
                 href={`/invoices/${invoice.id}`}
-                className="relative truncate font-medium no-underline after:absolute after:inset-0"
+                className="relative truncate text-sm font-medium no-underline after:absolute after:inset-0"
               >
                 {invoice.invoiceNumber}
               </Link>
-              <div className="text-sm">{amount}</div>
+              <div className="text-xs font-medium">{amount}</div>
             </div>
           );
         },
         meta: {
-          cellClassName: "w-full",
+          cellClassName: "w-full min-w-0",
         },
       }),
 
@@ -311,11 +311,14 @@ export default function InvoicesPage() {
           const invoice = info.row.original;
 
           return (
-            <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 items-center justify-center">{getInvoiceStatusText(invoice, company)}</div>
-              <div className="text-gray-600">{formatDate(invoice.invoiceDate)}</div>
+            <div className="flex h-full min-w-0 flex-col items-end justify-between text-right">
+              <div className="truncate text-xs font-medium">{getInvoiceStatusText(invoice, company)}</div>
+              <div className="text-xs text-gray-600">{formatDate(invoice.invoiceDate)}</div>
             </div>
           );
+        },
+        meta: {
+          cellClassName: "min-w-0",
         },
       }),
 
