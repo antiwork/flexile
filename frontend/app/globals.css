@@ -50,6 +50,8 @@
   --muted-foreground: hsl(0 0% 45%);
   --accent: hsl(0 0% 93.1%);
   --accent-foreground: hsl(0 0% 9%);
+  --info: var(--color-blue-600);
+  --info-foreground: var(--color-blue-50);
   --destructive: var(--color-red-700);
   --destructive-foreground: hsla(5, 73%, 62%, 0.1);
   --border: hsl(0 0% 85%);
@@ -75,7 +77,7 @@
 .dark {
   --background: hsl(212 25% 15%);
   --foreground: hsl(0 0% 98%);
-  --overlay: hsla(211, 30%, 20%, 0.3);
+  --overlay: hsla(211, 30%, 20%, 0.6);
   --card: hsl(212 29% 14%);
   --card-foreground: hsl(0 0% 98%);
   --popover: hsl(212 29% 14%);
@@ -88,11 +90,13 @@
   --muted-foreground: hsl(203 4% 60%);
   --accent: hsla(0, 0%, 100%, 0.05);
   --accent-foreground: hsla(0, 0%, 100%, 0.1);
+  --info: var(--color-blue-600);
+  --info-foreground: hsl(214, 52%, 25%);
   --destructive: var(--color-red-700);
   --destructive-foreground: hsla(15, 84%, 45%, 0.1);
   --border: hsla(0 0% 100% / 0.1);
   --input: hsla(0 0% 100% / 0.1);
-  --ring: var(--color-blue-600);
+  --ring: hsla(212, 100%, 46%, 0.8);
   --chart-1: hsl(220 70% 50%);
   --chart-2: hsl(160 60% 45%);
   --chart-3: hsl(30 80% 55%);
@@ -125,6 +129,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
