@@ -1,13 +1,17 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick, truncate } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db";
-import { companyInvestors, companyUpdates } from "@/db/schema";
+import { companyUpdates } from "@/db/schema";
 import { type CompanyContext, companyProcedure, createRouter, renderTiptapToText } from "@/trpc";
 import { isActive } from "@/trpc/routes/contractors";
-import { assertDefined } from "@/utils/assert";
+import {
+  company_company_update_url,
+  company_company_updates_url,
+  send_test_email_company_company_update_url,
+} from "@/utils/routes";
 
 const byId = (ctx: CompanyContext, id: string) =>
   and(eq(companyUpdates.companyId, ctx.company.id), eq(companyUpdates.externalId, id));
@@ -17,17 +21,9 @@ const dataSchema = createInsertSchema(companyUpdates).pick({
   body: true,
 });
 
-const checkHasInvestors = async (companyId: bigint) => {
-  const hasInvestors = await db.query.companyInvestors.findFirst({
-    where: eq(companyInvestors.companyId, companyId),
-  });
-  return !!hasInvestors;
-};
-
 export const companyUpdatesRouter = createRouter({
   list: companyProcedure.query(async ({ ctx }) => {
-    const hasInvestors = await checkHasInvestors(ctx.company.id);
-    if (!hasInvestors || (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor))
+    if (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
       throw new TRPCError({ code: "FORBIDDEN" });
     const where = and(
       eq(companyUpdates.companyId, ctx.company.id),
@@ -45,8 +41,7 @@ export const companyUpdatesRouter = createRouter({
     return { updates };
   }),
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    const hasInvestors = await checkHasInvestors(ctx.company.id);
-    if (!hasInvestors || (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor))
+    if (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
       throw new TRPCError({ code: "FORBIDDEN" });
     const update = await db.query.companyUpdates.findFirst({ where: byId(ctx, input.id) });
     if (!update) throw new TRPCError({ code: "NOT_FOUND" });
@@ -58,55 +53,152 @@ export const companyUpdatesRouter = createRouter({
     };
   }),
   create: companyProcedure.input(dataSchema.required()).mutation(async ({ ctx, input }) => {
-    const hasInvestors = await checkHasInvestors(ctx.company.id);
-    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const [update] = await db
-      .insert(companyUpdates)
-      .values({
-        ...pick(input, ["title", "body"]),
-        companyId: ctx.company.id,
+    const response = await fetch(company_company_updates_url(ctx.company.externalId), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...ctx.headers,
+      },
+      body: JSON.stringify({
+        company_update: {
+          title: input.title,
+          body: input.body,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorSchema = z.object({
+        error_message: z.string().optional(),
+      });
+      const errorData = errorSchema.parse(await response.json().catch(() => ({})));
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: errorData.error_message || "Failed to create company update",
+      });
+    }
+
+    const result = z
+      .object({
+        company_update: z.object({
+          id: z.string(),
+        }),
       })
-      .returning();
-    return assertDefined(update).externalId;
+      .parse(await response.json());
+
+    return result.company_update.id;
   }),
   update: companyProcedure.input(dataSchema.extend({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    const hasInvestors = await checkHasInvestors(ctx.company.id);
-    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-    const [update] = await db
-      .update(companyUpdates)
-      .set({
-        ...pick(input, ["title", "body"]),
-        companyId: ctx.company.id,
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+    const response = await fetch(company_company_update_url(ctx.company.externalId, input.id), {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...ctx.headers,
+      },
+      body: JSON.stringify({
+        company_update: {
+          title: input.title,
+          body: input.body,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      const errorSchema = z.object({
+        error_message: z.string().optional(),
+      });
+      const errorData = errorSchema.parse(await response.json().catch(() => ({})));
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: errorData.error_message || "Failed to update company update",
+      });
+    }
+
+    const result = z
+      .object({
+        company_update: z.object({
+          id: z.string(),
+        }),
       })
-      .where(byId(ctx, input.id))
-      .returning();
-    if (!update) throw new TRPCError({ code: "NOT_FOUND" });
+      .parse(await response.json());
+
+    return result.company_update.id;
   }),
   publish: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    const hasInvestors = await checkHasInvestors(ctx.company.id);
-    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const [update] = await db
-      .update(companyUpdates)
-      .set({ sentAt: new Date() })
-      .where(and(byId(ctx, input.id), isNull(companyUpdates.sentAt)))
-      .returning();
+    const response = await fetch(`${company_company_update_url(ctx.company.externalId, input.id)}/publish`, {
+      method: "POST",
+      headers: {
+        ...ctx.headers,
+      },
+    });
 
-    if (!update) throw new TRPCError({ code: "NOT_FOUND" });
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to publish company update",
+      });
+    }
 
-    return update.externalId;
+    const result = z
+      .object({
+        company_update: z.object({
+          id: z.string(),
+        }),
+      })
+      .parse(await response.json());
+
+    return result.company_update.id;
   }),
   sendTestEmail: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    const hasInvestors = await checkHasInvestors(ctx.company.id);
-    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-    const update = await db.query.companyUpdates.findFirst({ where: byId(ctx, input.id) });
-    if (!update) throw new TRPCError({ code: "NOT_FOUND" });
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+    const response = await fetch(send_test_email_company_company_update_url(ctx.company.externalId, input.id), {
+      method: "POST",
+      headers: {
+        ...ctx.headers,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to send test email",
+      });
+    }
   }),
   delete: companyProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    const hasInvestors = await checkHasInvestors(ctx.company.id);
-    if (!hasInvestors || !ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-    const result = await db.delete(companyUpdates).where(byId(ctx, input.id)).returning();
-    if (result.length === 0) throw new TRPCError({ code: "NOT_FOUND" });
+    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+
+    const response = await fetch(company_company_update_url(ctx.company.externalId, input.id), {
+      method: "DELETE",
+      headers: {
+        ...ctx.headers,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to delete company update",
+      });
+    }
   }),
 });
