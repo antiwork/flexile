@@ -138,8 +138,8 @@ export default function AutocompleteInput({
             <div
               key={option.value}
               className={cn(
-                "cursor-pointer px-3 py-2 hover:bg-gray-50",
-                index === activeSuggestionIndex ? "bg-gray-50" : "",
+                "hover:bg-accent cursor-pointer px-3 py-2",
+                index === activeSuggestionIndex ? "bg-accent" : "",
               )}
               onClick={() => {
                 onOptionSelect?.(option);
@@ -205,7 +205,7 @@ const DropdownWrapper = ({
   return (
     <div
       ref={dropDownRef}
-      className={`absolute right-0 left-0 z-[10] overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg transition-opacity ease-in ${dropdownMeta ? positionClasses[dropdownMeta.position] : "opacity-0"}`}
+      className={`bg-background border-border absolute right-0 left-0 z-[10] overflow-y-auto rounded-md border shadow-lg transition-opacity ease-in ${dropdownMeta ? positionClasses[dropdownMeta.position] : "opacity-0"}`}
       style={{ maxHeight: dropdownMeta ? `${dropdownMeta.customMaxHeight}px` : "0px" }}
     >
       {children}

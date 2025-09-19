@@ -413,7 +413,7 @@ export default function DataTable<T extends RowData>({
                         onClick={(e) => cell.column.id === "actions" && e.stopPropagation()}
                       >
                         {typeof cell.column.columnDef.header === "string" && (
-                          <div className="text-gray-500 md:hidden print:hidden" aria-hidden>
+                          <div className="text-muted-foreground md:hidden print:hidden" aria-hidden>
                             {cell.column.columnDef.header}
                           </div>
                         )}

@@ -126,7 +126,7 @@ export function AuthPage({
       <Card className="w-full max-w-md border-0 bg-transparent">
         <CardHeader className="text-center">
           <div className="mb-8 flex justify-center">
-            <Image src={logo} alt="Flexile" className="size-16" />
+            <Image src={logo} alt="Flexile" className="size-16 dark:invert" />
           </div>
           <CardTitle className="pb-1 text-xl font-medium">
             {sendOtp.isSuccess ? "Check your email for a code" : title}
@@ -185,7 +185,7 @@ export function AuthPage({
                       Verifying your code...
                     </div>
                   ) : (
-                    <Button className="text-gray-600" variant="link" onClick={() => sendOtp.reset()}>
+                    <Button className="text-muted-foreground text-sm" variant="link" onClick={() => sendOtp.reset()}>
                       Back to email
                     </Button>
                   )}
@@ -243,13 +243,13 @@ export function AuthPage({
                 <MutationStatusButton
                   mutation={sendOtp}
                   type="submit"
-                  className="border-input hover:border-input hover:bg-accent w-full bg-white text-gray-900"
+                  className="text-foreground border-input dark:border-border dark:bg-input/30 hover:bg-accent dark:hover:bg-muted hover:border-input dark:hover:border-border w-full bg-white"
                   loadingText="Sending..."
                 >
                   {sendOtpText}
                 </MutationStatusButton>
 
-                <div className="pt-6 text-center text-gray-600">{switcher}</div>
+                <div className="text-muted-foreground pt-6 text-center text-sm">{switcher}</div>
               </form>
             </Form>
           ) : null}

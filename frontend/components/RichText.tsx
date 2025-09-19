@@ -53,7 +53,10 @@ export const Editor = ({
     editorProps: {
       attributes: {
         ...(id ? { id } : {}),
-        class: cn(className, "prose p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none"),
+        class: cn(
+          className,
+          "prose text-foreground p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none",
+        ),
       },
     },
     immediatelyRender: false,
@@ -110,26 +113,29 @@ export const Editor = ({
       {...props}
       className={cn(
         "group border-input rounded-md border bg-transparent transition-[color,box-shadow] outline-none",
-        "focus-within:ring-ring/15 focus-within:border-gray-300 focus-within:ring-[3px]",
         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
         className,
       )}
     >
-      <div className="border-input group-aria-invalid:border-destructive flex border-b">
+      <div className="border-input group-aria-invalid:border-destructive flex border-b p-1">
         {toolbarItems.map((item) => (
           <button
             type="button"
-            className={cn(linkClasses, "p-3 text-sm")}
+            className={cn(linkClasses, "hover:bg-accent hover:text-foreground rounded p-2 text-sm")}
             key={item.label}
             aria-label={item.label}
             aria-pressed={editor?.isActive(item.name, item.attributes)}
             onClick={() => onToolbarClick(item)}
           >
-            <item.icon className="size-5" />
+            <item.icon className="size-4" />
           </button>
         ))}
       </div>
-      {editor ? <EditorContent editor={editor} /> : null}
+      {editor ? (
+        <div className="focus-within:ring-ring rounded-b-sm ring-inset focus-within:ring-2">
+          <EditorContent editor={editor} />
+        </div>
+      ) : null}
       <Dialog open={!!addingLink} onOpenChange={() => setAddingLink(null)}>
         <DialogContent>
           <DialogHeader>

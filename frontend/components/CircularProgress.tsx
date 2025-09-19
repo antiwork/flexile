@@ -6,7 +6,15 @@ export default function CircularProgress({ progress, radius = 8 }: { progress: n
 
   return (
     <svg className="h-4 w-4 -rotate-90" viewBox="0 0 20 20">
-      <circle cx="10" cy="10" r={radius} stroke="currentColor" strokeWidth="2" fill="none" className="text-gray-300" />
+      <circle
+        cx="10"
+        cy="10"
+        r={radius}
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="none"
+        className="text-muted-foreground"
+      />
       <circle
         cx="10"
         cy="10"

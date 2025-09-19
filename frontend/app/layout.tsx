@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { TRPCProvider } from "@/trpc/client";
@@ -39,9 +40,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body className={`${abcWhyte.className} h-screen antialiased accent-blue-600`}>
-        <TRPCProvider>
-          <NuqsAdapter>{children}</NuqsAdapter>
-        </TRPCProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <TRPCProvider>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </TRPCProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
