@@ -408,6 +408,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
     },
   });
   const [signed, setSigned] = useState(false);
+  const isMobile = useIsMobile();
   const sign = () => {
     signDocument.mutate({
       companyId: company.id,
@@ -424,7 +425,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
         </DialogHeader>
         <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
         <DialogFooter>
-          <Button size="small" onClick={sign} disabled={!signed}>
+          <Button size={isMobile ? "default" : "small"} onClick={sign} disabled={!signed}>
             Agree & Submit
           </Button>
         </DialogFooter>
@@ -443,6 +444,7 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
   const trpcUtils = trpc.useUtils();
   const [data] = trpc.documents.get.useSuspenseQuery({ companyId: company.id, id: document.id });
   const [recipients] = trpc.companies.listCompanyUsers.useSuspenseQuery({ companyId: company.id });
+  const isMobile = useIsMobile();
   const form = useForm({
     resolver: zodResolver(shareDocumentSchema),
     defaultValues: {
@@ -514,10 +516,10 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
               )}
             />
             <DialogFooter>
-              <Button size="small" variant="outline" onClick={onClose}>
+              <Button size={isMobile ? "default" : "small"} variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <MutationStatusButton type="submit" mutation={submitMutation} size="small">
+              <MutationStatusButton type="submit" mutation={submitMutation} size={isMobile ? "default" : "small"}>
                 Send
               </MutationStatusButton>
             </DialogFooter>

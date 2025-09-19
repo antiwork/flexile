@@ -194,12 +194,12 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
           </p>
           <DialogFooter>
             <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-              <Button variant="outline" size="small" onClick={() => setDeletingUpdate(null)}>
+              <Button variant="outline" size={isMobile ? "default" : "small"} onClick={() => setDeletingUpdate(null)}>
                 No, cancel
               </Button>
               <MutationButton
                 mutation={deleteMutation}
-                size="small"
+                size={isMobile ? "default" : "small"}
                 param={{ companyId: company.id, id: deletingUpdate ?? "" }}
                 loadingText="Deleting..."
               >
