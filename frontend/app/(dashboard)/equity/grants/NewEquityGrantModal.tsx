@@ -19,7 +19,17 @@ import DatePicker from "@/components/DatePicker";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DialogStack,
+  DialogStackBody,
+  DialogStackContent,
+  DialogStackDescription,
+  DialogStackFooter,
+  DialogStackHeader,
+  DialogStackNext,
+  DialogStackPrevious,
+  DialogStackTitle,
+} from "@/components/ui/dialog-stack";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { optionGrantIssueDateRelationships, optionGrantTypes, optionGrantVestingTriggers } from "@/db/enums";
 import { useCurrentCompany } from "@/global";
@@ -231,20 +241,15 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-medium">New equity grant</DialogTitle>
-          <DialogDescription className="mb-[-16px]">
-            Fill in the details below to create an equity grant.
-          </DialogDescription>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={(e) => void submit(e)} className="grid gap-8">
-            <div></div>
-            <div className="grid gap-4">
-              <h2 className="text-base font-medium">Recipient details</h2>
+    <DialogStack open={open} onOpenChange={(open) => (open ? undefined : handleClose())}>
+      <Form {...form}>
+        <DialogStackBody>
+          <DialogStackContent>
+            <DialogStackHeader>
+              <DialogStackTitle>New equity grant</DialogStackTitle>
+              <DialogStackDescription>Fill in the details below to create an equity grant.</DialogStackDescription>
+            </DialogStackHeader>
+            <div className="grid h-auto gap-4 overflow-y-auto">
               <FormField
                 control={form.control}
                 name="userId"
@@ -289,10 +294,6 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                   </FormItem>
                 )}
               />
-            </div>
-
-            <div className="grid gap-4">
-              <h2 className="text-base font-medium">Option grant details</h2>
               <FormField
                 control={form.control}
                 name="optionPoolId"
@@ -492,8 +493,20 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
               />
             </div>
 
+            <DialogStackFooter>
+              <Button variant="outline" onClick={handleClose}>
+                Cancel
+              </Button>
+              <DialogStackNext>
+                <Button disabled={!recipientId}>Continue</Button>
+              </DialogStackNext>
+            </DialogStackFooter>
+          </DialogStackContent>
+          <DialogStackContent>
+            <DialogStackHeader>
+              <DialogStackTitle>Vesting details</DialogStackTitle>
+            </DialogStackHeader>
             <div className="grid gap-4">
-              <h2 className="text-base font-medium">Vesting details</h2>
               {recipient?.activeContractor ? (
                 <FormField
                   control={form.control}
@@ -612,25 +625,41 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                 </>
               )}
             </div>
+            <DialogStackFooter>
+              <DialogStackPrevious>
+                <Button variant="outline">Back</Button>
+              </DialogStackPrevious>
+              <DialogStackNext>
+                <Button>Continue</Button>
+              </DialogStackNext>
+            </DialogStackFooter>
+          </DialogStackContent>
+          <DialogStackContent>
+            <DialogStackHeader>
+              <DialogStackTitle>Equity contract</DialogStackTitle>
+            </DialogStackHeader>
+            <form onSubmit={(e) => void submit(e)} className="space-y-4">
+              <NewDocumentField type="stock_option_agreement" />
 
-            <NewDocumentField type="stock_option_agreement" />
-
-            {form.formState.errors.root ? (
-              <div className="grid gap-2">
-                <div className="text-red text-center text-xs">
-                  {form.formState.errors.root.message ?? "An error occurred"}
+              {form.formState.errors.root ? (
+                <div className="grid gap-2">
+                  <div className="text-red text-center text-xs">
+                    {form.formState.errors.root.message ?? "An error occurred"}
+                  </div>
                 </div>
-              </div>
-            ) : null}
-
-            <div className="flex justify-end">
-              <MutationStatusButton type="submit" size="small" mutation={createEquityGrant} disabled={!isFormValid}>
-                Create grant
-              </MutationStatusButton>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+              ) : null}
+              <DialogStackFooter>
+                <DialogStackPrevious>
+                  <Button variant="outline">Back</Button>
+                </DialogStackPrevious>
+                <MutationStatusButton type="submit" size="small" mutation={createEquityGrant} disabled={!isFormValid}>
+                  Create grant
+                </MutationStatusButton>
+              </DialogStackFooter>
+            </form>
+          </DialogStackContent>
+        </DialogStackBody>
+      </Form>
+    </DialogStack>
   );
 }

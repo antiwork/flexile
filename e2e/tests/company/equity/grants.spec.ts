@@ -65,6 +65,7 @@ test.describe("Equity Grants", () => {
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
 
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByLabel("Contract").setInputFiles({
       name: "contract.pdf",
       mimeType: "application/pdf",
@@ -119,6 +120,7 @@ test.describe("Equity Grants", () => {
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
 
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
 
@@ -334,6 +336,8 @@ test.describe("Equity Grants", () => {
     await selectComboboxOption(page, "Recipient", `${otherAdminUser.preferredName} (${otherAdminUser.email})`);
     await expect(page.getByLabel("Shares will vest")).not.toBeVisible();
     await selectComboboxOption(page, "Vesting schedule", "4-year with 1-year cliff (1/48th monthly after cliff)");
+
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
 

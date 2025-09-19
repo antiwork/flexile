@@ -8,7 +8,7 @@ import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, formatFileSize } from "@/utils";
 
@@ -33,8 +33,6 @@ export default function NewDocumentField({ type }: { type: TemplateType }) {
       name="contract"
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="font-medium">Contract</FormLabel>
-
           <Tabs value={contractType} onValueChange={setContractType}>
             <TabsList className="w-full">
               <TabsTrigger value="upload">
@@ -48,7 +46,11 @@ export default function NewDocumentField({ type }: { type: TemplateType }) {
 
           {contractType === "write" ? (
             <FormControl>
-              <RichTextEditor {...field} value={typeof field.value === "string" ? field.value : ""} />
+              <RichTextEditor
+                aria-label="Contract"
+                {...field}
+                value={typeof field.value === "string" ? field.value : ""}
+              />
             </FormControl>
           ) : value instanceof File ? (
             <div className="border-input flex items-center gap-2 rounded-md border py-2 pl-2">
@@ -87,6 +89,7 @@ export default function NewDocumentField({ type }: { type: TemplateType }) {
                 <input
                   type="file"
                   accept=".pdf"
+                  aria-label="Contract"
                   className="absolute inset-0 size-full cursor-pointer opacity-0"
                   onChange={(e) => field.onChange(e.target.files?.[0])}
                 />
