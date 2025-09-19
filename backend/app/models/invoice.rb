@@ -42,6 +42,12 @@ class Invoice < ApplicationRecord
   validates :total_amount_in_usd_cents, presence: true,
                                         numericality: { only_integer: true, greater_than: 99 }
   validates :invoice_number, presence: true
+  validates :invoice_number, uniqueness: {
+    scope: [:company_id, :user_id],
+    case_sensitive: false,
+    conditions: -> { where(deleted_at: nil) },
+    message: proc { |record| record.invoice_number_taken_message },
+  }
   validates :bill_from, presence: true
   validates :bill_to, presence: true
   validates :due_on, presence: true
@@ -120,6 +126,7 @@ class Invoice < ApplicationRecord
 
   after_initialize :populate_bill_data
   before_validation :populate_bill_data, on: :create
+  before_validation :normalize_invoice_number
   after_commit :destroy_approvals, if: -> { rejected? }, on: :update
 
   def attachment = attachments.last
@@ -201,7 +208,20 @@ class Invoice < ApplicationRecord
     created_by_id == user_id
   end
 
+  def invoice_number_taken_message
+    suggestion = recommended_invoice_number
+    if suggestion.present? && suggestion != invoice_number
+      "This invoice number is already in use. Please try '#{suggestion}' instead."
+    else
+      "This invoice number is already in use. Please enter a different number."
+    end
+  end
+
   private
+    def normalize_invoice_number
+      self.invoice_number = invoice_number.strip if invoice_number.is_a?(String)
+    end
+
     def populate_bill_data
       self.bill_from ||= user&.billing_entity_name
       self.bill_to ||= company&.name
