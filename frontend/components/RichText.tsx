@@ -44,6 +44,7 @@ export const Editor = ({
   className?: string;
 } & Omit<React.ComponentProps<"div">, "onChange">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
 
   const editor = useEditor({
     extensions: richTextExtensions,
@@ -76,7 +77,10 @@ export const Editor = ({
       label: "Link",
       name: "link",
       icon: Link,
-      onClick: () => setAddingLink({ url: typeof currentLink === "string" ? currentLink : "" }),
+      onClick: () => {
+        setAddingLink({ url: typeof currentLink === "string" ? currentLink : "" });
+        setUrlError(null);
+      },
     },
     { label: "Bullet list", name: "bulletList", icon: List },
   ];
@@ -92,9 +96,40 @@ export const Editor = ({
     commands.run();
   };
 
+  const normalizeUrl = (url: string): string => {
+    // If already has http:// or https://, return as is
+    if (/^https?:\/\//u.exec(url)) {
+      return url;
+    }
+    // If it looks like a domain/URL, add https://
+    if (url.includes(".") || url.startsWith("www.")) {
+      return `https://${url}`;
+    }
+    return url;
+  };
+
+  const isValidUrl = (url: string): boolean => {
+    try {
+      const normalizedUrl = normalizeUrl(url);
+      const urlObj = new URL(normalizedUrl);
+
+      return ["http:", "https:"].includes(urlObj.protocol);
+    } catch {
+      return false;
+    }
+  };
+
   const handleInsertLink = () => {
     if (!addingLink?.url) return;
-    editor?.chain().focus().extendMarkRange("link").setLink({ href: addingLink.url }).run();
+
+    if (!isValidUrl(addingLink.url)) {
+      setUrlError("Please enter a valid URL");
+      return;
+    }
+
+    setUrlError(null);
+    const normalizedUrl = normalizeUrl(addingLink.url);
+    editor?.chain().focus().extendMarkRange("link").setLink({ href: normalizedUrl }).run();
     setAddingLink(null);
   };
 
@@ -130,7 +165,13 @@ export const Editor = ({
         ))}
       </div>
       {editor ? <EditorContent editor={editor} /> : null}
-      <Dialog open={!!addingLink} onOpenChange={() => setAddingLink(null)}>
+      <Dialog
+        open={!!addingLink}
+        onOpenChange={() => {
+          setAddingLink(null);
+          setUrlError(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Insert Link</DialogTitle>
@@ -140,12 +181,17 @@ export const Editor = ({
             <Input
               id="link-url"
               value={addingLink?.url ?? ""}
-              onChange={(e) => setAddingLink({ url: e.target.value })}
+              onChange={(e) => {
+                setAddingLink({ url: e.target.value });
+                setUrlError(null);
+              }}
               onKeyDown={handleKeyDown}
               type="url"
               placeholder="https://example.com"
               required
+              className={urlError ? "border-destructive" : ""}
             />
+            {urlError ? <p className="text-destructive mt-1 text-sm">{urlError}</p> : null}
           </div>
           <DialogFooter>
             <Button
@@ -154,6 +200,7 @@ export const Editor = ({
               onClick={() => {
                 editor?.chain().focus().unsetLink().run();
                 setAddingLink(null);
+                setUrlError(null);
               }}
             >
               {currentLink ? "Unlink" : "Cancel"}
