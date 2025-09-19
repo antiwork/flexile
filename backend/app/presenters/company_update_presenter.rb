@@ -40,6 +40,7 @@ class CompanyUpdatePresenter
       sender_name: company.primary_admin.user.name,
       body: company_update.body,
       status: company_update.status,
+      sent_at: company_update.sent_at,
     }
 
 
