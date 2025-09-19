@@ -116,6 +116,7 @@ class UserPresenter
       email: user.display_email,
       onboardingPath: worker && worker.role.nil? ? "/documents" : nil,
       taxInformationConfirmedAt: tax_information_confirmed_at&.iso8601,
+      teamMember: user.team_member,
     }
   end
 
