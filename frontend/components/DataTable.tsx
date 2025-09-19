@@ -242,7 +242,7 @@ export default function DataTable<T extends RowData>({
                               )}
                             </div>
                           </DropdownMenuSubTrigger>
-                          <DropdownMenuSubContent>
+                          <DropdownMenuSubContent className="max-w-[200px] sm:max-w-full">
                             <DropdownMenuCheckboxItem
                               checked={!filterValue?.length}
                               onCheckedChange={() => column.setFilterValue(undefined)}

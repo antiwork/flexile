@@ -142,7 +142,7 @@ export const ColumnSettingsToggle = ({
               <DropdownMenuSubTrigger>
                 <span>{categoryLabel}</span>
               </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
+              <DropdownMenuSubContent className="max-w-[200px] sm:max-w-full">
                 {categoryColumns.map((column) => (
                   <DropdownMenuCheckboxItem
                     key={column.id}
