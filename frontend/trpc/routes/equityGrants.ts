@@ -136,7 +136,10 @@ export const equityGrantsRouter = createRouter({
           optionPool: pick(optionPools, "name"),
         })
         .from(equityGrants)
-        .innerJoin(companyInvestors, eq(equityGrants.companyInvestorId, companyInvestors.id))
+        .innerJoin(
+          companyInvestors,
+          and(eq(equityGrants.companyInvestorId, companyInvestors.id), isNull(companyInvestors.endedAt)),
+        )
         .innerJoin(users, eq(companyInvestors.userId, users.id))
         .innerJoin(optionPools, eq(equityGrants.optionPoolId, optionPools.id))
         .leftJoin(equityGrantExercises, eq(equityGrants.activeExerciseId, equityGrantExercises.id))
@@ -201,7 +204,11 @@ export const equityGrantsRouter = createRouter({
       .from(users)
       .leftJoin(
         companyInvestors,
-        and(eq(users.id, companyInvestors.userId), eq(companyInvestors.companyId, ctx.company.id)),
+        and(
+          eq(users.id, companyInvestors.userId),
+          eq(companyInvestors.companyId, ctx.company.id),
+          isNull(companyInvestors.endedAt),
+        ),
       )
       .leftJoin(
         companyContractors,
@@ -324,6 +331,7 @@ export const getUniqueUnvestedEquityGrantForYear = async (
     where: and(
       eq(companyInvestors.companyId, companyContractor.companyId),
       eq(companyInvestors.userId, companyContractor.userId),
+      isNull(companyInvestors.endedAt),
     ),
     columns: { id: true, companyId: true },
   });

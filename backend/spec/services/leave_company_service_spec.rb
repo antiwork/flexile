@@ -73,8 +73,9 @@ RSpec.describe LeaveCompanyService do
         expect(result[:error]).to be_nil
       end
 
-      it "removes the investor role" do
-        expect { service.call }.to change { user.company_investors.count }.by(-1)
+      it "ends the investor relationship" do
+        expect { service.call }.to change { user.company_investors.where(company: company).first&.ended_at }.from(nil)
+        expect(user.company_investors.where(company: company).first.ended_at).to be_present
       end
     end
 
@@ -105,13 +106,16 @@ RSpec.describe LeaveCompanyService do
         expect(result[:error]).to be_nil
       end
 
-      it "removes all user roles" do
-        expect { service.call }.to change { user.company_investors.count }.by(-1)
-          .and change { user.company_lawyers.count }.by(-1)
+      it "ends all user roles" do
+        expect { service.call }.to change { user.company_lawyers.count }.by(-1)
 
         # Worker should have ended_at set instead of being deleted
         worker = user.company_workers.where(company: company).first
         expect(worker.ended_at).to be_present
+
+        # Investor should have ended_at set instead of being deleted
+        investor = user.company_investors.where(company: company).first
+        expect(investor.ended_at).to be_present
       end
     end
 
@@ -177,11 +181,15 @@ RSpec.describe LeaveCompanyService do
       it "rolls back all changes on error" do
         initial_worker_count = user.company_workers.count
         initial_investor_count = user.company_investors.count
+        initial_worker_ended_at = user.company_workers.where(company: company).first&.ended_at
+        initial_investor_ended_at = user.company_investors.where(company: company).first&.ended_at
 
         service.call
 
         expect(user.company_workers.count).to eq initial_worker_count
         expect(user.company_investors.count).to eq initial_investor_count
+        expect(user.company_workers.where(company: company).first&.ended_at).to eq initial_worker_ended_at
+        expect(user.company_investors.where(company: company).first&.ended_at).to eq initial_investor_ended_at
       end
     end
   end

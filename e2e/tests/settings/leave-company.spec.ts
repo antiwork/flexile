@@ -66,7 +66,7 @@ test.describe("Leave company", () => {
     const investor = await db.query.companyInvestors.findFirst({
       where: and(eq(companyInvestors.companyId, company.id), eq(companyInvestors.userId, user.id)),
     });
-    expect(investor).toBeUndefined();
+    expect(investor?.endedAt).toBeTruthy();
   });
 
   test("lawyer can leave successfully", async ({ page }) => {
@@ -126,7 +126,7 @@ test.describe("Leave company", () => {
     });
 
     expect(contractor?.endedAt).toBeTruthy();
-    expect(investor).toBeUndefined();
+    expect(investor?.endedAt).toBeTruthy();
   });
 
   test("user can cancel leaving workspace", async ({ page }) => {
