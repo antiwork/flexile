@@ -43,7 +43,7 @@ test.describe("Company equity settings", () => {
     await expect(enableEquitySwitch).toBeEnabled();
     await enableEquitySwitch.click({ force: true });
 
-    await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "true");
+    await expect(enableEquitySwitch).toBeChecked();
     await expect(page.getByRole("heading", { name: "Equity value" })).toBeVisible();
   });
 
@@ -53,6 +53,7 @@ test.describe("Company equity settings", () => {
       fmvPerShareInUsd: null,
       conversionSharePriceUsd: null,
       equityEnabled: false,
+      optionExercisingEnabled: false,
     });
     const { user: adminUser } = await usersFactory.create();
     await companyAdministratorsFactory.create({
@@ -64,12 +65,21 @@ test.describe("Company equity settings", () => {
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Equity" }).click();
 
+    await expect(page.getByText("Exercise requests")).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Exercise requests" })).toBeDisabled();
+
     // Enable equity toggle
     const enableEquitySwitch = page.getByRole("switch", { name: "Enable equity" });
-    await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "false");
-    await expect(enableEquitySwitch).toBeVisible();
+    await expect(enableEquitySwitch).not.toBeChecked();
     await enableEquitySwitch.click({ force: true });
-    await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "true");
+    await expect(enableEquitySwitch).toBeChecked();
+
+    const enableOptionExercisingSwitch = page.getByRole("switch", { name: "Exercise requests" });
+    await expect(enableOptionExercisingSwitch).not.toBeChecked();
+
+    await enableOptionExercisingSwitch.click({ force: true });
+    await expect(enableOptionExercisingSwitch).toBeChecked();
+    await expect(page.getByRole("switch", { name: "Exercise requests" })).not.toBeDisabled();
 
     // Wait for the form to appear
     await expect(page.getByRole("heading", { name: "Equity value" })).toBeVisible();
@@ -100,6 +110,7 @@ test.describe("Company equity settings", () => {
     });
     expect(dbCompany).toMatchObject({
       equityEnabled: true,
+      optionExercisingEnabled: true,
       sharePriceInUsd: "20",
       fmvPerShareInUsd: "15.123",
       conversionSharePriceUsd: "18.123456789",
@@ -114,5 +125,53 @@ test.describe("Company equity settings", () => {
     await expect(page.getByRole("link", { name: "Equity grants" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Dividends" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Buybacks" })).toBeVisible();
+  });
+
+  test("option exercising toggle behavior", async ({ page }) => {
+    const { company } = await companiesFactory.create({
+      equityEnabled: false,
+      optionExercisingEnabled: false,
+    });
+    const { user: adminUser } = await usersFactory.create();
+    await companyAdministratorsFactory.create({
+      companyId: company.id,
+      userId: adminUser.id,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Equity" }).click();
+
+    await expect(page.getByText("Exercise requests")).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Exercise requests" })).toBeDisabled();
+
+    const enableEquitySwitch = page.getByRole("switch", { name: "Enable equity" });
+    await enableEquitySwitch.click({ force: true });
+    await expect(enableEquitySwitch).toBeChecked();
+
+    const enableOptionExercisingSwitch = page.getByRole("switch", { name: "Exercise requests" });
+    await expect(enableOptionExercisingSwitch).not.toBeChecked();
+
+    await enableOptionExercisingSwitch.click({ force: true });
+    await expect(enableOptionExercisingSwitch).toBeChecked();
+    await expect(page.getByRole("switch", { name: "Exercise requests" })).toBeChecked();
+
+    let dbCompany = await db.query.companies.findFirst({
+      where: eq(companies.id, company.id),
+    });
+    expect(dbCompany?.optionExercisingEnabled).toBe(true);
+
+    await enableOptionExercisingSwitch.click({ force: true });
+    await expect(enableOptionExercisingSwitch).not.toBeChecked();
+    await expect(page.getByRole("switch", { name: "Exercise requests" })).not.toBeChecked();
+
+    dbCompany = await db.query.companies.findFirst({
+      where: eq(companies.id, company.id),
+    });
+    expect(dbCompany?.optionExercisingEnabled).toBe(false);
+
+    await enableEquitySwitch.click({ force: true });
+    await expect(enableEquitySwitch).not.toBeChecked();
+    await expect(page.getByRole("switch", { name: "Exercise requests" })).toBeDisabled();
   });
 });

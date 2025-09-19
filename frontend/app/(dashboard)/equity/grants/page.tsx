@@ -49,7 +49,7 @@ export default function GrantsPage() {
   const exerciseNoticeConfig = useDocumentTemplateQuery("exercise_notice");
   const { data: exerciseData } = useQuery({
     ...exerciseNoticeConfig,
-    enabled: company.flags.includes("option_exercising") && !!user.roles.administrator,
+    enabled: company.optionExercisingEnabled && !!user.roles.administrator,
   });
   const columnHelper = createColumnHelper<EquityGrant>();
   const columns = useMemo(
@@ -101,7 +101,18 @@ export default function GrantsPage() {
         }
       />
 
-      {exerciseData && !exerciseData.text ? (
+      {!company.optionExercisingEnabled ? (
+        <Alert className="mx-4">
+          <Info />
+          <AlertDescription>
+            <span className="font-bold">Option exercises are currently disabled.</span> Investors can't submit new
+            exercise requests.{" "}
+            <Link href="/settings/administrator/equity" className={linkClasses}>
+              Manage in settings
+            </Link>
+          </AlertDescription>
+        </Alert>
+      ) : exerciseData && !exerciseData.text ? (
         <Alert className="mx-4">
           <Info />
           <AlertDescription>

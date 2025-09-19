@@ -62,22 +62,18 @@ export const companiesRouter = createRouter({
           sharePriceInUsd: true,
           fmvPerShareInUsd: true,
           conversionSharePriceUsd: true,
+          equityEnabled: true,
+          optionExercisingEnabled: true,
         })
-        .extend({ logoKey: z.string().optional(), equityEnabled: z.boolean().optional() }),
+        .extend({
+          logoKey: z.string().optional(),
+        }),
     )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-      const { equityEnabled, ...rest } = input;
       await db.transaction(async (tx) => {
-        if (equityEnabled !== undefined) {
-          await tx
-            .update(companies)
-            .set({ ...rest, equityEnabled })
-            .where(eq(companies.id, ctx.company.id));
-        } else {
-          await tx.update(companies).set(rest).where(eq(companies.id, ctx.company.id));
-        }
+        await tx.update(companies).set(input).where(eq(companies.id, ctx.company.id));
 
         if (input.logoKey) {
           await tx.delete(activeStorageAttachments).where(companyLogo(ctx.company.id));
