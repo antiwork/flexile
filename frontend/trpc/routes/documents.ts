@@ -77,7 +77,12 @@ export const documentsRouter = createRouter({
       .select(pick(documents, "text"))
       .from(documents)
       .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
-      .where(and(eq(documents.id, input.id), visibleDocuments(ctx.company.id, ctx.user.id)));
+      .where(
+        and(
+          eq(documents.id, input.id),
+          visibleDocuments(ctx.company.id, ctx.companyAdministrator ? undefined : ctx.user.id),
+        ),
+      );
     if (!document) throw new TRPCError({ code: "NOT_FOUND" });
     return document;
   }),
