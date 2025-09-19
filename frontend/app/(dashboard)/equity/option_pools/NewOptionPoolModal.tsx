@@ -46,7 +46,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
   const [showExercise, setShowExercise] = useState(false);
   const isMobile = useIsMobile();
 
-  const { data: cap } = trpc.capTable.show.useQuery({ companyId: company.id, newSchema: true });
+  const { data: shareClasses } = trpc.shareClasses.list.useQuery({ companyId: company.id });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -108,7 +108,6 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
       }
 
       await trpcUtils.optionPools.list.invalidate();
-      await trpcUtils.capTable.show.invalidate();
       handleClose();
     },
   });
@@ -121,7 +120,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
     onOpenChange(false);
   };
 
-  const shareClassOptions = (cap?.shareClasses ?? []).map((c: { id: unknown; name: string }) => ({
+  const shareClassOptions = (shareClasses ?? []).map((c: { id: unknown; name: string }) => ({
     label: c.name,
     value: String(c.id),
   }));

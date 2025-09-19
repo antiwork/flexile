@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 class CreateOptionPool
-  def initialize(company:, name:, authorized_shares:, share_class:, default_option_expiry_months:,
+  def initialize(company:, name:, authorized_shares:, share_class_id:, default_option_expiry_months:,
                  voluntary_termination_exercise_months:, involuntary_termination_exercise_months:,
                  termination_with_cause_exercise_months:, death_exercise_months:, disability_exercise_months:,
                  retirement_exercise_months:)
     @company = company
     @name = name
     @authorized_shares = authorized_shares
-    @share_class = share_class
+    @share_class_id = share_class_id
     @default_option_expiry_months = default_option_expiry_months
     @voluntary_termination_exercise_months = voluntary_termination_exercise_months
     @involuntary_termination_exercise_months = involuntary_termination_exercise_months
@@ -19,6 +19,7 @@ class CreateOptionPool
   end
 
   def process
+    share_class = company.share_classes.find_by(id: share_class_id)
     return { success: false, error: "Share class must be selected" } if share_class.nil?
 
     option_pool = company.option_pools.build(
@@ -43,7 +44,7 @@ class CreateOptionPool
   end
 
   private
-    attr_reader :company, :name, :authorized_shares, :share_class, :default_option_expiry_months,
+    attr_reader :company, :name, :authorized_shares, :share_class_id, :default_option_expiry_months,
                 :voluntary_termination_exercise_months, :involuntary_termination_exercise_months,
                 :termination_with_cause_exercise_months, :death_exercise_months, :disability_exercise_months,
                 :retirement_exercise_months

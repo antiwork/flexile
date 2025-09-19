@@ -26,7 +26,7 @@ RSpec.describe Internal::Companies::Administrator::OptionPoolsController do
           expect(args[:company]).to eq(company)
           expect(args[:name]).to eq("2025 Equity plan")
           expect(args[:authorized_shares]).to eq("1000000")
-          expect(args[:share_class]).to eq(share_class)
+          expect(args[:share_class_id]).to eq(share_class.id.to_s)
           double(process: { success: true, option_pool: instance_double(OptionPool) })
         end
 
@@ -46,7 +46,7 @@ RSpec.describe Internal::Companies::Administrator::OptionPoolsController do
           },
         }
 
-        expect(response).to have_http_status(:ok)
+        expect(response).to have_http_status(:created)
       end
 
       it "returns error when service fails" do

@@ -4,21 +4,16 @@ class Internal::Companies::Administrator::OptionPoolsController < Internal::Comp
   def create
     authorize OptionPool
 
-    share_class = Current.company.share_classes.find_by(id: params[:option_pool][:share_class_id])
-
     result = CreateOptionPool.new(
       company: Current.company,
-      **option_pool_params.to_h.symbolize_keys.merge(share_class:)
+      **option_pool_params.to_h.symbolize_keys
     ).process
 
     if result[:success]
-      render json: result
+      head :created
     else
       render_error_response(result[:error])
     end
-  rescue ActiveRecord::RecordInvalid => e
-    error = e.record.errors.first
-    render_error_response(error.message, attribute_name: error.attribute)
   end
 
   private
