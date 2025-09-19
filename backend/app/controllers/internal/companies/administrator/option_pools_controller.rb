@@ -21,6 +21,7 @@ class Internal::Companies::Administrator::OptionPoolsController < Internal::Comp
       params.require(:option_pool).permit(
         :name,
         :authorized_shares,
+        :share_class_id,
         :default_option_expiry_months,
         :voluntary_termination_exercise_months,
         :involuntary_termination_exercise_months,
