@@ -42,12 +42,19 @@ class ApplicationController < ActionController::Base
     end
 
     def set_csrf_cookie
-      cookies["X-CSRF-Token"] = {
+      cookie_options = {
         value: form_authenticity_token,
-        secure: true,
-        same_site: :strict,
-        domain: DOMAIN,
       }
+
+      if Rails.env.production?
+        cookie_options.merge!(
+          same_site: :strict,
+          secure: true,
+          domain: DOMAIN
+        )
+      end
+
+      cookies["X-CSRF-Token"] = cookie_options
     end
 
     def user_for_paper_trail
