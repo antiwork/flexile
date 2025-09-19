@@ -9,9 +9,7 @@ export default function middleware(req: NextRequest) {
   const s3Urls = [env.S3_PRIVATE_BUCKET, env.S3_PUBLIC_BUCKET]
     .map((bucket) => `https://${bucket}.s3.${env.AWS_REGION}.amazonaws.com https://${bucket}.s3.amazonaws.com`)
     .join(" ");
-  const helperUrls = ["https://help.flexile.com", "wss://xmrztjqxvugqpgvxpmzz.supabase.co/realtime/v1/websocket"].join(
-    " ",
-  );
+  const helperUrls = env.HELPER_URLS.join(" ");
 
   const cspHeader = `
     default-src 'self';
