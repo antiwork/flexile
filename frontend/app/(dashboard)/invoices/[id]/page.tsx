@@ -441,7 +441,7 @@ export default function InvoicePage() {
 
               {invoice.lineItems.length > 0 ? (
                 <div className="w-full overflow-x-auto">
-                  <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full print:my-3 print:w-full print:border-collapse print:text-xs">
+                  <Table className="w-full min-w-fit print:my-3 print:w-full print:border-collapse print:text-xs">
                     <TableHeader>
                       <TableRow className="print:border-b print:border-gray-300">
                         <PrintTableHeader className="w-[50%] md:w-[60%] print:text-left">
