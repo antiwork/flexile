@@ -1,10 +1,9 @@
 "use client";
-
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleDollarSign, Download, Info, Plus } from "lucide-react";
+import { CircleDollarSign, Download, Info, Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
 import { z } from "zod";
@@ -66,7 +65,12 @@ export default function Billing() {
   const company = useCurrentCompany();
   const requiresCompanyName = !company.name || company.name.trim().length === 0;
   const [addingBankAccount, setAddingBankAccount] = useState(false);
-  const { data: stripeData } = useQuery({
+  const {
+    data: stripeData,
+    isLoading: isStripeDataLoading,
+    refetch: refetchStripeData,
+    error: stripeDataError,
+  } = useQuery({
     queryKey: ["administratorBankAccount", company.id],
     queryFn: async () => {
       const response = await request({
@@ -105,7 +109,7 @@ export default function Billing() {
         </p>
       </hgroup>
 
-      {stripeData !== undefined ? (
+      {stripeData !== undefined && !stripeDataError ? (
         // Re-render Stripe Elements provider when data changes as it considers its options immutable
         <>
           {stripeData.bank_account_last4 ? (
@@ -136,8 +140,16 @@ export default function Billing() {
             <AddBankAccount open={addingBankAccount} onOpenChange={setAddingBankAccount} />
           </Elements>
         </>
-      ) : (
+      ) : isStripeDataLoading ? (
         <BankAccountCardSkeleton />
+      ) : (
+        <Placeholder icon={CircleDollarSign}>
+          <p>Unable to load payment method information.</p>
+          <Button variant="outline" onClick={() => void refetchStripeData()}>
+            <RefreshCw />
+            Try again
+          </Button>
+        </Placeholder>
       )}
       <StripeMicrodepositVerification />
       <h3 className="mt-4 text-base font-medium">Billing history</h3>
