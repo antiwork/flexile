@@ -1,8 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import { createInsertSchema } from "drizzle-zod";
+import { truncate } from "lodash-es";
 import { z } from "zod";
 import { companyUpdates } from "@/db/schema";
-import { companyProcedure, createRouter } from "@/trpc";
+import { companyProcedure, createRouter, renderTiptapToText } from "@/trpc";
 import { isActive } from "@/trpc/routes/contractors";
 import {
   company_company_update_url,
@@ -102,7 +103,7 @@ export const companyUpdatesRouter = createRouter({
       id: result.id,
       title: result.title,
       senderName: result.sender_name,
-      body: result.body,
+      body: truncate(renderTiptapToText(result.body), { length: 300 }),
       status: result.status,
       sentAt: result.sent_at,
     };
