@@ -121,7 +121,7 @@ export const GettingStarted = () => {
               </div>
             </div>
           ) : (
-            <div className="bg-card border-muted mt-2 rounded-lg border px-1 pb-4 shadow-sm">
+            <div className="bg-popover border-muted mt-2 rounded-lg border px-1 pb-4 shadow-sm">
               <CollapsibleTrigger asChild>
                 <div className="mx-3 flex h-11 cursor-pointer items-center justify-between">
                   <span className="font-medium">Getting started</span>

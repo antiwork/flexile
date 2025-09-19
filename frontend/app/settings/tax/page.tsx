@@ -404,7 +404,7 @@ export default function TaxPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="focus-visible:ring-ring focus-visible:border-border rounded-l-none outline-none focus-visible:ring-2"
+                        className="focus-visible:ring-ring focus-visible:border-border border-input rounded-l-none outline-none focus-visible:ring-2"
                         onPointerDown={() => setMaskTaxId(false)}
                         onPointerUp={() => setMaskTaxId(true)}
                         onPointerLeave={() => setMaskTaxId(true)}
@@ -512,7 +512,7 @@ export default function TaxPage() {
             </MutationStatusButton>
 
             {user.roles.worker && data.contractor_for_companies.length > 0 ? (
-              <div className="flex items-center text-sm">
+              <div className="text-muted-foreground flex items-center text-sm">
                 Changes to your tax information may trigger{" "}
                 {data.contractor_for_companies.length === 1 ? "a new contract" : "new contracts"} with{" "}
                 {data.contractor_for_companies.join(", ")}.

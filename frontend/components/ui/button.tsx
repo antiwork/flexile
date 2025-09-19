@@ -4,11 +4,11 @@ import * as React from "react";
 import { cn } from "@/utils/index";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center px-3 border rounded-md gap-1.5 whitespace-nowrap cursor-pointer disabled:opacity-50 [&[inert]]:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed",
+  "inline-flex items-center justify-center px-3 border rounded-md gap-1.5 whitespace-nowrap cursor-pointer disabled:opacity-50 [&[inert]]:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed [&:has(svg)]:pl-2",
   {
     variants: {
       variant: {
-        default: "bg-black text-white border-black hover:bg-gray-800 hover:border-gray-800",
+        default: "bg-foreground text-background border-foreground hover:bg-foreground/90 hover:border-foreground/90",
         primary: "bg-blue-600 text-white border-blue-600 hover:bg-blue-500 hover:border-blue-500",
         critical: "bg-red text-white border-red hover:bg-red-700 hover:border-red-700",
         success: "bg-green text-white border-green",
