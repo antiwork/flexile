@@ -13,6 +13,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await page.goto(`/invite/${company.inviteLink}`);
 
     const email = faker.internet.email().toLowerCase();
+    await expect(page.getByLabel("Work email")).toBeVisible();
     await page.getByLabel("Work email").fill(email);
     await page.getByRole("button", { name: "Sign up", exact: true }).click();
     await fillOtp(page);
