@@ -2044,6 +2044,34 @@ export const people_new_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/company_updates/:id/publish(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const publish_company_company_update_url: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/company_updates/:id/publish(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const publish_company_company_update_path: ((
+  company_id: RequiredRouteParameter,
+  id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /admin/consolidated_payments/:id/refund(.:format)
  * @param {any} id
  * @param {object | undefined} options
