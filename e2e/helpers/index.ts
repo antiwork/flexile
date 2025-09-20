@@ -1,12 +1,12 @@
 import type { Locator, Page } from "@playwright/test";
 import { format, isAfter, isSameMonth, parse } from "date-fns";
 
-export const selectComboboxOption = async (page: Page, name: string, option: string) => {
+export const selectComboboxOption = async (page: Locator | Page, name: string, option: string) => {
   await page.getByRole("combobox", { name }).click();
   await page.getByRole("option", { name: option, exact: true }).first().click();
 };
 
-export const fillDatePicker = async (page: Page, name: string, value: string) => {
+export const fillDatePicker = async (page: Locator | Page, name: string, value: string) => {
   // Default date picker
   const spinButton = page.getByRole("spinbutton", { name: "Date" }).first();
 
