@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Internal::Companies::Administrator::CapTablesController do
+RSpec.describe Internal::Companies::Administrator::CapTableController do
   let(:company) { create(:company, equity_enabled: true, share_price_in_usd: 10.0, fully_diluted_shares: 0) }
   let(:user) { create(:user) }
   let(:company_administrator) { create(:company_administrator, company: company, user: user) }
