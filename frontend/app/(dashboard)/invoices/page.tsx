@@ -771,7 +771,10 @@ const InvoiceBulkActionsBar = ({
 
   return (
     <Dialog open={selectedInvoices.length > 0} modal={false}>
-      <DialogContent className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0">
+      <DialogContent
+        showCloseButton={false}
+        className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0"
+      >
         <DialogHeader className="sr-only">
           <DialogTitle>Selected invoices</DialogTitle>
         </DialogHeader>
