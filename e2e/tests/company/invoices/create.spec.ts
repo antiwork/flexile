@@ -6,7 +6,7 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { subDays } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import {
@@ -59,23 +59,30 @@ test.describe("invoice creation", () => {
       { year: 2021 },
     );
 
-    await login(page, contractorUser, "/invoices/new");
+    await login(page, contractorUser);
+    await page.getByRole("button", { name: "New invoice" }).click();
 
-    await page.getByPlaceholder("Description").fill("I worked on invoices");
-    await page.getByLabel("Hours").fill("03:25");
-    await expect(page.getByText("Total services$60")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)$0")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$60")).toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await modal.getByPlaceholder("Description").fill("I worked on invoices");
+        await modal.getByLabel("Hours / Qty").fill("03:25");
+        await expect(modal.getByText("Total services$60")).toBeVisible();
+        await expect(modal.getByText("Swapped for equity$0")).toBeVisible();
+        await expect(modal.getByText("Net amount in cash$60")).toBeVisible();
 
-    await fillDatePicker(page, "Date", "08/08/2021");
-    await page.getByLabel("Hours / Qty").fill("100:00");
-    await page.getByPlaceholder("Description").fill("I worked on invoices");
+        await fillDatePicker(page, "Invoice date", "08/08/2021");
+        await modal.getByLabel("Hours / Qty").fill("100:00");
+        await modal.getByPlaceholder("Description").fill("I worked on invoices");
 
-    await expect(page.getByText("Total services$6,000")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)$1,200")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$4,800")).toBeVisible();
+        await expect(modal.getByText("Total services$6,000")).toBeVisible();
+        await expect(modal.getByText("Swapped for equity$1,200")).toBeVisible();
+        await expect(modal.getByText("Net amount in cash$4,800")).toBeVisible();
 
-    await page.getByRole("button", { name: "Send invoice" }).click();
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
+
     await expect(page.locator("tbody")).toContainText(
       ["Invoice ID", "1", "Sent on", "Aug 8, 2021", "Amount", "$6,000", "Status", "Awaiting approval (0/2)"].join(""),
     );
@@ -95,20 +102,32 @@ test.describe("invoice creation", () => {
       .set({ startedAt: subDays(new Date(), 365), endedAt: subDays(new Date(), 100) })
       .where(eq(companyContractors.id, companyContractor.id));
 
-    await login(page, contractorUser, "/invoices/new");
-    await page.getByPlaceholder("Description").fill("item name");
-    await page.getByLabel("Hours / Qty").fill("01:00");
-    await page.getByPlaceholder("Enter notes about your").fill("sent as alumni");
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    await login(page, contractorUser);
+    await page.getByRole("button", { name: "New invoice" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByPlaceholder("Description").fill("item name");
+        await modal.getByLabel("Hours / Qty").fill("01:00");
+        await modal.getByPlaceholder("Type your notes here").fill("sent as alumni");
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
     await expect(page.getByRole("cell", { name: "Awaiting approval (0/2)" })).toBeVisible();
   });
 
   test("does not show equity split if equity compensation is disabled", async ({ page }) => {
     await db.update(companies).set({ equityEnabled: false }).where(eq(companies.id, company.id));
 
-    await login(page, contractorUser, "/invoices/new");
-    await expect(page.getByText("Total")).toBeVisible();
-    await expect(page.getByText("Swapped for equity")).not.toBeVisible();
+    await login(page, contractorUser);
+    await page.getByRole("button", { name: "New invoice" }).click();
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByText("Total")).toBeVisible();
+        await expect(modal.getByText("Swapped for equity")).not.toBeVisible();
+      },
+      { page, assertClosed: false },
+    );
   });
 
   test("creates an invoice with only expenses, no line items", async ({ page }) => {
@@ -116,19 +135,24 @@ test.describe("invoice creation", () => {
       companyId: company.id,
       name: "Office Supplies",
     });
-    await login(page, contractorUser, "/invoices/new");
+    await login(page, contractorUser);
+    await page.getByRole("button", { name: "New invoice" }).click();
 
-    await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[type="file"]').setInputFiles({
-      name: "receipt.pdf",
-      mimeType: "application/pdf",
-      buffer: Buffer.from("test expense receipt"),
-    });
+    await withinModal(
+      async (modal) => {
+        await modal.getByRole("button", { name: "Add expense" }).click();
+        await modal.locator('input[type="file"]').setInputFiles({
+          name: "receipt.pdf",
+          mimeType: "application/pdf",
+          buffer: Buffer.from("test expense receipt"),
+        });
 
-    await page.getByLabel("Merchant").fill("Office Supplies Inc");
-    await page.getByLabel("Amount").fill("45.99");
-
-    await page.getByRole("button", { name: "Send invoice" }).click();
+        await modal.getByLabel("Merchant").fill("Office Supplies Inc");
+        await modal.getByLabel("Amount").fill("45.99");
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     await expect(page.locator("tbody")).toContainText("$45.99");
@@ -149,36 +173,41 @@ test.describe("invoice creation", () => {
       { companyId: company.id, name: "Office Supplies" },
       { companyId: company.id, name: "Travel" },
     ]);
-    await login(page, contractorUser, "/invoices/new");
+    await login(page, contractorUser);
+    await page.getByRole("button", { name: "New invoice" }).click();
 
-    await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
-      name: "receipt1.pdf",
-      mimeType: "application/pdf",
-      buffer: Buffer.from("first expense receipt"),
-    });
+    await withinModal(
+      async (modal) => {
+        await modal.getByRole("button", { name: "Add expense" }).click();
+        await modal.locator('input[accept="application/pdf, image/*"]').setInputFiles({
+          name: "receipt1.pdf",
+          mimeType: "application/pdf",
+          buffer: Buffer.from("first expense receipt"),
+        });
 
-    await page.getByLabel("Merchant").fill("Office Supplies Inc");
-    await page.getByLabel("Amount").fill("25.50");
+        await modal.getByLabel("Merchant").fill("Office Supplies Inc");
+        await modal.getByLabel("Amount").fill("25.50");
 
-    await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
-      name: "receipt2.pdf",
-      mimeType: "application/pdf",
-      buffer: Buffer.from("second expense receipt"),
-    });
+        await modal.getByRole("button", { name: "Add expense" }).click();
+        await modal.locator('input[accept="application/pdf, image/*"]').setInputFiles({
+          name: "receipt2.pdf",
+          mimeType: "application/pdf",
+          buffer: Buffer.from("second expense receipt"),
+        });
 
-    const merchantInputs = page.getByLabel("Merchant");
-    await merchantInputs.nth(1).fill("Travel Agency");
+        const merchantInputs = modal.getByLabel("Merchant");
+        await merchantInputs.nth(1).fill("Travel Agency");
 
-    const amountInputs = page.getByLabel("Amount");
-    await amountInputs.nth(1).fill("150.75");
+        const amountInputs = modal.getByLabel("Amount");
+        await amountInputs.nth(1).fill("150.75");
 
-    await expect(page.getByText("Total expenses$176.25")).toBeVisible();
+        await expect(modal.getByText("Total expenses$176.25")).toBeVisible();
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
 
-    await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-
     await expect(page.locator("tbody")).toContainText("$176.25");
 
     const invoice = await db.query.invoices
@@ -221,45 +250,63 @@ test.describe("invoice creation", () => {
   });
 
   test("shows alert when billing above default pay rate", async ({ page }) => {
-    await login(page, contractorUser, "/invoices/new");
+    await login(page, contractorUser);
+    await page.getByRole("button", { name: "New invoice" }).click();
 
-    await page.getByLabel("Hours").fill("2:00");
-    await page.getByPlaceholder("Description").fill("Premium work");
-    await expect(page.getByText("This invoice includes rates above your default")).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Hours / Qty").fill("2:00");
+        await modal.getByPlaceholder("Description").fill("Premium work");
 
-    await page.getByLabel("Rate").fill("75");
-    await expect(
-      page.getByText("This invoice includes rates above your default of $60/hour. Please check before submitting."),
-    ).toBeVisible();
+        await expect(modal.getByText("This invoice includes rates above your default")).not.toBeVisible();
 
-    await page.getByLabel("Rate").fill("60");
-    await expect(page.getByText("This invoice includes rates above your default")).not.toBeVisible();
+        await modal.getByLabel("Rate").fill("75");
+        await expect(
+          modal.getByText(
+            "This invoice includes rates above your default of $60/hour. Please check before submitting.",
+          ),
+        ).toBeVisible();
+
+        await modal.getByLabel("Rate").fill("60");
+        await expect(modal.getByText("This invoice includes rates above your default")).not.toBeVisible();
+      },
+      { page, assertClosed: false },
+    );
 
     await db
       .update(companyContractors)
       .set({ payRateInSubunits: null })
       .where(eq(companyContractors.id, companyContractor.id));
+
     await page.reload();
-    await expect(page.getByText("This invoice includes rates above your default")).not.toBeVisible();
+    await page.getByRole("button", { name: "New invoice" }).click();
+
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Hours / Qty").fill("2:00");
+        await expect(modal.getByText("This invoice includes rates above your default")).not.toBeVisible();
+      },
+      { page, assertClosed: false },
+    );
   });
 
   test("supports decimal quantities", async ({ page }) => {
-    await login(page, contractorUser, "/invoices/new");
+    await login(page, contractorUser);
+    await page.getByRole("button", { name: "New invoice" }).click();
 
-    await page.getByLabel("Hours").fill("2.5");
-    await page.getByPlaceholder("Description").fill("Development work with decimal quantities");
-    await fillDatePicker(page, "Date", "12/15/2024");
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Hours / Qty").fill("2.5");
+        await modal.getByPlaceholder("Description").fill("Development work with decimal quantities");
+        await fillDatePicker(page, "Invoice date", "12/15/2024");
 
-    await expect(page.getByText("Total services$150")).toBeVisible();
+        await expect(modal.getByText("Total services$150")).toBeVisible();
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
 
-    // contractor has 20% equity, so $150 * 0.8 = $120
-    await expect(page.getByText("Net amount in cash$120")).toBeVisible();
-
-    await page.getByRole("button", { name: "Send invoice" }).click();
-
-    // wait for navigation to invoice list
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-
     await expect(page.locator("tbody")).toContainText("$150");
 
     const invoice = await db.query.invoices

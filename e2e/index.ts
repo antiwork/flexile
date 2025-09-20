@@ -58,7 +58,12 @@ export const withinModal = async (
   callback: (modal: Locator) => Promise<void>,
   { page, title, assertClosed = true }: { page: Page; title?: string | RegExp; assertClosed?: boolean },
 ) => {
-  const modal = title ? page.getByRole("dialog", { name: title }) : page.getByRole("dialog");
+  const element = page.getByRole("dialog").filter({
+    has: page.locator('[id^="radix-"]'),
+  });
+
+  const modal = title ? element.filter({ hasText: title }) : element;
+
   await expect(modal).toBeVisible();
   await callback(modal);
   if (assertClosed) await expect(modal).not.toBeVisible();

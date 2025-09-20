@@ -39,9 +39,11 @@ import {
   LegacyAddress,
   RejectModal,
   taxRequirementsMet,
+  useCanSubmitInvoices,
   useIsActionable,
   useIsDeletable,
 } from "..";
+import InvoiceModal from "../InvoiceModal";
 
 const getInvoiceStatusText = (
   invoice: { status: string; approvals: unknown[]; paidAt?: string | Date | null },
@@ -111,9 +113,11 @@ export default function InvoicePage() {
   const payRateInSubunits = invoice.contractor.payRateInSubunits;
   const complianceInfo = invoice.contractor.user.complianceInfo;
   const [expenseCategories] = trpc.expenseCategories.list.useSuspenseQuery({ companyId: company.id });
+  const { canSubmitInvoices } = useCanSubmitInvoices();
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const router = useRouter();
   const isActionable = useIsActionable();
   const isDeletable = useIsDeletable();
@@ -202,7 +206,7 @@ export default function InvoicePage() {
                   </DropdownMenuItem>
                 ) : null}
 
-                {user.id === invoice.userId && (
+                {user.id === invoice.userId && canSubmitInvoices ? (
                   <>
                     {EDITABLE_INVOICE_STATES.includes(invoice.status) && (
                       <DropdownMenuItem asChild>
@@ -239,7 +243,7 @@ export default function InvoicePage() {
                       </DropdownMenuItem>
                     )}
                   </>
-                )}
+                ) : null}
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
@@ -262,18 +266,16 @@ export default function InvoicePage() {
                   />
                 </>
               ) : null}
-              {user.id === invoice.userId ? (
+              {user.id === invoice.userId && canSubmitInvoices ? (
                 <>
                   {invoice.requiresAcceptanceByPayee ? (
                     <Button size="small" onClick={() => setAcceptPaymentModalOpen(true)}>
                       Accept payment
                     </Button>
                   ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                    <Button variant="default" size="small" asChild>
-                      <Link href={`/invoices/${invoice.id}/edit`}>
-                        <SquarePen className="size-4" />
-                        Edit invoice
-                      </Link>
+                    <Button variant="default" size="small" onClick={() => setEditModalOpen(true)}>
+                      <SquarePen className="size-4" />
+                      Edit invoice
                     </Button>
                   ) : null}
 
@@ -592,6 +594,10 @@ export default function InvoicePage() {
         onDelete={() => router.push(`/invoices`)}
         invoices={[invoice]}
       />
+
+      {user.id === invoice.userId && canSubmitInvoices && EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+        <InvoiceModal open={editModalOpen} onOpenChange={setEditModalOpen} invoiceId={invoice.id} />
+      ) : null}
     </div>
   );
 }

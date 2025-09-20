@@ -1,8 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import {
   AlertTriangle,
@@ -22,8 +19,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import {
   ApproveButton,
   DeleteModal,
@@ -34,16 +29,15 @@ import {
   useIsDeletable,
   useIsPayable,
 } from "@/app/(dashboard)/invoices/index";
+import InvoiceModal from "@/app/(dashboard)/invoices/InvoiceModal";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
 import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import DatePicker from "@/components/DatePicker";
 import { linkClasses } from "@/components/Link";
-import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
-import NumberInput from "@/components/NumberInput";
+import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -56,17 +50,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { request } from "@/utils/request";
-import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
+import { export_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
-import QuantityInput from "./QuantityInput";
 import { useCanSubmitInvoices } from ".";
 
 const statusNames = {
@@ -110,8 +101,9 @@ export default function InvoicesPage() {
   const isMobile = useIsMobile();
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
+  const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | "create" | "edit" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
+  const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const isDeletable = useIsDeletable();
@@ -141,7 +133,7 @@ export default function InvoicesPage() {
           contexts: ["single"],
           permissions: ["worker"],
           conditions: (invoice: Invoice, _context: ActionContext) => EDITABLE_INVOICE_STATES.includes(invoice.status),
-          href: (invoice: Invoice) => `/invoices/${invoice.id}/edit`,
+          action: "edit",
           group: "navigation",
           showIn: ["selection", "contextMenu"],
         },
@@ -352,6 +344,12 @@ export default function InvoicesPage() {
     const singleInvoice = invoices[0];
 
     switch (actionId) {
+      case "edit":
+        if (isSingleAction && singleInvoice) {
+          setEditInvoice(singleInvoice);
+          setOpenModal("edit");
+        }
+        break;
       case "approve":
         if (isSingleAction && singleInvoice) {
           setDetailInvoice(singleInvoice);
@@ -414,10 +412,17 @@ export default function InvoicesPage() {
   return (
     <>
       {isMobile && user.roles.worker ? (
-        <Button variant="floating-action" {...(!canSubmitInvoices ? { disabled: true } : { asChild: true })}>
-          <Link href="/invoices/new" inert={!canSubmitInvoices}>
-            <Plus />
-          </Link>
+        <Button
+          variant="floating-action"
+          disabled={!canSubmitInvoices}
+          onClick={() => {
+            if (canSubmitInvoices) {
+              setEditInvoice(null);
+              setOpenModal("create");
+            }
+          }}
+        >
+          <Plus />
         </Button>
       ) : null}
       <DashboardHeader
@@ -450,11 +455,19 @@ export default function InvoicesPage() {
               </div>
             ) : null
           ) : user.roles.worker ? (
-            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
-              <Link href="/invoices/new" inert={!canSubmitInvoices}>
-                <Plus className="size-4" />
-                New invoice
-              </Link>
+            <Button
+              variant="outline"
+              size="small"
+              disabled={!canSubmitInvoices}
+              onClick={() => {
+                if (canSubmitInvoices) {
+                  setEditInvoice(null);
+                  setOpenModal("create");
+                }
+              }}
+            >
+              <Plus className="size-4" />
+              New invoice
             </Button>
           ) : null
         }
@@ -528,8 +541,6 @@ export default function InvoicesPage() {
           ) : null}
         </>
       ) : null}
-
-      <QuickInvoicesSection />
 
       {isLoading ? (
         <TableSkeleton columns={6} />
@@ -657,6 +668,10 @@ export default function InvoicesPage() {
           onAction={handleInvoiceAction}
         />
       ) : null}
+
+      {openModal === "create" || openModal === "edit" ? (
+        <InvoiceModal open invoiceId={editInvoice?.id ?? null} onOpenChange={() => setOpenModal(null)} />
+      ) : null}
     </>
   );
 }
@@ -771,11 +786,8 @@ const InvoiceBulkActionsBar = ({
 
   return (
     <Dialog open={selectedInvoices.length > 0} modal={false}>
-      <DialogContent
-        showCloseButton={false}
-        className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0"
-      >
-        <DialogHeader className="sr-only">
+      <DialogContent className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0">
+        <DialogHeader className="sr-only" showCloseButton={false}>
           <DialogTitle>Selected invoices</DialogTitle>
         </DialogHeader>
         <div className="flex gap-2 p-2">
@@ -819,176 +831,5 @@ const InvoiceBulkActionsBar = ({
         </div>
       </DialogContent>
     </Dialog>
-  );
-};
-
-const quickInvoiceSchema = z.object({
-  rate: z.number().min(0.01),
-  quantity: z.object({ quantity: z.number().min(0.01), hourly: z.boolean() }),
-  date: z.instanceof(CalendarDate, { message: "This field is required." }),
-});
-
-const QuickInvoicesSection = () => {
-  const user = useCurrentUser();
-
-  // Early bail-out BEFORE any additional hooks that might change between renders.
-  if (!user.roles.worker) return null;
-
-  return <QuickInvoicesSectionContent />;
-};
-
-// Separated component that contains all hooks related to the worker view. This
-// avoids violating the Rules of Hooks when the parent conditionally renders.
-const QuickInvoicesSectionContent = () => {
-  const user = useCurrentUser();
-  const company = useCurrentCompany();
-  const trpcUtils = trpc.useUtils();
-  const queryClient = useQueryClient();
-
-  const payRateInSubunits = user.roles.worker?.payRateInSubunits ?? 0;
-  const isHourly = user.roles.worker?.payRateType === "hourly";
-
-  const { canSubmitInvoices } = useCanSubmitInvoices();
-  const form = useForm({
-    resolver: zodResolver(quickInvoiceSchema),
-    defaultValues: {
-      rate: payRateInSubunits ? payRateInSubunits / 100 : 0,
-      quantity: { quantity: isHourly ? 60 : 1, hourly: isHourly },
-      date: today(getLocalTimeZone()),
-    },
-    disabled: !canSubmitInvoices,
-  });
-
-  const date = form.watch("date");
-  const quantity = form.watch("quantity").quantity;
-  const hourly = form.watch("quantity").hourly;
-  const rate = form.watch("rate") * 100;
-  const totalAmountInCents = Math.ceil((quantity / (hourly ? 60 : 1)) * rate);
-
-  const newCompanyInvoiceRoute = () => {
-    const params = new URLSearchParams({
-      date: date.toString(),
-      rate: rate.toString(),
-      quantity: quantity.toString(),
-      hourly: hourly.toString(),
-    });
-    return `/invoices/new?${params.toString()}` as const;
-  };
-
-  const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery({
-    companyId: company.id,
-    invoiceYear: date.year,
-    servicesInCents: totalAmountInCents,
-  });
-  const equityAmountCents = equityCalculation?.equityCents ?? 0;
-  const cashAmountCents = totalAmountInCents - equityAmountCents;
-
-  const submit = useMutation({
-    mutationFn: async () => {
-      await request({
-        method: "POST",
-        url: company_invoices_path(company.id),
-        assertOk: true,
-        accept: "json",
-        jsonData: {
-          invoice: { invoice_date: date.toString() },
-          invoice_line_items: [{ description: "-", pay_rate_in_subunits: rate, quantity, hourly }],
-        },
-      });
-
-      form.reset();
-      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      await trpcUtils.invoices.list.invalidate();
-    },
-  });
-
-  const handleSubmit = form.handleSubmit(() => submit.mutate());
-
-  return (
-    <div className="mx-4">
-      <Card className={canSubmitInvoices ? "" : "opacity-50"}>
-        <CardContent>
-          <Form {...form}>
-            <form
-              className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[1fr_auto_1fr]"
-              onSubmit={(e) => void handleSubmit(e)}
-            >
-              <div className="grid gap-6">
-                <FormField
-                  control={form.control}
-                  name="rate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rate</FormLabel>
-                      <FormControl>
-                        <NumberInput {...field} min={0.01} step={0.01} prefix="$" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="quantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Hours / Qty</FormLabel>
-                      <FormControl>
-                        <QuantityInput {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <DatePicker {...field} label="Invoice date" granularity="day" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <Separator orientation="horizontal" className="block w-full lg:hidden" />
-              <Separator orientation="vertical" className="hidden lg:block" />
-
-              <div className="grid gap-2">
-                <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
-                  <span className="text-sm text-gray-500">Total amount</span>
-                  <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
-                  {company.equityEnabled ? (
-                    <div className="mt-1 text-sm text-gray-500">
-                      ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
-                      <Link href="/settings/payouts" className={linkClasses}>
-                        {formatMoneyFromCents(equityAmountCents)} equity
-                      </Link>
-                      )
-                    </div>
-                  ) : null}
-                </div>
-                <div className="flex flex-wrap items-center justify-end gap-3">
-                  <Button variant="outline" className="grow sm:grow-0" asChild disabled={!canSubmitInvoices}>
-                    <Link inert={!canSubmitInvoices} href={newCompanyInvoiceRoute()}>
-                      Add more info
-                    </Link>
-                  </Button>
-                  <MutationStatusButton
-                    disabled={!canSubmitInvoices || totalAmountInCents <= 0}
-                    className="grow sm:grow-0"
-                    mutation={submit}
-                    type="submit"
-                    loadingText="Sending..."
-                  >
-                    Send for approval
-                  </MutationStatusButton>
-                </div>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
   );
 };
