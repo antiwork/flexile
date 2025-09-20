@@ -70,6 +70,7 @@ scope path: :internal, module: :internal do
         get :microdeposit_verification_details
       end
     end
+    resources :expense_categories, only: [:index]
     resources :roles, only: [:index, :create, :update, :destroy]
 
     resource :invite_link, only: [:show] do
