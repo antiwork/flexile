@@ -43,9 +43,9 @@ export const companyUpdatesRouter = createRouter({
           z.object({
             id: z.string(),
             title: z.string(),
+            body: z.string(),
             sent_at: z.string().nullable().optional(),
             status: z.string().optional(),
-            summary: z.string(),
           }),
         ),
         pagy: z
@@ -62,6 +62,7 @@ export const companyUpdatesRouter = createRouter({
       ...result,
       updates: result.updates.map((update) => ({
         ...update,
+        summary: truncate(renderTiptapToText(update.body), { length: 300 }),
         sentAt: update.sent_at,
       })),
     };
@@ -103,7 +104,7 @@ export const companyUpdatesRouter = createRouter({
       id: result.id,
       title: result.title,
       senderName: result.sender_name,
-      body: truncate(renderTiptapToText(result.body), { length: 300 }),
+      body: result.body,
       status: result.status,
       sentAt: result.sent_at,
     };
