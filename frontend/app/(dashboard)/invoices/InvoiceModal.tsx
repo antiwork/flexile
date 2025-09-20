@@ -5,7 +5,7 @@ import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
-import { CircleAlert, SendHorizonalIcon } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
@@ -517,7 +517,6 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
             className="h-full"
           />
           <Button variant="primary" onClick={handleSubmit} disabled={submit.isPending}>
-            <SendHorizonalIcon className="size-4" />
             {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit" : "Send"}
           </Button>
         </DialogFooter>
