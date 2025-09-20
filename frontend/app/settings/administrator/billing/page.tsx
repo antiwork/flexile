@@ -4,12 +4,13 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleDollarSign, Download, Plus } from "lucide-react";
+import { CircleDollarSign, Download, Info, Plus } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
 import { z } from "zod";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
+import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
 import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
@@ -63,6 +64,7 @@ const stripeAppearance = {
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing() {
   const company = useCurrentCompany();
+  const requiresCompanyName = !company.name || company.name.trim().length === 0;
   const [addingBankAccount, setAddingBankAccount] = useState(false);
   const { data: stripeData } = useQuery({
     queryKey: ["administratorBankAccount", company.id],
@@ -83,6 +85,18 @@ export default function Billing() {
   return (
     <div className="mb-24 grid gap-4">
       <h2 className="mb-8 text-3xl font-bold">Billing</h2>
+      {requiresCompanyName ? (
+        <Alert>
+          <Info className="my-auto size-4" />
+          <AlertDescription>
+            Please{" "}
+            <Link href="/settings/administrator/details" className={linkClasses}>
+              provide your company details
+            </Link>{" "}
+            before linking a bank account.
+          </AlertDescription>
+        </Alert>
+      ) : null}
       <hgroup>
         <h3 className="mb-1 text-base font-medium">Payout method</h3>
         <p className="text-muted-foreground text-sm">
@@ -109,7 +123,7 @@ export default function Billing() {
           ) : (
             <Placeholder icon={CircleDollarSign}>
               <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-              <Button onClick={() => setAddingBankAccount(true)} size="small">
+              <Button onClick={() => setAddingBankAccount(true)} size="small" disabled={requiresCompanyName}>
                 <Plus className="size-4" />
                 Link your bank account
               </Button>
