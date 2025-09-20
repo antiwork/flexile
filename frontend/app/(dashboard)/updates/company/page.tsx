@@ -165,8 +165,8 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
 
           return (
             <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 w-4 items-center justify-center">
-                <Status variant={update.sentAt ? "success" : undefined} />
+              <div className="flex h-5 items-center justify-center">
+                <Status variant={update.sentAt ? "success" : undefined}>{update.sentAt ? "Sent" : "Draft"}</Status>
               </div>
               <div className="text-gray-600">{update.sentAt ? formatDate(update.sentAt) : "-"}</div>
             </div>
