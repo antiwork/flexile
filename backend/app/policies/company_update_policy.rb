@@ -38,4 +38,8 @@ class CompanyUpdatePolicy < ApplicationPolicy
   def send_test_email?
     company.company_investors.exists? && company_administrator.present?
   end
+
+  def publish?
+    company.company_investors.exists? && company_administrator.present?
+  end
 end
