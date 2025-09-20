@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Internal::Companies::Administrator::CapTablesController < Internal::Companies::BaseController
+class Internal::Companies::Administrator::CapTableController < Internal::Companies::BaseController
   def create
     authorize :cap_table
 
