@@ -124,7 +124,7 @@ test.describe("Invoices admin flow", () => {
       await page.getByRole("link", { name: "Invoices" }).click();
       await expect(page.getByLabel("Hours / Qty")).toBeVisible();
       await expect(page.getByText("Total amount$60")).toBeVisible();
-      await expect(page.locator("header").getByRole("link", { name: "New invoice" })).toBeVisible();
+      await expect(page.locator("header").getByRole("button", { name: "New invoice" })).toBeVisible();
     });
   });
 

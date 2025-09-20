@@ -36,33 +36,43 @@ test.describe("Invoice submission, approval and rejection", () => {
   test("allows contractor to submit/delete invoices and admin to approve/reject them", async ({ page }) => {
     await login(page, workerUserA);
 
-    await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-    await page.getByLabel("Invoice ID").fill("CUSTOM-1");
-    await fillDatePicker(page, "Date", "11/01/2024");
-    await page.getByPlaceholder("Description").fill("first item");
-    await page.getByLabel("Hours / Qty").first().fill("01:23");
-    await page.getByRole("button", { name: "Add line item" }).click();
-    await page.getByPlaceholder("Description").nth(1).fill("second item");
-    await page.getByLabel("Hours / Qty").nth(1).fill("10");
-    await page.getByPlaceholder("Enter notes about your").fill("A note in the invoice");
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 201),
-      // TRPC Clubs into 207 multi-status when repsonses are batched from server
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
-      page.getByRole("button", { name: "Send invoice" }).click(),
-    ]);
+    await page.locator("header").getByRole("button", { name: "New invoice" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Invoice ID").fill("CUSTOM-1");
+        await fillDatePicker(page, "Invoice date", "11/01/2024");
+        await modal.getByPlaceholder("Description").fill("first item");
+        await modal.getByLabel("Hours / Qty").first().fill("01:23");
+        await modal.getByRole("button", { name: "Add line item" }).click();
+        await modal.getByPlaceholder("Description").nth(1).fill("second item");
+        await modal.getByLabel("Hours / Qty").nth(1).fill("10");
+        await modal.getByPlaceholder("Type your notes here").fill("A note in the invoice");
+        await Promise.all([
+          page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 201),
+          // TRPC Clubs into 207 multi-status when repsonses are batched from server
+          page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
+          modal.getByRole("button", { name: "Send" }).click(),
+        ]);
+      },
+      { page },
+    );
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
     await expect(page.locator("tbody")).toContainText("$683");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
-    await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-    await page.getByPlaceholder("Description").fill("woops too little time");
-    await page.getByLabel("Hours / Qty").fill("0:23");
-    await page.getByLabel("Invoice ID").fill("CUSTOM-2");
-    await fillDatePicker(page, "Date", "12/01/2024");
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    await page.locator("header").getByRole("button", { name: "New invoice" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByPlaceholder("Description").fill("woops too little time");
+        await modal.getByLabel("Hours / Qty").fill("0:23");
+        await modal.getByLabel("Invoice ID").fill("CUSTOM-2");
+        await fillDatePicker(page, "Invoice date", "12/01/2024");
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
@@ -70,27 +80,38 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
 
     await page.getByRole("cell", { name: "CUSTOM-1" }).click();
-    await page.getByRole("link", { name: "Edit invoice" }).click();
-    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
-    await page.getByPlaceholder("Description").first().fill("first item updated");
-    const timeField = page.getByLabel("Hours / Qty").first();
-    await timeField.fill("04:30");
-    await timeField.blur(); // work around a test-specific issue; this works fine in a real browser
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 204),
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
-      page.getByRole("button", { name: "Re-submit invoice" }).click(),
-    ]);
+    await page.getByRole("button", { name: "Edit invoice" }).click();
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByRole("heading", { name: "CUSTOM-1" })).toBeVisible();
+        await modal.getByPlaceholder("Description").first().fill("first item updated");
+        const timeField = modal.getByLabel("Hours / Qty").first();
+        await timeField.fill("04:30");
+        await timeField.blur(); // work around a test-specific issue; this works fine in a real browser
+        await Promise.all([
+          page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 204),
+          page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
+          page.waitForResponse((r) => r.url().includes("invoices.get") && r.status() >= 200 && r.status() < 300),
+          modal.getByRole("button", { name: "Re-submit" }).click(),
+        ]);
+      },
+      { page },
+    );
 
     await expect(page.getByRole("cell", { name: "$870" })).toBeVisible();
     await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();
 
-    await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-    await page.getByPlaceholder("Description").fill("Invoice to be deleted");
-    await page.getByLabel("Hours / Qty").fill("0:33");
-    await page.getByLabel("Invoice ID").fill("CUSTOM-3");
-    await fillDatePicker(page, "Date", "12/01/2024");
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    await page.locator("header").getByRole("button", { name: "New invoice" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByPlaceholder("Description").fill("Invoice to be deleted");
+        await modal.getByLabel("Hours / Qty").fill("0:33");
+        await modal.getByLabel("Invoice ID").fill("CUSTOM-3");
+        await fillDatePicker(page, "Invoice date", "12/01/2024");
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
 
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
@@ -110,11 +131,16 @@ test.describe("Invoice submission, approval and rejection", () => {
     await logout(page);
     await login(page, workerUserB);
 
-    await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-    await page.getByPlaceholder("Description").fill("line item");
-    await page.getByLabel("Hours / Qty").fill("10:23");
-    await fillDatePicker(page, "Date", "11/20/2024");
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    await page.locator("header").getByRole("button", { name: "New invoice" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByPlaceholder("Description").fill("line item");
+        await modal.getByLabel("Hours / Qty").fill("10:23");
+        await fillDatePicker(page, "Invoice date", "11/20/2024");
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
     await expect(page.getByText("Awaiting approval")).toBeVisible();
 
     await logout(page);
@@ -214,10 +240,14 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await rejectedInvoiceRow.click({ button: "right" });
     await page.getByRole("menuitem", { name: "Edit" }).click();
-    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
-    await page.getByLabel("Hours / Qty").fill("02:30");
-    await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
-    await page.getByRole("button", { name: "Re-submit invoice" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Hours / Qty").fill("02:30");
+        await modal.getByPlaceholder("Type your notes here").fill("fixed hours");
+        await modal.getByRole("button", { name: "Re-submit" }).click();
+      },
+      { page },
+    );
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();

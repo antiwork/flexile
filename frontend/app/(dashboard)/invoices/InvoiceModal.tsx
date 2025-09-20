@@ -6,7 +6,7 @@ import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert, SendHorizonalIcon } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
@@ -16,12 +16,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { useCurrentCompany, useCurrentUser } from "@/global";
+import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
-import { assert, assertDefined } from "@/utils/assert";
+import { assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import {
@@ -31,7 +32,6 @@ import {
   new_company_invoice_path,
 } from "@/utils/routes";
 import QuantityInput from "./QuantityInput";
-import { useCanSubmitInvoices } from ".";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -96,15 +96,11 @@ interface InvoiceModalProps {
 }
 
 const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
-  const user = useCurrentUser();
   const company = useCurrentCompany();
-  const { canSubmitInvoices } = useCanSubmitInvoices();
-  if (!canSubmitInvoices) return null;
   const searchParams = useSearchParams();
   const [errorField, setErrorField] = useState<string | null>(null);
   const trpcUtils = trpc.useUtils();
-  const worker = user.roles.worker;
-  assert(worker != null);
+  const router = useRouter();
 
   const { data } = useSuspenseQuery({
     queryKey: invoiceId ? ["invoice", "edit", invoiceId] : ["invoice", "new"],
@@ -117,6 +113,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
       });
       return dataSchema.parse(await response.json());
     },
+    gcTime: 0,
   });
 
   const payRateInSubunits = data.user.pay_rate_in_subunits;
@@ -190,8 +187,10 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
         assertOk: true,
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
+      await trpcUtils.invoices.get.invalidate({ companyId: company.id });
       await trpcUtils.documents.list.invalidate();
       onOpenChange(false);
+      router.push("/invoices");
     },
   });
 
@@ -260,12 +259,22 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
       }),
     );
 
+  const handleSubmit = () => {
+    validate();
+    submit.mutate();
+    submit.reset();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl px-0 py-6 pb-4">
         <DialogHeader className="px-4">
           <DialogTitle className="flex h-5 items-center">
+            <Label htmlFor="invoice-id" className="sr-only">
+              Invoice ID
+            </Label>
             <input
+              id="invoice-id"
               value={invoiceNumber}
               tabIndex={-1}
               onChange={(e) => setInvoiceNumber(e.target.value)}
@@ -497,7 +506,8 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
 
         <DialogFooter className="px-4">
           <DatePicker
-            variant="trigger"
+            variant="button"
+            name="Invoice date"
             value={issueDate}
             onChange={(date) => {
               if (date) setIssueDate(date);
@@ -506,7 +516,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
             granularity="day"
             className="h-full"
           />
-          <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
+          <Button variant="primary" onClick={handleSubmit} disabled={submit.isPending}>
             <SendHorizonalIcon className="size-4" />
             {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit" : "Send"}
           </Button>

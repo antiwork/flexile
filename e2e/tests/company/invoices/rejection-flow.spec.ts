@@ -34,13 +34,19 @@ test.describe("invoice rejection flow", () => {
 
   test("handles invoice rejection workflow including contractor editing", async ({ page }) => {
     // Contractor creates invoice
-    await login(page, contractorUser, "/invoices/new");
-    await page.getByPlaceholder("Description").fill("Development work");
-    await page.getByLabel("Hours / Qty").fill("8:00");
-    await page.getByLabel("Invoice ID").fill("INV-REJECT-001");
-    await fillDatePicker(page, "Date", "12/15/2024");
-    await page.getByPlaceholder("Enter notes about your invoice (optional)").fill("Q1 development work");
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    await login(page, contractorUser);
+    await page.getByRole("button", { name: "New invoice" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Invoice ID").fill("INV-REJECT-001");
+        await fillDatePicker(page, "Invoice date", "12/15/2024");
+        await modal.getByPlaceholder("Description").fill("Development work");
+        await modal.getByLabel("Hours / Qty").fill("8:00");
+        await modal.getByPlaceholder("Type your notes here").fill("Q1 development work");
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Verify invoice was created
@@ -50,7 +56,6 @@ test.describe("invoice rejection flow", () => {
     // Logout and login as admin to reject the invoice
     await logout(page);
     await login(page, adminUser);
-    await page.getByRole("link", { name: "Invoices" }).click();
 
     // Reject the invoice with reason
     const invoiceRow = page.locator("tbody tr").filter({ hasText: contractorUser.legalName || "never" });
@@ -80,21 +85,25 @@ test.describe("invoice rejection flow", () => {
     // Contractor should be able to edit the rejected invoice
     await rejectedInvoiceRow.click({ button: "right" });
     await page.getByRole("menuitem", { name: "Edit" }).click();
-    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
 
-    // Verify form fields are populated with original data
-    await expect(page.getByLabel("Invoice ID")).toHaveValue("INV-REJECT-001");
-    await expect(page.getByPlaceholder("Description").first()).toHaveValue("Development work");
-    await expect(page.getByLabel("Hours / Qty").first()).toHaveValue("08:00");
-    await expect(page.getByPlaceholder("Enter notes about your invoice (optional)")).toHaveValue("Q1 development work");
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByRole("heading", { name: "INV-REJECT-001" })).toBeVisible();
 
-    // Make corrections and resubmit
-    await page.getByPlaceholder("Description").first().fill("Corrected development work");
-    await page.getByLabel("Hours / Qty").first().fill("6:00");
-    await page
-      .getByPlaceholder("Enter notes about your invoice (optional)")
-      .fill("Corrected Q1 development work with accurate hours");
-    await page.getByRole("button", { name: "Re-submit invoice" }).click();
+        // Verify form fields are populated with original data
+        await expect(modal.getByLabel("Invoice ID")).toHaveValue("INV-REJECT-001");
+        await expect(modal.getByPlaceholder("Description").first()).toHaveValue("Development work");
+        await expect(modal.getByLabel("Hours / Qty").first()).toHaveValue("08:00");
+        await expect(modal.getByPlaceholder("Type your notes here")).toHaveValue("Q1 development work");
+
+        // Make corrections and resubmit
+        await modal.getByPlaceholder("Description").first().fill("Corrected development work");
+        await modal.getByLabel("Hours / Qty").first().fill("6:00");
+        await modal.getByPlaceholder("Type your notes here").fill("Corrected Q1 development work with accurate hours");
+        await modal.getByRole("button", { name: "Re-submit" }).click();
+      },
+      { page },
+    );
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Verify invoice is back to awaiting approval
