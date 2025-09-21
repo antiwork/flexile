@@ -12,7 +12,7 @@ import { Form } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { PayRateType } from "@/trpc/client";
 import { request } from "@/utils/request";
-import { complete_onboarding_company_workers_url } from "@/utils/routes";
+import { complete_onboarding_company_workers_path } from "@/utils/routes";
 
 type OnboardingStepProps = {
   open: boolean;
@@ -52,7 +52,7 @@ const WorkerOnboardingModal = ({ open, onClose, onNext }: OnboardingStepProps) =
       const response = await request({
         method: "POST",
         accept: "json",
-        url: complete_onboarding_company_workers_url(company.externalId),
+        url: complete_onboarding_company_workers_path(company.id),
         jsonData: {
           contractor: {
             started_at: values.startedAt,
@@ -62,14 +62,11 @@ const WorkerOnboardingModal = ({ open, onClose, onNext }: OnboardingStepProps) =
           },
         },
       });
-
-      if (!response.ok) {
-        const errorSchema = z.object({
-          error_message: z.string().optional(),
-        });
-        const errorData = errorSchema.parse(await response.json().catch(() => ({})));
-        throw new Error(errorData.error_message || "Failed to complete onboarding");
-      }
+      if (!response.ok)
+        throw new Error(
+          z.object({ error_message: z.string() }).safeParse(await response.json()).data?.error_message ||
+            "Failed to complete onboarding",
+        );
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
