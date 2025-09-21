@@ -74,7 +74,7 @@ RSpec.describe CreateInvestorsAndDividends do
       it "parses user data correctly" do
         service.process
 
-        user = User.find_by("email LIKE 'sharang.d+12345%@gmail.com'")
+        user = User.where("email LIKE 'sharang.d+12345%@gmail.com'").find_by(preferred_name: "John Doe")
         expect(user).to be_present
         expect(user.preferred_name).to eq("John Doe")
         expect(user.legal_name).to eq("John Michael Doe")
