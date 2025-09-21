@@ -94,10 +94,11 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
       });
 
       if (!response.ok) {
-        throw new Error(
+        const error =
           z.object({ error: z.string() }).safeParse(await response.json()).data?.error ||
-            "Failed to create a new option pool",
-        );
+          "Failed to create a new option pool";
+        form.setError("root", { message: error });
+        throw new Error(error);
       }
 
       await trpcUtils.optionPools.list.invalidate();
