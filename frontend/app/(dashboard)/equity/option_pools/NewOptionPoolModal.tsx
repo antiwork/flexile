@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { camelCase } from "lodash-es";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -95,16 +94,10 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
       });
 
       if (!response.ok) {
-        const raw = await response.text();
-        const errorInfo = z
-          .object({ error: z.string(), attribute_name: z.string().nullable() })
-          .catch(() => ({ error: raw || "Request failed", attribute_name: null }))
-          .parse(JSON.parse(raw));
-
-        const field = camelCase(errorInfo.attribute_name ?? "root");
-        const isFormField = (k: string): k is keyof FormValues => k in schema.shape;
-        form.setError(isFormField(field) ? field : "root", { message: errorInfo.error });
-        throw new Error(errorInfo.error);
+        throw new Error(
+          z.object({ error: z.string() }).safeParse(await response.json()).data?.error ||
+            "Failed to create a new option pool",
+        );
       }
 
       await trpcUtils.optionPools.list.invalidate();

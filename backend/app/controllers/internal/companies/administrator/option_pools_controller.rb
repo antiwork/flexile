@@ -12,7 +12,7 @@ class Internal::Companies::Administrator::OptionPoolsController < Internal::Comp
     if result[:success]
       head :created
     else
-      render_error_response(result[:error])
+      render json: { error: result[:error] }, status: :unprocessable_entity
     end
   end
 
@@ -30,9 +30,5 @@ class Internal::Companies::Administrator::OptionPoolsController < Internal::Comp
         :disability_exercise_months,
         :retirement_exercise_months
       )
-    end
-
-    def render_error_response(error, attribute_name: nil)
-      render json: { error:, attribute_name: }, status: :unprocessable_entity
     end
 end
