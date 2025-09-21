@@ -168,6 +168,7 @@ export default function TaxPage() {
       setIsTaxInfoConfirmed(true);
       if (form.getFieldState("tax_id").isDirty) setTaxIdStatus(null);
       setShowCertificationModal(false);
+      form.reset(form.getValues());
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });
