@@ -36,6 +36,8 @@ export default function SettingsPage() {
     },
   });
 
+  const { isDirty } = form.formState;
+
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const logoUrl = useMemo(
     () => (logoFile ? URL.createObjectURL(logoFile) : (company.logo_url ?? defaultLogo.src)),
@@ -80,7 +82,10 @@ export default function SettingsPage() {
       await refetch();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
-    onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
+    onSuccess: () => {
+      form.reset(form.getValues());
+      setTimeout(() => saveMutation.reset(), 2000);
+    },
   });
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
@@ -174,6 +179,7 @@ export default function SettingsPage() {
             successText="Changes saved"
             loadingText="Saving..."
             className="w-fit"
+            disabled={!isDirty}
           >
             Save changes
           </MutationStatusButton>

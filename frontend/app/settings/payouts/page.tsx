@@ -61,6 +61,8 @@ const EquitySection = () => {
     defaultValues: { equityPercentage: worker.equityPercentage },
     resolver: zodResolver(equityFormSchema),
   });
+
+  const { isDirty } = form.formState;
   const payRateInSubunits = worker.payRateInSubunits ?? 0;
   const equityPercentage = form.watch("equityPercentage");
 
@@ -74,7 +76,10 @@ const EquitySection = () => {
         assertOk: true,
       });
     },
-    onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
+    onSuccess: () => {
+      form.reset(form.getValues());
+      setTimeout(() => saveMutation.reset(), 2000);
+    },
   });
 
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
@@ -137,6 +142,7 @@ const EquitySection = () => {
               loadingText="Saving..."
               successText="Saved!"
               className="justify-self-end"
+              disabled={!isDirty}
             >
               Save changes
             </MutationStatusButton>
@@ -178,6 +184,8 @@ const DividendSection = () => {
     resolver: zodResolver(dividendsFormSchema),
   });
 
+  const { isDirty } = form.formState;
+
   const saveMutation = useMutation({
     mutationFn: async (values: z.infer<typeof dividendsFormSchema>) => {
       await request({
@@ -192,7 +200,10 @@ const DividendSection = () => {
         assertOk: true,
       });
     },
-    onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
+    onSuccess: () => {
+      form.reset(form.getValues());
+      setTimeout(() => saveMutation.reset(), 2000);
+    },
   });
 
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
@@ -233,6 +244,7 @@ const DividendSection = () => {
               loadingText="Saving..."
               successText="Saved!"
               className="justify-self-end"
+              disabled={!isDirty}
             >
               Save changes
             </MutationStatusButton>

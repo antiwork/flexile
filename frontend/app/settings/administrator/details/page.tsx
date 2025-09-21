@@ -50,10 +50,13 @@ export default function Details() {
     },
   });
 
+  const { isDirty } = form.formState;
+
   const updateSettings = trpc.companies.update.useMutation({
     onSuccess: async () => {
       await utils.companies.settings.invalidate();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      form.reset(form.getValues());
       setTimeout(() => updateSettings.reset(), 2000);
     },
   });
@@ -203,6 +206,7 @@ export default function Details() {
           loadingText="Saving..."
           successText="Changes saved"
           className="w-fit"
+          disabled={!isDirty}
         >
           Save changes
         </MutationStatusButton>

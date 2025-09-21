@@ -45,6 +45,8 @@ const DetailsSection = () => {
     },
   });
 
+  const { isDirty } = form.formState;
+
   const saveMutation = useMutation({
     mutationFn: async (values: { email: string; preferredName: string }) => {
       const response = await request({
@@ -56,7 +58,10 @@ const DetailsSection = () => {
       if (!response.ok)
         throw new Error(z.object({ error_message: z.string() }).parse(await response.json()).error_message);
     },
-    onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
+    onSuccess: () => {
+      form.reset(form.getValues());
+      setTimeout(() => saveMutation.reset(), 2000);
+    },
   });
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
@@ -99,6 +104,7 @@ const DetailsSection = () => {
           mutation={saveMutation}
           loadingText="Saving..."
           successText="Saved!"
+          disabled={!isDirty}
         >
           Save
         </MutationStatusButton>

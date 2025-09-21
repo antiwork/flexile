@@ -43,6 +43,7 @@ export default function Equity() {
     onSuccess: async () => {
       await utils.companies.settings.invalidate();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      form.reset(form.getValues());
       setTimeout(() => updateSettings.reset(), 2000);
     },
   });
@@ -64,6 +65,8 @@ export default function Equity() {
     },
     disabled: requiresCompanyName,
   });
+
+  const { isDirty } = form.formState;
 
   const submit = form.handleSubmit((values) =>
     updateSettings.mutateAsync({
@@ -169,6 +172,7 @@ export default function Equity() {
                 mutation={updateSettings}
                 loadingText="Saving..."
                 successText="Changes saved"
+                disabled={!isDirty}
               >
                 Save changes
               </MutationStatusButton>
