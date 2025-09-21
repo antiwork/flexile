@@ -1,63 +1,49 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gt, or } from "drizzle-orm";
 import { z } from "zod";
-import { byExternalId, db } from "@/db";
-import { companyInvestorEntities, equityGrants, shareHoldings } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
+import { company_investor_entity_url } from "@/utils/routes";
 
-const RECORDS_PER_SECTION = 20;
+const grantSchema = z.object({
+  issuedAt: z.string(),
+  numberOfShares: z.number(),
+  vestedShares: z.number(),
+  unvestedShares: z.number(),
+  exercisedShares: z.number(),
+  vestedAmountUsd: z.number().nullable(),
+  exercisePriceUsd: z.number(),
+});
+
+const shareSchema = z.object({
+  issuedAt: z.string(),
+  shareType: z.string(),
+  numberOfShares: z.number(),
+  sharePriceUsd: z.number(),
+  totalAmountInCents: z.number(),
+});
+
+const investorEntityResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  grants: z.array(grantSchema),
+  shares: z.array(shareSchema),
+});
 
 export const investorEntitiesRouter = createRouter({
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     if (!ctx.company.equityEnabled) throw new TRPCError({ code: "NOT_FOUND" });
     if (!(ctx.companyAdministrator || ctx.companyLawyer)) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const investorEntity = await db.query.companyInvestorEntities.findFirst({
-      where: and(
-        eq(companyInvestorEntities.companyId, ctx.company.id),
-        eq(companyInvestorEntities.externalId, input.id),
-      ),
+    const response = await fetch(company_investor_entity_url(ctx.company.externalId, input.id), {
+      headers: ctx.headers,
     });
-    if (!investorEntity) throw new TRPCError({ code: "NOT_FOUND" });
 
-    const grants = (
-      await db.query.equityGrants.findMany({
-        where: and(
-          eq(equityGrants.companyInvestorEntityId, byExternalId(companyInvestorEntities, input.id)),
-          or(gt(equityGrants.vestedShares, 0), gt(equityGrants.unvestedShares, 0), eq(equityGrants.exercisedShares, 0)),
-        ),
-        limit: RECORDS_PER_SECTION,
-        orderBy: [desc(equityGrants.issuedAt)],
-      })
-    ).map((grant) => ({
-      issuedAt: grant.issuedAt,
-      numberOfShares: grant.numberOfShares,
-      vestedShares: grant.vestedShares,
-      unvestedShares: grant.unvestedShares,
-      exercisedShares: grant.exercisedShares,
-      vestedAmountUsd: grant.vestedAmountUsd,
-      exercisePriceUsd: grant.exercisePriceUsd,
-    }));
+    if (!response.ok) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch investor entity",
+      });
+    }
 
-    const shares = (
-      await db.query.shareHoldings.findMany({
-        where: eq(shareHoldings.companyInvestorEntityId, byExternalId(companyInvestorEntities, input.id)),
-        limit: RECORDS_PER_SECTION,
-        orderBy: [desc(shareHoldings.id)],
-      })
-    ).map((share) => ({
-      issuedAt: share.issuedAt,
-      shareType: share.name,
-      numberOfShares: share.numberOfShares,
-      sharePriceUsd: share.sharePriceUsd,
-      totalAmountInCents: share.totalAmountInCents,
-    }));
-
-    return {
-      id: investorEntity.externalId,
-      name: investorEntity.name,
-      grants,
-      shares,
-    };
+    return investorEntityResponseSchema.parse(await response.json());
   }),
 });
