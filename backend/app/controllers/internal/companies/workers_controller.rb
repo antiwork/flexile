@@ -23,8 +23,21 @@ class Internal::Companies::WorkersController < Internal::Companies::BaseControll
     end
   end
 
+  def complete_onboarding
+    authorize CompanyWorker
+
+    Current.company_worker.update!(complete_onboarding_params)
+    head :ok
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error_message: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
+  end
+
   private
     def worker_params
       params.require(:contractor).permit(:email, :started_at, :pay_rate_in_subunits, :role, :pay_rate_type, :contract_signed_elsewhere, :contract)
+    end
+
+    def complete_onboarding_params
+      params.require(:contractor).permit(:started_at, :pay_rate_in_subunits, :pay_rate_type, :role)
     end
 end

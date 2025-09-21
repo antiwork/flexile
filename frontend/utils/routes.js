@@ -1499,6 +1499,24 @@ export const company_workers_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":tru
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/workers/complete_onboarding(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const complete_onboarding_company_workers_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"workers"],[2,[7,"/"],[2,[6,"complete_onboarding"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/workers/complete_onboarding(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const complete_onboarding_company_workers_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"workers"],[2,[7,"/"],[2,[6,"complete_onboarding"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /internal/demo/companies/:id(.:format)
  * @param {any} id
  * @param {object | undefined} options

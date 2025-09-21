@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import { PayRateType, trpc } from "@/trpc/client";
+import { PayRateType } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { complete_onboarding_company_workers_url } from "@/utils/routes";
 
 type OnboardingStepProps = {
   open: boolean;
@@ -40,14 +42,42 @@ const WorkerOnboardingModal = ({ open, onClose, onNext }: OnboardingStepProps) =
     },
   });
 
-  const updateContractor = trpc.companyInviteLinks.completeOnboarding.useMutation({
+  const updateContractor = useMutation({
+    mutationFn: async (values: {
+      startedAt: string;
+      payRateInSubunits: number;
+      payRateType: PayRateType;
+      role: string;
+    }) => {
+      const response = await request({
+        method: "POST",
+        accept: "json",
+        url: complete_onboarding_company_workers_url(company.externalId),
+        jsonData: {
+          contractor: {
+            started_at: values.startedAt,
+            pay_rate_in_subunits: values.payRateInSubunits,
+            pay_rate_type: values.payRateType,
+            role: values.role,
+          },
+        },
+      });
+
+      if (!response.ok) {
+        const errorSchema = z.object({
+          error_message: z.string().optional(),
+        });
+        const errorData = errorSchema.parse(await response.json().catch(() => ({})));
+        throw new Error(errorData.error_message || "Failed to complete onboarding");
+      }
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       onNext();
     },
   });
   const submit = form.handleSubmit((values) => {
-    updateContractor.mutate({ companyId: company.id, ...values, startedAt: values.startedAt.toString() });
+    updateContractor.mutate({ ...values, startedAt: values.startedAt.toString() });
   });
 
   const otherRolesExist = Object.keys(user.roles).some((role) => role !== "worker");

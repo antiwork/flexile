@@ -1344,6 +1344,30 @@ export const company_workers_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/workers/complete_onboarding(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const complete_onboarding_company_workers_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/workers/complete_onboarding(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const complete_onboarding_company_workers_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/demo/companies/:id(.:format)
  * @param {any} id
  * @param {object | undefined} options

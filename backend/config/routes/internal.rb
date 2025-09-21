@@ -47,7 +47,9 @@ scope path: :internal, module: :internal do
     resources :company_updates do
       post :send_test_email, on: :member
     end
-    resources :workers, only: [:create]
+    resources :workers, only: [:create] do
+      post :complete_onboarding, on: :collection
+    end
     resources :lawyers, only: [:create]
     resources :administrators, only: [:create]
     resources :users, only: [:index] do

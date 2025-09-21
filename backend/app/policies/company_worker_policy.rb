@@ -24,4 +24,8 @@ class CompanyWorkerPolicy < ApplicationPolicy
   def updates?
     company_administrator.present?
   end
+
+  def complete_onboarding?
+    company_worker.present?
+  end
 end
