@@ -44,6 +44,8 @@ export type DialogStackProps = HTMLAttributes<HTMLDivElement> & {
   clickable?: boolean;
   onOpenChange?: (open: boolean) => void;
   defaultOpen?: boolean;
+  activeIndex?: number;
+  setActiveIndex?: Dispatch<SetStateAction<number>>;
 };
 
 export const DialogStack = ({
@@ -53,9 +55,15 @@ export const DialogStack = ({
   defaultOpen = false,
   onOpenChange,
   clickable = false,
+  activeIndex: activeIndexProp,
+  setActiveIndex: setActiveIndexProp,
   ...props
 }: DialogStackProps) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useControllableState({
+    defaultProp: 0,
+    prop: activeIndexProp,
+    ...(setActiveIndexProp ? { onChange: setActiveIndexProp } : {}),
+  });
   const [isOpen, setIsOpen] = useControllableState({
     defaultProp: defaultOpen,
     prop: open,

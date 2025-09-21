@@ -252,7 +252,6 @@ test.describe("Equity Grant Vesting Events", () => {
     await page.getByLabel("Number of options").fill("10000");
     await selectComboboxOption(page, "Relationship to company", "Consultant");
     await selectComboboxOption(page, "Grant type", "NSO");
-    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
 
     // Fill exercise periods
@@ -263,6 +262,8 @@ test.describe("Equity Grant Vesting Events", () => {
     await page.locator('input[name="deathExerciseMonths"]').fill("12");
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
+    await page.getByRole("button", { name: "Continue" }).click();
+    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
