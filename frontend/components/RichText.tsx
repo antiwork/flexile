@@ -94,7 +94,26 @@ export const Editor = ({
 
   const handleInsertLink = () => {
     if (!addingLink?.url) return;
-    editor?.chain().focus().extendMarkRange("link").setLink({ href: addingLink.url }).run();
+
+    let url = addingLink.url.trim();
+
+    // Check if it's an email
+    if (url.includes("@") && !url.includes("://")) {
+      url = `mailto:${url}`;
+    }
+    // Check if it already has a protocol
+    else if (!url.match(/^[a-z][a-z0-9+.-]*:/iu)) {
+      url = `https://${url}`;
+    }
+
+    if (editor?.state.selection.empty) {
+      // If no text is selected, insert the URL as both text and link
+      const displayText = url.startsWith("mailto:") ? url.replace("mailto:", "") : url;
+      editor?.chain().focus().insertContent(`<a href="${url}">${displayText}</a>`).run();
+    } else {
+      // If text is selected, make it a link
+      editor?.chain().focus().setLink({ href: url }).run();
+    }
     setAddingLink(null);
   };
 

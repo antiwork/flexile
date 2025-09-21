@@ -15,13 +15,13 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
 import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
+import { Editor as RichTextEditor } from "@/components/RichText";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert, assertDefined } from "@/utils/assert";
@@ -346,11 +346,13 @@ const Edit = () => {
               {lineItems.toArray().map((item, rowIndex) => (
                 <TableRow key={rowIndex}>
                   <TableCell>
-                    <Input
+                    <RichTextEditor
                       value={item.description}
-                      placeholder="Description"
+                      onChange={(value) =>
+                        updateLineItem(rowIndex, { description: typeof value === "string" ? value : "" })
+                      }
                       aria-invalid={item.errors?.includes("description")}
-                      onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
+                      className="min-h-20 w-full lg:w-96"
                     />
                   </TableCell>
                   <TableCell>
@@ -499,10 +501,9 @@ const Edit = () => {
           ) : null}
 
           <footer className="mx-4 flex flex-col gap-3 lg:flex-row lg:justify-between">
-            <Textarea
+            <RichTextEditor
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Enter notes about your invoice (optional)"
+              onChange={(value) => setNotes(typeof value === "string" ? value : "")}
               className="w-full lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
