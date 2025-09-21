@@ -39,7 +39,7 @@ scope path: :internal, module: :internal do
       resources :stripe_microdeposit_verifications, only: :create
       resources :equity_grants, only: [:create]
       resources :option_pools, only: [:create]
-      resources :cap_tables, only: [:create]
+      resource :cap_table, only: [:create]
     end
 
     resource :switch, only: :create, controller: "switch"
