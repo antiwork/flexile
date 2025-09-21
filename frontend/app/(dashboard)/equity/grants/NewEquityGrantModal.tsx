@@ -271,14 +271,14 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
   return (
     <DialogStack open={open} onOpenChange={(open) => (open ? undefined : handleClose())} activeIndex={step}>
       <DialogStackBody>
-        <DialogStackContent>
+        <DialogStackContent className="overflow-y-auto">
           <DialogStackHeader>
             <DialogStackTitle>New equity grant</DialogStackTitle>
             <DialogStackDescription>Fill in the details below to create an equity grant.</DialogStackDescription>
           </DialogStackHeader>
           <Form {...detailsForm}>
             <form onSubmit={(e) => void submitDetails(e)} className="space-y-4">
-              <div className="-mx-2 grid h-auto gap-4 overflow-y-auto px-2">
+              <div className="grid h-auto gap-4">
                 <FormField
                   control={detailsForm.control}
                   name="userId"

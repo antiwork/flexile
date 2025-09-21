@@ -325,12 +325,12 @@ test.describe("Equity Grants", () => {
     await page.getByRole("button", { name: "New grant" }).click();
 
     await page.getByLabel("Number of options").fill("100");
+    await selectComboboxOption(page, "Relationship to company", "Consultant");
     await selectComboboxOption(page, "Recipient", `${otherAdminUser.preferredName} (${otherAdminUser.email})`);
-    await expect(page.getByLabel("Shares will vest")).not.toBeVisible();
-    await selectComboboxOption(page, "Vesting schedule", "4-year with 1-year cliff (1/48th monthly after cliff)");
 
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Shares will vest")).not.toBeVisible();
+    await selectComboboxOption(page, "Vesting schedule", "4-year with 1-year cliff (1/48th monthly after cliff)");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
