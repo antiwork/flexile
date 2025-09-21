@@ -9,20 +9,19 @@ RSpec.describe Internal::Companies::ExpenseCategoriesController do
   let(:company_worker) { create(:company_worker, company: company, user: worker_user) }
   let(:expense_category) { create(:expense_category, company: company) }
 
+  before do
+    allow(controller).to receive(:authenticate_user_json!).and_return(true)
+    allow(controller).to receive(:current_context) do
+      Current.user = admin_user
+      Current.company = company
+      Current.company_administrator = company_administrator
+      Current.company_worker = nil
+      CurrentContext.new(user: admin_user, company: company)
+    end
+  end
+
   describe "GET #index" do
-    context "when user is company administrator" do
-      before do
-        allow(controller).to receive(:authenticate_user_json!).and_return(true)
-
-        allow(controller).to receive(:current_context) do
-          Current.user = admin_user
-          Current.company = company
-          Current.company_administrator = company_administrator
-          Current.company_worker = nil
-          CurrentContext.new(user: admin_user, company: company)
-        end
-      end
-
+    context "when user is authorized" do
       it "returns expense categories" do
         expense_category
 
@@ -39,8 +38,6 @@ RSpec.describe Internal::Companies::ExpenseCategoriesController do
 
     context "when user is company worker" do
       before do
-        allow(controller).to receive(:authenticate_user_json!).and_return(true)
-
         allow(controller).to receive(:current_context) do
           Current.user = worker_user
           Current.company = company
@@ -63,17 +60,7 @@ RSpec.describe Internal::Companies::ExpenseCategoriesController do
     end
 
     context "when user is not authorized" do
-      before do
-        allow(controller).to receive(:authenticate_user_json!).and_return(true)
-
-        allow(controller).to receive(:current_context) do
-          Current.user = regular_user
-          Current.company = company
-          Current.company_administrator = nil
-          Current.company_worker = nil
-          CurrentContext.new(user: regular_user, company: company)
-        end
-      end
+      before { company_administrator.destroy! }
 
       it "returns forbidden" do
         get :index, params: { company_id: company.external_id }
