@@ -62,7 +62,6 @@ export const companiesRouter = createRouter({
           sharePriceInUsd: true,
           fmvPerShareInUsd: true,
           conversionSharePriceUsd: true,
-          exerciseNotice: true,
         })
         .extend({ logoKey: z.string().optional(), equityEnabled: z.boolean().optional() }),
     )
