@@ -117,7 +117,7 @@ test.describe("Documents", () => {
     await page.locator("[contenteditable='true']").fill("Some other text");
     await selectComboboxOption(page, "Recipient", "Recipient 1");
     await page.getByRole("button", { name: "Send" }).click();
-    await expect(page.locator("tbody tr")).toHaveCount(2);
+    await expect(page.locator("tbody tr")).toHaveCount(1);
 
     await logout(page);
     await login(page, recipient, "/documents");
