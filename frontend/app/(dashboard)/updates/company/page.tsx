@@ -1,5 +1,5 @@
 "use client";
-import { Check, CircleCheck, Plus, Trash2 } from "lucide-react";
+import { CircleCheck, Plus, Trash2 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import CompanyUpdateModal from "@/app/(dashboard)/updates/company/CompanyUpdateModal";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
@@ -177,12 +177,8 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
 
           return (
             <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 w-4 items-center justify-center">
-                <span
-                  className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${update.sentAt ? "bg-blue-600" : "border border-dashed border-gray-500"}`}
-                >
-                  {update.sentAt ? <Check className="size-3 font-bold text-white" /> : null}
-                </span>
+              <div className="flex h-5 items-center justify-center">
+                <Status variant={update.sentAt ? "success" : undefined}>{update.sentAt ? "Sent" : "Draft"}</Status>
               </div>
               <div className="text-gray-600">{update.sentAt ? formatDate(update.sentAt) : "-"}</div>
             </div>
