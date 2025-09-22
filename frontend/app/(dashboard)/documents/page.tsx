@@ -581,6 +581,7 @@ const DocumentBulkActionsBar = ({
   const rowsSelected = visibleDocuments.length;
   const downloadAction = visibleActions.find((action) => action.key === "edit");
   const signAction = visibleActions.find((action) => action.key === "reviewAndSign");
+  const shareAction = visibleActions.find((action) => action.key === "reject");
   const singleDocument = rowsSelected === 1 ? visibleDocuments[0] : undefined;
 
   return (
@@ -616,6 +617,16 @@ const DocumentBulkActionsBar = ({
               onClick={() => signAction.action && onAction(signAction.action, selectedDocuments)}
             >
               Review and sign
+            </Button>
+          ) : null}
+          {shareAction ? (
+            <Button
+              variant="outline"
+              className="flex h-9 items-center gap-2 text-sm"
+              onClick={() => shareAction.action && onAction(shareAction.action, selectedDocuments)}
+            >
+              <Share className="size-3.5" strokeWidth={2.5} />
+              Share
             </Button>
           ) : null}
         </div>
