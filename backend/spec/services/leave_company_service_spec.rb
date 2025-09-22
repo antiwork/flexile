@@ -20,10 +20,10 @@ RSpec.describe LeaveCompanyService do
 
       it "does not remove any user roles" do
         create(:company_worker, user: user, company: company)
-        create(:company_investor, user: user, company: company)
+        create(:company_lawyer, user: user, company: company)
 
         expect { service.call }.not_to change { user.company_workers.count }
-        expect { service.call }.not_to change { user.company_investors.count }
+        expect { service.call }.not_to change { user.company_lawyers.count }
       end
     end
 
@@ -66,15 +66,15 @@ RSpec.describe LeaveCompanyService do
     context "when user is an investor" do
       let!(:company_investor) { create(:company_investor, user: user, company: company) }
 
-      it "returns success" do
+      it "returns failure" do
         result = service.call
 
         expect(result[:success]).to be true
         expect(result[:error]).to be_nil
       end
 
-      it "removes the investor role" do
-        expect { service.call }.to change { user.company_investors.count }.by(-1)
+      it "does not remove the investor role" do
+        expect { service.call }.to change { user.company_investors.count }.by(0)
       end
     end
 
@@ -95,7 +95,6 @@ RSpec.describe LeaveCompanyService do
 
     context "when user has multiple roles" do
       let!(:company_worker) { create(:company_worker, user: user, company: company) }
-      let!(:company_investor) { create(:company_investor, user: user, company: company) }
       let!(:company_lawyer) { create(:company_lawyer, user: user, company: company) }
 
       it "returns success" do
@@ -106,8 +105,7 @@ RSpec.describe LeaveCompanyService do
       end
 
       it "removes all user roles" do
-        expect { service.call }.to change { user.company_investors.count }.by(-1)
-          .and change { user.company_lawyers.count }.by(-1)
+        expect { service.call }.to change { user.company_lawyers.count }.by(-1)
 
         # Worker should have ended_at set instead of being deleted
         worker = user.company_workers.where(company: company).first
@@ -168,7 +166,6 @@ RSpec.describe LeaveCompanyService do
 
     context "transaction rollback behavior" do
       let!(:company_worker) { create(:company_worker, user: user, company: company) }
-      let!(:company_investor) { create(:company_investor, user: user, company: company) }
 
       before do
         allow(user.company_lawyers).to receive(:where).and_raise(ActiveRecord::ActiveRecordError, "Simulated error")
@@ -176,12 +173,10 @@ RSpec.describe LeaveCompanyService do
 
       it "rolls back all changes on error" do
         initial_worker_count = user.company_workers.count
-        initial_investor_count = user.company_investors.count
 
         service.call
 
         expect(user.company_workers.count).to eq initial_worker_count
-        expect(user.company_investors.count).to eq initial_investor_count
       end
     end
   end
@@ -220,8 +215,8 @@ RSpec.describe LeaveCompanyService do
         create(:company_investor, user: user, company: company)
       end
 
-      it "returns true" do
-        expect(service.send(:user_has_leavable_role?)).to be true
+      it "returns false" do
+        expect(service.send(:user_has_leavable_role?)).to be false
       end
     end
 

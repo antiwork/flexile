@@ -158,7 +158,7 @@ const LeaveWorkspaceSection = () => {
   }
 
   // Don't show leave option if user has no leavable roles
-  if (!user.roles.worker && !user.roles.investor && !user.roles.lawyer) {
+  if (!user.roles.worker && !user.roles.lawyer) {
     return null;
   }
 
