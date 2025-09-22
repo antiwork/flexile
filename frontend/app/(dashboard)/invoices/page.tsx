@@ -603,10 +603,11 @@ export default function InvoicesPage() {
           </Card>
           {selectedApprovableInvoices.length > 5 && <div>and {selectedApprovableInvoices.length - 5} more</div>}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenModal(null)}>
+            <Button variant="outline" size={isMobile ? "default" : "small"} onClick={() => setOpenModal(null)}>
               No, cancel
             </Button>
             <MutationButton
+              size={isMobile ? "default" : "small"}
               mutation={approveInvoices}
               param={{
                 approve_ids: selectedApprovableInvoices.map((invoice) => invoice.id),

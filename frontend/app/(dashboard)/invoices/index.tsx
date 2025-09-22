@@ -11,6 +11,7 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_invoice_path, reject_company_invoices_path } from "@/utils/routes";
+import { useIsMobile } from "@/utils/use-mobile";
 
 type Invoice = RouterOutput["invoices"]["list"][number] | RouterOutput["invoices"]["get"];
 export const EDITABLE_INVOICE_STATES: Invoice["status"][] = ["received", "rejected"];
@@ -152,11 +153,12 @@ export const ApproveButton = ({
   const company = useCurrentCompany();
   const approveInvoices = useApproveInvoices(onApprove);
   const pay = useIsPayable()(invoice);
+  const isMobile = useIsMobile();
 
   return (
     <MutationButton
       className={className}
-      size="small"
+      size={isMobile ? "default" : "small"}
       mutation={approveInvoices}
       param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
       successText={pay ? "Payment initiated" : "Approved!"}
@@ -208,6 +210,7 @@ export const RejectModal = ({
     onClose();
   });
   const [reason, setReason] = useState("");
+  const isMobile = useIsMobile();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -227,10 +230,15 @@ export const RejectModal = ({
           />
         </div>
         <DialogFooter className="max-md:grid max-md:grid-cols-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" size={isMobile ? "default" : "small"} onClick={onClose}>
             No, cancel
           </Button>
-          <MutationButton mutation={rejectInvoices} param={{ ids, reason }} loadingText="Rejecting...">
+          <MutationButton
+            mutation={rejectInvoices}
+            param={{ ids, reason }}
+            loadingText="Rejecting..."
+            size={isMobile ? "default" : "small"}
+          >
             Yes, reject
           </MutationButton>
         </DialogFooter>
@@ -253,6 +261,7 @@ export const DeleteModal = ({
   const company = useCurrentCompany();
   const utils = trpc.useUtils();
   const ids = invoices.map((invoice) => invoice.id);
+  const isMobile = useIsMobile();
 
   const deleteInvoices = useMutation({
     mutationFn: async (params: { ids: string[] }) => {
@@ -290,10 +299,16 @@ export const DeleteModal = ({
           </p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" size={isMobile ? "default" : "small"} onClick={onClose}>
             Cancel
           </Button>
-          <MutationButton idleVariant="critical" mutation={deleteInvoices} param={{ ids }} loadingText="Deleting...">
+          <MutationButton
+            idleVariant="critical"
+            mutation={deleteInvoices}
+            param={{ ids }}
+            loadingText="Deleting..."
+            size={isMobile ? "default" : "small"}
+          >
             Delete
           </MutationButton>
         </DialogFooter>

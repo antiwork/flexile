@@ -355,7 +355,7 @@ export default function ContractorPage() {
                   <div className="flex justify-end">
                     <MutationStatusButton
                       type="submit"
-                      size="small"
+                      size={isMobile ? "default" : "small"}
                       mutation={issuePaymentMutation}
                       successText="Payment submitted!"
                       loadingText="Saving..."
