@@ -16,7 +16,7 @@ class VestingEvent < ApplicationRecord
   validates :vested_shares, presence: true, numericality: { greater_than: 0 }
   validates :cancellation_reason, inclusion: { in: CANCELLATION_REASONS.values }, allow_nil: true, if: -> { cancelled_at.present? }
 
-  scope :processed, -> { where.not(processed_at: nil) }
+  scope :processed, -> { where.not(processed_at: nil).order(:vesting_date, :id) }
   scope :unprocessed, -> { where(processed_at: nil) }
   scope :cancelled, -> { where.not(cancelled_at: nil) }
   scope :not_cancelled, -> { where(cancelled_at: nil) }

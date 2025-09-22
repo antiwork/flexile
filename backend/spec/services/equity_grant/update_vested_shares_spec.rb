@@ -135,20 +135,31 @@ RSpec.describe EquityGrant::UpdateVestedShares do
       it "processes the invoice payment vesting event" do
         expect { service.process }.to change { equity_grant.reload.vesting_events.processed.count }.by(1)
         expect(equity_grant.vesting_events.unprocessed.count).to eq(0)
-        expect(equity_grant.vesting_events.processed.pluck(:vested_shares)).to eq([
-                                                                                    123 # invoice payment vesting event
-                                                                                  ])
+
+        expect(equity_grant.vesting_events.processed.pluck(:vested_shares))
+          .to eq([123])  # first processed vesting event
+
         expect(equity_grant).to have_attributes(vested_shares: 123, unvested_shares: 877)
 
         # Processing another invoice payment would not re-process
         invoice2 = create(:invoice_with_equity, equity_amount_in_options: 25, company:, user:)
-        post_invoice_payment_vesting_event2 = create(:vesting_event, equity_grant:, vesting_date: Date.current, vested_shares: invoice2.equity_amount_in_options)
-        service = described_class.new(equity_grant:, invoice: invoice2, post_invoice_payment_vesting_event: post_invoice_payment_vesting_event2)
+        post_invoice_payment_vesting_event2 = create(
+          :vesting_event,
+          equity_grant:,
+          vesting_date: Date.current,
+          vested_shares: invoice2.equity_amount_in_options
+        )
+        service = described_class.new(
+          equity_grant:,
+          invoice: invoice2,
+          post_invoice_payment_vesting_event: post_invoice_payment_vesting_event2
+        )
+
         expect { service.process }.to change { equity_grant.reload.vesting_events.processed.count }.by(1)
-        expect(equity_grant.vesting_events.processed.pluck(:vested_shares)).to eq([
-                                                                                    123, # previous invoice payment vesting event
-                                                                                    25 # new invoice payment vesting event
-                                                                                  ])
+
+        expect(equity_grant.vesting_events.processed.pluck(:vested_shares))
+          .to eq([123, 25])  # previous + new in chronological order
+
         expect(equity_grant).to have_attributes(vested_shares: 148, unvested_shares: 852)
       end
     end
