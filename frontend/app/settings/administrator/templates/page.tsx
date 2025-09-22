@@ -77,7 +77,7 @@ export default function Templates() {
                 <TableCell>{name}</TableCell>
                 <TableCell>{usedFor}</TableCell>
                 <TableCell>{template ? formatDate(template.updated_at) : "-"}</TableCell>
-                <TableCell className="h-14">{template ? null : <Button>Add</Button>}</TableCell>
+                <TableCell className="h-14">{template ? null : <Button size="small">Add</Button>}</TableCell>
               </TableRow>
             );
           })}
