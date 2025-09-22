@@ -110,7 +110,7 @@ test.describe("Leave company", () => {
 
     expect(contractor?.endedAt).toBeTruthy();
     expect(lawyer).toBeUndefined();
-    expect(investor).toBeUndefined(); // We don't delete the `company_investors` data as it referenced in other tables
+    expect(investor).toBeDefined(); // We don't delete the `company_investors` data as it referenced in other tables
   });
 
   test("user can cancel leaving workspace", async ({ page }) => {
@@ -154,14 +154,14 @@ test.describe("Leave company", () => {
 
     await login(page, user);
 
-    await expect(page.getByRole("button", { name: "Company B" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Company A" })).toBeVisible();
     await page.getByRole("link", { name: "Settings" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
     await expect(page.getByText("Leave this workspace?")).toBeVisible();
     await page.getByRole("button", { name: "Leave" }).click();
 
-    await expect(page.getByRole("button", { name: "Company A" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Company B" })).toBeVisible();
 
     const lawyerA = await db.query.companyLawyers.findFirst({
       where: and(eq(companyLawyers.companyId, companyA.id), eq(companyLawyers.userId, user.id)),
@@ -170,7 +170,7 @@ test.describe("Leave company", () => {
       where: and(eq(companyLawyers.companyId, companyB.id), eq(companyLawyers.userId, user.id)),
     });
 
-    expect(lawyerA).toBeDefined();
-    expect(lawyerB).toBeUndefined();
+    expect(lawyerA).toBeUndefined();
+    expect(lawyerB).toBeDefined();
   });
 });
