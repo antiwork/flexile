@@ -1,5 +1,5 @@
 "use client";
-import { CircleCheck, Plus, Trash2 } from "lucide-react";
+import { CircleCheck, Plus, Trash2, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import CompanyUpdateModal from "@/app/(dashboard)/updates/company/CompanyUpdateModal";
 import ViewUpdateDialog from "@/app/(dashboard)/updates/company/ViewUpdateDialog";
@@ -355,6 +355,7 @@ const UpdateBulkActionBar = ({
             onClick={onClose}
           >
             <span className="tabular-nums">{selectedUpdates.length}</span> selected
+            <X className="size-4" />
           </Button>
           <Button variant="destructive" className="flex h-9 items-center gap-2 text-sm" onClick={() => onDelete()}>
             <Trash2 className="size-3.5" strokeWidth={2.5} />
