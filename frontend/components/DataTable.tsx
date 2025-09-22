@@ -233,7 +233,7 @@ export default function DataTable<T extends RowData>({
                       return (
                         <DropdownMenuSub key={column.id}>
                           <DropdownMenuSubTrigger className="max-md:h-11">
-                            <div className="box-border flex items-center gap-1">
+                            <div className="text-foreground box-border flex items-center gap-1">
                               <span>{getColumnName(column)}</span>
                               {Array.isArray(filterValue) && filterValue.length > 0 && (
                                 <Badge variant="secondary" className="rounded-sm px-1 font-normal">
@@ -275,7 +275,7 @@ export default function DataTable<T extends RowData>({
                     {activeFilterCount > 0 && (
                       <>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem variant="destructive" onSelect={() => table.resetColumnFilters(true)}>
+                        <DropdownMenuItem onSelect={() => table.resetColumnFilters(true)}>
                           Clear all filters
                         </DropdownMenuItem>
                       </>

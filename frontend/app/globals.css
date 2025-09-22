@@ -71,6 +71,7 @@
   --sidebar-accent-foreground: hsla(0, 0%, 84%, 0.7);
   --sidebar-border: var(--muted);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --selected-bg: hsla(214, 90%, 95%, 0.5);
   --link: var(--color-blue-600);
 }
 
@@ -111,6 +112,7 @@
   --sidebar-border: hsl(215 11% 21%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
   --link: hsl(214 100% 61%);
+  --selected-bg: rgba(28, 122, 215, 0.13);
   --color-green: #4ade80;
 }
 
@@ -155,6 +157,7 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
   --color-link: var(--link);
+  --color-selected-bg: var(--selected-bg);
 }
 
 body {

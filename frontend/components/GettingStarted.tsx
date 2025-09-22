@@ -101,13 +101,10 @@ export const GettingStarted = () => {
         </CollapsibleTrigger>
         <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 absolute mb-8 w-full origin-bottom overflow-hidden py-3 data-[state=closed]:duration-300 data-[state=open]:duration-200">
           {status === "completed" ? (
-            <div className="rounded-lg border border-gray-200 bg-white pb-4 shadow-sm">
+            <div className="border-muted bg-popover rounded-lg border pb-4 shadow-sm">
               <div className="mr-3 ml-4 flex h-11 items-center justify-between">
                 <span className="font-medium">You are all set!</span>
-                <button
-                  onClick={() => setStatus("dismissed")}
-                  className="ml-4 cursor-pointer transition-colors hover:text-black/80"
-                >
+                <button onClick={() => setStatus("dismissed")} className="ml-4 cursor-pointer transition-colors">
                   <X className="h-4 w-4" />
                   <span className="sr-only">Close</span>
                 </button>

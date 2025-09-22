@@ -220,7 +220,7 @@ export default function InvoicesPage() {
             cell: (info) => (
               <>
                 <b className="truncate">{info.getValue()}</b>
-                <div className="text-xs text-gray-500">{info.row.original.contractor.role}</div>
+                <div className="text-muted-foreground text-xs">{info.row.original.contractor.role}</div>
               </>
             ),
           })
@@ -956,10 +956,10 @@ const QuickInvoicesSectionContent = () => {
 
               <div className="grid gap-2">
                 <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
-                  <span className="text-sm text-gray-500">Total amount</span>
+                  <span className="text-muted-foreground text-sm">Total amount</span>
                   <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
                   {company.equityEnabled ? (
-                    <div className="mt-1 text-sm text-gray-500">
+                    <div className="text-muted-foreground mt-1 text-sm">
                       ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
                       <Link href="/settings/payouts" className={linkClasses}>
                         {formatMoneyFromCents(equityAmountCents)} equity
