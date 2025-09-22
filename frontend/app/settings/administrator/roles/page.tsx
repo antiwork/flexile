@@ -457,7 +457,7 @@ export default function RolesPage() {
                 ) : null}
                 <Button
                   type="submit"
-                  size="small"
+                  size={isMobile ? "default" : "small"}
                   className="w-full md:w-auto"
                   disabled={
                     !addMemberForm.formState.isValid ||
