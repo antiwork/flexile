@@ -27,6 +27,7 @@ import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_administrator_equity_grants_path } from "@/utils/routes";
+import { useIsMobile } from "@/utils/use-mobile";
 
 const MAX_VESTING_DURATION_IN_MONTHS = 120;
 
@@ -71,6 +72,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
   const company = useCurrentCompany();
   const [data] = trpc.equityGrants.new.useSuspenseQuery({ companyId: company.id });
   const [showExercisePeriods, setShowExercisePeriods] = useState(false);
+  const isMobile = useIsMobile();
 
   const form = useForm({
     resolver: zodResolver(refinedSchema),
@@ -624,7 +626,12 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
             ) : null}
 
             <div className="flex justify-end">
-              <MutationStatusButton type="submit" size="small" mutation={createEquityGrant} disabled={!isFormValid}>
+              <MutationStatusButton
+                type="submit"
+                size={isMobile ? "default" : "small"}
+                mutation={createEquityGrant}
+                disabled={!isFormValid}
+              >
                 Create grant
               </MutationStatusButton>
             </div>

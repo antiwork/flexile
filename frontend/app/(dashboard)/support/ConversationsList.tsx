@@ -227,11 +227,11 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" size="small" onClick={() => setIsModalOpen(false)}>
+            <Button variant="outline" size={isMobile ? "default" : "small"} onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
             <MutationStatusButton
-              size="small"
+              size={isMobile ? "default" : "small"}
               mutation={createConversation}
               disabled={!message.trim() && attachments.length === 0}
               onClick={() => void handleSubmit()}

@@ -18,6 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { cn, formatFileSize, md5Checksum } from "@/utils";
+import { useIsMobile } from "@/utils/use-mobile";
 
 const formSchema = z.object({
   startDate: z.instanceof(CalendarDate, { message: "This field is required." }),
@@ -35,6 +36,7 @@ export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) 
   const company = useCurrentCompany();
   const { data: letterOfTransmittal } = useQuery(useDocumentTemplateQuery("letter_of_transmittal"));
   const [isDragging, setIsDragging] = useState(false);
+  const isMobile = useIsMobile();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -204,7 +206,7 @@ export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) 
         <MutationStatusButton
           className="justify-self-end"
           type="submit"
-          size="small"
+          size={isMobile ? "default" : "small"}
           mutation={createMutation}
           loadingText="Creating..."
         >
