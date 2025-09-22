@@ -95,6 +95,7 @@ RSpec.describe LeaveCompanyService do
 
     context "when user has multiple roles" do
       let!(:company_worker) { create(:company_worker, user: user, company: company) }
+      let!(:company_investor) { create(:company_investor, user: user, company: company) }
       let!(:company_lawyer) { create(:company_lawyer, user: user, company: company) }
 
       it "returns success" do
@@ -106,6 +107,7 @@ RSpec.describe LeaveCompanyService do
 
       it "removes all user roles" do
         expect { service.call }.to change { user.company_lawyers.count }.by(-1)
+          .and change { user.company_investors.count }.by(0) # We don't delete the `company_investors` data as it referenced in other tables
 
         # Worker should have ended_at set instead of being deleted
         worker = user.company_workers.where(company: company).first
@@ -172,11 +174,11 @@ RSpec.describe LeaveCompanyService do
       end
 
       it "rolls back all changes on error" do
-        initial_worker_count = user.company_workers.count
+        initial_worker_count = user.company_workers.active.count
 
         service.call
 
-        expect(user.company_workers.count).to eq initial_worker_count
+        expect(user.company_workers.active.count).to eq initial_worker_count
       end
     end
   end
