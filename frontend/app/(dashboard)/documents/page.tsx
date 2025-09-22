@@ -35,7 +35,6 @@ import { assertDefined } from "@/utils/assert";
 import { request } from "@/utils/request";
 import { company_documents_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
-import { useIsMobile } from "@/utils/use-mobile";
 
 type Document = RouterOutput["documents"]["list"][number];
 
@@ -88,7 +87,6 @@ export default function DocumentsPage() {
   const isCompanyRepresentative = !!user.roles.administrator || !!user.roles.lawyer;
   const userId = isCompanyRepresentative ? null : user.id;
   const canSign = user.address.street_address || isCompanyRepresentative;
-  const isMobile = useIsMobile();
 
   const contractorIncomplete = user.roles.worker ? !user.roles.worker.role : false;
   const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(contractorIncomplete);
@@ -408,7 +406,6 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
     },
   });
   const [signed, setSigned] = useState(false);
-  const isMobile = useIsMobile();
   const sign = () => {
     signDocument.mutate({
       companyId: company.id,
@@ -425,7 +422,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
         </DialogHeader>
         <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
         <DialogFooter>
-          <Button size={isMobile ? "default" : "small"} onClick={sign} disabled={!signed}>
+          <Button onClick={sign} disabled={!signed}>
             Agree & Submit
           </Button>
         </DialogFooter>
@@ -444,7 +441,6 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
   const trpcUtils = trpc.useUtils();
   const [data] = trpc.documents.get.useSuspenseQuery({ companyId: company.id, id: document.id });
   const [recipients] = trpc.companies.listCompanyUsers.useSuspenseQuery({ companyId: company.id });
-  const isMobile = useIsMobile();
   const form = useForm({
     resolver: zodResolver(shareDocumentSchema),
     defaultValues: {
@@ -516,10 +512,10 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
               )}
             />
             <DialogFooter>
-              <Button size={isMobile ? "default" : "small"} variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <MutationStatusButton type="submit" mutation={submitMutation} size={isMobile ? "default" : "small"}>
+              <MutationStatusButton type="submit" mutation={submitMutation}>
                 Send
               </MutationStatusButton>
             </DialogFooter>

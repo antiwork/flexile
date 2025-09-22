@@ -21,7 +21,6 @@ import { useCurrentCompany } from "@/global";
 import { request } from "@/utils/request";
 import { company_template_path, company_templates_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
-import { useIsMobile } from "@/utils/use-mobile";
 
 export default function Templates() {
   const company = useCurrentCompany();
@@ -94,7 +93,6 @@ const formSchema = z.object({ text: z.string().nullable() });
 function EditTemplate({ type, onClose }: { type: TemplateType; onClose: () => void }) {
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
-  const isMobile = useIsMobile();
 
   const { name } = templateTypeNames[type];
   const { data: template } = useSuspenseQuery(useDocumentTemplateQuery(type));
@@ -126,7 +124,7 @@ function EditTemplate({ type, onClose }: { type: TemplateType; onClose: () => vo
           <Form {...form}>
             <FormField control={form.control} name="text" render={({ field }) => <RichTextEditor {...field} />} />
             <DialogFooter>
-              <Button variant="outline" onClick={onClose} size={isMobile ? "default" : "small"}>
+              <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
               <MutationStatusButton
@@ -134,7 +132,6 @@ function EditTemplate({ type, onClose }: { type: TemplateType; onClose: () => vo
                 mutation={submitMutation}
                 loadingText="Saving..."
                 successText="Changes saved"
-                size={isMobile ? "default" : "small"}
               >
                 Save changes
               </MutationStatusButton>

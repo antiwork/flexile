@@ -28,7 +28,6 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
-import { useIsMobile } from "@/utils/use-mobile";
 
 const createAddMemberSchema = (companyUsers: User[]) =>
   z.object({
@@ -129,7 +128,6 @@ const UserOrEmailInput = ({
 export default function RolesPage() {
   const company = useCurrentCompany();
   const currentUser = useCurrentUser();
-  const isMobile = useIsMobile();
   const [showAddModal, setShowAddModal] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState<{ id: string; name: string; role: string } | null>(null);
 
@@ -457,7 +455,6 @@ export default function RolesPage() {
                 ) : null}
                 <Button
                   type="submit"
-                  size={isMobile ? "default" : "small"}
                   className="w-full md:w-auto"
                   disabled={
                     !addMemberForm.formState.isValid ||
@@ -487,15 +484,10 @@ export default function RolesPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button size={isMobile ? "default" : "small"} variant="outline" onClick={() => setConfirmRevoke(null)}>
+            <Button variant="outline" onClick={() => setConfirmRevoke(null)}>
               Cancel
             </Button>
-            <Button
-              size={isMobile ? "default" : "small"}
-              variant="critical"
-              onClick={handleRemoveRole}
-              disabled={removeRoleMutation.isPending}
-            >
+            <Button variant="critical" onClick={handleRemoveRole} disabled={removeRoleMutation.isPending}>
               Remove {confirmRevoke?.role === "admin" ? "admin" : "lawyer"}
             </Button>
           </DialogFooter>

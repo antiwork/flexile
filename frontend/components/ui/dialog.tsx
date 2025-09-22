@@ -3,6 +3,7 @@ import { XIcon } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/utils";
 import { useIsMobile } from "@/utils/use-mobile";
+import { Button } from "./button";
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
@@ -70,13 +71,39 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="dialog-header" className={cn("flex flex-col gap-2 text-left", className)} {...props} />;
 }
 
-function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+function DialogFooter({ className, children, ...props }: React.ComponentProps<"div">) {
+  const isMobile = useIsMobile();
+
+  const processChildren = (children: React.ReactNode): React.ReactNode =>
+    React.Children.map(children, (child) => {
+      if (React.isValidElement(child)) {
+        const isButtonComponent =
+          (typeof child.type === "function" &&
+            (child.type.name === "Button" ||
+              child.type.name === "MutationButton" ||
+              child.type.name === "MutationStatusButton")) ||
+          child.type === Button;
+
+        if (isButtonComponent) {
+          const hasSize = child.props && typeof child.props === "object" && "size" in child.props && child.props.size;
+          if (!hasSize) {
+            return React.cloneElement(child, {
+              size: isMobile ? "default" : "small",
+            });
+          }
+        }
+      }
+      return child;
+    });
+
   return (
     <div
       data-slot="dialog-footer"
       className={cn("flex flex-col-reverse gap-2 md:flex-row md:justify-end", className)}
       {...props}
-    />
+    >
+      {processChildren(children)}
+    </div>
   );
 }
 function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
