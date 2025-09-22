@@ -135,6 +135,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
     const lastGrant = recipient?.lastGrant;
     detailsForm.setValue("optionGrantType", lastGrant?.optionGrantType ?? "nso");
     detailsForm.setValue("issueDateRelationship", lastGrant?.issueDateRelationship ?? "employee");
+    void detailsForm.trigger("issueDateRelationship");
     if (!recipient?.activeContractor) vestingForm.setValue("vestingTrigger", "scheduled");
   }, [recipientId]);
 
@@ -269,7 +270,12 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
   };
 
   return (
-    <DialogStack open={open} onOpenChange={(open) => (open ? undefined : handleClose())} activeIndex={step}>
+    <DialogStack
+      open={open}
+      onOpenChange={(open) => (open ? undefined : handleClose())}
+      activeIndex={step}
+      setActiveIndex={setStep}
+    >
       <DialogStackBody>
         <DialogStackContent className="overflow-y-auto">
           <DialogStackHeader>
