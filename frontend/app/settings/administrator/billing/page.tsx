@@ -1,4 +1,5 @@
 "use client";
+
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
