@@ -30,6 +30,7 @@ import { cn } from "@/utils";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate, formatDuration } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 import {
   Address,
   ApproveButton,
@@ -116,6 +117,7 @@ export default function InvoicePage() {
   const router = useRouter();
   const isActionable = useIsActionable();
   const isDeletable = useIsDeletable();
+  const isMobile = useIsMobile();
   const searchParams = useSearchParams();
   const [acceptPaymentModalOpen, setAcceptPaymentModalOpen] = useState(
     invoice.requiresAcceptanceByPayee && searchParams.get("accept") === "true",

@@ -35,6 +35,7 @@ import { PayRateType, trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_workers_path } from "@/utils/routes";
 import { formatDate, serverDateToLocal } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 import NewDocumentField, { schema as documentSchema } from "../documents/NewDocumentField";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";

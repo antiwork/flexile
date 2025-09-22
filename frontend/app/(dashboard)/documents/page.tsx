@@ -35,6 +35,7 @@ import { assertDefined } from "@/utils/assert";
 import { request } from "@/utils/request";
 import { company_documents_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 
 type Document = RouterOutput["documents"]["list"][number];
 
@@ -87,6 +88,7 @@ export default function DocumentsPage() {
   const isCompanyRepresentative = !!user.roles.administrator || !!user.roles.lawyer;
   const userId = isCompanyRepresentative ? null : user.id;
   const canSign = user.address.street_address || isCompanyRepresentative;
+  const isMobile = useIsMobile();
 
   const contractorIncomplete = user.roles.worker ? !user.roles.worker.role : false;
   const [forceWorkerOnboarding, setForceWorkerOnboarding] = useState<boolean>(contractorIncomplete);

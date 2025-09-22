@@ -84,12 +84,11 @@ function DialogFooter({ className, children, ...props }: React.ComponentProps<"d
               child.type.name === "MutationStatusButton")) ||
           child.type === Button;
 
-        if (isButtonComponent) {
-          const hasSize = child.props && typeof child.props === "object" && "size" in child.props && child.props.size;
+        if (isButtonComponent && child.props && typeof child.props === "object") {
+          const hasSize = "size" in child.props && child.props.size;
           if (!hasSize) {
-            return React.cloneElement(child, {
-              size: isMobile ? "default" : "small",
-            });
+            const newProps = { size: isMobile ? "default" : "small" };
+            return React.cloneElement(child, newProps);
           }
         }
       }

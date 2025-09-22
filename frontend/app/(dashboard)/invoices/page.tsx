@@ -65,6 +65,7 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 import QuantityInput from "./QuantityInput";
 import { useCanSubmitInvoices } from ".";
 
@@ -106,6 +107,7 @@ const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprov
 type Invoice = RouterOutput["invoices"]["list"][number];
 
 export default function InvoicesPage() {
+  const isMobile = useIsMobile();
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
