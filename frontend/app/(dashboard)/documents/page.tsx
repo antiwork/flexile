@@ -152,11 +152,31 @@ export default function DocumentsPage() {
           id: "actions",
           cell: (info) => {
             const document = info.row.original;
-            return isSignable(document) ? (
-              <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)} disabled={!canSign}>
-                Review and sign
-              </Button>
-            ) : null;
+            const hasAttachment = !!document.attachment;
+            const showSignButton = isSignable(document);
+
+            return (
+              <div className="flex gap-2">
+                {showSignButton ? (
+                  <Button
+                    variant="outline"
+                    size="small"
+                    onClick={() => setSignDocumentId(document.id)}
+                    disabled={!canSign}
+                  >
+                    Review and sign
+                  </Button>
+                ) : null}
+                {hasAttachment ? (
+                  <Button asChild variant="outline" size="small">
+                    <Link href={`/download/${document.attachment?.key}/${document.attachment?.filename}`}>
+                      <Download className="size-4" />
+                      Download
+                    </Link>
+                  </Button>
+                ) : null}
+              </div>
+            );
           },
         }),
       ].filter((column) => !!column),
@@ -191,13 +211,24 @@ export default function DocumentsPage() {
           cell: (info) => {
             const document = info.row.original;
             const { variant } = getStatus(info.row.original);
+            const hasAttachment = !!document.attachment;
 
             return (
               <div className="flex h-full flex-col items-end justify-between">
                 <div className="flex h-5 w-4 items-center justify-center">
                   <Status variant={variant} />
                 </div>
-                <div className="text-gray-600">{formatDate(document.createdAt)}</div>
+                <div className="flex flex-col items-end gap-1">
+                  <div className="text-gray-600">{formatDate(document.createdAt)}</div>
+                  {hasAttachment ? (
+                    <Button asChild variant="outline" size="small">
+                      <Link href={`/download/${document.attachment?.key}/${document.attachment?.filename}`}>
+                        <Download className="size-4" />
+                        Download
+                      </Link>
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             );
           },
