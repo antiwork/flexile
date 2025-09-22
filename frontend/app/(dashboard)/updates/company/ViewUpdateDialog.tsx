@@ -7,11 +7,9 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
-import { useIsMobile } from "@/utils/use-mobile";
 
 function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpenChange: () => void }) {
   const company = useCurrentCompany();
-  const isMobile = useIsMobile();
   const {
     data: update = { title: "", sentAt: null, body: "" },
     isLoading,
@@ -60,12 +58,9 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
         {!isLoading && !isError && !update.sentAt && (
           <DialogFooter>
             <DialogClose asChild>
-              <Button size={isMobile ? "default" : "small"} variant="outline">
-                Close
-              </Button>
+              <Button variant="outline">Close</Button>
             </DialogClose>
             <MutationButton
-              size={isMobile ? "default" : "small"}
               loadingText="Sending..."
               mutation={sendTestEmail}
               param={{ companyId: company.id, id: updateId }}

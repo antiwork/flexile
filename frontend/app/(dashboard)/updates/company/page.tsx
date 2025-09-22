@@ -14,7 +14,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
-import { useIsMobile } from "@/utils/use-mobile";
 
 const useData = () => {
   const company = useCurrentCompany();
@@ -194,12 +193,11 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
           </p>
           <DialogFooter>
             <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-              <Button variant="outline" size={isMobile ? "default" : "small"} onClick={() => setDeletingUpdate(null)}>
+              <Button variant="outline" onClick={() => setDeletingUpdate(null)}>
                 No, cancel
               </Button>
               <MutationButton
                 mutation={deleteMutation}
-                size={isMobile ? "default" : "small"}
                 param={{ companyId: company.id, id: deletingUpdate ?? "" }}
                 loadingText="Deleting..."
               >

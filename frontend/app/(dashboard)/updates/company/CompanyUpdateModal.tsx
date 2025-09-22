@@ -17,7 +17,6 @@ import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { pluralize } from "@/utils/pluralize";
-import { useIsMobile } from "@/utils/use-mobile";
 
 const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
@@ -33,7 +32,6 @@ interface CompanyUpdateModalProps {
 const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps) => {
   const company = useCurrentCompany();
   const trpcUtils = trpc.useUtils();
-  const isMobile = useIsMobile();
 
   const { data: update, isLoading } = trpc.companyUpdates.get.useQuery(
     { companyId: company.id, id: updateId ?? "" },
@@ -181,14 +179,11 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
 
           <div className="flex justify-end gap-3">
             {update?.sentAt ? (
-              <Button size={isMobile ? "default" : "small"} onClick={() => void submit()}>
-                Update
-              </Button>
+              <Button onClick={() => void submit()}>Update</Button>
             ) : (
               <>
                 <MutationStatusButton
                   type="button"
-                  size={isMobile ? "default" : "small"}
                   mutation={saveMutation}
                   idleVariant="outline"
                   loadingText="Saving..."
@@ -198,9 +193,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                 >
                   Preview
                 </MutationStatusButton>
-                <Button size={isMobile ? "default" : "small"} onClick={() => void submit()}>
-                  Publish
-                </Button>
+                <Button onClick={() => void submit()}>Publish</Button>
               </>
             )}
           </div>
@@ -219,18 +212,13 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
           )}
           <DialogFooter>
             <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-              <Button
-                variant="outline"
-                size={isMobile ? "default" : "small"}
-                onClick={() => setPublishModalOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setPublishModalOpen(false)}>
                 No, cancel
               </Button>
               <MutationButton
                 mutation={saveMutation}
                 param={{ values: form.getValues(), preview: false }}
                 loadingText="Sending..."
-                size={isMobile ? "default" : "small"}
               >
                 Yes, {update?.sentAt ? "update" : "publish"}
               </MutationButton>

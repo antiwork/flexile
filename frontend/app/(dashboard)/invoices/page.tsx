@@ -65,7 +65,6 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
-import { useIsMobile } from "@/utils/use-mobile";
 import QuantityInput from "./QuantityInput";
 import { useCanSubmitInvoices } from ".";
 
@@ -107,7 +106,6 @@ const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprov
 type Invoice = RouterOutput["invoices"]["list"][number];
 
 export default function InvoicesPage() {
-  const isMobile = useIsMobile();
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
@@ -603,11 +601,10 @@ export default function InvoicesPage() {
           </Card>
           {selectedApprovableInvoices.length > 5 && <div>and {selectedApprovableInvoices.length - 5} more</div>}
           <DialogFooter>
-            <Button variant="outline" size={isMobile ? "default" : "small"} onClick={() => setOpenModal(null)}>
+            <Button variant="outline" onClick={() => setOpenModal(null)}>
               No, cancel
             </Button>
             <MutationButton
-              size={isMobile ? "default" : "small"}
               mutation={approveInvoices}
               param={{
                 approve_ids: selectedApprovableInvoices.map((invoice) => invoice.id),
@@ -675,8 +672,6 @@ const TasksModal = ({
   const [invoiceData] = trpc.invoices.get.useSuspenseQuery({ companyId: company.id, id: invoice.id });
   const payRateInSubunits = invoiceData.contractor.payRateInSubunits;
   const isActionable = useIsActionable();
-  const isMobile = useIsMobile();
-
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="md:w-110">
@@ -732,12 +727,7 @@ const TasksModal = ({
         {isActionable(invoice) ? (
           <DialogFooter>
             <div className="grid grid-cols-2 gap-4">
-              <Button
-                variant="outline"
-                size={isMobile ? "default" : "small"}
-                onClick={onReject}
-                className="max-md:h-9 max-md:text-sm"
-              >
+              <Button variant="outline" onClick={onReject} className="max-md:h-9 max-md:text-sm">
                 Reject
               </Button>
               <ApproveButton invoice={invoice} onApprove={onClose} className="max-md:h-9 max-md:text-sm" />

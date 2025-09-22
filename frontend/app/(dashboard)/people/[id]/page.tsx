@@ -67,7 +67,6 @@ export default function ContractorPage() {
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const { id } = useParams<{ id: string }>();
-  const isMobile = useIsMobile();
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id });
   const { data: contractor, refetch } = trpc.contractors.get.useQuery(
     { companyId: company.id, userId: id },
@@ -356,7 +355,6 @@ export default function ContractorPage() {
                   <div className="flex justify-end">
                     <MutationStatusButton
                       type="submit"
-                      size={isMobile ? "default" : "small"}
                       mutation={issuePaymentMutation}
                       successText="Payment submitted!"
                       loadingText="Saving..."

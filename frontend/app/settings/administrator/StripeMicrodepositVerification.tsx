@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { formatDate } from "@/utils/time";
-import { useIsMobile } from "@/utils/use-mobile";
 
 const formSchema = z.object({ verificationCode: z.string().length(6, "Please enter a 6-digit code.") }).or(
   z.object({
@@ -27,7 +26,6 @@ const formSchema = z.object({ verificationCode: z.string().length(6, "Please ent
 const StripeMicrodepositVerification = () => {
   const company = useCurrentCompany();
   const searchParams = useSearchParams();
-  const isMobile = useIsMobile();
 
   const [{ microdepositVerificationDetails }] = trpc.companies.microdepositVerificationDetails.useSuspenseQuery({
     companyId: company.id,
@@ -154,12 +152,7 @@ const StripeMicrodepositVerification = () => {
               )}
 
               <DialogFooter>
-                <MutationStatusButton
-                  type="submit"
-                  loadingText="Submitting..."
-                  mutation={microdepositVerification}
-                  size={isMobile ? "default" : "small"}
-                >
+                <MutationStatusButton type="submit" loadingText="Submitting..." mutation={microdepositVerification}>
                   Submit
                 </MutationStatusButton>
               </DialogFooter>

@@ -35,7 +35,6 @@ import { PayRateType, trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_workers_path } from "@/utils/routes";
 import { formatDate, serverDateToLocal } from "@/utils/time";
-import { useIsMobile } from "@/utils/use-mobile";
 import NewDocumentField, { schema as documentSchema } from "../documents/NewDocumentField";
 import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
@@ -373,7 +372,7 @@ const ActionPanel = () => {
 
               {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField type="consulting_contract" />}
               <div className="flex flex-col items-end space-y-2">
-                <MutationStatusButton mutation={inviteMutation} type="submit" size={isMobile ? "default" : "small"}>
+                <MutationStatusButton mutation={inviteMutation} type="submit">
                   Send invite
                 </MutationStatusButton>
                 {inviteMutation.isError ? <div className="text-red text-sm">{inviteMutation.error.message}</div> : null}

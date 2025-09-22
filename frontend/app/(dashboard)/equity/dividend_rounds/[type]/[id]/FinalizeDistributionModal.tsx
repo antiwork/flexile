@@ -22,7 +22,6 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_dividend_rounds_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
-import { useIsMobile } from "@/utils/use-mobile";
 import type { DividendComputation } from "./page";
 
 const FinalizeDistributionModal = ({
@@ -39,7 +38,6 @@ const FinalizeDistributionModal = ({
   const router = useRouter();
   const queryClient = useQueryClient();
   const utils = trpc.useUtils();
-  const isMobile = useIsMobile();
 
   const finalizeMutation = useMutation({
     mutationFn: async () => {
@@ -140,7 +138,6 @@ const FinalizeDistributionModal = ({
             disabled={!isConfirmed}
             loadingText="Finalizing..."
             errorText={finalizeMutation.error?.message || "Something went wrong. Please try again."}
-            size={isMobile ? "default" : "small"}
           >
             Finalize distribution
           </MutationButton>

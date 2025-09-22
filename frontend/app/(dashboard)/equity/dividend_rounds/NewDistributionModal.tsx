@@ -21,7 +21,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useCurrentCompany } from "@/global";
 import { request } from "@/utils/request";
 import { company_dividend_computations_path } from "@/utils/routes";
-import { useIsMobile } from "@/utils/use-mobile";
 
 interface NewDistributionModalProps {
   open: boolean;
@@ -55,7 +54,6 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const isMobile = useIsMobile();
   const mutation = useMutation({
     mutationFn: async (data: FormValues) => {
       const response = await request({
@@ -149,11 +147,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
             />
 
             <DialogFooter>
-              <Button
-                type="submit"
-                size={isMobile ? "default" : "small"}
-                disabled={!form.formState.isValid || mutation.isPending}
-              >
+              <Button type="submit" disabled={!form.formState.isValid || mutation.isPending}>
                 Create distribution
               </Button>
             </DialogFooter>
