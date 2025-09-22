@@ -69,8 +69,8 @@ RSpec.describe LeaveCompanyService do
       it "returns failure" do
         result = service.call
 
-        expect(result[:success]).to be true
-        expect(result[:error]).to be_nil
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq "You do not have permission to leave this company."
       end
 
       it "does not remove the investor role" do

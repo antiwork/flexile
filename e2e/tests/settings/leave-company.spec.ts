@@ -110,7 +110,7 @@ test.describe("Leave company", () => {
 
     expect(contractor?.endedAt).toBeTruthy();
     expect(lawyer).toBeUndefined();
-    expect(investor?.id).not.toBeNull();
+    expect(investor).toBeUndefined(); // We don't delete the `company_investors` data as it referenced in other tables
   });
 
   test("user can cancel leaving workspace", async ({ page }) => {
@@ -135,7 +135,7 @@ test.describe("Leave company", () => {
     const lawyer = await db.query.companyLawyers.findFirst({
       where: and(eq(companyLawyers.companyId, company.id), eq(companyLawyers.userId, user.id)),
     });
-    expect(lawyer?.id).not.toBeNull();
+    expect(lawyer).toBeDefined();
   });
 
   test("user with roles in other companies can leave current company successfully", async ({ page }) => {
@@ -170,7 +170,7 @@ test.describe("Leave company", () => {
       where: and(eq(companyLawyers.companyId, companyB.id), eq(companyLawyers.userId, user.id)),
     });
 
-    expect(lawyerA?.id).not.toBeNull();
+    expect(lawyerA).toBeDefined();
     expect(lawyerB).toBeUndefined();
   });
 });
