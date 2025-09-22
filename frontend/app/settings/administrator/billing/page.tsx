@@ -3,7 +3,7 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleDollarSign, Download, Plus, RefreshCw } from "lucide-react";
+import { CircleDollarSign, Download, Plus } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
 import { z } from "zod";
@@ -63,12 +63,7 @@ const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing() {
   const company = useCurrentCompany();
   const [addingBankAccount, setAddingBankAccount] = useState(false);
-  const {
-    data: stripeData,
-    isLoading: isStripeDataLoading,
-    refetch: refetchStripeData,
-    error: stripeDataError,
-  } = useQuery({
+  const { data: stripeData } = useQuery({
     queryKey: ["administratorBankAccount", company.id],
     queryFn: async () => {
       const response = await request({
@@ -81,6 +76,7 @@ export default function Billing() {
         .object({ client_secret: z.string(), bank_account_last4: z.string().nullable() })
         .parse(await response.json());
     },
+    throwOnError: true,
   });
   const { data, isLoading } = trpc.consolidatedInvoices.list.useQuery({ companyId: company.id });
 
@@ -126,24 +122,8 @@ export default function Billing() {
             <AddBankAccount open={addingBankAccount} onOpenChange={setAddingBankAccount} />
           </Elements>
         </>
-      ) : isStripeDataLoading ? (
-        <BankAccountCardSkeleton />
-      ) : stripeDataError ? (
-        <Placeholder icon={CircleDollarSign}>
-          <p>Unable to load payment method information.</p>
-          <Button variant="outline" onClick={() => void refetchStripeData()}>
-            <RefreshCw className="size-4" />
-            Try again
-          </Button>
-        </Placeholder>
       ) : (
-        <Placeholder icon={CircleDollarSign}>
-          <p>No payment method found.</p>
-          <Button variant="outline" onClick={() => void refetchStripeData()}>
-            <RefreshCw className="size-4" />
-            Try again
-          </Button>
-        </Placeholder>
+        <BankAccountCardSkeleton />
       )}
       <StripeMicrodepositVerification />
       <h3 className="mt-4 text-base font-medium">Billing history</h3>
