@@ -111,6 +111,7 @@
   --sidebar-border: hsl(215 11% 21%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
   --link: hsl(214 100% 61%);
+  --color-green: #4ade80;
 }
 
 @theme inline {
@@ -160,4 +161,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+.dark .tiptap strong,
+.dark .tiptap p {
+  color: white;
 }

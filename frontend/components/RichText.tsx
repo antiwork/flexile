@@ -132,7 +132,7 @@ export const Editor = ({
         ))}
       </div>
       {editor ? (
-        <div className="focus-within:ring-ring rounded-b-sm ring-inset focus-within:ring-2">
+        <div className="focus-within:ring-ring dark:hover:bg-accent dark:focus-within:bg-accent rounded-b-sm ring-inset focus-within:ring-1">
           <EditorContent editor={editor} />
         </div>
       ) : null}

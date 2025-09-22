@@ -57,7 +57,7 @@ export default function CompanyUpdates() {
                 <Plus />
               </Button>
             ) : (
-              <Button size="small" onClick={handleNewUpdate}>
+              <Button variant="outline" size="small" onClick={handleNewUpdate}>
                 New update
               </Button>
             )
@@ -124,12 +124,12 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
         cell: (info) => (
           <Button
             aria-label="Remove"
-            variant="outline"
+            variant="ghost"
             onClick={(e) => {
               e.stopPropagation();
               setDeletingUpdate(info.row.original.id);
             }}
-            className="inline-flex cursor-pointer items-center border-none bg-transparent text-inherit underline hover:text-blue-600"
+            className="hover:text-link inline-flex items-center text-inherit"
           >
             <Trash2 className="size-4" />
           </Button>
