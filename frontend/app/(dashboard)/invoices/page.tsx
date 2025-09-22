@@ -729,10 +729,10 @@ const TasksModal = ({
         {isActionable(invoice) ? (
           <DialogFooter>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" onClick={onReject} className="max-md:h-9 max-md:text-sm">
+              <Button variant="outline" onClick={onReject}>
                 Reject
               </Button>
-              <ApproveButton invoice={invoice} onApprove={onClose} className="max-md:h-9 max-md:text-sm" />
+              <ApproveButton invoice={invoice} onApprove={onClose} />
             </div>
           </DialogFooter>
         ) : null}
