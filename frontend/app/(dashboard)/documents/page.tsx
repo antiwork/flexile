@@ -579,7 +579,7 @@ const DocumentBulkActionsBar = ({
   }, [selectedDocuments, availableActions]);
 
   const rowsSelected = visibleDocuments.length;
-  const downloadAction = visibleActions.find((action) => action.key === "download");
+  const downloadAction = visibleActions.find((action) => action.key === "edit");
   const signAction = visibleActions.find((action) => action.key === "reviewAndSign");
   const singleDocument = rowsSelected === 1 ? visibleDocuments[0] : undefined;
 
