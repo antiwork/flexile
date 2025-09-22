@@ -12,6 +12,7 @@
 @utility no-scrollbar {
   /* Firefox */
   scrollbar-width: none;
+
   /* WebKit browsers (Chrome, Safari, Opera) */
   &::-webkit-scrollbar {
     display: none;
@@ -142,6 +143,10 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+}
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
 }
 
 body {

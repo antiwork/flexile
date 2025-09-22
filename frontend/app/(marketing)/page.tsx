@@ -1,8 +1,10 @@
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import type { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 import { authOptions } from "@/lib/auth";
 import logo from "@/public/flexile-logo.svg";
 import { cn } from "@/utils";
@@ -13,8 +15,8 @@ import iconGlobe from "./icon-globe.svg";
 
 const buttonClasses = "flex justify-center items-center rounded-full transition-all duration-400 no-underline";
 
-const Section = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <section className={cn("flex", className)}>
+const Section = ({ children, className, id }: { children: ReactNode; className?: string; id?: string }) => (
+  <section className={cn("flex", className)} id={id}>
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 md:gap-12">{children}</div>
   </section>
 );
@@ -54,21 +56,30 @@ export default async function HomePage() {
       </nav>
 
       <main className="min-h-screen bg-white pt-20">
-        <Section className="bg-blue-600 py-8 md:py-16">
-          <h1 className="text-6xl leading-[0.9] font-medium tracking-tight sm:text-8xl md:text-[9rem] lg:text-[12rem]">
-            Contractor payments
-          </h1>
-          <div className="flex">
-            <Link
-              href="/signup/"
-              className={`${buttonClasses} h-20 w-full bg-white px-8 text-xl text-black hover:bg-black hover:text-white md:h-28 md:text-2xl`}
-            >
-              Get started
-            </Link>
+        <Section className="py-16 md:py-24">
+          <div className="text-center">
+            <h1 className="mb-6 text-5xl font-bold tracking-tight text-gray-900 md:text-7xl">
+              Simplifying Contractor
+              <span className="block text-blue-600">Payments</span>
+            </h1>
+            <p className="mx-auto mb-8 max-w-3xl text-xl text-gray-600 md:text-2xl">
+              Create invoices, get paid faster, and manage everything in one place. The modern platform for contractor
+              payments and invoicing.
+            </p>
+            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Button size="default" variant="primary" className="px-8 py-3 text-lg" asChild>
+                <Link href="/signup">
+                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button size="default" variant="outline" className="px-8 py-3 text-lg" asChild>
+                <a href="#features">Learn More</a>
+              </Button>
+            </div>
           </div>
         </Section>
 
-        <Section className="py-8 md:py-16">
+        <Section className="bg-gray-50 py-8 md:py-16" id="features">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-16">
             <div className="flex items-center gap-8">
               <Image src={iconClock} alt="Invoice Management" className="w-12 shrink-0" loading="eager" />
@@ -109,7 +120,7 @@ export default async function HomePage() {
           </div>
         </Section>
 
-        <Section className="flex bg-gray-50 py-8 md:py-16">
+        <Section className="flex py-8 md:py-16">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 md:gap-12">
             <h2 className="text-4xl font-medium md:text-6xl">Clear, straight forward pricing</h2>
             <div className="text-2xl md:text-3xl">1.5% + $0.50, capped at $15/payment</div>
