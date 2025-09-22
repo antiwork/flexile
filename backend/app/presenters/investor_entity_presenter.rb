@@ -19,7 +19,7 @@ class InvestorEntityPresenter
   private
     def grants_props
       @investor_entity.equity_grants
-        .where("vested_shares > 0 OR unvested_shares > 0 OR exercised_shares = 0")
+        .eventually_exercisable
         .order(issued_at: :desc)
         .limit(RECORDS_PER_SECTION)
         .select(:issued_at, :number_of_shares, :vested_shares, :unvested_shares, :exercised_shares, :vested_amount_usd, :exercise_price_usd)
