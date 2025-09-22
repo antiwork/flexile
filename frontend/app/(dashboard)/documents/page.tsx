@@ -1,31 +1,40 @@
 "use client";
-import { useQueryClient } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, Info, X } from "lucide-react";
+import { CircleCheck, Download, Info, Share, X } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
+import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
 import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
+import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
+import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
+import { Editor as RichTextEditor } from "@/components/RichText";
 import SignForm from "@/components/SignForm";
 import Status, { type Variant as StatusVariant } from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
+import { request } from "@/utils/request";
+import { company_documents_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 
@@ -90,6 +99,7 @@ export default function DocumentsPage() {
 
   const columnHelper = createColumnHelper<Document>();
   const [signDocumentParam] = useQueryState("sign");
+  const [sharingDocument, setSharingDocument] = useState<Document | null>(null);
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
   const isSignable = (document: Document) =>
     document.hasText &&
@@ -105,53 +115,6 @@ export default function DocumentsPage() {
     const document = signDocumentParam ? documents.find((document) => document.id === BigInt(signDocumentParam)) : null;
     if (canSign && document && isSignable(document)) setSignDocumentId(document.id);
   }, [documents, signDocumentParam]);
-
-  const actionConfig = useMemo(
-    (): ActionConfig<Document> => ({
-      entityName: "documents",
-      actions: {
-        reviewAndSign: {
-          id: "reviewAndSign",
-          label: "Review and sign",
-          icon: () => null,
-          variant: "primary",
-          contexts: ["single"],
-          permissions: ["administrator", "worker"],
-          conditions: (document: Document): boolean => !!isSignable(document) && !!canSign,
-          action: "reviewAndSign",
-          group: "signature",
-          showIn: ["selection"],
-        },
-        download: {
-          id: "download",
-          label: "Download",
-          icon: Download,
-          contexts: ["single"],
-          permissions: ["administrator", "worker"],
-          conditions: (document: Document): boolean => !!document.attachment,
-          href: (document: Document) => `/download/${document.attachment?.key}/${document.attachment?.filename}`,
-          group: "file",
-          showIn: ["both"],
-        },
-      },
-    }),
-    [isSignable, canSign, isCompanyRepresentative],
-  );
-
-  const actionContext = useMemo(
-    (): ActionContext => ({
-      userRole: isCompanyRepresentative ? "administrator" : "worker",
-      permissions: {},
-    }),
-    [isCompanyRepresentative],
-  );
-
-  const handleAction = (actionId: string, documents: Document[]) => {
-    const singleDocument = documents[0];
-    if (!singleDocument) return;
-
-    if (actionId === "reviewAndSign") setSignDocumentId(singleDocument.id);
-  };
 
   const desktopColumns = useMemo(
     () =>
@@ -292,6 +255,53 @@ export default function DocumentsPage() {
       }),
   });
 
+  const actionConfig: ActionConfig<Document> = {
+    entityName: "documents",
+    actions: {
+      reviewAndSign: {
+        id: "reviewAndSign",
+        label: "Review and sign",
+        icon: () => null,
+        variant: "primary",
+        contexts: ["single"],
+        permissions: ["administrator", "worker"],
+        conditions: (document: Document): boolean => !!isSignable(document) && !!canSign,
+        action: "reviewAndSign",
+        group: "signature",
+        showIn: ["selection"],
+      },
+      edit: {
+        id: "download",
+        label: "Download",
+        icon: Download,
+        contexts: ["single"],
+        permissions: ["administrator", "worker"],
+        conditions: (document, _) => !!document.attachment,
+        href: (document: Document) => `/download/${document.attachment?.key}/${document.attachment?.filename}`,
+      },
+      reject: {
+        id: "share",
+        label: "Share",
+        icon: Share,
+        contexts: ["single"],
+        permissions: ["administrator"],
+        conditions: (document, _) => !!document.hasText,
+        action: "share",
+      },
+    },
+  };
+  const actionContext: ActionContext = {
+    userRole: user.roles.administrator ? "administrator" : "worker",
+    permissions: {},
+  };
+  const handleAction = (actionId: string, documents: Document[]) => {
+    const singleDocument = documents[0];
+    if (!singleDocument) return;
+
+    if (actionId === "share") setSharingDocument(singleDocument);
+    if (actionId === "reviewAndSign") setSignDocumentId(singleDocument.id);
+  };
+
   const selectedRows = table.getSelectedRowModel().rows;
   const selectedDocuments = selectedRows.map((row) => row.original);
   const availableActions = useMemo(
@@ -364,6 +374,16 @@ export default function DocumentsPage() {
             table={table}
             tabsColumn="status"
             {...(isCompanyRepresentative && { searchColumn: "signer" })}
+            contextMenuContent={({ row, selectedRows, onClearSelection }) => (
+              <ContextMenuActions
+                item={row}
+                selectedItems={selectedRows}
+                config={actionConfig}
+                actionContext={actionContext}
+                onAction={handleAction}
+                onClearSelection={onClearSelection}
+              />
+            )}
             selectionActions={(selectedDocuments) => (
               <SelectionActions
                 selectedItems={selectedDocuments}
@@ -382,6 +402,9 @@ export default function DocumentsPage() {
             />
           ) : null}
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
+          {sharingDocument ? (
+            <ShareDocumentModal document={sharingDocument} onClose={() => setSharingDocument(null)} />
+          ) : null}
         </>
       ) : (
         <div className="mx-4">
@@ -433,6 +456,101 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
             Agree & Submit
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const shareDocumentSchema = z.object({
+  text: z.string(),
+  recipient: z.string(),
+});
+
+const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose: () => void }) => {
+  const company = useCurrentCompany();
+  const trpcUtils = trpc.useUtils();
+  const [data] = trpc.documents.get.useSuspenseQuery({ companyId: company.id, id: document.id });
+  const [recipients] = trpc.companies.listCompanyUsers.useSuspenseQuery({ companyId: company.id });
+  const form = useForm({
+    resolver: zodResolver(shareDocumentSchema),
+    defaultValues: {
+      text: data.text ?? "",
+      recipient: assertDefined(recipients[0]).id,
+    },
+  });
+  const submitMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof shareDocumentSchema>) => {
+      await request({
+        method: "POST",
+        url: company_documents_path(company.id),
+        accept: "json",
+        jsonData: {
+          document: {
+            text: values.text,
+            document_type: document.type,
+            name: document.name,
+          },
+          recipient: values.recipient,
+        },
+        assertOk: true,
+      });
+    },
+    onSuccess: async () => {
+      await trpcUtils.documents.list.invalidate();
+      onClose();
+    },
+  });
+  const submit = form.handleSubmit((values) => submitMutation.mutate(values));
+  return (
+    <Dialog open onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-screen-lg">
+        <DialogHeader>
+          <DialogTitle>Share document</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+            <FormField
+              control={form.control}
+              name="text"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <RichTextEditor value={field.value} onChange={field.onChange} className="max-w-none" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="recipient"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Recipient</FormLabel>
+                  <FormControl>
+                    <ComboBox
+                      {...field}
+                      value={field.value}
+                      options={recipients.map((recipient) => ({
+                        value: recipient.id.toString(),
+                        label: recipient.name,
+                      }))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button size="small" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <MutationStatusButton type="submit" mutation={submitMutation} size="small">
+                Send
+              </MutationStatusButton>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
