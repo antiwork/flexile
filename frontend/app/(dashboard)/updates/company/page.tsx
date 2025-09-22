@@ -247,7 +247,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
               <Button variant="outline" size="small" onClick={() => setShowBulkDeleteDialog(false)}>
                 No, cancel
               </Button>
-              <Button size="small" onClick={() => handleBulkDelete(selectedUpdates)}>
+              <Button size="small" onClick={() => void handleBulkDelete(selectedUpdates)}>
                 {`Yes, delete ${selectedUpdates.length === 1 ? "" : "all"}`}
               </Button>
             </div>
