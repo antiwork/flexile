@@ -4,7 +4,6 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
-import { wiseRecipientsFactory } from "@test/factories/wiseRecipients";
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
@@ -47,8 +46,6 @@ test.describe("invoice creation", () => {
         equityPercentage: 20,
       })
     ).companyContractor;
-
-    await wiseRecipientsFactory.create({ userId: contractorUser.id });
   });
 
   test("considers the invoice year when calculating equity", async ({ page }) => {
@@ -234,11 +231,14 @@ test.describe("invoice creation", () => {
       })
     ).user;
 
-    await companyContractorsFactory.create({
-      companyId: company.id,
-      userId: userWithoutPayout.id,
-      payRateInSubunits: 5000,
-    });
+    await companyContractorsFactory.create(
+      {
+        companyId: company.id,
+        userId: userWithoutPayout.id,
+        payRateInSubunits: 5000,
+      },
+      { withoutBankAccount: true },
+    );
 
     await login(page, userWithoutPayout);
 
