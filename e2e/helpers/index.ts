@@ -36,4 +36,6 @@ export const fillDatePicker = async (page: Locator | Page, name: string, value: 
 };
 
 export const findRichTextEditor = (page: Locator | Page, name: string) =>
-  page.locator(`xpath=.//*[@contenteditable="true" and (./@id = //label[contains(., ${JSON.stringify(name)})]/@for)]`);
+  page.locator(
+    `xpath=.//*[@contenteditable="true" and ((./@aria-label = ${JSON.stringify(name)}) or (./@id = //label[contains(., ${JSON.stringify(name)})]/@for))]`,
+  );
