@@ -206,8 +206,8 @@ export function AuthPage({
                   ) : null}
                   <Button
                     type="button"
-                    variant="outline"
-                    className="font-base flex h-11 w-full items-center justify-center gap-2 border-none bg-blue-600 text-base text-white hover:bg-blue-500"
+                    variant="primary"
+                    className="font-base flex h-11 w-full items-center justify-center gap-2"
                     onClick={() => providerSignIn(SignInMethod.Google)}
                   >
                     <Image src={googleLogoLight} alt="Google" width={20} height={20} />
