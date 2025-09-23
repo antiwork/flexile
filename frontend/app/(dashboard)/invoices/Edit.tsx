@@ -1,9 +1,9 @@
 "use client";
 
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { PaperAirplaneIcon, PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
@@ -102,6 +102,7 @@ const Edit = () => {
   const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
+  const queryClient = useQueryClient();
   const worker = user.roles.worker;
   assert(worker != null);
 
@@ -117,6 +118,7 @@ const Edit = () => {
       return dataSchema.parse(await response.json());
     },
   });
+
   const payRateInSubunits = data.user.pay_rate_in_subunits;
 
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
@@ -189,6 +191,10 @@ const Edit = () => {
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       await trpcUtils.documents.list.invalidate();
+      if (id) {
+        await trpcUtils.invoices.get.invalidate({ companyId: company.id, id });
+        await queryClient.invalidateQueries({ queryKey: ["invoice", id] });
+      }
       router.push("/invoices");
     },
   });
@@ -277,8 +283,7 @@ const Edit = () => {
               onClick={() => validate() && submit.mutate()}
               disabled={submit.isPending}
             >
-              <PaperAirplaneIcon className="size-4" />
-              {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit invoice" : "Send invoice"}
+              {submit.isPending ? "Sending..." : data.invoice.id ? "Resubmit" : "Send invoice"}
             </Button>
           </>
         }

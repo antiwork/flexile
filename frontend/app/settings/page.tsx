@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useCurrentCompany, useCurrentUser } from "@/global";
+import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { request } from "@/utils/request";
@@ -109,6 +110,7 @@ const DetailsSection = () => {
 
 const LeaveWorkspaceSection = () => {
   const user = useCurrentUser();
+  const { logout } = useUserStore();
   const company = useCurrentCompany();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -137,10 +139,13 @@ const LeaveWorkspaceSection = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      setTimeout(() => {
-        setIsModalOpen(false);
+
+      if (user.companies.length > 1) {
         router.push("/dashboard");
-      }, 1000);
+      } else {
+        await signOut({ redirect: false }).then(logout);
+        router.push("/login");
+      }
     },
     onError: (error: Error) => {
       setErrorMessage(error.message);
@@ -153,7 +158,7 @@ const LeaveWorkspaceSection = () => {
   }
 
   // Don't show leave option if user has no leavable roles
-  if (!user.roles.worker && !user.roles.investor && !user.roles.lawyer) {
+  if (!user.roles.worker && !user.roles.lawyer) {
     return null;
   }
 
