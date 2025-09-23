@@ -142,14 +142,16 @@ test.describe("Equity Grants", () => {
 
     await logout(page);
     await login(page, contractorUser, "/invoices");
-    await page.getByRole("link", { name: "New invoice" }).first().click();
-    await page.getByLabel("Invoice ID").fill("CUSTOM-1");
-    await fillDatePicker(page, "Date", "10/15/2024");
-    await page.getByPlaceholder("Description").fill("Software development work");
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
-      page.getByRole("button", { name: "Send invoice" }).click(),
-    ]);
+    await page.getByRole("button", { name: "New invoice" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Invoice ID").fill("CUSTOM-1");
+        await fillDatePicker(page, "Invoice date", "10/15/2024");
+        await modal.getByPlaceholder("Description").fill("Software development work");
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
@@ -164,14 +166,16 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText(assertDefined(projectBasedUser.legalName))).toBeVisible();
     await page.getByRole("button", { name: "Agree & Submit" }).click();
 
-    await page.getByRole("link", { name: "New invoice" }).first().click();
-    await page.getByLabel("Invoice ID").fill("CUSTOM-2");
-    await fillDatePicker(page, "Date", "11/01/2024");
-    await page.getByPlaceholder("Description").fill("Promotional video production work");
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
-      page.getByRole("button", { name: "Send invoice" }).click(),
-    ]);
+    await page.getByRole("button", { name: "New invoice" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Invoice ID").fill("CUSTOM-2");
+        await fillDatePicker(page, "Invoice date", "11/01/2024");
+        await modal.getByPlaceholder("Description").fill("Promotional video production work");
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
