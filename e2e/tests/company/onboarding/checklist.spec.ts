@@ -135,9 +135,10 @@ test.describe("Onboarding checklist", () => {
 
     await withinModal(
       async (modal) => {
+        await modal.getByPlaceholder("Description").fill("Software development work");
         await modal.getByLabel("Hours / Qty").fill("10:30");
         await modal.getByLabel("Rate").fill("50");
-        await expect(modal.getByText("Total amount$525")).toBeVisible();
+        await expect(modal.getByText("Total$525")).toBeVisible();
         await modal.getByRole("button", { name: "Send" }).click();
       },
       { page },
@@ -225,9 +226,10 @@ test.describe("Onboarding checklist", () => {
 
     await withinModal(
       async (modal) => {
+        await modal.getByPlaceholder("Description").fill("Software development work");
         await modal.getByLabel("Hours / Qty").fill("10:30");
         await modal.getByLabel("Rate").fill("50");
-        await expect(modal.getByText("Total amount$525")).toBeVisible();
+        await expect(modal.getByText("Total$525")).toBeVisible();
         await modal.getByRole("button", { name: "Send" }).click();
       },
       { page },
