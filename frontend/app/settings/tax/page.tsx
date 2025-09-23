@@ -612,7 +612,7 @@ const LegalCertificationModal = ({
           </>
         )}
 
-        <div className="prose border-muted min-h-0 grow overflow-y-auto rounded-md border p-4 text-black">
+        <div className="prose border-muted text-foreground min-h-0 grow overflow-y-auto rounded-md border p-4">
           <b>{certificateType} Certification</b>
           <br />
           <br />
