@@ -417,7 +417,7 @@ export default function InvoicesPage() {
   );
 
   useEffect(() => {
-    if (searchParams?.get("setup") === "incomplete") {
+    if (searchParams.get("setup") === "incomplete") {
       setSetupDialogOpen(true);
       const sp = new URLSearchParams(searchParams.toString());
       sp.delete("setup");
