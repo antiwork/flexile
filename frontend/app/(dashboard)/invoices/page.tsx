@@ -69,16 +69,6 @@ import { useIsMobile } from "@/utils/use-mobile";
 import QuantityInput from "./QuantityInput";
 import { useCanSubmitInvoices } from ".";
 
-const statusNames = {
-  received: "Awaiting approval",
-  approved: "Awaiting approval",
-  processing: "Processing",
-  payment_pending: "Processing",
-  paid: "Paid",
-  rejected: "Rejected",
-  failed: "Failed",
-};
-
 const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
   switch (invoice.status) {
     case "received":
