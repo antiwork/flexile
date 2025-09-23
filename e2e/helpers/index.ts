@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-export const selectComboboxOption = async (page: Page, name: string, option: string) => {
+export const selectComboboxOption = async (page: Locator | Page, name: string, option: string) => {
   await page.getByRole("combobox", { name }).click();
   await page.getByRole("option", { name: option, exact: true }).first().click();
 };

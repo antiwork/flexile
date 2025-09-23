@@ -82,7 +82,7 @@ test.describe("invoice editing", () => {
       );
     await expect(page.locator("tbody")).toContainText("$900");
 
-    await page.getByRole("button", { name: "Re-submit invoice" }).click();
+    await page.getByRole("button", { name: "Resubmit" }).click();
 
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
