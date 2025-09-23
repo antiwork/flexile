@@ -207,16 +207,16 @@ export default function InvoicePage() {
                   </DropdownMenuItem>
                 ) : null}
 
-                {user.id === invoice.userId && canSubmitInvoices ? (
+                {user.id === invoice.userId ? (
                   <>
-                    {EDITABLE_INVOICE_STATES.includes(invoice.status) && (
+                    {EDITABLE_INVOICE_STATES.includes(invoice.status) && canSubmitInvoices ? (
                       <DropdownMenuItem asChild>
                         <Link href={`/invoices/${invoice.id}/edit`} className="flex items-center gap-2">
                           <SquarePen className="size-4" />
                           Edit invoice
                         </Link>
                       </DropdownMenuItem>
-                    )}
+                    ) : null}
 
                     <DropdownMenuItem
                       onSelect={(e) => {
@@ -597,9 +597,7 @@ export default function InvoicePage() {
         invoices={[invoice]}
       />
 
-      {user.id === invoice.userId && canSubmitInvoices && EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-        <InvoiceModal open={editModalOpen} onOpenChange={setEditModalOpen} invoiceId={invoice.id} />
-      ) : null}
+      {editModalOpen ? <InvoiceModal open onOpenChange={setEditModalOpen} invoiceId={invoice.id} /> : null}
     </div>
   );
 }
