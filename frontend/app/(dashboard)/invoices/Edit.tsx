@@ -7,7 +7,7 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { List } from "immutable";
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
-import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
@@ -96,11 +96,14 @@ const Edit = () => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const { canSubmitInvoices } = useCanSubmitInvoices();
-  if (!canSubmitInvoices) throw redirect("/invoices");
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
-  const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
+  if (!id && !canSubmitInvoices) {
+    router.replace("/invoices?setup=incomplete");
+    return null;
+  }
+  const [errorField, setErrorField] = useState<string | null>(null);
   const trpcUtils = trpc.useUtils();
   const queryClient = useQueryClient();
   const worker = user.roles.worker;
@@ -109,8 +112,13 @@ const Edit = () => {
   const { data } = useSuspenseQuery({
     queryKey: ["invoice", id],
     queryFn: async () => {
+      const fromId = !id ? searchParams.get("from") : null;
       const response = await request({
-        url: id ? edit_company_invoice_path(company.id, id) : new_company_invoice_path(company.id),
+        url: id
+          ? edit_company_invoice_path(company.id, id)
+          : fromId
+            ? edit_company_invoice_path(company.id, fromId)
+            : new_company_invoice_path(company.id),
         method: "GET",
         accept: "json",
         assertOk: true,

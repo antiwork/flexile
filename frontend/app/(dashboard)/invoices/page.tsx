@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -113,6 +114,9 @@ export default function InvoicesPage() {
   const company = useCurrentCompany();
   const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
+  const [setupDialogOpen, setSetupDialogOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const isDeletable = useIsDeletable();
@@ -412,10 +416,27 @@ export default function InvoicesPage() {
     [selectedInvoices, actionConfig, actionContext],
   );
 
+  useEffect(() => {
+    if (searchParams?.get("setup") === "incomplete") {
+      setSetupDialogOpen(true);
+      const sp = new URLSearchParams(searchParams.toString());
+      sp.delete("setup");
+      router.replace(`/invoices${sp.toString() ? `?${sp}` : ""}`);
+    }
+  }, [searchParams]);
+
+  const openNewInvoiceOrSetup = (canSubmit: boolean) => {
+    if (canSubmit) return;
+    setSetupDialogOpen(true);
+  };
+
   return (
     <>
       {isMobile && user.roles.worker ? (
-        <Button variant="floating-action" {...(!canSubmitInvoices ? { disabled: true } : { asChild: true })}>
+        <Button
+          variant="floating-action"
+          {...(!canSubmitInvoices ? { onClick: () => openNewInvoiceOrSetup(false) } : { asChild: true })}
+        >
           <Link href="/invoices/new" inert={!canSubmitInvoices}>
             <Plus />
           </Link>
@@ -451,7 +472,11 @@ export default function InvoicesPage() {
               </div>
             ) : null
           ) : user.roles.worker ? (
-            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+            <Button
+              {...(!canSubmitInvoices ? { onClick: () => openNewInvoiceOrSetup(false) } : { asChild: true })}
+              variant="outline"
+              size="small"
+            >
               <Link href="/invoices/new" inert={!canSubmitInvoices}>
                 <Plus className="size-4" />
                 New invoice
@@ -616,6 +641,49 @@ export default function InvoicesPage() {
             >
               Yes, proceed
             </MutationButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={setupDialogOpen} onOpenChange={setSetupDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Finish setup to create invoices</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div className="text-gray-700">Before you can create invoices, please complete:</div>
+            {!user.taxInformationConfirmedAt ? (
+              <Alert>
+                <Info className="size-4" />
+                <AlertDescription>
+                  Provide your tax and legal details in{" "}
+                  <Link className={linkClasses} href="/settings/tax">
+                    Settings → Tax
+                  </Link>
+                  .
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            {!user.hasPayoutMethodForInvoices ? (
+              <Alert>
+                <Info className="size-4" />
+                <AlertDescription>
+                  Add a payout method in{" "}
+                  <Link className={linkClasses} href="/settings/payouts">
+                    Settings → Payouts
+                  </Link>
+                  .
+                </AlertDescription>
+              </Alert>
+            ) : null}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSetupDialogOpen(false)}>
+              Close
+            </Button>
+            <Button asChild>
+              <Link href={user.hasPayoutMethodForInvoices ? "/settings/tax" : "/settings/payouts"}>Open settings</Link>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

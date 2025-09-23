@@ -3,7 +3,7 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon, PaperClipIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
-import { Ban, CircleAlert, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
+import { Ban, CircleAlert, Copy, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { Fragment, useMemo, useState } from "react";
@@ -210,6 +210,14 @@ export default function InvoicePage() {
                         <Link href={`/invoices/${invoice.id}/edit`} className="flex items-center gap-2">
                           <SquarePen className="size-4" />
                           Edit invoice
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {!EDITABLE_INVOICE_STATES.includes(invoice.status) && (
+                      <DropdownMenuItem asChild>
+                        <Link href={`/invoices/new?from=${invoice.id}`} className="flex items-center gap-2">
+                          <Copy className="size-4" />
+                          Duplicate
                         </Link>
                       </DropdownMenuItem>
                     )}
