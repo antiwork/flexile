@@ -131,11 +131,18 @@ test.describe("Onboarding checklist", () => {
     await expect(page.getByRole("button", { name: "Close" })).toBeVisible();
 
     await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("button", { name: "New invoice" }).click();
 
-    await page.getByLabel("Hours / Qty").fill("10:30");
-    await page.getByLabel("Rate").fill("50");
-    await expect(page.getByText("Total amount$525")).toBeVisible();
-    await page.getByRole("button", { name: "Send for approval" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Hours / Qty").fill("10:30");
+        await modal.getByLabel("Rate").fill("50");
+        await expect(modal.getByText("Total amount$525")).toBeVisible();
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
+
     await expect(page.getByRole("row").getByText("$525")).toBeVisible();
   });
 
@@ -214,11 +221,18 @@ test.describe("Onboarding checklist", () => {
     await expect(page.getByRole("button", { name: "Close" })).toBeVisible();
 
     await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("button", { name: "New invoice" }).click();
 
-    await page.getByLabel("Hours / Qty").fill("10:30");
-    await page.getByLabel("Rate").fill("50");
-    await expect(page.getByText("Total amount$525")).toBeVisible();
-    await page.getByRole("button", { name: "Send for approval" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Hours / Qty").fill("10:30");
+        await modal.getByLabel("Rate").fill("50");
+        await expect(modal.getByText("Total amount$525")).toBeVisible();
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
+
     await expect(page.getByRole("row").getByText("$525")).toBeVisible();
   });
 });
