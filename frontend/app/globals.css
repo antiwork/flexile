@@ -98,7 +98,7 @@
   --destructive: var(--color-red-700);
   --destructive-foreground: hsla(15, 84%, 45%, 0.1);
   --warning: var(--color-amber-500);
-  --warning-foreground: hsl(32 100% 50% / 0.16);
+  --warning-foreground: hsl(32 52% 42% / 0.1);
   --border: hsla(0 0% 100% / 0.1);
   --input: hsla(0 0% 100% / 0.1);
   --ring: hsla(212, 100%, 46%, 0.8);
