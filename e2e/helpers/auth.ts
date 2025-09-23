@@ -26,11 +26,12 @@ export const logout = async (page: Page) => {
   if (page.url().includes("/login")) {
     return;
   }
-  if (!page.url().includes("/invoices")) {
+  const button = page.getByRole("button", { name: "Log out" }).first();
+  if (!(await button.isVisible())) {
     // Navigate to invoices page to ensure we're on a dashboard page with sidebar
     await page.goto("/invoices");
   }
-  await page.getByRole("button", { name: "Log out" }).first().click();
+  await button.click();
 
   // Wait for redirect to login
   await page.waitForURL(/.*\/login.*/u);
