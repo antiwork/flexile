@@ -21,9 +21,11 @@ import { useCurrentCompany } from "@/global";
 import { request } from "@/utils/request";
 import { company_template_path, company_templates_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 
 export default function Templates() {
   const company = useCurrentCompany();
+  const isMobile = useIsMobile();
   const [editingTemplate, setEditingTemplate] = useQueryState("edit", parseAsStringLiteral(templateTypes));
   const { data: templates } = useSuspenseQuery({
     queryKey: ["templates", company.id],
@@ -51,10 +53,16 @@ export default function Templates() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Used for</TableHead>
-            <TableHead>Last edited</TableHead>
-            <TableHead />
+            {isMobile ? (
+              <TableHead />
+            ) : (
+              <>
+                <TableHead>Name</TableHead>
+                <TableHead>Used for</TableHead>
+                <TableHead>Last edited</TableHead>
+                <TableHead />
+              </>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -72,12 +80,37 @@ export default function Templates() {
             }
             const { name, usedFor } = templateTypeNames[type];
             const template = templates.find((template) => template.document_type === type);
+
             return (
               <TableRow key={type} onClick={() => void setEditingTemplate(type)} className="cursor-pointer">
-                <TableCell>{name}</TableCell>
-                <TableCell>{usedFor}</TableCell>
-                <TableCell>{template ? formatDate(template.updated_at) : "-"}</TableCell>
-                <TableCell className="h-14">{template ? null : <Button size="small">Add</Button>}</TableCell>
+                {isMobile ? (
+                  <TableCell className="w-full">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between">
+                        <div className="w-3xs truncate text-base font-medium">{name}</div>
+                        <div className="flex items-center gap-2">{!template && <Button size="small">Add</Button>}</div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div
+                          className="truncate text-base leading-5 font-[350] text-gray-600"
+                          style={{ width: "calc(100vw - 120px)" }}
+                        >
+                          {usedFor}
+                        </div>
+                        <div className="flex-shrink-0 text-right font-[350] text-gray-600">
+                          {template ? formatDate(template.updated_at) : "-"}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                ) : (
+                  <>
+                    <TableCell>{name}</TableCell>
+                    <TableCell>{usedFor}</TableCell>
+                    <TableCell>{template ? formatDate(template.updated_at) : "-"}</TableCell>
+                    <TableCell className="h-14">{template ? null : <Button size="small">Add</Button>}</TableCell>
+                  </>
+                )}
               </TableRow>
             );
           })}
