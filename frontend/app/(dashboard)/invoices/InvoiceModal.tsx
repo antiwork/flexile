@@ -504,7 +504,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
           </section>
         </div>
 
-        <DialogFooter className="px-4">
+        <DialogFooter className="px-4 pt-3">
           <DatePicker
             variant="button"
             name="Invoice date"
@@ -516,7 +516,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
             granularity="day"
             className="h-full"
           />
-          <Button variant="primary" onClick={handleSubmit} disabled={submit.isPending}>
+          <Button size="small" variant="primary" onClick={handleSubmit} disabled={submit.isPending}>
             {submit.isPending ? "Sending..." : data.invoice.id ? "Re-submit" : "Send"}
           </Button>
         </DialogFooter>
