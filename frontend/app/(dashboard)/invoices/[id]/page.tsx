@@ -38,6 +38,7 @@ import {
   EDITABLE_INVOICE_STATES,
   LegacyAddress,
   RejectModal,
+  StatusDetails,
   taxRequirementsMet,
   useCanSubmitInvoices,
   useIsActionable,
@@ -366,12 +367,13 @@ export default function InvoicePage() {
         ) : null}
 
         {!taxRequirementsMet(invoice) && (
-          <Alert className="mx-4 print:hidden" variant="destructive">
+          <Alert className="mx-4 mb-4 print:hidden" variant="destructive">
             <ExclamationTriangleIcon />
             <AlertTitle>Missing tax information.</AlertTitle>
             <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
           </Alert>
         )}
+        <StatusDetails invoice={invoice} className="mx-4 mb-4 print:hidden" />
 
         <div className="mx-4 print:hidden">
           <div className="text-sm text-gray-500">Status</div>

@@ -21,6 +21,7 @@ import { investorsRouter } from "./routes/investors";
 import { invoicesRouter } from "./routes/invoices";
 import { lawyersRouter } from "./routes/lawyers";
 import { optionPoolsRouter } from "./routes/optionPools";
+import { shareClassesRouter } from "./routes/shareClasses";
 import { shareHoldingsRouter } from "./routes/shareHoldings";
 import { supportRouter } from "./routes/support";
 import { tenderOffersRouter } from "./routes/tenderOffers";
@@ -44,6 +45,7 @@ export const appRouter = createRouter({
   tenderOffers: tenderOffersRouter,
 
   optionPools: optionPoolsRouter,
+  shareClasses: shareClassesRouter,
   companyUpdates: companyUpdatesRouter,
   capTable: capTableRouter,
 
