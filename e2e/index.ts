@@ -58,11 +58,11 @@ export const withinModal = async (
   callback: (modal: Locator) => Promise<void>,
   { page, title, assertClosed = true }: { page: Page; title?: string | RegExp; assertClosed?: boolean },
 ) => {
-  const element = page.getByRole("dialog").filter({
+  const locator = page.getByRole("dialog").filter({
     has: page.locator('[id^="radix-"]'),
   });
 
-  const modal = title ? element.filter({ hasText: title }) : element;
+  const modal = title ? locator.filter({ hasText: title }) : locator;
 
   await expect(modal).toBeVisible();
   await callback(modal);
