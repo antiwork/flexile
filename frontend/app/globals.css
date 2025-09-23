@@ -54,6 +54,8 @@
   --info-foreground: var(--color-blue-50);
   --destructive: var(--color-red-700);
   --destructive-foreground: hsla(5, 73%, 62%, 0.1);
+  --warning: var(--color-amber-600);
+  --warning-foreground: var(--color-amber-50);
   --border: hsl(0 0% 85%);
   --input: hsl(0 0% 80%);
   --ring: hsl(0 0% 90%);
@@ -95,6 +97,8 @@
   --info-foreground: hsl(214, 52%, 25%);
   --destructive: var(--color-red-700);
   --destructive-foreground: hsla(15, 84%, 45%, 0.1);
+  --warning: var(--color-amber-500);
+  --warning-foreground: hsl(32 100% 50% / 0.16);
   --border: hsla(0 0% 100% / 0.1);
   --input: hsla(0 0% 100% / 0.1);
   --ring: hsla(212, 100%, 46%, 0.8);
@@ -136,6 +140,8 @@
   --color-info-foreground: var(--info-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
