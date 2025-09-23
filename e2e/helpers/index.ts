@@ -8,7 +8,7 @@ export const selectComboboxOption = async (page: Locator | Page, name: string, o
 
 export const fillDatePicker = async (page: Locator | Page, name: string, value: string) => {
   // Default date picker
-  const spinButton = page.getByRole("spinbutton", { name: "Date" }).first();
+  const spinButton = page.getByRole("spinbutton", { name }).first();
 
   if (await spinButton.count()) {
     await spinButton.pressSequentially(value, { delay: 50 });
