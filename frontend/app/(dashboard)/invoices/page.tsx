@@ -413,16 +413,7 @@ export default function InvoicesPage() {
   return (
     <>
       {isMobile && user.roles.worker ? (
-        <Button
-          variant="floating-action"
-          disabled={!canSubmitInvoices}
-          onClick={() => {
-            if (canSubmitInvoices) {
-              setEditInvoice(null);
-              setOpenModal("create");
-            }
-          }}
-        >
+        <Button variant="floating-action" disabled={!canSubmitInvoices} onClick={() => setOpenModal("create")}>
           <Plus />
         </Button>
       ) : null}
@@ -456,17 +447,7 @@ export default function InvoicesPage() {
               </div>
             ) : null
           ) : user.roles.worker ? (
-            <Button
-              variant="outline"
-              size="small"
-              disabled={!canSubmitInvoices}
-              onClick={() => {
-                if (canSubmitInvoices) {
-                  setEditInvoice(null);
-                  setOpenModal("create");
-                }
-              }}
-            >
+            <Button variant="outline" size="small" disabled={!canSubmitInvoices} onClick={() => setOpenModal("create")}>
               <Plus className="size-4" />
               New invoice
             </Button>
@@ -671,7 +652,14 @@ export default function InvoicesPage() {
       ) : null}
 
       {openModal === "create" || openModal === "edit" ? (
-        <InvoiceModal open invoiceId={editInvoice?.id ?? null} onOpenChange={() => setOpenModal(null)} />
+        <InvoiceModal
+          open
+          invoiceId={editInvoice?.id ?? null}
+          onOpenChange={() => {
+            setEditInvoice(null);
+            setOpenModal(null);
+          }}
+        />
       ) : null}
     </>
   );
