@@ -145,7 +145,6 @@
   --color-sidebar: var(--sidebar);
 }
 html {
-  scroll-behavior: smooth;
   scroll-padding-top: 80px;
 }
 
