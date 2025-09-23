@@ -57,10 +57,10 @@ const formValuesSchema = z.object({
   business_type: z.nativeEnum(BusinessType).nullable(),
   tax_classification: z.nativeEnum(TaxClassification).nullable(),
   country_code: z.string(),
-  tax_id: z.string().min(1, "This field is required."),
+  tax_id: z.string().trim().min(1, "This field is required."),
   birth_date: z.instanceof(CalendarDate).nullable(),
-  street_address: z.string().min(1, "Please add your residential address."),
-  city: z.string().min(1, "Please add your city or town."),
+  street_address: z.string().trim().min(1, "Please add your residential address."),
+  city: z.string().trim().min(1, "Please add your city or town."),
   state: z.string(),
   zip_code: z.string().regex(/\d/u, "Please add a valid postal code (must contain at least one number)."),
 });

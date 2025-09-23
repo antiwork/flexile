@@ -55,7 +55,7 @@ import FormFields, { schema as formSchema } from "../FormFields";
 
 const issuePaymentSchema = z.object({
   amountInCents: z.number().min(0),
-  description: z.string().min(1, "This field is required"),
+  description: z.string().trim().min(1, "This field is required"),
   equityType: z.enum(["fixed", "range"]),
   equityPercentage: z.number().min(MINIMUM_EQUITY_PERCENTAGE).max(MAXIMUM_EQUITY_PERCENTAGE),
   equityRange: z.tuple([z.number().min(MINIMUM_EQUITY_PERCENTAGE), z.number().max(MAXIMUM_EQUITY_PERCENTAGE)]),

@@ -31,7 +31,7 @@ import { VESTED_SHARES_CLASS } from "..";
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 
 const formSchema = z.object({
-  shareClass: z.string().min(1, "This field is required"),
+  shareClass: z.string().trim().min(1, "This field is required"),
   numberOfShares: z.number().min(1),
   pricePerShare: z.number().min(0),
 });
