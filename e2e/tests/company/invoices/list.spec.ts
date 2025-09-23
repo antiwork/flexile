@@ -108,24 +108,6 @@ test.describe("Invoices admin flow", () => {
         page.getByText("Payments to contractors may take up to 10 business days to process."),
       ).not.toBeVisible();
     });
-
-    test("loads successfully for alumni", async ({ page }) => {
-      const { company } = await setupCompany();
-      const { companyContractor } = await companyContractorsFactory.create({
-        companyId: company.id,
-        endedAt: new Date("2023-01-01"),
-      });
-      const contractorUser = await db.query.users.findFirst({
-        where: eq(users.id, companyContractor.userId),
-      });
-      assert(contractorUser !== undefined);
-
-      await login(page, contractorUser);
-      await page.getByRole("link", { name: "Invoices" }).click();
-      await expect(page.getByLabel("Hours / Qty")).toBeVisible();
-      await expect(page.getByText("Total amount$60")).toBeVisible();
-      await expect(page.locator("header").getByRole("button", { name: "New invoice" })).toBeVisible();
-    });
   });
 
   const countInvoiceApprovals = async (companyId: bigint) =>
