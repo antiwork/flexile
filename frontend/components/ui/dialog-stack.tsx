@@ -207,7 +207,7 @@ export const DialogStackBody = ({ children, className, ...props }: DialogStackBo
         <div
           role="dialog"
           className={cn(
-            "pointer-events-none fixed inset-0 z-50 mx-auto flex max-h-[95vh] w-full max-w-lg flex-col items-center justify-start p-2 pt-32",
+            "pointer-events-none fixed inset-0 z-50 mx-auto flex max-h-[90vh] w-full max-w-lg flex-col items-center justify-start p-2 pt-16 sm:max-h-[95vh] sm:pt-32",
             className,
           )}
           {...props}
@@ -318,7 +318,7 @@ export const DialogStackDescription = ({ children, className, ...props }: Dialog
 export type DialogStackHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 export const DialogStackHeader = ({ className, ...props }: DialogStackHeaderProps) => (
-  <div className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />
+  <div className={cn("flex flex-col space-y-1.5 text-left", className)} {...props} />
 );
 
 export type DialogStackFooterProps = HTMLAttributes<HTMLDivElement>;

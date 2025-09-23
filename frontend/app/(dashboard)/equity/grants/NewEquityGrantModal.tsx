@@ -277,14 +277,14 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
       setActiveIndex={setStep}
     >
       <DialogStackBody>
-        <DialogStackContent className="overflow-y-auto">
+        <DialogStackContent>
           <DialogStackHeader>
             <DialogStackTitle>New equity grant</DialogStackTitle>
             <DialogStackDescription>Fill in the details below to create an equity grant.</DialogStackDescription>
           </DialogStackHeader>
           <Form {...detailsForm}>
-            <form onSubmit={(e) => void submitDetails(e)} className="space-y-4">
-              <div className="grid h-auto gap-4">
+            <form onSubmit={(e) => void submitDetails(e)} className="contents">
+              <div className="grid h-auto gap-4 overflow-y-auto">
                 <FormField
                   control={detailsForm.control}
                   name="userId"
@@ -546,7 +546,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
             <DialogStackTitle>Vesting details</DialogStackTitle>
           </DialogStackHeader>
           <Form {...vestingForm}>
-            <form onSubmit={(e) => void submitVesting(e)} className="space-y-4">
+            <form onSubmit={(e) => void submitVesting(e)} className="contents">
               {recipient?.activeContractor ? (
                 <FormField
                   control={vestingForm.control}
@@ -682,7 +682,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
             <DialogStackTitle>Equity contract</DialogStackTitle>
           </DialogStackHeader>
           <Form {...documentForm}>
-            <form onSubmit={(e) => void submit(e)} className="space-y-4">
+            <form onSubmit={(e) => void submit(e)} className="contents">
               <NewDocumentField type="stock_option_agreement" />
 
               {documentForm.formState.errors.root ? (
@@ -698,7 +698,6 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                 </DialogStackPrevious>
                 <MutationStatusButton
                   type="submit"
-                  size="small"
                   mutation={createEquityGrant}
                   disabled={!documentForm.formState.isValid}
                 >

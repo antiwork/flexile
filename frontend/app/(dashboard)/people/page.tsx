@@ -373,7 +373,7 @@ const ActionPanel = () => {
               <DialogStackHeader>
                 <DialogStackTitle>Add a contract</DialogStackTitle>
               </DialogStackHeader>
-              <form onSubmit={(e) => void submit(e)} className="space-y-4">
+              <form onSubmit={(e) => void submit(e)} className="contents">
                 {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField type="consulting_contract" />}
 
                 <FormField
