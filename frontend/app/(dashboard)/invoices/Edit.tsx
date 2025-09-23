@@ -158,11 +158,11 @@ const Edit = () => {
       formData.append("invoice[invoice_number]", invoiceNumber);
       formData.append("invoice[invoice_date]", issueDate.toString());
       for (const lineItem of lineItems) {
-        if (!lineItem.description || !lineItem.quantity) continue;
+        if (!lineItem.quantity) continue;
         if (lineItem.id) {
           formData.append("invoice_line_items[][id]", lineItem.id.toString());
         }
-        formData.append("invoice_line_items[][description]", lineItem.description);
+        formData.append("invoice_line_items[][description]", lineItem.description || "-");
         formData.append("invoice_line_items[][quantity]", lineItem.quantity.toString());
         formData.append("invoice_line_items[][hourly]", lineItem.hourly.toString());
         formData.append("invoice_line_items[][pay_rate_in_subunits]", lineItem.pay_rate_in_subunits.toString());
@@ -241,7 +241,6 @@ const Edit = () => {
       lineItems.update(index, (lineItem) => {
         const updated = { ...assertDefined(lineItem), ...update };
         updated.errors = [];
-        if (updated.description.length === 0) updated.errors.push("description");
         if (!updated.quantity || parseQuantity(updated.quantity) < 0.01) updated.errors.push("quantity");
         return updated;
       }),
