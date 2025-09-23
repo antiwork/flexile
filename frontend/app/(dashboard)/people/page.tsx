@@ -22,10 +22,19 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DialogStack,
+  DialogStackBody,
+  DialogStackContent,
+  DialogStackFooter,
+  DialogStackHeader,
+  DialogStackNext,
+  DialogStackPrevious,
+  DialogStackTitle,
+} from "@/components/ui/dialog-stack";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -194,7 +203,7 @@ export default function PeoplePage() {
                 {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
               </button>
             ) : null}
-            {workers.length === 0 ? <ActionPanel /> : null}
+            {workers.length === 0 && !isLoading ? <ActionPanel /> : null}
           </>
         }
       />
@@ -314,13 +323,13 @@ const ActionPanel = () => {
           </Button>
         </div>
       )}
-      <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Who's joining?</DialogTitle>
-          </DialogHeader>
-          <Form {...inviteForm}>
-            <form onSubmit={(e) => void submit(e)} className="space-y-4">
+      <DialogStack open={showInviteModal} onOpenChange={setShowInviteModal}>
+        <Form {...inviteForm}>
+          <DialogStackBody>
+            <DialogStackContent>
+              <DialogStackHeader>
+                <DialogStackTitle>Who's joining?</DialogStackTitle>
+              </DialogStackHeader>
               <FormField
                 control={inviteForm.control}
                 name="email"
@@ -354,34 +363,48 @@ const ActionPanel = () => {
               />
 
               <FormFields />
+              <DialogStackFooter>
+                <DialogStackNext>
+                  <Button>Continue</Button>
+                </DialogStackNext>
+              </DialogStackFooter>
+            </DialogStackContent>
+            <DialogStackContent>
+              <DialogStackHeader>
+                <DialogStackTitle>Add a contract</DialogStackTitle>
+              </DialogStackHeader>
+              <form onSubmit={(e) => void submit(e)} className="contents">
+                {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField type="consulting_contract" />}
 
-              <FormField
-                control={inviteForm.control}
-                name="contractSignedElsewhere"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        label="Already signed contract elsewhere"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField type="consulting_contract" />}
-              <div className="flex flex-col items-end space-y-2">
-                <MutationStatusButton mutation={inviteMutation} type="submit" size="small">
-                  Send invite
-                </MutationStatusButton>
+                <FormField
+                  control={inviteForm.control}
+                  name="contractSignedElsewhere"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          label="Already signed contract elsewhere"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
                 {inviteMutation.isError ? <div className="text-red text-sm">{inviteMutation.error.message}</div> : null}
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+                <DialogStackFooter>
+                  <DialogStackPrevious>
+                    <Button variant="outline">Back</Button>
+                  </DialogStackPrevious>
+                  <MutationStatusButton mutation={inviteMutation} type="submit">
+                    Send invite
+                  </MutationStatusButton>
+                </DialogStackFooter>
+              </form>
+            </DialogStackContent>
+          </DialogStackBody>
+        </Form>
+      </DialogStack>
       <InviteLinkModal open={showInviteLinkModal} onOpenChange={setShowInviteLinkModal} />
     </>
   );
