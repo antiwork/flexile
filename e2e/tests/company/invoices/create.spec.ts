@@ -4,6 +4,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
+import { wiseRecipientsFactory } from "@test/factories/wiseRecipients";
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
@@ -46,6 +47,8 @@ test.describe("invoice creation", () => {
         equityPercentage: 20,
       })
     ).companyContractor;
+
+    await wiseRecipientsFactory.create({ userId: contractorUser.id });
   });
 
   test("considers the invoice year when calculating equity", async ({ page }) => {
@@ -218,6 +221,30 @@ test.describe("invoice creation", () => {
 
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByText("Please provide your legal details before creating new invoices.")).toBeVisible();
+  });
+
+  test("shows payout warning when payout information is not provided", async ({ page }) => {
+    const userWithoutPayout = (
+      await usersFactory.create({
+        streetAddress: "123 Main St",
+        zipCode: "12345",
+        city: "Test City",
+        state: "CA",
+        countryCode: "US",
+      })
+    ).user;
+
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: userWithoutPayout.id,
+      payRateInSubunits: 5000,
+    });
+
+    await login(page, userWithoutPayout);
+
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    await expect(page.getByText("Please provide a payout method for your invoices.")).toBeVisible();
+    await expect(page.locator("header").getByRole("link", { name: "New invoice" })).toHaveClass(/disabled/u);
   });
 
   test("shows alert when billing above default pay rate", async ({ page }) => {

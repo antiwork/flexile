@@ -38,11 +38,12 @@ export const useCanSubmitInvoices = () => {
   const unsignedContractId = documents?.[0]?.id;
   const hasLegalDetails = user.address.street_address && !!user.taxInformationConfirmedAt;
   const contractSignedElsewhere = contractorInfo?.contractSignedElsewhere ?? false;
+  const hasPayoutInfo = user.hasPayoutMethodForInvoices ?? false;
 
   return {
     unsignedContractId: contractSignedElsewhere ? null : unsignedContractId,
     hasLegalDetails,
-    canSubmitInvoices: (contractSignedElsewhere || !unsignedContractId) && hasLegalDetails,
+    canSubmitInvoices: (contractSignedElsewhere || !unsignedContractId) && hasLegalDetails && hasPayoutInfo,
   };
 };
 
