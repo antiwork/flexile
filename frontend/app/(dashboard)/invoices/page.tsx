@@ -101,6 +101,28 @@ const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprov
       return "Rejected";
     case "failed":
       return "Failed";
+    default:
+      return "Awaiting approval";
+  }
+};
+
+const getInvoiceStatusFilterValue = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
+  switch (invoice.status) {
+    case "received":
+      return "Awaiting approval";
+    case "approved":
+      return invoice.approvals.length < company.requiredInvoiceApprovals ? "Awaiting approval" : "Approved";
+    case "processing":
+    case "payment_pending":
+      return "Processing";
+    case "paid":
+      return "Paid";
+    case "rejected":
+      return "Rejected";
+    case "failed":
+      return "Failed";
+    default:
+      return "Awaiting approval";
   }
 };
 
@@ -239,7 +261,7 @@ export default function InvoicesPage() {
         (value) => (value ? formatMoneyFromCents(value) : "N/A"),
         "numeric",
       ),
-      columnHelper.accessor((row) => statusNames[row.status], {
+      columnHelper.accessor((row) => getInvoiceStatusFilterValue(row, company), {
         id: "status",
         header: "Status",
         cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
@@ -269,7 +291,7 @@ export default function InvoicesPage() {
         },
       }),
     ],
-    [data, user.roles.administrator],
+    [company, data, user.roles.administrator],
   );
 
   const mobileColumns = useMemo(
@@ -319,7 +341,7 @@ export default function InvoicesPage() {
         },
       }),
 
-      columnHelper.accessor((row) => statusNames[row.status], {
+      columnHelper.accessor((row) => getInvoiceStatusFilterValue(row, company), {
         id: "status",
         meta: {
           filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
@@ -342,7 +364,7 @@ export default function InvoicesPage() {
         },
       }),
     ],
-    [data],
+    [company, data],
   );
 
   const columns = isMobile ? mobileColumns : desktopColumns;
