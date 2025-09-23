@@ -424,7 +424,7 @@ const ActionPanel = ({
         <DialogDescription className="sr-only">Manage Payment or Contract</DialogDescription>
         <div className="flex flex-col gap-3">
           <DialogClose asChild onClick={handleIssuePaymentClick}>
-            <Button size="small">Issue payment</Button>
+            <Button>Issue payment</Button>
           </DialogClose>
           {contractor.endedAt && !isFuture(contractor.endedAt) ? (
             <Status className="justify-center" variant="critical">
@@ -432,9 +432,7 @@ const ActionPanel = ({
             </Status>
           ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
             <DialogClose asChild onClick={handleEndContractClick}>
-              <Button variant="outline" size="small">
-                End contract
-              </Button>
+              <Button variant="outline">End contract</Button>
             </DialogClose>
           ) : null}
         </div>

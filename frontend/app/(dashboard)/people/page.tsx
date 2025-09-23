@@ -288,13 +288,13 @@ const ActionPanel = () => {
             <DialogDescription className="sr-only">Invite people to your workspace</DialogDescription>
             <div className="flex flex-col gap-3">
               <DialogClose asChild onClick={() => setShowInviteLinkModal(true)}>
-                <Button size="small" variant="outline">
+                <Button variant="outline">
                   <LinkIcon className="size-4" />
                   Invite link
                 </Button>
               </DialogClose>
               <DialogClose asChild onClick={() => setShowInviteModal(true)}>
-                <Button size="small">
+                <Button>
                   <Plus className="size-4" />
                   Add contractor
                 </Button>
@@ -304,11 +304,11 @@ const ActionPanel = () => {
         </Dialog>
       ) : (
         <div className="flex flex-row gap-2">
-          <Button size="small" variant="outline" onClick={() => setShowInviteLinkModal(true)}>
+          <Button variant="outline" onClick={() => setShowInviteLinkModal(true)}>
             <LinkIcon className="size-4" />
             Invite link
           </Button>
-          <Button size="small" onClick={() => setShowInviteModal(true)}>
+          <Button onClick={() => setShowInviteModal(true)}>
             <Plus className="size-4" />
             Add contractor
           </Button>
