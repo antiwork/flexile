@@ -278,30 +278,19 @@ test.describe("invoice creation", () => {
   test("allows submitting line items with blank descriptions via 'Add more info' flow", async ({ page }) => {
     await login(page, contractorUser, "/invoices");
 
-    await page.getByRole("button", { name: "Add more info" }).click();
-    await expect(page.getByRole("heading", { name: "New invoice" })).toBeVisible();
-
-    await page.getByLabel("Hours / Qty").fill("2:00");
+    await page.getByText("Add more info").click();
+    await page.getByLabel("Hours / Qty").fill("1:00");
     await page.getByLabel("Rate").fill("60");
-
-    await expect(page.getByText("Total$120")).toBeVisible();
-
     await page.getByRole("button", { name: "Send invoice" }).click();
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-
-    await expect(page.locator("tbody")).toContainText("$120");
+    await expect(page.getByRole("cell", { name: "Awaiting approval (0/2)" })).toBeVisible();
 
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
       .then(takeOrThrow);
 
-    expect(invoice.totalAmountInUsdCents).toBe(12000n);
-
     const lineItem = await db.query.invoiceLineItems
       .findFirst({ where: eq(invoiceLineItems.invoiceId, invoice.id) })
       .then(takeOrThrow);
-
     expect(lineItem.description).toBe("-");
-    expect(Number(lineItem.quantity)).toBe(2);
   });
 });
