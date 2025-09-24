@@ -3,7 +3,7 @@
 import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -100,6 +100,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
   const [errorField, setErrorField] = useState<string | null>(null);
   const trpcUtils = trpc.useUtils();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { data } = useSuspenseQuery({
     queryKey: invoiceId ? ["invoice", "edit", invoiceId] : ["invoice", "new"],
@@ -112,7 +113,6 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
       });
       return dataSchema.parse(await response.json());
     },
-    gcTime: 0,
   });
 
   const payRateInSubunits = data.user.pay_rate_in_subunits;
@@ -186,6 +186,9 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       await trpcUtils.invoices.get.invalidate({ companyId: company.id });
       await trpcUtils.documents.list.invalidate();
+      await queryClient.invalidateQueries({
+        queryKey: invoiceId ? ["invoice", "edit", invoiceId] : ["invoice", "new"],
+      });
       onOpenChange(false);
       router.push("/invoices");
     },

@@ -146,30 +146,37 @@ test.describe("invoice editing", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByRole("cell", { name: "INV-STALE-TEST" })).toBeVisible();
 
+    // Open invoice and click edit
     await page.getByRole("cell", { name: "INV-STALE-TEST" }).click();
-    await page.getByRole("link", { name: "Edit invoice" }).click();
-    await expect(page.getByRole("link", { name: "Edit invoice" })).toBeVisible();
+    await page.getByRole("button", { name: "Edit invoice" }).click();
 
-    // Verify initial data is loaded correctly
-    await expect(page.getByPlaceholder("Enter notes about your invoice (optional)")).toHaveValue("Original notes.");
-    await expect(page.getByPlaceholder("Description").first()).toHaveValue("Development work");
+    // Verify initial data is loaded correctly in the modal
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByPlaceholder("Description").first()).toHaveValue("Development work");
+        await expect(modal.getByPlaceholder("Type your notes here")).toHaveValue("Original notes.");
 
-    // Update the invoice data
-    await page.getByPlaceholder("Enter notes about your invoice (optional)").fill("Updated notes after first edit.");
-    await page.getByPlaceholder("Description").first().fill("Updated development work");
-    await page.getByRole("button", { name: "Resubmit" }).click();
+        // Update the invoice data
+        await modal.getByPlaceholder("Type your notes here").fill("Updated notes after first edit.");
+        await page.getByPlaceholder("Description").first().fill("Updated development work");
+        await modal.getByRole("button", { name: "Re-submit" }).click();
+      },
+      { page },
+    );
 
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "INV-STALE-TEST" })).toBeVisible();
 
     // Navigate back to edit page
     await page.getByRole("cell", { name: "INV-STALE-TEST" }).click();
-    await page.getByRole("link", { name: "Edit invoice" }).click();
-    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
+    await page.getByRole("button", { name: "Edit invoice" }).click();
 
-    // Verify fresh data is displayed (not stale cached data)
-    await expect(page.getByPlaceholder("Description").first()).toHaveValue("Updated development work");
-    await expect(page.getByPlaceholder("Enter notes about your invoice (optional)")).toHaveValue(
-      "Updated notes after first edit.",
+    // Verify fresh data is displayed in the modal (not stale cached data)
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByPlaceholder("Description").first()).toHaveValue("Updated development work");
+        await expect(modal.getByPlaceholder("Type your notes here")).toHaveValue("Updated notes after first edit.");
+      },
+      { page, assertClosed: false },
     );
 
     // Confirm database has the correct data
