@@ -422,7 +422,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
         </DialogHeader>
         <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
         <DialogFooter>
-          <Button size="small" onClick={sign} disabled={!signed}>
+          <Button onClick={sign} disabled={!signed}>
             Agree & Submit
           </Button>
         </DialogFooter>
@@ -512,10 +512,10 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
               )}
             />
             <DialogFooter>
-              <Button size="small" variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <MutationStatusButton type="submit" mutation={submitMutation} size="small">
+              <MutationStatusButton type="submit" mutation={submitMutation}>
                 Send
               </MutationStatusButton>
             </DialogFooter>

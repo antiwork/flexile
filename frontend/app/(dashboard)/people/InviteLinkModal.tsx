@@ -65,10 +65,10 @@ const InviteLinkModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
             <Input className="text-foreground text-sm" readOnly value={inviteLink} aria-label="Link" />
           </div>
           <DialogFooter>
-            <Button variant="outline" size="small" onClick={() => setShowResetLinkModal(true)}>
+            <Button variant="outline" onClick={() => setShowResetLinkModal(true)}>
               Reset link
             </Button>
-            <CopyButton aria-label="Copy" size="small" copyText={inviteLink}>
+            <CopyButton aria-label="Copy" copyText={inviteLink}>
               <Copy className="size-4" />
               <span>Copy</span>
             </CopyButton>
@@ -86,12 +86,10 @@ const InviteLinkModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
           </DialogHeader>
           <div className="flex flex-col">
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="small" onClick={() => setShowResetLinkModal(false)}>
+              <Button variant="outline" onClick={() => setShowResetLinkModal(false)}>
                 Cancel
               </Button>
-              <MutationButton size="small" mutation={resetMutation}>
-                Reset link
-              </MutationButton>
+              <MutationButton mutation={resetMutation}>Reset link</MutationButton>
             </div>
           </div>
         </DialogContent>

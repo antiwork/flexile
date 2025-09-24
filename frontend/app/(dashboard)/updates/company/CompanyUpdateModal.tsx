@@ -179,14 +179,11 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
 
           <div className="flex justify-end gap-3">
             {update?.sentAt ? (
-              <Button size="small" onClick={() => void submit()}>
-                Update
-              </Button>
+              <Button onClick={() => void submit()}>Update</Button>
             ) : (
               <>
                 <MutationStatusButton
                   type="button"
-                  size="small"
                   mutation={saveMutation}
                   idleVariant="outline"
                   loadingText="Saving..."
@@ -196,9 +193,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                 >
                   Preview
                 </MutationStatusButton>
-                <Button size="small" onClick={() => void submit()}>
-                  Publish
-                </Button>
+                <Button onClick={() => void submit()}>Publish</Button>
               </>
             )}
           </div>
@@ -217,14 +212,13 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
           )}
           <DialogFooter>
             <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-              <Button variant="outline" size="small" onClick={() => setPublishModalOpen(false)}>
+              <Button variant="outline" onClick={() => setPublishModalOpen(false)}>
                 No, cancel
               </Button>
               <MutationButton
                 mutation={saveMutation}
                 param={{ values: form.getValues(), preview: false }}
                 loadingText="Sending..."
-                size="small"
               >
                 Yes, {update?.sentAt ? "update" : "publish"}
               </MutationButton>

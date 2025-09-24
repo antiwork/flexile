@@ -33,6 +33,7 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_dividend_path, company_switch_path, sign_company_dividend_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 
 type Dividend = RouterOutput["dividends"]["list"][number];
 const columnHelper = createColumnHelper<Dividend>();
@@ -42,6 +43,7 @@ export default function Dividends() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const companyIdParam = searchParams.get("company_id");
 
@@ -150,7 +152,10 @@ export default function Dividends() {
             user.hasPayoutMethodForDividends &&
             info.row.original.dividendRound.releaseDocument &&
             !info.row.original.signedReleaseAt ? (
-              <Button size="small" onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}>
+              <Button
+                size={isMobile ? "default" : "small"}
+                onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}
+              >
                 Sign
               </Button>
             ) : null}
@@ -266,7 +271,7 @@ export default function Dividends() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button size="small" onClick={() => setSigningDividend({ id: signingDividend.id, state: "signing" })}>
+                  <Button onClick={() => setSigningDividend({ id: signingDividend.id, state: "signing" })}>
                     Review and sign agreement
                   </Button>
                 </DialogFooter>

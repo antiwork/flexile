@@ -455,7 +455,6 @@ export default function RolesPage() {
                 ) : null}
                 <Button
                   type="submit"
-                  size="small"
                   className="w-full md:w-auto"
                   disabled={
                     !addMemberForm.formState.isValid ||
@@ -485,10 +484,10 @@ export default function RolesPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button size="small" variant="outline" onClick={() => setConfirmRevoke(null)}>
+            <Button variant="outline" onClick={() => setConfirmRevoke(null)}>
               Cancel
             </Button>
-            <Button size="small" variant="critical" onClick={handleRemoveRole} disabled={removeRoleMutation.isPending}>
+            <Button variant="critical" onClick={handleRemoveRole} disabled={removeRoleMutation.isPending}>
               Remove {confirmRevoke?.role === "admin" ? "admin" : "lawyer"}
             </Button>
           </DialogFooter>

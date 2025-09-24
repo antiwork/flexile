@@ -160,12 +160,11 @@ export default function GrantsPage() {
                 </AlertDescription>
               </Alert>
               <DialogFooter>
-                <Button variant="outline" size="small" onClick={() => setCancellingGrantId(null)}>
+                <Button variant="outline" onClick={() => setCancellingGrantId(null)}>
                   Cancel
                 </Button>
                 <MutationButton
                   idleVariant="critical"
-                  size="small"
                   mutation={cancelGrant}
                   param={{ companyId: company.id, id: cancellingGrant.id, reason: "Cancelled by admin" }}
                 >
