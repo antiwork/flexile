@@ -54,36 +54,34 @@ RSpec.describe Invoice do
         .allow_nil
     end
 
-    describe "invoice_number uniqueness and normalization" do
-      let(:company) { create(:company) }
-      let(:user) { create(:user, :contractor) }
+    let(:company) { create(:company) }
+    let(:user) { create(:user, :contractor) }
 
-      it "strips surrounding whitespace before validation" do
-        invoice = build(:invoice, company:, user:, invoice_number: "  INV-123  ")
-        expect(invoice).to be_valid
-        expect(invoice.invoice_number).to eq("INV-123")
-      end
+    it "strips surrounding whitespace before validation" do
+      invoice = build(:invoice, company:, user:, invoice_number: "  INV-123  ")
+      expect(invoice).to be_valid
+      expect(invoice.invoice_number).to eq("INV-123")
+    end
 
-      it "enforces case-insensitive uniqueness scoped to company and user for alive invoices" do
-        create(:invoice, company:, user:, invoice_number: "INV-123")
-        dup = build(:invoice, company:, user:, invoice_number: "inv-123")
-        expect(dup).to be_invalid
-        expect(dup.errors[:invoice_number]).to be_present
-      end
+    it "enforces case-insensitive uniqueness scoped to company and user for alive invoices" do
+      create(:invoice, company:, user:, invoice_number: "INV-123")
+      dup = build(:invoice, company:, user:, invoice_number: "inv-123")
+      expect(dup).to be_invalid
+      expect(dup.errors[:invoice_number]).to be_present
+    end
 
-      it "ignores soft-deleted invoices for uniqueness" do
-        create(:invoice, company:, user:, invoice_number: "INV-123", deleted_at: 1.day.ago)
-        dup = build(:invoice, company:, user:, invoice_number: "INV-123")
-        expect(dup).to be_valid
-      end
+    it "ignores soft-deleted invoices for uniqueness" do
+      create(:invoice, company:, user:, invoice_number: "INV-123", deleted_at: 1.day.ago)
+      dup = build(:invoice, company:, user:, invoice_number: "INV-123")
+      expect(dup).to be_valid
+    end
 
-      it "suggests the next invoice number when duplicate" do
-        create(:invoice, company:, user:, invoice_number: "INV-123")
-        dup = build(:invoice, company:, user:, invoice_number: "INV-123")
-        expect(dup).to be_invalid
-        expect(dup.errors[:invoice_number].join).to include("already in use")
-        expect(dup.errors[:invoice_number].join).to include("INV-124")
-      end
+    it "suggests the next invoice number when duplicate" do
+      create(:invoice, company:, user:, invoice_number: "INV-123")
+      dup = build(:invoice, company:, user:, invoice_number: "INV-123")
+      expect(dup).to be_invalid
+      expect(dup.errors[:invoice_number].join).to include("already in use")
+      expect(dup.errors[:invoice_number].join).to include("INV-124")
     end
 
     describe "allowed equity percentage range" do
