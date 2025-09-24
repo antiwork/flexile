@@ -9,6 +9,7 @@ import {
   Popover as RacPopover,
 } from "react-aria-components";
 import type { DatePickerProps as RacDatePickerProps, DateValue } from "react-aria-components";
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { DateInput } from "@/components/ui/datefield";
 import { cn } from "@/utils";
@@ -40,10 +41,12 @@ export default function DatePicker({ label, className, variant = "default", ...p
   function renderButtonPicker() {
     return (
       <Group className="bg-background border-input focus-within:border-ring focus-within:ring-ring/15 flex overflow-hidden rounded-md border whitespace-nowrap transition-[color,box-shadow] focus-within:ring-[3px]">
-        <RacButton className="flex cursor-pointer items-center gap-2 px-3 py-2" aria-label={props.name ?? "Calendar"}>
-          <CalendarIcon size={16} />
-          {props.value ? <span>{formatDayOfMonth(props.value.toString())}</span> : <span>Select date</span>}
-        </RacButton>
+        <Button variant="ghost" asChild size="small" className="gap-2 hover:bg-white">
+          <RacButton aria-label={props.name ?? "Calendar"}>
+            <CalendarIcon size={16} />
+            {props.value ? <span>{formatDayOfMonth(props.value.toString())}</span> : <span>Select date</span>}
+          </RacButton>
+        </Button>
       </Group>
     );
   }
