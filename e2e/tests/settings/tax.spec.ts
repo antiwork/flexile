@@ -9,9 +9,9 @@ import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { BusinessType, TaxClassification } from "@/db/enums";
-import { companies, users } from "@/db/schema";
+import { companies, userComplianceInfos, users } from "@/db/schema";
 
 test.describe("Tax settings", () => {
   let company: typeof companies.$inferSelect;
@@ -152,10 +152,13 @@ test.describe("Tax settings", () => {
         .findFirst({
           where: eq(users.id, user.id),
           with: {
-            userComplianceInfos: true,
+            userComplianceInfos: {
+              orderBy: [desc(userComplianceInfos.createdAt)],
+            },
           },
         })
         .then(takeOrThrow);
+
       expect(updatedUser.userComplianceInfos).toHaveLength(2);
 
       expect(updatedUser.userComplianceInfos[0]?.deletedAt).not.toBeNull();
