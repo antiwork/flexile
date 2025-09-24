@@ -210,7 +210,7 @@ class Invoice < ApplicationRecord
 
   def invoice_number_taken_message
     suggestion = recommended_invoice_number
-    if suggestion.present? && suggestion != invoice_number
+    if suggestion != invoice_number
       "This invoice number is already in use. Please try '#{suggestion}' instead."
     else
       "This invoice number is already in use. Please enter a different number."
