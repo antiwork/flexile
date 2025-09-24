@@ -22,6 +22,7 @@ import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_dividend_rounds_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 import type { DividendComputation } from "./page";
 
 const FinalizeDistributionModal = ({
@@ -38,6 +39,7 @@ const FinalizeDistributionModal = ({
   const router = useRouter();
   const queryClient = useQueryClient();
   const utils = trpc.useUtils();
+  const isMobile = useIsMobile();
 
   const finalizeMutation = useMutation({
     mutationFn: async () => {
@@ -60,7 +62,7 @@ const FinalizeDistributionModal = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="default" size="small">
+        <Button variant="default" size={isMobile ? "default" : "small"}>
           Finalize distribution
         </Button>
       </DialogTrigger>

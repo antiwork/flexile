@@ -188,7 +188,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                 <Button
                   type="button"
                   variant="ghost"
-                  size="small"
+                  size={isMobile ? "default" : "small"}
                   onClick={() => fileInputRef.current?.click()}
                   className="h-8 w-8 p-0"
                 >
