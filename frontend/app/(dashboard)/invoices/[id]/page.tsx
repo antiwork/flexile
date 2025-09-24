@@ -498,17 +498,19 @@ export default function InvoicePage() {
                 />
               )}
 
-              {invoice.attachments.length > 0 && (
+              {invoice.attachment ? (
                 <AttachmentListCard
                   title="Documents"
                   linkClasses={linkClasses}
-                  items={invoice.attachments.map((attachment) => ({
-                    key: attachment.key,
-                    filename: attachment.filename,
-                    label: attachment.filename,
-                  }))}
+                  items={[
+                    {
+                      key: invoice.attachment.key,
+                      filename: invoice.attachment.filename,
+                      label: invoice.attachment.filename,
+                    },
+                  ]}
                 />
-              )}
+              ) : null}
 
               <footer className="flex justify-between px-4 print:mt-4 print:flex print:items-start print:justify-between">
                 <div className="print:flex-1">
