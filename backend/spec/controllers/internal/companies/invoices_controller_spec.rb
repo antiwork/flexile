@@ -29,8 +29,7 @@ RSpec.describe Internal::Companies::InvoicesController do
         ],
       }
 
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body).to eq({ "success" => true })
+      expect(response).to have_http_status(:created)
     end
 
     it "returns success: false with form_errors on duplicate invoice number" do
@@ -48,9 +47,9 @@ RSpec.describe Internal::Companies::InvoicesController do
         ],
       }
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:unprocessable_entity)
       body = response.parsed_body
-      expect(body["success"]).to eq(false)
+      expect(body["error_message"]).to be_present
       expect(body["form_errors"]).to be_an(Array)
       expect(body["form_errors"].map { |e| e["path"] }).to include("invoice_number")
       msg = body["form_errors"].find { |e| e["path"] == "invoice_number" }["message"]
@@ -71,8 +70,7 @@ RSpec.describe Internal::Companies::InvoicesController do
         ],
       }
 
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body).to eq({ "success" => true })
+      expect(response).to have_http_status(:no_content)
     end
 
     it "returns success: false with form_errors on duplicate invoice number" do
@@ -84,9 +82,9 @@ RSpec.describe Internal::Companies::InvoicesController do
         invoice: { invoice_number: "INV-200" },
       }
 
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:unprocessable_entity)
       body = response.parsed_body
-      expect(body["success"]).to eq(false)
+      expect(body["error_message"]).to be_present
       expect(body["form_errors"]).to be_an(Array)
       expect(body["form_errors"].map { |e| e["path"] }).to include("invoice_number")
     end
