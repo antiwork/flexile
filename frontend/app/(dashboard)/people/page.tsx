@@ -14,7 +14,6 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import DatePicker from "@/components/DatePicker";
 import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,27 +50,18 @@ import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 
 const removeMailtoPrefix = (email: string) => email.replace(/^mailto:/iu, "");
-const getStatusMeta = (worker: RouterOutput["contractors"]["list"][number]) => {
-  const { endedAt, startedAt, user } = worker;
-  let label;
-  let variant: "critical" | "success" | "primary";
+const getStatusLabel = (contractor: RouterOutput["contractors"]["list"][number]) => {
+  const { endedAt, startedAt, user } = contractor;
   if (endedAt) {
-    variant = "critical";
-    label = `Ended on ${formatDate(serverDateToLocal(endedAt))}`;
+    return `Ended on ${formatDate(serverDateToLocal(endedAt))}`;
   } else if (startedAt <= new Date()) {
-    variant = "success";
-    label = `Started on ${formatDate(serverDateToLocal(startedAt))}`;
+    return `Started on ${formatDate(serverDateToLocal(startedAt))}`;
   } else if (user.onboardingCompleted) {
-    variant = "success";
-    label = `Starts on ${formatDate(serverDateToLocal(startedAt))}`;
+    return `Starts on ${formatDate(serverDateToLocal(startedAt))}`;
   } else if (user.invitationAcceptedAt) {
-    variant = "primary";
-    label = "In Progress";
-  } else {
-    variant = "primary";
-    label = "Invited";
+    return "In Progress";
   }
-  return { label, variant };
+  return "Invited";
 };
 
 export default function PeoplePage() {
@@ -104,10 +94,7 @@ export default function PeoplePage() {
         id: "status",
         header: "Status",
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
-        cell: (info) => {
-          const meta = getStatusMeta(info.row.original);
-          return <Status variant={meta.variant}>{meta.label}</Status>;
-        },
+        cell: (info) => getStatusLabel(info.row.original),
       }),
     ],
     [workers],
@@ -139,16 +126,11 @@ export default function PeoplePage() {
 
       columnHelper.display({
         id: "statusDisplay",
-        cell: (info) => {
-          const meta = getStatusMeta(info.row.original);
-          return (
-            <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 items-center justify-center">
-                <Status variant={meta.variant}>{meta.label}</Status>
-              </div>
-            </div>
-          );
-        },
+        cell: (info) => (
+          <div className="flex h-full flex-col items-end justify-between">
+            <div className="flex h-5 items-center justify-center">{getStatusLabel(info.row.original)}</div>
+          </div>
+        ),
       }),
 
       columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
