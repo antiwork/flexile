@@ -17,6 +17,12 @@ import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { pluralize } from "@/utils/pluralize";
+import { request } from "@/utils/request";
+import {
+  company_company_update_url,
+  company_company_updates_url,
+  publish_company_company_update_url,
+} from "@/utils/routes";
 
 const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
@@ -66,31 +72,60 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
 
   const recipientCount = (company.contractorCount ?? 0) + (company.investorCount ?? 0);
 
-  const createMutation = trpc.companyUpdates.create.useMutation();
-  const updateMutation = trpc.companyUpdates.update.useMutation();
-  const publishMutation = trpc.companyUpdates.publish.useMutation();
+  const submitMutation = useMutation({
+    mutationFn: async ({
+      values,
+      preview,
+      publish,
+      updateId: mutationUpdateId,
+    }: {
+      values: z.infer<typeof formSchema>;
+      preview: boolean;
+      publish?: boolean;
+      updateId?: string | undefined;
+    }) => {
+      const formData = new FormData();
+      formData.append("company_update[title]", values.title);
+      formData.append("company_update[body]", values.body);
 
-  const saveMutation = useMutation({
-    mutationFn: async ({ values, preview }: { values: z.infer<typeof formSchema>; preview: boolean }) => {
-      const data = {
-        companyId: company.id,
-        ...values,
-      };
-      let id;
-      if (update) {
-        id = update.id;
-        await updateMutation.mutateAsync({ ...data, id });
-      } else if (previewUpdateId) {
-        id = previewUpdateId;
-        await updateMutation.mutateAsync({ ...data, id });
-      } else {
-        id = await createMutation.mutateAsync(data);
+      const isUpdate = !!mutationUpdateId;
+      const method = isUpdate ? "PATCH" : "POST";
+      const url = isUpdate
+        ? company_company_update_url(company.externalId, mutationUpdateId)
+        : company_company_updates_url(company.externalId);
+
+      const response = await request({
+        method,
+        url,
+        formData,
+        accept: "json",
+        assertOk: true,
+      });
+
+      const result = z
+        .object({
+          company_update: z.object({
+            id: z.string(),
+          }),
+        })
+        .parse(await response.json());
+
+      const updateId = result.company_update.id;
+
+      if (publish && !update?.sentAt) {
+        await request({
+          method: "POST",
+          url: publish_company_company_update_url(company.externalId, updateId),
+          accept: "json",
+          assertOk: true,
+        });
       }
-      if (!preview && !update?.sentAt) await publishMutation.mutateAsync({ companyId: company.id, id });
+
       void trpcUtils.companyUpdates.list.invalidate();
-      await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id });
+      await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id: updateId });
+
       if (preview) {
-        setPreviewUpdateId(id);
+        setPreviewUpdateId(updateId);
         setViewPreview(true);
       } else {
         handleClose();
@@ -187,12 +222,14 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                 <MutationStatusButton
                   type="button"
                   size="small"
-                  mutation={saveMutation}
+                  mutation={submitMutation}
                   idleVariant="outline"
                   loadingText="Saving..."
                   className="w-1/2 md:w-fit"
                   onClick={() =>
-                    void form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()
+                    void form.handleSubmit((values) =>
+                      submitMutation.mutateAsync({ values, preview: true, updateId }),
+                    )()
                   }
                 >
                   Preview
@@ -222,8 +259,8 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                 No, cancel
               </Button>
               <MutationButton
-                mutation={saveMutation}
-                param={{ values: form.getValues(), preview: false }}
+                mutation={submitMutation}
+                param={{ values: form.getValues(), preview: false, publish: true, updateId }}
                 loadingText="Sending..."
                 size="small"
               >

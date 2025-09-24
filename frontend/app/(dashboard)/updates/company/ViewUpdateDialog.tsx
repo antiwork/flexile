@@ -1,4 +1,5 @@
 import { EnvelopeIcon } from "@heroicons/react/24/outline";
+import { useMutation } from "@tanstack/react-query";
 import MutationButton from "@/components/MutationButton";
 import RichText from "@/components/RichText";
 import SkeletonList from "@/components/SkeletonList";
@@ -7,6 +8,8 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { send_test_email_company_company_update_url } from "@/utils/routes";
 
 function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpenChange: () => void }) {
   const company = useCurrentCompany();
@@ -15,7 +18,17 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
     isLoading,
     isError,
   } = trpc.companyUpdates.get.useQuery({ companyId: company.id, id: updateId });
-  const sendTestEmail = trpc.companyUpdates.sendTestEmail.useMutation();
+
+  const sendTestEmail = useMutation({
+    mutationFn: async () => {
+      await request({
+        method: "POST",
+        url: send_test_email_company_company_update_url(company.externalId, updateId),
+        accept: "json",
+        assertOk: true,
+      });
+    },
+  });
 
   return (
     <Dialog defaultOpen onOpenChange={onOpenChange}>
@@ -62,12 +75,7 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
                 Close
               </Button>
             </DialogClose>
-            <MutationButton
-              size="small"
-              loadingText="Sending..."
-              mutation={sendTestEmail}
-              param={{ companyId: company.id, id: updateId }}
-            >
+            <MutationButton size="small" loadingText="Sending..." mutation={sendTestEmail}>
               <EnvelopeIcon className="size-4" />
               Send test email
             </MutationButton>
