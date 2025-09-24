@@ -37,6 +37,7 @@ export const Editor = ({
   onChange,
   className,
   id,
+  "aria-label": ariaLabel,
   ...props
 }: {
   value: string | null | undefined;
@@ -53,6 +54,7 @@ export const Editor = ({
     editorProps: {
       attributes: {
         ...(id ? { id } : {}),
+        ...(ariaLabel ? { "aria-label": ariaLabel } : {}),
         class: cn(
           className,
           "prose text-foreground p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none",
