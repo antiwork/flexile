@@ -78,58 +78,44 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       formData.append("company_update[title]", values.title);
       formData.append("company_update[body]", values.body);
 
-      let id;
-      if (update) {
-        id = update.id;
-        await request({
-          method: "PATCH",
-          url: company_company_update_path(company.externalId, id),
-          formData,
-          accept: "json",
-          assertOk: true,
-        });
-      } else if (previewUpdateId) {
-        id = previewUpdateId;
-        await request({
-          method: "PATCH",
-          url: company_company_update_path(company.externalId, id),
-          formData,
-          accept: "json",
-          assertOk: true,
-        });
-      } else {
-        const response = await request({
-          method: "POST",
-          url: company_company_updates_path(company.externalId),
-          formData,
-          accept: "json",
-          assertOk: true,
-        });
+      const existingId = update?.id || previewUpdateId;
+      const shouldPublish = !preview && !update?.sentAt;
 
-        const result = z
+      const method = existingId ? "PATCH" : "POST";
+      const url = existingId
+        ? company_company_update_path(company.externalId, existingId)
+        : company_company_updates_path(company.externalId);
+
+      const response = await request({
+        method,
+        url,
+        formData,
+        accept: "json",
+        assertOk: true,
+      });
+
+      const updateId =
+        existingId ||
+        z
           .object({
             company_update: z.object({
               id: z.string(),
             }),
           })
-          .parse(await response.json());
+          .parse(await response.json()).company_update.id;
 
-        id = result.company_update.id;
-      }
-
-      if (!preview && !update?.sentAt) {
+      if (shouldPublish) {
         await request({
           method: "POST",
-          url: publish_company_company_update_path(company.externalId, id),
+          url: publish_company_company_update_path(company.externalId, updateId),
           accept: "json",
           assertOk: true,
         });
       }
-
       void trpcUtils.companyUpdates.list.invalidate();
-      await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id });
+      await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id: updateId });
       if (preview) {
-        setPreviewUpdateId(id);
+        setPreviewUpdateId(updateId);
         setViewPreview(true);
       } else {
         handleClose();
