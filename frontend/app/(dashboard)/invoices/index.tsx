@@ -1,7 +1,10 @@
 import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { addDays, isWeekend, nextMonday } from "date-fns";
+import { Ban, Info } from "lucide-react";
 import React, { useState } from "react";
 import MutationButton from "@/components/MutationButton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -9,8 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
+import { cn } from "@/utils";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_invoice_path, reject_company_invoices_path } from "@/utils/routes";
+import { formatDate } from "@/utils/time";
 
 type Invoice = RouterOutput["invoices"]["list"][number] | RouterOutput["invoices"]["get"];
 export const EDITABLE_INVOICE_STATES: Invoice["status"][] = ["received", "rejected"];
@@ -301,3 +306,55 @@ export const DeleteModal = ({
     </Dialog>
   );
 };
+
+export function StatusDetails({ invoice, className }: { invoice: Invoice; className?: string }) {
+  const user = useCurrentUser();
+  const company = useCurrentCompany();
+  const [{ invoice: consolidatedInvoice }] = trpc.consolidatedInvoices.last.useSuspenseQuery({ companyId: company.id });
+
+  const getDetails = () => {
+    let details = null;
+    switch (invoice.status) {
+      case "approved":
+        if (invoice.approvals.length > 0) {
+          details = (
+            <ul className="list-disc pl-5">
+              {invoice.approvals.map((approval, index) => (
+                <li key={index}>
+                  Approved by {approval.approver.id === user.id ? "you" : approval.approver.name} on{" "}
+                  {formatDate(approval.approvedAt, { time: true })}
+                </li>
+              ))}
+            </ul>
+          );
+        }
+        break;
+      case "rejected":
+        details = "Rejected";
+        if (invoice.rejector) details += ` by ${invoice.rejector.name}`;
+        if (invoice.rejectedAt) details += ` on ${formatDate(invoice.rejectedAt)}`;
+        if (invoice.rejectionReason) details += `: "${invoice.rejectionReason}"`;
+        break;
+      case "payment_pending":
+      case "processing":
+        if (consolidatedInvoice) {
+          let paymentExpectedBy = addDays(consolidatedInvoice.createdAt, company.paymentProcessingDays);
+          if (isWeekend(paymentExpectedBy)) paymentExpectedBy = nextMonday(paymentExpectedBy);
+          details = `Your payment should arrive by ${formatDate(paymentExpectedBy)}`;
+        }
+        break;
+      default:
+        break;
+    }
+    return details;
+  };
+
+  const statusDetails = getDetails();
+
+  return statusDetails ? (
+    <Alert className={cn(className)} {...(invoice.status === "rejected" && { variant: "destructive" })}>
+      {invoice.status === "rejected" ? <Ban /> : <Info />}
+      <AlertDescription>{statusDetails}</AlertDescription>
+    </Alert>
+  ) : null;
+}
