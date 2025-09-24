@@ -177,7 +177,7 @@ test.describe("invoice creation", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    await expect(page.locator("tbody")).toContainText("$176.25");
+    await expect(page.locator("tbody").first()).toContainText("$176.25");
 
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
@@ -246,7 +246,7 @@ test.describe("invoice creation", () => {
 
     await page.getByLabel("Hours").fill("2.5");
     await page.getByPlaceholder("Description").fill("Development work with decimal quantities");
-    await fillDatePicker(page, "Date", "12/15/2024");
+    await fillDatePicker(page, "Date", "12/15/2023");
 
     await expect(page.getByText("Total services$150")).toBeVisible();
 
@@ -255,7 +255,7 @@ test.describe("invoice creation", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    await expect(page.locator("tbody")).toContainText("$150");
+    await expect(page.locator("tbody").first()).toContainText("$150");
 
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
