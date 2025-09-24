@@ -76,13 +76,15 @@ class CreateOrUpdateInvoiceService
       invoice.equity_amount_in_options = equity_options
       invoice.flexile_fee_cents = invoice.calculate_flexile_fee_cents
 
-      if invoice_attachments.present?
-        invoice.attachments.each do |attachment|
-          unless invoice_attachments.include?(attachment.signed_id)
-            attachment.purge_later
+      if invoice_attachment.present?
+        invoice.attachments.each do |existing_attachment|
+          unless existing_attachment.signed_id == invoice_attachment
+            existing_attachment.purge_later
           end
         end
-        invoice.attachments.attach(invoice_attachments)
+        unless invoice.attachments.any? { |att| att.signed_id == invoice_attachment }
+          invoice.attachments.attach(invoice_attachment)
+        end
       else
         invoice.attachments.each(&:purge_later)
       end
@@ -112,8 +114,8 @@ class CreateOrUpdateInvoiceService
       params.permit(invoice: [:invoice_date, :invoice_number, :notes, :equity_percentage])[:invoice]
     end
 
-    def invoice_attachments
-      params.permit(invoice: [attachments: []]).dig(:invoice, :attachments)
+    def invoice_attachment
+      params.permit(invoice: [:attachment]).dig(:invoice, :attachment)
     end
 
     def invoice_line_items_params

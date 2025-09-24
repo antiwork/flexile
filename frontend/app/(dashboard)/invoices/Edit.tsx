@@ -93,22 +93,21 @@ const dataSchema = z.object({
         attachment: z.object({ name: z.string(), url: z.string() }),
       }),
     ),
-    attachments: z
-      .array(
-        z.object({
-          name: z.string(),
-          url: z.string(),
-          signed_id: z.string().optional(),
-        }),
-      )
-      .default([]),
+    attachment: z
+      .object({
+        name: z.string(),
+        url: z.string(),
+        signed_id: z.string().optional(),
+      })
+      .nullable()
+      .default(null),
   }),
 });
 type Data = z.infer<typeof dataSchema>;
 
 type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: string[] | null };
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
-type InvoiceFormDocument = Data["invoice"]["attachments"][number] & { errors?: string[] | null; blob?: File | null };
+type InvoiceFormDocument = Data["invoice"]["attachment"] & { errors?: string[] | null; blob?: File | null };
 
 const Edit = () => {
   const user = useCurrentUser();
@@ -163,7 +162,7 @@ const Edit = () => {
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const uploadDocumentRef = useRef<HTMLInputElement>(null);
-  const [documents, setDocuments] = useState<InvoiceFormDocument[]>(data.invoice.attachments);
+  const [document, setDocument] = useState<InvoiceFormDocument | null>(data.invoice.attachment);
   const showExpensesTable = showExpenses || expenses.size > 0;
   const actionColumnClass = "w-12";
 
@@ -174,7 +173,7 @@ const Edit = () => {
       errorField === null &&
       lineItems.every((lineItem) => !lineItem.errors?.length) &&
       expenses.every((expense) => !expense.errors?.length) &&
-      documents.every((document) => !document.errors?.length)
+      (!document || !document.errors?.length)
     );
   };
 
@@ -207,9 +206,9 @@ const Edit = () => {
 
       if (notes.length) formData.append("invoice[notes]", notes);
 
-      for (const file of documents) {
-        if (file.blob) formData.append("invoice[attachments][]", file.blob);
-        else if (file.signed_id) formData.append("invoice[attachments][]", file.signed_id);
+      if (document) {
+        if (document.blob) formData.append("invoice[attachment]", document.blob);
+        else if (document.signed_id) formData.append("invoice[attachment]", document.signed_id);
       }
 
       await request({
@@ -291,18 +290,26 @@ const Edit = () => {
 
   const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    if (!file) return;
 
     const MAX_FILE_SIZE = 10 * 1024 * 1024;
-    Array.from(files).forEach((file) => {
-      if (file.size > MAX_FILE_SIZE) {
-        setAlertTitle("File Size Exceeded");
-        setAlertMessage("File size exceeds the maximum limit of 10MB. Please select a smaller file.");
-        setAlertOpen(true);
-        e.target.value = "";
-        return;
-      }
-      setDocuments((documents) => [...documents, { name: file.name, url: URL.createObjectURL(file), blob: file }]);
+
+    if (file.size > MAX_FILE_SIZE) {
+      setAlertTitle("File Size Exceeded");
+      setAlertMessage("File size exceeds the maximum limit of 10MB. Please select a smaller file.");
+      setAlertOpen(true);
+      e.target.value = "";
+      return;
+    }
+
+    setDocument({
+      name: file.name,
+      url: URL.createObjectURL(file),
+      blob: file,
+      errors: null,
     });
   };
 
@@ -512,7 +519,7 @@ const Edit = () => {
                         </Label>
                       </Button>
                     ) : null}
-                    {documents.length === 0 ? (
+                    {!document ? (
                       <Button asChild variant="link">
                         <Label>
                           <Upload className="inline size-4" />
@@ -522,7 +529,6 @@ const Edit = () => {
                             type="file"
                             className="hidden"
                             accept="application/pdf"
-                            multiple
                             onChange={handleDocumentUpload}
                           />
                         </Label>
@@ -620,7 +626,7 @@ const Edit = () => {
               </TableFooter>
             </Table>
           ) : null}
-          {documents.length > 0 ? (
+          {document ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -629,47 +635,19 @@ const Edit = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {documents.map((document, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <a href={document.url} download>
-                        <PaperClipIcon className="inline size-4" /> {document.name}
-                      </a>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="link"
-                        aria-label="Remove"
-                        onClick={() =>
-                          setDocuments((documents) => documents.filter((doc) => doc.name !== document.name))
-                        }
-                      >
-                        <TrashIcon className="size-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={2}>
-                    <Button asChild variant="link">
-                      <Label>
-                        <Upload className="inline size-4" />
-                        Add document
-                        <input
-                          ref={uploadDocumentRef}
-                          type="file"
-                          className="hidden"
-                          accept="application/pdf"
-                          multiple
-                          onChange={handleDocumentUpload}
-                        />
-                      </Label>
+                  <TableCell>
+                    <a href={document.url} download>
+                      <PaperClipIcon className="inline size-4" /> {document.name}
+                    </a>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="link" aria-label="Remove" onClick={() => setDocument(null)}>
+                      <TrashIcon className="size-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
-              </TableFooter>
+              </TableBody>
             </Table>
           ) : null}
 
