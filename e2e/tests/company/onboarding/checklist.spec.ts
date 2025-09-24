@@ -98,7 +98,7 @@ test.describe("Onboarding checklist", () => {
     page,
   }) => {
     const { user: contractorUser } = await usersFactory.create(undefined, { withoutComplianceInfo: true });
-    await companyContractorsFactory.create({ userId: contractorUser.id });
+    await companyContractorsFactory.create({ userId: contractorUser.id }, { withoutBankAccount: true });
     await login(page, contractorUser);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
