@@ -6,7 +6,7 @@ import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
@@ -97,7 +97,6 @@ interface InvoiceModalProps {
 
 const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
   const company = useCurrentCompany();
-  const searchParams = useSearchParams();
   const [errorField, setErrorField] = useState<string | null>(null);
   const trpcUtils = trpc.useUtils();
   const router = useRouter();
@@ -119,9 +118,7 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
   const payRateInSubunits = data.user.pay_rate_in_subunits;
 
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
-  const [issueDate, setIssueDate] = useState<DateValue>(() =>
-    parseDate(searchParams.get("date") || data.invoice.invoice_date),
-  );
+  const [issueDate, setIssueDate] = useState<DateValue>(() => parseDate(data.invoice.invoice_date));
   const invoiceYear = issueDate.year;
   const [notes, setNotes] = useState(data.invoice.notes ?? "");
   const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
@@ -130,9 +127,9 @@ const InvoiceModal = ({ open, onOpenChange, invoiceId }: InvoiceModalProps) => {
     return List([
       {
         description: "",
-        quantity: (parseFloat(searchParams.get("quantity") ?? "") || (data.user.project_based ? 1 : 60)).toString(),
-        hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : !data.user.project_based,
-        pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || (payRateInSubunits ?? 0),
+        quantity: (data.user.project_based ? 1 : 60).toString(),
+        hourly: !data.user.project_based,
+        pay_rate_in_subunits: payRateInSubunits ?? 0,
       },
     ]);
   });
