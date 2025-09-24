@@ -79,8 +79,6 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       formData.append("company_update[body]", values.body);
 
       const existingId = update?.id || previewUpdateId;
-      const shouldPublish = !preview && !update?.sentAt;
-
       const method = existingId ? "PATCH" : "POST";
       const url = existingId
         ? company_company_update_path(company.externalId, existingId)
@@ -94,17 +92,10 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
         assertOk: true,
       });
 
-      const updateId =
-        existingId ||
-        z
-          .object({
-            company_update: z.object({
-              id: z.string(),
-            }),
-          })
-          .parse(await response.json()).company_update.id;
+      const companyUpdateResponseSchema = z.object({ company_update: z.object({ id: z.string() }) });
+      const updateId = existingId || companyUpdateResponseSchema.parse(await response.json()).company_update.id;
 
-      if (shouldPublish) {
+      if (!preview && !update?.sentAt) {
         await request({
           method: "POST",
           url: publish_company_company_update_path(company.externalId, updateId),
