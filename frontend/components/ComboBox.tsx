@@ -35,7 +35,7 @@ const ComboBox = ({
           aria-expanded={open}
           {...props}
           className={cn(
-            "focus-visible:ring-ring focus-visible:border-border w-full min-w-0 justify-between outline-none focus-visible:ring-2 focus-visible:outline-hidden dark:bg-transparent",
+            "border-input focus-visible:ring-ring focus-visible:border-border w-full min-w-0 justify-between outline-none focus-visible:ring-2 focus-visible:outline-hidden dark:bg-transparent",
             className,
           )}
         >
