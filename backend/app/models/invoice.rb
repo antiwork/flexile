@@ -120,6 +120,7 @@ class Invoice < ApplicationRecord
 
   after_initialize :populate_bill_data
   before_validation :populate_bill_data, on: :create
+  before_update :calculate_equity_amount_in_options
   after_commit :destroy_approvals, if: -> { rejected? }, on: :update
 
   def attachment = attachments.last
@@ -241,6 +242,21 @@ class Invoice < ApplicationRecord
 
       if !status.in?(DELETABLE_STATES)
         errors.add(:status, "cannot be #{status} for deleted invoices")
+      end
+    end
+
+    def calculate_equity_amount_in_options
+      return if !status_changed? || status != APPROVED || equity_amount_in_cents == 0
+
+      unvested_grant = company_worker.unique_unvested_equity_grant_for_year(invoice_date.year)
+      share_price_usd = unvested_grant&.share_price_usd || company.fmv_per_share_in_usd
+      self.equity_amount_in_options = (equity_amount_in_cents / (share_price_usd * 100.to_d)).round
+      if equity_amount_in_options == 0
+        self.equity_amount_in_cents = 0
+        self.equity_percentage = 0
+      end
+      if !unvested_grant.present? || unvested_grant.unvested_shares < equity_amount_in_options
+        errors.add(:equity_percentage, "Worker does not have an equity grant with sufficient unvested shares")
       end
     end
 end
