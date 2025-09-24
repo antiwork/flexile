@@ -267,13 +267,13 @@ export default function InvoicePage() {
                   />
                 </>
               ) : null}
-              {user.id === invoice.userId && canSubmitInvoices ? (
+              {user.id === invoice.userId ? (
                 <>
                   {invoice.requiresAcceptanceByPayee ? (
                     <Button size="small" onClick={() => setAcceptPaymentModalOpen(true)}>
                       Accept payment
                     </Button>
-                  ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+                  ) : EDITABLE_INVOICE_STATES.includes(invoice.status) && canSubmitInvoices ? (
                     <Button variant="default" size="small" onClick={() => setEditModalOpen(true)}>
                       <SquarePen className="size-4" />
                       Edit invoice
