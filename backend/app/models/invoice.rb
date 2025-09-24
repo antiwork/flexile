@@ -126,7 +126,7 @@ class Invoice < ApplicationRecord
 
   after_initialize :populate_bill_data
   before_validation :populate_bill_data, on: :create
-  before_validation :normalize_invoice_number
+  normalizes :invoice_number, with: ->(value) { value.strip if value.is_a?(String) }
   after_commit :destroy_approvals, if: -> { rejected? }, on: :update
 
   def attachment = attachments.last
@@ -218,10 +218,6 @@ class Invoice < ApplicationRecord
   end
 
   private
-    def normalize_invoice_number
-      self.invoice_number = invoice_number.strip if invoice_number.is_a?(String)
-    end
-
     def populate_bill_data
       self.bill_from ||= user&.billing_entity_name
       self.bill_to ||= company&.name
