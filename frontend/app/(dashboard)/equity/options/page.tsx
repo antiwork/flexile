@@ -30,6 +30,7 @@ import { assertDefined } from "@/utils/assert";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_equity_grant_exercises_path, resend_company_equity_grant_exercise_path } from "@/utils/routes";
+import { useIsMobile } from "@/utils/use-mobile";
 
 type EquityGrant = RouterOutput["equityGrants"]["list"][number];
 const investorGrantColumnHelper = createColumnHelper<EquityGrant>();
@@ -49,6 +50,7 @@ const investorGrantColumns = [
 export default function OptionsPage() {
   const company = useCurrentCompany();
   const user = useCurrentUser();
+  const isMobile = useIsMobile();
   if (!user.roles.investor) forbidden();
   const { data = [], isLoading } = trpc.equityGrants.list.useQuery({
     companyId: company.id,
@@ -124,7 +126,7 @@ export default function OptionsPage() {
                       <span className="font-bold">
                         You have {totalUnexercisedVestedShares.toLocaleString()} vested options available for exercise.
                       </span>
-                      <Button size="small" onClick={openExerciseModal}>
+                      <Button size={isMobile ? "default" : "small"} onClick={openExerciseModal}>
                         Exercise Options
                       </Button>
                     </div>
@@ -142,7 +144,7 @@ export default function OptionsPage() {
                         exercise {exerciseInProgress.numberOfOptions.toLocaleString()} options.
                       </span>
                       <MutationButton
-                        size="small"
+                        size={isMobile ? "default" : "small"}
                         mutation={resendPaymentInstructions}
                         param={exerciseInProgress.id}
                         successText="Payment instructions sent!"
@@ -340,7 +342,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
               </Card>
             </div>
             <DialogFooter>
-              <Button size="small" onClick={() => setState("signing")} disabled={optionsToExercise === 0}>
+              <Button onClick={() => setState("signing")} disabled={optionsToExercise === 0}>
                 Proceed
               </Button>
             </DialogFooter>

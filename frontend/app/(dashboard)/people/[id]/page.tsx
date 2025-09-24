@@ -218,11 +218,10 @@ export default function ContractorPage() {
               </Status>
             </div>
             <DialogFooter>
-              <Button variant="outline" size="small" onClick={() => setEndModalOpen(false)}>
+              <Button variant="outline" onClick={() => setEndModalOpen(false)}>
                 No, cancel
               </Button>
               <MutationButton
-                size="small"
                 mutation={endContract}
                 param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate?.toString() ?? "" }}
               >
@@ -762,6 +761,7 @@ type EquityGrantExercise = RouterOutput["equityGrantExercises"]["list"][number];
 function ExercisesTab({ investorId }: { investorId: string }) {
   const company = useCurrentCompany();
   const trpcUtils = trpc.useUtils();
+  const isMobile = useIsMobile();
   const { data: exercises = [], isLoading } = trpc.equityGrantExercises.list.useQuery({
     companyId: company.id,
     investorId,
@@ -799,7 +799,11 @@ function ExercisesTab({ investorId }: { investorId: string }) {
         id: "actions",
         cell: (info) =>
           info.row.original.status === "signed" ? (
-            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} size="small">
+            <MutationButton
+              mutation={confirmPaymentMutation}
+              param={info.row.original.id}
+              size={isMobile ? "default" : "small"}
+            >
               Confirm payment
             </MutationButton>
           ) : undefined,
