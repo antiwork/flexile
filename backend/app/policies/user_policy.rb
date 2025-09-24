@@ -10,6 +10,6 @@ class UserPolicy < ApplicationPolicy
   end
 
   def leave_company?
-    (company_worker.present? || company_investor.present? || company_lawyer.present?) && company_administrator.blank?
+    (company_worker.present? || company_lawyer.present?) && company_administrator.blank?
   end
 end

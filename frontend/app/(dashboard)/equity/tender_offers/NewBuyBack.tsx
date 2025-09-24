@@ -1,11 +1,12 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate } from "@internationalized/date";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { CloudUpload, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useDocumentTemplateQuery } from "@/app/(dashboard)/documents";
 import DatePicker from "@/components/DatePicker";
 import { linkClasses } from "@/components/Link";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -32,10 +33,12 @@ type NewBuybackFormProps = {
 
 export default function NewBuybackForm({ handleComplete }: NewBuybackFormProps) {
   const company = useCurrentCompany();
+  const { data: letterOfTransmittal } = useQuery(useDocumentTemplateQuery("letter_of_transmittal"));
   const [isDragging, setIsDragging] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
+    defaultValues: { letterOfTransmittal: letterOfTransmittal?.text ?? "" },
   });
 
   const attachmentValue = form.watch("attachment");
