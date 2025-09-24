@@ -19,9 +19,9 @@ import { trpc } from "@/trpc/client";
 import { pluralize } from "@/utils/pluralize";
 import { request } from "@/utils/request";
 import {
-  company_company_update_url,
-  company_company_updates_url,
-  publish_company_company_update_url,
+  company_company_update_path,
+  company_company_updates_path,
+  publish_company_company_update_path,
 } from "@/utils/routes";
 
 const formSchema = z.object({
@@ -83,7 +83,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
         id = update.id;
         await request({
           method: "PATCH",
-          url: company_company_update_url(company.externalId, id),
+          url: company_company_update_path(company.externalId, id),
           formData,
           accept: "json",
           assertOk: true,
@@ -92,7 +92,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
         id = previewUpdateId;
         await request({
           method: "PATCH",
-          url: company_company_update_url(company.externalId, id),
+          url: company_company_update_path(company.externalId, id),
           formData,
           accept: "json",
           assertOk: true,
@@ -100,7 +100,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       } else {
         const response = await request({
           method: "POST",
-          url: company_company_updates_url(company.externalId),
+          url: company_company_updates_path(company.externalId),
           formData,
           accept: "json",
           assertOk: true,
@@ -120,7 +120,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       if (!preview && !update?.sentAt) {
         await request({
           method: "POST",
-          url: publish_company_company_update_url(company.externalId, id),
+          url: publish_company_company_update_path(company.externalId, id),
           accept: "json",
           assertOk: true,
         });

@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
-import { company_company_update_url } from "@/utils/routes";
+import { company_company_update_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 
@@ -103,7 +103,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
     mutationFn: async (updateId: string) => {
       await request({
         method: "DELETE",
-        url: company_company_update_url(company.externalId, updateId),
+        url: company_company_update_path(company.externalId, updateId),
         accept: "json",
         assertOk: true,
       });

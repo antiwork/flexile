@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
-import { send_test_email_company_company_update_url } from "@/utils/routes";
+import { send_test_email_company_company_update_path } from "@/utils/routes";
 
 function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpenChange: () => void }) {
   const company = useCurrentCompany();
@@ -23,7 +23,7 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
     mutationFn: async () => {
       await request({
         method: "POST",
-        url: send_test_email_company_company_update_url(company.externalId, updateId),
+        url: send_test_email_company_company_update_path(company.externalId, updateId),
         accept: "json",
         assertOk: true,
       });
