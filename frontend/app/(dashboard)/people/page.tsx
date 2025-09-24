@@ -40,6 +40,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
+import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_workers_path } from "@/utils/routes";
@@ -50,6 +51,28 @@ import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 
 const removeMailtoPrefix = (email: string) => email.replace(/^mailto:/iu, "");
+const getStatusMeta = (worker: RouterOutput["contractors"]["list"][number]) => {
+  const { endedAt, startedAt, user } = worker;
+  let label;
+  let variant: "critical" | "success" | "primary";
+  if (endedAt) {
+    variant = "critical";
+    label = `Ended on ${formatDate(serverDateToLocal(endedAt))}`;
+  } else if (startedAt <= new Date()) {
+    variant = "success";
+    label = `Started on ${formatDate(serverDateToLocal(startedAt))}`;
+  } else if (user.onboardingCompleted) {
+    variant = "success";
+    label = `Starts on ${formatDate(serverDateToLocal(startedAt))}`;
+  } else if (user.invitationAcceptedAt) {
+    variant = "primary";
+    label = "In Progress";
+  } else {
+    variant = "primary";
+    label = "Invited";
+  }
+  return { label, variant };
+};
 
 export default function PeoplePage() {
   const company = useCurrentCompany();
@@ -81,18 +104,10 @@ export default function PeoplePage() {
         id: "status",
         header: "Status",
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
-        cell: (info) =>
-          info.row.original.endedAt ? (
-            <Status variant="critical">Ended on {formatDate(serverDateToLocal(info.row.original.endedAt))}</Status>
-          ) : info.row.original.startedAt <= new Date() ? (
-            <Status variant="success">Started on {formatDate(serverDateToLocal(info.row.original.startedAt))}</Status>
-          ) : info.row.original.user.onboardingCompleted ? (
-            <Status variant="success">Starts on {formatDate(serverDateToLocal(info.row.original.startedAt))}</Status>
-          ) : info.row.original.user.invitationAcceptedAt ? (
-            <Status variant="primary">In Progress</Status>
-          ) : (
-            <Status variant="primary">Invited</Status>
-          ),
+        cell: (info) => {
+          const meta = getStatusMeta(info.row.original);
+          return <Status variant={meta.variant}>{meta.label}</Status>;
+        },
       }),
     ],
     [workers],
@@ -106,42 +121,30 @@ export default function PeoplePage() {
           return (
             <>
               <div>
-                <div className="text-base font-medium">{person.user.name}</div>
-                <div className="text-sm font-normal">{person.role}</div>
+                <div className="truncate text-base font-medium">{person.user.name}</div>
+                <div className="truncate text-sm font-normal">{person.role}</div>
               </div>
               {person.user.countryCode ? (
-                <div className="text-sm font-normal text-gray-600">{countries.get(person.user.countryCode)}</div>
+                <div className="truncate text-sm font-normal text-gray-600">
+                  {countries.get(person.user.countryCode)}
+                </div>
               ) : null}
             </>
           );
         },
         meta: {
-          cellClassName: "w-full",
+          cellClassName: "max-w-[50vw]",
         },
       }),
 
       columnHelper.display({
         id: "statusDisplay",
         cell: (info) => {
-          const original = info.row.original;
-          let variant: "critical" | "success" | "primary";
-
-          if (original.endedAt) {
-            variant = "critical";
-          } else if (original.startedAt <= new Date()) {
-            variant = "success";
-          } else if (original.user.onboardingCompleted) {
-            variant = "success";
-          } else if (original.user.invitationAcceptedAt) {
-            variant = "primary";
-          } else {
-            variant = "primary";
-          }
-
+          const meta = getStatusMeta(info.row.original);
           return (
             <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 w-4 items-center justify-center">
-                <Status variant={variant} />
+              <div className="flex h-5 items-center justify-center">
+                <Status variant={meta.variant}>{meta.label}</Status>
               </div>
             </div>
           );
