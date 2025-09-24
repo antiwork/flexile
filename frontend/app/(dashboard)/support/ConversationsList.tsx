@@ -90,7 +90,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
               <Plus />
             </Button>
           ) : (
-            <Button onClick={handleContactSupportClick} size={isMobile ? "default" : "small"}>
+            <Button onClick={handleContactSupportClick} size="small">
               Contact support
             </Button>
           )
