@@ -77,12 +77,14 @@ class CreateOrUpdateInvoiceService
       invoice.flexile_fee_cents = invoice.calculate_flexile_fee_cents
 
       if invoice_attachment.present?
-        invoice.attachments.each do |existing_attachment|
-          unless existing_attachment.signed_id == invoice_attachment
-            existing_attachment.purge_later
+        if invoice_attachment.is_a?(String)
+          invoice.attachments.each do |existing_attachment|
+            unless existing_attachment.signed_id == invoice_attachment
+              existing_attachment.purge_later
+            end
           end
-        end
-        unless invoice.attachments.any? { |att| att.signed_id == invoice_attachment }
+        else
+          invoice.attachments.each(&:purge_later)
           invoice.attachments.attach(invoice_attachment)
         end
       else

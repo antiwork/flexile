@@ -449,15 +449,70 @@ RSpec.describe CreateOrUpdateInvoiceService do
       it "updates the invoice address when the contractor has changed it" do
         user.update!(street_address: "123 2nd Ave", city: "New York", state: "NY", zip_code: "10001")
 
+        params_to_update = ActionController::Parameters.new({
+          **invoice_params,
+          **invoice_line_item_params,
+        })
+        invoice_service = described_class.new(
+          params: params_to_update,
+          user: user,
+          company: company,
+          contractor: contractor,
+          invoice: invoice
+        )
+
         expect do
           result = invoice_service.process
-          expect(result[:success]).to eq(true)
-          expect(invoice.reload.street_address).to eq("123 2nd Ave")
-          expect(invoice.city).to eq("New York")
-          expect(invoice.state).to eq("NY")
-          expect(invoice.zip_code).to eq("10001")
+          expect(result[:success]).to be(true)
+          expect(invoice.invoice_line_items.length).to eq(2)
+          expect(invoice.reload.invoice_date.strftime("%Y-%m-%d")).to eq(Date.current.strftime("%Y-%m-%d"))
+          expect(invoice.invoice_number).to eq("INV-123")
+          expect(invoice.total_amount_in_usd_cents).to eq(expected_total_amount_in_cents)
+          expect(invoice.notes).to eq("Tax ID: 123efjo32r")
+          expect(invoice.street_address).to eq(user.street_address)
+          expect(invoice.city).to eq(user.city)
+          expect(invoice.state).to eq(user.state)
+          expect(invoice.zip_code).to eq(user.zip_code)
           expect(invoice.country_code).to eq(user.country_code)
-        end.to change { user.invoices.count }.by(0)
+        end.to_not change { user.invoices.count }
+      end
+
+      it "preserves existing attachment when updating with signed_id reference" do
+        # First add an attachment to the invoice
+        invoice.attachments.purge
+        original_attachment = fixture_file_upload("sample.pdf", "application/pdf")
+        invoice.attachments.attach(original_attachment)
+        invoice.reload
+        expect(invoice.attachments.count).to eq(1)
+        original_signed_id = invoice.attachments.first.signed_id
+
+        # Update the invoice but reference the existing attachment by signed_id
+        params_with_signed_id = ActionController::Parameters.new({
+          **invoice_params,
+          **invoice_line_item_params,
+          invoice: {
+            **invoice_params[:invoice],
+            attachment: original_signed_id,
+          },
+        })
+        invoice_service_with_signed_id = described_class.new(
+          params: params_with_signed_id,
+          user: user,
+          company: company,
+          contractor: contractor,
+          invoice: invoice
+        )
+
+        expect do
+          result = invoice_service_with_signed_id.process
+          expect(result[:success]).to eq(true)
+
+          invoice.reload
+          expect(invoice.attachments.count).to eq(1)
+          # The original attachment should be preserved
+          expect(invoice.attachments.first.signed_id).to eq(original_signed_id)
+          expect(invoice.attachments.first.filename.to_s).to eq("sample.pdf")
+        end.to change { invoice.reload.attachments.count }.by(0)
       end
 
       it "updates the amounts correctly if the contractor has opted for some compensation in equity" do
