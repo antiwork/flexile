@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/utils";
 import { useIsMobile } from "@/utils/use-mobile";
+import TableSkeleton from "./TableSkeleton";
 
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -104,6 +105,7 @@ interface TableProps<T> {
     onClearSelection: () => void;
   }) => React.ReactNode;
   selectionActions?: (selectedRows: T[]) => React.ReactNode;
+  isLoading?: boolean;
 }
 
 export default function DataTable<T extends RowData>({
@@ -114,6 +116,7 @@ export default function DataTable<T extends RowData>({
   tabsColumn: tabsColumnName,
   contextMenuContent,
   selectionActions,
+  isLoading,
 }: TableProps<T>) {
   const isMobile = useIsMobile();
 
@@ -382,7 +385,9 @@ export default function DataTable<T extends RowData>({
           ))}
         </TableHeader>
         <TableBody className="not-print:max-md:contents">
-          {data.rows.length > 0 ? (
+          {isLoading ? (
+            <TableSkeleton columns={data.headers[0]?.headers.length || 6} hasSelection={selectable} renderRowsOnly />
+          ) : data.rows.length > 0 ? (
             data.rows.map((row) => {
               const isSelected = row.getIsSelected();
               const rowContent = (

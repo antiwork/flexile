@@ -43,6 +43,7 @@ test.describe("End contract", () => {
     await page.getByLabel("Email").fill(contractor.email);
     const startDate = addYears(new Date(), 1);
     await fillDatePicker(page, "Start date", format(startDate, "MM/dd/yyyy"));
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
     await page.getByRole("button", { name: "Send invite" }).click();

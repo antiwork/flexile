@@ -48,12 +48,15 @@ const DetailsSection = () => {
 
   const saveMutation = useMutation({
     mutationFn: async (values: { email: string; preferredName: string }) => {
+      const payload = { settings: { email: values.email, preferred_name: values.preferredName } };
+
       const response = await request({
         url: settings_path(),
         method: "PATCH",
         accept: "json",
-        jsonData: { settings: { email: values.email, preferred_name: values.preferredName } },
+        jsonData: payload,
       });
+
       if (!response.ok)
         throw new Error(z.object({ error_message: z.string() }).parse(await response.json()).error_message);
     },
@@ -158,7 +161,7 @@ const LeaveWorkspaceSection = () => {
   }
 
   // Don't show leave option if user has no leavable roles
-  if (!user.roles.worker && !user.roles.investor && !user.roles.lawyer) {
+  if (!user.roles.worker && !user.roles.lawyer) {
     return null;
   }
 
