@@ -279,6 +279,25 @@ RSpec.describe CreateOrUpdateInvoiceService do
           end.to change(user.invoices, :count).by(1)
         end
       end
+
+      context "when invoice number is already taken" do
+        let(:invoice) { nil }
+        let(:params) { ActionController::Parameters.new({ **invoice_params, **invoice_line_item_params }) }
+
+        before do
+          create(:invoice, company:, user:, company_worker: contractor, invoice_number: "INV-123")
+        end
+
+        it "fails with form_errors and does not create invoice" do
+          expect do
+            result = invoice_service.process
+
+            expect(result[:success]).to be(false)
+            expect(result[:error_message]).to include("already in use")
+            expect(result[:form_errors].first).to include(path: "invoice_number", message: /already in use/)
+          end.not_to change { user.invoices.count }
+        end
+      end
     end
 
     describe "updating an invoice" do
@@ -487,6 +506,31 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expect(invoice.zip_code).to eq(user.zip_code)
             expect(invoice.country_code).to eq(user.country_code)
           end.to_not change { user.invoices.count }
+        end
+      end
+
+      context "when updating to a duplicate invoice number" do
+        let!(:invoice) { create(:invoice, company:, user:, company_worker: contractor, invoice_number: "INV-100") }
+        let!(:another_invoice) { create(:invoice, company:, user:, company_worker: contractor, invoice_number: "INV-200") }
+        let(:params) do
+          ActionController::Parameters.new(
+            invoice: { invoice_date: date.to_s, invoice_number: "INV-200", notes: "Updated notes" },
+            invoice_line_items: [{ description: "Updated work", pay_rate_in_subunits: contractor.pay_rate_in_subunits, quantity: 1, hourly: true }]
+          )
+        end
+
+        it "fails with form_errors and does not update invoice" do
+          original_number = invoice.invoice_number
+
+          result = invoice_service.process
+
+          expect(result[:success]).to be(false)
+          expect(result[:error_message]).to include("already in use")
+          expect(result[:form_errors].first).to include(path: "invoice_number", message: /already in use/)
+
+          invoice.reload
+          expect(invoice.invoice_number).to eq(original_number)
+          expect(invoice.notes).not_to eq("Updated notes")
         end
       end
     end

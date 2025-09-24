@@ -81,7 +81,7 @@ export const request = (settings: RequestSettings): Promise<Response> => {
   })
     .then(
       (response) => {
-        if (response.status === 422) {
+        if (settings.assertOk && response.status === 422) {
           return response.json().then((data: { error_message: string }) => {
             throw new ResponseError(data.error_message);
           });

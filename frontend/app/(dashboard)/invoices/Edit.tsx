@@ -91,15 +91,6 @@ const dataSchema = z.object({
 });
 type Data = z.infer<typeof dataSchema>;
 
-const saveInvoiceResultSchema = z.discriminatedUnion("success", [
-  z.object({ success: z.literal(true) }),
-  z.object({
-    success: z.literal(false),
-    error_message: z.string().nullable(),
-    form_errors: z.array(z.object({ path: z.string(), message: z.string() })),
-  }),
-]);
-
 type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: string[] | null };
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
 
@@ -199,11 +190,15 @@ const Edit = () => {
         url: id ? company_invoice_path(company.id, id) : company_invoices_path(company.id),
         accept: "json",
         formData,
-        assertOk: true,
       });
-      const data = saveInvoiceResultSchema.parse(await response.json());
-      if (!data.success) {
-        const formErrors = Object.fromEntries(data.form_errors.map((e) => [e.path, e.message]));
+      if (!response.ok) {
+        const { form_errors } = z
+          .object({
+            error_message: z.string().nullable(),
+            form_errors: z.array(z.object({ path: z.string(), message: z.string() })),
+          })
+          .parse(await response.json());
+        const formErrors = Object.fromEntries(form_errors.map((e) => [e.path, e.message]));
         setFormErrors(formErrors);
         return;
       }
