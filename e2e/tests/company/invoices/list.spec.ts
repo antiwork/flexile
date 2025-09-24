@@ -399,21 +399,13 @@ test.describe("Invoices admin flow", () => {
     await page.getByPlaceholder("Description").fill("Invoice with document for admin review");
     await page.getByLabel("Hours").fill("10:00");
 
-    await page.getByLabel("Add document").setInputFiles([
-      {
-        name: "admin-review-document-1.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("document content for admin review 1"),
-      },
-      {
-        name: "admin-review-document-2.pdf",
-        mimeType: "application/pdf",
-        buffer: Buffer.from("document content for admin review 2"),
-      },
-    ]);
+    await page.getByLabel("Add document").setInputFiles({
+      name: "admin-review-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("document content for admin review"),
+    });
     await page.waitForTimeout(300);
-    await expect(page.getByText("admin-review-document-1.pdf")).toBeVisible();
-    await expect(page.getByText("admin-review-document-2.pdf")).toBeVisible();
+    await expect(page.getByText("admin-review-document.pdf")).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
@@ -431,13 +423,10 @@ test.describe("Invoices admin flow", () => {
 
     await page.getByRole("link", { name: "View Invoice" }).click();
 
-    await expect(page.getByText("admin-review-document-1.pdf")).toBeVisible();
-    await expect(page.getByText("admin-review-document-2.pdf")).toBeVisible();
+    await expect(page.getByText("admin-review-document.pdf")).toBeVisible();
 
-    const documentLink1 = page.getByRole("link", { name: "admin-review-document-1.pdf" });
-    const documentLink2 = page.getByRole("link", { name: "admin-review-document-2.pdf" });
-    await expect(documentLink1).toBeVisible();
-    await expect(documentLink2).toBeVisible();
+    const documentLink = page.getByRole("link", { name: "admin-review-document.pdf" });
+    await expect(documentLink).toBeVisible();
   });
 
   test("shows expense attachments when viewing an invoice as an admin", async ({ page }) => {

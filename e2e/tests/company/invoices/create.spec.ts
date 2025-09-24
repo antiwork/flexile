@@ -320,7 +320,7 @@ test.describe("invoice creation", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    await expect(page.getByRole("cell", { name: "Awaiting approval (0/2)" })).toBeVisible();
 
     await page.getByRole("row", { name: "Awaiting approval" }).click();
 
