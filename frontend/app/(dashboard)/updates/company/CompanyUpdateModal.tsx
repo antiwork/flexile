@@ -72,60 +72,64 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
 
   const recipientCount = (company.contractorCount ?? 0) + (company.investorCount ?? 0);
 
-  const submitMutation = useMutation({
-    mutationFn: async ({
-      values,
-      preview,
-      publish,
-      updateId: mutationUpdateId,
-    }: {
-      values: z.infer<typeof formSchema>;
-      preview: boolean;
-      publish?: boolean;
-      updateId?: string | undefined;
-    }) => {
+  const saveMutation = useMutation({
+    mutationFn: async ({ values, preview }: { values: z.infer<typeof formSchema>; preview: boolean }) => {
       const formData = new FormData();
       formData.append("company_update[title]", values.title);
       formData.append("company_update[body]", values.body);
 
-      const isUpdate = !!mutationUpdateId;
-      const method = isUpdate ? "PATCH" : "POST";
-      const url = isUpdate
-        ? company_company_update_url(company.externalId, mutationUpdateId)
-        : company_company_updates_url(company.externalId);
+      let id;
+      if (update) {
+        id = update.id;
+        await request({
+          method: "PATCH",
+          url: company_company_update_url(company.externalId, id),
+          formData,
+          accept: "json",
+          assertOk: true,
+        });
+      } else if (previewUpdateId) {
+        id = previewUpdateId;
+        await request({
+          method: "PATCH",
+          url: company_company_update_url(company.externalId, id),
+          formData,
+          accept: "json",
+          assertOk: true,
+        });
+      } else {
+        const response = await request({
+          method: "POST",
+          url: company_company_updates_url(company.externalId),
+          formData,
+          accept: "json",
+          assertOk: true,
+        });
 
-      const response = await request({
-        method,
-        url,
-        formData,
-        accept: "json",
-        assertOk: true,
-      });
+        const result = z
+          .object({
+            company_update: z.object({
+              id: z.string(),
+            }),
+          })
+          .parse(await response.json());
 
-      const result = z
-        .object({
-          company_update: z.object({
-            id: z.string(),
-          }),
-        })
-        .parse(await response.json());
+        id = result.company_update.id;
+      }
 
-      const updateId = result.company_update.id;
-
-      if (publish && !update?.sentAt) {
+      if (!preview && !update?.sentAt) {
         await request({
           method: "POST",
-          url: publish_company_company_update_url(company.externalId, updateId),
+          url: publish_company_company_update_url(company.externalId, id),
           accept: "json",
           assertOk: true,
         });
       }
 
       void trpcUtils.companyUpdates.list.invalidate();
-      await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id: updateId });
-
+      await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id });
       if (preview) {
-        setPreviewUpdateId(updateId);
+        setPreviewUpdateId(id);
         setViewPreview(true);
       } else {
         handleClose();
@@ -222,14 +226,12 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                 <MutationStatusButton
                   type="button"
                   size="small"
-                  mutation={submitMutation}
+                  mutation={saveMutation}
                   idleVariant="outline"
                   loadingText="Saving..."
                   className="w-1/2 md:w-fit"
                   onClick={() =>
-                    void form.handleSubmit((values) =>
-                      submitMutation.mutateAsync({ values, preview: true, updateId }),
-                    )()
+                    void form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()
                   }
                 >
                   Preview
@@ -259,8 +261,8 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
                 No, cancel
               </Button>
               <MutationButton
-                mutation={submitMutation}
-                param={{ values: form.getValues(), preview: false, publish: true, updateId }}
+                mutation={saveMutation}
+                param={{ values: form.getValues(), preview: false }}
                 loadingText="Sending..."
                 size="small"
               >
