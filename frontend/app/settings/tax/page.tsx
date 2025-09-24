@@ -61,7 +61,7 @@ const formValuesSchema = z.object({
   birth_date: z.instanceof(CalendarDate).nullable(),
   street_address: z.string().min(1, "Please add your residential address."),
   city: z.string().min(1, "Please add your city or town."),
-  state: z.string().min(1, "This field is required."),
+  state: z.string(),
   zip_code: z.string().regex(/\d/u, "Please add a valid postal code (must contain at least one number)."),
 });
 
@@ -185,6 +185,9 @@ export default function TaxPage() {
 
     if (values.country_code === "US" && !/(^\d{5}|\d{9}|\d{5}[- ]\d{4})$/u.test(values.zip_code))
       return form.setError("zip_code", { message: "Please add a valid ZIP code (5 or 9 digits)." });
+
+    if (countrySubdivisions.length > 0 && values.state.length === 0)
+      return form.setError("state", { message: `Please select your ${stateLabel}.` });
     setShowCertificationModal(true);
   });
 
