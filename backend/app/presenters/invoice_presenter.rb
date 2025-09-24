@@ -96,7 +96,7 @@ class InvoicePresenter
       invoice_expenses.reject { _1.marked_for_destruction? }
                       .map do |expense|
         {
-          id: expense.id,
+          id: expense.external_id,
           description: expense.description,
           category_id: expense.expense_category_id,
           total_amount_in_cents: expense.total_amount_in_cents,

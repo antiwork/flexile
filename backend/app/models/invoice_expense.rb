@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class InvoiceExpense < ApplicationRecord
-  include Serializable
+  include Serializable, ExternalId
 
   belongs_to :invoice
   belongs_to :expense_category
