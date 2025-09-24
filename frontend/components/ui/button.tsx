@@ -14,7 +14,7 @@ const buttonVariants = cva(
         success: "bg-green text-white border-green",
         outline: "bg-transparent dark:bg-input/30 text-inherit border-muted hover:bg-accent dark:hover:bg-accent",
         destructive: "bg-transparent text-inherit border-muted hover:text-destructive hover:*:text-destructive",
-        dashed: "bg-transparent text-inherit border-dashed border-current hover:text-link",
+        dashed: "bg-transparent text-inherit border-dashed border-input hover:text-link hover:border-current",
         ghost: "border-transparent text-muted-background hover:bg-accent",
         link: "gap-1 border-none hover:text-link hover:underline !py-0 justify-start px-0",
         "floating-action":

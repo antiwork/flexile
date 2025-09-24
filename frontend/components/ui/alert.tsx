@@ -3,7 +3,7 @@ import * as React from "react";
 import { cn } from "@/utils";
 
 const alertVariants = cva(
-  "relative rounded-md px-2.5 py-2 text-foreground grid has-[>svg]:grid-cols-[auto_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-2 gap-y-0.5 [&>svg]:size-5 [&>svg]:text-current flex-row flex-wrap [&:not(:has(>div[data-slot=alert-title]))]:items-start",
+  "relative rounded-md px-2.5 py-2 text-foreground grid has-[>svg]:grid-cols-[auto_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-2 gap-y-0.5 [&>svg]:size-5 [&>svg]:text-current [&>svg]:self-center [&>svg]:[align-self:anchor-center] flex-row flex-wrap [&:not(:has(>div[data-slot=alert-title]))]:items-start",
   {
     variants: {
       variant: {
