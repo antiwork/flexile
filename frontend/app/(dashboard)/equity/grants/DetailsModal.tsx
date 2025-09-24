@@ -10,7 +10,6 @@ import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatDate, humanizeMonths } from "@/utils/time";
-import { useIsMobile } from "@/utils/use-mobile";
 import { optionGrantTypeDisplayNames, relationshipDisplayNames } from ".";
 
 type EquityGrant = RouterOutput["equityGrants"]["list"][number];
@@ -36,7 +35,6 @@ const DetailsModal = ({
   onClose: () => void;
 }) => {
   const company = useCurrentCompany();
-  const isMobile = useIsMobile();
   const [user] = trpc.users.get.useSuspenseQuery({ companyId: company.id, id: userId });
   const { data: fullEquityGrant } = trpc.equityGrants.get.useQuery({ companyId: company.id, id: equityGrant.id });
 
@@ -147,9 +145,7 @@ const DetailsModal = ({
         canExercise ? (
           <SheetFooter>
             <div className="grid gap-4">
-              <Button size={isMobile ? "default" : "small"} onClick={onUpdateExercise}>
-                Exercise options
-              </Button>
+              <Button onClick={onUpdateExercise}>Exercise options</Button>
               <div className="text-xs">You can choose how many options to exercise in the next step.</div>
             </div>
           </SheetFooter>

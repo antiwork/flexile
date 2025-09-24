@@ -2,6 +2,8 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/utils/index";
+import { useIsMobile } from "@/utils/use-mobile";
+import { Button } from "./button";
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
@@ -75,8 +77,35 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="sheet-header" className={cn("flex flex-col gap-1.5 p-6 pb-2", className)} {...props} />;
 }
 
-function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="sheet-footer" className={cn("mt-auto flex flex-col gap-2 p-6 pt-0", className)} {...props} />;
+function SheetFooter({ className, children, ...props }: React.ComponentProps<"div">) {
+  const isMobile = useIsMobile();
+
+  const processChildren = (children: React.ReactNode): React.ReactNode =>
+    React.Children.map(children, (child) => {
+      if (React.isValidElement(child)) {
+        const isButtonComponent =
+          (typeof child.type === "function" &&
+            (child.type.name === "Button" ||
+              child.type.name === "MutationButton" ||
+              child.type.name === "MutationStatusButton")) ||
+          child.type === Button;
+
+        if (isButtonComponent && child.props && typeof child.props === "object") {
+          const hasSize = "size" in child.props && child.props.size;
+          if (!hasSize) {
+            const newProps = { size: isMobile ? "default" : "small" };
+            return React.cloneElement(child, newProps);
+          }
+        }
+      }
+      return child;
+    });
+
+  return (
+    <div data-slot="sheet-footer" className={cn("mt-auto flex flex-col gap-2 p-6 pt-0", className)} {...props}>
+      {processChildren(children)}
+    </div>
+  );
 }
 
 function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Title>) {
