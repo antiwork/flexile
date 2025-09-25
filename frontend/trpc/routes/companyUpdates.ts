@@ -10,7 +10,7 @@ const updateSchema = z.object({
   title: z.string(),
   body: z.string(),
   sent_at: z.string().nullable().optional(),
-  status: z.string(),
+  status: z.string().optional(),
   sender_name: z.string().optional(),
 });
 
@@ -27,9 +27,9 @@ const updatesListSchema = z.object({
 
 export const companyUpdatesRouter = createRouter({
   list: companyProcedure.query(async ({ ctx }) => {
-    if (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor) {
+    if (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
       throw new TRPCError({ code: "FORBIDDEN" });
-    }
+
     const response = await fetch(company_company_updates_url(ctx.company.externalId), {
       method: "GET",
       headers: {
@@ -37,7 +37,6 @@ export const companyUpdatesRouter = createRouter({
         ...ctx.headers,
       },
     });
-
     if (!response.ok) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
@@ -55,9 +54,9 @@ export const companyUpdatesRouter = createRouter({
     };
   }),
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    if (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor) {
+    if (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor)
       throw new TRPCError({ code: "FORBIDDEN" });
-    }
+
     const response = await fetch(company_company_update_url(ctx.company.externalId, input.id), {
       method: "GET",
       headers: {
@@ -65,7 +64,6 @@ export const companyUpdatesRouter = createRouter({
         ...ctx.headers,
       },
     });
-
     if (!response.ok) {
       if (response.status === 404) {
         throw new TRPCError({ code: "NOT_FOUND" });
@@ -75,7 +73,6 @@ export const companyUpdatesRouter = createRouter({
         message: "Failed to fetch company update",
       });
     }
-
     const result = updateSchema.parse(await response.json());
     return {
       ...result,
