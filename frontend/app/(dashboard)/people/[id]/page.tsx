@@ -346,7 +346,7 @@ export default function ContractorPage() {
                   <small className="text-red">{issuePaymentForm.formState.errors.root.message}</small>
                 ) : null}
 
-                <small className="text-gray-600">
+                <small className="text-muted-foreground">
                   Your'll be able to initiate payment once it has been accepted by the recipient
                   {company.requiredInvoiceApprovals > 1 ? " and has sufficient approvals" : ""}.
                 </small>
@@ -514,7 +514,7 @@ const DetailsTab = ({
           {payRateInSubunits && company.flags.includes("equity") ? (
             <div>
               <span>Equity split</span>
-              <div className="my-2 flex h-2 overflow-hidden rounded-xs bg-gray-200">
+              <div className="bg-muted my-2 flex h-2 overflow-hidden rounded">
                 <div
                   style={{ width: `${contractor.equityPercentage}%` }}
                   className="flex flex-col justify-center bg-blue-600 whitespace-nowrap"
@@ -527,13 +527,13 @@ const DetailsTab = ({
               <div className="flex justify-between">
                 <span>
                   {(contractor.equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} Equity{" "}
-                  <span className="text-gray-600">
+                  <span className="text-muted-foreground">
                     ({formatMoneyFromCents((contractor.equityPercentage * payRateInSubunits) / 100)})
                   </span>
                 </span>
                 <span>
                   {((100 - contractor.equityPercentage) / 100).toLocaleString(undefined, { style: "percent" })} Cash{" "}
-                  <span className="text-gray-600">
+                  <span className="text-muted-foreground">
                     ({formatMoneyFromCents(((100 - contractor.equityPercentage) * payRateInSubunits) / 100)})
                   </span>
                 </span>
