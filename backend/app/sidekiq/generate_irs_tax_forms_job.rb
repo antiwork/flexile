@@ -34,7 +34,7 @@ class GenerateIrsTaxFormsJob
         company = company_user.company
         next if user.documents.tax_document.alive.where(year: tax_year, document_type:, company:).exists?
 
-        GenerateTaxFormService.new(user_compliance_info:, form_name:, tax_year:, company:).process
+        GenerateTaxFormService.new(user_compliance_info:, document_type:, tax_year:, company:).process
       end
     end
 end
