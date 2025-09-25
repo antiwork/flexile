@@ -5,7 +5,7 @@ import { expect, test } from "@test/index";
 test.describe("Company billing settings", () => {
   test("billing settings gated until company name is set", async ({ page }) => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding(
-      { name: null },
+      { name: null, stripeCustomerId: null },
       { withoutBankAccount: true },
     );
 
