@@ -7,8 +7,6 @@ FactoryBot.define do
     year { Date.current.year }
     attachments { [Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/sample.pdf"))] }
 
-    # Consulting contract
-    name { Document::CONSULTING_CONTRACT_NAME }
     document_type { Document.document_types[:consulting_contract] }
 
     transient do
@@ -39,7 +37,6 @@ FactoryBot.define do
     end
 
     factory :equity_plan_contract_doc do
-      name { "Equity Incentive Plan #{Date.current.year}" }
       document_type { Document.document_types[:equity_plan_contract] }
       equity_grant { create(:equity_grant, company_investor: create(:company_investor, company:)) }
     end
