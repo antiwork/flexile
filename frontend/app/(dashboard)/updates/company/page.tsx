@@ -7,7 +7,6 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -117,7 +116,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
       columnHelper.simple("sentAt", "Sent On", (v) => (v ? formatDate(v) : "-")),
       columnHelper.accessor((row) => (row.sentAt ? "Sent" : "Draft"), {
         header: "Status",
-        cell: (info) => <Status variant={info.getValue() === "Sent" ? "success" : undefined}>{info.getValue()}</Status>,
+        cell: (info) => info.getValue(),
       }),
       columnHelper.display({
         id: "actions",
@@ -165,9 +164,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
 
           return (
             <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 items-center justify-center">
-                <Status variant={update.sentAt ? "success" : undefined}>{update.sentAt ? "Sent" : "Draft"}</Status>
-              </div>
+              <div className="flex h-5 items-center justify-center">{update.sentAt ? "Sent" : "Draft"}</div>
               <div className="text-gray-600">{update.sentAt ? formatDate(update.sentAt) : "-"}</div>
             </div>
           );

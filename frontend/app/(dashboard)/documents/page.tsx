@@ -21,7 +21,6 @@ import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import SignForm from "@/components/SignForm";
-import Status, { type Variant as StatusVariant } from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -57,27 +56,26 @@ const getCompletedAt = (document: Document) =>
       )
     : undefined;
 
-function getStatus(document: Document): { variant: StatusVariant | undefined; name: string; text: string } {
+function getStatus(document: Document): { name: string; text: string } {
   const completedAt = getCompletedAt(document);
 
   switch (document.type) {
     case DocumentType.TaxDocument:
       if (document.name.startsWith("W-") || completedAt) {
         return {
-          variant: "success",
           name: "Signed",
           text: completedAt ? `Filed on ${formatDate(completedAt)}` : "Signed",
         };
       }
-      return { variant: undefined, name: "Ready for filing", text: "Ready for filing" };
+      return { name: "Ready for filing", text: "Ready for filing" };
     case DocumentType.ShareCertificate:
     case DocumentType.ExerciseNotice:
-      return { variant: "success", name: "Issued", text: "Issued" };
+      return { name: "Issued", text: "Issued" };
     case DocumentType.ConsultingContract:
     case DocumentType.EquityPlanContract:
       return completedAt
-        ? { variant: "success", name: "Signed", text: "Signed" }
-        : { variant: "critical", name: "Signature required", text: "Signature required" };
+        ? { name: "Signed", text: "Signed" }
+        : { name: "Signature required", text: "Signature required" };
   }
 }
 
@@ -143,8 +141,8 @@ export default function DocumentsPage() {
           header: "Status",
           meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
           cell: (info) => {
-            const { variant, text } = getStatus(info.row.original);
-            return <Status variant={variant}>{text}</Status>;
+            const { text } = getStatus(info.row.original);
+            return text;
           },
         }),
         columnHelper.display({
@@ -189,13 +187,11 @@ export default function DocumentsPage() {
           id: "statusSentOn",
           cell: (info) => {
             const document = info.row.original;
-            const { variant } = getStatus(info.row.original);
+            const { text } = getStatus(info.row.original);
 
             return (
               <div className="flex h-full flex-col items-end justify-between">
-                <div className="flex h-5 w-4 items-center justify-center">
-                  <Status variant={variant} />
-                </div>
+                <div className="flex h-5 items-center justify-center">{text}</div>
                 <div className="text-gray-600">{formatDate(document.createdAt)}</div>
               </div>
             );

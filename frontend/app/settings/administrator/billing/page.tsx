@@ -12,7 +12,6 @@ import StripeMicrodepositVerification from "@/app/settings/administrator/StripeM
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
-import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -172,15 +171,15 @@ const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
       columnHelper.simple("status", "Status", (status) => {
         switch (status.toLowerCase()) {
           case "sent":
-            return <Status variant="primary">Sent</Status>;
+            return "Sent";
           case "processing":
-            return <Status variant="primary">Payment in progress</Status>;
+            return "Payment in progress";
           case "paid":
-            return <Status variant="success">Paid</Status>;
+            return "Paid";
           case "refunded":
-            return <Status variant="success">Refunded</Status>;
+            return "Refunded";
           case "failed":
-            return <Status variant="critical">Failed</Status>;
+            return "Failed";
         }
       }),
       columnHelper.accessor("attachment", {
