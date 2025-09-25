@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::Companies::CompanyUpdatesController < Internal::Companies::BaseController
-  before_action :load_company_update!, only: [:show, :edit, :update, :destroy, :send_test_email, :publish]
+  before_action :load_company_update!, only: [:show, :edit, :update, :destroy, :send_test_email]
 
 
   def index
@@ -48,12 +48,6 @@ class Internal::Companies::CompanyUpdatesController < Internal::Companies::BaseC
   rescue ActiveRecord::RecordInvalid => error
     Bugsnag.notify("Error updating company update: #{error}")
     render json: { error_message: error.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
-  end
-
-  def publish
-    authorize @company_update
-    PublishCompanyUpdate.new(@company_update).perform!
-    render json: { company_update: CompanyUpdatePresenter.new(@company_update).props }, status: :ok
   end
 
   def send_test_email
