@@ -94,11 +94,11 @@
   --accent: hsla(0, 0%, 100%, 0.05);
   --accent-foreground: hsla(0, 0%, 100%, 0.1);
   --info: var(--color-blue-600);
-  --info-foreground: hsl(214, 52%, 25%);
-  --destructive: var(--color-red-700);
-  --destructive-foreground: hsla(15, 84%, 45%, 0.1);
-  --warning: var(--color-amber-500);
-  --warning-foreground: hsl(32 52% 42% / 0.1);
+  --info-foreground: hsla(215, 75%, 57%, 0.1);
+  --destructive: hsl(0, 55%, 55%);
+  --destructive-foreground: hsla(0, 75%, 57%, 0.1);
+  --warning: var(--color-amber-600);
+  --warning-foreground: hsla(22, 75%, 57%, 0.1);
   --border: hsla(0 0% 100% / 0.1);
   --input: hsla(0 0% 100% / 0.1);
   --ring: hsla(212, 100%, 46%, 0.8);
