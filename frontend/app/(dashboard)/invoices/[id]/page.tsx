@@ -307,7 +307,7 @@ export default function InvoicePage() {
                     <>
                       <div>
                         <div className="mb-4 flex items-center justify-between">
-                          <span className="mb-4 text-gray-600">Cash vs equity split</span>
+                          <span className="text-muted-foreground mb-4">Cash vs equity split</span>
                           <span className="font-medium">
                             {(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} equity
                           </span>
@@ -321,7 +321,7 @@ export default function InvoicePage() {
                           min={invoice.minAllowedEquityPercentage}
                           max={invoice.maxAllowedEquityPercentage}
                         />
-                        <div className="flex justify-between text-gray-600">
+                        <div className="text-muted-foreground flex justify-between">
                           <span>
                             {(invoice.minAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })}{" "}
                             equity
@@ -564,9 +564,9 @@ export default function InvoicePage() {
         </section>
       </div>
       {isMobile && user.roles.administrator && isActionable(invoice) ? (
-        <div className="fixed bottom-15 left-0 z-10 w-full bg-white px-4 py-4" style={{ width: "100%" }}>
+        <div className="bg-background fixed bottom-15 left-0 z-10 w-full px-4 py-4" style={{ width: "100%" }}>
           <ApproveButton
-            className="w-full border-0 bg-blue-500 shadow-lg"
+            className="w-full border-0 bg-blue-500 text-white shadow-lg"
             invoice={invoice}
             onApprove={() => router.push(`/invoices`)}
           />
