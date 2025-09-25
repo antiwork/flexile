@@ -19,7 +19,16 @@ class DividendRound < ApplicationRecord
   def send_dividend_emails
     company.company_investors.joins(:dividends)
       .where(dividends: { dividend_round_id: id })
-      .where.not(dividends: { status: [Dividend::PENDING_SIGNUP, Dividend::ISSUED] })
+      .group(:id)
+      .each do |investor|
+        investor_dividend_round = investor.investor_dividend_rounds.find_or_create_by!(dividend_round_id: id)
+        investor_dividend_round.send_dividend_issued_email
+      end
+  end
+
+  def remind_dividend_investors
+    company.company_investors.joins(:dividends)
+      .where(dividends: { dividend_round_id: id, status: Dividend::PENDING_SIGNUP })
       .group(:id)
       .each do |investor|
         investor_dividend_round = investor.investor_dividend_rounds.find_or_create_by!(dividend_round_id: id)
