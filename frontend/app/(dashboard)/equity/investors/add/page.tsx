@@ -437,13 +437,7 @@ const AddCapTablePage = () => {
         <DashboardHeader
           title="Cap table"
           headerActions={
-            <Button
-              type="submit"
-              variant="default"
-              size="default"
-              className="bg-gray-800 hover:bg-gray-900"
-              disabled={createCapTableMutation.isPending}
-            >
+            <Button type="submit" variant="default" size="default" disabled={createCapTableMutation.isPending}>
               {createCapTableMutation.isPending ? "Creating..." : "Finalize cap table"}
             </Button>
           }
