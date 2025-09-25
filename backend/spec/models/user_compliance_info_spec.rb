@@ -423,7 +423,7 @@ RSpec.describe UserComplianceInfo do
         it "marks the user compliance info as deleted and only deletes unsigned non-dividend tax documents" do
           user_compliance_info.mark_deleted!
           expect(user_compliance_info.reload).to be_deleted
-          expect(form_1099_div.reload).to be_deleted
+          expect(form_1099_nec.reload).to be_deleted
           expect(tax_document.reload).to_not be_deleted
           expect(submitted_1099_nec).to_not be_deleted
           expect(form_1099_div.reload).to_not be_deleted
