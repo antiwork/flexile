@@ -43,26 +43,20 @@ test.describe("Role autocomplete", () => {
   };
 
   const testAutofill = async (page: Page) => {
-    const roleField = page.getByLabel("Role");
-    await roleField.click();
-    await expect(page.getByRole("option", { name: role1 })).not.toBeVisible();
-    await expect(page.getByRole("option", { name: role2 })).not.toBeVisible();
-    await expect(page.getByRole("option", { name: role3 })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Alumni Role" })).not.toBeVisible();
-
-    await roleField.clear();
+    const searchField = page.getByPlaceholder("Search...");
+    await page.getByLabel("Role").click();
     await expect(page.getByRole("option", { name: role1 })).toBeVisible();
     await expect(page.getByRole("option", { name: role2 })).toBeVisible();
     await expect(page.getByRole("option", { name: role3 })).toBeVisible();
     await expect(page.getByRole("option", { name: "Alumni Role" })).not.toBeVisible();
 
-    await roleField.fill("de");
+    await searchField.fill("de");
     await expect(page.getByRole("option", { name: role1 })).toBeVisible();
     await expect(page.getByRole("option", { name: role2 })).toBeVisible();
     await expect(page.getByRole("option", { name: role3 })).not.toBeVisible();
-    await roleField.press("Enter");
-    await expect(roleField).toHaveValue(role1);
-    await expect(page.getByRole("option")).not.toBeVisible();
+    await searchField.press("Enter");
+    await expect(searchField).not.toBeVisible();
+    await expect(page.getByLabel("Role")).toHaveText(role1);
   };
 
   test("suggests existing roles when inviting a new contractor", async ({ page }) => {
@@ -85,7 +79,7 @@ test.describe("Role autocomplete", () => {
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("link", { name: user.preferredName ?? "" }).click();
-    await expect(page.getByLabel("Role")).toHaveValue(assertDefined(contractor.role));
+    await expect(page.getByLabel("Role")).toHaveText(assertDefined(contractor.role));
     await testAutofill(page);
   });
 });
