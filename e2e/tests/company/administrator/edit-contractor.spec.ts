@@ -7,7 +7,7 @@ import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
-import { users } from "@/db/schema";
+import { companyContractors, users } from "@/db/schema";
 import { assert, assertDefined } from "@/utils/assert";
 
 test.describe("Edit contractor", () => {
@@ -77,7 +77,7 @@ test.describe("Edit contractor", () => {
     await expect(page.getByRole("button", { name: "Save changes" })).not.toBeDisabled();
 
     const updatedContractor = await db.query.companyContractors.findFirst({
-      where: eq(users.id, companyContractor.id),
+      where: eq(companyContractors.userId, companyContractor.userId),
     });
     assert(updatedContractor !== undefined);
     expect(updatedContractor.role).toBe("Stuff-doer");
@@ -111,7 +111,7 @@ test.describe("Edit contractor", () => {
     await expect(page.getByRole("button", { name: "Save changes" })).not.toBeDisabled();
 
     const updatedContractor = await db.query.companyContractors.findFirst({
-      where: eq(users.id, companyContractor.id),
+      where: eq(companyContractors.userId, companyContractor.userId),
     });
     assert(updatedContractor !== undefined);
     expect(updatedContractor.payRateType).toBe(PayRateType.Custom);
