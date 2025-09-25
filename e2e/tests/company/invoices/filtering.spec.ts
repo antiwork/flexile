@@ -176,14 +176,32 @@ test.describe("Invoice Status Filtering", () => {
     const statusTests = [
       {
         status: "Awaiting approval",
-        expectedContractors: [
+        expectedContractors: ["Zero Approval Dev", "One Approval Dev", "Frontend Developer", "Main Contractor"],
+        hiddenContractors: [
+          "Fully Approved Dev",
+          "Processing Dev",
+          "Paid Dev",
+          "Rejected Dev",
+          "Failed Dev",
+          "Payment Pending Dev",
+          "Backend Developer",
+        ],
+      },
+      {
+        status: "Approved",
+        expectedContractors: ["Fully Approved Dev"],
+        hiddenContractors: [
           "Zero Approval Dev",
           "One Approval Dev",
-          "Fully Approved Dev",
+          "Processing Dev",
+          "Paid Dev",
+          "Rejected Dev",
+          "Failed Dev",
+          "Payment Pending Dev",
           "Frontend Developer",
           "Main Contractor",
+          "Backend Developer",
         ],
-        hiddenContractors: ["Processing Dev", "Paid Dev", "Rejected Dev", "Failed Dev", "Payment Pending Dev"],
       },
       {
         status: "Processing",
@@ -195,6 +213,9 @@ test.describe("Invoice Status Filtering", () => {
           "Paid Dev",
           "Rejected Dev",
           "Failed Dev",
+          "Frontend Developer",
+          "Main Contractor",
+          "Backend Developer",
         ],
       },
       {
@@ -208,6 +229,9 @@ test.describe("Invoice Status Filtering", () => {
           "Rejected Dev",
           "Failed Dev",
           "Payment Pending Dev",
+          "Frontend Developer",
+          "Main Contractor",
+          "Backend Developer",
         ],
       },
       {
@@ -221,6 +245,8 @@ test.describe("Invoice Status Filtering", () => {
           "Paid Dev",
           "Failed Dev",
           "Payment Pending Dev",
+          "Frontend Developer",
+          "Main Contractor",
         ],
       },
       {
@@ -234,6 +260,9 @@ test.describe("Invoice Status Filtering", () => {
           "Paid Dev",
           "Rejected Dev",
           "Payment Pending Dev",
+          "Frontend Developer",
+          "Main Contractor",
+          "Backend Developer",
         ],
       },
     ];
