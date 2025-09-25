@@ -108,7 +108,7 @@ const EquitySection = () => {
                 <div>Cash amount</div>
                 <div>
                   {formatMoneyFromCents(((100 - equityPercentage) * payRateInSubunits) / 100)}{" "}
-                  <span className="text-gray-500">/ {getPayRateDisplayText(worker.payRateType)}</span>
+                  <span className="text-muted-foreground">/ {getPayRateDisplayText(worker.payRateType)}</span>
                 </div>
               </div>
               <Separator />
@@ -116,7 +116,7 @@ const EquitySection = () => {
                 <div>Equity value</div>
                 <div>
                   {formatMoneyFromCents((equityPercentage * payRateInSubunits) / 100)}{" "}
-                  <span className="text-gray-500">/ {getPayRateDisplayText(worker.payRateType)}</span>
+                  <span className="text-muted-foreground">/ {getPayRateDisplayText(worker.payRateType)}</span>
                 </div>
               </div>
               <Separator />
@@ -124,7 +124,7 @@ const EquitySection = () => {
                 <div>Total amount</div>
                 <div>
                   {formatMoneyFromCents(payRateInSubunits)}{" "}
-                  <span className="text-gray-500">/ {getPayRateDisplayText(worker.payRateType)}</span>
+                  <span className="text-muted-foreground">/ {getPayRateDisplayText(worker.payRateType)}</span>
                 </div>
               </div>
             </div>
