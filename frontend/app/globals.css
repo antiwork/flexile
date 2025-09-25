@@ -171,8 +171,3 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
-
-.dark .tiptap strong,
-.dark .tiptap p {
-  color: white;
-}

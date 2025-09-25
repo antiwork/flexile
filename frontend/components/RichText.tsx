@@ -16,7 +16,7 @@ const RichText = ({ content, className }: { content: Content; className?: string
     content,
     editorProps: {
       attributes: {
-        class: cn(className, "prose"),
+        class: cn(className, "prose text-foreground dark:prose-invert"),
       },
     },
     editable: false,
@@ -57,7 +57,7 @@ export const Editor = ({
         ...(ariaLabel ? { "aria-label": ariaLabel } : {}),
         class: cn(
           className,
-          "prose text-foreground p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none",
+          "prose text-foreground dark:prose-invert border-muted my-2 max-h-100 overflow-y-auto rounded-md border px-8 py-4 p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none",
         ),
       },
     },
