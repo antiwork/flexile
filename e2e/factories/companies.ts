@@ -23,6 +23,7 @@ export const companiesFactory = {
         registrationNumber: faker.string.numeric(9),
         registrationState: "DE",
         streetAddress: faker.location.streetAddress(),
+        phoneNumber: faker.phone.number({ style: "national" }),
         city: faker.location.city(),
         state: faker.location.state({ abbreviated: true }),
         zipCode: faker.location.zipCode(),

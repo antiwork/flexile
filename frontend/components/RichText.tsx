@@ -37,12 +37,13 @@ export const Editor = ({
   onChange,
   className,
   id,
+  "aria-label": ariaLabel,
   ...props
 }: {
   value: string | null | undefined;
   onChange: (value: string | null) => void;
   className?: string;
-} & React.ComponentProps<"div">) => {
+} & Omit<React.ComponentProps<"div">, "onChange">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
 
   const editor = useEditor({
@@ -53,6 +54,7 @@ export const Editor = ({
     editorProps: {
       attributes: {
         ...(id ? { id } : {}),
+        ...(ariaLabel ? { "aria-label": ariaLabel } : {}),
         class: cn(className, "prose p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none"),
       },
     },
