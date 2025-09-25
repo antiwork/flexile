@@ -317,7 +317,7 @@ export default function DataTable<T extends RowData>({
                 <button
                   onClick={() => tabFilterColumn.setFilterValue(undefined)}
                   className={`bg-secondary h-9 rounded-full border px-4 text-sm leading-5 font-medium ${
-                    !tabFilterValue?.length ? "border-blue-600 !bg-blue-600/5" : "border-border"
+                    !tabFilterValue?.length ? "border-blue-600 !bg-blue-500/10" : "border-border"
                   }`}
                 >
                   All
@@ -336,7 +336,7 @@ export default function DataTable<T extends RowData>({
                       );
                     }}
                     className={`bg-secondary h-9 rounded-full border px-4 text-sm leading-5 font-medium whitespace-nowrap ${
-                      tabFilterValue?.includes(option) ? "border-blue-600 !bg-blue-600/5" : "border-border"
+                      tabFilterValue?.includes(option) ? "border-blue-600 !bg-blue-500/10" : "border-border"
                     }`}
                   >
                     {option}

@@ -180,7 +180,7 @@ export function AuthPage({
                 />
                 <div className="text-center">
                   {verifyOtp.isPending || redirectInProgress ? (
-                    <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                    <div className="text-muted-foreground flex items-center justify-center gap-2 text-sm">
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
                       Verifying your code...
                     </div>

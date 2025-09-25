@@ -149,7 +149,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
             <div className="flex w-3xs flex-col gap-2">
               <div>
                 <div className="truncate text-base font-medium">{update.title}</div>
-                <div className="truncate font-normal text-gray-600">{update.summary}</div>
+                <div className="text-muted-foreground truncate font-normal">{update.summary}</div>
               </div>
             </div>
           );
@@ -168,7 +168,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
               <div className="flex h-5 items-center justify-center">
                 <Status variant={update.sentAt ? "success" : undefined}>{update.sentAt ? "Sent" : "Draft"}</Status>
               </div>
-              <div className="text-gray-600">{update.sentAt ? formatDate(update.sentAt) : "-"}</div>
+              <div className="text-muted-foreground">{update.sentAt ? formatDate(update.sentAt) : "-"}</div>
             </div>
           );
         },
@@ -240,12 +240,12 @@ const ViewList = () => {
             <div className="flex flex-col gap-1">
               <div className="flex">
                 <div className="w-3xs truncate text-base font-medium">{update.title}</div>
-                <div className="flex-1 text-right font-[350] text-gray-600">
+                <div className="text-muted-foreground flex-1 text-right font-[350]">
                   {update.sentAt ? formatDate(update.sentAt) : "-"}
                 </div>
               </div>
               <div
-                className="truncate text-base leading-5 font-[350] text-gray-600"
+                className="text-muted-foreground truncate text-base leading-5 font-[350]"
                 style={{ width: "calc(100vw - 40px)" }}
               >
                 {update.summary}

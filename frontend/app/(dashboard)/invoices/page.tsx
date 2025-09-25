@@ -285,7 +285,7 @@ export default function InvoicesPage() {
             <div className="flex flex-col gap-2">
               <div>
                 <div className="text-base font-medium">{invoice.billFrom}</div>
-                <div className="text-gray-600">{invoice.contractor.role}</div>
+                <div className="text-muted-foreground">{invoice.contractor.role}</div>
               </div>
               <div className="text-sm">{amount}</div>
             </div>
@@ -314,7 +314,7 @@ export default function InvoicesPage() {
           return (
             <div className="flex h-full flex-col items-end justify-between">
               <div className="flex h-5 items-center justify-center">{getInvoiceStatusText(invoice, company)}</div>
-              <div className="text-gray-600">{formatDate(invoice.invoiceDate)}</div>
+              <div className="text-muted-foreground">{formatDate(invoice.invoiceDate)}</div>
             </div>
           );
         },
@@ -428,7 +428,7 @@ export default function InvoicesPage() {
             data.length > 0 ? (
               <div className="flex items-center">
                 <button
-                  className="p-2 text-blue-600"
+                  className="text-link p-2"
                   onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
                 >
                   {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
@@ -436,7 +436,7 @@ export default function InvoicesPage() {
                 {user.roles.administrator ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger className="p-2">
-                      <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
+                      <MoreHorizontal className="text-link size-5" strokeWidth={1.75} />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
