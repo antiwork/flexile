@@ -129,11 +129,11 @@ export default async function HomePage() {
         </Section>
 
         <Section className="bg-black py-8 text-white md:py-16">
-          <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between px-4 md:flex-row md:items-end">
+          <div className="mx-auto flex w-full max-w-5xl flex-row items-center justify-between px-4 md:items-end">
             <div className="flex flex-col items-start gap-8 md:gap-18">
               <Image src={logo} alt="Flexile" className="block h-16 w-auto invert" />
             </div>
-            <div className="mt-8 flex flex-col items-start gap-4 text-left md:mt-0 md:items-end md:text-right">
+            <div className="flex flex-col items-end gap-4 text-right">
               <Link href="/privacy" className="text-base text-white no-underline hover:underline">
                 Privacy policy
               </Link>
