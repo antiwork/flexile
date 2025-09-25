@@ -133,11 +133,11 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                               {conversation.subject}
                             </div>
                           </div>
-                          <div className="grow text-right font-[350] text-gray-600">
+                          <div className="text-muted-foreground grow text-right font-[350]">
                             {formatConversationDate(conversation.latestMessageAt ?? conversation.createdAt)}
                           </div>
                         </div>
-                        <div className="w-[calc(100vw-40px)] truncate text-base leading-5 font-[350] text-gray-600">
+                        <div className="text-muted-foreground w-[calc(100vw-40px)] truncate text-base leading-5 font-[350]">
                           {conversation.latestMessage}
                         </div>
                       </div>

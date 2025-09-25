@@ -78,7 +78,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                       />
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
+                      <span className="text-foreground truncate font-semibold">
                         {user.companies.find((c) => c.id === user.currentCompanyId)?.name ?? "Personal"}
                       </span>
                       <span className="text-muted-foreground truncate text-xs">{user.email}</span>
