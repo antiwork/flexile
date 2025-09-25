@@ -459,7 +459,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
           <DialogTitle>Bank account</DialogTitle>
         </DialogHeader>
 
-        <div className="-mx-1 flex-1 space-y-4 overflow-y-auto px-1 py-1">
+        <div className="no-scrollbar -mx-1 flex-1 space-y-4 overflow-y-auto px-1 py-1">
           <div className="grid gap-2">
             <Label htmlFor={`currency-${uid}`}>Currency</Label>
             <ComboBox
