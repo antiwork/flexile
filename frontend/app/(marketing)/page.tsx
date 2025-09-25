@@ -53,9 +53,9 @@ export default async function HomePage() {
         </div>
       </nav>
 
-      <main className="min-h-screen bg-white pt-20">
+      <main className="bg-background min-h-screen pt-20">
         <Section className="bg-blue-600 py-8 md:py-16">
-          <h1 className="text-6xl leading-[0.9] font-medium tracking-tight sm:text-8xl md:text-[9rem] lg:text-[12rem]">
+          <h1 className="text-primary-foreground text-6xl leading-[0.9] font-medium tracking-tight sm:text-8xl md:text-[9rem] lg:text-[12rem]">
             Contractor payments
           </h1>
           <div className="flex">
@@ -109,7 +109,7 @@ export default async function HomePage() {
           </div>
         </Section>
 
-        <Section className="flex bg-gray-50 py-8 md:py-16">
+        <Section className="bg-primary-foreground flex bg-gray-50 py-8 md:py-16">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 md:gap-12">
             <h2 className="text-4xl font-medium md:text-6xl">Clear, straight forward pricing</h2>
             <div className="text-2xl md:text-3xl">1.5% + $0.50, capped at $15/payment</div>
