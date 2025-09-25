@@ -33,15 +33,12 @@ test.describe("invoice editing", () => {
     // Wait for the form to load
     await expect(page.getByLabel("Invoice ID")).toBeVisible();
 
-    // Fill in the invoice form - clear field first to ensure clean input
+    // Fill in the invoice form - clear Invoice ID field first to ensure clean input
     await page.getByPlaceholder("Description").fill("Development work for Q1");
     await page.getByLabel("Hours / Qty").fill("10:00");
     await page.getByLabel("Rate").fill("75");
-
-    // Clear and fill Invoice ID field
     await page.getByLabel("Invoice ID").clear();
     await page.getByLabel("Invoice ID").fill("INV-EDIT-001");
-
     await fillDatePicker(page, "Date", "12/15/2024");
     await page
       .getByPlaceholder("Enter notes about your invoice (optional)")
@@ -55,15 +52,10 @@ test.describe("invoice editing", () => {
     // Submit the invoice
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    // Wait for navigation and loading to complete
-    await page.waitForURL("**/invoices", { timeout: 10000 });
+    // Wait for navigation and the invoice to appear in the table
+    await page.waitForURL("**/invoices");
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-
-    // Wait a bit more for the table to populate
-    await page.waitForTimeout(1000);
-
-    // Verify the invoice was created with correct data
-    await expect(page.locator("tbody")).toContainText("INV-EDIT-001", { timeout: 10000 });
+    await expect(page.getByRole("cell", { name: "INV-EDIT-001" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("$750"); // $75 * 10 hours
 
     // Get the created invoice from the database
@@ -84,10 +76,7 @@ test.describe("invoice editing", () => {
     await page.getByRole("link", { name: "Edit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
 
-    // Wait for form to load with data
-    await page.waitForTimeout(500);
-
-    // Verify all form fields are populated correctly
+    // Wait for form fields to be populated with existing data
     await expect(page.getByLabel("Invoice ID")).toHaveValue("INV-EDIT-001");
     await expect(page.getByPlaceholder("Description").first()).toHaveValue("Development work for Q1");
     await expect(page.getByLabel("Hours / Qty").first()).toHaveValue("10:00");
@@ -97,26 +86,32 @@ test.describe("invoice editing", () => {
     );
 
     // Make some changes
+    await page.getByPlaceholder("Description").first().clear();
     await page.getByPlaceholder("Description").first().fill("Updated development work for Q1");
+
+    await page.getByLabel("Hours / Qty").first().clear();
     await page.getByLabel("Hours / Qty").first().fill("12:00");
+
+    await page.getByPlaceholder("Enter notes about your invoice (optional)").clear();
     await page
       .getByPlaceholder("Enter notes about your invoice (optional)")
       .fill(
         "Updated notes: This invoice covers the Q1 development sprint including new features, bug fixes, and additional enhancements. Please process within 30 days.",
       );
 
+    // Verify the changes were entered correctly before submitting
+    await expect(page.getByLabel("Hours / Qty").first()).toHaveValue("12:00");
+    await expect(page.getByPlaceholder("Description").first()).toHaveValue("Updated development work for Q1");
+
     // Submit the updated invoice
     await page.getByRole("button", { name: "Resubmit" }).click();
 
-    // Wait for navigation
-    await page.waitForURL("**/invoices", { timeout: 10000 });
+    // Wait for navigation and verify the updated amount appears
+    await page.waitForURL("**/invoices");
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    // Wait for table to update
-    await page.waitForTimeout(1000);
-
-    // Verify the invoice was updated
-    await expect(page.locator("tbody")).toContainText("$900", { timeout: 10000 }); // $75 * 12 hours
+    // Wait for the specific invoice row to update with new amount
+    await expect(page.getByRole("row").filter({ hasText: "INV-EDIT-001" })).toContainText("$900");
 
     // Verify the database was updated
     const updatedInvoice = await db.query.invoices.findFirst({ where: eq(invoices.id, invoice.id) }).then(takeOrThrow);
@@ -160,14 +155,12 @@ test.describe("invoice editing", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByRole("cell", { name: "INV-STALE-TEST" })).toBeVisible();
 
+    // Navigate to edit page
     await page.getByRole("cell", { name: "INV-STALE-TEST" }).click();
     await page.getByRole("link", { name: "Edit invoice" }).click();
-
-    // Wait for the edit page to load completely
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
-    await page.waitForTimeout(500);
 
-    // Verify initial data is loaded correctly
+    // Wait for initial data to be loaded in form fields
     await expect(page.getByPlaceholder("Enter notes about your invoice (optional)")).toHaveValue("Original notes.");
     await expect(page.getByPlaceholder("Description").first()).toHaveValue("Development work");
 
@@ -176,17 +169,14 @@ test.describe("invoice editing", () => {
     await page.getByPlaceholder("Description").first().fill("Updated development work");
     await page.getByRole("button", { name: "Resubmit" }).click();
 
-    // Wait for navigation
-    await page.waitForURL("**/invoices", { timeout: 10000 });
+    // Wait for navigation back to invoices list
+    await page.waitForURL("**/invoices");
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Navigate back to edit page
     await page.getByRole("cell", { name: "INV-STALE-TEST" }).click();
     await page.getByRole("link", { name: "Edit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
-
-    // Wait for form data to load
-    await page.waitForTimeout(500);
 
     // Verify fresh data is displayed (not stale cached data)
     await expect(page.getByPlaceholder("Description").first()).toHaveValue("Updated development work");
