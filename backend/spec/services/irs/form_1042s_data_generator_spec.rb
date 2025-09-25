@@ -170,18 +170,11 @@ RSpec.describe Irs::Form1042sDataGenerator do
 
   def required_blanks(number) = "".ljust(number)
 
-  def create_legacy_tax_documents
-    create(:tax_document, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_1, tax_year:)
-    create(:tax_document, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_1, tax_year: tax_year - 1)
-    create(:tax_document, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_2, tax_year:)
-    create(:tax_document, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_3, tax_year:)
-  end
-
   def create_new_tax_documents
-    create(:tax_doc, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_1, year: tax_year)
-    create(:tax_doc, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_1, year: tax_year - 1)
-    create(:tax_doc, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_2, year: tax_year)
-    create(:tax_doc, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_3, year: tax_year)
+    create(:document, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_1, year: tax_year)
+    create(:document, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_1, year: tax_year - 1)
+    create(:document, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_2, year: tax_year)
+    create(:document, document_type: :form_1042s, company:, user_compliance_info: non_us_user_compliance_info_3, year: tax_year)
   end
 
   describe "#process" do
@@ -369,7 +362,7 @@ RSpec.describe Irs::Form1042sDataGenerator do
                                      withholding_percentage: 15,
                                      created_at: Date.new(tax_year, 7, 1),
                                      paid_at: Date.new(tax_year, 7, 7))
-            create(:tax_doc, document_type: :form_1042s, company:, user_compliance_info: new_user_compliance_info, tax_year:)
+            create(:document, document_type: :form_1042s, company:, user_compliance_info: new_user_compliance_info, year: tax_year)
           end
 
           it "returns a string with the correct form data" do

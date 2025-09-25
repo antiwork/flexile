@@ -12,8 +12,8 @@ class Document < ApplicationRecord
 
   has_many_attached :attachments
 
-  SUPPORTED_TAX_INFORMATION_TYPES = %i[form_w_9 form_w_8ben form_w_8ben_e].freeze
-  TAX_FORM_TYPES = %i[form_1099_nec form_1099_div form_1042_s form_w_9 form_w_8ben form_w_8ben_e].freeze
+  SUPPORTED_TAX_INFORMATION_TYPES = %w[form_w9 form_w8ben form_w8bene].freeze
+  TAX_FORM_TYPES = %w[form_1099nec form_1099div form_1042s form_w9 form_w8ben form_w8bene].freeze
 
   validates_associated :signatures
   validates :document_type, presence: true
@@ -26,17 +26,17 @@ class Document < ApplicationRecord
     consulting_contract: 0,
     equity_plan_contract: 1,
     share_certificate: 2,
-    form_1099_nec: 3,
+    form_1099nec: 3,
     exercise_notice: 4,
     release_agreement: 5,
-    form_1099_div: 6,
-    form_1042_s: 7,
-    form_w_9: 8,
-    form_w_8ben: 9,
-    form_w_8ben_e: 10,
+    form_1099div: 6,
+    form_1042s: 7,
+    form_w9: 8,
+    form_w8ben: 9,
+    form_w8bene: 10,
   }
 
-  scope :irs_tax_forms, -> { tax_document.where(document_type: %i[form_1099_nec form_1099_div form_1042_s]) }
+  scope :irs_tax_forms, -> { tax_document.where(document_type: %i[form_1099nec form_1099div form_1042s]) }
   scope :tax_document, -> { where(document_type: TAX_FORM_TYPES) }
   scope :unsigned, -> { joins(:signatures).where(signatures: { signed_at: nil }) }
 
@@ -44,7 +44,7 @@ class Document < ApplicationRecord
     raise "Document type not supported" unless tax_document?
 
     namespace ||= "TaxDocuments"
-    serializer = "Form#{document_type.capitalize}Serializer"
+    serializer = "#{document_type.split("_").map(&:capitalize).join("")}Serializer"
     "#{namespace}::#{serializer}".constantize.new(user_compliance_info, year, company)
   end
 
@@ -58,27 +58,27 @@ class Document < ApplicationRecord
 
   def name
     case document_type
-    when :consulting_contract
+    when "consulting_contract"
       "Consulting Contract"
-    when :equity_plan_contract
+    when "equity_plan_contract"
       "Equity Plan Contract"
-    when :share_certificate
+    when "share_certificate"
       "Share Certificate"
-    when :form_1099_nec
+    when "form_1099nec"
       "1099-NEC"
-    when :exercise_notice
+    when "exercise_notice"
       "Exercise Notice"
-    when :release_agreement
+    when "release_agreement"
       "Release Agreement"
-    when :form_1099_div
+    when "form_1099div"
       "1099-DIV"
-    when :form_1042_s
+    when "form_1042s"
       "1042-S"
-    when :form_w_9
+    when "form_w9"
       "W-9"
-    when :form_w_8ben
-      "1099-DIV"
-    when :form_w_8ben_e
+    when "form_w8ben"
+      "W-8BEN"
+    when "form_w8bene"
       "W-8BEN-E"
     end
   end

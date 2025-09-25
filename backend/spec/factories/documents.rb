@@ -41,15 +41,6 @@ FactoryBot.define do
       equity_grant { create(:equity_grant, company_investor: create(:company_investor, company:)) }
     end
 
-    factory :tax_doc do
-      document_type { Document::TAX_FORM_TYPES.sample }
-      user_compliance_info { create(:user_compliance_info) }
-
-      trait :deleted do
-        deleted_at { Time.current }
-      end
-    end
-
     factory :share_certificate_doc do
       document_type { Document.document_types[:share_certificate] }
       name { "Share Certificate" }
@@ -59,6 +50,10 @@ FactoryBot.define do
       document_type { Document.document_types[:exercise_notice] }
       name { "XA-23 Form of Notice of Exercise (US) 2024.pdf" }
       signed
+    end
+
+    trait :deleted do
+      deleted_at { Time.current }
     end
   end
 end

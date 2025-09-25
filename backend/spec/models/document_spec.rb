@@ -17,7 +17,6 @@ RSpec.describe Document do
   end
 
   describe "validations" do
-    it { is_expected.to validate_presence_of(:name) }
     it { is_expected.to validate_presence_of(:document_type) }
     it { is_expected.to validate_presence_of(:year) }
     it { is_expected.to validate_numericality_of(:year).only_integer.is_less_than_or_equal_to(Date.today.year) }
@@ -36,48 +35,48 @@ RSpec.describe Document do
       end
     end
 
-    context "when type is tax_document" do
-      subject { build(:tax_doc) }
+    context "when document is a tax document" do
+      subject { build(:document, document_type: :form_1099div) }
 
       it { is_expected.to validate_presence_of(:user_compliance_info_id) }
 
       context "when another record exists" do
         context "when the record is alive" do
-          let!(:tax_doc) { create(:tax_doc) }
+          let!(:tax_doc) { create(:document, document_type: :form_1099div) }
 
-          it "does not allow creating another record with the same name, tax year and user compliance info" do
-            new_tax_doc = build(:tax_doc, name: tax_doc.name, user_compliance_info: tax_doc.user_compliance_info, company: tax_doc.company)
+          it "does not allow creating another record with the same type, tax year and user compliance info" do
+            new_tax_doc = build(:document, document_type: :form_1099div, user_compliance_info: tax_doc.user_compliance_info, company: tax_doc.company)
 
             expect(new_tax_doc.valid?).to eq(false)
-            expect(new_tax_doc.errors.full_messages).to eq(["A tax form with the same name, company, and year already exists " \
+            expect(new_tax_doc.errors.full_messages).to eq(["A tax form with the same type, company, and year already exists " \
                                                             "for this user"])
           end
 
-          it "allows creating another record with the same name and company, but a different tax year" do
+          it "allows creating another record with the same type and company, but a different tax year" do
             expect do
-              create(:tax_doc, name: tax_doc.name, year: tax_doc.year - 1, company: tax_doc.company)
+              create(:document, document_type: :form_1099div, year: tax_doc.year - 1, company: tax_doc.company)
             end.to change { described_class.count }.by(1)
           end
 
-          it "allows creating another record with the same name and company, but different user compliance info" do
+          it "allows creating another record with the same type and company, but different user compliance info" do
             expect do
-              create(:tax_doc, name: tax_doc.name, user_compliance_info: create(:user_compliance_info), company: tax_doc.company)
+              create(:document, document_type: :form_1099div, user_compliance_info: create(:user_compliance_info), company: tax_doc.company)
             end.to change { described_class.count }.by(1)
           end
 
-          it "allows creating another record with the same name and tax year, but different company" do
+          it "allows creating another record with the same type and tax year, but different company" do
             expect do
-              create(:tax_doc, name: tax_doc.name, year: tax_doc.year, company: create(:company))
+              create(:document, document_type: :form_1099div, year: tax_doc.year, company: create(:company))
             end.to change { described_class.count }.by(1)
           end
         end
 
         context "when the record is deleted" do
-          let!(:tax_doc) { create(:tax_doc, deleted_at: Time.current) }
+          let!(:tax_doc) { create(:document, document_type: :form_1099div, deleted_at: Time.current) }
 
-          it "allows creating another record with the same name, tax year and user compliance info" do
+          it "allows creating another record with the same type, tax year and user compliance info" do
             expect do
-              create(:tax_doc, name: tax_doc.name, user_compliance_info: tax_doc.user_compliance_info, company: tax_doc.company)
+              create(:document, document_type: :form_1099div, user_compliance_info: tax_doc.user_compliance_info, company: tax_doc.company)
             end.to change { described_class.count }.by(1)
           end
         end
@@ -92,14 +91,14 @@ RSpec.describe Document do
   end
 
   describe ".irs_tax_forms" do
-    let!(:form_1099nec) { create(:tax_doc, :form_1099nec) }
-    let!(:form_1099div) { create(:tax_doc, :form_1099div) }
-    let!(:form_1042s) { create(:tax_doc, :form_1042s) }
+    let!(:form_1099nec) { create(:document, document_type: :form_1099nec) }
+    let!(:form_1099div) { create(:document, document_type: :form_1099div) }
+    let!(:form_1042s) { create(:document, document_type: :form_1042s) }
 
     before do
-      create(:tax_doc, :form_w9)
-      create(:tax_doc, :form_w8ben)
-      create(:tax_doc, :form_w8bene)
+      create(:document, document_type: :form_w9)
+      create(:document, document_type: :form_w8ben)
+      create(:document, document_type: :form_w8bene)
     end
 
     it "returns only IRS tax documents" do
@@ -109,25 +108,33 @@ RSpec.describe Document do
 
   describe "#fetch_serializer" do
     it "returns the correct serializer for the W-9 tax document" do
-      expect(build(:tax_doc, :form_w9).fetch_serializer).to be_a(TaxDocuments::FormW9Serializer)
+      expect(build(:document, document_type: :form_w9).fetch_serializer).to be_a(TaxDocuments::FormW9Serializer)
     end
 
     it "returns the correct serializer for the W-8BEN tax document" do
-      expect(build(:tax_doc, :form_w8ben).fetch_serializer).to be_a(TaxDocuments::FormW8benSerializer)
+      expect(build(:document, document_type: :form_w8ben).fetch_serializer).to be_a(TaxDocuments::FormW8benSerializer)
     end
 
     it "returns the correct serializer for the W-8BEN-E tax document" do
-      expect(build(:tax_doc, :form_w8bene).fetch_serializer).to be_a(TaxDocuments::FormW8beneSerializer)
+      expect(build(:document, document_type: :form_w8bene).fetch_serializer).to be_a(TaxDocuments::FormW8beneSerializer)
     end
 
     it "returns the correct serializer for the 1099-DIV tax document" do
-      expect(build(:tax_doc, :form_1099div).fetch_serializer).to be_a(TaxDocuments::Form1099divSerializer)
+      expect(build(:document, document_type: :form_1099div).fetch_serializer).to be_a(TaxDocuments::Form1099divSerializer)
     end
 
     it "raises an exception when the document is not a tax form" do
       expect do
         build(:document).fetch_serializer
       end.to raise_error("Document type not supported")
+    end
+  end
+
+  describe "#tax_document?" do
+    it "returns whether the document is a tax form" do
+      Document.document_types.each do |document_type, _|
+        expect(build(:document, document_type:).tax_document?).to eq(Document::TAX_FORM_TYPES.include?(document_type))
+      end
     end
   end
 

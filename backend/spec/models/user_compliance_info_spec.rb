@@ -416,7 +416,7 @@ RSpec.describe UserComplianceInfo do
 
 
       context "when there are paid dividends attached to the user compliance info" do
-        let!(:form_1099_div) { create(:tax_doc, document_type: :form_1099div, user_compliance_info:) }
+        let!(:form_1099_div) { create(:tax_document, document_type: :form_1099div, user_compliance_info:) }
 
         before { create(:dividend, :paid, user_compliance_info:) }
 
@@ -430,7 +430,7 @@ RSpec.describe UserComplianceInfo do
         end
 
         context "with 1042-S forms" do
-          let!(:form_1042_s) { create(:tax_doc, document_type: :form_1042s, user_compliance_info:) }
+          let!(:form_1042_s) { create(:tax_document, document_type: :form_1042s, user_compliance_info:) }
 
           it "preserves dividend-related tax documents" do
             user_compliance_info.mark_deleted!
@@ -440,9 +440,9 @@ RSpec.describe UserComplianceInfo do
       end
     end
 
-    let!(:tax_document) { create(:tax_doc, document_type: :form_w9, user_compliance_info:) }
-    let!(:form_1099_nec) { create(:tax_doc, document_type: :form_1099nec, year: 2023, user_compliance_info:, signed: false) }
-    let!(:submitted_1099_nec) { create(:tax_doc, document_type: :form_1099nec, year: 2022, user_compliance_info:, signed: true) }
+    let!(:tax_document) { create(:tax_document, document_type: :form_w9, user_compliance_info:) }
+    let!(:form_1099_nec) { create(:tax_document, document_type: :form_1099nec, year: 2023, user_compliance_info:, signed: false) }
+    let!(:submitted_1099_nec) { create(:tax_document, document_type: :form_1099nec, year: 2022, user_compliance_info:, signed: true) }
 
     include_examples "common assertions"
   end

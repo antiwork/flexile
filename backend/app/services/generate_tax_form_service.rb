@@ -23,7 +23,7 @@ class GenerateTaxFormService
     pdf = HexaPDF::Document.open(Rails.root.join("config", "data", "tax_forms", "#{document.name}.pdf").to_s)
     acro_form = pdf.acro_form
 
-    document.fetch_serializer.attributes.each do |field_uname, value|
+    document.fetch_serializer.attributes.each do |field_name, value|
       field = acro_form.field_by_name(field_name)
       field.field_value = value if field
     end
@@ -39,14 +39,14 @@ class GenerateTaxFormService
     )
 
     # Automatically mark as signed tax information forms (W-8/W-9) because the user gave us their e-sign consent
-    signed_at = form_name.in?(Document::SUPPORTED_TAX_INFORMATION_TYPES) ? Time.current : nil
+    signed_at = document_type.in?(Document::SUPPORTED_TAX_INFORMATION_TYPES) ? Time.current : nil
     document.signatures.build(user:, title: "Signer", signed_at:)
     document.save!
     document
   end
 
   private
-    attr_reader :user_compliance_info, :form_name, :tax_year, :company
+    attr_reader :user_compliance_info, :document_type, :tax_year, :company
 
     delegate :user, to: :user_compliance_info
 end
