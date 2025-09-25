@@ -74,7 +74,7 @@ const SheetOverlay = ({ open }: { open: boolean }) =>
   ReactDOM.createPortal(
     <div
       className={cn(
-        "pointer-events-none fixed inset-0 z-35 bg-black/50 transition-opacity duration-200",
+        "bg-overlay pointer-events-none fixed inset-0 z-35 transition-opacity duration-200",
         open ? "pointer-events-auto opacity-100" : "opacity-0",
       )}
       aria-hidden="true"
@@ -87,7 +87,7 @@ const NavSheet = ({ trigger, title, open, onOpenChange, onBack, children }: NavS
     <SheetOverlay open={!!open} />
     <Sheet modal={false} open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent side="bottom" className="bottom-14 z-50 rounded-t-2xl pb-4 not-print:border-t-0">
+      <SheetContent side="bottom" className="bg-background bottom-14 z-50 rounded-t-2xl pb-4 not-print:border-t-0">
         <SheetHeader className="pb-0">
           <SheetTitle className="flex h-5 items-center gap-2">
             {onBack ? (
@@ -121,7 +121,7 @@ const SheetNavItem = ({ item, image, onClick, showChevron, pathname, className }
     {...(!item.route && { role: "button" })}
     className={cn(
       "flex items-center gap-3 rounded-none px-6 py-3 transition-colors",
-      (pathname === item.route || item.isActive) && "bg-accent text-accent-foreground font-medium",
+      (pathname === item.route || item.isActive) && "bg-accent text-foreground font-medium",
       "w-full text-left",
       className,
     )}
