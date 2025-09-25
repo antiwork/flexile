@@ -2,6 +2,8 @@ import { companiesFactory } from "@test/factories/companies";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 
+// allow green builds on OSS PRs that don't have a stripe sandbox key, but fail on CI if something changes on Stripe's end
+test.skip(() => process.env.STRIPE_SECRET_KEY === "dummy");
 test.describe("Company billing settings", () => {
   test("billing settings gated until company name is set", async ({ page }) => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding(
