@@ -70,18 +70,13 @@ function getStatus(document: Document): { variant: StatusVariant | undefined; na
     case DocumentType.FormW8BEN:
     case DocumentType.FormW8BENE:
     case DocumentType.FormW9:
-      return {
-        variant: "success",
-        name: "Signed",
-        text: "Signed",
-      };
+      return { variant: "success", name: "Signed", text: "Signed" };
     case DocumentType.Form1099NEC:
     case DocumentType.Form1099DIV:
     case DocumentType.Form1042S:
-      if (completedAt) {
-        return { variant: "success", name: "Signed", text: `Filed on ${formatDate(completedAt)}` };
-      }
-      return { variant: undefined, name: "Ready for filing", text: "Ready for filing" };
+      return completedAt
+        ? { variant: "success", name: "Signed", text: `Filed on ${formatDate(completedAt)}` }
+        : { variant: undefined, name: "Ready for filing", text: "Ready for filing" };
     case DocumentType.ShareCertificate:
     case DocumentType.ExerciseNotice:
       return { variant: "success", name: "Issued", text: "Issued" };

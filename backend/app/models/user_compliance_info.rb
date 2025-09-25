@@ -49,7 +49,7 @@ class UserComplianceInfo < ApplicationRecord
     when requires_w9?
       :form_w9
     when business_entity?
-      :form_w_8bene
+      :form_w8bene
     else
       :form_w8ben
     end
