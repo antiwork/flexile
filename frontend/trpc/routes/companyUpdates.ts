@@ -61,7 +61,6 @@ export const companyUpdatesRouter = createRouter({
     if (!ctx.companyAdministrator && !isActive(ctx.companyContractor) && !ctx.companyInvestor) {
       throw new TRPCError({ code: "FORBIDDEN" });
     }
-
     const response = await fetch(company_company_update_url(ctx.company.externalId, input.id), {
       method: "GET",
       headers: {
@@ -81,13 +80,9 @@ export const companyUpdatesRouter = createRouter({
     }
 
     const result = updateSchema.parse(await response.json());
-
     return {
-      id: result.id,
-      title: result.title,
+      ...result,
       senderName: result.sender_name,
-      body: result.body,
-      status: result.status,
       sentAt: result.sent_at,
     };
   }),
