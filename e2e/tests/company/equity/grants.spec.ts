@@ -10,7 +10,8 @@ import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/
 import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq } from "drizzle-orm";
-import { companies, companyInvestors, equityGrants } from "@/db/schema";
+import { DocumentTemplateType } from "@/db/enums";
+import { companies, companyInvestors, documentTemplates, equityGrants } from "@/db/schema";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("Equity Grants", () => {
@@ -52,7 +53,6 @@ test.describe("Equity Grants", () => {
     await selectComboboxOption(page, "Relationship to company", "Consultant");
 
     await selectComboboxOption(page, "Grant type", "NSO");
-    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
     await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
 
@@ -64,6 +64,10 @@ test.describe("Equity Grants", () => {
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
 
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByLabel("Contract").setInputFiles({
       name: "contract.pdf",
       mimeType: "application/pdf",
@@ -89,28 +93,15 @@ test.describe("Equity Grants", () => {
 
     await page.getByRole("button", { name: "New grant" }).click();
 
-    // Fill in recipient (required)
     await selectComboboxOption(page, "Recipient", `${projectBasedUser.preferredName} (${projectBasedUser.email})`);
 
-    // Fill in number of options (required)
     await page.getByLabel("Number of options").fill("20");
-
-    // Fill in relationship to company (required)
     await selectComboboxOption(page, "Relationship to company", "Consultant");
-
-    // Fill in required grant type
     await selectComboboxOption(page, "Grant type", "NSO");
 
-    // Fill in required vesting details
-    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
-
-    // Fill in required board approval date (using today's date)
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
 
-    // Fill in required exercise period fields
     await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
-
-    // Use more precise selectors focusing on the input fields directly
     await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
     await page.locator('input[name="involuntaryTerminationExerciseMonths"]').fill("3");
     await page.locator('input[name="terminationWithCauseExerciseMonths"]').fill("3");
@@ -118,6 +109,10 @@ test.describe("Equity Grants", () => {
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
 
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
 
@@ -224,7 +219,9 @@ test.describe("Equity Grants", () => {
     await expect(page.getByRole("heading", { name: "Options" })).toBeVisible();
     await page.waitForLoadState("networkidle");
     await expect(page.getByRole("button", { name: "Exercise Options" })).not.toBeVisible();
-    await db.update(companies).set({ exerciseNotice: "I am exercising" }).where(eq(companies.id, company.id));
+    await db
+      .insert(documentTemplates)
+      .values({ companyId: company.id, documentType: DocumentTemplateType.ExerciseNotice, text: "I am exercising" });
     await page.reload();
     await expect(page.getByText("You have 100 vested options available for exercise.")).toBeVisible();
     await page.getByRole("button", { name: "Exercise Options" }).click();
@@ -298,7 +295,7 @@ test.describe("Equity Grants", () => {
       page.getByRole("alert", { name: "Please add an exercise notice so investors can exercise their options." }),
     ).not.toBeVisible();
     await page.getByRole("link", { name: "add an exercise notice" }).click();
-    await findRichTextEditor(page, "Exercise notice").fill("This is an exercise notice");
+    await page.locator("[contenteditable=true]").fill("This is an exercise notice");
     await page.getByRole("button", { name: "Save changes" }).click();
     await page.goBack();
     await expect(page.getByRole("heading", { name: "Equity grants" })).toBeVisible();
@@ -328,9 +325,13 @@ test.describe("Equity Grants", () => {
     await page.getByRole("button", { name: "New grant" }).click();
 
     await page.getByLabel("Number of options").fill("100");
+    await selectComboboxOption(page, "Relationship to company", "Consultant");
     await selectComboboxOption(page, "Recipient", `${otherAdminUser.preferredName} (${otherAdminUser.email})`);
+
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Shares will vest")).not.toBeVisible();
     await selectComboboxOption(page, "Vesting schedule", "4-year with 1-year cliff (1/48th monthly after cliff)");
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
 
