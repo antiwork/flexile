@@ -210,6 +210,7 @@ export const DialogStackBody = ({ children, className, ...props }: DialogStackBo
             "pointer-events-none fixed inset-0 z-50 mx-auto flex max-h-[90vh] w-full max-w-lg flex-col items-center justify-start p-2 pt-16 sm:max-h-[95vh] sm:pt-32",
             className,
           )}
+          aria-labelledby={`dialog-title-${context.activeIndex}`}
           {...props}
         >
           <div className="pointer-events-auto relative flex max-h-full w-full flex-col items-center justify-center">
@@ -301,11 +302,23 @@ export const DialogStackContent = ({ children, className, offset = 16, ...props 
 
 export type DialogStackTitleProps = HTMLAttributes<HTMLHeadingElement>;
 
-export const DialogStackTitle = ({ children, className, ...props }: DialogStackTitleProps) => (
-  <h2 className={cn("text-lg leading-none font-semibold", className)} {...props}>
-    {children}
-  </h2>
-);
+export const DialogStackTitle = ({ children, className, ...props }: DialogStackTitleProps) => {
+  const indexContext = useContext(DialogStackContentContext);
+
+  if (!indexContext) {
+    throw new Error("DialogStackContent must be used within a DialogStackTitle");
+  }
+
+  return (
+    <h2
+      id={`dialog-title-${indexContext.index}`}
+      className={cn("text-lg leading-none font-semibold", className)}
+      {...props}
+    >
+      {children}
+    </h2>
+  );
+};
 
 export type DialogStackDescriptionProps = HTMLAttributes<HTMLParagraphElement>;
 
