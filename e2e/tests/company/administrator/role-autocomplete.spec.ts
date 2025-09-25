@@ -3,7 +3,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { expect, type Page, test } from "@test/index";
+import { expect, type Page, test, withinCombobox } from "@test/index";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("Role autocomplete", () => {
@@ -43,20 +43,22 @@ test.describe("Role autocomplete", () => {
   };
 
   const testAutofill = async (page: Page) => {
-    const searchField = page.getByPlaceholder("Search...");
-    await page.getByLabel("Role").click();
-    await expect(page.getByRole("option", { name: role1 })).toBeVisible();
-    await expect(page.getByRole("option", { name: role2 })).toBeVisible();
-    await expect(page.getByRole("option", { name: role3 })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Alumni Role" })).not.toBeVisible();
+    await withinCombobox(
+      async (searchField, combobox) => {
+        await expect(page.getByRole("option", { name: role1 })).toBeVisible();
+        await expect(page.getByRole("option", { name: role2 })).toBeVisible();
+        await expect(page.getByRole("option", { name: role3 })).toBeVisible();
+        await expect(page.getByRole("option", { name: "Alumni Role" })).not.toBeVisible();
 
-    await searchField.fill("de");
-    await expect(page.getByRole("option", { name: role1 })).toBeVisible();
-    await expect(page.getByRole("option", { name: role2 })).toBeVisible();
-    await expect(page.getByRole("option", { name: role3 })).not.toBeVisible();
-    await searchField.press("Enter");
-    await expect(searchField).not.toBeVisible();
-    await expect(page.getByLabel("Role")).toHaveText(role1);
+        await searchField.fill("de");
+        await expect(page.getByRole("option", { name: role1 })).toBeVisible();
+        await expect(page.getByRole("option", { name: role2 })).toBeVisible();
+        await expect(page.getByRole("option", { name: role3 })).not.toBeVisible();
+        await searchField.press("Enter");
+        await expect(combobox).toHaveText(role1);
+      },
+      { page, name: "Role", searchPlaceholder: "Select or type a role..." },
+    );
   };
 
   test("suggests existing roles when inviting a new contractor", async ({ page }) => {
@@ -79,7 +81,7 @@ test.describe("Role autocomplete", () => {
     await login(page, admin);
     await page.getByRole("link", { name: "People" }).click();
     await page.getByRole("link", { name: user.preferredName ?? "" }).click();
-    await expect(page.getByLabel("Role")).toHaveText(assertDefined(contractor.role));
+    await expect(page.getByRole("combobox", { name: "Role", exact: true })).toHaveText(assertDefined(contractor.role));
     await testAutofill(page);
   });
 });
