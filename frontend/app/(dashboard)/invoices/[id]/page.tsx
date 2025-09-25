@@ -40,9 +40,11 @@ import {
   RejectModal,
   StatusDetails,
   taxRequirementsMet,
+  useCanSubmitInvoices,
   useIsActionable,
   useIsDeletable,
 } from "..";
+import InvoiceModal from "../InvoiceModal";
 
 const getInvoiceStatusText = (
   invoice: { status: string; approvals: unknown[]; paidAt?: string | Date | null },
@@ -112,9 +114,11 @@ export default function InvoicePage() {
   const payRateInSubunits = invoice.contractor.payRateInSubunits;
   const complianceInfo = invoice.contractor.user.complianceInfo;
   const [expenseCategories] = trpc.expenseCategories.list.useSuspenseQuery({ companyId: company.id });
+  const { canSubmitInvoices } = useCanSubmitInvoices();
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const router = useRouter();
   const isActionable = useIsActionable();
   const isDeletable = useIsDeletable();
@@ -203,16 +207,16 @@ export default function InvoicePage() {
                   </DropdownMenuItem>
                 ) : null}
 
-                {user.id === invoice.userId && (
+                {user.id === invoice.userId ? (
                   <>
-                    {EDITABLE_INVOICE_STATES.includes(invoice.status) && (
+                    {EDITABLE_INVOICE_STATES.includes(invoice.status) && canSubmitInvoices ? (
                       <DropdownMenuItem asChild>
                         <Link href={`/invoices/${invoice.id}/edit`} className="flex items-center gap-2">
                           <SquarePen className="size-4" />
                           Edit invoice
                         </Link>
                       </DropdownMenuItem>
-                    )}
+                    ) : null}
 
                     <DropdownMenuItem
                       onSelect={(e) => {
@@ -240,7 +244,7 @@ export default function InvoicePage() {
                       </DropdownMenuItem>
                     )}
                   </>
-                )}
+                ) : null}
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
@@ -269,12 +273,10 @@ export default function InvoicePage() {
                     <Button size="small" onClick={() => setAcceptPaymentModalOpen(true)}>
                       Accept payment
                     </Button>
-                  ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                    <Button variant="default" size="small" asChild>
-                      <Link href={`/invoices/${invoice.id}/edit`}>
-                        <SquarePen className="size-4" />
-                        Edit invoice
-                      </Link>
+                  ) : EDITABLE_INVOICE_STATES.includes(invoice.status) && canSubmitInvoices ? (
+                    <Button variant="default" size="small" onClick={() => setEditModalOpen(true)}>
+                      <SquarePen className="size-4" />
+                      Edit invoice
                     </Button>
                   ) : null}
 
@@ -594,6 +596,8 @@ export default function InvoicePage() {
         onDelete={() => router.push(`/invoices`)}
         invoices={[invoice]}
       />
+
+      {editModalOpen ? <InvoiceModal open onOpenChange={setEditModalOpen} invoiceId={invoice.id} /> : null}
     </div>
   );
 }

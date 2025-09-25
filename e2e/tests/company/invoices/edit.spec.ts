@@ -5,7 +5,7 @@ import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { desc, eq } from "drizzle-orm";
 import { companyContractors, invoiceLineItems, invoices } from "@/db/schema";
 import { assert } from "@/utils/assert";
@@ -28,22 +28,30 @@ test.describe("invoice editing", () => {
   });
 
   test("preserves form fields when editing an invoice", async ({ page }) => {
-    await login(page, contractorUser, "/invoices/new");
+    await login(page, contractorUser);
+    await page.getByRole("button", { name: "New invoice" }).click();
 
-    // Fill in the invoice form
-    await page.getByPlaceholder("Description").fill("Development work for Q1");
-    await page.getByLabel("Hours / Qty").fill("10:00");
-    await page.getByLabel("Rate").fill("75");
-    await page.getByLabel("Invoice ID").fill("INV-EDIT-001");
-    await fillDatePicker(page, "Date", "12/15/2024");
-    await page
-      .getByPlaceholder("Enter notes about your invoice (optional)")
-      .fill(
-        "This invoice covers the Q1 development sprint including new features and bug fixes. Please process within 30 days.",
-      );
+    await withinModal(
+      async (modal) => {
+        // Fill in the invoice form
+        await modal.getByPlaceholder("Description").fill("Development work for Q1");
+        await modal.getByLabel("Hours / Qty").fill("10:00");
+        await modal.getByLabel("Rate").fill("75");
+        await modal.getByLabel("Invoice ID").fill("INV-EDIT-001");
+        await fillDatePicker(page, "Invoice date", "12/15/2024");
 
-    // Submit the invoice
-    await page.getByRole("button", { name: "Send invoice" }).click();
+        await modal
+          .getByPlaceholder("Type your notes here")
+          .fill(
+            "This invoice covers the Q1 development sprint including new features and bug fixes. Please process within 30 days.",
+          );
+
+        // Submit the invoice
+        await modal.getByRole("button", { name: "Send" }).click();
+      },
+      { page },
+    );
+
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Verify the invoice was created
@@ -62,29 +70,35 @@ test.describe("invoice editing", () => {
 
     // Now edit the invoice
     await page.getByRole("cell", { name: "INV-EDIT-001" }).click();
-    await page.getByRole("link", { name: "Edit invoice" }).click();
-    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
+    await page.getByRole("button", { name: "Edit invoice" }).click();
 
-    // Verify all form fields are populated correctly
-    await expect(page.getByLabel("Invoice ID")).toHaveValue("INV-EDIT-001");
-    await expect(page.getByPlaceholder("Description").first()).toHaveValue("Development work for Q1");
-    await expect(page.getByLabel("Hours / Qty").first()).toHaveValue("10:00");
-    await expect(page.getByLabel("Rate").first()).toHaveValue("75");
-    await expect(page.getByPlaceholder("Enter notes about your invoice (optional)")).toHaveValue(
-      "This invoice covers the Q1 development sprint including new features and bug fixes. Please process within 30 days.",
+    await withinModal(
+      async (modal) => {
+        // Verify all form fields are populated correctly
+        await expect(modal.getByLabel("Invoice ID")).toHaveValue("INV-EDIT-001");
+        await expect(modal.getByPlaceholder("Description").first()).toHaveValue("Development work for Q1");
+        await expect(modal.getByLabel("Hours / Qty").first()).toHaveValue("10:00");
+        await expect(modal.getByLabel("Rate").first()).toHaveValue("75");
+
+        await expect(modal.getByPlaceholder("Type your notes here")).toHaveValue(
+          "This invoice covers the Q1 development sprint including new features and bug fixes. Please process within 30 days.",
+        );
+
+        // Make some changes
+        await modal.getByPlaceholder("Description").first().fill("Updated development work for Q1");
+        await modal.getByLabel("Hours / Qty").first().fill("12:00");
+        await modal
+          .getByPlaceholder("Type your notes here")
+          .fill(
+            "Updated notes: This invoice covers the Q1 development sprint including new features, bug fixes, and additional enhancements. Please process within 30 days.",
+          );
+
+        // Submit the updated invoice
+        await modal.getByRole("button", { name: "Re-submit" }).click();
+      },
+      { page },
     );
 
-    // Make some changes
-    await page.getByPlaceholder("Description").first().fill("Updated development work for Q1");
-    await page.getByLabel("Hours / Qty").first().fill("12:00");
-    await page
-      .getByPlaceholder("Enter notes about your invoice (optional)")
-      .fill(
-        "Updated notes: This invoice covers the Q1 development sprint including new features, bug fixes, and additional enhancements. Please process within 30 days.",
-      );
-
-    // Submit the updated invoice
-    await page.getByRole("button", { name: "Resubmit" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Verify the invoice was updated
@@ -132,30 +146,37 @@ test.describe("invoice editing", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByRole("cell", { name: "INV-STALE-TEST" })).toBeVisible();
 
+    // Open invoice and click edit
     await page.getByRole("cell", { name: "INV-STALE-TEST" }).click();
-    await page.getByRole("link", { name: "Edit invoice" }).click();
-    await expect(page.getByRole("link", { name: "Edit invoice" })).toBeVisible();
+    await page.getByRole("button", { name: "Edit invoice" }).click();
 
-    // Verify initial data is loaded correctly
-    await expect(page.getByPlaceholder("Enter notes about your invoice (optional)")).toHaveValue("Original notes.");
-    await expect(page.getByPlaceholder("Description").first()).toHaveValue("Development work");
+    // Verify initial data is loaded correctly in the modal
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByPlaceholder("Description").first()).toHaveValue("Development work");
+        await expect(modal.getByPlaceholder("Type your notes here")).toHaveValue("Original notes.");
 
-    // Update the invoice data
-    await page.getByPlaceholder("Enter notes about your invoice (optional)").fill("Updated notes after first edit.");
-    await page.getByPlaceholder("Description").first().fill("Updated development work");
-    await page.getByRole("button", { name: "Resubmit" }).click();
+        // Update the invoice data
+        await modal.getByPlaceholder("Type your notes here").fill("Updated notes after first edit.");
+        await page.getByPlaceholder("Description").first().fill("Updated development work");
+        await modal.getByRole("button", { name: "Re-submit" }).click();
+      },
+      { page },
+    );
 
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "INV-STALE-TEST" })).toBeVisible();
 
     // Navigate back to edit page
     await page.getByRole("cell", { name: "INV-STALE-TEST" }).click();
-    await page.getByRole("link", { name: "Edit invoice" }).click();
-    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
+    await page.getByRole("button", { name: "Edit invoice" }).click();
 
-    // Verify fresh data is displayed (not stale cached data)
-    await expect(page.getByPlaceholder("Description").first()).toHaveValue("Updated development work");
-    await expect(page.getByPlaceholder("Enter notes about your invoice (optional)")).toHaveValue(
-      "Updated notes after first edit.",
+    // Verify fresh data is displayed in the modal (not stale cached data)
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByPlaceholder("Description").first()).toHaveValue("Updated development work");
+        await expect(modal.getByPlaceholder("Type your notes here")).toHaveValue("Updated notes after first edit.");
+      },
+      { page, assertClosed: false },
     );
 
     // Confirm database has the correct data
