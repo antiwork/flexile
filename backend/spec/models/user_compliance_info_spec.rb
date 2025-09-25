@@ -317,7 +317,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { false }
 
         it "returns the W-9 form type" do
-          expect(user_compliance_info.tax_information_document_type).to eq(:form_w_9)
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
 
@@ -325,7 +325,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { true }
 
         it "returns the W-9 form type" do
-          expect(user_compliance_info.tax_information_document_type).to eq(:form_w_9)
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
     end
@@ -337,7 +337,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { false }
 
         it "returns the W-9 form type" do
-          expect(user_compliance_info.tax_information_document_type).to eq(:form_w_9)
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
 
@@ -345,7 +345,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { true }
 
         it "returns the W-9 form type" do
-          expect(user_compliance_info.tax_information_document_type).to eq(:form_w_9)
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
     end
@@ -357,7 +357,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { false }
 
         it "returns the W-8BEN form type" do
-          expect(user_compliance_info.tax_information_document_type).to eq(:form_w_8ben)
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w8ben)
         end
       end
 
@@ -365,7 +365,7 @@ RSpec.describe UserComplianceInfo do
         let(:business_entity) { true }
 
         it "returns the W-8BEN-E form type" do
-          expect(user_compliance_info.tax_information_document_type).to eq(:form_w_8ben_e)
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w8bene)
         end
       end
     end
@@ -378,7 +378,7 @@ RSpec.describe UserComplianceInfo do
       let(:user) { create(:user, country_code: "US", citizenship_country_code: "RO") }
 
       it "returns the 1099-DIV form type" do
-        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1099_div)
+        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1099div)
       end
     end
 
@@ -386,7 +386,7 @@ RSpec.describe UserComplianceInfo do
       let(:user) { create(:user, country_code: "RO", citizenship_country_code: "US") }
 
       it "returns the 1099-DIV form type" do
-        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1099_div)
+        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1099div)
       end
     end
 
@@ -396,7 +396,7 @@ RSpec.describe UserComplianceInfo do
       end
 
       it "returns the 1042-S form type" do
-        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1042_s)
+        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1042s)
       end
     end
   end
@@ -409,39 +409,39 @@ RSpec.describe UserComplianceInfo do
       it "marks the user compliance info and corresponding records as deleted" do
         user_compliance_info.mark_deleted!
         expect(user_compliance_info.reload).to be_deleted
-        expect(form_1099_nec.reload).to be_deleted
+        expect(form_1099nec.reload).to be_deleted
         expect(tax_document.reload).to_not be_deleted
         expect(submitted_1099_nec).to_not be_deleted
       end
 
 
       context "when there are paid dividends attached to the user compliance info" do
-        let!(:form_1099_div) { create(:document, document_type: :form_1099div, user_compliance_info:) }
+        let!(:form_1099div) { create(:document, document_type: :form_1099div, user_compliance_info:) }
 
         before { create(:dividend, :paid, user_compliance_info:) }
 
         it "marks the user compliance info as deleted and only deletes unsigned non-dividend tax documents" do
           user_compliance_info.mark_deleted!
           expect(user_compliance_info.reload).to be_deleted
-          expect(form_1099_nec.reload).to be_deleted
+          expect(form_1099nec.reload).to be_deleted
           expect(tax_document.reload).to_not be_deleted
           expect(submitted_1099_nec).to_not be_deleted
-          expect(form_1099_div.reload).to_not be_deleted
+          expect(form_1099div.reload).to_not be_deleted
         end
 
         context "with 1042-S forms" do
-          let!(:form_1042_s) { create(:document, document_type: :form_1042s, user_compliance_info:) }
+          let!(:form_1042s) { create(:document, document_type: :form_1042s, user_compliance_info:) }
 
           it "preserves dividend-related tax documents" do
             user_compliance_info.mark_deleted!
-            expect(form_1042_s.reload).to_not be_deleted
+            expect(form_1042s.reload).to_not be_deleted
           end
         end
       end
     end
 
     let!(:tax_document) { create(:document, document_type: :form_w9, user_compliance_info:) }
-    let!(:form_1099_nec) { create(:document, document_type: :form_1099nec, year: 2023, user_compliance_info:, signed: false) }
+    let!(:form_1099nec) { create(:document, document_type: :form_1099nec, year: 2023, user_compliance_info:, signed: false) }
     let!(:submitted_1099_nec) { create(:document, document_type: :form_1099nec, year: 2022, user_compliance_info:, signed: true) }
 
     include_examples "common assertions"
