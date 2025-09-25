@@ -53,9 +53,9 @@ test.describe("Invoice submission, approval and rejection", () => {
     ]);
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
-    await expect(page.locator("tbody")).toContainText("$683");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Nov 1, 2024");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("$683");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Awaiting approval");
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("woops too little time");
@@ -65,9 +65,9 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
-    await expect(page.locator("tbody")).toContainText("$23");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Dec 1, 2024");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("$23");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Awaiting approval");
 
     await page.getByRole("cell", { name: "CUSTOM-1" }).click();
     await page.getByRole("link", { name: "Edit invoice" }).click();
@@ -93,9 +93,9 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
-    await expect(page.locator("tbody")).toContainText("$33");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Dec 1, 2024");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("$33");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Awaiting approval");
 
     await page.getByRole("cell", { name: "CUSTOM-3" }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Delete" }).click();

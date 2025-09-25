@@ -53,11 +53,11 @@ test.describe("Investors", () => {
     await expect(page.getByText("Alice Investor")).toBeVisible();
     await expect(page.getByText("Bob Investor")).toBeVisible();
 
-    await expect(page.locator("tbody")).toContainText("10.00%");
-    await expect(page.locator("tbody")).toContainText("5.00%");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("10.00%");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("5.00%");
 
-    await expect(page.locator("tbody")).toContainText("100,000");
-    await expect(page.locator("tbody")).toContainText("50,000");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("100,000");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("50,000");
   });
 
   test("recalculates ownership percentages when data changes", async ({ page }) => {
@@ -84,8 +84,8 @@ test.describe("Investors", () => {
     await login(page, adminUser, "/equity/investors");
 
     await expect(page.getByText("Test Investor")).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("20.00%");
-    await expect(page.locator("tbody")).toContainText("200,000");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("20.00%");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("200,000");
   });
 
   test("shows correct ownership percentages for both outstanding and fully diluted columns", async ({ page }) => {
@@ -112,8 +112,8 @@ test.describe("Investors", () => {
     await login(page, adminUser, "/equity/investors");
 
     await expect(page.getByText("Major Investor")).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("15.00%");
-    await expect(page.locator("tbody")).toContainText("300,000");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("15.00%");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("300,000");
 
     await expect(page.getByRole("cell", { name: "Outstanding ownership" })).toBeVisible();
     await expect(page.getByRole("cell", { name: "Fully diluted ownership" })).toBeVisible();
@@ -158,11 +158,11 @@ test.describe("Investors", () => {
     await login(page, adminUser, "/equity/investors");
 
     await expect(page.getByText("Acme Inc")).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("10,000");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("10,000");
     await page.getByRole("button", { name: /Columns/u }).click();
     await page.getByRole("menuitem", { name: "Option strikes" }).hover();
     await page.getByRole("menuitemcheckbox", { name: "Common options $4.64 strike" }).click();
-    await expect(page.locator("tbody")).toContainText("833");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("833");
   });
 
   test.describe("Column Settings", () => {
@@ -243,8 +243,8 @@ test.describe("Investors", () => {
       await page.getByRole("button", { name: /Columns/u }).click();
       await page.getByRole("menuitem", { name: "Option strikes" }).hover();
       await page.getByRole("menuitemcheckbox", { name: "Common options $1.00 strike" }).click();
-      await expect(page.locator("tbody")).toContainText("60,000"); // Common shares
-      await expect(page.locator("tbody")).toContainText("3,000"); // $1.00 vested options
+      await expect(page.getByRole("table").locator("tbody")).toContainText("60,000"); // Common shares
+      await expect(page.getByRole("table").locator("tbody")).toContainText("3,000"); // $1.00 vested options
     });
 
     test("hides column settings button when no data", async ({ page }) => {

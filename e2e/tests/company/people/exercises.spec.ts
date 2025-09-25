@@ -60,7 +60,7 @@ test.describe("People - Exercises Table", () => {
     await expect(exercisesTab).toBeVisible();
     await exercisesTab.click();
 
-    await expect(page.locator("tbody")).toContainText(
+    await expect(page.getByRole("table").locator("tbody")).toContainText(
       [
         "Request date",
         format(equityGrantExercise.requestedAt, "MMM d, yyyy"),

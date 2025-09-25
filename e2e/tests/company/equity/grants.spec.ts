@@ -146,8 +146,8 @@ test.describe("Equity Grants", () => {
     ]);
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Oct 15, 2024");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Awaiting approval");
 
     await logout(page);
     await login(page, projectBasedUser, "/invoices");
@@ -168,9 +168,9 @@ test.describe("Equity Grants", () => {
     ]);
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
-    await expect(page.locator("tbody")).toContainText("1,000");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Nov 1, 2024");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("1,000");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Awaiting approval");
   });
 
   test("allows cancelling a grant", async ({ page }) => {
