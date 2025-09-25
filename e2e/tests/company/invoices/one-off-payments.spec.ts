@@ -372,7 +372,7 @@ test.describe("One-off payments", () => {
 
       await login(page, adminUser, "/invoices");
 
-      await expect(page.locator("tbody")).toBeVisible();
+      await expect(page.locator('tbody[data-slot="table-body"]').first()).toBeVisible();
 
       const invoiceRow = await findRequiredTableRow(page, {
         Amount: "$500",
