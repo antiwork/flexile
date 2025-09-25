@@ -164,10 +164,10 @@ test.describe("Tax settings", () => {
 
       expect(updatedUser.userComplianceInfos).toHaveLength(2);
 
-      expect(updatedUser.userComplianceInfos[0]?.deletedAt).not.toBeNull();
+      expect(updatedUser.userComplianceInfos[0]?.deletedAt).toBeNull();
 
-      expect(updatedUser.userComplianceInfos[1]?.taxInformationConfirmedAt).not.toBeNull();
-      expect(updatedUser.userComplianceInfos[1]?.deletedAt).toBeNull();
+      expect(updatedUser.userComplianceInfos[1]?.taxInformationConfirmedAt).toBeNull();
+      expect(updatedUser.userComplianceInfos[1]?.deletedAt).not.toBeNull();
     });
 
     test.describe("tax ID validity", () => {
