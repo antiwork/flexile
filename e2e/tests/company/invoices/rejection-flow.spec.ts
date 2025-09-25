@@ -44,8 +44,8 @@ test.describe("invoice rejection flow", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Verify invoice was created
-    await expect(page.locator("tbody")).toContainText("INV-REJECT-001");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("INV-REJECT-001");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Awaiting approval");
 
     // Logout and login as admin to reject the invoice
     await logout(page);
@@ -98,9 +98,9 @@ test.describe("invoice rejection flow", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Verify invoice is back to awaiting approval
-    await expect(page.locator("tbody")).toContainText("INV-REJECT-001");
-    await expect(page.locator("tbody")).toContainText("$360"); // $60 * 6 hours
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("INV-REJECT-001");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("$360"); // $60 * 6 hours
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Awaiting approval");
 
     await page.locator("tbody tr").filter({ hasText: "INV-REJECT-001" }).click();
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
