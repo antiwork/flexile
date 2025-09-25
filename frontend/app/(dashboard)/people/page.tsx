@@ -110,7 +110,9 @@ export default function PeoplePage() {
                 <div className="text-sm font-normal">{person.role}</div>
               </div>
               {person.user.countryCode ? (
-                <div className="text-sm font-normal text-gray-600">{countries.get(person.user.countryCode)}</div>
+                <div className="text-muted-foreground text-sm font-normal">
+                  {countries.get(person.user.countryCode)}
+                </div>
               ) : null}
             </>
           );
@@ -196,10 +198,7 @@ export default function PeoplePage() {
         headerActions={
           <>
             {isMobile && table.options.enableRowSelection ? (
-              <button
-                className="text-blue-600"
-                onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
-              >
+              <button className="text-link" onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}>
                 {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
               </button>
             ) : null}
