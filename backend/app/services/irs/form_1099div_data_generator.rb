@@ -27,9 +27,8 @@ class Irs::Form1099divDataGenerator < Irs::BaseFormDataGenerator
                                                              {
                                                                company:,
                                                                year: tax_year,
-                                                               name: Document::FORM_1099_DIV,
+                                                               document_type: :form_1099_div,
                                                                deleted_at: nil,
-                                                               document_type: :tax_document,
                                                              })
                                                     .where(country_code: "US")
     end

@@ -40,7 +40,6 @@ RSpec.describe Document do
       subject { build(:tax_doc) }
 
       it { is_expected.to validate_presence_of(:user_compliance_info_id) }
-      it { is_expected.to validate_inclusion_of(:name).in_array(Document::ALL_SUPPORTED_TAX_FORM_NAMES) }
 
       context "when another record exists" do
         context "when the record is alive" do

@@ -39,11 +39,17 @@ import { useIsMobile } from "@/utils/use-mobile";
 type Document = RouterOutput["documents"]["list"][number];
 
 const typeLabels = {
-  [DocumentType.ConsultingContract]: "Agreement",
-  [DocumentType.ShareCertificate]: "Certificate",
-  [DocumentType.TaxDocument]: "Tax form",
+  [DocumentType.ConsultingContract]: "Consulting agreement",
+  [DocumentType.ShareCertificate]: "Share certificate",
+  [DocumentType.FormW8BEN]: "W8-BEN",
+  [DocumentType.FormW8BENE]: "W8-BEN-E",
+  [DocumentType.FormW9]: "W9",
+  [DocumentType.Form1099NEC]: "1099-NEC",
+  [DocumentType.Form1099DIV]: "1099-DIV",
+  [DocumentType.Form1042S]: "1042-S",
   [DocumentType.ExerciseNotice]: "Exercise notice",
   [DocumentType.EquityPlanContract]: "Equity plan",
+  [DocumentType.ReleaseAgreement]: "Release agreement",
 };
 
 const columnFiltersSchema = z.array(z.object({ id: z.string(), value: filterValueSchema }));
@@ -61,19 +67,26 @@ function getStatus(document: Document): { variant: StatusVariant | undefined; na
   const completedAt = getCompletedAt(document);
 
   switch (document.type) {
-    case DocumentType.TaxDocument:
-      if (document.name.startsWith("W-") || completedAt) {
-        return {
-          variant: "success",
-          name: "Signed",
-          text: completedAt ? `Filed on ${formatDate(completedAt)}` : "Signed",
-        };
+    case DocumentType.FormW8BEN:
+    case DocumentType.FormW8BENE:
+    case DocumentType.FormW9:
+      return {
+        variant: "success",
+        name: "Signed",
+        text: "Signed",
+      };
+    case DocumentType.Form1099NEC:
+    case DocumentType.Form1099DIV:
+    case DocumentType.Form1042S:
+      if (completedAt) {
+        return { variant: "success", name: "Signed", text: `Filed on ${formatDate(completedAt)}` };
       }
       return { variant: undefined, name: "Ready for filing", text: "Ready for filing" };
     case DocumentType.ShareCertificate:
     case DocumentType.ExerciseNotice:
       return { variant: "success", name: "Issued", text: "Issued" };
     case DocumentType.ConsultingContract:
+    case DocumentType.ReleaseAgreement:
     case DocumentType.EquityPlanContract:
       return completedAt
         ? { variant: "success", name: "Signed", text: "Signed" }
@@ -124,9 +137,8 @@ export default function DocumentsPage() {
               { id: "signer", header: "Signer" },
             )
           : null,
-        columnHelper.simple("name", "Document"),
         columnHelper.accessor((row) => typeLabels[row.type], {
-          header: "Type",
+          header: "Name",
           meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))] },
         }),
         columnHelper.accessor("createdAt", {
@@ -169,7 +181,7 @@ export default function DocumentsPage() {
           id: "documentNameSigner",
           cell: (info) => (
             <div className="flex flex-col gap-1">
-              <div className="text-base font-medium">{info.row.original.name}</div>
+              <div className="text-base font-medium">{typeLabels[info.row.original.type]}</div>
               {isCompanyRepresentative ? (
                 <div className="text-sm font-normal">
                   {
@@ -418,7 +430,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>{document.name}</DialogTitle>
+          <DialogTitle>{typeLabels[document.type]}</DialogTitle>
         </DialogHeader>
         <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
         <DialogFooter>
@@ -458,7 +470,6 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
           document: {
             text: values.text,
             document_type: document.type,
-            name: document.name,
           },
           recipient: values.recipient,
         },

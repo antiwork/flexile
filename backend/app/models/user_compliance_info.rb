@@ -44,24 +44,24 @@ class UserComplianceInfo < ApplicationRecord
 
   def requires_w9? = [citizenship_country_code, country_code].include?("US")
 
-  def tax_information_document_name
+  def tax_information_document_type
     case
     when requires_w9?
-      Document::FORM_W_9
+      :form_w_9
     when business_entity?
-      Document::FORM_W_8BEN_E
+      :form_w_8ben_e
     else
-      Document::FORM_W_8BEN
+      :form_w_8ben
     end
   end
 
-  def investor_tax_document_name
-    requires_w9? ? Document::FORM_1099_DIV : Document::FORM_1042_S
+  def investor_tax_document_type
+    requires_w9? ? :form_1099_div : :form_1042_s
   end
 
   def mark_deleted!
     docs = documents.tax_document.unsigned
-    docs = docs.where.not(name: [Document::FORM_1099_DIV, Document::FORM_1042_S]) if dividends.paid.any?
+    docs = docs.where.not(document_type: [:form_1099_div, :form_1042_s]) if dividends.paid.any?
     docs.each(&:mark_deleted!)
     super
   end

@@ -35,9 +35,8 @@ class Irs::Form1042sDataGenerator < Irs::BaseFormDataGenerator
                                                              {
                                                                company:,
                                                                year: tax_year,
-                                                               name: Document::FORM_1042_S,
+                                                               document_type: :form_1042_s,
                                                                deleted_at: nil,
-                                                               document_type: :tax_document,
                                                              })
                                                     .where.not(country_code: "US")
     end

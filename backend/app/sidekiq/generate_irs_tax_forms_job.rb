@@ -12,7 +12,7 @@ class GenerateIrsTaxFormsJob
       company_user_klass: CompanyWorker,
       user_compliance_info:,
       user:,
-      form_name: Document::FORM_1099_NEC,
+      document_type: :form_1099_nec,
       tax_year:,
     )
 
@@ -20,19 +20,19 @@ class GenerateIrsTaxFormsJob
       company_user_klass: CompanyInvestor,
       user_compliance_info:,
       user:,
-      form_name: user_compliance_info.investor_tax_document_name,
+      document_type: user_compliance_info.investor_tax_document_type,
       tax_year:,
     )
   end
 
   private
-    def generate_tax_forms(company_user_klass:, user_compliance_info:, user:, form_name:, tax_year:)
+    def generate_tax_forms(company_user_klass:, user_compliance_info:, user:, document_type:, tax_year:)
       company_user_klass.with_required_tax_info_for(tax_year:)
                         .where(user:)
                         .includes(:company)
                         .find_each do |company_user|
         company = company_user.company
-        next if user.documents.tax_document.alive.where(year: tax_year, name: form_name, company:).exists?
+        next if user.documents.tax_document.alive.where(year: tax_year, document_type:, company:).exists?
 
         GenerateTaxFormService.new(user_compliance_info:, form_name:, tax_year:, company:).process
       end
