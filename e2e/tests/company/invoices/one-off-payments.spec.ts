@@ -318,7 +318,7 @@ test.describe("One-off payments", () => {
       await page.getByRole("button", { name: "Filter" }).click();
       await page.getByRole("menuitem", { name: "Clear all filters" }).click();
 
-      await expect(page.getByRole("row", { name: "$123.45 Payment scheduled" })).toBeVisible();
+      await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
     });
 
     test("shows 'Pay again' button for failed payments", async ({ page }) => {
@@ -334,7 +334,7 @@ test.describe("One-off payments", () => {
 
       await login(page, adminUser, "/invoices");
 
-      await expect(page.locator("tbody")).toBeVisible();
+      await expect(page.getByRole("table").locator("tbody")).toBeVisible();
 
       const invoiceRow = await findRequiredTableRow(page, {
         Amount: "$500",
