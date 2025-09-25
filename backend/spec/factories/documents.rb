@@ -43,12 +43,10 @@ FactoryBot.define do
 
     factory :share_certificate_doc do
       document_type { Document.document_types[:share_certificate] }
-      name { "Share Certificate" }
     end
 
     factory :exercise_notice do
       document_type { Document.document_types[:exercise_notice] }
-      name { "XA-23 Form of Notice of Exercise (US) 2024.pdf" }
       signed
     end
 

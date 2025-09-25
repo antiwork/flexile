@@ -67,7 +67,7 @@ class Document < ApplicationRecord
     when "form_1099nec"
       "1099-NEC"
     when "exercise_notice"
-      "Exercise Notice"
+      "Notice of Exercise"
     when "release_agreement"
       "Release Agreement"
     when "form_1099div"
