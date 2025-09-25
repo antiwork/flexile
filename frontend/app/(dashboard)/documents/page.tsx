@@ -186,7 +186,7 @@ export default function DocumentsPage() {
             return (
               <div className="flex h-full flex-col items-end justify-between gap-1">
                 <Status variant={variant}>{text}</Status>
-                <div className="text-gray-600">{formatDate(document.createdAt)}</div>
+                <div className="text-muted-foreground">{formatDate(document.createdAt)}</div>
               </div>
             );
           },
@@ -316,10 +316,7 @@ export default function DocumentsPage() {
         title="Documents"
         headerActions={
           isMobile && table.options.enableRowSelection ? (
-            <button
-              className="text-blue-600"
-              onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
-            >
+            <button className="text-link" onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}>
               {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
             </button>
           ) : null
