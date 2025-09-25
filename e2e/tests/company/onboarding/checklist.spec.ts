@@ -7,6 +7,7 @@ import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccou
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { wiseRecipientsFactory } from "@test/factories/wiseRecipients";
+import { findRichTextEditor } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 
@@ -57,19 +58,15 @@ test.describe("Onboarding checklist", () => {
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
     await page.getByRole("button", { name: "Add contractor" }).click();
 
-    await withinModal(
-      async (modal) => {
-        await expect(modal.getByText("Who's joining?")).toBeVisible();
-        await modal.getByLabel("Email").fill(faker.internet.email());
-        await modal.getByLabel("Role").fill("Software Engineer");
-        await modal.getByLabel("Hourly").check();
-        await modal.getByLabel("Rate").fill("100");
-        await page.getByRole("button", { name: "Continue" }).click();
-        await modal.getByLabel("Already signed contract elsewhere").check({ force: true });
-        await modal.getByRole("button", { name: "Send invite" }).click();
-      },
-      { page, title: "Who's joining?" },
-    );
+    await expect(page.getByText("Who's joining?")).toBeVisible();
+    await page.getByLabel("Email").fill(faker.internet.email());
+    await page.getByLabel("Role").fill("Software Engineer");
+    await page.getByLabel("Hourly").check();
+    await page.getByLabel("Rate").fill("100");
+    await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("tab", { name: "Write" }).click();
+    await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
+    await page.getByRole("button", { name: "Send invite" }).click();
 
     const checkProgress = async () => {
       await expect(page.getByText("75%")).toBeVisible();
