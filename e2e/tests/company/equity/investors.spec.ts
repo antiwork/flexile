@@ -49,7 +49,7 @@ test.describe("Investors", () => {
       .where(eq(companyInvestors.id, companyInvestor2.id));
 
     await login(page, adminUser, "/equity/investors");
-    await expect(page.getByText("Investors")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Investors" })).toBeVisible();
     await expect(page.getByText("Alice Investor")).toBeVisible();
     await expect(page.getByText("Bob Investor")).toBeVisible();
 
