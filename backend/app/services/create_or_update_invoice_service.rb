@@ -12,6 +12,7 @@ class CreateOrUpdateInvoiceService
 
   def process
     error = nil
+    form_errors = []
     ApplicationRecord.transaction do
       existing_line_items = invoice.invoice_line_items.to_a
       line_items_to_keep = []
@@ -80,6 +81,7 @@ class CreateOrUpdateInvoiceService
 
       unless invoice.save
         error = invoice.errors.full_messages.to_sentence
+        form_errors = invoice.errors.map { |e| { path: e.attribute.to_s, message: e.message } }
         raise ActiveRecord::Rollback
       end
     end
@@ -87,6 +89,7 @@ class CreateOrUpdateInvoiceService
       {
         success: false,
         error_message: error,
+        form_errors: form_errors,
       }
     else
       {

@@ -25,7 +25,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     if result[:success]
       head :created
     else
-      render json: { error_message: result[:error_message] }, status: :unprocessable_entity
+      render json: { error_message: result[:error_message], form_errors: result[:form_errors] }, status: :unprocessable_entity
     end
   end
 
@@ -49,7 +49,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     if result[:success]
       head :no_content
     else
-      render json: { error_message: result[:error_message] }, status: :unprocessable_entity
+      render json: { error_message: result[:error_message], form_errors: result[:form_errors] }, status: :unprocessable_entity
     end
   end
 
