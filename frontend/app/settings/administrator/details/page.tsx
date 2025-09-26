@@ -107,6 +107,7 @@ export default function Details() {
                     {...field}
                     placeholder="XX-XXXXXXX"
                     onChange={(e) => field.onChange(formatTaxId(e.target.value))}
+                    maxLength={10}
                   />
                 </FormControl>
                 <FormMessage />
