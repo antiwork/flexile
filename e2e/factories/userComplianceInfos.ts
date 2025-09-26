@@ -30,6 +30,7 @@ export const userComplianceInfosFactory = {
       .values({
         userId: user.id,
         taxId: "000-00-0000",
+        createdAt: new Date(),
         ...nonTaxComplianceAttributeDefaultValues,
         ...overrides,
       })
