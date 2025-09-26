@@ -37,6 +37,7 @@ class UserPresenter
       investor = user.company_investor_for(company)
       roles[Company::ACCESS_ROLE_INVESTOR] = {
         id: investor.external_id,
+        deactivatedAt: investor.deactivated_at,
         hasDocuments: has_documents,
         hasGrants: investor.equity_grants.accepted.eventually_exercisable.exists?,
         hasShares: investor.share_holdings.exists?,
@@ -63,7 +64,7 @@ class UserPresenter
         flags.push("equity") if company.equity_enabled?
         flags.push("company_updates") if company.company_investors.exists?
         flags.push("option_exercising") if company.json_flag?("option_exercising")
-        can_view_financial_data = user.company_administrator_for?(company) || user.company_investor_for?(company)
+        can_view_financial_data = user.company_administrator_for?(company) || user.active_company_investor_for?(company)
         {
           **company_navigation_props(
             company:,
