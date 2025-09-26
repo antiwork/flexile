@@ -98,7 +98,7 @@ test.describe("Onboarding checklist", () => {
     page,
   }) => {
     const { user: contractorUser } = await usersFactory.create(undefined, { withoutComplianceInfo: true });
-    await companyContractorsFactory.create({ userId: contractorUser.id });
+    await companyContractorsFactory.create({ userId: contractorUser.id }, { withoutBankAccount: true });
     await login(page, contractorUser);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
@@ -180,7 +180,10 @@ test.describe("Onboarding checklist", () => {
     page,
   }) => {
     const { user: contractorUser } = await usersFactory.create(undefined, { withoutComplianceInfo: true });
-    const { companyContractor } = await companyContractorsFactory.create({ userId: contractorUser.id });
+    const { companyContractor } = await companyContractorsFactory.create(
+      { userId: contractorUser.id },
+      { withoutBankAccount: true },
+    );
     await companyInvestorsFactory.create({ userId: contractorUser.id, companyId: companyContractor.companyId });
     await login(page, contractorUser);
 
