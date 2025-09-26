@@ -114,7 +114,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
   });
 
   const handleBulkDelete = async (updates: UpdateListItem[]) => {
-    await Promise.all(updates.map((update) => deleteMutation.mutateAsync({ companyId: company.id, id: update.id })));
+    await Promise.all(updates.map((update) => deleteMutation.mutateAsync(update.id)));
     setShowBulkDeleteDialog(false);
   };
 
