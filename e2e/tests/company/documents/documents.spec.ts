@@ -101,10 +101,7 @@ test.describe("Documents", () => {
   test("allows administrators to share documents", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
     const { user: recipient } = await usersFactory.create({ legalName: "Recipient 1" });
-    const { document } = await documentsFactory.create(
-      { companyId: company.id, text: "Test document text" },
-      { signatures: [{ userId: recipient.id, title: "Signer" }] },
-    );
+    const { document } = await documentsFactory.create({ companyId: company.id, text: "Test document text" });
 
     await companyContractorsFactory.create({ companyId: company.id, userId: recipient.id });
     await login(page, adminUser, "/documents");
