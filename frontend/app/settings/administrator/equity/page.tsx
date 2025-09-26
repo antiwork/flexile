@@ -124,7 +124,7 @@ export default function Equity() {
             </div>
             <Switch
               id="exercise-requests-switch"
-              checked={company.jsonData?.flags?.includes("option_exercising") ?? false}
+              checked={company.jsonData?.flags.includes("option_exercising") ?? false}
               onCheckedChange={(checked) => {
                 const currentFlags = company.jsonData?.flags || [];
                 const newFlags = checked

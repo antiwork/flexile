@@ -83,7 +83,7 @@ test.describe("Company equity settings", () => {
     let dbCompany = await db.query.companies.findFirst({
       where: eq(companies.id, company.id),
     });
-    expect(dbCompany?.jsonData?.flags).toContain("option_exercising");
+    expect(dbCompany?.jsonData.flags).toContain("option_exercising");
 
     await enableOptionExercisingSwitch.click({ force: true });
     await expect(enableOptionExercisingSwitch).not.toBeChecked();
@@ -91,7 +91,7 @@ test.describe("Company equity settings", () => {
     dbCompany = await db.query.companies.findFirst({
       where: eq(companies.id, company.id),
     });
-    expect(dbCompany?.jsonData?.flags).not.toContain("option_exercising");
+    expect(dbCompany?.jsonData.flags).not.toContain("option_exercising");
 
     await enableOptionExercisingSwitch.click({ force: true });
     await expect(enableOptionExercisingSwitch).toBeChecked();
