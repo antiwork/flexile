@@ -121,6 +121,7 @@ test.describe("Documents", () => {
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
     await expect(page.locator("tbody tr")).toHaveCount(1);
     const documentRow = page.getByRole("row").filter({ hasText: document.name });
+    await expect(documentRow).toBeVisible();
     await documentRow.getByRole("checkbox").click();
     await page.getByRole("button", { name: "Review and sign" }).click();
     await expect(page.getByText("Test document text")).toBeVisible();
