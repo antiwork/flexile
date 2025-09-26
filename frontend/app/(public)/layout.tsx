@@ -10,7 +10,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <Image src={logo} alt="Flexile" />
         </a>
       </header>
-      <main className="flex flex-1 flex-col items-center overflow-y-auto px-3 py-3 print:overflow-visible">
+      <main className="bg-background flex flex-1 flex-col items-center overflow-y-auto px-3 py-3 print:overflow-visible">
         <div className="my-auto grid gap-4 pt-7">{children}</div>
       </main>
     </div>
