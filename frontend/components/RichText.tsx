@@ -16,7 +16,7 @@ const RichText = ({ content, className }: { content: Content; className?: string
     content,
     editorProps: {
       attributes: {
-        class: cn(className, "prose"),
+        class: cn(className, "prose text-foreground dark:prose-invert"),
       },
     },
     editable: false,
@@ -37,12 +37,13 @@ export const Editor = ({
   onChange,
   className,
   id,
+  "aria-label": ariaLabel,
   ...props
 }: {
   value: string | null | undefined;
   onChange: (value: string | null) => void;
   className?: string;
-} & React.ComponentProps<"div">) => {
+} & Omit<React.ComponentProps<"div">, "onChange">) => {
   const [addingLink, setAddingLink] = useState<{ url: string } | null>(null);
 
   const editor = useEditor({
@@ -53,7 +54,11 @@ export const Editor = ({
     editorProps: {
       attributes: {
         ...(id ? { id } : {}),
-        class: cn(className, "prose p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none"),
+        ...(ariaLabel ? { "aria-label": ariaLabel } : {}),
+        class: cn(
+          className,
+          "prose text-foreground dark:prose-invert border-muted my-2 max-h-100 overflow-y-auto rounded-md border px-8 py-4 p-4 min-h-60 max-h-96 overflow-y-auto max-w-full rounded-b-md outline-none",
+        ),
       },
     },
     immediatelyRender: false,
@@ -110,26 +115,29 @@ export const Editor = ({
       {...props}
       className={cn(
         "group border-input rounded-md border bg-transparent transition-[color,box-shadow] outline-none",
-        "focus-within:ring-ring/15 focus-within:border-gray-300 focus-within:ring-[3px]",
         "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
         className,
       )}
     >
-      <div className="border-input group-aria-invalid:border-destructive flex border-b">
+      <div className="border-input group-aria-invalid:border-destructive flex border-b p-1">
         {toolbarItems.map((item) => (
           <button
             type="button"
-            className={cn(linkClasses, "p-3 text-sm")}
+            className={cn(linkClasses, "hover:bg-accent hover:text-foreground rounded p-2 text-sm")}
             key={item.label}
             aria-label={item.label}
             aria-pressed={editor?.isActive(item.name, item.attributes)}
             onClick={() => onToolbarClick(item)}
           >
-            <item.icon className="size-5" />
+            <item.icon className="size-4" />
           </button>
         ))}
       </div>
-      {editor ? <EditorContent editor={editor} /> : null}
+      {editor ? (
+        <div className="focus-within:ring-ring dark:hover:bg-accent dark:focus-within:bg-accent rounded-b-sm ring-inset focus-within:ring-1">
+          <EditorContent editor={editor} />
+        </div>
+      ) : null}
       <Dialog open={!!addingLink} onOpenChange={() => setAddingLink(null)}>
         <DialogContent>
           <DialogHeader>
