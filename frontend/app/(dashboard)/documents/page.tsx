@@ -2,7 +2,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, Info, Share, X } from "lucide-react";
+import { CircleCheck, Download, Info, Share } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,7 +13,8 @@ import { z } from "zod";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
-import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
+import type { ActionConfig, ActionContext } from "@/components/actions/types";
+import { BulkActionsBar } from "@/components/BulkActionsBar";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
@@ -278,7 +279,7 @@ export default function DocumentsPage() {
         conditions: (document, _) => !!document.attachment,
         href: (document: Document) => `/download/${document.attachment?.key}/${document.attachment?.filename}`,
       },
-      reject: {
+      share: {
         id: "share",
         label: "Share",
         icon: Share,
@@ -389,9 +390,9 @@ export default function DocumentsPage() {
             )}
           />
           {isMobile ? (
-            <DocumentBulkActionsBar
+            <BulkActionsBar
               availableActions={availableActions}
-              selectedDocuments={selectedDocuments}
+              selectedItems={selectedDocuments}
               onClose={() => table.toggleAllRowsSelected(false)}
               onAction={handleAction}
             />
@@ -546,85 +547,6 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-const DocumentBulkActionsBar = ({
-  selectedDocuments,
-  onClose,
-  availableActions,
-  onAction,
-}: {
-  selectedDocuments: Document[];
-  onClose: () => void;
-  availableActions: AvailableActions<Document>[];
-  onAction: (actionId: string, items: Document[]) => void;
-}) => {
-  const [visibleDocuments, setVisibleDocuments] = useState<Document[]>([]);
-  const [visibleActions, setVisibleActions] = useState<AvailableActions<Document>[]>([]);
-
-  useEffect(() => {
-    const isOpen = selectedDocuments.length > 0;
-    if (isOpen) {
-      setVisibleDocuments(selectedDocuments);
-      setVisibleActions(availableActions);
-    }
-  }, [selectedDocuments, availableActions]);
-
-  const rowsSelected = visibleDocuments.length;
-  const downloadAction = visibleActions.find((action) => action.key === "edit");
-  const signAction = visibleActions.find((action) => action.key === "reviewAndSign");
-  const shareAction = visibleActions.find((action) => action.key === "reject");
-  const singleDocument = rowsSelected === 1 ? visibleDocuments[0] : undefined;
-
-  return (
-    <Dialog open={selectedDocuments.length > 0} modal={false}>
-      <DialogContent
-        className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0"
-        showCloseButton={false}
-      >
-        <DialogHeader className="sr-only">
-          <DialogTitle>Selected documents</DialogTitle>
-        </DialogHeader>
-        <div className="flex gap-2 p-2">
-          <Button
-            variant="outline"
-            className="border-muted flex h-9 items-center gap-2 rounded-lg border border-dashed text-sm font-medium hover:bg-white"
-            onClick={onClose}
-          >
-            <span className="tabular-nums">{rowsSelected}</span> selected
-            <X className="size-4" />
-          </Button>
-          {downloadAction && downloadAction.href && singleDocument ? (
-            <Button variant="outline" className="flex h-9 items-center gap-2 text-sm" asChild>
-              <Link href={{ pathname: downloadAction.href(singleDocument) }}>
-                <Download className="size-3.5" strokeWidth={2.5} />
-                Download
-              </Link>
-            </Button>
-          ) : null}
-          {signAction ? (
-            <Button
-              variant="primary"
-              className="flex h-9 items-center gap-2 text-sm"
-              onClick={() => signAction.action && onAction(signAction.action, selectedDocuments)}
-            >
-              Review and sign
-            </Button>
-          ) : null}
-          {shareAction ? (
-            <Button
-              variant="outline"
-              className="flex h-9 items-center gap-2 text-sm"
-              onClick={() => shareAction.action && onAction(shareAction.action, selectedDocuments)}
-            >
-              <Share className="size-3.5" strokeWidth={2.5} />
-              Share
-            </Button>
-          ) : null}
-        </div>
       </DialogContent>
     </Dialog>
   );
