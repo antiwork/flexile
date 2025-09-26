@@ -41,7 +41,7 @@ export default function Terms() {
       </p>
       <div role="navigation" className={cn("grid gap-1", "not-prose")}>
         {sections.map((section, index) => (
-          <a key={index} href={`#jump_${index + 1}`} className="flex items-center text-gray-500 no-underline">
+          <a key={index} href={`#jump_${index + 1}`} className="text-muted-foreground flex items-center no-underline">
             <Badge variant="outline" className="mr-1 shrink-0">
               {index + 1}
             </Badge>
