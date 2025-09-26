@@ -109,19 +109,19 @@ export default async function HomePage() {
           </div>
         </Section>
 
-        <Section className="flex bg-gray-50 py-8 md:py-16">
-          <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 md:gap-12">
+        <Section className="flex justify-center bg-gray-50 py-8 md:py-16">
+          <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-4 text-center md:gap-12">
             <h2 className="text-4xl font-medium md:text-6xl">Clear, straight forward pricing</h2>
             <div className="text-2xl md:text-3xl">1.5% + $0.50, capped at $15/payment</div>
           </div>
         </Section>
 
-        <Section className="flex w-full bg-blue-600 py-8 md:py-16">
-          <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 md:gap-12">
+        <Section className="flex w-full justify-center bg-blue-600 py-8 md:py-16">
+          <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-4 text-center md:gap-12">
             <h2 className="text-4xl font-medium md:text-6xl">Less stress, more flex</h2>
             <Link
               href="/signup/"
-              className={`${buttonClasses} h-20 w-full bg-white px-8 text-xl text-black hover:bg-black hover:text-white md:h-28 md:text-2xl`}
+              className={`${buttonClasses} h-16 w-full max-w-xs bg-white px-8 text-xl text-black hover:bg-black hover:text-white md:h-20 md:text-2xl`}
             >
               Get started
             </Link>
