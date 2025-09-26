@@ -14,49 +14,35 @@ export default function TableSkeleton({
   rows = 5,
   renderRowsOnly = false,
 }: TableSkeletonProps) {
-  const desktopSkeletonRows = Array.from({ length: rows }).map((_, rowIndex) => (
-    <TableRow key={`desktop-${rowIndex}`} className="hidden md:table-row">
+  const skeletonRows = Array.from({ length: rows }).map((_, rowIndex) => (
+    <TableRow key={rowIndex}>
       {hasSelection ? (
-        <TableCell className="w-12 min-w-12 py-2">
+        <TableCell className="hidden w-12 min-w-12 py-2 md:table-cell">
           <Skeleton className="mx-auto h-4 w-4 rounded" />
         </TableCell>
       ) : null}
+      <TableCell className="mb-2 flex flex-col gap-3 border-none p-4 md:hidden">
+        <Skeleton className="h-4 w-48 rounded" /> {/* Subtitle */}
+        <div className="flex justify-between">
+          <Skeleton className="h-4 w-20 rounded" /> {/* Left info */}
+          <Skeleton className="h-4 w-16 rounded" /> {/* Button */}
+        </div>
+      </TableCell>
       {Array.from({ length: columns }).map((_, colIndex) => (
-        <TableCell key={colIndex} className="py-2">
+        <TableCell key={colIndex} className="hidden py-2 md:table-cell">
           <Skeleton className="h-4 w-20 rounded" />
         </TableCell>
       ))}
     </TableRow>
   ));
 
-  const mobileSkeletonRows = Array.from({ length: 3 }).map((_, rowIndex) => (
-    <TableRow key={`mobile-${rowIndex}`} className="mb-2 flex flex-col gap-3 p-4 md:hidden">
-      <Skeleton className="h-4 w-48 rounded" /> {/* Subtitle */}
-      <div className="flex justify-between">
-        <Skeleton className="h-4 w-20 rounded" /> {/* Left info */}
-        <Skeleton className="h-4 w-16 rounded" /> {/* Button */}
-      </div>
-    </TableRow>
-  ));
-
   if (renderRowsOnly) {
-    return (
-      <>
-        {desktopSkeletonRows}
-        {mobileSkeletonRows}
-      </>
-    );
+    return skeletonRows;
   }
 
   return (
-    <>
-      <Table className="hidden md:table">
-        <TableBody>{desktopSkeletonRows}</TableBody>
-      </Table>
-
-      <Table className="grid gap-4 md:hidden">
-        <TableBody>{mobileSkeletonRows}</TableBody>
-      </Table>
-    </>
+    <Table>
+      <TableBody>{skeletonRows}</TableBody>
+    </Table>
   );
 }
