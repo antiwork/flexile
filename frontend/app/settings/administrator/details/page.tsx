@@ -67,7 +67,7 @@ export default function Details() {
   };
 
   const formatTaxId = (value: string) => {
-    const digits = value.replace(/\D/gu, "");
+    const digits = value.replace(/\D/gu, "").slice(0, 9);
     if (digits.length < 3) return digits;
     return `${digits.slice(0, 2)}-${digits.slice(2)}`;
   };
