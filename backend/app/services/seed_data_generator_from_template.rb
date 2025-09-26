@@ -111,9 +111,10 @@ class SeedDataGeneratorFromTemplate
       company = nil
       Timecop.travel(Time.zone.parse(model_attributes["created_at"])) do
         company_name = model_attributes.fetch("name")
+        primary_admin_name = company_data.fetch("primary_administrator").fetch("model_attributes").fetch("preferred_name")
         result = SignUpCompany.new(
           user_attributes: {
-            email: config.fetch("email"),
+            email: generate_email(primary_admin_name),
             password: DEFAULT_PASSWORD,
             confirmed_at: Time.current,
           },
