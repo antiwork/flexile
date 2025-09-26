@@ -34,7 +34,7 @@ class CompanyUpdatePresenter
   end
 
   def props
-    props = {
+    {
       id: company_update.external_id,
       title: company_update.title,
       sender_name: company.primary_admin.user.name,
@@ -42,17 +42,10 @@ class CompanyUpdatePresenter
       status: company_update.status,
       sent_at: company_update.sent_at,
     }
-
-
-
-    props
   end
 
   private
     attr_reader :company_update, :company
-
-
-
 
     def present_update(company_update)
       {
