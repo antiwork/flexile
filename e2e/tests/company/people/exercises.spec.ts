@@ -74,6 +74,7 @@ test.describe("People - Exercises Table", () => {
         "SH-1, SH-2",
         "Status",
         "Signed",
+        "Confirm payment",
       ].join(""),
     );
   });
