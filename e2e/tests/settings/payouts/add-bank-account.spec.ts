@@ -47,7 +47,7 @@ test.describe("Bank account settings", () => {
     onboardingUser = (await usersFactory.create({ state: "Hawaii" })).user;
     await companyContractorsFactory.create(
       { companyId: company.id, userId: onboardingUser.id },
-      { withUnsignedContract: true },
+      { withoutBankAccount: true, withUnsignedContract: true },
     );
 
     await login(page, onboardingUser, "/settings/payouts");
