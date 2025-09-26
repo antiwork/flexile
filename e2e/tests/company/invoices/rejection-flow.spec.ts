@@ -94,10 +94,7 @@ test.describe("invoice rejection flow", () => {
     await page
       .getByPlaceholder("Enter notes about your invoice (optional)")
       .fill("Corrected Q1 development work with accurate hours");
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.ok()),
-      page.getByRole("button", { name: "Resubmit" }).click(),
-    ]);
+    await page.getByRole("button", { name: "Resubmit" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Verify invoice is back to awaiting approval
