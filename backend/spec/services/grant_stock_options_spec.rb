@@ -127,7 +127,6 @@ RSpec.describe GrantStockOptions do
         expect(contract.company).to eq(company)
         expect(contract.year).to eq(Date.current.year)
         expect(contract.equity_grant).to eq(equity_grant)
-        expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
         expect(contract.attachments.size).to eq 0
         expect(contract.text).to eq("Contract")
 
@@ -191,7 +190,6 @@ RSpec.describe GrantStockOptions do
         expect(contract.company).to eq(company)
         expect(contract.year).to eq(Date.current.year)
         expect(contract.equity_grant).to eq(equity_grant)
-        expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
         expect(contract.attachments.size).to eq 0
         expect(contract.text).to eq("Contract")
 
@@ -273,7 +271,6 @@ RSpec.describe GrantStockOptions do
       contract = Document.equity_plan_contract.last
       expect(contract.company).to eq(company)
       expect(contract.year).to eq(Date.current.year)
-      expect(contract.name).to eq("Equity Incentive Plan #{Date.current.year}")
       expect(contract.attachments.size).to eq 1
       expect(contract.text).to be_nil
 

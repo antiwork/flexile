@@ -497,7 +497,6 @@ export const documents = pgTable(
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     userComplianceInfoId: bigint("user_compliance_info_id", { mode: "bigint" }),
     equityGrantId: bigint("equity_grant_id", { mode: "bigint" }),
-    name: varchar().notNull(),
     type: integer("document_type").$type<DocumentType>().notNull(),
     year: integer().notNull(),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),

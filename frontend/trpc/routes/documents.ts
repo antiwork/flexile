@@ -34,7 +34,7 @@ export const documentsRouter = createRouter({
       );
       const rows = await db
         .selectDistinctOn([documents.id], {
-          ...pick(documents, "id", "name", "createdAt", "type"),
+          ...pick(documents, "id", "createdAt", "type"),
           attachment: pick(activeStorageBlobs, "key", "filename"),
           hasText: isNotNull(documents.text),
         })
