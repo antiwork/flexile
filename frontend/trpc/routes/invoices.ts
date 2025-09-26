@@ -405,7 +405,7 @@ export const invoicesRouter = createRouter({
 
     if (!invoice) throw new TRPCError({ code: "NOT_FOUND" });
 
-    const attachmentRows = await db.query.activeStorageAttachments.findMany({
+    const expenseAttachmentRows = await db.query.activeStorageAttachments.findMany({
       where: and(
         eq(activeStorageAttachments.recordType, "InvoiceExpense"),
         inArray(
@@ -417,9 +417,19 @@ export const invoicesRouter = createRouter({
       with: { blob: { columns: { key: true, filename: true } } },
     });
 
-    const attachments = new Map(
-      await Promise.all(attachmentRows.map((attachment) => [attachment.recordId, attachment] as const)),
+    const expenseAttachments = new Map(
+      await Promise.all(expenseAttachmentRows.map((attachment) => [attachment.recordId, attachment] as const)),
     );
+
+    const documentAttachmentRow = await db.query.activeStorageAttachments.findFirst({
+      where: and(
+        eq(activeStorageAttachments.recordType, "Invoice"),
+        eq(activeStorageAttachments.recordId, invoice.id),
+        eq(activeStorageAttachments.name, "attachments"),
+      ),
+      with: { blob: { columns: { key: true, filename: true } } },
+      orderBy: desc(activeStorageAttachments.id),
+    });
 
     return {
       ...pick(
@@ -449,9 +459,10 @@ export const invoicesRouter = createRouter({
       userId: invoice.contractor.user.externalId,
       requiresAcceptanceByPayee: requiresAcceptanceByPayee(invoice),
       expenses: invoice.expenses.map((expense) => {
-        const attachment = attachments.get(expense.id);
+        const attachment = expenseAttachments.get(expense.id);
         return { ...expense, attachment: attachment?.blob };
       }),
+      attachment: documentAttachmentRow ? documentAttachmentRow.blob : null,
       lineItems: invoice.lineItems,
       id: invoice.externalId,
       approvals: invoice.approvals.map((approval) => ({
