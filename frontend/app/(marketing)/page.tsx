@@ -109,7 +109,7 @@ export default async function HomePage() {
           </div>
         </Section>
 
-        <Section className="flex bg-gray-50 py-8 md:py-16">
+        <Section className="flex bg-gray-50 py-8 text-black md:py-16">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 md:gap-12">
             <h2 className="text-4xl font-medium md:text-6xl">Clear, straight forward pricing</h2>
             <div className="text-2xl md:text-3xl">1.5% + $0.50, capped at $15/payment</div>
