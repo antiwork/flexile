@@ -12,6 +12,7 @@ import {
   CircleCheck,
   CircleCheckBig,
   Download,
+  Edit,
   Eye,
   Info,
   MoreHorizontal,
@@ -142,6 +143,7 @@ export default function InvoicesPage() {
           contexts: ["single"],
           permissions: ["worker"],
           conditions: (invoice: Invoice, _context: ActionContext) => EDITABLE_INVOICE_STATES.includes(invoice.status),
+          action: "edit",
           href: (invoice: Invoice) => `/invoices/${invoice.id}/edit`,
           group: "navigation",
           showIn: ["selection", "contextMenu"],
@@ -373,6 +375,11 @@ export default function InvoicesPage() {
         setOpenModal("delete");
         break;
       }
+      case "edit":
+        if (isSingleAction && singleInvoice) {
+          window.location.href = `/invoices/${singleInvoice.id}/edit`;
+        }
+        break;
     }
   };
 
@@ -768,6 +775,7 @@ const InvoiceBulkActionsBar = ({
   const rejectAction = visibleActions.find((action) => action.key === "reject");
   const approveAction = visibleActions.find((action) => action.key === "approve");
   const deleteAction = visibleActions.find((action) => action.key === "delete");
+  const editAction = visibleActions.find((action) => action.key === "edit");
 
   return (
     <Dialog open={selectedInvoices.length > 0} modal={false}>
@@ -814,6 +822,15 @@ const InvoiceBulkActionsBar = ({
               onClick={() => deleteAction.action && onAction(deleteAction.action, selectedInvoices)}
             >
               <Trash2 className="size-3.5" strokeWidth={2.5} />
+            </Button>
+          ) : null}
+          {editAction ? (
+            <Button
+              variant="outline"
+              className="flex h-9 items-center gap-2 text-sm"
+              onClick={() => editAction.action && onAction(editAction.action, selectedInvoices)}
+            >
+              <Edit className="size-3.5" strokeWidth={2.5} />
             </Button>
           ) : null}
         </div>
