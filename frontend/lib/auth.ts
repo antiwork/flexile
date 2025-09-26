@@ -4,6 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import type { Provider } from "next-auth/providers/index";
 import { z } from "zod";
 import env from "@/env";
+import { isValidImpersonationData } from "@/lib/impersonation";
 import { assertDefined } from "@/utils/assert";
 
 const otpLoginSchema = z.object({
@@ -114,16 +115,38 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    jwt({ token, user }) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
-      if (!user) return token;
-      token.jwt = user.jwt;
-      token.legalName = user.legalName ?? "";
-      token.preferredName = user.preferredName ?? "";
+    jwt({ token, user, trigger, session }) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- User may be undefined
+      if (user && trigger !== "update") {
+        token.jwt = user.jwt;
+        token.legalName = user.legalName ?? "";
+        token.preferredName = user.preferredName ?? "";
+      }
+
+      if (trigger === "update" && session && typeof session === "object" && session !== null) {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Session update requires type assertion
+        const updatedSession = session as { impersonation?: unknown };
+
+        if (updatedSession.impersonation === undefined) {
+          delete token.impersonation;
+        } else if (isValidImpersonationData(updatedSession.impersonation)) {
+          token.impersonation = updatedSession.impersonation;
+        }
+      }
+
       return token;
     },
     session({ session, token }) {
-      return { ...session, user: { ...session.user, ...token, id: token.sub } };
+      const baseSession = { ...session, user: { ...session.user, ...token, id: token.sub } };
+
+      if (token.impersonation) {
+        baseSession.impersonation = token.impersonation;
+        baseSession.user.jwt = token.impersonation.jwt;
+      } else {
+        delete baseSession.impersonation;
+      }
+
+      return baseSession;
     },
     async signIn({ user, account }) {
       if (!account) return false;
