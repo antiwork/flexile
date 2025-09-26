@@ -49,14 +49,11 @@ export default function TableSkeleton({
   }
 
   return (
-    <>
-      <Table className="hidden md:table">
-        <TableBody>{desktopSkeletonRows}</TableBody>
-      </Table>
-
-      <Table className="grid gap-4 md:hidden">
-        <TableBody>{mobileSkeletonRows}</TableBody>
-      </Table>
-    </>
+    <Table>
+      <TableBody>
+        {desktopSkeletonRows}
+        {mobileSkeletonRows}
+      </TableBody>
+    </Table>
   );
 }
