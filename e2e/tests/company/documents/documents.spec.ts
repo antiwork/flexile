@@ -84,6 +84,11 @@ test.describe("Documents", () => {
     );
     await expect(page.getByRole("row").filter({ hasText: document2.name })).toBeVisible();
 
+    const document1Row = page.getByRole("row").filter({ hasText: document1.name });
+    await document1Row.getByRole("checkbox").click();
+
+    await expect(page.getByRole("link", { name: "Download" })).toHaveAttribute("href", "/download/blobkey/test.pdf");
+
     const searchInput = page.getByPlaceholder("Search by Signer...");
     await expect(searchInput).toBeVisible();
 
@@ -95,8 +100,12 @@ test.describe("Documents", () => {
 
   test("allows administrators to share documents", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
-    const { document } = await documentsFactory.create({ companyId: company.id, text: "Test document text" });
     const { user: recipient } = await usersFactory.create({ legalName: "Recipient 1" });
+    const { document } = await documentsFactory.create(
+      { companyId: company.id, text: "Test document text" },
+      { signatures: [{ userId: recipient.id, title: "Signer" }] },
+    );
+
     await companyContractorsFactory.create({ companyId: company.id, userId: recipient.id });
     await login(page, adminUser, "/documents");
     await logout(page);
@@ -108,14 +117,17 @@ test.describe("Documents", () => {
     await page.locator("[contenteditable='true']").fill("Some other text");
     await selectComboboxOption(page, "Recipient", "Recipient 1");
     await page.getByRole("button", { name: "Send" }).click();
-    await expect(page.locator("tbody tr")).toHaveCount(2);
+    await expect(page.locator("tbody tr")).toHaveCount(1);
 
     await logout(page);
     await login(page, recipient, "/documents");
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
     await expect(page.locator("tbody tr")).toHaveCount(1);
+    const documentRow = page.getByRole("row").filter({ hasText: document.name });
+    await expect(documentRow).toBeVisible();
+    await documentRow.getByRole("checkbox").click();
     await page.getByRole("button", { name: "Review and sign" }).click();
-    await expect(page.getByText("Some other text")).toBeVisible();
+    await expect(page.getByText("Test document text")).toBeVisible();
     await page.getByRole("button", { name: "Add your signature" }).click();
     await page.getByRole("button", { name: "Agree & Submit" }).click();
   });

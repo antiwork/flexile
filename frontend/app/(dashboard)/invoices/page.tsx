@@ -10,7 +10,6 @@ import {
   CheckCircle,
   CircleAlert,
   CircleCheck,
-  CircleCheckBig,
   Download,
   Eye,
   Info,
@@ -18,10 +17,9 @@ import {
   Plus,
   SquarePen,
   Trash2,
-  X,
 } from "lucide-react";
 import Link from "next/link";
-import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import React, { Fragment, useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -38,7 +36,8 @@ import {
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
-import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
+import type { ActionConfig, ActionContext } from "@/components/actions/types";
+import { BulkActionsBar } from "@/components/BulkActionsBar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DatePicker from "@/components/DatePicker";
@@ -649,9 +648,9 @@ export default function InvoicesPage() {
         invoices={selectedDeletableInvoices}
       />
       {isMobile ? (
-        <InvoiceBulkActionsBar
+        <BulkActionsBar
           availableActions={availableActions}
-          selectedInvoices={selectedInvoices}
+          selectedItems={selectedInvoices}
           onClose={() => {
             table.toggleAllRowsSelected(false);
           }}
@@ -737,86 +736,6 @@ const TasksModal = ({
             </div>
           </DialogFooter>
         ) : null}
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-const InvoiceBulkActionsBar = ({
-  selectedInvoices,
-  onClose,
-  availableActions,
-  onAction,
-}: {
-  selectedInvoices: Invoice[];
-  onClose: () => void;
-  availableActions: AvailableActions<Invoice>[];
-  onAction: (actionId: string, items: Invoice[]) => void;
-}) => {
-  const [visibleInvoices, setVisibleInvoices] = useState<Invoice[]>([]);
-  const [visibleActions, setVisibleActions] = useState<AvailableActions<Invoice>[]>([]);
-
-  useEffect(() => {
-    const isOpen = selectedInvoices.length > 0;
-    if (isOpen) {
-      setVisibleInvoices(selectedInvoices);
-      setVisibleActions(availableActions);
-    }
-  }, [selectedInvoices, availableActions]);
-
-  const rowsSelected = visibleInvoices.length;
-  const rejectAction = visibleActions.find((action) => action.key === "reject");
-  const approveAction = visibleActions.find((action) => action.key === "approve");
-  const deleteAction = visibleActions.find((action) => action.key === "delete");
-
-  return (
-    <Dialog open={selectedInvoices.length > 0} modal={false}>
-      <DialogContent
-        showCloseButton={false}
-        className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0"
-      >
-        <DialogHeader className="sr-only">
-          <DialogTitle>Selected invoices</DialogTitle>
-        </DialogHeader>
-        <div className="flex gap-2 p-2">
-          <Button
-            variant="outline"
-            className="border-muted flex h-9 items-center gap-2 rounded-lg border border-dashed text-sm font-medium hover:bg-white"
-            onClick={onClose}
-          >
-            <span className="tabular-nums">{rowsSelected}</span> selected
-            <X className="size-4" />
-          </Button>
-          {rejectAction ? (
-            <Button
-              variant="outline"
-              className="flex h-9 items-center gap-2 text-sm"
-              onClick={() => rejectAction.action && onAction(rejectAction.action, selectedInvoices)}
-            >
-              <Ban className="size-3.5" strokeWidth={2.5} />
-              Reject
-            </Button>
-          ) : null}
-          {approveAction ? (
-            <Button
-              variant="primary"
-              className="flex h-9 items-center gap-2 border-none text-sm"
-              onClick={() => approveAction.action && onAction(approveAction.action, selectedInvoices)}
-            >
-              <CircleCheckBig className="size-3.5" strokeWidth={2.5} />
-              Approve
-            </Button>
-          ) : null}
-          {deleteAction ? (
-            <Button
-              variant="outline"
-              className="flex h-9 items-center"
-              onClick={() => deleteAction.action && onAction(deleteAction.action, selectedInvoices)}
-            >
-              <Trash2 className="size-3.5" strokeWidth={2.5} />
-            </Button>
-          ) : null}
-        </div>
       </DialogContent>
     </Dialog>
   );
