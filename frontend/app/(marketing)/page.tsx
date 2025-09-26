@@ -53,7 +53,7 @@ export default async function HomePage() {
         </div>
       </nav>
 
-      <main className="bg-background min-h-screen pt-20">
+      <main className="bg-accent-background min-h-screen pt-20">
         <Section className="bg-blue-600 py-8 md:py-16">
           <h1 className="text-6xl leading-[0.9] font-medium tracking-tight sm:text-8xl md:text-[9rem] lg:text-[12rem]">
             Contractor payments
