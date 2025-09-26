@@ -53,7 +53,6 @@ test.describe("Equity Grants", () => {
     await selectComboboxOption(page, "Relationship to company", "Consultant");
 
     await selectComboboxOption(page, "Grant type", "NSO");
-    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
     await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
 
@@ -65,6 +64,10 @@ test.describe("Equity Grants", () => {
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
 
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByLabel("Contract").setInputFiles({
       name: "contract.pdf",
       mimeType: "application/pdf",
@@ -90,28 +93,15 @@ test.describe("Equity Grants", () => {
 
     await page.getByRole("button", { name: "New grant" }).click();
 
-    // Fill in recipient (required)
     await selectComboboxOption(page, "Recipient", `${projectBasedUser.preferredName} (${projectBasedUser.email})`);
 
-    // Fill in number of options (required)
     await page.getByLabel("Number of options").fill("20");
-
-    // Fill in relationship to company (required)
     await selectComboboxOption(page, "Relationship to company", "Consultant");
-
-    // Fill in required grant type
     await selectComboboxOption(page, "Grant type", "NSO");
 
-    // Fill in required vesting details
-    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
-
-    // Fill in required board approval date (using today's date)
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
 
-    // Fill in required exercise period fields
     await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
-
-    // Use more precise selectors focusing on the input fields directly
     await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
     await page.locator('input[name="involuntaryTerminationExerciseMonths"]').fill("3");
     await page.locator('input[name="terminationWithCauseExerciseMonths"]').fill("3");
@@ -119,6 +109,10 @@ test.describe("Equity Grants", () => {
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
 
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
 
@@ -391,9 +385,13 @@ test.describe("Equity Grants", () => {
     await page.getByRole("button", { name: "New grant" }).click();
 
     await page.getByLabel("Number of options").fill("100");
+    await selectComboboxOption(page, "Relationship to company", "Consultant");
     await selectComboboxOption(page, "Recipient", `${otherAdminUser.preferredName} (${otherAdminUser.email})`);
+
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Shares will vest")).not.toBeVisible();
     await selectComboboxOption(page, "Vesting schedule", "4-year with 1-year cliff (1/48th monthly after cliff)");
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
 

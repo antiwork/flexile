@@ -29,6 +29,7 @@ import {
   DeleteModal,
   EDITABLE_INVOICE_STATES,
   RejectModal,
+  StatusDetails,
   useApproveInvoices,
   useIsActionable,
   useIsDeletable,
@@ -220,7 +221,7 @@ export default function InvoicesPage() {
             cell: (info) => (
               <>
                 <b className="truncate">{info.getValue()}</b>
-                <div className="text-xs text-gray-500">{info.row.original.contractor.role}</div>
+                <div className="text-muted-foreground text-xs">{info.row.original.contractor.role}</div>
               </>
             ),
           })
@@ -284,7 +285,7 @@ export default function InvoicesPage() {
             <div className="flex flex-col gap-2">
               <div>
                 <div className="text-base font-medium">{invoice.billFrom}</div>
-                <div className="text-gray-600">{invoice.contractor.role}</div>
+                <div className="text-muted-foreground">{invoice.contractor.role}</div>
               </div>
               <div className="text-sm">{amount}</div>
             </div>
@@ -313,7 +314,7 @@ export default function InvoicesPage() {
           return (
             <div className="flex h-full flex-col items-end justify-between">
               <div className="flex h-5 items-center justify-center">{getInvoiceStatusText(invoice, company)}</div>
-              <div className="text-gray-600">{formatDate(invoice.invoiceDate)}</div>
+              <div className="text-muted-foreground">{formatDate(invoice.invoiceDate)}</div>
             </div>
           );
         },
@@ -427,7 +428,7 @@ export default function InvoicesPage() {
             data.length > 0 ? (
               <div className="flex items-center">
                 <button
-                  className="p-2 text-blue-600"
+                  className="text-link p-2"
                   onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
                 >
                   {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
@@ -435,7 +436,7 @@ export default function InvoicesPage() {
                 {user.roles.administrator ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger className="p-2">
-                      <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
+                      <MoreHorizontal className="text-link size-5" strokeWidth={1.75} />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
@@ -679,14 +680,13 @@ const TasksModal = ({
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="md:w-110">
         <DialogHeader>
-          <DialogTitle className="max-md:pb-4 max-md:text-base max-md:leading-5 max-md:font-medium">
-            {invoice.billFrom}
-          </DialogTitle>
+          <DialogTitle className="max-md:text-base max-md:leading-5 max-md:font-medium">{invoice.billFrom}</DialogTitle>
         </DialogHeader>
         <section>
+          <StatusDetails invoice={invoice} className="mb-4" />
           {payRateInSubunits &&
           invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-            <Alert className="max-md:mb-4" variant="warning">
+            <Alert className="mb-4" variant="warning">
               <CircleAlert />
               <AlertDescription>
                 This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
@@ -694,7 +694,7 @@ const TasksModal = ({
               </AlertDescription>
             </Alert>
           ) : null}
-          <header className="flex items-center justify-between gap-4 md:pt-4">
+          <header className="flex items-center justify-between gap-4">
             <h3 className="text-base max-md:leading-5">Invoice details</h3>
             <Button variant="outline" size="small" asChild className="max-md:font-regular max-md:h-7.5 max-md:text-sm">
               <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
@@ -956,10 +956,10 @@ const QuickInvoicesSectionContent = () => {
 
               <div className="grid gap-2">
                 <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
-                  <span className="text-sm text-gray-500">Total amount</span>
+                  <span className="text-muted-foreground text-sm">Total amount</span>
                   <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
                   {company.equityEnabled ? (
-                    <div className="mt-1 text-sm text-gray-500">
+                    <div className="text-muted-foreground mt-1 text-sm">
                       ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
                       <Link href="/settings/payouts" className={linkClasses}>
                         {formatMoneyFromCents(equityAmountCents)} equity

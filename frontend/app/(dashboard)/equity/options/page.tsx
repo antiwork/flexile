@@ -331,7 +331,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
                     <div>
                       Options value
                       <br />
-                      <span className="text-sm text-gray-600">
+                      <span className="text-muted-foreground text-sm">
                         Based on {(company.valuationInDollars ?? 0).toLocaleString([], { notation: "compact" })}{" "}
                         valuation
                       </span>

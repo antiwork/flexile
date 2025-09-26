@@ -64,6 +64,7 @@ test.describe("Onboarding checklist", () => {
         await modal.getByLabel("Role").fill("Software Engineer");
         await modal.getByLabel("Hourly").check();
         await modal.getByLabel("Rate").fill("100");
+        await page.getByRole("button", { name: "Continue" }).click();
         await modal.getByLabel("Already signed contract elsewhere").check({ force: true });
         await modal.getByRole("button", { name: "Send invite" }).click();
       },
@@ -97,7 +98,7 @@ test.describe("Onboarding checklist", () => {
     page,
   }) => {
     const { user: contractorUser } = await usersFactory.create(undefined, { withoutComplianceInfo: true });
-    await companyContractorsFactory.create({ userId: contractorUser.id });
+    await companyContractorsFactory.create({ userId: contractorUser.id }, { withoutBankAccount: true });
     await login(page, contractorUser);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
@@ -179,7 +180,10 @@ test.describe("Onboarding checklist", () => {
     page,
   }) => {
     const { user: contractorUser } = await usersFactory.create(undefined, { withoutComplianceInfo: true });
-    const { companyContractor } = await companyContractorsFactory.create({ userId: contractorUser.id });
+    const { companyContractor } = await companyContractorsFactory.create(
+      { userId: contractorUser.id },
+      { withoutBankAccount: true },
+    );
     await companyInvestorsFactory.create({ userId: contractorUser.id, companyId: companyContractor.companyId });
     await login(page, contractorUser);
 

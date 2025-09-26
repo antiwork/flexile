@@ -60,9 +60,9 @@ const MessageRow = ({
   return (
     <div
       className={cn(
-        "border-muted hover:bg-muted/10 cursor-pointer px-4 py-4",
+        "border-muted hover:bg-accent cursor-pointer px-4 py-4",
         !isLastMessage ? "border-b" : "",
-        message.role === "user" ? "" : "bg-muted/15",
+        message.role === "user" ? "" : "bg-accent/20",
       )}
       onClick={toggleExpansion}
     >
@@ -81,7 +81,7 @@ const MessageRow = ({
         </div>
         <div className="flex-1">
           <div className="mb-1 flex items-center justify-between">
-            <span className="text-sm font-medium text-black">
+            <span className="text-foreground text-sm font-medium">
               {message.role === "user" ? userName : message.staffName || "Flexile support"}
             </span>
             <span className="text-muted-foreground text-sm">
