@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_05_123957) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_23_081928) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -610,7 +610,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_05_123957) do
     t.string "description", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
+    t.string "external_id", null: false
     t.index ["expense_category_id"], name: "index_invoice_expenses_on_expense_category_id"
+    t.index ["external_id"], name: "index_invoice_expenses_on_external_id", unique: true
     t.index ["invoice_id"], name: "index_invoice_expenses_on_invoice_id"
   end
 

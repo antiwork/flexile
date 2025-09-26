@@ -384,7 +384,7 @@ RSpec.describe CreateOrUpdateInvoiceService do
               **invoice_line_item_params,
               invoice_expenses: [
                 {
-                  id: invoice_expense.id,
+                  id: invoice_expense.external_id,
                   description: "American Airlines",
                   total_amount_in_cents: 500_00,
                   expense_category_id: expense_category.id,
@@ -426,14 +426,14 @@ RSpec.describe CreateOrUpdateInvoiceService do
             expect(invoice.zip_code).to eq(user.zip_code)
             expect(invoice.country_code).to eq(user.country_code)
 
-            expect(expense_1.id).to eq(invoice_expense.id)
+            expect(expense_1.external_id).to eq(invoice_expense.external_id)
             expect(expense_1.invoice_id).to eq(invoice.id)
             expect(expense_1.description).to eq("American Airlines")
             expect(expense_1.total_amount_in_cents).to eq(500_00)
             expect(expense_1.expense_category_id).to eq(expense_category.id)
             expect(expense_1.attachment.filename).to eq("expense.pdf")
 
-            expect(expense_2.id).to_not eq(invoice_expense.id)
+            expect(expense_2.external_id).to_not eq(invoice_expense.external_id)
             expect(expense_2.invoice_id).to eq(invoice.id)
             expect(expense_2.description).to eq("Air Canada")
             expect(expense_2.total_amount_in_cents).to eq(1_500_00)

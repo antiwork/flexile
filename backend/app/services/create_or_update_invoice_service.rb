@@ -42,7 +42,7 @@ class CreateOrUpdateInvoiceService
       keep_expenses = []
       expenses_in_cents = 0
       invoice_expenses_params.each do |expense|
-        invoice_expense = invoice.invoice_expenses.find_by(id: expense[:id]) || invoice.invoice_expenses.build(expense)
+        invoice_expense = invoice.invoice_expenses.find_by(external_id: expense[:id]) || invoice.invoice_expenses.build(expense)
         if invoice_expense.persisted?
           # TODO (raul): remove once https://github.com/rails/rails/issues/17466 is fixed
           #   Ensures changed association is saved when calling @invoice.save.
