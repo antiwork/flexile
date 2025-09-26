@@ -49,7 +49,7 @@ export default function GrantsPage() {
   const exerciseNoticeConfig = useDocumentTemplateQuery("exercise_notice");
   const { data: exerciseData } = useQuery({
     ...exerciseNoticeConfig,
-    enabled: company.optionExercisingEnabled && !!user.roles.administrator,
+    enabled: company.flags.includes("option_exercising") && !!user.roles.administrator,
   });
   const columnHelper = createColumnHelper<EquityGrant>();
   const columns = useMemo(
@@ -101,7 +101,7 @@ export default function GrantsPage() {
         }
       />
 
-      {!company.optionExercisingEnabled ? (
+      {!company.flags.includes("option_exercising") ? (
         <Alert className="mx-4">
           <Info />
           <AlertDescription>

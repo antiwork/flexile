@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_13_170846) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_05_123957) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -105,7 +105,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_13_170846) do
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
     t.string "invite_link"
-    t.boolean "option_exercising_enabled", default: false, null: false
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
     t.index ["invite_link"], name: "index_companies_on_invite_link", unique: true
   end

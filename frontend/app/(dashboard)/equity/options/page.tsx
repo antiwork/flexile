@@ -114,7 +114,7 @@ export default function OptionsPage() {
         </div>
       ) : (
         <>
-          {!company.optionExercisingEnabled ? (
+          {!company.flags.includes("option_exercising") ? (
             <Alert className="mx-4 mb-4">
               <Info />
               <AlertDescription>

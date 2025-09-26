@@ -63,10 +63,10 @@ export const companiesRouter = createRouter({
           fmvPerShareInUsd: true,
           conversionSharePriceUsd: true,
           equityEnabled: true,
-          optionExercisingEnabled: true,
         })
         .extend({
           logoKey: z.string().optional(),
+          jsonData: z.object({ flags: z.array(z.string()) }).optional(),
         }),
     )
     .mutation(async ({ ctx, input }) => {

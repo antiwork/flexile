@@ -29,16 +29,12 @@ export default function Equity() {
   const queryClient = useQueryClient();
   const requiresCompanyName = !settings.name || settings.name.trim().length === 0;
 
-  const createToggleMutation = () =>
-    trpc.companies.update.useMutation({
-      onSuccess: async () => {
-        await utils.companies.settings.invalidate();
-        await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      },
-    });
-
-  const updateEquityEnabled = createToggleMutation();
-  const updateOptionExercisingEnabled = createToggleMutation();
+  const toggleMutation = trpc.companies.update.useMutation({
+    onSuccess: async () => {
+      await utils.companies.settings.invalidate();
+      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    },
+  });
 
   // Mutation for the form
   const updateSettings = trpc.companies.update.useMutation({
@@ -110,12 +106,12 @@ export default function Equity() {
               id="enable-equity-switch"
               checked={company.equityEnabled}
               onCheckedChange={(checked) => {
-                updateEquityEnabled.mutate({
+                toggleMutation.mutate({
                   companyId: company.id,
                   equityEnabled: checked,
                 });
               }}
-              disabled={updateEquityEnabled.isPending || requiresCompanyName}
+              disabled={toggleMutation.isPending || requiresCompanyName}
             />
           </div>
 
@@ -128,14 +124,19 @@ export default function Equity() {
             </div>
             <Switch
               id="exercise-requests-switch"
-              checked={company.optionExercisingEnabled}
+              checked={company.jsonData?.flags?.includes("option_exercising") ?? false}
               onCheckedChange={(checked) => {
-                updateOptionExercisingEnabled.mutate({
+                const currentFlags = company.jsonData?.flags || [];
+                const newFlags = checked
+                  ? [...new Set([...currentFlags, "option_exercising"])]
+                  : currentFlags.filter((flag) => flag !== "option_exercising");
+
+                toggleMutation.mutate({
                   companyId: company.id,
-                  optionExercisingEnabled: checked,
+                  jsonData: { flags: newFlags },
                 });
               }}
-              disabled={updateOptionExercisingEnabled.isPending || !company.equityEnabled}
+              disabled={toggleMutation.isPending || !company.equityEnabled}
             />
           </div>
         </div>

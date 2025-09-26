@@ -62,7 +62,7 @@ class UserPresenter
         flags = []
         flags.push("equity") if company.equity_enabled?
         flags.push("company_updates") if company.company_investors.exists?
-        flags.push("option_exercising") if company.option_exercising_enabled?
+        flags.push("option_exercising") if company.json_flag?("option_exercising")
         can_view_financial_data = user.company_administrator_for?(company) || user.company_investor_for?(company)
         {
           **company_navigation_props(
@@ -77,8 +77,8 @@ class UserPresenter
             country: ISO3166::Country[company.country_code].common_name,
           },
           flags:,
+          jsonData: company.json_data,
           equityEnabled: company.equity_enabled,
-          optionExercisingEnabled: company.option_exercising_enabled,
           requiredInvoiceApprovals: company.required_invoice_approval_count,
           paymentProcessingDays: company.contractor_payment_processing_time_in_days,
           createdAt: company.created_at.iso8601,
