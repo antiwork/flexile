@@ -8,7 +8,7 @@ import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { wiseRecipientsFactory } from "@test/factories/wiseRecipients";
 import { login } from "@test/helpers/auth";
-import { expect, test, withinModal } from "@test/index";
+import { expect, test, withinChecklistModal, withinModal } from "@test/index";
 
 test.describe("Onboarding checklist", () => {
   test("completes admin onboarding checklist by adding company details, bank account, and inviting contractor", async ({
@@ -57,15 +57,21 @@ test.describe("Onboarding checklist", () => {
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
     await page.getByRole("button", { name: "Add contractor" }).click();
 
-    await withinModal(
+    await withinChecklistModal(
       async (modal) => {
         await expect(modal.getByText("Who's joining?")).toBeVisible();
         await modal.getByLabel("Email").fill(faker.internet.email());
         await modal.getByLabel("Role").fill("Software Engineer");
         await modal.getByLabel("Hourly").check();
         await modal.getByLabel("Rate").fill("100");
-        await page.getByRole("button", { name: "Continue" }).click();
-        await modal.getByLabel("Already signed contract elsewhere").check({ force: true });
+        await modal.getByRole("button", { name: "Continue" }).click();
+        const signedElsewhereLabel = modal.getByText("Already signed contract elsewhere");
+        await expect(signedElsewhereLabel).toBeVisible();
+        await signedElsewhereLabel.click();
+        await expect(modal.getByRole("switch", { name: "Already signed contract elsewhere" })).toHaveAttribute(
+          "aria-checked",
+          "true",
+        );
         await modal.getByRole("button", { name: "Send invite" }).click();
       },
       { page, title: "Who's joining?" },

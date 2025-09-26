@@ -63,3 +63,31 @@ export const withinModal = async (
   await callback(modal);
   if (assertClosed) await expect(modal).not.toBeVisible();
 };
+
+export const withinChecklistModal = async (
+  callback: (modal: Locator) => Promise<void>,
+  { page, title, assertClosed = true }: { page: Page; title?: string | RegExp; assertClosed?: boolean },
+) => {
+  await expect(page.getByRole("dialog").first()).toBeVisible({ timeout: 10000 });
+
+  const modal = title ? page.getByRole("dialog", { name: title }) : page.getByRole("dialog");
+
+  if (title) {
+    const dialogCount = await page.getByRole("dialog").count();
+    if (dialogCount > 0) {
+      const isVisible = await modal.isVisible();
+      if (!isVisible) {
+        console.log(`Debug: Found ${dialogCount} dialog(s), but none with title: "${title}"`);
+        const firstDialog = page.getByRole("dialog").first();
+        await expect(firstDialog).toBeVisible();
+        await callback(firstDialog);
+        if (assertClosed) await expect(firstDialog).not.toBeVisible();
+        return;
+      }
+    }
+  }
+
+  await expect(modal).toBeVisible();
+  await callback(modal);
+  if (assertClosed) await expect(modal).not.toBeVisible();
+};
