@@ -23,7 +23,7 @@ export default function SignForm({
         {signed ? (
           <div className="font-signature border-b text-xl">{user.legalName}</div>
         ) : (
-          <Button className="border-muted w-full hover:border-current" variant="dashed" onClick={onSign}>
+          <Button className="w-full" variant="dashed" onClick={onSign}>
             Add your signature
           </Button>
         )}
