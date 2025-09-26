@@ -63,3 +63,26 @@ export const withinModal = async (
   await callback(modal);
   if (assertClosed) await expect(modal).not.toBeVisible();
 };
+
+export const withinCombobox = async (
+  callback: (searchField: Locator, combobox: Locator) => Promise<void>,
+  {
+    page,
+    name,
+    searchPlaceholder = "Search...",
+    assertClosed = true,
+  }: { page: Page; name: string; searchPlaceholder?: string; assertClosed?: boolean },
+) => {
+  const combobox = page.getByRole("combobox", { name, exact: true });
+  await combobox.click();
+  const popover = page.locator('[data-slot="popover-content"]').filter({
+    has: page.getByPlaceholder(searchPlaceholder),
+  });
+  await expect(popover).toBeVisible();
+  const searchField = popover.getByPlaceholder(searchPlaceholder);
+  await expect(searchField).toBeVisible();
+  await callback(searchField, combobox);
+  if (assertClosed) {
+    await expect(popover).not.toBeVisible();
+  }
+};
