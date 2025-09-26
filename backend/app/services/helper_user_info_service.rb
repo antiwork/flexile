@@ -11,6 +11,7 @@ class HelperUserInfoService
 
     {
       name: user.email,
+      actions: impersonation_actions,
       metadata: {
         "Country of residence" => user.display_country,
         "Contractor for companies" => user.clients.map(&:display_name).to_sentence.presence,
@@ -26,6 +27,12 @@ class HelperUserInfoService
 
   private
     attr_reader :user
+
+    def impersonation_actions
+      return {} if user.team_member?
+
+      { "Impersonate" => Rails.application.routes.url_helpers.impersonate_admin_user_url(user.external_id) }
+    end
 
     def investment_notes
       return unless user.investor?
