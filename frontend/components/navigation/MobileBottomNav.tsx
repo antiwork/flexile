@@ -55,7 +55,7 @@ const NavIcon = ({ icon: Icon, label, badge, isActive, className }: NavIconProps
     {Icon ? <Icon className="mb-1 h-5 w-5" /> : null}
     <span className="text-xs font-normal">{label}</span>
     {badge ? (
-      <span className="absolute top-2 right-1/2 flex h-3.5 w-3.5 translate-x-4 -translate-y-1 rounded-full border-3 border-white bg-blue-500" />
+      <span className="border-background absolute top-2 right-1/2 flex h-3.5 w-3.5 translate-x-4 -translate-y-1 rounded-full border-3 bg-blue-500" />
     ) : null}
   </div>
 );
