@@ -270,7 +270,7 @@ export default function DocumentsPage() {
         group: "signature",
         showIn: ["selection"],
       },
-      edit: {
+      download: {
         id: "download",
         label: "Download",
         icon: Download,

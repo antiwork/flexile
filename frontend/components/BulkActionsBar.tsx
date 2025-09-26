@@ -38,7 +38,7 @@ export const BulkActionsBar = <T extends Invoice | Document>({
   const rejectAction = visibleActions.find((action) => action.key === "reject");
   const approveAction = visibleActions.find((action) => action.key === "approve");
   const deleteAction = visibleActions.find((action) => action.key === "delete");
-  const downloadAction = visibleActions.find((action) => action.key === "edit");
+  const downloadAction = visibleActions.find((action) => action.key === "download");
   const shareAction = visibleActions.find((action) => action.key === "share");
   const signAction = visibleActions.find((action) => action.key === "reviewAndSign");
 
