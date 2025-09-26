@@ -127,7 +127,7 @@ test.describe("Documents", () => {
     await expect(documentRow).toBeVisible();
     await documentRow.getByRole("checkbox").click();
     await page.getByRole("button", { name: "Review and sign" }).click();
-    await expect(page.getByText("Some other text")).toBeVisible();
+    await expect(page.getByText("Test document text")).toBeVisible();
     await page.getByRole("button", { name: "Add your signature" }).click();
     await page.getByRole("button", { name: "Agree & Submit" }).click();
   });
