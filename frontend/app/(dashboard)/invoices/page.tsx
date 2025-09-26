@@ -46,7 +46,6 @@ import { linkClasses } from "@/components/Link";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
-import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -532,9 +531,7 @@ export default function InvoicesPage() {
 
       <QuickInvoicesSection />
 
-      {isLoading ? (
-        <TableSkeleton columns={6} />
-      ) : data.length > 0 ? (
+      {data.length > 0 || isLoading ? (
         <DataTable
           table={table}
           onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
@@ -568,6 +565,7 @@ export default function InvoicesPage() {
               onClearSelection={onClearSelection}
             />
           )}
+          isLoading={isLoading}
         />
       ) : (
         <div className="mx-4">
