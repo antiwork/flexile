@@ -24,14 +24,13 @@ test.describe("Investor Entities", () => {
     const { user: investorUser } = await usersFactory.create({
       legalName: "Test Investor",
     });
-    await companyInvestorsFactory.create({
+    const { companyInvestor } = await companyInvestorsFactory.create({
       id: investorUser.id,
       companyId: company.id,
       userId: investorUser.id,
     });
 
     const { companyInvestorEntity } = await companyInvestorEntitiesFactory.create({
-      id: investorUser.id,
       companyId: company.id,
       name: "Test Investor",
     });
@@ -42,6 +41,7 @@ test.describe("Investor Entities", () => {
     });
 
     await shareHoldingsFactory.create({
+      companyInvestorId: companyInvestor.id,
       companyInvestorEntityId: companyInvestorEntity.id,
       shareClassId: shareClass.id,
       name: "Common Stock",
@@ -54,7 +54,7 @@ test.describe("Investor Entities", () => {
     });
 
     await equityGrantsFactory.create({
-      companyInvestorId: investorUser.id,
+      companyInvestorId: companyInvestor.id,
       companyInvestorEntityId: companyInvestorEntity.id,
       numberOfShares: 10000,
       vestedShares: 8000,
