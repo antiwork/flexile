@@ -57,6 +57,8 @@ test.describe("Onboarding checklist", () => {
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
     await page.getByRole("button", { name: "Add contractor" }).click();
 
+    await expect(page.getByRole("dialog").first()).toBeVisible();
+
     await withinModal(
       async (modal) => {
         await expect(modal.getByText("Who's joining?")).toBeVisible();
@@ -64,11 +66,17 @@ test.describe("Onboarding checklist", () => {
         await modal.getByLabel("Role").fill("Software Engineer");
         await modal.getByLabel("Hourly").check();
         await modal.getByLabel("Rate").fill("100");
-        await page.getByRole("button", { name: "Continue" }).click();
-        await modal.getByLabel("Already signed contract elsewhere").check({ force: true });
+        await modal.getByRole("button", { name: "Continue" }).click();
+        const signedElsewhereLabel = modal.getByText("Already signed contract elsewhere");
+        await expect(signedElsewhereLabel).toBeVisible();
+        await signedElsewhereLabel.click();
+        await expect(modal.getByRole("switch", { name: "Already signed contract elsewhere" })).toHaveAttribute(
+          "aria-checked",
+          "true",
+        );
         await modal.getByRole("button", { name: "Send invite" }).click();
       },
-      { page, title: "Who's joining?" },
+      { page },
     );
 
     const checkProgress = async () => {
