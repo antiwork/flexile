@@ -76,7 +76,7 @@ test.describe("invoice creation", () => {
     await expect(page.getByText("Net amount in cash$4,800")).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
-    await expect(page.locator("tbody")).toContainText(
+    await expect(page.getByRole("table").locator("tbody")).toContainText(
       ["Invoice ID", "1", "Sent on", "Aug 8, 2021", "Amount", "$6,000", "Status", "Awaiting approval (0/2)"].join(""),
     );
 
@@ -131,8 +131,8 @@ test.describe("invoice creation", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    await expect(page.locator("tbody")).toContainText("$45.99");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("$45.99");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("Awaiting approval");
 
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
@@ -179,7 +179,7 @@ test.describe("invoice creation", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    await expect(page.locator("tbody")).toContainText("$176.25");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("$176.25");
 
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
@@ -287,7 +287,7 @@ test.describe("invoice creation", () => {
     // wait for navigation to invoice list
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    await expect(page.locator("tbody")).toContainText("$150");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("$150");
 
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })

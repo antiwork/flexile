@@ -47,8 +47,8 @@ test.describe("invoice editing", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Verify the invoice was created
-    await expect(page.locator("tbody")).toContainText("INV-EDIT-001");
-    await expect(page.locator("tbody")).toContainText("$750"); // $75 * 10 hours
+    await expect(page.getByRole("table").locator("tbody")).toContainText("INV-EDIT-001");
+    await expect(page.getByRole("table").locator("tbody")).toContainText("$750"); // $75 * 10 hours
 
     // Get the created invoice from the database
     const invoice = await db.query.invoices
@@ -88,7 +88,7 @@ test.describe("invoice editing", () => {
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     // Verify the invoice was updated
-    await expect(page.locator("tbody")).toContainText("$900"); // $75 * 12 hours
+    await expect(page.getByRole("table").locator("tbody")).toContainText("$900"); // $75 * 12 hours
 
     // Verify the database was updated
     const updatedInvoice = await db.query.invoices.findFirst({ where: eq(invoices.id, invoice.id) }).then(takeOrThrow);

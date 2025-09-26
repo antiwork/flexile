@@ -24,8 +24,8 @@ import { latestUserComplianceInfo, simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
 
 const requiresAcceptanceByPayee = (
-  invoice: Pick<typeof invoices.$inferSelect, "createdById" | "userId" | "acceptedAt">,
-) => invoice.createdById !== invoice.userId && invoice.acceptedAt === null;
+  invoice: Pick<typeof invoices.$inferSelect, "createdById" | "userId" | "acceptedAt" | "invoiceType">,
+) => invoice.createdById !== invoice.userId && invoice.acceptedAt === null && invoice.invoiceType !== "other";
 
 const INITIAL_ADMIN_INVOICE_NUMBER = "O-0001";
 const getNextAdminInvoiceNumber = async (companyId: bigint, userId: bigint) => {
