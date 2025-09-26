@@ -16,6 +16,7 @@ const companySchema = z.object({
   logo_url: z.string().nullable(),
   address: addressSchema,
   flags: z.array(z.string()),
+  jsonData: z.object({ flags: z.array(z.string()) }).optional(),
   routes: z.array(navLinkSchema.extend({ subLinks: z.array(navLinkSchema).optional() })),
   requiredInvoiceApprovals: z.number(),
   equityEnabled: z.boolean(),

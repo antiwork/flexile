@@ -43,7 +43,7 @@ test.describe("Company equity settings", () => {
     await expect(enableEquitySwitch).toBeEnabled();
     await enableEquitySwitch.click({ force: true });
 
-    await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "true");
+    await expect(enableEquitySwitch).toBeChecked();
     await expect(page.getByRole("heading", { name: "Equity value" })).toBeVisible();
   });
 
@@ -64,12 +64,37 @@ test.describe("Company equity settings", () => {
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Equity" }).click();
 
+    await expect(page.getByText("Exercise requests")).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Exercise requests" })).toBeDisabled();
+
     // Enable equity toggle
     const enableEquitySwitch = page.getByRole("switch", { name: "Enable equity" });
-    await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "false");
-    await expect(enableEquitySwitch).toBeVisible();
+    await expect(enableEquitySwitch).not.toBeChecked();
     await enableEquitySwitch.click({ force: true });
-    await expect(enableEquitySwitch).toHaveAttribute("aria-checked", "true");
+    await expect(enableEquitySwitch).toBeChecked();
+
+    const enableOptionExercisingSwitch = page.getByRole("switch", { name: "Exercise requests" });
+    await expect(enableOptionExercisingSwitch).not.toBeChecked();
+
+    await enableOptionExercisingSwitch.click({ force: true });
+    await expect(enableOptionExercisingSwitch).toBeChecked();
+    await expect(page.getByRole("switch", { name: "Exercise requests" })).not.toBeDisabled();
+
+    let dbCompany = await db.query.companies.findFirst({
+      where: eq(companies.id, company.id),
+    });
+    expect(dbCompany?.jsonData.flags).toContain("option_exercising");
+
+    await enableOptionExercisingSwitch.click({ force: true });
+    await expect(enableOptionExercisingSwitch).not.toBeChecked();
+
+    dbCompany = await db.query.companies.findFirst({
+      where: eq(companies.id, company.id),
+    });
+    expect(dbCompany?.jsonData.flags).not.toContain("option_exercising");
+
+    await enableOptionExercisingSwitch.click({ force: true });
+    await expect(enableOptionExercisingSwitch).toBeChecked();
 
     // Wait for the form to appear
     await expect(page.getByRole("heading", { name: "Equity value" })).toBeVisible();
@@ -95,11 +120,12 @@ test.describe("Company equity settings", () => {
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Save changes" })).toBeEnabled();
 
-    const dbCompany = await db.query.companies.findFirst({
+    dbCompany = await db.query.companies.findFirst({
       where: eq(companies.id, company.id),
     });
     expect(dbCompany).toMatchObject({
       equityEnabled: true,
+      jsonData: { flags: ["option_exercising"] },
       sharePriceInUsd: "20",
       fmvPerShareInUsd: "15.123",
       conversionSharePriceUsd: "18.123456789",

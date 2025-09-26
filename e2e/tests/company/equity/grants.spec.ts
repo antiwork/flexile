@@ -243,6 +243,46 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("We're awaiting a payment of $50 to exercise 10 options.")).toBeVisible();
   });
 
+  test("shows option exercising disabled notice for investors", async ({ page }) => {
+    const { company } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      conversionSharePriceUsd: "1",
+    });
+    const { user } = await usersFactory.create();
+    await companyContractorsFactory.create({ companyId: company.id, userId: user.id });
+    const { companyInvestor } = await companyInvestorsFactory.create({ companyId: company.id, userId: user.id });
+    await equityGrantsFactory.create({ companyInvestorId: companyInvestor.id, vestedShares: 100 });
+
+    await login(page, user, "/equity/options");
+    await expect(page.getByRole("heading", { name: "Options" })).toBeVisible();
+
+    await expect(page.getByText("Option exercises are currently unavailable.")).toBeVisible();
+    await expect(
+      page.getByText(
+        "The company has paused exercises, which may be due to a distribution in progress or other administrative settings.",
+      ),
+    ).toBeVisible();
+
+    await expect(page.getByRole("button", { name: "Exercise Options" })).not.toBeVisible();
+
+    await db
+      .update(companies)
+      .set({ jsonData: { flags: ["option_exercising"] } })
+      .where(eq(companies.id, company.id));
+    await page.reload();
+
+    await expect(page.getByText("Option exercises are currently unavailable.")).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Exercise Options" })).not.toBeVisible();
+
+    await db
+      .insert(documentTemplates)
+      .values({ companyId: company.id, documentType: DocumentTemplateType.ExerciseNotice, text: "I am exercising" });
+    await page.reload();
+
+    await expect(page.getByText("You have 100 vested options available for exercise.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Exercise Options" })).toBeVisible();
+  });
+
   test("handles missing FMV share price gracefully", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
       equityEnabled: true,
@@ -303,6 +343,31 @@ test.describe("Equity Grants", () => {
     await expect(
       page.getByRole("alert", { name: "Please add an exercise notice so investors can exercise their options." }),
     ).not.toBeVisible();
+  });
+
+  test("shows option exercising disabled notice for administrators", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+    });
+    await login(page, adminUser, "/equity/grants");
+    await expect(page.getByRole("heading", { name: "Equity grants" })).toBeVisible();
+
+    await expect(page.getByText("Option exercises are currently disabled.")).toBeVisible();
+    await expect(page.getByText("Investors can't submit new exercise requests.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Manage in settings" })).toBeVisible();
+
+    await db
+      .update(companies)
+      .set({ jsonData: { flags: ["option_exercising"] } })
+      .where(eq(companies.id, company.id));
+    await page.reload();
+
+    await expect(page.getByText("Option exercises are currently unavailable.")).not.toBeVisible();
+    await expect(
+      page
+        .getByRole("alert")
+        .filter({ hasText: "Please add an exercise notice so investors can exercise their options." }),
+    ).toBeVisible();
   });
 
   test("allows issuing equity grants to administrators", async ({ page }) => {

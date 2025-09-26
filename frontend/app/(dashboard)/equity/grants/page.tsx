@@ -101,7 +101,18 @@ export default function GrantsPage() {
         }
       />
 
-      {exerciseData && !exerciseData.text ? (
+      {!company.flags.includes("option_exercising") ? (
+        <Alert className="mx-4">
+          <Info />
+          <AlertDescription>
+            <span className="font-bold">Option exercises are currently disabled.</span> Investors can't submit new
+            exercise requests.{" "}
+            <Link href="/settings/administrator/equity" className={linkClasses}>
+              Manage in settings
+            </Link>
+          </AlertDescription>
+        </Alert>
+      ) : exerciseData && !exerciseData.text ? (
         <Alert className="mx-4">
           <Info />
           <AlertDescription>
