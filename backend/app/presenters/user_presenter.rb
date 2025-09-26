@@ -62,7 +62,7 @@ class UserPresenter
       companies: user.all_companies.compact.map do |company|
         flags = []
         flags.push("equity") if company.equity_enabled?
-        flags.push("company_updates") if company.company_investors.exists?
+        flags.push("company_updates") if company.company_investors.active.exists?
         flags.push("option_exercising") if company.json_flag?("option_exercising")
         can_view_financial_data = user.company_administrator_for?(company) || user.active_company_investor_for?(company)
         {
@@ -87,7 +87,7 @@ class UserPresenter
           sharePriceInUsd: can_view_financial_data ? company.share_price_in_usd.to_s : nil,
           conversionSharePriceUsd: can_view_financial_data ? company.conversion_share_price_usd.to_s : nil,
           exercisePriceInUsd: can_view_financial_data ? company.fmv_per_share_in_usd.to_s : nil,
-          investorCount: user.company_administrator_for?(company) ? company.company_investors.where.not(user_id: company.company_workers.active.select(:user_id)).count : nil,
+          investorCount: user.company_administrator_for?(company) ? company.company_investors.active.where.not(user_id: company.company_workers.active.select(:user_id)).count : nil,
           contractorCount: user.company_administrator_for?(company) ? company.company_workers.active.count : nil,
           primaryAdminName: company.primary_admin.user.name,
           completedPaymentMethodSetup: company.bank_account_ready?,
