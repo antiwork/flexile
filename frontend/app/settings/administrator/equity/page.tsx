@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
+import { cn } from "@/utils";
 
 const formSchema = z.object({
   sharePriceInUsd: z.number().min(0),
@@ -86,7 +87,7 @@ export default function Equity() {
         </Alert>
       ) : null}
 
-      <div className={`space-y-6 ${requiresCompanyName ? "opacity-50" : ""}`}>
+      <div className={cn("space-y-6", requiresCompanyName && "opacity-50")}>
         <div>
           <h2 className="text-base font-semibold">Settings</h2>
           <div className="bg-border mt-2 h-px" />
@@ -144,9 +145,8 @@ export default function Equity() {
 
       {company.equityEnabled ? (
         <div className={`space-y-4 ${requiresCompanyName ? "opacity-50" : ""}`}>
-          <hgroup>
+          <hgroup className="border-border border-b pb-2">
             <h2 className="text-base font-semibold">Equity value</h2>
-            <div className="bg-border mt-2 h-px"></div>
           </hgroup>
 
           <div>
