@@ -53,7 +53,7 @@ test.describe("Dividend Computations", () => {
         has: page.getByText("50,000"),
       })
       .filter({
-        has: page.getByText(formatDate(date.toString())),
+        has: page.getByText(formatDate(date.toString(), { locales: "en-US" })),
       });
 
     await expect(draftRow).toBeVisible();
