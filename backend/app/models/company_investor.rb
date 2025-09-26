@@ -23,6 +23,7 @@ class CompanyInvestor < ApplicationRecord
   validates :investment_amount_in_cents, presence: true,
                                          numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
+  scope :active, -> { where(deactivated_at: nil) }
   scope :with_shares_or_options, -> { where("total_shares > 0 OR total_options > 0") }
   scope :with_required_tax_info_for, -> (tax_year:) do
     dividends_subquery = Dividend.select("company_investor_id")

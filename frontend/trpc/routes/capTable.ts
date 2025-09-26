@@ -20,7 +20,7 @@ import { company_administrator_cap_table_url } from "@/utils/routes";
 export const capTableRouter = createRouter({
   show: companyProcedure.input(z.object({ newSchema: z.boolean().optional() })).query(async ({ ctx, input }) => {
     const isAdminOrLawyer = !!(ctx.companyAdministrator || ctx.companyLawyer);
-    if (!ctx.company.equityEnabled || !(isAdminOrLawyer || ctx.companyInvestor))
+    if (!ctx.company.equityEnabled || !(isAdminOrLawyer || (ctx.companyInvestor && !ctx.companyInvestor.deactivatedAt)))
       throw new TRPCError({ code: "FORBIDDEN" });
 
     let outstandingShares = BigInt(0);

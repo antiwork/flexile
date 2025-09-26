@@ -35,6 +35,17 @@ RSpec.describe CompanyInvestor do
   end
 
   describe "scopes" do
+    describe ".active" do
+      before do
+        create(:company_investor, deactivated_at: Time.current)
+        @company_investor_active = create(:company_investor)
+      end
+
+      it "returns only active company investors" do
+        expect(described_class.active).to match_array([@company_investor_active])
+      end
+    end
+
     describe ".with_shares_or_options" do
       before do
         create(:company_investor)

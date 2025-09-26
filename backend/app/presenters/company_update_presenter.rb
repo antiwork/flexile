@@ -22,7 +22,7 @@ class CompanyUpdatePresenter
       financial_periods:,
       recipient_count: {
         contractors: company.company_workers.active.count,
-        investors: company.company_investors.where.not(user_id: company.company_workers.active.select(:user_id)).count,
+        investors: company.company_investors.active.where.not(user_id: company.company_workers.active.select(:user_id)).count,
       },
     }
 

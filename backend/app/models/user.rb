@@ -136,6 +136,10 @@ class User < ApplicationRecord
     company_investors.find_by(company:)
   end
 
+  def active_company_investor_for?(company)
+    company_investors.active.find_by(company:).present?
+  end
+
   def company_investor_for?(company)
     company_investor_for(company).present?
   end

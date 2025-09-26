@@ -49,7 +49,10 @@ export const tenderOffersRouter = createRouter({
   }),
 
   list: companyProcedure.query(async ({ ctx }) => {
-    if (!ctx.company.equityEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
+    if (
+      !ctx.company.equityEnabled ||
+      (!ctx.companyAdministrator && !(ctx.companyInvestor && !ctx.companyInvestor.deactivatedAt))
+    )
       throw new TRPCError({ code: "FORBIDDEN" });
 
     return await db
@@ -64,7 +67,10 @@ export const tenderOffersRouter = createRouter({
   }),
 
   get: companyProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    if (!ctx.company.equityEnabled || (!ctx.companyAdministrator && !ctx.companyInvestor))
+    if (
+      !ctx.company.equityEnabled ||
+      (!ctx.companyAdministrator && !(ctx.companyInvestor && !ctx.companyInvestor.deactivatedAt))
+    )
       throw new TRPCError({ code: "FORBIDDEN" });
 
     const tenderOffer = await db.query.tenderOffers.findFirst({
