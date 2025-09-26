@@ -30,14 +30,21 @@ export const formatMonth = (date: Date | string) => formatDateTime(date, { month
  * the server should send a raw date string to ignore timezones (e.g "2024-01-03").
  * On the client, we convert it to UTC to avoid timezone issues.
  */
-export const formatDate = (date: Date | string, options?: { time?: boolean }) =>
-  formatDateTime(typeof date === "string" ? parseISO(date) : utc(date), {
-    dateStyle: "medium",
-    timeStyle: options?.time ? "short" : undefined,
-  });
+export const formatDate = (date: Date | string, options?: { locales?: Intl.LocalesArgument; time?: boolean }) =>
+  formatDateTime(
+    typeof date === "string" ? parseISO(date) : utc(date),
+    {
+      dateStyle: "medium",
+      timeStyle: options?.time ? "short" : undefined,
+    },
+    options?.locales,
+  );
 
-const formatDateTime = (date: Date | string, options: Intl.DateTimeFormatOptions = {}) =>
-  new Intl.DateTimeFormat(undefined, options).format(typeof date === "string" ? parseISO(date) : date);
+const formatDateTime = (
+  date: Date | string,
+  options: Intl.DateTimeFormatOptions = {},
+  locales?: Intl.LocalesArgument,
+) => new Intl.DateTimeFormat(locales, options).format(typeof date === "string" ? parseISO(date) : date);
 
 /**
  * Humanizes a number of months into a string with years and months.
