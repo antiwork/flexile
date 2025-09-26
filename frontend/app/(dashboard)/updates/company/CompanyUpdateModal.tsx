@@ -17,6 +17,8 @@ import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { pluralize } from "@/utils/pluralize";
+import { request } from "@/utils/request";
+import { company_company_update_path, company_company_updates_path } from "@/utils/routes";
 
 const formSchema = z.object({
   title: z.string().trim().min(1, "This field is required."),
@@ -66,31 +68,35 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
 
   const recipientCount = (company.contractorCount ?? 0) + (company.investorCount ?? 0);
 
-  const createMutation = trpc.companyUpdates.create.useMutation();
-  const updateMutation = trpc.companyUpdates.update.useMutation();
-  const publishMutation = trpc.companyUpdates.publish.useMutation();
-
   const saveMutation = useMutation({
     mutationFn: async ({ values, preview }: { values: z.infer<typeof formSchema>; preview: boolean }) => {
-      const data = {
-        companyId: company.id,
-        ...values,
-      };
-      let id;
-      if (update) {
-        id = update.id;
-        await updateMutation.mutateAsync({ ...data, id });
-      } else if (previewUpdateId) {
-        id = previewUpdateId;
-        await updateMutation.mutateAsync({ ...data, id });
-      } else {
-        id = await createMutation.mutateAsync(data);
+      const formData = new FormData();
+      formData.append("company_update[title]", values.title);
+      formData.append("company_update[body]", values.body);
+      if (!preview && !update?.sentAt) {
+        formData.append("publish", "true");
       }
-      if (!preview && !update?.sentAt) await publishMutation.mutateAsync({ companyId: company.id, id });
+
+      const existingId = update?.id || previewUpdateId;
+      const method = existingId ? "PATCH" : "POST";
+      const url = existingId
+        ? company_company_update_path(company.externalId, existingId)
+        : company_company_updates_path(company.externalId);
+
+      const response = await request({
+        method,
+        url,
+        formData,
+        accept: "json",
+        assertOk: true,
+      });
+
+      const companyUpdateResponseSchema = z.object({ company_update: z.object({ id: z.string() }) });
+      const updateId = existingId || companyUpdateResponseSchema.parse(await response.json()).company_update.id;
       void trpcUtils.companyUpdates.list.invalidate();
-      await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id });
+      await trpcUtils.companyUpdates.get.invalidate({ companyId: company.id, id: updateId });
       if (preview) {
-        setPreviewUpdateId(id);
+        setPreviewUpdateId(updateId);
         setViewPreview(true);
       } else {
         handleClose();
