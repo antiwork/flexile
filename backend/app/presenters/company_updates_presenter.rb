@@ -20,6 +20,7 @@ class CompanyUpdatesPresenter
       {
         id: update.external_id,
         title: update.title,
+        body: update.body,
         sent_at: update.sent_at,
         status: update.status,
       }
@@ -34,11 +35,10 @@ class CompanyUpdatesPresenter
   def props
     pagy, company_updates = pagy(company.company_updates.sent.order(created_at: :desc), limit: RECORDS_PER_PAGE)
     company_updates_props = company_updates.map do |update|
-      plaintext_body = Nokogiri::HTML(update.body).css("p").map(&:text).join(" ")
       {
         id: update.external_id,
         title: update.title,
-        summary: truncate(plaintext_body, length: 300),
+        body: update.body,
       }
     end
 
