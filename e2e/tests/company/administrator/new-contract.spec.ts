@@ -6,7 +6,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, findRichTextEditor } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
-import { expect, type Page, test } from "@test/index";
+import { expect, type Page, test, withinCombobox } from "@test/index";
 import { addMonths, format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
@@ -51,7 +51,13 @@ test.describe("New Contractor", () => {
 
   test("allows inviting a contractor", async ({ page }) => {
     const { email } = await fillForm(page);
-    await page.getByLabel("Role").fill("Hourly Role 1");
+    await withinCombobox(
+      async (searchField) => {
+        await searchField.fill("Hourly Role 1");
+        await searchField.press("Enter");
+      },
+      { page, name: "Role", searchPlaceholder: "Select or type a role..." },
+    );
     await page.getByLabel("Rate").fill("99");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
@@ -77,7 +83,13 @@ test.describe("New Contractor", () => {
 
   test("allows inviting a project-based contractor", async ({ page }) => {
     const { email } = await fillForm(page);
-    await page.getByLabel("Role").fill("Project-based Role");
+    await withinCombobox(
+      async (searchField) => {
+        await searchField.fill("Project-based Role");
+        await searchField.press("Enter");
+      },
+      { page, name: "Role", searchPlaceholder: "Select or type a role..." },
+    );
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("1000");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -112,7 +124,7 @@ test.describe("New Contractor", () => {
     });
     await login(page, user, "/people");
     await page.getByRole("button", { name: "Add contractor" }).click();
-    await expect(page.getByLabel("Role")).toHaveValue("Hourly Role 1");
+    await expect(page.getByRole("combobox", { name: "Role", exact: true })).toHaveText("Hourly Role 1");
     await expect(page.getByLabel("Rate")).toHaveValue("100");
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Already signed contract elsewhere")).toBeChecked();

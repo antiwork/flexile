@@ -4,7 +4,7 @@ import { companyAdministratorsFactory } from "@test/factories/companyAdministrat
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, test, withinCombobox } from "@test/index";
 import { eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
 import { users } from "@/db/schema";
@@ -67,11 +67,17 @@ test.describe("Edit contractor", () => {
     await page.getByRole("link", { name: contractor.preferredName }).click();
 
     await page.getByRole("heading", { name: contractor.preferredName }).click();
-    await expect(page.getByLabel("Role")).toHaveValue(assertDefined(companyContractor.role));
     await expect(page.getByLabel("Legal name")).toHaveValue(contractor.legalName);
     await expect(page.getByLabel("Legal name")).toBeDisabled();
 
-    await page.getByLabel("Role").fill("Stuff-doer");
+    await withinCombobox(
+      async (searchField, combobox) => {
+        await expect(combobox).toHaveText(assertDefined(companyContractor.role));
+        await searchField.fill("Stuff-doer");
+        await searchField.press("Enter");
+      },
+      { page, name: "Role", searchPlaceholder: "Select or type a role..." },
+    );
     await page.getByLabel("Rate").fill("107");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Save changes" })).not.toBeDisabled();
@@ -104,7 +110,13 @@ test.describe("Edit contractor", () => {
     await page.getByRole("link", { name: user.preferredName }).click();
     await page.getByRole("heading", { name: user.preferredName }).click();
 
-    await page.getByLabel("Role").fill("Stuff-doer");
+    await withinCombobox(
+      async (searchField) => {
+        await searchField.fill("Stuff-doer");
+        await searchField.press("Enter");
+      },
+      { page, name: "Role", searchPlaceholder: "Select or type a role..." },
+    );
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("2000");
     await page.getByRole("button", { name: "Save changes" }).click();

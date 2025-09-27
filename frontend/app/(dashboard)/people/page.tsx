@@ -208,6 +208,7 @@ const inviteSchema = formSchema.merge(documentSchema).extend({
   startDate: z.instanceof(CalendarDate),
   contractSignedElsewhere: z.boolean().default(false),
 });
+
 const ActionPanel = () => {
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
