@@ -133,7 +133,7 @@ export default function TaxPage() {
 
   const normalizedTaxId = (taxId: string) => {
     if (isForeign) return taxId.toUpperCase().replace(/[^A-Z0-9]/gu, "");
-    return taxId.replace(/[^0-9]/gu, "");
+    return taxId.replace(/[^0-9]/gu, "").slice(0, 9);
   };
 
   const formatUSTaxId = (value: string) => {
@@ -398,6 +398,7 @@ export default function TaxPage() {
                           {...field}
                           value={formatUSTaxId(field.value)}
                           onChange={(e) => field.onChange(normalizedTaxId(e.target.value))}
+                          maxLength={isForeign ? undefined : formValues.business_entity ? 10 : 11}
                           className="w-full rounded-r-none border-r-0"
                         />
                       </FormControl>
