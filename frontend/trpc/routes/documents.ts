@@ -3,7 +3,14 @@ import { and, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from 
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { activeStorageAttachments, activeStorageBlobs, documents, documentSignatures, users } from "@/db/schema";
+import {
+  activeStorageAttachments,
+  activeStorageBlobs,
+  documents,
+  documentSignatures,
+  equityGrants,
+  users,
+} from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
@@ -104,21 +111,33 @@ export const documentsRouter = createRouter({
       .limit(1);
     if (!document) throw new TRPCError({ code: "NOT_FOUND" });
 
-    await db
-      .update(documentSignatures)
-      .set({ signedAt: new Date() })
-      .where(
-        and(
-          eq(documentSignatures.documentId, input.id),
-          isNull(documentSignatures.signedAt),
-          eq(documentSignatures.title, input.role),
-        ),
-      );
+    return await db.transaction(async (tx) => {
+      await tx
+        .update(documentSignatures)
+        .set({ signedAt: new Date() })
+        .where(
+          and(
+            eq(documentSignatures.documentId, input.id),
+            isNull(documentSignatures.signedAt),
+            eq(documentSignatures.title, input.role),
+          ),
+        );
 
-    // Check if all signatures for this document have been signed
-    const allSignatures = await db.select().from(documentSignatures).where(eq(documentSignatures.documentId, input.id));
-    const allSigned = allSignatures.every((signature) => signature.signedAt !== null);
+      // Check if all signatures for this document have been signed
+      const allSignatures = await tx
+        .select()
+        .from(documentSignatures)
+        .where(eq(documentSignatures.documentId, input.id));
+      const allSigned = allSignatures.every((signature) => signature.signedAt !== null);
 
-    return { documentId: input.id, complete: allSigned };
+      if (allSigned && document.documents.equityGrantId) {
+        await tx
+          .update(equityGrants)
+          .set({ acceptedAt: new Date() })
+          .where(eq(equityGrants.id, document.documents.equityGrantId));
+      }
+
+      return { documentId: input.id, complete: allSigned };
+    });
   }),
 });
