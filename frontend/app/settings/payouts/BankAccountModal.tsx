@@ -281,6 +281,27 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     [allFields],
   );
 
+  useEffect(() => {
+    if (!visibleFields) return;
+
+    setDetails((prevDetails) => {
+      let updated = prevDetails;
+      let changed = false;
+
+      for (const field of visibleFields) {
+        if ((field.type === "select" || field.type === "radio") && field.valuesAllowed) {
+          const value = prevDetails.get(field.key);
+          const isValid = field.valuesAllowed.some((option) => option.key === value);
+          if (value && !isValid) {
+            updated = updated.set(field.key, "");
+            changed = true;
+          }
+        }
+      }
+      return changed ? updated : prevDetails;
+    });
+  }, [visibleFields, details]);
+
   const hasVisibleErrors = visibleFields?.some((field) => errors.has(field.key));
 
   const hasRequiredFieldsEmpty = visibleFields?.some((field) => field.required && !details.get(field.key)?.trim());
