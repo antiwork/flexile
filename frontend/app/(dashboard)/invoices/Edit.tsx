@@ -509,7 +509,7 @@ const Edit = () => {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Enter notes about your invoice (optional)"
-              className="w-full lg:w-96"
+              className="w-full whitespace-pre-wrap lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
               {showExpensesTable || company.equityEnabled ? (
