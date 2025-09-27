@@ -128,6 +128,7 @@ export default function Billing() {
         .object({ client_secret: z.string(), bank_account_last4: z.string().nullable() })
         .parse(await response.json());
     },
+    throwOnError: true,
   });
   const { data, isLoading } = trpc.consolidatedInvoices.list.useQuery({ companyId: company.id });
 
