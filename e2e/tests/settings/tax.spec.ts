@@ -514,9 +514,10 @@ test.describe("Tax settings", () => {
           },
         })
         .then(takeOrThrow);
-      expect(updatedUser.userComplianceInfos).toHaveLength(1);
-      expect(updatedUser.userComplianceInfos[0]?.taxInformationConfirmedAt).not.toBeNull();
+      expect(updatedUser.userComplianceInfos).toHaveLength(2);
       expect(updatedUser.userComplianceInfos[0]?.deletedAt).toBeNull();
+      expect(updatedUser.userComplianceInfos[0]?.taxInformationConfirmedAt).not.toBeNull();
+      expect(updatedUser.userComplianceInfos[1]?.deletedAt).not.toBeNull();
     });
   });
 
