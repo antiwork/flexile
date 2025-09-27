@@ -33,6 +33,7 @@ import {
   edit_company_invoice_path,
   new_company_invoice_path,
 } from "@/utils/routes";
+import { useIsMobile } from "@/utils/use-mobile";
 import QuantityInput from "./QuantityInput";
 import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
 
@@ -103,6 +104,8 @@ const Edit = () => {
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const worker = user.roles.worker;
+  const isMobile = useIsMobile();
+
   assert(worker != null);
 
   const { data } = useSuspenseQuery({
@@ -332,84 +335,168 @@ const Edit = () => {
             </div>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50%]">Line item</TableHead>
-                <TableHead>Hours / Qty</TableHead>
-                <TableHead>Rate</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          {isMobile ? (
+            <div className="mx-4 space-y-4">
               {lineItems.toArray().map((item, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  <TableCell>
-                    <Input
-                      value={item.description}
-                      placeholder="Description"
-                      aria-invalid={item.errors?.includes("description")}
-                      onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <QuantityInput
-                      value={item.quantity ? { quantity: parseQuantity(item.quantity), hourly: item.hourly } : null}
-                      aria-label="Hours / Qty"
-                      aria-invalid={item.errors?.includes("quantity")}
-                      onChange={(value) =>
-                        updateLineItem(rowIndex, {
-                          quantity: value?.quantity.toString() ?? null,
-                          hourly: value?.hourly ?? false,
-                        })
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <NumberInput
-                      value={item.pay_rate_in_subunits / 100}
-                      onChange={(value: number | null) =>
-                        updateLineItem(rowIndex, { pay_rate_in_subunits: (value ?? 0) * 100 })
-                      }
-                      aria-label="Rate"
-                      placeholder="0"
-                      prefix="$"
-                      decimal
-                    />
-                  </TableCell>
-                  <TableCell>{formatMoneyFromCents(lineItemTotal(item))}</TableCell>
-                  <TableCell>
+                <div key={rowIndex} className="border-input space-y-4 rounded-lg border p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium">Line item {rowIndex + 1}</h3>
                     <Button
                       variant="link"
+                      size="small"
                       aria-label="Remove"
                       onClick={() => setLineItems((lineItems) => lineItems.delete(rowIndex))}
                     >
                       <TrashIcon className="size-4" />
                     </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor={`description-${rowIndex}`}>Line item</Label>
+                      <Input
+                        id={`description-${rowIndex}`}
+                        value={item.description}
+                        placeholder="Description"
+                        aria-invalid={item.errors?.includes("description")}
+                        onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor={`quantity-${rowIndex}`}>Hours / Qty</Label>
+                        <QuantityInput
+                          id={`quantity-${rowIndex}`}
+                          value={item.quantity ? { quantity: parseQuantity(item.quantity), hourly: item.hourly } : null}
+                          aria-label="Hours / Qty"
+                          aria-invalid={item.errors?.includes("quantity")}
+                          onChange={(value) =>
+                            updateLineItem(rowIndex, {
+                              quantity: value?.quantity.toString() ?? null,
+                              hourly: value?.hourly ?? false,
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor={`rate-${rowIndex}`}>Rate</Label>
+                        <NumberInput
+                          id={`rate-${rowIndex}`}
+                          value={item.pay_rate_in_subunits / 100}
+                          onChange={(value: number | null) =>
+                            updateLineItem(rowIndex, { pay_rate_in_subunits: (value ?? 0) * 100 })
+                          }
+                          aria-label="Rate"
+                          placeholder="0"
+                          prefix="$"
+                          decimal
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>Amount</Label>
+                      <div className="text-lg font-medium">{formatMoneyFromCents(lineItemTotal(item))}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex gap-3">
+                <Button variant="link" onClick={addLineItem}>
+                  <PlusIcon className="inline size-4" />
+                  Add line item
+                </Button>
+                {data.company.expense_categories.length && !showExpensesTable ? (
+                  <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
+                    <ArrowUpTrayIcon className="inline size-4" />
+                    Add expense
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50%]">Line item</TableHead>
+                  <TableHead>Hours / Qty</TableHead>
+                  <TableHead>Rate</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {lineItems.toArray().map((item, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    <TableCell>
+                      <Input
+                        value={item.description}
+                        placeholder="Description"
+                        aria-invalid={item.errors?.includes("description")}
+                        onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <QuantityInput
+                        value={item.quantity ? { quantity: parseQuantity(item.quantity), hourly: item.hourly } : null}
+                        aria-label="Hours / Qty"
+                        aria-invalid={item.errors?.includes("quantity")}
+                        onChange={(value) =>
+                          updateLineItem(rowIndex, {
+                            quantity: value?.quantity.toString() ?? null,
+                            hourly: value?.hourly ?? false,
+                          })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <NumberInput
+                        value={item.pay_rate_in_subunits / 100}
+                        onChange={(value: number | null) =>
+                          updateLineItem(rowIndex, { pay_rate_in_subunits: (value ?? 0) * 100 })
+                        }
+                        aria-label="Rate"
+                        placeholder="0"
+                        prefix="$"
+                        decimal
+                      />
+                    </TableCell>
+                    <TableCell>{formatMoneyFromCents(lineItemTotal(item))}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="link"
+                        aria-label="Remove"
+                        onClick={() => setLineItems((lineItems) => lineItems.delete(rowIndex))}
+                      >
+                        <TrashIcon className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={5}>
+                    <div className="flex gap-3">
+                      <Button variant="link" onClick={addLineItem}>
+                        <PlusIcon className="inline size-4" />
+                        Add line item
+                      </Button>
+                      {data.company.expense_categories.length && !showExpensesTable ? (
+                        <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
+                          <ArrowUpTrayIcon className="inline size-4" />
+                          Add expense
+                        </Button>
+                      ) : null}
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell colSpan={5}>
-                  <div className="flex gap-3">
-                    <Button variant="link" onClick={addLineItem}>
-                      <PlusIcon className="inline size-4" />
-                      Add line item
-                    </Button>
-                    {data.company.expense_categories.length && !showExpensesTable ? (
-                      <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
-                        <ArrowUpTrayIcon className="inline size-4" />
-                        Add expense
-                      </Button>
-                    ) : null}
-                  </div>
-                </TableCell>
-              </TableRow>
-            </TableFooter>
-          </Table>
+              </TableFooter>
+            </Table>
+          )}
           {data.company.expense_categories.length ? (
             <input
               ref={uploadExpenseRef}
