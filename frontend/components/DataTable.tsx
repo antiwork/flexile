@@ -135,11 +135,9 @@ export default function DataTable<T extends RowData>({
     const filteredRows = table.getRowModel().rows;
     let rowsToShow = filteredRows;
 
-    // If no filtered results, show people with blank or N/A roles
     if (filteredRows.length === 0) {
       const allRows = table.getCoreRowModel().rows;
       rowsToShow = allRows.filter((row) => {
-        // Look for role column and check if it's blank or N/A
         const roleColumn = table.getAllColumns().find((col) => col.id === "role");
         if (roleColumn) {
           const roleValue = row.getValue("role");
