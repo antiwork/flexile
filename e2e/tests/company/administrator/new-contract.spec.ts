@@ -56,7 +56,7 @@ test.describe("New Contractor", () => {
         await searchField.fill("Hourly Role 1");
         await searchField.press("Enter");
       },
-      { page, name: "Role", searchPlaceholder: "Select or type a role..." },
+      { page, name: "Role", searchPlaceholder: "Search or enter a role..." },
     );
     await page.getByLabel("Rate").fill("99");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -88,7 +88,7 @@ test.describe("New Contractor", () => {
         await searchField.fill("Project-based Role");
         await searchField.press("Enter");
       },
-      { page, name: "Role", searchPlaceholder: "Select or type a role..." },
+      { page, name: "Role", searchPlaceholder: "Search or enter a role..." },
     );
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("1000");

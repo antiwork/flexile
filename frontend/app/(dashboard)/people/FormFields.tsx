@@ -71,7 +71,7 @@ export default function FormFields() {
                       size="small"
                       variant="outline"
                     >
-                      <div className="truncate">{field.value || "Select or type a role..."}</div>
+                      <div className="truncate">{field.value || "Search or enter a role..."}</div>
                       <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
@@ -85,7 +85,7 @@ export default function FormFields() {
                 >
                   <Command value={field.value}>
                     <CommandInput
-                      placeholder="Select or type a role..."
+                      placeholder="Search or enter a role..."
                       value={searchQuery}
                       onValueChange={(query: string) => {
                         setSearchQuery(query);

@@ -76,7 +76,7 @@ test.describe("Edit contractor", () => {
         await searchField.fill("Stuff-doer");
         await searchField.press("Enter");
       },
-      { page, name: "Role", searchPlaceholder: "Select or type a role..." },
+      { page, name: "Role", searchPlaceholder: "Search or enter a role..." },
     );
     await page.getByLabel("Rate").fill("107");
     await page.getByRole("button", { name: "Save changes" }).click();
@@ -115,7 +115,7 @@ test.describe("Edit contractor", () => {
         await searchField.fill("Stuff-doer");
         await searchField.press("Enter");
       },
-      { page, name: "Role", searchPlaceholder: "Select or type a role..." },
+      { page, name: "Role", searchPlaceholder: "Search or enter a role..." },
     );
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("2000");

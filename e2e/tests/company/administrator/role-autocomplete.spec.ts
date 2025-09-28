@@ -57,7 +57,7 @@ test.describe("Role autocomplete", () => {
         await searchField.press("Enter");
         await expect(combobox).toHaveText(role1);
       },
-      { page, name: "Role", searchPlaceholder: "Select or type a role..." },
+      { page, name: "Role", searchPlaceholder: "Search or enter a role..." },
     );
   };
 

@@ -31,7 +31,7 @@ test.describe("Contractor for multiple companies", () => {
         await searchField.fill("Role");
         await searchField.press("Enter");
       },
-      { page, name: "Role", searchPlaceholder: "Select or type a role..." },
+      { page, name: "Role", searchPlaceholder: "Search or enter a role..." },
     );
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
