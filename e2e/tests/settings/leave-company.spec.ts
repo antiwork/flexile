@@ -11,7 +11,11 @@ import { companyContractors, companyInvestors, companyLawyers } from "@/db/schem
 
 const waitForLeaveSuccess = async (page: Page) => {
   try {
-    await page.waitForURL("/login", { timeout: process.env.CI === "true" ? 300000 : 30000 });
+    // Wait for either /login (single company) or /dashboard (multiple companies)
+    await Promise.race([
+      page.waitForURL("/login", { timeout: process.env.CI === "true" ? 300000 : 30000 }),
+      page.waitForURL("/dashboard", { timeout: process.env.CI === "true" ? 300000 : 30000 }),
+    ]);
     return true;
   } catch (error) {
     if (process.env.CI === "true") {
@@ -197,17 +201,12 @@ test.describe.serial("Leave company", () => {
     // Wait for dialog to appear
     await expect(page.getByText("Leave this workspace?")).toBeVisible();
 
-    // Click leave button and wait for API response
+    // Click leave button and wait for success (should redirect to dashboard for multi-company user)
     const leaveButton = page.getByRole("button", { name: "Leave" });
-    const responsePromise = page.waitForResponse(
-      (response) =>
-        response.url().includes("/internal/companies/") &&
-        response.url().includes("/leave") &&
-        response.status() === 200,
-    );
+    const successPromise = waitForLeaveSuccess(page);
 
     await leaveButton.click();
-    await responsePromise;
+    await successPromise;
 
     // Wait for the company switch to complete
     await page.waitForLoadState("networkidle");
