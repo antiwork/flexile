@@ -87,7 +87,16 @@ export default function PeoplePage() {
       columnHelper.accessor("role", {
         header: "Role",
         cell: (info) => info.getValue() || "N/A",
-        meta: { filterOptions: [...new Set(workers.map((worker) => worker.role))] },
+        meta: {
+          filterOptions: [
+            ...new Set(
+              workers.map((worker) => {
+                const role = (worker.role || "").trim();
+                return role.length > 0 ? role : "Not specified";
+              }),
+            ),
+          ],
+        },
       }),
       columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
       columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
@@ -154,7 +163,14 @@ export default function PeoplePage() {
         id: "role",
         header: "Role",
         meta: {
-          filterOptions: [...new Set(workers.map((worker) => worker.role))],
+          filterOptions: [
+            ...new Set(
+              workers.map((worker) => {
+                const role = (worker.role || "").trim();
+                return role.length > 0 ? role : "Not specified";
+              }),
+            ),
+          ],
           hidden: true,
         },
       }),

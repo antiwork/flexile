@@ -131,8 +131,26 @@ export default function DataTable<T extends RowData>({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [table]);
 
-  const data = useMemo(
-    () => ({
+  const data = useMemo(() => {
+    const filteredRows = table.getRowModel().rows;
+    let rowsToShow = filteredRows;
+
+    // If no filtered results, show people with blank or N/A roles
+    if (filteredRows.length === 0) {
+      const allRows = table.getCoreRowModel().rows;
+      rowsToShow = allRows.filter((row) => {
+        // Look for role column and check if it's blank or N/A
+        const roleColumn = table.getAllColumns().find((col) => col.id === "role");
+        if (roleColumn) {
+          const roleValue = row.getValue("role");
+          const role = (roleValue || "").toString().trim();
+          return role === "" || role.toUpperCase() === "N/A";
+        }
+        return false;
+      });
+    }
+
+    return {
       headers: table
         .getHeaderGroups()
         .filter((group) => group.headers.some((header) => header.column.columnDef.header))
@@ -140,7 +158,7 @@ export default function DataTable<T extends RowData>({
           ...group,
           headers: group.headers.filter((header) => !header.column.columnDef.meta?.hidden),
         })),
-      rows: table.getRowModel().rows,
+      rows: rowsToShow,
       footers: table
         .getFooterGroups()
         .filter((group) => group.headers.some((header) => header.column.columnDef.footer))
@@ -148,9 +166,8 @@ export default function DataTable<T extends RowData>({
           ...group,
           headers: group.headers.filter((header) => !header.column.columnDef.meta?.hidden),
         })),
-    }),
-    [table.getState()],
-  );
+    };
+  }, [table.getState()]);
   const sortable = !!table.options.getSortedRowModel;
   const filterable = !!table.options.getFilteredRowModel;
   const selectable = !!table.options.enableRowSelection;
