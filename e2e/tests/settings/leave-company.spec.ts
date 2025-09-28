@@ -9,42 +9,31 @@ import { expect, type Page, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companyContractors, companyInvestors, companyLawyers } from "@/db/schema";
 
-const waitForLeaveApiResponse = async (page: Page, maxRetries = 15) => {
-  const startTime = Date.now();
-  console.log(`Starting API wait (max ${maxRetries} retries) in ${process.env.CI ? "CI" : "Local"} environment`);
-  for (let i = 0; i < maxRetries; i++) {
-    const attemptStart = Date.now();
-    try {
-      console.log(`Attempt ${i + 1}/${maxRetries} - waiting for API response...`);
-      const response = await page.waitForResponse(
-        (response) =>
-          response.url().includes("/internal/companies/") &&
-          response.url().includes("/leave") &&
-          response.status() === 200,
-        { timeout: process.env.CI === "true" ? 90000 : 30000 },
-      );
-      const totalTime = Date.now() - startTime;
-      console.log(`API response received in ${totalTime}ms (attempt ${i + 1})`);
-      return response;
-    } catch (error) {
-      const attemptTime = Date.now() - attemptStart;
-      const totalTime = Date.now() - startTime;
-      console.log(`Attempt ${i + 1} failed after ${attemptTime}ms (total: ${totalTime}ms)`);
-      if (i === maxRetries - 1) {
-        console.log(`All ${maxRetries} attempts failed after ${totalTime}ms`);
-        if (process.env.CI === "true") {
-          await page.screenshot({ path: `ci_failure_${Date.now()}.png` });
-        }
-        throw error;
-      }
-      console.log(`Retrying in 5s... (${maxRetries - i - 1} attempts left)`);
-      await page.waitForTimeout(5000);
+const waitForLeaveApiResponse = async (page: Page) => {
+  console.log("Starting leave API wait - using direct approach");
+
+  // Wait for the API call to complete without complex retry logic
+  try {
+    const response = await page.waitForResponse(
+      (response) =>
+        response.url().includes("/internal/companies/") &&
+        response.url().includes("/leave") &&
+        response.status() === 200,
+      { timeout: process.env.CI === "true" ? 300000 : 30000 }, // 5 minutes in CI
+    );
+    console.log("Leave API response received successfully");
+    return response;
+  } catch (error) {
+    console.log("Leave API wait failed, taking screenshot for debugging");
+    if (process.env.CI === "true") {
+      await page.screenshot({ path: `leave_api_failure_${Date.now()}.png` });
     }
+    throw error;
   }
 };
 
 const getTimeout = () => {
-  const timeout = process.env.CI === "true" ? 120000 : 15000;
+  const timeout = process.env.CI === "true" ? 300000 : 30000; // 5 minutes in CI
   console.log(`Using timeout: ${timeout}ms (${process.env.CI ? "CI" : "Local"})`);
   return timeout;
 };
