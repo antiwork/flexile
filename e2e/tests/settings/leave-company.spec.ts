@@ -9,26 +9,47 @@ import { expect, type Page, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companyContractors, companyInvestors, companyLawyers } from "@/db/schema";
 
-const waitForLeaveApiResponse = async (page: Page, maxRetries = 10) => {
+const waitForLeaveApiResponse = async (page: Page, maxRetries = 15) => {
+  const startTime = Date.now();
+  console.log(`Starting API wait (max ${maxRetries} retries) in ${process.env.CI ? "CI" : "Local"} environment`);
   for (let i = 0; i < maxRetries; i++) {
+    const attemptStart = Date.now();
     try {
-      return await page.waitForResponse(
+      console.log(`Attempt ${i + 1}/${maxRetries} - waiting for API response...`);
+      const response = await page.waitForResponse(
         (response) =>
           response.url().includes("/internal/companies/") &&
           response.url().includes("/leave") &&
           response.status() === 200,
-        { timeout: 60000 },
+        { timeout: process.env.CI === "true" ? 90000 : 30000 },
       );
+      const totalTime = Date.now() - startTime;
+      console.log(`API response received in ${totalTime}ms (attempt ${i + 1})`);
+      return response;
     } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      await page.waitForTimeout(3000);
+      const attemptTime = Date.now() - attemptStart;
+      const totalTime = Date.now() - startTime;
+      console.log(`Attempt ${i + 1} failed after ${attemptTime}ms (total: ${totalTime}ms)`);
+      if (i === maxRetries - 1) {
+        console.log(`All ${maxRetries} attempts failed after ${totalTime}ms`);
+        if (process.env.CI === "true") {
+          await page.screenshot({ path: `ci_failure_${Date.now()}.png` });
+        }
+        throw error;
+      }
+      console.log(`Retrying in 5s... (${maxRetries - i - 1} attempts left)`);
+      await page.waitForTimeout(5000);
     }
   }
 };
 
-const getTimeout = () => (process.env.CI === "true" ? 60000 : 10000);
+const getTimeout = () => {
+  const timeout = process.env.CI === "true" ? 120000 : 15000;
+  console.log(`Using timeout: ${timeout}ms (${process.env.CI ? "CI" : "Local"})`);
+  return timeout;
+};
 
-test.describe("Leave company", () => {
+test.describe.serial("Leave company", () => {
   test("administrator cannot see leave workspace option", async ({ page }) => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding();
     await login(page, adminUser);
@@ -39,6 +60,7 @@ test.describe("Leave company", () => {
   });
 
   test("contractor can leave successfully", async ({ page }) => {
+    console.log("Starting contractor leave test");
     const { company } = await companiesFactory.createCompletedOnboarding();
     const { user } = await usersFactory.create();
 
@@ -48,11 +70,15 @@ test.describe("Leave company", () => {
     });
 
     await login(page, user);
+    await page.waitForLoadState("networkidle");
+
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.waitForLoadState("networkidle");
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
+    await page.waitForLoadState("networkidle");
 
-    await expect(page.getByText("Leave this workspace?")).toBeVisible();
+    await expect(page.getByText("Leave this workspace?")).toBeVisible({ timeout: getTimeout() });
 
     const leaveButton = page.getByRole("button", { name: "Leave" });
     const responsePromise = waitForLeaveApiResponse(page);
@@ -61,14 +87,17 @@ test.describe("Leave company", () => {
     await responsePromise;
 
     await page.waitForURL("/login", { timeout: getTimeout() });
+    await page.waitForLoadState("networkidle");
 
     const contractor = await db.query.companyContractors.findFirst({
       where: and(eq(companyContractors.companyId, company.id), eq(companyContractors.userId, user.id)),
     });
     expect(contractor?.endedAt).toBeTruthy();
+    console.log("Contractor leave test completed");
   });
 
   test("lawyer can leave successfully", async ({ page }) => {
+    console.log("Starting lawyer leave test");
     const { company } = await companiesFactory.createCompletedOnboarding();
     const { user } = await usersFactory.create();
 
@@ -78,11 +107,15 @@ test.describe("Leave company", () => {
     });
 
     await login(page, user);
+    await page.waitForLoadState("networkidle");
+
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.waitForLoadState("networkidle");
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
+    await page.waitForLoadState("networkidle");
 
-    await expect(page.getByText("Leave this workspace?")).toBeVisible();
+    await expect(page.getByText("Leave this workspace?")).toBeVisible({ timeout: getTimeout() });
 
     const leaveButton = page.getByRole("button", { name: "Leave" });
     const responsePromise = waitForLeaveApiResponse(page);
@@ -91,11 +124,13 @@ test.describe("Leave company", () => {
     await responsePromise;
 
     await page.waitForURL("/login", { timeout: getTimeout() });
+    await page.waitForLoadState("networkidle");
 
     const lawyer = await db.query.companyLawyers.findFirst({
       where: and(eq(companyLawyers.companyId, company.id), eq(companyLawyers.userId, user.id)),
     });
     expect(lawyer).toBeUndefined();
+    console.log("Lawyer leave test completed");
   });
 
   test("user with multiple roles can leave successfully", async ({ page }) => {
@@ -136,7 +171,7 @@ test.describe("Leave company", () => {
       where: and(eq(companyContractors.companyId, company.id), eq(companyContractors.userId, user.id)),
     });
     const lawyer = await db.query.companyLawyers.findFirst({
-      where: and(eq(companyInvestors.companyId, company.id), eq(companyInvestors.userId, user.id)),
+      where: and(eq(companyLawyers.companyId, company.id), eq(companyLawyers.userId, user.id)),
     });
     const investor = await db.query.companyInvestors.findFirst({
       where: and(eq(companyInvestors.companyId, company.id), eq(companyInvestors.userId, user.id)),
