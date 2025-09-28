@@ -478,7 +478,7 @@ const AddCapTablePage = () => {
                 Add new investor
               </Button>
 
-              <Card className="bg-gray-50">
+              <Card className="bg-secondary">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold">Total</span>
