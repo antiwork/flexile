@@ -5,9 +5,28 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyLawyersFactory } from "@test/factories/companyLawyers";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, type Page, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companyContractors, companyInvestors, companyLawyers } from "@/db/schema";
+
+const waitForLeaveApiResponse = async (page: Page, maxRetries = 3) => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await page.waitForResponse(
+        (response) =>
+          response.url().includes("/internal/companies/") &&
+          response.url().includes("/leave") &&
+          response.status() === 200,
+        { timeout: 15000 },
+      );
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await page.waitForTimeout(1000);
+    }
+  }
+};
+
+const getTimeout = () => (process.env.CI === "true" ? 15000 : 10000);
 
 test.describe("Leave company", () => {
   test("administrator cannot see leave workspace option", async ({ page }) => {
@@ -34,9 +53,14 @@ test.describe("Leave company", () => {
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
     await expect(page.getByText("Leave this workspace?")).toBeVisible();
-    await page.getByRole("button", { name: "Leave" }).click();
 
-    await expect(page).toHaveURL("/login");
+    const leaveButton = page.getByRole("button", { name: "Leave" });
+    const responsePromise = waitForLeaveApiResponse(page);
+
+    await leaveButton.click();
+    await responsePromise;
+
+    await page.waitForURL("/login", { timeout: getTimeout() });
 
     const contractor = await db.query.companyContractors.findFirst({
       where: and(eq(companyContractors.companyId, company.id), eq(companyContractors.userId, user.id)),
@@ -59,9 +83,14 @@ test.describe("Leave company", () => {
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
     await expect(page.getByText("Leave this workspace?")).toBeVisible();
-    await page.getByRole("button", { name: "Leave" }).click();
 
-    await expect(page).toHaveURL("/login");
+    const leaveButton = page.getByRole("button", { name: "Leave" });
+    const responsePromise = waitForLeaveApiResponse(page);
+
+    await leaveButton.click();
+    await responsePromise;
+
+    await page.waitForURL("/login", { timeout: getTimeout() });
 
     const lawyer = await db.query.companyLawyers.findFirst({
       where: and(eq(companyLawyers.companyId, company.id), eq(companyLawyers.userId, user.id)),
@@ -94,9 +123,14 @@ test.describe("Leave company", () => {
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
     await expect(page.getByText("Leave this workspace?")).toBeVisible();
-    await page.getByRole("button", { name: "Leave" }).click();
 
-    await expect(page).toHaveURL("/login");
+    const leaveButton = page.getByRole("button", { name: "Leave" });
+    const responsePromise = waitForLeaveApiResponse(page);
+
+    await leaveButton.click();
+    await responsePromise;
+
+    await page.waitForURL("/login", { timeout: getTimeout() });
 
     const contractor = await db.query.companyContractors.findFirst({
       where: and(eq(companyContractors.companyId, company.id), eq(companyContractors.userId, user.id)),
@@ -127,10 +161,12 @@ test.describe("Leave company", () => {
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
-    await expect(page.getByText("Leave this workspace?")).toBeVisible();
+    const dialog = page.getByText("Leave this workspace?");
+    await expect(dialog).toBeVisible();
+
     await page.getByRole("button", { name: "Cancel" }).click();
 
-    await expect(page.getByText("Leave this workspace?")).not.toBeVisible();
+    await expect(dialog).not.toBeVisible({ timeout: getTimeout() });
 
     const lawyer = await db.query.companyLawyers.findFirst({
       where: and(eq(companyLawyers.companyId, company.id), eq(companyLawyers.userId, user.id)),
@@ -158,10 +194,25 @@ test.describe("Leave company", () => {
     await page.getByRole("link", { name: "Settings" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
-    await expect(page.getByText("Leave this workspace?")).toBeVisible();
-    await page.getByRole("button", { name: "Leave" }).click();
 
-    await expect(page.getByRole("button", { name: "Company B" })).toBeVisible();
+    // Wait for dialog to appear
+    await expect(page.getByText("Leave this workspace?")).toBeVisible();
+
+    // Click leave button and wait for API response
+    const leaveButton = page.getByRole("button", { name: "Leave" });
+    const responsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes("/internal/companies/") &&
+        response.url().includes("/leave") &&
+        response.status() === 200,
+    );
+
+    await leaveButton.click();
+    await responsePromise;
+
+    // Wait for the company switch to complete
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("button", { name: "Company B" })).toBeVisible({ timeout: getTimeout() });
 
     const lawyerA = await db.query.companyLawyers.findFirst({
       where: and(eq(companyLawyers.companyId, companyA.id), eq(companyLawyers.userId, user.id)),
