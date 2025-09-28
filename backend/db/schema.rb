@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_11_150333) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_05_123957) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -665,7 +665,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_11_150333) do
     t.integer "max_allowed_equity_percentage"
     t.datetime "accepted_at"
     t.datetime "deleted_at"
-    t.index "company_id, user_id, lower((invoice_number)::text)", name: "idx_invoices_unique_number_per_company_user", unique: true, where: "(deleted_at IS NULL)"
     t.index ["company_contractor_id"], name: "index_invoices_on_company_contractor_id"
     t.index ["company_id", "invoice_date", "created_at"], name: "idx_invoices_company_alive_date_created", order: { invoice_date: :desc, created_at: :desc }, where: "(deleted_at IS NULL)"
     t.index ["company_id"], name: "index_invoices_on_company_id"
