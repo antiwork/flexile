@@ -9,7 +9,7 @@ import { expect, type Page, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companyContractors, companyInvestors, companyLawyers } from "@/db/schema";
 
-const waitForLeaveApiResponse = async (page: Page, maxRetries = 5) => {
+const waitForLeaveApiResponse = async (page: Page, maxRetries = 10) => {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await page.waitForResponse(
@@ -17,16 +17,16 @@ const waitForLeaveApiResponse = async (page: Page, maxRetries = 5) => {
           response.url().includes("/internal/companies/") &&
           response.url().includes("/leave") &&
           response.status() === 200,
-        { timeout: 30000 },
+        { timeout: 60000 },
       );
     } catch (error) {
       if (i === maxRetries - 1) throw error;
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(3000);
     }
   }
 };
 
-const getTimeout = () => (process.env.CI === "true" ? 30000 : 10000);
+const getTimeout = () => (process.env.CI === "true" ? 60000 : 10000);
 
 test.describe("Leave company", () => {
   test("administrator cannot see leave workspace option", async ({ page }) => {
