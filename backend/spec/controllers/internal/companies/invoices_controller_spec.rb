@@ -16,7 +16,7 @@ RSpec.describe Internal::Companies::InvoicesController do
   end
 
   describe "POST #create" do
-    it "returns success: true on valid create with 200 JSON" do
+    it "succeeds with valid data" do
       post :create, params: {
         company_id: company.external_id,
         invoice: {
@@ -32,7 +32,7 @@ RSpec.describe Internal::Companies::InvoicesController do
       expect(response).to have_http_status(:created)
     end
 
-    it "returns success: false with form_errors on duplicate invoice number" do
+    it "returns validation errors for duplicate invoice number" do
       create(:invoice, company:, user:, company_worker: contractor, invoice_number: "INV-123")
 
       post :create, params: {
@@ -60,7 +60,7 @@ RSpec.describe Internal::Companies::InvoicesController do
   describe "PATCH #update" do
     let!(:invoice) { create(:invoice, company:, user:, company_worker: contractor, invoice_number: "INV-100") }
 
-    it "returns success: true on valid update with 200 JSON" do
+    it "succeeds with valid data" do
       patch :update, params: {
         company_id: company.external_id,
         id: invoice.external_id,
@@ -73,7 +73,7 @@ RSpec.describe Internal::Companies::InvoicesController do
       expect(response).to have_http_status(:no_content)
     end
 
-    it "returns success: false with form_errors on duplicate invoice number" do
+    it "returns validation errors for duplicate invoice number" do
       create(:invoice, company:, user:, company_worker: contractor, invoice_number: "INV-200")
 
       patch :update, params: {

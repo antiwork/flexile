@@ -47,6 +47,7 @@ class Invoice < ApplicationRecord
     case_sensitive: false,
     conditions: -> { where(deleted_at: nil) },
     message: proc { |record| record.invoice_number_taken_message },
+    on: :create,
   }
   validates :bill_from, presence: true
   validates :bill_to, presence: true
