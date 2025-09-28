@@ -11,20 +11,16 @@ import { companyContractors, companyInvestors, companyLawyers } from "@/db/schem
 
 const waitForLeaveSuccess = async (page: Page) => {
   try {
-    // Wait for any navigation away from current page (much more robust)
     await page.waitForURL((url) => !url.toString().includes("/settings"), {
       timeout: process.env.CI === "true" ? 300000 : 30000,
     });
     return true;
   } catch (error) {
-    // Don't try to screenshot if browser is closed
     try {
       if (process.env.CI === "true" && !page.isClosed()) {
         await page.screenshot({ path: `leave_success_failure_${Date.now()}.png` });
       }
-    } catch (_screenshotError) {
-      // Ignore screenshot errors if browser is closed
-    }
+    } catch (_screenshotError) {}
     throw error;
   }
 };
