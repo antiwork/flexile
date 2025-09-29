@@ -105,7 +105,12 @@ test.describe("Edit contractor", () => {
     await page.getByRole("heading", { name: user.preferredName }).click();
 
     await page.getByLabel("Role").fill("Stuff-doer");
-    await page.getByRole("radio", { name: "Custom" }).click({ force: true });
+
+    // Wait for the radio button to be available and click its label instead
+    const customRadioLabel = page.locator("label", { hasText: "Custom" });
+    await expect(customRadioLabel).toBeVisible();
+    await customRadioLabel.click();
+
     await page.getByLabel("Rate").fill("2000");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Save changes" })).not.toBeDisabled();

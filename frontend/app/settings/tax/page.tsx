@@ -258,7 +258,13 @@ export default function TaxPage() {
                   <FormControl>
                     <RadioButtons
                       value={field.value ? "business" : "individual"}
-                      onChange={(value) => field.onChange(value === "business")}
+                      onChange={(value) => {
+                        const isBusiness = value === "business";
+                        field.onChange(isBusiness);
+                        if (!isBusiness) {
+                          form.setValue("business_name", null);
+                        }
+                      }}
                       options={[
                         { label: "Individual", value: "individual" },
                         { label: "Business", value: "business" },

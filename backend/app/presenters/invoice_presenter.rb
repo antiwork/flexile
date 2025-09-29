@@ -44,6 +44,7 @@ class InvoicePresenter
           attachment: attachment ? {
             name: attachment.filename,
             url: Rails.application.routes.url_helpers.rails_blob_path(attachment, disposition: "attachment"),
+            signed_id: attachment.signed_id,
           } : nil,
           bill_address: AddressPresenter.new(invoice).props,
           description:,
