@@ -277,7 +277,7 @@ export default function TaxPage() {
             />
 
             {formValues.business_entity ? (
-              <div className="grid auto-cols-fr grid-flow-col items-start gap-3">
+              <div className="animate-in slide-in-from-top-2 fade-in grid auto-cols-fr grid-flow-col items-start gap-3 duration-300">
                 <FormField
                   control={form.control}
                   name="business_name"
@@ -320,29 +320,31 @@ export default function TaxPage() {
                     />
 
                     {formValues.business_type === BusinessType.LLC && (
-                      <FormField
-                        control={form.control}
-                        name="tax_classification"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tax classification</FormLabel>
-                            <FormControl>
-                              <ComboBox
-                                {...field}
-                                value={field.value?.toString() ?? ""}
-                                onChange={(value) => field.onChange(+value)}
-                                options={[
-                                  { label: "C corporation", value: TaxClassification.CCorporation.toString() },
-                                  { label: "S corporation", value: TaxClassification.SCorporation.toString() },
-                                  { label: "Partnership", value: TaxClassification.Partnership.toString() },
-                                ]}
-                                placeholder="Select tax classification"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="animate-in slide-in-from-top-2 fade-in duration-300">
+                        <FormField
+                          control={form.control}
+                          name="tax_classification"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Tax classification</FormLabel>
+                              <FormControl>
+                                <ComboBox
+                                  {...field}
+                                  value={field.value?.toString() ?? ""}
+                                  onChange={(value) => field.onChange(+value)}
+                                  options={[
+                                    { label: "C corporation", value: TaxClassification.CCorporation.toString() },
+                                    { label: "S corporation", value: TaxClassification.SCorporation.toString() },
+                                    { label: "Partnership", value: TaxClassification.Partnership.toString() },
+                                  ]}
+                                  placeholder="Select tax classification"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     )}
                   </>
                 ) : null}
