@@ -121,7 +121,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+      <DialogContent className="max-w-xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-medium">New option pool</DialogTitle>
           <DialogDescription>Fill in the details below to create an option pool.</DialogDescription>
