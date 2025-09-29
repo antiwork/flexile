@@ -53,7 +53,7 @@ export default async function HomePage() {
         </div>
       </nav>
 
-      <main className="min-h-screen bg-white pt-20">
+      <main className="bg-accent-background min-h-screen pt-20">
         <Section className="bg-blue-600 py-8 md:py-16">
           <h1 className="text-6xl leading-[0.9] font-medium tracking-tight sm:text-8xl md:text-[9rem] lg:text-[12rem]">
             Contractor payments
@@ -74,7 +74,7 @@ export default async function HomePage() {
               <Image src={iconClock} alt="Invoice Management" className="w-12 shrink-0" loading="eager" />
               <div>
                 <h3 className="text-xl font-medium">Invoice Management</h3>
-                <div className="text-xl text-gray-600">
+                <div className="text-muted-foreground text-xl">
                   Streamlined invoice creation, approval workflows, and automated processing
                 </div>
               </div>
@@ -83,7 +83,7 @@ export default async function HomePage() {
               <Image src={iconGlobe} alt="Pay Contractors" className="w-12 shrink-0" loading="eager" />
               <div>
                 <h3 className="text-xl font-medium">Pay Contractors</h3>
-                <div className="text-xl text-gray-600">
+                <div className="text-muted-foreground text-xl">
                   Fast, reliable payments to contractors in 190+ countries worldwide
                 </div>
               </div>
@@ -92,7 +92,7 @@ export default async function HomePage() {
               <Image src={iconEye} alt="Equity Option" className="w-12 shrink-0" loading="eager" />
               <div>
                 <h3 className="text-xl font-medium">Equity Option</h3>
-                <div className="text-xl text-gray-600">
+                <div className="text-muted-foreground text-xl">
                   Optional equity compensation for aligned contractor incentives
                 </div>
               </div>
@@ -101,7 +101,7 @@ export default async function HomePage() {
               <Image src={iconDiamond} alt="Contract Management" className="w-12 shrink-0" loading="eager" />
               <div>
                 <h3 className="text-xl font-medium">Contract Management</h3>
-                <div className="text-xl text-gray-600">
+                <div className="text-muted-foreground text-xl">
                   Digital contract signing and automated contractor onboarding
                 </div>
               </div>
@@ -109,7 +109,7 @@ export default async function HomePage() {
           </div>
         </Section>
 
-        <Section className="flex bg-gray-50 py-8 md:py-16">
+        <Section className="bg-accent flex py-8 md:py-16 dark:bg-white dark:text-black">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 md:gap-12">
             <h2 className="text-4xl font-medium md:text-6xl">Clear, straight forward pricing</h2>
             <div className="text-2xl md:text-3xl">1.5% + $0.50, capped at $15/payment</div>
@@ -129,11 +129,11 @@ export default async function HomePage() {
         </Section>
 
         <Section className="bg-black py-8 text-white md:py-16">
-          <div className="mx-auto flex w-full max-w-5xl flex-col items-start justify-between px-4 md:flex-row md:items-end">
+          <div className="mx-auto flex w-full max-w-5xl flex-row items-center justify-between px-4 md:items-end">
             <div className="flex flex-col items-start gap-8 md:gap-18">
               <Image src={logo} alt="Flexile" className="block h-16 w-auto invert" />
             </div>
-            <div className="mt-8 flex flex-col items-start gap-4 text-left md:mt-0 md:items-end md:text-right">
+            <div className="flex flex-col items-end gap-4 text-right">
               <Link href="/privacy" className="text-base text-white no-underline hover:underline">
                 Privacy policy
               </Link>

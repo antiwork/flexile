@@ -36,11 +36,14 @@ test.describe("Tax settings", () => {
     test.beforeEach(async () => {
       await companyContractorsFactory.create({ userId: user.id, companyId: company.id });
       const { company: company2 } = await companiesFactory.createCompletedOnboarding();
-      await companyContractorsFactory.create({
-        userId: user.id,
-        companyId: company2.id,
-        contractSignedElsewhere: true,
-      });
+      await companyContractorsFactory.create(
+        {
+          userId: user.id,
+          companyId: company2.id,
+          contractSignedElsewhere: true,
+        },
+        { withoutBankAccount: true },
+      );
     });
 
     test("allows editing tax information", async ({ page }) => {

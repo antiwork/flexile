@@ -6,13 +6,13 @@ import { loadStripe } from "@stripe/stripe-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleDollarSign, Download, Info, Plus } from "lucide-react";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import React, { useMemo, useState } from "react";
 import { z } from "zod";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
-import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -45,14 +45,14 @@ const stripeAppearance = {
     ".Link:hover": { textDecoration: "underline" },
     ".Label": { color: "rgba(83, 87, 83, 0.9)" },
     ".Input": { border: "1px solid rgb(214, 214, 214)", boxShadow: "none" },
-    ".Input:hover": { borderColor: "rgba(4, 5, 0, 0.9)" },
-    ".Input:focus": { borderColor: "rgba(4, 5, 0, 0.9)", outline: "2px rgba(214, 233, 255, 1)" },
+    ".Input:hover": { borderColor: "rgb(214, 214, 214)" },
+    ".Input:focus": { borderColor: "hsl(0, 0%, 85%)", outline: "none", boxShadow: "0 0 0 2px hsl(0, 0%, 90%)" },
     ".Input--invalid": { borderColor: "var(--colorDanger)" },
     ".PickerItem": { border: "1px solid rgb(214, 214, 214)", boxShadow: "none", padding: "var(--fontSize2Xl)" },
     ".MenuIcon:hover": { backgroundColor: "rgba(240, 247, 255, 1)" },
     ".MenuAction": { backgroundColor: "#f7f9fa" },
     ".MenuAction:hover": { backgroundColor: "rgba(240, 247, 255, 1)" },
-    ".Dropdown": { border: "1px solid rgba(83, 87, 83, 0.9)" },
+    ".Dropdown": { border: "1px solid rgb(214, 214, 214)" },
     ".DropdownItem": { padding: "var(--fontSizeLg)" },
     ".DropdownItem--highlight": { backgroundColor: "rgba(240, 247, 255, 1)" },
     ".TermsText": { fontSize: "var(--fontSizeBase)" },
@@ -61,11 +61,59 @@ const stripeAppearance = {
   },
 };
 
+const darkAppearance = {
+  variables: {
+    colorPrimary: "rgba(222,226,230,0.9)",
+    colorBackground: "#1D2530",
+    colorText: "#ffffff",
+    colorDanger: "rgba(219, 53, 0, 1)",
+    fontFamily: "ABC Whyte, sans-serif",
+    spacingUnit: "4px",
+    borderRadius: "4px",
+    fontWeightMedium: "500",
+    fontSizeBase: "0.875rem",
+    colorIcon: "rgba(222,226,230,0.9)",
+  },
+  rules: {
+    ".Label": { color: "rgba(222,226,230,0.9)" },
+    ".Input": {
+      border: "1px solid rgb(60,72,84)",
+      boxShadow: "none",
+      backgroundColor: "rgb(33,43,54)",
+      color: "rgba(255,255,255,0.92)",
+    },
+    ".Input:hover": { borderColor: "rgb(125,140,155)" },
+    ".Input:focus": {
+      borderColor: "hsla(0, 0%, 100%, 0.1)",
+      outline: "none",
+      boxShadow: "0 0 0 2px hsla(212, 100%, 46%, 0.8)",
+    },
+    ".PickerItem": {
+      border: "1px solid rgb(60,72,84)",
+      boxShadow: "none",
+      padding: "var(--fontSize2Xl)",
+      backgroundColor: "rgb(33,43,54)",
+    },
+    ".MenuIcon:hover": { backgroundColor: "rgba(240, 247, 255, 1)" },
+    ".MenuAction": { backgroundColor: "rgb(38,50,62)" },
+    ".MenuAction:hover": { backgroundColor: "rgba(240, 247, 255, 1)" },
+    ".Dropdown": { border: "1px solid rgb(60,72,84)" },
+    ".DropdownItem": { padding: "var(--fontSizeLg)" },
+    ".DropdownItem--highlight": { backgroundColor: "hsla(0,0%,100%,0.06)", color: "#ffffff" },
+    ".PickerItem--highlight": { backgroundColor: "hsla(0,0%,100%,0.06)", color: "#ffffff" },
+    ".TermsText": { fontSize: "var(--fontSizeBase)" },
+    ".p-AccordionPanelContents": { padding: "0" },
+    ".AccordionItem": { border: "none", padding: "2px", boxShadow: "none" },
+  },
+} as const;
+
 const stripePromise = loadStripe(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing() {
+  const { resolvedTheme } = useTheme();
   const company = useCurrentCompany();
   const requiresCompanyName = !company.name || company.name.trim().length === 0;
   const [addingBankAccount, setAddingBankAccount] = useState(false);
+  const appearance = useMemo(() => (resolvedTheme === "dark" ? darkAppearance : stripeAppearance), [resolvedTheme]);
   const { data: stripeData } = useQuery({
     queryKey: ["administratorBankAccount", company.id],
     queryFn: async () => {
@@ -130,8 +178,9 @@ export default function Billing() {
             </Placeholder>
           )}
           <Elements
+            key={resolvedTheme ?? "system"}
             stripe={stripePromise}
-            options={{ appearance: stripeAppearance, clientSecret: stripeData.client_secret }}
+            options={{ appearance, clientSecret: stripeData.client_secret }}
           >
             <AddBankAccount open={addingBankAccount} onOpenChange={setAddingBankAccount} />
           </Elements>
@@ -172,15 +221,15 @@ const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
       columnHelper.simple("status", "Status", (status) => {
         switch (status.toLowerCase()) {
           case "sent":
-            return <Status variant="primary">Sent</Status>;
+            return "Sent";
           case "processing":
-            return <Status variant="primary">Payment in progress</Status>;
+            return "Payment in progress";
           case "paid":
-            return <Status variant="success">Paid</Status>;
+            return "Paid";
           case "refunded":
-            return <Status variant="success">Refunded</Status>;
+            return "Refunded";
           case "failed":
-            return <Status variant="critical">Failed</Status>;
+            return "Failed";
         }
       }),
       columnHelper.accessor("attachment", {
