@@ -57,7 +57,7 @@ export const Editor = ({
         ...(ariaLabel ? { "aria-label": ariaLabel } : {}),
         class: cn(
           className,
-          "prose text-foreground dark:prose-invert max-h-100 overflow-y-auto rounded-md px-8 py-4 p-4 min-h-60 max-h-96 overflow-y-auto max-w-full outline-none",
+          "prose text-foreground dark:prose-invert max-h-100 overflow-y-auto rounded-b-md px-8 py-4 p-4 min-h-60 max-h-96 overflow-y-auto max-w-full outline-none",
         ),
       },
     },
