@@ -117,7 +117,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-4xl">
+        <DialogContent className="flex flex-col sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle>{update ? "Edit company update" : "New company update"}</DialogTitle>
           </DialogHeader>
