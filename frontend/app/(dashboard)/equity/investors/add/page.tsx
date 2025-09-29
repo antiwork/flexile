@@ -226,10 +226,10 @@ const MobileInvestorCard = ({
             {formFields.SharesField}
           </div>
 
-          <div className="border-muted border-t pt-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Ownership:</span>
-              <span className="font-medium">{percentage.toFixed(1)}%</span>
+          <div className="pt-2">
+            <div className="flex justify-between text-sm font-medium">
+              <span>Ownership:</span>
+              <span>{percentage.toFixed(1)}%</span>
             </div>
           </div>
         </div>
@@ -478,11 +478,9 @@ const AddCapTablePage = () => {
                 Add new investor
               </Button>
 
-              <div className="flex items-center justify-between px-4">
-                <span className="text-sm font-semibold">Total</span>
-                <div className="font-semibold">
-                  {calculateTotalShares(form.watch("investors")).toLocaleString()} shares
-                </div>
+              <div className="flex items-center justify-between px-4 text-sm font-semibold">
+                <span>Total</span>
+                <div>{calculateTotalShares(form.watch("investors")).toLocaleString()} shares</div>
               </div>
             </div>
           ) : (
