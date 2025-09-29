@@ -28,7 +28,7 @@ export const companiesFactory = {
         state: faker.location.state({ abbreviated: true }),
         zipCode: faker.location.zipCode(),
         countryCode: "US",
-        stripeCustomerId: overrides.stripeCustomerId || null,
+        stripeCustomerId: null,
         brandColor: faker.color.rgb({ prefix: "#" }),
         website: "https://www.example.com",
         requiredInvoiceApprovalCount: 2,
