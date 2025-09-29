@@ -23,19 +23,21 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
 };
 
 export const logout = async (page: Page) => {
-  if (page.url().includes("/login")) {
-    return;
+  // Deterministic logout that avoids any UI interactions which could be blocked by portals
+  if (!page.url().includes("/login")) {
+    // Clear browser state to invalidate the session
+    await page.context().clearCookies();
+    await page.evaluate(() => {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch {}
+    });
   }
-  const button = page.getByRole("button", { name: "Log out" }).first();
-  if (!(await button.isVisible())) {
-    // Navigate to invoices page to ensure we're on a dashboard page with sidebar
-    await page.goto("/invoices");
-    await page.waitForLoadState("networkidle");
-  }
-  await button.click();
 
-  // Wait for redirect to login
-  await page.waitForURL(/.*\/login.*/u);
+  // Navigate directly to the login page and assert it's ready
+  await page.goto("/login");
+  await expect(page.getByLabel("Work email")).toBeVisible({ timeout: 15000 });
   await page.waitForLoadState("networkidle");
 };
 
