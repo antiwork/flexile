@@ -11,6 +11,7 @@ import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
 import { and, count, desc, eq } from "drizzle-orm";
 import {
+  activeStorageAttachments,
   companies,
   companyContractors,
   expenseCategories,
@@ -119,8 +120,7 @@ test.describe("invoice creation", () => {
     });
     await login(page, contractorUser, "/invoices/new");
 
-    await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[type="file"]').setInputFiles({
+    await page.getByLabel("Add expense").setInputFiles({
       name: "receipt.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("test expense receipt"),
@@ -152,8 +152,7 @@ test.describe("invoice creation", () => {
     ]);
     await login(page, contractorUser, "/invoices/new");
 
-    await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
+    await page.getByLabel("Add expense").setInputFiles({
       name: "receipt1.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("first expense receipt"),
@@ -162,8 +161,7 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Merchant").fill("Office Supplies Inc");
     await page.getByLabel("Amount").fill("25.50");
 
-    await page.getByRole("button", { name: "Add expense" }).click();
-    await page.locator('input[accept="application/pdf, image/*"]').setInputFiles({
+    await page.getByLabel("Add expense").setInputFiles({
       name: "receipt2.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("second expense receipt"),
@@ -180,7 +178,7 @@ test.describe("invoice creation", () => {
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    await expect(page.locator("tbody")).toContainText("$176.25");
+    await expect(page.locator("tbody").first()).toContainText("$176.25");
 
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
@@ -276,19 +274,16 @@ test.describe("invoice creation", () => {
 
     await page.getByLabel("Hours").fill("2.5");
     await page.getByPlaceholder("Description").fill("Development work with decimal quantities");
-    await fillDatePicker(page, "Date", "12/15/2024");
+    await fillDatePicker(page, "Date", "12/15/2023");
 
     await expect(page.getByText("Total services$150")).toBeVisible();
 
-    // contractor has 20% equity, so $150 * 0.8 = $120
     await expect(page.getByText("Net amount in cash$120")).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
-
-    // wait for navigation to invoice list
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    await expect(page.locator("tbody")).toContainText("$150");
+    await expect(page.locator("tbody").first()).toContainText("$150");
 
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
@@ -303,6 +298,151 @@ test.describe("invoice creation", () => {
     expect(Number(lineItem.quantity)).toBe(2.5);
   });
 
+  test("creates an invoice with an attached document", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    await page.getByPlaceholder("Description").fill("Invoice with document attachment");
+    await page.getByLabel("Hours").fill("05:00");
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "invoice-attachment.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("test invoice attachment document"),
+    });
+
+    await expect(page.getByText("invoice-attachment.pdf")).toBeVisible();
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    const invoice = await db.query.invoices
+      .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
+      .then(takeOrThrow);
+
+    expect(invoice).toBeDefined();
+    const attachment = await db.query.activeStorageAttachments.findFirst({
+      where: and(
+        eq(activeStorageAttachments.recordType, "Invoice"),
+        eq(activeStorageAttachments.recordId, invoice.id),
+        eq(activeStorageAttachments.name, "attachments"),
+      ),
+      with: { blob: { columns: { key: true, filename: true } } },
+    });
+
+    expect(attachment?.blob.filename).toBe("invoice-attachment.pdf");
+  });
+
+  test("allows viewing and editing an invoice with attachment", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    await page.getByPlaceholder("Description").fill("Invoice for document editing test");
+    await page.getByLabel("Hours").fill("02:00");
+    await page.getByLabel("Rate").fill("30");
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "test-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("test invoice document"),
+    });
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    await expect(page.getByRole("cell", { name: "Awaiting approval (0/2)" })).toBeVisible();
+
+    await page.getByRole("row", { name: "Awaiting approval" }).click();
+
+    await expect(page.getByText("test-document.pdf")).toBeVisible();
+
+    await page.getByRole("link", { name: "Edit" }).click();
+
+    await expect(page.getByText("test-document.pdf")).toBeVisible();
+
+    await page.getByRole("row", { name: "test-document.pdf" }).getByLabel("Remove").click();
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "updated-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("updated invoice document content"),
+    });
+
+    await page.getByRole("button", { name: "Resubmit" }).click();
+
+    await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
+
+    await expect(page.getByRole("cell", { name: "Awaiting approval (0/2)" })).toBeVisible();
+
+    await page.getByRole("row", { name: "Awaiting approval" }).click();
+    await expect(page.getByRole("link", { name: "Edit" })).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByText("updated-document.pdf")).toBeVisible();
+  });
+
+  test("prevents uploading document file larger than 10MB", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    await page.getByPlaceholder("Description").fill("Invoice with oversized document");
+    await page.getByLabel("Hours").fill("01:00");
+
+    const largeBuffer = Buffer.alloc(11 * 1024 * 1024, "X");
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "large-document.pdf",
+      mimeType: "application/pdf",
+      buffer: largeBuffer,
+    });
+
+    await expect(page.getByText("large-document.pdf")).not.toBeVisible();
+
+    await expect(page.getByRole("heading", { name: "File Size Exceeded" })).toBeVisible();
+    await expect(
+      page.getByText("File size exceeds the maximum limit of 10MB. Please select a smaller file."),
+    ).toBeVisible();
+
+    await page.getByRole("button", { name: "OK" }).click();
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "valid-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("valid document content"),
+    });
+
+    await expect(page.getByText("valid-document.pdf")).toBeVisible();
+  });
+
+  test("prevents uploading expense files larger than 10MB", async ({ page }) => {
+    await db.insert(expenseCategories).values({
+      companyId: company.id,
+      name: "Office Supplies",
+    });
+
+    await login(page, contractorUser, "/invoices/new");
+
+    const largeBuffer = Buffer.alloc(11 * 1024 * 1024, "X");
+
+    await page.getByLabel("Add expense").setInputFiles({
+      name: "large-receipt.pdf",
+      mimeType: "application/pdf",
+      buffer: largeBuffer,
+    });
+
+    await expect(page.getByRole("heading", { name: "File Size Exceeded" })).toBeVisible();
+
+    await page.getByRole("button", { name: "OK" }).click();
+
+    await page.getByLabel("Add expense").setInputFiles({
+      name: "valid-receipt.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("valid receipt content"),
+    });
+    await expect(page.getByText("valid-receipt.pdf")).toBeVisible();
+
+    await page.getByLabel("Merchant").fill("Office Supplies Store");
+    await page.getByLabel("Amount").fill("42.99");
+    await expect(page.getByText("Total expenses$42.99")).toBeVisible();
+  });
+
   test("shows inline field error on duplicate invoice number and prevents creation", async ({ page }) => {
     await invoicesFactory.create({
       companyId: company.id,
@@ -310,8 +450,6 @@ test.describe("invoice creation", () => {
       companyContractorId: companyContractor.id,
       invoiceNumber: "INV-123",
     });
-
-    await login(page, contractorUser, "/invoices/new");
 
     await page.getByLabel("Invoice ID").fill("INV-123");
     await page.getByPlaceholder("Description").fill("Work item");
