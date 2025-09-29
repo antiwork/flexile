@@ -277,7 +277,7 @@ export default function TaxPage() {
             />
 
             {formValues.business_entity ? (
-              <div className="animate-in slide-in-from-top-2 fade-in grid auto-cols-fr grid-flow-col items-start gap-3 duration-300">
+              <div className="animate-in slide-in-from-top-2 fade-in grid auto-cols-fr grid-flow-col items-start gap-3 duration-500">
                 <FormField
                   control={form.control}
                   name="business_name"
@@ -320,7 +320,7 @@ export default function TaxPage() {
                     />
 
                     {formValues.business_type === BusinessType.LLC && (
-                      <div className="animate-in slide-in-from-top-2 fade-in duration-300">
+                      <div className="animate-in slide-in-from-top-1 fade-in duration-500">
                         <FormField
                           control={form.control}
                           name="tax_classification"
