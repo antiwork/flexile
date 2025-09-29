@@ -1,12 +1,13 @@
 "use client";
 
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { InformationCircleIcon, PaperClipIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { Ban, CircleAlert, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { Fragment, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
+import AttachmentListCard from "@/components/AttachmentsList";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
@@ -38,6 +39,7 @@ import {
   EDITABLE_INVOICE_STATES,
   LegacyAddress,
   RejectModal,
+  StatusDetails,
   taxRequirementsMet,
   useIsActionable,
   useIsDeletable,
@@ -305,7 +307,7 @@ export default function InvoicePage() {
                     <>
                       <div>
                         <div className="mb-4 flex items-center justify-between">
-                          <span className="mb-4 text-gray-600">Cash vs equity split</span>
+                          <span className="text-muted-foreground mb-4">Cash vs equity split</span>
                           <span className="font-medium">
                             {(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} equity
                           </span>
@@ -319,7 +321,7 @@ export default function InvoicePage() {
                           min={invoice.minAllowedEquityPercentage}
                           max={invoice.maxAllowedEquityPercentage}
                         />
-                        <div className="flex justify-between text-gray-600">
+                        <div className="text-muted-foreground flex justify-between">
                           <span>
                             {(invoice.minAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })}{" "}
                             equity
@@ -364,12 +366,13 @@ export default function InvoicePage() {
         ) : null}
 
         {!taxRequirementsMet(invoice) && (
-          <Alert className="mx-4 print:hidden" variant="destructive">
+          <Alert className="mx-4 mb-4 print:hidden" variant="destructive">
             <ExclamationTriangleIcon />
             <AlertTitle>Missing tax information.</AlertTitle>
             <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
           </Alert>
         )}
+        <StatusDetails invoice={invoice} className="mx-4 mb-4 print:hidden" />
 
         <div className="mx-4 print:hidden">
           <div className="text-sm text-gray-500">Status</div>
@@ -444,7 +447,7 @@ export default function InvoicePage() {
                   <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full print:my-3 print:w-full print:border-collapse print:text-xs">
                     <TableHeader>
                       <TableRow className="print:border-b print:border-gray-300">
-                        <PrintTableHeader className="w-[50%] md:w-[60%] print:text-left">
+                        <PrintTableHeader className="w-[40%] md:w-[50%] print:text-left">
                           {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
                         </PrintTableHeader>
                         <PrintTableHeader className="w-[20%] text-right md:w-[15%] print:text-right">
@@ -453,7 +456,7 @@ export default function InvoicePage() {
                         <PrintTableHeader className="w-[20%] text-right md:w-[15%] print:text-right">
                           Cash rate
                         </PrintTableHeader>
-                        <PrintTableHeader className="w-[10%] text-right print:text-right">Line total</PrintTableHeader>
+                        <PrintTableHeader className="w-[20%] text-right print:text-right">Line total</PrintTableHeader>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -483,33 +486,31 @@ export default function InvoicePage() {
               ) : null}
 
               {invoice.expenses.length > 0 && (
-                <Card className="mx-4 print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
-                  <CardContent>
-                    <div className="flex justify-between gap-2">
-                      <div>Expense</div>
-                      <div>Amount</div>
-                    </div>
-                    {invoice.expenses.map((expense, i) => (
-                      <Fragment key={i}>
-                        <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
-                        <div className="flex justify-between gap-2">
-                          <Link
-                            href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
-                            download
-                            className={cn(linkClasses, "print:text-black print:no-underline")}
-                          >
-                            <PaperClipIcon className="inline size-4 print:hidden" />
-                            {
-                              expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name
-                            } – {expense.description}
-                          </Link>
-                          <span>{formatMoneyFromCents(expense.totalAmountInCents)}</span>
-                        </div>
-                      </Fragment>
-                    ))}
-                  </CardContent>
-                </Card>
+                <AttachmentListCard
+                  title="Expense"
+                  linkClasses={linkClasses}
+                  items={invoice.expenses.map((expense) => ({
+                    key: expense.attachment?.key || `expense-${expense.id}`,
+                    filename: expense.attachment?.filename || "No attachment",
+                    label: `${expenseCategories.find((c) => c.id === expense.expenseCategoryId)?.name || "Uncategorized"} – ${expense.description}`,
+                    right: <span className="text-sm">{formatMoneyFromCents(expense.totalAmountInCents)}</span>,
+                  }))}
+                />
               )}
+
+              {invoice.attachment ? (
+                <AttachmentListCard
+                  title="Documents"
+                  linkClasses={linkClasses}
+                  items={[
+                    {
+                      key: invoice.attachment.key,
+                      filename: invoice.attachment.filename,
+                      label: invoice.attachment.filename,
+                    },
+                  ]}
+                />
+              ) : null}
 
               <footer className="flex justify-between px-4 print:mt-4 print:flex print:items-start print:justify-between">
                 <div className="print:flex-1">
@@ -563,9 +564,9 @@ export default function InvoicePage() {
         </section>
       </div>
       {isMobile && user.roles.administrator && isActionable(invoice) ? (
-        <div className="fixed bottom-15 left-0 z-10 w-full bg-white px-4 py-4" style={{ width: "100%" }}>
+        <div className="bg-background fixed bottom-15 left-0 z-10 w-full px-4 py-4" style={{ width: "100%" }}>
           <ApproveButton
-            className="w-full border-0 bg-blue-500 shadow-lg"
+            className="w-full border-0 bg-blue-500 text-white shadow-lg"
             invoice={invoice}
             onApprove={() => router.push(`/invoices`)}
           />

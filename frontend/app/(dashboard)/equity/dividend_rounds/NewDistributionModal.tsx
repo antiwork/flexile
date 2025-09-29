@@ -111,7 +111,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
                       ]}
                       value={field.value}
                       onChange={field.onChange}
-                      className="grid-flow-col"
+                      className="grid-flow-row md:grid-flow-col"
                     />
                   </FormControl>
                 </FormItem>
