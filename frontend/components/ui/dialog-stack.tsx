@@ -164,9 +164,9 @@ export const DialogStackOverlay = ({ className, ...props }: DialogStackOverlayPr
   return (
     <div
       className={cn(
-        "fixed inset-0 z-50 bg-black/80",
         "data-[state=closed]:animate-out data-[state=open]:animate-in",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "bg-overlay fixed inset-0 z-50",
         className,
       )}
       onClick={handleClick}
@@ -264,7 +264,7 @@ export const DialogStackContent = ({ children, className, offset = 16, ...props 
   return (
     <div
       className={cn(
-        "bg-background h-auto max-h-full w-full rounded-lg border border-gray-200 p-6 shadow-lg transition-all duration-300",
+        "bg-background h-auto max-h-full w-full rounded-lg p-6 shadow-lg [box-shadow:0_-12px_24px_-12px_rgba(0,0,0,0.15)] transition-all duration-300",
         className,
       )}
       onClick={handleClick}
@@ -302,7 +302,7 @@ export const DialogStackContent = ({ children, className, offset = 16, ...props 
 export type DialogStackTitleProps = HTMLAttributes<HTMLHeadingElement>;
 
 export const DialogStackTitle = ({ children, className, ...props }: DialogStackTitleProps) => (
-  <h2 className={cn("text-lg leading-none font-semibold tracking-tight", className)} {...props}>
+  <h2 className={cn("text-lg leading-none font-semibold", className)} {...props}>
     {children}
   </h2>
 );
@@ -310,7 +310,7 @@ export const DialogStackTitle = ({ children, className, ...props }: DialogStackT
 export type DialogStackDescriptionProps = HTMLAttributes<HTMLParagraphElement>;
 
 export const DialogStackDescription = ({ children, className, ...props }: DialogStackDescriptionProps) => (
-  <p className={cn("text-muted-foreground text-sm", className)} {...props}>
+  <p className={cn("text-base", className)} {...props}>
     {children}
   </p>
 );
@@ -318,7 +318,7 @@ export const DialogStackDescription = ({ children, className, ...props }: Dialog
 export type DialogStackHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 export const DialogStackHeader = ({ className, ...props }: DialogStackHeaderProps) => (
-  <div className={cn("flex flex-col space-y-1.5 text-left", className)} {...props} />
+  <div className={cn("flex flex-col gap-2 text-left", className)} {...props} />
 );
 
 export type DialogStackFooterProps = HTMLAttributes<HTMLDivElement>;
