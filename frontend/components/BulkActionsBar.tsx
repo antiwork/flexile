@@ -1,4 +1,4 @@
-import { Ban, CircleCheckBig, Download, Share, Trash2, X } from "lucide-react";
+import { Ban, CircleCheckBig, Download, Edit, Share, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { AvailableActions } from "@/components/actions/types";
@@ -41,6 +41,7 @@ export const BulkActionsBar = <T extends Invoice | Document>({
   const downloadAction = visibleActions.find((action) => action.key === "download");
   const shareAction = visibleActions.find((action) => action.key === "share");
   const signAction = visibleActions.find((action) => action.key === "reviewAndSign");
+  const editAction = visibleActions.find((action) => action.key === "edit");
 
   return (
     <Dialog open={selectedItems.length > 0} modal={false}>
@@ -114,6 +115,15 @@ export const BulkActionsBar = <T extends Invoice | Document>({
             >
               <Share className="size-3.5" strokeWidth={2.5} />
               Share
+            </Button>
+          ) : null}
+          {editAction ? (
+            <Button
+              variant="outline"
+              className="flex h-9 items-center gap-2 text-sm"
+              onClick={() => editAction.action && onAction(editAction.action, visibleItems)}
+            >
+              <Edit className="size-3.5" strokeWidth={2.5} />
             </Button>
           ) : null}
         </div>
