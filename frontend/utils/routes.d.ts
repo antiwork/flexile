@@ -608,24 +608,24 @@ export const balance_credit_webhooks_wise_index_path: ((
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/administrator/cap_tables(.:format)
+ * /internal/companies/:company_id/administrator/cap_table(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const company_administrator_cap_tables_url: ((
+export const company_administrator_cap_table_url: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/administrator/cap_tables(.:format)
+ * /internal/companies/:company_id/administrator/cap_table(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const company_administrator_cap_tables_path: ((
+export const company_administrator_cap_table_path: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
@@ -650,6 +650,30 @@ export const company_administrator_equity_grants_url: ((
  * @returns {string} route path
  */
 export const company_administrator_equity_grants_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/administrator/option_pools(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_administrator_option_pools_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/administrator/option_pools(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_administrator_option_pools_path: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
@@ -1235,6 +1259,30 @@ export const company_settings_url: ((
  * @returns {string} route path
  */
 export const company_settings_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/share_classes(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_share_classes_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/share_classes(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_share_classes_path: ((
+  company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 

@@ -38,7 +38,8 @@ scope path: :internal, module: :internal do
 
       resources :stripe_microdeposit_verifications, only: :create
       resources :equity_grants, only: [:create]
-      resources :cap_tables, only: [:create]
+      resources :option_pools, only: [:create]
+      resource :cap_table, only: [:create]
     end
 
     resource :switch, only: :create, controller: "switch"
@@ -85,6 +86,7 @@ scope path: :internal, module: :internal do
     resources :dividend_rounds, only: [:create]
     resources :templates, only: [:index, :show, :update]
     resources :documents, only: [:create]
+    resources :share_classes, only: [:index]
   end
 
   resources :wise_account_requirements, only: :create
