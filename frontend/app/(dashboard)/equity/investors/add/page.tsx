@@ -226,11 +226,9 @@ const MobileInvestorCard = ({
             {formFields.SharesField}
           </div>
 
-          <div className="pt-2">
-            <div className="flex justify-between text-sm font-medium">
-              <span>Ownership:</span>
-              <span>{percentage.toFixed(1)}%</span>
-            </div>
+          <div className="flex justify-between pt-2 text-sm font-medium">
+            <span>Ownership:</span>
+            <span>{percentage.toFixed(1)}%</span>
           </div>
         </div>
       </CardContent>
