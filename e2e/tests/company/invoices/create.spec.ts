@@ -451,6 +451,8 @@ test.describe("invoice creation", () => {
       invoiceNumber: "INV-123",
     });
 
+    await login(page, contractorUser, "/invoices/new");
+
     await page.getByLabel("Invoice ID").fill("INV-123");
     await page.getByPlaceholder("Description").fill("Work item");
     await page.getByLabel("Hours / Qty").fill("01:00");
