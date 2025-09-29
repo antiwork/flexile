@@ -15,8 +15,15 @@ const ComboBox = ({
   className,
   modal,
   showSearch = true,
+  maxHeight = "200px",
   ...props
-}: { options: { value: string; label: string }[]; placeholder?: string; modal?: boolean; showSearch?: boolean } & (
+}: {
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  modal?: boolean;
+  showSearch?: boolean;
+  maxHeight?: string;
+} & (
   | { multiple: true; value: string[]; onChange: (value: string[]) => void }
   | { multiple?: false; value: string | null | undefined; onChange: (value: string) => void }
 ) &
@@ -45,7 +52,13 @@ const ComboBox = ({
           <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="max-h-[100px] p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
+      <PopoverContent
+        className="p-0"
+        style={{
+          width: "var(--radix-popover-trigger-width)",
+          maxHeight, // Use dynamic maxHeight
+        }}
+      >
         <Command>
           {showSearch ? (
             <CommandInput
@@ -59,7 +72,11 @@ const ComboBox = ({
               }}
             />
           ) : null}
-          <CommandList ref={listRef} className="max-h-[60px] overflow-y-auto">
+          <CommandList
+            ref={listRef}
+            className="overflow-y-auto"
+            style={{ maxHeight: `calc(${maxHeight} - 40px)` }} // Adjust for input height
+          >
             {showSearch ? <CommandEmpty>No results found.</CommandEmpty> : null}
             <CommandGroup>
               {options.map((option) => (

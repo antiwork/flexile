@@ -439,6 +439,7 @@ export default function RolesPage() {
                         onChange={field.onChange}
                         placeholder="Select role..."
                         showSearch={false}
+                        maxHeight="100px"
                       />
                     </FormControl>
                     <FormMessage />
