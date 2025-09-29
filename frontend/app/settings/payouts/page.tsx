@@ -74,7 +74,10 @@ const EquitySection = () => {
         assertOk: true,
       });
     },
-    onSuccess: () => setTimeout(() => saveMutation.reset(), 2000),
+    onSuccess: () => {
+      form.reset(form.getValues());
+      setTimeout(() => saveMutation.reset(), 2000);
+    },
   });
 
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
@@ -134,6 +137,7 @@ const EquitySection = () => {
               type="submit"
               size="small"
               mutation={saveMutation}
+              disabled={!form.formState.isDirty}
               loadingText="Saving..."
               successText="Saved!"
               className="justify-self-end"

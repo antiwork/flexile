@@ -99,7 +99,7 @@ const RangeInput = ({
         max={max}
         step={1}
         aria-hidden
-        className="grow"
+        className="grow cursor-pointer"
         disabled={disabled ?? false}
       />
       <div className="relative flex h-8 items-center">
