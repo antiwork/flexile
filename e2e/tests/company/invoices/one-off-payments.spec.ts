@@ -217,6 +217,7 @@ test.describe("One-off payments", () => {
   test.describe("invoice list visibility", () => {
     test("does not show one-off payments in the admin invoice list while they're not accepted by the payee", async ({
       page,
+      sentEmails: _,
     }) => {
       await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
