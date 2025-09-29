@@ -33,7 +33,8 @@ test.describe("Company administrator signup", () => {
 
     await page.getByText("Add company details").click();
 
-    await page.waitForURL(/.*\/settings\/administrator\/details.*/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await page.waitForURL(/.*\/settings\/administrator\/details.*/);
 
     await page.getByLabel("Company's legal name").fill(companyName);
     await page.getByLabel("EIN").fill(ein);

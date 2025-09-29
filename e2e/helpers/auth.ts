@@ -19,7 +19,8 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
   await page.getByRole("button", { name: "Log in", exact: true }).click();
   await fillOtp(page);
 
-  await page.waitForURL(/^(?!.*\/login$).*/u);
+  // eslint-disable-next-line require-unicode-regexp
+  await page.waitForURL(/^(?!.*\/login$).*/);
 };
 
 export const logout = async (page: Page) => {
@@ -34,7 +35,8 @@ export const logout = async (page: Page) => {
   await button.click();
 
   // Wait for redirect to login
-  await page.waitForURL(/.*\/login.*/u);
+  // eslint-disable-next-line require-unicode-regexp
+  await page.waitForURL(/.*\/login.*/);
   await page.waitForLoadState("networkidle");
 };
 

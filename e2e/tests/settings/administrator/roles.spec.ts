@@ -87,7 +87,8 @@ test.describe("Manage roles access", () => {
 
       // Check that multi-role user shows all their roles
       await expect(page.getByText(multiRoleUser.legalName || "")).toBeVisible();
-      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "") });
       await expect(multiRoleRow.getByRole("cell", { name: "Admin, Lawyer, Investor" })).toBeVisible();
 
       // Verify users with roles other than admin or lawyer are NOT displayed
@@ -165,7 +166,9 @@ test.describe("Manage roles access", () => {
       await login(page, primaryAdmin, "/settings/administrator/roles");
 
       // Find second admin row and click ellipsis menu
-      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      // eslint-disable-next-line require-unicode-regexp
+      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "") });
       const ellipsisButton = secondAdminRow.getByRole("button", { name: "Open menu" });
       await ellipsisButton.click();
 
@@ -174,7 +177,8 @@ test.describe("Manage roles access", () => {
 
       await withinModal(
         async (modal) => {
-          await expect(modal.getByText(/Remove admin access for/u)).toBeVisible();
+          // eslint-disable-next-line require-unicode-regexp
+          await expect(modal.getByText(/Remove admin access for/)).toBeVisible();
           await Promise.all([
             // Set up promise to wait for the tRPC mutation response
             page.waitForResponse(
@@ -187,7 +191,8 @@ test.describe("Manage roles access", () => {
       );
 
       // Wait for the row in the table to be removed, not just any text
-      await expect(page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") })).not.toBeVisible();
+      // eslint-disable-next-line require-unicode-regexp
+      await expect(page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "") })).not.toBeVisible();
 
       // Verify in database
       const adminRecord = await db.query.companyAdministrators.findFirst({
@@ -200,7 +205,8 @@ test.describe("Manage roles access", () => {
       await login(page, primaryAdmin, "/settings/administrator/roles");
 
       // Owner role should not have any action button
-      const ownRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      const ownRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName || "") });
       await expect(ownRow.getByRole("button", { name: "Open menu" })).not.toBeVisible();
     });
 
@@ -208,7 +214,8 @@ test.describe("Manage roles access", () => {
       await login(page, secondAdmin, "/settings/administrator/roles");
 
       // Find own row (marked with "You")
-      const ownRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      const ownRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "") });
       const ellipsisButton = ownRow.getByRole("button", { name: "Open menu" });
 
       // Button should be disabled for own row
@@ -226,11 +233,14 @@ test.describe("Manage roles access", () => {
       await login(page, secondAdmin, "/settings/administrator/roles");
 
       // Primary admin (owner) should not have action button
-      const ownerRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      const ownerRow = page.getByRole("row", { name: new RegExp(primaryAdmin.legalName || "") });
       await expect(ownerRow.getByRole("button", { name: "Open menu" })).not.toBeVisible();
 
       // Second admin should have disabled button when they would be removing the last non-owner admin
-      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      // eslint-disable-next-line require-unicode-regexp
+      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "") });
       const ellipsisButton = secondAdminRow.getByRole("button", { name: "Open menu" });
       await expect(ellipsisButton).toBeDisabled();
     });
@@ -238,7 +248,8 @@ test.describe("Manage roles access", () => {
     test("shows button state during revoke", async ({ page }) => {
       await login(page, primaryAdmin, "/settings/administrator/roles");
 
-      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "") });
       const ellipsisButton = secondAdminRow.getByRole("button", { name: "Open menu" });
 
       // Button should be enabled initially
@@ -250,7 +261,8 @@ test.describe("Manage roles access", () => {
       await page.getByRole("button", { name: "Remove admin" }).click();
 
       // Row should be removed from the list
-      await expect(page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") })).not.toBeVisible();
+      // eslint-disable-next-line require-unicode-regexp
+      await expect(page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "") })).not.toBeVisible();
     });
   });
 
@@ -260,7 +272,8 @@ test.describe("Manage roles access", () => {
       await page.goto("/settings/administrator/roles");
 
       // Find lawyer row and click ellipsis menu
-      const lawyerRow = page.getByRole("row", { name: new RegExp(lawyerUser.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      const lawyerRow = page.getByRole("row", { name: new RegExp(lawyerUser.legalName || "") });
       const ellipsisButton = lawyerRow.getByRole("button", { name: "Open menu" });
       await ellipsisButton.click();
 
@@ -268,7 +281,8 @@ test.describe("Manage roles access", () => {
       await page.getByRole("menuitem", { name: "Remove lawyer" }).click();
       await withinModal(
         async (modal) => {
-          await expect(modal.getByText(/Remove lawyer access for/u)).toBeVisible();
+          // eslint-disable-next-line require-unicode-regexp
+          await expect(modal.getByText(/Remove lawyer access for/)).toBeVisible();
           await Promise.all([
             // Set up promise to wait for the tRPC mutation response
             page.waitForResponse(
@@ -281,7 +295,8 @@ test.describe("Manage roles access", () => {
       );
 
       // Wait for row to be removed (optimistic update)
-      await expect(page.getByRole("row", { name: new RegExp(lawyerUser.legalName || "", "u") })).not.toBeVisible();
+      // eslint-disable-next-line require-unicode-regexp
+      await expect(page.getByRole("row", { name: new RegExp(lawyerUser.legalName || "") })).not.toBeVisible();
     });
 
     test("shows remove admin option for multi-role user when they have admin role", async ({ page }) => {
@@ -289,7 +304,9 @@ test.describe("Manage roles access", () => {
       await page.goto("/settings/administrator/roles");
 
       // Multi-role user should show "Admin" role
-      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      // eslint-disable-next-line require-unicode-regexp
+      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "") });
       await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
 
       // Should have "Remove admin" option
@@ -321,7 +338,9 @@ test.describe("Manage roles access", () => {
       await login(page, primaryAdmin, "/settings/administrator/roles");
 
       // Multi-role user should show "Admin" role
-      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      // eslint-disable-next-line require-unicode-regexp
+      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "") });
       await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
     });
 
@@ -329,7 +348,9 @@ test.describe("Manage roles access", () => {
       await login(page, primaryAdmin, "/settings/administrator/roles");
 
       // Multi-role user currently shows as Admin
-      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      // eslint-disable-next-line require-unicode-regexp
+      const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "") });
       await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
 
       // Revoke admin role
@@ -351,7 +372,8 @@ test.describe("Manage roles access", () => {
       await responsePromise;
 
       // User should now show as Lawyer only
-      const updatedMultiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
+      // eslint-disable-next-line require-unicode-regexp
+      const updatedMultiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "") });
       await expect(updatedMultiRoleRow.getByRole("cell", { name: "Lawyer" })).toBeVisible();
       await expect(updatedMultiRoleRow.getByRole("cell", { name: "Admin" })).not.toBeVisible();
     });
@@ -378,7 +400,8 @@ test.describe("Roles page invite functionality", () => {
     );
 
     // Check that the invited user appears in the table with the correct role
-    const invitedRow = page.getByRole("row", { name: new RegExp(invitedEmail, "u") });
+    // eslint-disable-next-line require-unicode-regexp
+    const invitedRow = page.getByRole("row", { name: new RegExp(invitedEmail) });
     await expect(invitedRow).toBeVisible();
     await expect(invitedRow.getByRole("cell", { name: "Admin", exact: true })).toBeVisible();
 
@@ -411,7 +434,8 @@ test.describe("Roles page invite functionality", () => {
     );
 
     // Check that the invited user appears in the table with the correct role
-    const invitedRow = page.getByRole("row", { name: new RegExp(invitedEmail, "u") });
+    // eslint-disable-next-line require-unicode-regexp
+    const invitedRow = page.getByRole("row", { name: new RegExp(invitedEmail) });
     await expect(invitedRow).toBeVisible();
     await expect(invitedRow.getByRole("cell", { name: "Lawyer", exact: true })).toBeVisible();
 
@@ -470,7 +494,8 @@ test.describe("Roles page invite functionality", () => {
     );
 
     // Check that the invited user appears in the table with the correct role
-    const invitedRow = page.getByRole("row", { name: new RegExp(existingUser.email, "u") });
+    // eslint-disable-next-line require-unicode-regexp
+    const invitedRow = page.getByRole("row", { name: new RegExp(existingUser.email) });
     await expect(invitedRow).toBeVisible();
     await expect(invitedRow.getByRole("cell", { name: "Lawyer", exact: true })).toBeVisible();
 

@@ -242,7 +242,8 @@ test.describe("invoice creation", () => {
 
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByText("Please provide a payout method for your invoices.")).toBeVisible();
-    await expect(page.locator("header").getByRole("link", { name: "New invoice" })).toHaveClass(/disabled/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(page.locator("header").getByRole("link", { name: "New invoice" })).toHaveClass(/disabled/);
   });
 
   test("shows alert when billing above default pay rate", async ({ page }) => {

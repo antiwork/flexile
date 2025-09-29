@@ -159,7 +159,8 @@ test.describe("Investors", () => {
 
     await expect(page.getByText("Acme Inc")).toBeVisible();
     await expect(page.getByRole("table").locator("tbody")).toContainText("10,000");
-    await page.getByRole("button", { name: /Columns/u }).click();
+    // eslint-disable-next-line require-unicode-regexp
+    await page.getByRole("button", { name: /Columns/ }).click();
     await page.getByRole("menuitem", { name: "Option strikes" }).hover();
     await page.getByRole("menuitemcheckbox", { name: "Common options $4.64 strike" }).click();
     await expect(page.getByRole("table").locator("tbody")).toContainText("833");
@@ -209,7 +210,8 @@ test.describe("Investors", () => {
       await expect(page.getByRole("table")).toBeVisible();
       await expect(page.getByText("Test Investor")).toBeVisible();
 
-      await expect(page.getByRole("button", { name: /Columns \d+/u })).toBeVisible();
+      // eslint-disable-next-line require-unicode-regexp
+      await expect(page.getByRole("button", { name: /Columns \d+/ })).toBeVisible();
 
       // Default columns are visible by default
       await expect(page.locator("thead").getByText("Name")).toBeVisible();
@@ -218,7 +220,8 @@ test.describe("Investors", () => {
       await expect(page.locator("thead").getByText("Fully diluted shares")).toBeVisible();
       await expect(page.locator("thead").getByText("Fully diluted ownership")).toBeVisible();
 
-      await page.getByRole("button", { name: /Columns/u }).click();
+      // eslint-disable-next-line require-unicode-regexp
+      await page.getByRole("button", { name: /Columns/ }).click();
       await page.getByRole("menuitem", { name: "Ownership" }).hover();
       const nameCheckbox = page.getByRole("menuitemcheckbox", { name: "Name" });
       await expect(nameCheckbox).toBeDisabled();
@@ -237,10 +240,12 @@ test.describe("Investors", () => {
       await expect(page.locator("thead").getByText("Name")).toBeVisible();
 
       // Test new share class and option columns
-      await page.getByRole("button", { name: /Columns/u }).click();
+      // eslint-disable-next-line require-unicode-regexp
+      await page.getByRole("button", { name: /Columns/ }).click();
       await page.getByRole("menuitem", { name: "Share classes" }).hover();
       await page.getByRole("menuitemcheckbox", { name: "Common" }).click();
-      await page.getByRole("button", { name: /Columns/u }).click();
+      // eslint-disable-next-line require-unicode-regexp
+      await page.getByRole("button", { name: /Columns/ }).click();
       await page.getByRole("menuitem", { name: "Option strikes" }).hover();
       await page.getByRole("menuitemcheckbox", { name: "Common options $1.00 strike" }).click();
       await expect(page.getByRole("table").locator("tbody")).toContainText("60,000"); // Common shares
@@ -256,7 +261,8 @@ test.describe("Investors", () => {
       await login(page, adminUser);
       await page.goto("/equity/investors");
 
-      await expect(page.getByRole("button", { name: /Columns/u })).not.toBeVisible();
+      // eslint-disable-next-line require-unicode-regexp
+      await expect(page.getByRole("button", { name: /Columns/ })).not.toBeVisible();
     });
   });
 });

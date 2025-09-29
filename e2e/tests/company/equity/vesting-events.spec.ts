@@ -203,11 +203,13 @@ test.describe("Equity Grant Vesting Events", () => {
         }
 
         // Verify only 4 processed events are shown (cliff + 3 monthly) and no cancelled events
-        const sharesEntries = await modal.getByText(/\d+,?\d*\s+shares/u, { exact: false }).count();
+        // eslint-disable-next-line require-unicode-regexp
+        const sharesEntries = await modal.getByText(/\d+,?\d*\s+shares/, { exact: false }).count();
         expect(sharesEntries).toBe(4); // Only processed events should be visible
 
         // Should not show status indicators like (Vested) or (Scheduled)
-        const statusCount = await modal.getByText(/\((Vested|Scheduled|Cancelled)\)/u, { exact: false }).count();
+        // eslint-disable-next-line require-unicode-regexp
+        const statusCount = await modal.getByText(/\((Vested|Scheduled|Cancelled)\)/, { exact: false }).count();
         expect(statusCount).toBe(0);
 
         // Verify other sections are still present within the modal

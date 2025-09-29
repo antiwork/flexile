@@ -61,5 +61,8 @@ export const withinModal = async (
   const modal = title ? page.getByRole("dialog", { name: title }) : page.getByRole("dialog");
   await expect(modal).toBeVisible();
   await callback(modal);
-  if (assertClosed) await expect(modal).not.toBeVisible();
+  if (assertClosed) {
+    await page.waitForTimeout(100);
+    await expect(modal).not.toBeVisible();
+  }
 };

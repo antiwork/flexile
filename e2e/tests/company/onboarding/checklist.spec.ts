@@ -74,10 +74,14 @@ test.describe("Onboarding checklist", () => {
     const checkProgress = async () => {
       await expect(page.getByText("75%")).toBeVisible();
       const checklistItems = page.locator('[class*="space-y-1"] > button');
-      await expect(checklistItems.nth(0).getByText("Add company details")).toHaveClass(/line-through/u);
-      await expect(checklistItems.nth(1).getByText("Add bank account")).toHaveClass(/line-through/u);
-      await expect(checklistItems.nth(2).getByText("Invite a contractor")).toHaveClass(/line-through/u);
-      await expect(checklistItems.nth(3).getByText("Send your first payment")).not.toHaveClass(/line-through/u);
+      // eslint-disable-next-line require-unicode-regexp
+      await expect(checklistItems.nth(0).getByText("Add company details")).toHaveClass(/line-through/);
+      // eslint-disable-next-line require-unicode-regexp
+      await expect(checklistItems.nth(1).getByText("Add bank account")).toHaveClass(/line-through/);
+      // eslint-disable-next-line require-unicode-regexp
+      await expect(checklistItems.nth(2).getByText("Invite a contractor")).toHaveClass(/line-through/);
+      // eslint-disable-next-line require-unicode-regexp
+      await expect(checklistItems.nth(3).getByText("Send your first payment")).not.toHaveClass(/line-through/);
     };
 
     await checkProgress();
@@ -106,7 +110,8 @@ test.describe("Onboarding checklist", () => {
     await expect(page.getByText("Sign contract")).toBeVisible();
 
     await page.getByText("Fill tax information").click();
-    await expect(page).toHaveURL(/\/settings\/tax/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(page).toHaveURL(/\/settings\/tax/);
     await page.getByLabel("Tax ID").fill(faker.string.numeric(9));
     await page.getByRole("button", { name: "Save changes" }).click();
     await withinModal(
@@ -120,9 +125,12 @@ test.describe("Onboarding checklist", () => {
     await expect(page.getByText("67%")).toBeVisible();
 
     const checklistItems = page.locator('[class*="space-y-1"] > button');
-    await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/u);
-    await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/u);
-    await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/);
 
     await wiseRecipientsFactory.create({ userId: contractorUser.id });
     await page.reload();
@@ -151,7 +159,8 @@ test.describe("Onboarding checklist", () => {
     await expect(page.getByText("Add payout information")).toBeVisible();
 
     await page.getByText("Fill tax information").click();
-    await expect(page).toHaveURL(/\/settings\/tax/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(page).toHaveURL(/\/settings\/tax/);
     await page.getByLabel("Tax ID").fill(faker.string.numeric(9));
     await page.getByRole("button", { name: "Save changes" }).click();
     await withinModal(
@@ -165,8 +174,10 @@ test.describe("Onboarding checklist", () => {
     await expect(page.getByText("50%")).toBeVisible();
 
     const checklistItems = page.locator('[class*="space-y-1"] > button');
-    await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/u);
-    await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/);
 
     await wiseRecipientsFactory.create({ userId: investorUser.id, usedForDividends: true });
     await page.reload();
@@ -192,7 +203,8 @@ test.describe("Onboarding checklist", () => {
     await expect(page.getByText("Sign contract")).toBeVisible();
 
     await page.getByText("Fill tax information").click();
-    await expect(page).toHaveURL(/\/settings\/tax/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(page).toHaveURL(/\/settings\/tax/);
     await page.getByLabel("Tax ID").fill(faker.string.numeric(9));
     await page.getByRole("button", { name: "Save changes" }).click();
     await withinModal(
@@ -206,9 +218,12 @@ test.describe("Onboarding checklist", () => {
     await expect(page.getByText("67%")).toBeVisible();
 
     const checklistItems = page.locator('[class*="space-y-1"] > button');
-    await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/u);
-    await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/u);
-    await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(checklistItems.nth(0).getByText("Fill tax information")).toHaveClass(/line-through/);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(checklistItems.nth(1).getByText("Add payout information")).not.toHaveClass(/line-through/);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(checklistItems.nth(2).getByText("Sign contract")).toHaveClass(/line-through/);
 
     await wiseRecipientsFactory.create({ userId: contractorUser.id, usedForDividends: true });
     await page.reload();

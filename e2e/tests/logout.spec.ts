@@ -25,9 +25,11 @@ test.describe("Logout", () => {
 
     await page.getByRole("button", { name: "Log out" }).click();
 
-    await page.waitForURL(/\/login(\?|$)/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await page.waitForURL(/\/login(\?|$)/);
     await page.goto("/invoices");
-    await page.waitForURL(/\/login(\?|$)/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await page.waitForURL(/\/login(\?|$)/);
 
     await expect(page.getByText("Welcome back")).toBeVisible();
   });

@@ -21,7 +21,8 @@ test("login", async ({ page }) => {
   await expect(page.getByText("Invalid verification code")).toBeVisible();
   await fillOtp(page);
 
-  await page.waitForURL(/.*\/invoices.*/u);
+  // eslint-disable-next-line require-unicode-regexp
+  await page.waitForURL(/.*\/invoices.*/);
 
   await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
@@ -39,7 +40,8 @@ test("login with redirect_url", async ({ page }) => {
 
   await page.goto("/people");
 
-  await page.waitForURL(/\/login\?.*redirect_url=%2Fpeople/u);
+  // eslint-disable-next-line require-unicode-regexp
+  await page.waitForURL(/\/login\?.*redirect_url=%2Fpeople/);
 
   await page.getByLabel("Work email").fill(email);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
@@ -47,7 +49,8 @@ test("login with redirect_url", async ({ page }) => {
   await fillOtp(page);
 
   // No need to click the button as it should auto-submit
-  await page.waitForURL(/.*\/people.*/u);
+  // eslint-disable-next-line require-unicode-regexp
+  await page.waitForURL(/.*\/people.*/);
 
   await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
 
@@ -65,7 +68,8 @@ test("login with Google", async ({ page }) => {
   await externalProviderMock(page, String(SignInMethod.Google), { email: user.email });
 
   await page.getByRole("button", { name: "Log in with Google" }).click();
-  await page.waitForURL(/.*\/invoices.*/u);
+  // eslint-disable-next-line require-unicode-regexp
+  await page.waitForURL(/.*\/invoices.*/);
 
   await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
   const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) });
@@ -77,12 +81,14 @@ test("login with Google and redirect_url", async ({ page }) => {
   const { user } = await usersFactory.create();
 
   await page.goto("/people");
-  await page.waitForURL(/\/login\?.*redirect_url=%2Fpeople/u);
+  // eslint-disable-next-line require-unicode-regexp
+  await page.waitForURL(/\/login\?.*redirect_url=%2Fpeople/);
 
   await externalProviderMock(page, String(SignInMethod.Google), { email: user.email });
 
   await page.getByRole("button", { name: "Log in with Google" }).click();
-  await page.waitForURL(/.*\/people.*/u);
+  // eslint-disable-next-line require-unicode-regexp
+  await page.waitForURL(/.*\/people.*/);
 
   await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
 
@@ -102,7 +108,8 @@ test("login description updates with last used sign-in method", async ({ page })
   await externalProviderMock(page, String(SignInMethod.Google), { email: user.email });
 
   await page.getByRole("button", { name: "Log in with Google" }).click();
-  await page.waitForURL(/.*\/invoices.*/u);
+  // eslint-disable-next-line require-unicode-regexp
+  await page.waitForURL(/.*\/invoices.*/);
   await logout(page);
 
   await expect(page.getByText("you used Google to log in last time")).toBeVisible();
@@ -153,5 +160,6 @@ test("OTP input validation and auto-submit behavior", async ({ page }) => {
   await expect(page.getByText("Verifying your code...")).toBeVisible();
 
   // Wait for redirect
-  await page.waitForURL(/.*\/invoices.*/u);
+  // eslint-disable-next-line require-unicode-regexp
+  await page.waitForURL(/.*\/invoices.*/);
 });

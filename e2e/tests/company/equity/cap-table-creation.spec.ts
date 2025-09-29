@@ -43,13 +43,15 @@ test.describe("Cap table creation", () => {
 
     await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText(investor1.legalName || "").click();
-    const row = page.getByRole("row", { name: new RegExp(investor1.legalName || "", "u") });
+    // eslint-disable-next-line require-unicode-regexp
+    const row = page.getByRole("row", { name: new RegExp(investor1.legalName || "") });
     await row.getByRole("textbox", { name: "Number of shares" }).fill("100000");
 
     await page.getByRole("button", { name: "Add new investor" }).click();
     await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText(investor2.legalName || "").click();
-    const row2 = page.getByRole("row", { name: new RegExp(investor2.legalName || "", "u") });
+    // eslint-disable-next-line require-unicode-regexp
+    const row2 = page.getByRole("row", { name: new RegExp(investor2.legalName || "") });
     await row2.getByRole("textbox", { name: "Number of shares" }).fill("50000");
 
     await expect(page.getByText("66.7%")).toBeVisible();
@@ -124,7 +126,8 @@ test.describe("Cap table creation", () => {
 
     await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText("Test Investor").click();
-    const row = page.getByRole("row", { name: new RegExp(investor.legalName || "", "u") });
+    // eslint-disable-next-line require-unicode-regexp
+    const row = page.getByRole("row", { name: new RegExp(investor.legalName || "") });
     await row.getByRole("textbox", { name: "Number of shares" }).fill("0");
 
     await page.getByRole("button", { name: "Finalize cap table" }).click();
@@ -157,7 +160,8 @@ test.describe("Cap table creation", () => {
 
     await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText("Test Investor").click();
-    const row = page.getByRole("row", { name: new RegExp(investor.legalName || "", "u") });
+    // eslint-disable-next-line require-unicode-regexp
+    const row = page.getByRole("row", { name: new RegExp(investor.legalName || "") });
     await row.getByRole("textbox", { name: "Number of shares" }).fill("5000");
 
     await page.getByRole("button", { name: "Finalize cap table" }).click();

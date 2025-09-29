@@ -39,7 +39,8 @@ test.describe("Dividend Computations", () => {
       { page },
     );
 
-    await expect(page).toHaveURL(/\/equity\/dividend_rounds\/draft\/.+/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(page).toHaveURL(/\/equity\/dividend_rounds\/draft\/.+/);
     await expect(page.getByRole("heading", { name: "Dividend" })).toBeVisible();
     await expect(page.getByText("Dividend distribution is still a draft")).toBeVisible();
     await page.getByRole("link", { name: "Dividends" }).first().click();
@@ -143,7 +144,8 @@ test.describe("Dividend Computations", () => {
       { page },
     );
 
-    await expect(page).toHaveURL(/\/equity\/dividend_rounds\/round\/.+/u);
+    // eslint-disable-next-line require-unicode-regexp
+    await expect(page).toHaveURL(/\/equity\/dividend_rounds\/round\/.+/);
 
     const footerAfterFinalization = await page.locator("tfoot").textContent();
     expect(footerAfterFinalization).toBe(footerBeforeFinalization);
