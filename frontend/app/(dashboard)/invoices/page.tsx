@@ -141,6 +141,7 @@ export default function InvoicesPage() {
           contexts: ["single"],
           permissions: ["worker"],
           conditions: (invoice: Invoice, _context: ActionContext) => EDITABLE_INVOICE_STATES.includes(invoice.status),
+          action: "edit",
           href: (invoice: Invoice) => `/invoices/${invoice.id}/edit`,
           group: "navigation",
           showIn: ["selection", "contextMenu"],
@@ -372,6 +373,11 @@ export default function InvoicesPage() {
         setOpenModal("delete");
         break;
       }
+      case "edit":
+        if (isSingleAction && singleInvoice) {
+          window.location.href = `/invoices/${singleInvoice.id}/edit`;
+        }
+        break;
     }
   };
 
