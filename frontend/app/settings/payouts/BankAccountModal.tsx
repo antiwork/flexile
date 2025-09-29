@@ -82,7 +82,7 @@ type BillingDetails = {
   zip_code: string | null;
   street_address: string | null;
   email: string;
-  billing_entity_name: string;
+  billing_entity_name: string | null;
   legal_type: "BUSINESS" | "PRIVATE";
 };
 
@@ -530,7 +530,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
                           modal
                           options={selectOptions}
                           disabled={isPending}
-                          className={cn(errors.has(field.key) && "border-red-500 focus-visible:ring-red-500")}
+                          className={cn(errors.has(field.key) && "border-red-500 focus-visible:ring-red-500", "h-9")}
                         />
                         {errorMessage ? <div className="text-sm text-red-500">{errorMessage}</div> : null}
                       </div>
