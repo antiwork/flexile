@@ -14,12 +14,9 @@ import {
   users,
   wiseRecipients,
 } from "@/db/schema";
-import env from "@/env";
 import { MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
 import { companyProcedure, createRouter } from "@/trpc";
-import { sendEmail } from "@/trpc/email";
 import { calculateInvoiceEquity } from "@/trpc/routes/equityCalculations";
-import OneOffInvoiceCreated from "@/trpc/routes/OneOffInvoiceCreated";
 import { latestUserComplianceInfo, simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
 
@@ -164,7 +161,7 @@ export const invoicesRouter = createRouter({
 
     const cashAmountInCents = totalAmountCents - equityAmountInCents;
 
-    const { invoice, paymentDescriptions } = await db.transaction(async (tx) => {
+    const { invoice } = await db.transaction(async (tx) => {
       const date = formatISO(dateToday, { representation: "date" });
       const invoiceResult = await tx
         .insert(invoices)
@@ -192,6 +189,7 @@ export const invoicesRouter = createRouter({
           totalAmountInUsdCents: totalAmountCents,
           cashAmountInCents,
           flexileFeeCents: getFlexileFeeCents(totalAmountCents),
+          acceptedAt: new Date(),
         })
         .returning();
       const invoice = assertDefined(invoiceResult[0]);
@@ -208,21 +206,6 @@ export const invoicesRouter = createRouter({
 
       return { invoice, paymentDescriptions: lineItems.map((item) => item.description) };
     });
-    const bankAccountLastFour = invoicer.wiseRecipients[0]?.lastFourDigits;
-
-    await sendEmail({
-      from: `Flexile <support@${env.DOMAIN}>`,
-      to: companyWorker.user.email,
-      replyTo: companyWorker.company.email,
-      subject: `🔴 Action needed: ${companyWorker.company.name} would like to pay you`,
-      react: OneOffInvoiceCreated({
-        companyName: companyWorker.company.name || companyWorker.company.email,
-        invoice,
-        bankAccountLastFour,
-        paymentDescriptions,
-      }),
-    });
-
     return invoice;
   }),
 
