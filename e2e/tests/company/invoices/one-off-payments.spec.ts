@@ -54,6 +54,7 @@ test.describe("One-off payments", () => {
       const invoice = await db.query.invoices.findFirst({
         where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
       });
+      expect(invoice?.acceptedAt).not.toBeNull();
       expect(invoice).toEqual(
         expect.objectContaining({
           totalAmountInUsdCents: BigInt(215430),
@@ -134,6 +135,7 @@ test.describe("One-off payments", () => {
         const invoice = await db.query.invoices.findFirst({
           where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
         });
+        expect(invoice?.acceptedAt).not.toBeNull();
         expect(invoice).toEqual(
           expect.objectContaining({
             totalAmountInUsdCents: BigInt(50000),
@@ -192,6 +194,7 @@ test.describe("One-off payments", () => {
         const invoice = await db.query.invoices.findFirst({
           where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
         });
+        expect(invoice?.acceptedAt).not.toBeNull();
         expect(invoice).toEqual(
           expect.objectContaining({
             totalAmountInUsdCents: BigInt(50000),
