@@ -119,11 +119,15 @@ export const Editor = ({
         className,
       )}
     >
-      <div className="border-input group-aria-invalid:border-destructive flex border-b p-1">
+      <div className="border-input group-aria-invalid:border-destructive flex gap-1 border-b p-1">
         {toolbarItems.map((item) => (
           <button
             type="button"
-            className={cn(linkClasses, "hover:bg-accent hover:text-foreground rounded p-2 text-sm")}
+            className={cn(
+              linkClasses,
+              "hover:bg-accent hover:text-foreground rounded p-2 text-sm transition-colors",
+              editor?.isActive(item.name, item.attributes) && "bg-accent text-foreground",
+            )}
             key={item.label}
             aria-label={item.label}
             aria-pressed={editor?.isActive(item.name, item.attributes)}
