@@ -71,7 +71,7 @@ test.describe("One-off payments", () => {
         expect.objectContaining({
           to: workerUser.email,
           subject: `${company.name} has sent you a payment`,
-          text: expect.stringContaining("as sent you money"),
+          text: expect.stringContaining("has sent you money"),
         }),
       ]);
     });
@@ -152,7 +152,7 @@ test.describe("One-off payments", () => {
           expect.objectContaining({
             to: workerUser.email,
             subject: `${company.name} has sent you a payment`,
-            text: expect.stringContaining("as sent you money"),
+            text: expect.stringContaining("has sent you money"),
           }),
         ]);
       });
@@ -210,7 +210,7 @@ test.describe("One-off payments", () => {
           expect.objectContaining({
             to: workerUser.email,
             subject: `${company.name} has sent you a payment`,
-            text: expect.stringContaining("as sent you money"),
+            text: expect.stringContaining("has sent you money"),
           }),
         ]);
       });
