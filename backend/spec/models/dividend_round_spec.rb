@@ -75,4 +75,27 @@ RSpec.describe DividendRound do
       expect(created_rounds.pluck(:company_investor_id)).to match_array(pending_investor_ids)
     end
   end
+
+  describe "#send_dividend_emails" do
+    let(:company) { create(:company) }
+    let(:dividend_round) { create(:dividend_round, company: company) }
+    let(:investor1) { create(:company_investor, company: company) }
+    let(:investor2) { create(:company_investor, company: company) }
+    let(:investor3) { create(:company_investor, company: company) }
+
+    before do
+      create(:dividend, dividend_round: dividend_round, company_investor: investor1, status: Dividend::ISSUED)
+      create(:dividend, dividend_round: dividend_round, company_investor: investor2, status: Dividend::PENDING_SIGNUP)
+      create(:dividend, dividend_round: dividend_round, company_investor: investor3, status: Dividend::ISSUED)
+    end
+
+    it "only sends emails to investors with Issued dividends, excluding Pending signup" do
+      allow_any_instance_of(InvestorDividendRound).to receive(:send_dividend_issued_email)
+
+      dividend_round.send_dividend_emails
+
+      expect(InvestorDividendRound.where(company_investor: [investor1, investor3]).count).to eq(2)
+      expect(InvestorDividendRound.where(company_investor: investor2).count).to eq(0)
+    end
+  end
 end
