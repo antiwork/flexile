@@ -166,7 +166,7 @@ test.describe("Manage roles access", () => {
       await login(page, primaryAdmin, "/settings/administrator/roles");
 
       // Find second admin row and click ellipsis menu
-      // eslint-disable-next-line require-unicode-regexp
+
       // eslint-disable-next-line require-unicode-regexp
       const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "") });
       const ellipsisButton = secondAdminRow.getByRole("button", { name: "Open menu" });
@@ -238,7 +238,7 @@ test.describe("Manage roles access", () => {
       await expect(ownerRow.getByRole("button", { name: "Open menu" })).not.toBeVisible();
 
       // Second admin should have disabled button when they would be removing the last non-owner admin
-      // eslint-disable-next-line require-unicode-regexp
+
       // eslint-disable-next-line require-unicode-regexp
       const secondAdminRow = page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "") });
       const ellipsisButton = secondAdminRow.getByRole("button", { name: "Open menu" });
@@ -304,7 +304,7 @@ test.describe("Manage roles access", () => {
       await page.goto("/settings/administrator/roles");
 
       // Multi-role user should show "Admin" role
-      // eslint-disable-next-line require-unicode-regexp
+
       // eslint-disable-next-line require-unicode-regexp
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "") });
       await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
@@ -338,7 +338,7 @@ test.describe("Manage roles access", () => {
       await login(page, primaryAdmin, "/settings/administrator/roles");
 
       // Multi-role user should show "Admin" role
-      // eslint-disable-next-line require-unicode-regexp
+
       // eslint-disable-next-line require-unicode-regexp
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "") });
       await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
@@ -348,7 +348,7 @@ test.describe("Manage roles access", () => {
       await login(page, primaryAdmin, "/settings/administrator/roles");
 
       // Multi-role user currently shows as Admin
-      // eslint-disable-next-line require-unicode-regexp
+
       // eslint-disable-next-line require-unicode-regexp
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "") });
       await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
