@@ -176,7 +176,7 @@ export const invoicesRouter = createRouter({
           companyContractorId: companyWorker.id,
           invoiceType: "other",
           invoiceNumber,
-          status: "received",
+          status: "approved",
           invoiceDate: date,
           dueOn: date,
           billFrom,
@@ -192,6 +192,7 @@ export const invoicesRouter = createRouter({
           totalAmountInUsdCents: totalAmountCents,
           cashAmountInCents,
           flexileFeeCents: getFlexileFeeCents(totalAmountCents),
+          acceptedAt: new Date(),
         })
         .returning();
       const invoice = assertDefined(invoiceResult[0]);
@@ -214,9 +215,9 @@ export const invoicesRouter = createRouter({
       from: `Flexile <support@${env.DOMAIN}>`,
       to: companyWorker.user.email,
       replyTo: companyWorker.company.email,
-      subject: `🔴 Action needed: ${companyWorker.company.name} would like to pay you`,
+      subject: `Payment received from ${companyWorker.company.name}`,
       react: OneOffInvoiceCreated({
-        companyName: companyWorker.company.name || companyWorker.company.email,
+        companyName: companyWorker.company.name ?? companyWorker.company.email,
         invoice,
         bankAccountLastFour,
         paymentDescriptions,

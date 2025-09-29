@@ -66,11 +66,14 @@ test.describe("One-off payments", () => {
         }),
       );
 
+      expect(invoice?.acceptedAt).not.toBeNull();
+      expect(invoice?.acceptedAt).toBeInstanceOf(Date);
+      expect(invoice?.status).toBe("approved");
       expect(sentEmails).toEqual([
         expect.objectContaining({
           to: workerUser.email,
-          subject: `🔴 Action needed: ${company.name} would like to pay you`,
-          text: expect.stringContaining("would like to send you money"),
+          subject: `Payment received from ${company.name}`,
+          text: expect.stringContaining("You've received a payment"),
         }),
       ]);
     });
@@ -146,11 +149,13 @@ test.describe("One-off payments", () => {
           }),
         );
 
+        expect(invoice?.acceptedAt).not.toBeNull();
+        expect(invoice?.acceptedAt).toBeInstanceOf(Date);
         expect(sentEmails).toEqual([
           expect.objectContaining({
             to: workerUser.email,
-            subject: `🔴 Action needed: ${company.name} would like to pay you`,
-            text: expect.stringContaining("would like to send you money"),
+            subject: `Payment received from ${company.name}`,
+            text: expect.stringContaining("You've received a payment"),
           }),
         ]);
       });
@@ -204,96 +209,21 @@ test.describe("One-off payments", () => {
           }),
         );
 
+        expect(invoice?.acceptedAt).not.toBeNull();
+        expect(invoice?.acceptedAt).toBeInstanceOf(Date);
         expect(sentEmails).toEqual([
           expect.objectContaining({
             to: workerUser.email,
-            subject: `🔴 Action needed: ${company.name} would like to pay you`,
-            text: expect.stringContaining("would like to send you money"),
+            subject: `Payment received from ${company.name}`,
+            text: expect.stringContaining("You've received a payment"),
           }),
         ]);
-      });
-
-      test("allows a worker to accept a one-off payment with a fixed equity percentage", async ({ page }) => {
-        const { invoice } = await invoicesFactory.create({
-          userId: workerUser.id,
-          companyId: company.id,
-          companyContractorId: companyContractor.id,
-          createdById: adminUser.id,
-          invoiceType: "other",
-          status: "approved",
-          equityPercentage: 10,
-          equityAmountInCents: BigInt(600),
-          equityAmountInOptions: 60,
-          cashAmountInCents: BigInt(5400),
-          totalAmountInUsdCents: BigInt(6000),
-        });
-        await login(page, workerUser, `/invoices/${invoice.externalId}`);
-
-        await page.getByRole("button", { name: "Accept payment" }).click();
-        await withinModal(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), { page });
-        await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
-      });
-
-      test("allows a worker to accept a one-off payment with an allowed equity percentage range", async ({ page }) => {
-        const { invoice } = await invoicesFactory.create({
-          userId: workerUser.id,
-          companyId: company.id,
-          companyContractorId: companyContractor.id,
-          createdById: adminUser.id,
-          invoiceType: "other",
-          status: "approved",
-          equityPercentage: 0,
-          equityAmountInCents: BigInt(0),
-          equityAmountInOptions: 0,
-          cashAmountInCents: BigInt(50000),
-          totalAmountInUsdCents: BigInt(50000),
-          minAllowedEquityPercentage: 0,
-          maxAllowedEquityPercentage: 100,
-        });
-        await login(page, workerUser, `/invoices/${invoice.externalId}`);
-
-        await page.getByRole("button", { name: "Accept payment" }).click();
-
-        await withinModal(
-          async (modal) => {
-            const sliderContainer = modal.locator('[data-orientation="horizontal"]').first();
-            const containerBounds = await sliderContainer.boundingBox();
-            if (!containerBounds) throw new Error("Could not get slider container bounds");
-
-            const equityPercentageThumb = modal.getByRole("slider");
-            await equityPercentageThumb.focus();
-            await equityPercentageThumb.press("Home");
-
-            // Move to 25% by pressing Arrow Right 25 times (assuming 1% per step)
-            for (let i = 0; i < 25; i++) {
-              await equityPercentageThumb.press("ArrowRight");
-            }
-
-            await modal.getByRole("button", { name: "Confirm 25% split" }).click();
-          },
-          { page },
-        );
-
-        expect(await db.query.invoices.findFirst({ where: eq(invoices.id, invoice.id) })).toEqual(
-          expect.objectContaining({
-            totalAmountInUsdCents: BigInt(50000),
-            equityPercentage: 25,
-            cashAmountInCents: BigInt(37500),
-            equityAmountInCents: BigInt(12500),
-            equityAmountInOptions: 13,
-            minAllowedEquityPercentage: 0,
-            maxAllowedEquityPercentage: 100,
-          }),
-        );
       });
     });
   });
 
   test.describe("invoice list visibility", () => {
-    test("does not show one-off payments in the admin invoice list while they're not accepted by the payee", async ({
-      page,
-      sentEmails: _,
-    }) => {
+    test("shows one-off payments in both admin and worker invoice lists immediately", async ({ page }) => {
       await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
       await page.getByRole("button", { name: "Issue payment" }).click();
@@ -321,17 +251,7 @@ test.describe("One-off payments", () => {
 
       await invoiceRow.getByRole("link", { name: "O-0001" }).click();
       await expect(page.getByRole("cell", { name: "Bonus!" })).toBeVisible();
-
-      await page.getByRole("button", { name: "Accept payment" }).click();
-      await withinModal(
-        async (modal) => {
-          await expect(modal).toContainText("Total value $123.45", { useInnerText: true });
-          await modal.getByRole("button", { name: "Accept payment" }).click();
-          await page.waitForLoadState("networkidle");
-        },
-        { page },
-      );
-
+      await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
       await logout(page);
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
