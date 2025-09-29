@@ -7,7 +7,9 @@ export const selectComboboxOption = async (page: Locator | Page, name: string, o
 
 export const fillDatePicker = async (page: Page, name: string, value: string) => {
   const date = page.getByRole("spinbutton", { name }).first();
+  // Wait for the field to be interactive before typing to avoid lost keystrokes
   await expect(date).toBeEditable();
+  // Add delay between keystrokes as workaround for React Aria Components JS interop issues
   return date.pressSequentially(value, { delay: 100 });
 };
 
