@@ -37,7 +37,7 @@ test.describe("One-off payments", () => {
   });
 
   test.describe("admin creates a payment", () => {
-    test("allows admin to create a one-off payment for a contractor without equity", async ({ page }) => {
+    test("allows admin to create a one-off payment for a contractor without equity", async ({ page, sentEmails }) => {
       await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
       await page.getByRole("button", { name: "Issue payment" }).click();
@@ -65,6 +65,14 @@ test.describe("One-off payments", () => {
           maxAllowedEquityPercentage: null,
         }),
       );
+
+      expect(sentEmails).toEqual([
+        expect.objectContaining({
+          to: workerUser.email,
+          subject: `${company.name} has sent you a payment`,
+          text: expect.stringContaining("as sent you money"),
+        }),
+      ]);
     });
 
     test.describe("for a contractor with equity", () => {
@@ -108,7 +116,7 @@ test.describe("One-off payments", () => {
         );
       });
 
-      test("with a fixed equity percentage", async ({ page }) => {
+      test("with a fixed equity percentage", async ({ page, sentEmails }) => {
         await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
         await page.getByRole("button", { name: "Issue payment" }).click();
@@ -137,9 +145,17 @@ test.describe("One-off payments", () => {
             maxAllowedEquityPercentage: null,
           }),
         );
+
+        expect(sentEmails).toEqual([
+          expect.objectContaining({
+            to: workerUser.email,
+            subject: `${company.name} has sent you a payment`,
+            text: expect.stringContaining("as sent you money"),
+          }),
+        ]);
       });
 
-      test("with an allowed equity percentage range", async ({ page }) => {
+      test("with an allowed equity percentage range", async ({ page, sentEmails }) => {
         await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
         await page.getByRole("button", { name: "Issue payment" }).click();
@@ -187,6 +203,13 @@ test.describe("One-off payments", () => {
             maxAllowedEquityPercentage: 75,
           }),
         );
+        expect(sentEmails).toEqual([
+          expect.objectContaining({
+            to: workerUser.email,
+            subject: `${company.name} has sent you a payment`,
+            text: expect.stringContaining("as sent you money"),
+          }),
+        ]);
       });
     });
   });
