@@ -519,13 +519,13 @@ export default function InvoicePage() {
                       <b className="print:text-sm print:font-bold">Notes</b>
                       <div>
                         <div className="text-xs">
-                          <p className="print:mt-1 print:text-xs">{invoice.notes}</p>
+                          <p className="whitespace-pre-wrap print:mt-1 print:text-xs">{invoice.notes}</p>
                         </div>
                       </div>
                     </div>
                   ) : null}
                 </div>
-                <Card className="print:min-w-36 print:border-none print:bg-transparent print:p-2">
+                <Card className="self-start print:min-w-36 print:border-none print:bg-transparent print:p-2">
                   <CardContent>
                     {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
                       <>
