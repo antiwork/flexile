@@ -246,12 +246,12 @@ export default function RolesPage() {
           const user = info.row.original;
           const isCurrentUser = currentUser.email === user.email;
           return (
-            <div>
-              <div className="font-medium">
-                {user.name}
-                {isCurrentUser ? <span className="text-muted-foreground ml-1">(You)</span> : null}
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 font-medium">
+                <span className="truncate">{user.name}</span>
+                {isCurrentUser ? <span className="text-muted-foreground shrink-0 text-xs">(You)</span> : null}
               </div>
-              <div className="text-muted-foreground text-sm">{user.email}</div>
+              <div className="text-muted-foreground truncate text-sm">{user.email}</div>
             </div>
           );
         },

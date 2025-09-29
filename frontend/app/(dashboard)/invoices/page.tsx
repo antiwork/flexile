@@ -12,6 +12,7 @@ import {
   CircleCheck,
   CircleCheckBig,
   Download,
+  Edit,
   Eye,
   Info,
   MoreHorizontal,
@@ -46,7 +47,6 @@ import { linkClasses } from "@/components/Link";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
-import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -142,6 +142,7 @@ export default function InvoicesPage() {
           contexts: ["single"],
           permissions: ["worker"],
           conditions: (invoice: Invoice, _context: ActionContext) => EDITABLE_INVOICE_STATES.includes(invoice.status),
+          action: "edit",
           href: (invoice: Invoice) => `/invoices/${invoice.id}/edit`,
           group: "navigation",
           showIn: ["selection", "contextMenu"],
@@ -373,6 +374,11 @@ export default function InvoicesPage() {
         setOpenModal("delete");
         break;
       }
+      case "edit":
+        if (isSingleAction && singleInvoice) {
+          window.location.href = `/invoices/${singleInvoice.id}/edit`;
+        }
+        break;
     }
   };
 
@@ -532,9 +538,7 @@ export default function InvoicesPage() {
 
       <QuickInvoicesSection />
 
-      {isLoading ? (
-        <TableSkeleton columns={6} />
-      ) : data.length > 0 ? (
+      {data.length > 0 || isLoading ? (
         <DataTable
           table={table}
           onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
@@ -568,6 +572,7 @@ export default function InvoicesPage() {
               onClearSelection={onClearSelection}
             />
           )}
+          isLoading={isLoading}
         />
       ) : (
         <div className="mx-4">
@@ -768,6 +773,7 @@ const InvoiceBulkActionsBar = ({
   const rejectAction = visibleActions.find((action) => action.key === "reject");
   const approveAction = visibleActions.find((action) => action.key === "approve");
   const deleteAction = visibleActions.find((action) => action.key === "delete");
+  const editAction = visibleActions.find((action) => action.key === "edit");
 
   return (
     <Dialog open={selectedInvoices.length > 0} modal={false}>
@@ -814,6 +820,15 @@ const InvoiceBulkActionsBar = ({
               onClick={() => deleteAction.action && onAction(deleteAction.action, selectedInvoices)}
             >
               <Trash2 className="size-3.5" strokeWidth={2.5} />
+            </Button>
+          ) : null}
+          {editAction ? (
+            <Button
+              variant="outline"
+              className="flex h-9 items-center gap-2 text-sm"
+              onClick={() => editAction.action && onAction(editAction.action, selectedInvoices)}
+            >
+              <Edit className="size-3.5" strokeWidth={2.5} />
             </Button>
           ) : null}
         </div>

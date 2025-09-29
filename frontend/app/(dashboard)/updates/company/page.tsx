@@ -1,4 +1,5 @@
 "use client";
+import { useMutation } from "@tanstack/react-query";
 import { CircleCheck, Plus, Trash2 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import CompanyUpdateModal from "@/app/(dashboard)/updates/company/CompanyUpdateModal";
@@ -7,12 +8,13 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { company_company_update_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 
@@ -96,8 +98,15 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
 
   const [deletingUpdate, setDeletingUpdate] = useState<string | null>(null);
 
-  const deleteMutation = trpc.companyUpdates.delete.useMutation({
-    onSuccess: () => {
+  const deleteMutation = useMutation({
+    mutationFn: async (updateId: string) => {
+      await request({
+        method: "DELETE",
+        url: company_company_update_path(company.externalId, updateId),
+        accept: "json",
+        assertOk: true,
+      });
+
       void trpcUtils.companyUpdates.list.invalidate();
       setDeletingUpdate(null);
     },
@@ -117,7 +126,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
       columnHelper.simple("sentAt", "Sent On", (v) => (v ? formatDate(v) : "-")),
       columnHelper.accessor((row) => (row.sentAt ? "Sent" : "Draft"), {
         header: "Status",
-        cell: (info) => <Status variant={info.getValue() === "Sent" ? "success" : undefined}>{info.getValue()}</Status>,
+        cell: (info) => info.getValue(),
       }),
       columnHelper.display({
         id: "actions",
@@ -165,9 +174,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
 
           return (
             <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 items-center justify-center">
-                <Status variant={update.sentAt ? "success" : undefined}>{update.sentAt ? "Sent" : "Draft"}</Status>
-              </div>
+              <div className="flex h-5 items-center justify-center">{update.sentAt ? "Sent" : "Draft"}</div>
               <div className="text-muted-foreground">{update.sentAt ? formatDate(update.sentAt) : "-"}</div>
             </div>
           );
@@ -200,7 +207,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
               <MutationButton
                 mutation={deleteMutation}
                 size="small"
-                param={{ companyId: company.id, id: deletingUpdate ?? "" }}
+                param={deletingUpdate ?? ""}
                 loadingText="Deleting..."
               >
                 Yes, delete
