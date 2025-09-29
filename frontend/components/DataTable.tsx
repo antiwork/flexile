@@ -135,17 +135,22 @@ export default function DataTable<T extends RowData>({
     const filteredRows = table.getRowModel().rows;
     let rowsToShow = filteredRows;
 
+    // Only show fallback for people with no roles if:
+    // 1. There are no filtered results
+    // 2. There's an active role filter (not just a search)
     if (filteredRows.length === 0) {
-      const allRows = table.getCoreRowModel().rows;
-      rowsToShow = allRows.filter((row) => {
-        const roleColumn = table.getAllColumns().find((col) => col.id === "role");
-        if (roleColumn) {
+      const columnFilters = table.getState().columnFilters;
+      const hasRoleFilter = columnFilters.some((filter) => filter.id === "role");
+      const hasOnlyRoleFilter = columnFilters.length === 1 && hasRoleFilter;
+
+      if (hasRoleFilter && hasOnlyRoleFilter) {
+        const allRows = table.getCoreRowModel().rows;
+        rowsToShow = allRows.filter((row) => {
           const roleValue = row.getValue("role");
           const role = (roleValue || "").toString().trim();
           return role === "" || role.toUpperCase() === "N/A";
-        }
-        return false;
-      });
+        });
+      }
     }
 
     return {
@@ -166,6 +171,7 @@ export default function DataTable<T extends RowData>({
         })),
     };
   }, [table.getState()]);
+
   const sortable = !!table.options.getSortedRowModel;
   const filterable = !!table.options.getFilteredRowModel;
   const selectable = !!table.options.enableRowSelection;
