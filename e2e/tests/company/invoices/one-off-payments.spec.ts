@@ -166,35 +166,23 @@ test.describe("One-off payments", () => {
             await modal.getByLabel("What is this for?").fill("Bonus payment for Q4");
             await modal.getByLabel("Equity percentage range").evaluate((x) => x instanceof HTMLElement && x.click()); // playwright breaks on the hidden radio inputs
 
-            const sliderContainer = modal.locator('[data-orientation="horizontal"]').first();
-            const containerBounds = await sliderContainer.boundingBox();
-            if (!containerBounds) throw new Error("Could not get slider container bounds");
-
             // Move minimum thumb to 25%
             const minThumb = modal.getByRole("slider", { name: "Minimum" });
-            const minThumbBounds = await minThumb.boundingBox();
-            if (!minThumbBounds) throw new Error("Could not get min thumb bounds");
-
-            await minThumb.hover();
-            await page.mouse.down();
-            await page.mouse.move(
-              containerBounds.x + containerBounds.width * 0.25,
-              containerBounds.y + containerBounds.height / 2,
-            );
-            await page.mouse.up();
+            await minThumb.focus();
+            await minThumb.press("Home"); // Start at 0%
+            // Move to 25% by pressing Arrow Right 25 times (assuming 1% per step)
+            for (let i = 0; i < 25; i++) {
+              await minThumb.press("ArrowRight");
+            }
 
             // Move maximum thumb to 75%
             const maxThumb = modal.getByRole("slider", { name: "Maximum" });
-            const maxThumbBounds = await maxThumb.boundingBox();
-            if (!maxThumbBounds) throw new Error("Could not get max thumb bounds");
-
-            await maxThumb.hover();
-            await page.mouse.down();
-            await page.mouse.move(
-              containerBounds.x + containerBounds.width * 0.75,
-              containerBounds.y + containerBounds.height / 2,
-            );
-            await page.mouse.up();
+            await maxThumb.focus();
+            await maxThumb.press("End"); // Start at 100%
+            // Move to 75% by pressing Arrow Left 25 times (from 100% to 75%)
+            for (let i = 0; i < 25; i++) {
+              await maxThumb.press("ArrowLeft");
+            }
 
             await modal.getByRole("button", { name: "Issue payment" }).click();
           },
