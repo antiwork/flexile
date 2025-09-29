@@ -478,16 +478,12 @@ const AddCapTablePage = () => {
                 Add new investor
               </Button>
 
-              <Card className="bg-secondary">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold">Total</span>
-                    <div className="font-semibold">
-                      {calculateTotalShares(form.watch("investors")).toLocaleString()} shares
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-center justify-between px-4">
+                <span className="text-sm font-semibold">Total</span>
+                <div className="font-semibold">
+                  {calculateTotalShares(form.watch("investors")).toLocaleString()} shares
+                </div>
+              </div>
             </div>
           ) : (
             <DataTable table={table} />
