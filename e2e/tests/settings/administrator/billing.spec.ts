@@ -7,7 +7,7 @@ test.skip(() => process.env.STRIPE_SECRET_KEY === "dummy");
 test.describe("Company billing settings", () => {
   test("billing settings gated until company name is set", async ({ page }) => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding(
-      { name: null, stripeCustomerId: null },
+      { name: null },
       { withoutBankAccount: true },
     );
 
