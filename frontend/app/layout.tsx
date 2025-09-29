@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Toaster } from "sonner";
 import { TRPCProvider } from "@/trpc/client";
 
 const abcWhyte = localFont({
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <TRPCProvider>
             <NuqsAdapter>{children}</NuqsAdapter>
+            <Toaster theme="system" richColors position="bottom-right" />
           </TRPCProvider>
         </ThemeProvider>
       </body>

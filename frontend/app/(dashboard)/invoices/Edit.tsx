@@ -8,6 +8,7 @@ import { CircleAlert, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useRef, useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -224,6 +225,11 @@ const Edit = () => {
         await refetch();
       }
       router.push("/invoices");
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to submit invoice", {
+        description: error.message || "An unexpected error occurred. Please try again.",
+      });
     },
   });
 
