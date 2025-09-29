@@ -238,7 +238,7 @@ const CompanySwitcher = ({ onSelect }: CompanySwitcherProps) => {
       onClick={() => void handleCompanySwitch(company.id)}
       className={cn(
         "flex w-full items-center gap-3 px-6 py-3 text-left transition-colors",
-        company.id === user.currentCompanyId && "bg-accent text-accent-foreground font-medium",
+        company.id === user.currentCompanyId && "bg-accent text-foreground font-medium",
       )}
       aria-label={`Switch to ${company.name}`}
       aria-current={company.id === user.currentCompanyId ? "true" : undefined}
