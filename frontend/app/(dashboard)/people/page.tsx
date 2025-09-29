@@ -14,7 +14,6 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import DatePicker from "@/components/DatePicker";
 import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentCompany } from "@/global";
 import { countries } from "@/models/constants";
+import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_workers_path } from "@/utils/routes";
@@ -50,6 +50,19 @@ import FormFields, { schema as formSchema } from "./FormFields";
 import InviteLinkModal from "./InviteLinkModal";
 
 const removeMailtoPrefix = (email: string) => email.replace(/^mailto:/iu, "");
+const getStatusLabel = (contractor: RouterOutput["contractors"]["list"][number]) => {
+  const { endedAt, startedAt, user } = contractor;
+  if (endedAt) {
+    return `Ended on ${formatDate(serverDateToLocal(endedAt))}`;
+  } else if (startedAt <= new Date()) {
+    return `Started on ${formatDate(serverDateToLocal(startedAt))}`;
+  } else if (user.onboardingCompleted) {
+    return `Starts on ${formatDate(serverDateToLocal(startedAt))}`;
+  } else if (user.invitationAcceptedAt) {
+    return "In Progress";
+  }
+  return "Invited";
+};
 
 export default function PeoplePage() {
   const company = useCurrentCompany();
@@ -81,18 +94,7 @@ export default function PeoplePage() {
         id: "status",
         header: "Status",
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
-        cell: (info) =>
-          info.row.original.endedAt ? (
-            <Status variant="critical">Ended on {formatDate(serverDateToLocal(info.row.original.endedAt))}</Status>
-          ) : info.row.original.startedAt <= new Date() ? (
-            <Status variant="success">Started on {formatDate(serverDateToLocal(info.row.original.startedAt))}</Status>
-          ) : info.row.original.user.onboardingCompleted ? (
-            <Status variant="success">Starts on {formatDate(serverDateToLocal(info.row.original.startedAt))}</Status>
-          ) : info.row.original.user.invitationAcceptedAt ? (
-            <Status variant="primary">In Progress</Status>
-          ) : (
-            <Status variant="primary">Invited</Status>
-          ),
+        cell: (info) => getStatusLabel(info.row.original),
       }),
     ],
     [workers],
@@ -106,11 +108,11 @@ export default function PeoplePage() {
           return (
             <>
               <div>
-                <div className="text-base font-medium">{person.user.name}</div>
-                <div className="text-sm font-normal">{person.role}</div>
+                <div className="truncate text-base font-medium">{person.user.name}</div>
+                <div className="truncate text-sm font-normal">{person.role}</div>
               </div>
               {person.user.countryCode ? (
-                <div className="text-muted-foreground text-sm font-normal">
+                <div className="text-muted-foreground truncate text-sm font-normal">
                   {countries.get(person.user.countryCode)}
                 </div>
               ) : null}
@@ -118,36 +120,17 @@ export default function PeoplePage() {
           );
         },
         meta: {
-          cellClassName: "w-full",
+          cellClassName: "max-w-[50vw]",
         },
       }),
 
       columnHelper.display({
         id: "statusDisplay",
-        cell: (info) => {
-          const original = info.row.original;
-          let variant: "critical" | "success" | "primary";
-
-          if (original.endedAt) {
-            variant = "critical";
-          } else if (original.startedAt <= new Date()) {
-            variant = "success";
-          } else if (original.user.onboardingCompleted) {
-            variant = "success";
-          } else if (original.user.invitationAcceptedAt) {
-            variant = "primary";
-          } else {
-            variant = "primary";
-          }
-
-          return (
-            <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 w-4 items-center justify-center">
-                <Status variant={variant} />
-              </div>
-            </div>
-          );
-        },
+        cell: (info) => (
+          <div className="flex h-full flex-col items-end justify-between">
+            <div className="flex h-5 items-center justify-center">{getStatusLabel(info.row.original)}</div>
+          </div>
+        ),
       }),
 
       columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {

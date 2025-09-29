@@ -12,7 +12,7 @@ import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq } from "drizzle-orm";
 import { DocumentTemplateType } from "@/db/enums";
 import { companies, companyInvestors, documentTemplates, equityGrants } from "@/db/schema";
-import { assertDefined } from "@/utils/assert";
+import { assert, assertDefined } from "@/utils/assert";
 
 test.describe("Equity Grants", () => {
   test("allows issuing equity grants", async ({ page }) => {
@@ -127,12 +127,11 @@ test.describe("Equity Grants", () => {
     const projectBasedCompanyInvestor = await db.query.companyInvestors.findFirst({
       where: and(eq(companyInvestors.companyId, company.id), eq(companyInvestors.userId, projectBasedUser.id)),
     });
-    assertDefined(
-      await db.query.equityGrants.findFirst({
-        where: eq(equityGrants.companyInvestorId, assertDefined(projectBasedCompanyInvestor).id),
-        orderBy: desc(equityGrants.createdAt),
-      }),
-    );
+    const grant = await db.query.equityGrants.findFirst({
+      where: eq(equityGrants.companyInvestorId, assertDefined(projectBasedCompanyInvestor).id),
+      orderBy: desc(equityGrants.createdAt),
+    });
+    assert(grant != null);
 
     await logout(page);
     await login(page, contractorUser, "/invoices");
@@ -171,6 +170,8 @@ test.describe("Equity Grants", () => {
     await expect(page.getByRole("table").locator("tbody")).toContainText("Nov 1, 2024");
     await expect(page.getByRole("table").locator("tbody")).toContainText("1,000");
     await expect(page.getByRole("table").locator("tbody")).toContainText("Awaiting approval");
+    const updatedGrant = await db.query.equityGrants.findFirst({ where: eq(equityGrants.id, grant.id) });
+    expect(updatedGrant?.acceptedAt).not.toBeNull();
   });
 
   test("allows cancelling a grant", async ({ page }) => {

@@ -1,4 +1,5 @@
 "use client";
+import { useMutation } from "@tanstack/react-query";
 import { CircleCheck, Plus, Trash2 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import CompanyUpdateModal from "@/app/(dashboard)/updates/company/CompanyUpdateModal";
@@ -13,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
+import { request } from "@/utils/request";
+import { company_company_update_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 
@@ -96,8 +99,15 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
 
   const [deletingUpdate, setDeletingUpdate] = useState<string | null>(null);
 
-  const deleteMutation = trpc.companyUpdates.delete.useMutation({
-    onSuccess: () => {
+  const deleteMutation = useMutation({
+    mutationFn: async (updateId: string) => {
+      await request({
+        method: "DELETE",
+        url: company_company_update_path(company.externalId, updateId),
+        accept: "json",
+        assertOk: true,
+      });
+
       void trpcUtils.companyUpdates.list.invalidate();
       setDeletingUpdate(null);
     },
@@ -200,7 +210,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
               <MutationButton
                 mutation={deleteMutation}
                 size="small"
-                param={{ companyId: company.id, id: deletingUpdate ?? "" }}
+                param={deletingUpdate ?? ""}
                 loadingText="Deleting..."
               >
                 Yes, delete

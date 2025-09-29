@@ -446,7 +446,7 @@ export default function InvoicePage() {
                   <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full print:my-3 print:w-full print:border-collapse print:text-xs">
                     <TableHeader>
                       <TableRow className="print:border-b print:border-gray-300">
-                        <PrintTableHeader className="w-[50%] md:w-[60%] print:text-left">
+                        <PrintTableHeader className="w-[40%] md:w-[50%] print:text-left">
                           {complianceInfo?.businessEntity ? `Services (${complianceInfo.legalName})` : "Services"}
                         </PrintTableHeader>
                         <PrintTableHeader className="w-[20%] text-right md:w-[15%] print:text-right">
@@ -455,7 +455,7 @@ export default function InvoicePage() {
                         <PrintTableHeader className="w-[20%] text-right md:w-[15%] print:text-right">
                           Cash rate
                         </PrintTableHeader>
-                        <PrintTableHeader className="w-[10%] text-right print:text-right">Line total</PrintTableHeader>
+                        <PrintTableHeader className="w-[20%] text-right print:text-right">Line total</PrintTableHeader>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
