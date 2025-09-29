@@ -134,10 +134,6 @@ export default function DataTable<T extends RowData>({
   const data = useMemo(() => {
     const filteredRows = table.getRowModel().rows;
     let rowsToShow = filteredRows;
-
-    // Only show fallback for people with no roles if:
-    // 1. There are no filtered results
-    // 2. There's an active role filter (not just a search)
     if (filteredRows.length === 0) {
       const columnFilters = table.getState().columnFilters;
       const hasRoleFilter = columnFilters.some((filter) => filter.id === "role");
