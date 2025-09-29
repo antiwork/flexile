@@ -286,7 +286,6 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
 
     setDetails((prevDetails) => {
       let updated = prevDetails;
-      let changed = false;
 
       for (const field of visibleFields) {
         if ((field.type === "select" || field.type === "radio") && field.valuesAllowed) {
@@ -294,13 +293,12 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
           const isValid = field.valuesAllowed.some((option) => option.key === value);
           if (value && !isValid) {
             updated = updated.set(field.key, "");
-            changed = true;
           }
         }
       }
-      return changed ? updated : prevDetails;
+      return updated;
     });
-  }, [visibleFields, details]);
+  }, [visibleFields]);
 
   const hasVisibleErrors = visibleFields?.some((field) => errors.has(field.key));
 
