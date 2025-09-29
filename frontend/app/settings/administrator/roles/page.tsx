@@ -391,7 +391,7 @@ export default function RolesPage() {
       </div>
 
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent className="overflow-visible py-9.5 sm:max-w-lg">
+        <DialogContent className="overflow-visible sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Add a member</DialogTitle>
             <DialogDescription>

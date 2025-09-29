@@ -45,7 +45,7 @@ const ComboBox = ({
           <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
+      <PopoverContent className="max-h-[100px] p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
         <Command>
           {showSearch ? (
             <CommandInput
@@ -59,7 +59,7 @@ const ComboBox = ({
               }}
             />
           ) : null}
-          <CommandList ref={listRef}>
+          <CommandList ref={listRef} className="max-h-[60px] overflow-y-auto">
             {showSearch ? <CommandEmpty>No results found.</CommandEmpty> : null}
             <CommandGroup>
               {options.map((option) => (
