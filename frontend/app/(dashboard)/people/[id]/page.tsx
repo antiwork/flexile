@@ -587,7 +587,7 @@ const DetailsTab = ({
               </FormItem>
             )}
           />
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className={user.businessName ? "grid gap-3 md:grid-cols-2" : ""}>
             <FormField
               control={personalInfoForm.control}
               name="preferredName"
@@ -601,19 +601,21 @@ const DetailsTab = ({
                 </FormItem>
               )}
             />
-            <FormField
-              control={personalInfoForm.control}
-              name="businessName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Billing entity name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {user.businessName ? (
+              <FormField
+                control={personalInfoForm.control}
+                name="businessName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Billing entity name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
           </div>
           <FormField
             control={personalInfoForm.control}
