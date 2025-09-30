@@ -73,6 +73,7 @@ test.describe("invoice creation", () => {
     const date = new Date(2021, 7, 8); // August 8, 2021
     await fillDatePicker(page, "Invoice date", format(date, "MM/dd/yyyy"));
 
+    await page.waitForTimeout(500);
     await expect(page.getByText("Total services$6,000")).toBeVisible();
     await expect(page.getByText("Swapped for equity (not paid in cash)$1,200")).toBeVisible();
     await expect(page.getByText("Net amount in cash$4,800")).toBeVisible();
