@@ -457,7 +457,7 @@ export default function InvoicesPage() {
               </div>
             ) : null
           ) : user.roles.worker ? (
-            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+            <Button asChild size="small" disabled={!canSubmitInvoices}>
               <Link href="/invoices/new" inert={!canSubmitInvoices}>
                 <Plus className="size-4" />
                 New invoice

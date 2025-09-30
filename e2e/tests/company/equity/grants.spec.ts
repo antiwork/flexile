@@ -68,7 +68,7 @@ test.describe("Equity Grants", () => {
 
     await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
     await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByLabel("Contract").setInputFiles({
+    await page.getByLabel("Contract", { exact: true }).setInputFiles({
       name: "contract.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("very signed contract"),
