@@ -47,6 +47,8 @@ test.describe("Tax settings", () => {
     });
 
     test("allows editing tax information", async ({ page }) => {
+      await db.update(users).set({ countryCode: null, state: null }).where(eq(users.id, user.id));
+
       await login(page, user, "/settings/tax");
       await expect(
         page.getByText("These details will be included in your invoices and applicable tax forms."),
@@ -54,7 +56,9 @@ test.describe("Tax settings", () => {
       await expect(page.getByText("Confirm your tax information")).toBeVisible();
       await expect(page.getByLabel("Individual")).toBeChecked();
 
-      await expect(page.getByLabel("Country of residence")).toHaveText("United States");
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await expect(page.getByText("Please select your country of residence.")).toBeVisible();
+
       await selectComboboxOption(page, "Country of residence", "American Samoa");
       await expect(page.getByLabel("Province")).not.toBeEnabled();
       await selectComboboxOption(page, "Country of residence", "United Kingdom");
@@ -81,6 +85,11 @@ test.describe("Tax settings", () => {
       await page.getByLabel("Tax ID (SSN or ITIN)").fill("55566678");
       await page.getByRole("button", { name: "Save changes" }).click();
       await expect(page.getByText("Please check that your SSN or ITIN is 9 numbers long.")).toBeVisible();
+
+      await page.getByLabel("Tax ID (SSN or ITIN)").fill("123123123");
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await expect(page.getByText("Please select your state.")).toBeVisible();
+      await expect(page.getByLabel("State")).not.toBeValid();
 
       await page.locator("label").filter({ hasText: "Business" }).click();
       await expect(page.getByLabel("Type")).toBeValid();
