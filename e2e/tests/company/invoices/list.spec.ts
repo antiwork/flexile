@@ -180,10 +180,10 @@ test.describe("Invoices admin flow", () => {
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await expect(page.getByText("2 selected")).toBeVisible();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await page.getByRole("button", { name: "Approve selected" }).click();
 
       // TODO missing check - need to verify ChargeConsolidatedInvoiceJob not enqueued
@@ -251,7 +251,7 @@ test.describe("Invoices admin flow", () => {
         await login(page, adminUser);
         await page.getByRole("link", { name: "Invoices" }).click();
 
-        await page.locator("th").getByLabel("Select all").check();
+        await page.getByRole("checkbox", { name: "Select all" }).check();
         await expect(page.getByText("4 selected")).toBeVisible();
         await page.getByRole("button", { name: "Approve selected" }).click();
 
@@ -297,7 +297,7 @@ test.describe("Invoices admin flow", () => {
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await expect(page.getByText("2 selected")).toBeVisible();
       await page.getByRole("button", { name: "Reject selected" }).click();
 
@@ -320,7 +320,7 @@ test.describe("Invoices admin flow", () => {
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await expect(page.getByText("2 selected")).toBeVisible();
       await page.getByRole("button", { name: "Reject selected" }).click();
 
