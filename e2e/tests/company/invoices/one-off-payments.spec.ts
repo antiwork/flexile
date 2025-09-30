@@ -70,7 +70,7 @@ test.describe("One-off payments", () => {
       expect(sentEmails).toEqual([
         expect.objectContaining({
           to: workerUser.email,
-          subject: `${company.name} has sent you a payment`,
+          subject: `${company.name} has sent you money`,
           text: expect.stringContaining("has sent you money"),
         }),
       ]);
@@ -151,7 +151,7 @@ test.describe("One-off payments", () => {
         expect(sentEmails).toEqual([
           expect.objectContaining({
             to: workerUser.email,
-            subject: `${company.name} has sent you a payment`,
+            subject: `${company.name} has sent you money`,
             text: expect.stringContaining("has sent you money"),
           }),
         ]);
@@ -209,7 +209,7 @@ test.describe("One-off payments", () => {
         expect(sentEmails).toEqual([
           expect.objectContaining({
             to: workerUser.email,
-            subject: `${company.name} has sent you a payment`,
+            subject: `${company.name} has sent you money`,
             text: expect.stringContaining("has sent you money"),
           }),
         ]);
