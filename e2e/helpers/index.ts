@@ -23,17 +23,12 @@ export type FillByLabelOptions = {
   exact?: boolean;
 };
 
-export const fillByLabelSafe = async (page: Page, name: string, value: string, options: FillByLabelOptions = {}) => {
+export const fillByLabel = async (page: Page, name: string, value: string, options: FillByLabelOptions = {}) => {
   const { index, exact } = options;
   let field = page.getByLabel(name, { exact: Boolean(exact) });
   if (typeof index === "number") {
     field = field.nth(index);
   }
-
-  await expect(field).toBeVisible();
-  await expect(field).toBeEditable();
-
   await field.fill(value);
-
   await expect(field).toHaveValue(value);
 };

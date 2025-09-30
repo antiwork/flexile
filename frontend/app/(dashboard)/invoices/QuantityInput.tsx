@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { formatDuration } from "@/utils/time";
 
@@ -10,12 +10,8 @@ interface QuantityInputProps extends Omit<React.ComponentProps<"input">, "value"
 }
 
 const QuantityInput = ({ value, onChange, ...inputProps }: QuantityInputProps) => {
-  const [displayValue, setDisplayValue] = useState(() => {
-    if (!value) return "";
-    return value.hourly ? formatDuration(value.quantity) : String(value.quantity);
-  });
-  const [hasFocus, setHasFocus] = useState(false);
-  const lastPropValue = useRef(value);
+  const [localValue, setLocalValue] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   const parseInput = (input: string): QuantityValue => {
     const trimmed = input.trim();
@@ -37,33 +33,31 @@ const QuantityInput = ({ value, onChange, ...inputProps }: QuantityInputProps) =
     return val.hourly ? formatDuration(val.quantity) : String(val.quantity);
   };
 
-  useEffect(() => {
-    if (!hasFocus) {
-      const valueChanged =
-        lastPropValue.current?.quantity !== value?.quantity || lastPropValue.current?.hourly !== value?.hourly;
-
-      if (valueChanged) {
-        setDisplayValue(formatDisplayValue(value));
-        lastPropValue.current = value;
-      }
-    }
-  }, [value, hasFocus]);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    setDisplayValue(newValue);
-
+    setLocalValue(newValue);
     const parsed = parseInput(newValue);
     onChange(parsed);
   };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    setLocalValue(formatDisplayValue(value));
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+  };
+
+  const displayValue = isFocused ? localValue : formatDisplayValue(value);
 
   return (
     <Input
       {...inputProps}
       value={displayValue}
       onChange={handleInputChange}
-      onBlur={() => setHasFocus(false)}
-      onFocus={() => setHasFocus(true)}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
     />
   );
 };

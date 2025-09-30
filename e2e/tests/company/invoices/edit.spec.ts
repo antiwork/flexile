@@ -3,7 +3,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
-import { fillByLabelSafe, fillDatePicker } from "@test/helpers";
+import { fillByLabel, fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { desc, eq } from "drizzle-orm";
@@ -32,9 +32,9 @@ test.describe("invoice editing", () => {
 
     // Fill in the invoice form
     await page.getByPlaceholder("Description").fill("Development work for Q1");
-    await fillByLabelSafe(page, "Hours / Qty", "10:00", { index: 0 });
-    await fillByLabelSafe(page, "Rate", "75", { index: 0 });
-    await fillByLabelSafe(page, "Invoice ID", "INV-EDIT-001", { index: 0 });
+    await fillByLabel(page, "Hours / Qty", "10:00", { index: 0 });
+    await fillByLabel(page, "Rate", "75", { index: 0 });
+    await fillByLabel(page, "Invoice ID", "INV-EDIT-001", { index: 0 });
     await fillDatePicker(page, "Date", "12/15/2024");
     await page
       .getByPlaceholder("Enter notes about your invoice (optional)")
@@ -76,7 +76,7 @@ test.describe("invoice editing", () => {
 
     // Make some changes
     await page.getByPlaceholder("Description").first().fill("Updated development work for Q1");
-    await fillByLabelSafe(page, "Hours / Qty", "12:00", { index: 0 });
+    await fillByLabel(page, "Hours / Qty", "12:00", { index: 0 });
     await page
       .getByPlaceholder("Enter notes about your invoice (optional)")
       .fill(
