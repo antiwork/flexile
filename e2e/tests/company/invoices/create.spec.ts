@@ -73,7 +73,7 @@ test.describe("invoice creation", () => {
     await fillDatePicker(page, "Date", "08/08/2021");
     await page.getByPlaceholder("Description").click(); // click on description to set date value properly
 
-    await expect(page.getByText("Total services$6,000")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Total services$6,000")).toBeVisible();
     await expect(page.getByText("Swapped for equity (not paid in cash)$1,200")).toBeVisible();
     await expect(page.getByText("Net amount in cash$4,800")).toBeVisible();
 
