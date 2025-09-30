@@ -265,8 +265,6 @@ export default function DocumentsPage() {
         permissions: ["administrator", "worker"],
         conditions: (document: Document): boolean => !!isSignable(document) && !!canSign,
         action: "reviewAndSign",
-        group: "signature",
-        showIn: ["selection"],
       },
       download: {
         id: "download",
