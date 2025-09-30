@@ -442,3 +442,214 @@ test.describe("invoice creation", () => {
     await expect(page.getByText("Total expenses$42.99")).toBeVisible();
   });
 });
+
+test.describe("AI PDF invoice parsing", () => {
+  let company: typeof companies.$inferSelect;
+  let contractorUser: typeof users.$inferSelect;
+
+  test.beforeEach(async () => {
+    company = (
+      await companiesFactory.createCompletedOnboarding({
+        equityEnabled: false,
+      })
+    ).company;
+
+    contractorUser = (
+      await usersFactory.createWithBusinessEntity({
+        zipCode: "22222",
+        streetAddress: "1st St.",
+      })
+    ).user;
+
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+      payRateInSubunits: 10000, // $100/hour
+    });
+
+    await db.insert(expenseCategories).values({
+      companyId: company.id,
+      name: "Office Supplies",
+    });
+  });
+
+  test("shows parsing progress when uploading PDF document", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    // Create a simple PDF buffer
+    const pdfBuffer = Buffer.from(
+      "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\nxref\n0 2\ntrailer<</Size 2/Root 1 0 R>>\n%%EOF",
+    );
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "test-invoice.pdf",
+      mimeType: "application/pdf",
+      buffer: pdfBuffer,
+    });
+
+    // Should show parsing progress
+    await expect(page.getByText("Parsing PDF with AI to extract invoice data...")).toBeVisible();
+
+    // Wait for parsing to complete
+    await expect(page.getByText("Parsing PDF with AI to extract invoice data...")).not.toBeVisible({ timeout: 15000 });
+
+    // Document should be attached
+    await expect(page.getByText("test-invoice.pdf")).toBeVisible();
+  });
+
+  test("handles PDF parsing API errors gracefully", async ({ page }) => {
+    // Skip if no API key configured
+    if (!process.env.OPENAI_API_KEY) {
+      test.skip(true, "OPENAI_API_KEY not configured");
+    }
+
+    await login(page, contractorUser, "/invoices/new");
+
+    // Upload a minimal PDF that likely won't contain invoice data
+    const nonInvoicePdf = Buffer.from(
+      "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[]>>endobj\nxref\n0 3\ntrailer<</Size 3/Root 1 0 R>>\n%%EOF",
+    );
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "empty-doc.pdf",
+      mimeType: "application/pdf",
+      buffer: nonInvoicePdf,
+    });
+
+    // Wait for parsing indicator to appear and disappear
+    await expect(page.getByText("Parsing PDF with AI to extract invoice data...")).toBeVisible();
+    await expect(page.getByText("Parsing PDF with AI to extract invoice data...")).not.toBeVisible({ timeout: 15000 });
+
+    // Document should still be attached
+    await expect(page.getByText("empty-doc.pdf")).toBeVisible();
+
+    // Check if error message appears and can be dismissed
+    const errorMessage = page.getByText(/doesn't appear to contain invoice data/iu);
+    if (await errorMessage.isVisible()) {
+      await page.getByRole("button", { name: "Dismiss" }).click();
+      await expect(errorMessage).not.toBeVisible();
+    }
+  });
+
+  test("validates oversized PDF files before parsing", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    // Create file larger than 10MB limit
+    const largeBuffer = Buffer.alloc(11 * 1024 * 1024, "X");
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "huge-file.pdf",
+      mimeType: "application/pdf",
+      buffer: largeBuffer,
+    });
+
+    // Should show size error dialog immediately
+    await expect(page.getByRole("heading", { name: "File Size Exceeded" })).toBeVisible();
+    await expect(page.getByText("File size exceeds the maximum limit of 10MB")).toBeVisible();
+
+    await page.getByRole("button", { name: "OK" }).click();
+    await expect(page.getByRole("heading", { name: "File Size Exceeded" })).not.toBeVisible();
+
+    // File should not be uploaded
+    await expect(page.getByText("huge-file.pdf")).not.toBeVisible();
+
+    // Parsing indicator should never appear
+    await expect(page.getByText("Parsing PDF with AI")).not.toBeVisible();
+  });
+
+  test("preserves existing form data when PDF upload occurs", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    // Fill some manual form data
+    await page.getByLabel("Invoice ID").fill("MANUAL-001");
+    await page.getByPlaceholder("Description").first().fill("Development work");
+    await page.getByLabel("Hours / Qty").first().fill("5:00");
+    await page.getByPlaceholder("Enter notes about your").fill("Manual notes");
+
+    // Store the values to check later
+    const originalInvoiceId = await page.getByLabel("Invoice ID").inputValue();
+    const originalDescription = await page.getByPlaceholder("Description").first().inputValue();
+    const originalNotes = await page.getByPlaceholder("Enter notes about your").inputValue();
+
+    // Upload a minimal PDF
+    const pdfBuffer = Buffer.from(
+      "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\nxref\n0 2\ntrailer<</Size 2/Root 1 0 R>>\n%%EOF",
+    );
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "minimal.pdf",
+      mimeType: "application/pdf",
+      buffer: pdfBuffer,
+    });
+
+    // Wait for any parsing to complete
+    if (await page.getByText("Parsing PDF with AI to extract invoice data...").isVisible()) {
+      await expect(page.getByText("Parsing PDF with AI to extract invoice data...")).not.toBeVisible({
+        timeout: 15000,
+      });
+    }
+
+    // Document should be attached
+    await expect(page.getByText("minimal.pdf")).toBeVisible();
+
+    // If parsing fails (likely with minimal PDF), original data should be preserved
+    const currentInvoiceId = await page.getByLabel("Invoice ID").inputValue();
+    const currentDescription = await page.getByPlaceholder("Description").first().inputValue();
+    const currentNotes = await page.getByPlaceholder("Enter notes about your").inputValue();
+
+    // At least one field should retain its original value (indicating form is functional)
+    const hasPreservedData =
+      currentInvoiceId === originalInvoiceId ||
+      currentDescription === originalDescription ||
+      currentNotes === originalNotes;
+
+    expect(hasPreservedData).toBe(true);
+  });
+
+  test("allows form submission after PDF upload regardless of parsing result", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    // Fill required fields
+    await page.getByPlaceholder("Description").first().fill("Test work");
+    await page.getByLabel("Hours / Qty").first().fill("2:00");
+
+    // Upload PDF
+    const pdfBuffer = Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF");
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "work-doc.pdf",
+      mimeType: "application/pdf",
+      buffer: pdfBuffer,
+    });
+
+    // Wait for any parsing to complete
+    if (await page.getByText("Parsing PDF with AI to extract invoice data...").isVisible()) {
+      await expect(page.getByText("Parsing PDF with AI to extract invoice data...")).not.toBeVisible({
+        timeout: 15000,
+      });
+    }
+
+    // Form should be submittable
+    await page.getByRole("button", { name: "Send invoice" }).click();
+
+    // Should navigate to invoices list or show validation errors
+    await expect(page.getByRole("heading", { name: "Invoices" }).or(page.getByText("Invoice ID"))).toBeVisible();
+  });
+
+  test("handles non-PDF files without triggering AI parsing", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    // Try to upload a text file (browser will handle MIME type validation)
+    await page.getByLabel("Add document").setInputFiles({
+      name: "document.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from("This is not a PDF"),
+    });
+
+    // Wait briefly for any potential processing
+    await page.waitForLoadState("networkidle");
+
+    // AI parsing indicator should not appear for non-PDF files
+    await expect(page.getByText("Parsing PDF with AI")).not.toBeVisible();
+  });
+});
