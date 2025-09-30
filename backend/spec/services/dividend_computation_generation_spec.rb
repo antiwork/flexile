@@ -12,7 +12,11 @@ RSpec.describe DividendComputationGeneration do
     create(:share_holding, company_investor: @seed_investor, share_class: @seed_class, number_of_shares: 99_283, originally_acquired_at: 91.days.ago, total_amount_in_cents: 111_406_00)
     create(:share_holding, company_investor: @seed_investor, share_class: @seed_class, number_of_shares: 12_123, originally_acquired_at: 89.days.ago, total_amount_in_cents: 13_625_00)
 
-    @series_A_investor = create(:company_investor, user: create(:user, legal_name: "Series A Investor"), company:)
+    @zero_share_investor = create(:company_investor, user: create(:user, legal_name: "Zero Share Investor"), company:)
+    create(:share_holding, company_investor: @zero_share_investor, share_class: @seed_class, number_of_shares: 0, originally_acquired_at: 120.days.ago, total_amount_in_cents: 0)
+
+    @deactivated_investor = create(:company_investor, user: create(:user, legal_name: "Deactivated Investor"), company:, deactivated_at: 30.days.ago)
+    create(:share_holding, company_investor: @deactivated_investor, share_class: @seed_class, number_of_shares: 10_000, originally_acquired_at: 120.days.ago, total_amount_in_cents: 11_234_00)    @series_A_investor = create(:company_investor, user: create(:user, legal_name: "Series A Investor"), company:)
     create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 32_123, total_amount_in_cents: 39_768_00)
     create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 1_346, total_amount_in_cents: 1_666_00)
 
@@ -283,6 +287,9 @@ RSpec.describe DividendComputationGeneration do
              total_amount_in_usd: 291_411.52,
              investment_amount_cents: 2_000_000_00 # Set to the convertible.amount_in_cents
            )).to eq(true)
+
+    expect(dividend_computation.dividend_computation_outputs.exists?(company_investor_id: @zero_share_investor.id)).to eq(false)
+    expect(dividend_computation.dividend_computation_outputs.exists?(company_investor_id: @deactivated_investor.id)).to eq(false)
 
     # Assert sum of all computed dividends
     # It's more than the input that is 1M because of rounding up. This was the case when Cooley did the calculation too.

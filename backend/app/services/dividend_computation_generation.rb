@@ -167,7 +167,9 @@ class DividendComputationGeneration
         company
           .share_holdings
           .joins(:share_class, :company_investor)
+          .where("company_investors.deactivated_at IS NULL")
           .group(:company_investor_id, :share_class_id)
+          .having("SUM(number_of_shares) > 0")
           .select(
             "company_investor_id, share_class_id, SUM(number_of_shares) AS total_shares, " \
               "SUM(" \
