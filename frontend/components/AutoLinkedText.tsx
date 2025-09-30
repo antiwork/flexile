@@ -33,7 +33,7 @@ const AutoLinkedText: React.FC<AutoLinkedTextProps> = ({ text, className, preser
 
     return parts
       .map((part) => {
-        if (part.match(/^<a[^>]*>.*?<\/a>$/iu)) {
+        if (/^<a[^>]*>.*?<\/a>$/iu.exec(part)) {
           return part;
         }
         return part.replace(urlRegex, (match) => {
