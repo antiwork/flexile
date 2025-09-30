@@ -33,31 +33,24 @@ const QuantityInput = ({ value, onChange, ...inputProps }: QuantityInputProps) =
     return val.hourly ? formatDuration(val.quantity) : String(val.quantity);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setLocalValue(newValue);
-    const parsed = parseInput(newValue);
-    onChange(parsed);
-  };
-
-  const handleFocus = () => {
-    setIsFocused(true);
-    setLocalValue(formatDisplayValue(value));
-  };
-
-  const handleBlur = () => {
-    setIsFocused(false);
-  };
-
   const displayValue = isFocused ? localValue : formatDisplayValue(value);
 
   return (
     <Input
       {...inputProps}
       value={displayValue}
-      onChange={handleInputChange}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
+      onChange={(e) => {
+        setLocalValue(e.target.value);
+        const parsed = parseInput(e.target.value);
+        onChange(parsed);
+      }}
+      onFocus={() => {
+        setIsFocused(true);
+        setLocalValue(formatDisplayValue(value));
+      }}
+      onBlur={() => {
+        setIsFocused(false);
+      }}
     />
   );
 };
