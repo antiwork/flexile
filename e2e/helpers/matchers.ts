@@ -2,15 +2,36 @@ import { type Page } from "@playwright/test";
 import { assert } from "@/utils/assert";
 
 export const findTableRow = async (page: Page, columnValues: Record<string, string>) => {
-  const rows = await page.locator("tbody tr").all();
-  for (const row of rows) {
+  const headerCells = page.locator("thead tr").last().locator("th");
+  const headerTexts = await headerCells.allTextContents();
+
+  const rows = page.locator("tbody tr");
+  const rowCount = await rows.count();
+
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+    const row = rows.nth(rowIndex);
+    if (await row.isHidden()) {
+      continue;
+    }
+
     let matchesAll = true;
 
     for (const [columnLabel, expectedValue] of Object.entries(columnValues)) {
-      const headerCell = page.locator("th").filter({ hasText: columnLabel });
-      const columnIndex = await headerCell.evaluate((el) => Array.from(el.parentElement?.children || []).indexOf(el));
+      const columnIndex = headerTexts.findIndex((text) => text.trim() === columnLabel);
+      if (columnIndex === -1) {
+        matchesAll = false;
+        break;
+      }
 
-      const cellText = await row.getByRole("cell").nth(columnIndex).textContent();
+      const cells = row.getByRole("cell");
+      const cellCount = await cells.count();
+
+      if (cellCount <= columnIndex) {
+        matchesAll = false;
+        break;
+      }
+
+      const cellText = await cells.nth(columnIndex).textContent();
       if (!cellText?.includes(expectedValue)) {
         matchesAll = false;
         break;
