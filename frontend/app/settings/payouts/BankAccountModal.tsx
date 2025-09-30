@@ -28,6 +28,7 @@ const KEY_ACCOUNT_HOLDER_NAME = "accountHolderName";
 const KEY_ACCOUNT_ROUTING_NUMBER = "abartn";
 const KEY_ADDRESS_COUNTRY = "address.country";
 const KEY_ADDRESS_STATE = "address.state";
+const KEY_BANK_NAME = "bankName";
 const KEY_ADDRESS_CITY = "address.city";
 const KEY_ADDRESS_POST_CODE = "address.postCode";
 const KEY_ADDRESS_FIRST_LINE = "address.firstLine";
@@ -131,6 +132,7 @@ const validateCPF = (cpf: string): boolean => {
 
   return parseInt(digits.charAt(10), 10) === secondCheckDigit;
 };
+const ALWAYS_VISIBLE_FIELD_KEYS = new Set([KEY_ADDRESS_STATE, KEY_BANK_NAME]);
 
 const fieldGroups: string[][] = [
   [
@@ -254,7 +256,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
       allFields
         ?.filter(
           (field) =>
-            (field.required || field.key === KEY_ADDRESS_STATE) &&
+            (field.required || ALWAYS_VISIBLE_FIELD_KEYS.has(field.key)) &&
             !((field.type === "select" || field.type === "radio") && !field.valuesAllowed) &&
             field.key !== KEY_LEGAL_TYPE,
         )
