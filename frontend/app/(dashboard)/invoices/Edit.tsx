@@ -7,7 +7,7 @@ import { List } from "immutable";
 import { CircleAlert, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -42,6 +42,7 @@ import {
   new_company_invoice_path,
 } from "@/utils/routes";
 import QuantityInput from "./QuantityInput";
+import { type ParsedInvoiceData, usePdfParsing } from "./usePdfParsing";
 import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
 
 const addressSchema = z.object({
@@ -165,6 +166,115 @@ const Edit = () => {
   const [document, setDocument] = useState<InvoiceFormDocument | null>(data.invoice.attachment);
   const showExpensesTable = showExpenses || expenses.size > 0;
   const actionColumnClass = "w-12";
+
+  // PDF import functionality
+  const handlePdfParsed = useCallback(
+    (parsedData: ParsedInvoiceData, file: File) => {
+      // Check if the PDF contains any meaningful invoice data
+      const hasInvoiceData =
+        parsedData.invoiceNumber ||
+        parsedData.invoiceDate ||
+        (parsedData.lineItems && parsedData.lineItems.length > 0) ||
+        (parsedData.expenses && parsedData.expenses.length > 0);
+
+      if (!hasInvoiceData) {
+        setError("This PDF doesn't appear to contain invoice data. Please upload a valid invoice PDF.");
+        return;
+      }
+
+      if (parsedData.invoiceNumber) {
+        setInvoiceNumber(parsedData.invoiceNumber);
+      }
+
+      if (parsedData.invoiceDate && parsedData.invoiceDate !== "N/A") {
+        try {
+          // Validate that the date is in YYYY-MM-DD format
+          const dateRegex = /^\d{4}-\d{2}-\d{2}$/u;
+          if (dateRegex.test(parsedData.invoiceDate)) {
+            const date = parseDate(parsedData.invoiceDate);
+            setIssueDate(date);
+          }
+        } catch {
+          // Silently ignore invalid date formats
+        }
+      }
+
+      // Update line items
+      if (parsedData.lineItems?.length) {
+        const newLineItems = parsedData.lineItems.map((item) => {
+          const isHourly = !data.user.project_based;
+          // Handle quantity conversion
+          let quantityValue: string;
+          if (item.quantity) {
+            if (isHourly) {
+              // For hourly workers, convert hours to minutes
+              quantityValue = Math.round(item.quantity * 60).toString();
+            } else {
+              // For project-based workers, keep quantity as-is
+              quantityValue = item.quantity.toString();
+            }
+          } else {
+            // Default quantity
+            quantityValue = isHourly ? "60" : "1";
+          }
+
+          // Calculate rate in subunits (cents)
+          let rateInSubunits: number;
+          if (item.rate) {
+            rateInSubunits = Math.round(item.rate * 100);
+          } else if (item.amount && item.quantity && item.quantity > 0) {
+            rateInSubunits = Math.round((item.amount / item.quantity) * 100);
+          } else {
+            rateInSubunits = payRateInSubunits || 10000;
+          }
+
+          return {
+            description: item.description || "",
+            quantity: quantityValue,
+            hourly: isHourly,
+            pay_rate_in_subunits: rateInSubunits,
+          };
+        });
+        setLineItems(List(newLineItems));
+      }
+
+      // Update expenses
+      if (parsedData.expenses?.length) {
+        const defaultCategory = data.company.expense_categories[0];
+        if (defaultCategory) {
+          const newExpenses = parsedData.expenses.map((expense) => {
+            // Match category by name if provided
+            const categoryId = expense.category
+              ? data.company.expense_categories.find((cat) =>
+                  cat.name.toLowerCase().includes(expense.category?.toLowerCase() ?? ""),
+                )?.id || defaultCategory.id
+              : defaultCategory.id;
+
+            return {
+              description: expense.description || "",
+              category_id: categoryId,
+              total_amount_in_cents: Math.round((expense.amount || 0) * 100),
+              attachment: { name: file.name, url: URL.createObjectURL(file) },
+              blob: file,
+            };
+          });
+          setExpenses(List(newExpenses));
+          setShowExpenses(true);
+        }
+      }
+
+      if (parsedData.notes) {
+        setNotes(parsedData.notes);
+      }
+
+      setError(null);
+    },
+    [data.company.expense_categories, data.user.project_based, payRateInSubunits],
+  );
+
+  const { isParsing, error, setError, handleFileSelect } = usePdfParsing({
+    onPdfParsed: handlePdfParsed,
+  });
 
   const validate = () => {
     setErrorField(null);
@@ -311,6 +421,11 @@ const Edit = () => {
       blob: file,
       errors: null,
     });
+
+    // If it's a PDF, also try to parse it for invoice data
+    if (file.type === "application/pdf") {
+      handleFileSelect(file);
+    }
   };
 
   const parseQuantity = (value: string | null | undefined) => {
@@ -386,6 +501,25 @@ const Edit = () => {
           </>
         }
       />
+
+      {error ? (
+        <Alert className="mx-4" variant="destructive">
+          <CircleAlert className="size-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="ml-4 text-sm underline hover:no-underline">
+              Dismiss
+            </button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {isParsing ? (
+        <Alert className="mx-4">
+          <CircleAlert className="size-4" />
+          <AlertDescription>Parsing PDF with AI to extract invoice data...</AlertDescription>
+        </Alert>
+      ) : null}
 
       {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
         <Alert className="mx-4" variant="warning">
