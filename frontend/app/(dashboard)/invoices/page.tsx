@@ -457,7 +457,7 @@ export default function InvoicesPage() {
               </div>
             ) : null
           ) : user.roles.worker ? (
-            <Button asChild size="small" disabled={!canSubmitInvoices}>
+            <Button asChild variant="primary" disabled={!canSubmitInvoices}>
               <Link href="/invoices/new" inert={!canSubmitInvoices}>
                 <Plus className="size-4" />
                 New invoice
@@ -613,6 +613,7 @@ export default function InvoicesPage() {
               No, cancel
             </Button>
             <MutationButton
+              idleVariant="primary"
               mutation={approveInvoices}
               param={{
                 approve_ids: selectedApprovableInvoices.map((invoice) => invoice.id),
@@ -734,12 +735,10 @@ const TasksModal = ({
         </section>
         {isActionable(invoice) ? (
           <DialogFooter>
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" size="small" onClick={onReject} className="max-md:h-9 max-md:text-sm">
-                Reject
-              </Button>
-              <ApproveButton invoice={invoice} onApprove={onClose} className="max-md:h-9 max-md:text-sm" />
-            </div>
+            <Button variant="outline" onClick={onReject}>
+              Reject
+            </Button>
+            <ApproveButton variant="primary" invoice={invoice} onApprove={onClose} />
           </DialogFooter>
         ) : null}
       </DialogContent>

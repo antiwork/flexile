@@ -8,12 +8,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-foreground text-background border-foreground hover:bg-foreground/90 hover:border-foreground/90",
-        primary: "bg-blue-600 border-none text-white hover:bg-blue-500 ",
+        default:
+          "bg-foreground text-white border-foreground hover:bg-foreground/80 hover:border-foreground/80 dark:bg-foreground/5 dark:border-foreground/5 dark:hover:bg-white/85 dark:hover:text-black",
+        primary: "bg-blue-600 border-transparent text-white hover:bg-blue-500 ",
         critical: "bg-red text-white border-red hover:bg-red-700 hover:border-red-700",
         success: "bg-green text-white border-green",
-        outline: "bg-transparent dark:bg-input/30 text-inherit border-muted hover:bg-accent dark:hover:bg-accent",
-        destructive: "bg-transparent text-inherit border-muted hover:text-destructive hover:*:text-destructive",
+        outline: "bg-transparent text-inherit border-muted hover:bg-accent dark:hover:bg-accent",
+        destructive:
+          "bg-transparent text-inherit border-muted hover:text-destructive hover:*:text-destructive dark:hover:bg-destructive/10 hover:bg-destructive/5",
         dashed: "bg-transparent text-inherit border-dashed border-input hover:text-link hover:border-current",
         ghost: "border-transparent text-muted-background hover:bg-accent",
         link: "gap-1 border-none hover:text-link hover:underline !py-0 justify-start px-0",
