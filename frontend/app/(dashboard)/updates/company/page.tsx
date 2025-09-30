@@ -59,7 +59,7 @@ export default function CompanyUpdates() {
                 <Plus />
               </Button>
             ) : (
-              <Button variant="outline" size="small" onClick={handleNewUpdate}>
+              <Button variant="primary" onClick={handleNewUpdate}>
                 New update
               </Button>
             )

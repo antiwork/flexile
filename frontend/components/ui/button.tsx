@@ -21,7 +21,7 @@ const buttonVariants = cva(
           "fixed right-4 bottom-18 z-30 size-14 rounded-full border-blue-600 bg-blue-600 px-2 text-white shadow-[0px_1px_2px_-1px_rgba(0,0,0,0.1),0px_1px_3px_0px_rgba(0,0,0,0.1)] hover:border-blue-500 hover:bg-blue-500 disabled:pointer-events-auto [&_svg]:size-6",
       },
       size: {
-        default: "py-2",
+        default: "py-2 md:py-1.25",
         small: "py-1.25",
         icon: "size-10",
       },
