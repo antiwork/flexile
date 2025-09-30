@@ -322,7 +322,7 @@ export const invoicesRouter = createRouter({
       from: `Flexile <support@${env.DOMAIN}>`,
       to: companyWorker.user.email,
       replyTo: companyWorker.company.email,
-      subject: `💰 ${companyWorker.company.name} has sent you a payment`,
+      subject: `💰 ${companyWorker.company.name} has sent you money`,
       react: OneOffInvoiceCreated({
         companyName: companyWorker.company.name || companyWorker.company.email,
         invoice,
