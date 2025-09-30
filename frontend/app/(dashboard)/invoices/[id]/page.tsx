@@ -444,7 +444,7 @@ export default function InvoicePage() {
 
               {invoice.lineItems.length > 0 ? (
                 <div className="w-full overflow-x-auto">
-                  <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full print:my-3 print:w-full print:border-collapse print:text-xs">
+                  <Table className="w-full min-w-fit print:my-3 print:w-full print:border-collapse print:text-xs">
                     <TableHeader>
                       <TableRow className="print:border-b print:border-gray-300">
                         <PrintTableHeader className="w-[40%] md:w-[50%] print:text-left">
@@ -512,20 +512,20 @@ export default function InvoicePage() {
                 />
               ) : null}
 
-              <footer className="flex justify-between px-4 print:mt-4 print:flex print:items-start print:justify-between">
+              <footer className="flex flex-col justify-between gap-3 px-4 lg:flex-row print:mt-4 print:flex print:items-start print:justify-between">
                 <div className="print:flex-1">
                   {invoice.notes ? (
                     <div>
                       <b className="print:text-sm print:font-bold">Notes</b>
                       <div>
                         <div className="text-xs">
-                          <p className="print:mt-1 print:text-xs">{invoice.notes}</p>
+                          <p className="whitespace-pre-wrap print:mt-1 print:text-xs">{invoice.notes}</p>
                         </div>
                       </div>
                     </div>
                   ) : null}
                 </div>
-                <Card className="print:min-w-36 print:border-none print:bg-transparent print:p-2">
+                <Card className="self-start print:min-w-36 print:border-none print:bg-transparent print:p-2">
                   <CardContent>
                     {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
                       <>
