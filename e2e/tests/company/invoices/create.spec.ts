@@ -63,13 +63,15 @@ test.describe("invoice creation", () => {
     await login(page, contractorUser, "/invoices/new");
 
     await page.getByPlaceholder("Description").fill("I worked on invoices");
-    await page.getByLabel("Hours").fill("03:25");
+    await fillDatePicker(page, "Date", "08/08/2021");
+    await page.getByLabel("Hours / Qty").fill("03:25");
+    await page.getByLabel("Hours / Qty").evaluate((el: HTMLInputElement) => el.blur());
     await expect(page.getByText("Total services$60")).toBeVisible();
     await expect(page.getByText("Swapped for equity (not paid in cash)$0")).toBeVisible();
     await expect(page.getByText("Net amount in cash$60")).toBeVisible();
 
-    await fillDatePicker(page, "Date", "08/08/2021");
     await page.getByLabel("Hours / Qty").fill("100:00");
+    await page.getByLabel("Hours / Qty").evaluate((el: HTMLInputElement) => el.blur());
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
     await expect(page.getByText("Total services$6,000")).toBeVisible();
