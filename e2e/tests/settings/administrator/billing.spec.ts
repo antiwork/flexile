@@ -2,9 +2,20 @@ import { companiesFactory } from "@test/factories/companies";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 
-// allow green builds on OSS PRs that don't have a stripe sandbox key, but fail on CI if something changes on Stripe's end
-test.skip(() => process.env.STRIPE_SECRET_KEY === "dummy");
 test.describe("Company billing settings", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route("**/internal/companies/*/administrator/settings/bank_accounts", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          client_secret: "seti_1XXxxZzMockSecretKey92DTjAIWWr_secret_T9ONHxxxxxRfJ9L8dhjdMOCK",
+          bank_account_last4: null,
+        }),
+      });
+    });
+  });
+
   test("billing settings gated until company name is set", async ({ page }) => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding(
       { name: null },
