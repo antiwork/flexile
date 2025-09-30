@@ -20,10 +20,10 @@ const OneOffInvoiceCreated = ({
   paymentDescriptions: string[];
 }) => (
   <EmailLayout>
-    <Preview>{companyName} has sent you a payment</Preview>
+    <Preview>{companyName} has sent you money</Preview>
 
     <Container className="mb-8">
-      <Heading as="h1">{companyName} has sent you a payment.</Heading>
+      <Heading as="h1">{companyName} has sent you money.</Heading>
       <Heading as="h2">
         This one-off payment has been automatically approved and will be processed soon.
         {!bankAccountLastFour ? " You'll also need to connect your bank account to receive payment." : null}
