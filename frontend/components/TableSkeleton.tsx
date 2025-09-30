@@ -32,12 +32,14 @@ export default function TableSkeleton({
   ));
 
   const mobileSkeletonRows = Array.from({ length: 3 }).map((_, rowIndex) => (
-    <TableRow key={`mobile-${rowIndex}`} className="mb-2 flex flex-col gap-3 p-4">
-      <Skeleton className="h-4 w-48 rounded" /> {/* Subtitle */}
-      <div className="flex justify-between">
-        <Skeleton className="h-4 w-20 rounded" /> {/* Left info */}
-        <Skeleton className="h-4 w-16 rounded" /> {/* Button */}
-      </div>
+    <TableRow key={`mobile-${rowIndex}`} className="md:hidden">
+      <TableCell className="mb-2 flex flex-col gap-3 p-4">
+        <Skeleton className="h-4 w-48 rounded" /> {/* Subtitle */}
+        <div className="flex justify-between">
+          <Skeleton className="h-4 w-20 rounded" /> {/* Left info */}
+          <Skeleton className="h-4 w-16 rounded" /> {/* Button */}
+        </div>
+      </TableCell>
     </TableRow>
   ));
 
