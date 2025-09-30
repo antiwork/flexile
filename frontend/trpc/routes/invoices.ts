@@ -73,6 +73,7 @@ const invoiceInputSchema = createInsertSchema(invoiceLineItems)
       minAllowedEquityPercentage: true,
       maxAllowedEquityPercentage: true,
     }).shape,
+    equityPercentage: z.number().min(0).max(100).optional(),
   })
   .refine(
     (data) =>
@@ -139,27 +140,133 @@ export const invoicesRouter = createRouter({
     const dateToday = new Date();
 
     if (ctx.company.equityEnabled) {
-      const equityResult = await calculateInvoiceEquity({
-        companyContractor: companyWorker,
-        serviceAmountCents: Number(totalAmountCents),
-        invoiceYear: dateToday.getFullYear(),
-        providedEquityPercentage: values.equityPercentage,
-      });
+      if (values.minAllowedEquityPercentage != null && values.maxAllowedEquityPercentage != null) {
+        if (values.minAllowedEquityPercentage > values.maxAllowedEquityPercentage) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Minimum equity percentage cannot be greater than maximum",
+          });
+        }
 
-      if (!equityResult) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Recipient has insufficient unvested equity",
+        const minEquity = values.minAllowedEquityPercentage;
+        const maxEquity = values.maxAllowedEquityPercentage;
+
+        const minEquityResult = await calculateInvoiceEquity({
+          companyContractor: companyWorker,
+          serviceAmountCents: Number(totalAmountCents),
+          invoiceYear: dateToday.getFullYear(),
+          providedEquityPercentage: minEquity,
         });
-      }
 
-      if (equityResult.equityPercentage !== values.equityPercentage) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "No options would be granted" });
-      }
+        if (!minEquityResult) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Recipient has insufficient unvested equity for ${minEquity}% equity`,
+          });
+        }
 
-      equityAmountInCents = BigInt(equityResult.equityCents);
-      equityAmountInOptions = equityResult.equityOptions;
-      equityPercentage = equityResult.equityPercentage;
+        if (minEquityResult.equityPercentage !== minEquity) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: `No options would be granted at ${minEquity}% equity` });
+        }
+
+        const maxEquityResult = await calculateInvoiceEquity({
+          companyContractor: companyWorker,
+          serviceAmountCents: Number(totalAmountCents),
+          invoiceYear: dateToday.getFullYear(),
+          providedEquityPercentage: maxEquity,
+        });
+
+        if (!maxEquityResult) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Recipient has insufficient unvested equity for ${maxEquity}% equity`,
+          });
+        }
+
+        if (maxEquityResult.equityPercentage !== maxEquity) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: `No options would be granted at ${maxEquity}% equity` });
+        }
+
+        let contractorPreferredEquity = companyWorker.equityPercentage;
+
+        if (contractorPreferredEquity < minEquity) {
+          contractorPreferredEquity = minEquity;
+        } else if (contractorPreferredEquity > maxEquity) {
+          contractorPreferredEquity = maxEquity;
+        }
+
+        const preferredEquityResult = await calculateInvoiceEquity({
+          companyContractor: companyWorker,
+          serviceAmountCents: Number(totalAmountCents),
+          invoiceYear: dateToday.getFullYear(),
+          providedEquityPercentage: contractorPreferredEquity,
+        });
+
+        if (!preferredEquityResult) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Unable to calculate equity for contractor's preferred percentage (${contractorPreferredEquity}%)`,
+          });
+        }
+
+        if (preferredEquityResult.equityPercentage !== contractorPreferredEquity) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `No options would be granted at ${contractorPreferredEquity}% equity`,
+          });
+        }
+
+        equityAmountInCents = BigInt(preferredEquityResult.equityCents);
+        equityAmountInOptions = preferredEquityResult.equityOptions;
+        equityPercentage = preferredEquityResult.equityPercentage;
+      } else if (values.equityPercentage != null) {
+        const fixedEquityResult = await calculateInvoiceEquity({
+          companyContractor: companyWorker,
+          serviceAmountCents: Number(totalAmountCents),
+          invoiceYear: dateToday.getFullYear(),
+          providedEquityPercentage: values.equityPercentage,
+        });
+
+        if (!fixedEquityResult) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Recipient has insufficient unvested equity",
+          });
+        }
+
+        if (fixedEquityResult.equityPercentage !== values.equityPercentage) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "No options would be granted" });
+        }
+
+        equityAmountInCents = BigInt(fixedEquityResult.equityCents);
+        equityAmountInOptions = fixedEquityResult.equityOptions;
+        equityPercentage = fixedEquityResult.equityPercentage;
+      } else {
+        const preferredEquityResult = await calculateInvoiceEquity({
+          companyContractor: companyWorker,
+          serviceAmountCents: Number(totalAmountCents),
+          invoiceYear: dateToday.getFullYear(),
+          providedEquityPercentage: companyWorker.equityPercentage,
+        });
+
+        if (!preferredEquityResult) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Unable to calculate equity for contractor's preferred percentage (${companyWorker.equityPercentage}%)`,
+          });
+        }
+
+        if (preferredEquityResult.equityPercentage !== companyWorker.equityPercentage) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `No options would be granted at ${companyWorker.equityPercentage}% equity`,
+          });
+        }
+
+        equityAmountInCents = BigInt(preferredEquityResult.equityCents);
+        equityAmountInOptions = preferredEquityResult.equityOptions;
+        equityPercentage = preferredEquityResult.equityPercentage;
+      }
     }
 
     const cashAmountInCents = totalAmountCents - equityAmountInCents;
@@ -176,7 +283,7 @@ export const invoicesRouter = createRouter({
           companyContractorId: companyWorker.id,
           invoiceType: "other",
           invoiceNumber,
-          status: "received",
+          status: "approved",
           invoiceDate: date,
           dueOn: date,
           billFrom,
@@ -192,6 +299,7 @@ export const invoicesRouter = createRouter({
           totalAmountInUsdCents: totalAmountCents,
           cashAmountInCents,
           flexileFeeCents: getFlexileFeeCents(totalAmountCents),
+          acceptedAt: new Date(),
         })
         .returning();
       const invoice = assertDefined(invoiceResult[0]);
@@ -214,7 +322,7 @@ export const invoicesRouter = createRouter({
       from: `Flexile <support@${env.DOMAIN}>`,
       to: companyWorker.user.email,
       replyTo: companyWorker.company.email,
-      subject: `🔴 Action needed: ${companyWorker.company.name} would like to pay you`,
+      subject: `💰 ${companyWorker.company.name} has sent you a payment`,
       react: OneOffInvoiceCreated({
         companyName: companyWorker.company.name || companyWorker.company.email,
         invoice,
@@ -225,75 +333,6 @@ export const invoicesRouter = createRouter({
 
     return invoice;
   }),
-
-  acceptPayment: companyProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        equityPercentage: z.number().min(MINIMUM_EQUITY_PERCENTAGE).max(MAXIMUM_EQUITY_PERCENTAGE),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.companyContractor) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const invoice = await db.query.invoices.findFirst({
-        where: and(
-          eq(invoices.externalId, input.id),
-          eq(invoices.companyId, ctx.company.id),
-          isNull(invoices.deletedAt),
-        ),
-      });
-      if (!invoice) throw new TRPCError({ code: "NOT_FOUND" });
-      if (invoice.userId !== ctx.companyContractor.userId) throw new TRPCError({ code: "FORBIDDEN" });
-      if (invoice.invoiceType !== "other") throw new TRPCError({ code: "FORBIDDEN" });
-
-      if (invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null) {
-        if (
-          input.equityPercentage < invoice.minAllowedEquityPercentage ||
-          input.equityPercentage > invoice.maxAllowedEquityPercentage
-        ) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Equity percentage is out of range" });
-        }
-      }
-
-      const equityResult = await calculateInvoiceEquity({
-        companyContractor: ctx.companyContractor,
-        serviceAmountCents: Number(invoice.totalAmountInUsdCents),
-        invoiceYear: new Date(invoice.invoiceDate).getFullYear(),
-        providedEquityPercentage: input.equityPercentage,
-      });
-
-      if (!equityResult) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Error calculating equity. Please contact the administrator.",
-        });
-      }
-
-      if (equityResult.equityPercentage !== input.equityPercentage) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "No options would be granted" });
-      }
-
-      const equityAmountInCents = BigInt(equityResult.equityCents);
-      const equityAmountInOptions = equityResult.equityOptions;
-      const equityPercentage = equityResult.equityPercentage;
-      const cashAmountInCents = invoice.totalAmountInUsdCents - equityAmountInCents;
-
-      await db
-        .update(invoices)
-        .set(
-          invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null
-            ? {
-                acceptedAt: new Date(),
-                equityPercentage,
-                cashAmountInCents,
-                equityAmountInCents,
-                equityAmountInOptions,
-              }
-            : { acceptedAt: new Date() },
-        )
-        .where(eq(invoices.id, invoice.id));
-    }),
 
   list: companyProcedure
     .input(

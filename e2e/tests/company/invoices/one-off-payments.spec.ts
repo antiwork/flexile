@@ -9,7 +9,7 @@ import { login, logout } from "@test/helpers/auth";
 import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
-import { companies, equityGrants, invoices } from "@/db/schema";
+import { companies, companyContractors, equityGrants, invoices } from "@/db/schema";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
 type Company = Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["company"];
@@ -63,14 +63,15 @@ test.describe("One-off payments", () => {
           equityAmountInOptions: 0,
           minAllowedEquityPercentage: null,
           maxAllowedEquityPercentage: null,
+          acceptedAt: expect.any(Date),
         }),
       );
 
       expect(sentEmails).toEqual([
         expect.objectContaining({
           to: workerUser.email,
-          subject: `🔴 Action needed: ${company.name} would like to pay you`,
-          text: expect.stringContaining("would like to send you money"),
+          subject: `💰 ${company.name} has sent you a payment`,
+          text: expect.stringContaining("has sent you a payment"),
         }),
       ]);
     });
@@ -143,14 +144,15 @@ test.describe("One-off payments", () => {
             equityAmountInOptions: 5,
             minAllowedEquityPercentage: null,
             maxAllowedEquityPercentage: null,
+            acceptedAt: expect.any(Date),
           }),
         );
 
         expect(sentEmails).toEqual([
           expect.objectContaining({
             to: workerUser.email,
-            subject: `🔴 Action needed: ${company.name} would like to pay you`,
-            text: expect.stringContaining("would like to send you money"),
+            subject: `💰 ${company.name} has sent you a payment`,
+            text: expect.stringContaining("has sent you a payment"),
           }),
         ]);
       });
@@ -201,96 +203,83 @@ test.describe("One-off payments", () => {
             equityAmountInOptions: 13,
             minAllowedEquityPercentage: 25,
             maxAllowedEquityPercentage: 75,
+            acceptedAt: expect.any(Date),
           }),
         );
 
         expect(sentEmails).toEqual([
           expect.objectContaining({
             to: workerUser.email,
-            subject: `🔴 Action needed: ${company.name} would like to pay you`,
-            text: expect.stringContaining("would like to send you money"),
+            subject: `💰 ${company.name} has sent you a payment`,
+            text: expect.stringContaining("has sent you a payment"),
           }),
         ]);
       });
 
-      test("allows a worker to accept a one-off payment with a fixed equity percentage", async ({ page }) => {
-        const { invoice } = await invoicesFactory.create({
-          userId: workerUser.id,
-          companyId: company.id,
-          companyContractorId: companyContractor.id,
-          createdById: adminUser.id,
-          invoiceType: "other",
-          status: "approved",
-          equityPercentage: 10,
-          equityAmountInCents: BigInt(600),
-          equityAmountInOptions: 60,
-          cashAmountInCents: BigInt(5400),
-          totalAmountInUsdCents: BigInt(6000),
-        });
-        await login(page, workerUser, `/invoices/${invoice.externalId}`);
+      test("clamps contractor's preferred equity to the admin's allowed range", async ({ page, sentEmails }) => {
+        await db
+          .update(companyContractors)
+          .set({ equityPercentage: 80 })
+          .where(eq(companyContractors.id, companyContractor.id));
 
-        await page.getByRole("button", { name: "Accept payment" }).click();
-        await withinModal(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), { page });
-        await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
-      });
+        await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
-      test("allows a worker to accept a one-off payment with an allowed equity percentage range", async ({ page }) => {
-        const { invoice } = await invoicesFactory.create({
-          userId: workerUser.id,
-          companyId: company.id,
-          companyContractorId: companyContractor.id,
-          createdById: adminUser.id,
-          invoiceType: "other",
-          status: "approved",
-          equityPercentage: 0,
-          equityAmountInCents: BigInt(0),
-          equityAmountInOptions: 0,
-          cashAmountInCents: BigInt(50000),
-          totalAmountInUsdCents: BigInt(50000),
-          minAllowedEquityPercentage: 0,
-          maxAllowedEquityPercentage: 100,
-        });
-        await login(page, workerUser, `/invoices/${invoice.externalId}`);
-
-        await page.getByRole("button", { name: "Accept payment" }).click();
+        await page.getByRole("button", { name: "Issue payment" }).click();
 
         await withinModal(
           async (modal) => {
-            const sliderContainer = modal.locator('[data-orientation="horizontal"]').first();
-            const containerBounds = await sliderContainer.boundingBox();
-            if (!containerBounds) throw new Error("Could not get slider container bounds");
+            await modal.getByLabel("Amount").fill("400.00");
+            await modal.getByLabel("What is this for?").fill("Bonus payment");
+            await modal.getByLabel("Equity percentage range").evaluate((x) => x instanceof HTMLElement && x.click());
 
-            const equityPercentageThumb = modal.getByRole("slider");
-            await equityPercentageThumb.focus();
-            await equityPercentageThumb.press("Home");
-
-            // Move to 25% by pressing Arrow Right 25 times (assuming 1% per step)
-            for (let i = 0; i < 25; i++) {
-              await equityPercentageThumb.press("ArrowRight");
+            // Set range to 10% - 30%
+            const minThumb = modal.getByRole("slider", { name: "Minimum" });
+            await minThumb.focus();
+            await minThumb.press("Home");
+            for (let i = 0; i < 10; i++) {
+              await minThumb.press("ArrowRight");
             }
 
-            await modal.getByRole("button", { name: "Confirm 25% split" }).click();
+            const maxThumb = modal.getByRole("slider", { name: "Maximum" });
+            await maxThumb.focus();
+            for (let i = 0; i < 70; i++) {
+              await maxThumb.press("ArrowLeft");
+            }
+
+            await modal.getByRole("button", { name: "Issue payment" }).click();
           },
           { page },
         );
 
-        expect(await db.query.invoices.findFirst({ where: eq(invoices.id, invoice.id) })).toEqual(
+        const invoice = await db.query.invoices.findFirst({
+          where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
+        });
+        expect(invoice).toEqual(
           expect.objectContaining({
-            totalAmountInUsdCents: BigInt(50000),
-            equityPercentage: 25,
-            cashAmountInCents: BigInt(37500),
-            equityAmountInCents: BigInt(12500),
-            equityAmountInOptions: 13,
-            minAllowedEquityPercentage: 0,
-            maxAllowedEquityPercentage: 100,
+            totalAmountInUsdCents: BigInt(40000),
+            equityPercentage: 30,
+            cashAmountInCents: BigInt(28000),
+            equityAmountInCents: BigInt(12000),
+            equityAmountInOptions: 12,
+            minAllowedEquityPercentage: 10,
+            maxAllowedEquityPercentage: 30,
+            acceptedAt: expect.any(Date),
           }),
         );
+
+        expect(sentEmails).toEqual([
+          expect.objectContaining({
+            to: workerUser.email,
+            subject: `💰 ${company.name} has sent you a payment`,
+            text: expect.stringContaining("has sent you a payment"),
+          }),
+        ]);
       });
     });
   });
 
   test.describe("invoice list visibility", () => {
-    test("does not show one-off payments in the admin invoice list while they're not accepted by the payee", async ({
+    test("shows one-off payments in the admin invoice list immediately since they're auto-accepted", async ({
       page,
       sentEmails: _,
     }) => {
@@ -307,6 +296,11 @@ test.describe("One-off payments", () => {
         { page },
       );
 
+      const invoice = await db.query.invoices.findFirst({
+        where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
+      });
+      expect(invoice?.acceptedAt).toBeDefined();
+
       await logout(page);
       await login(page, workerUser);
 
@@ -320,14 +314,7 @@ test.describe("One-off payments", () => {
       await invoiceRow.getByRole("link", { name: "O-0001" }).click();
       await expect(page.getByRole("cell", { name: "Bonus!" })).toBeVisible();
 
-      await page.getByRole("button", { name: "Accept payment" }).click();
-      await withinModal(
-        async (modal) => {
-          await expect(modal).toContainText("Total value $123.45", { useInnerText: true });
-          await modal.getByRole("button", { name: "Accept payment" }).click();
-        },
-        { page },
-      );
+      await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
 
       await logout(page);
       await login(page, adminUser);
