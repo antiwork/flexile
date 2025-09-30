@@ -172,4 +172,67 @@ test.describe("invoice editing", () => {
     const lineItem = updatedLineItems[0];
     expect(lineItem?.description).toBe("Updated development work");
   });
+
+  test("displays fresh data for invoice show page after re-submission", async ({ page }) => {
+    const existingContractor = await db.query.companyContractors.findFirst({
+      where: eq(companyContractors.companyId, company.company.id),
+    });
+    assert(existingContractor !== undefined);
+    const invoiceData = await invoicesFactory.create({
+      companyContractorId: existingContractor.id,
+      invoiceNumber: "INV-SHOW-AFT-RESUBMISSION",
+      notes: "Original notes.",
+    });
+    const existingLineItem = await db.query.invoiceLineItems.findFirst({
+      where: eq(invoiceLineItems.invoiceId, invoiceData.invoice.id),
+    });
+    assert(existingLineItem !== undefined);
+
+    await db
+      .update(invoiceLineItems)
+      .set({
+        description: "Development work",
+      })
+      .where(eq(invoiceLineItems.id, existingLineItem.id));
+
+    await login(page, contractorUser);
+
+    await page.goto("/invoices");
+
+    await page.getByRole("link", { name: "INV-SHOW-AFT-RESUBMISSION" }).click();
+    await expect(
+      page.getByTableRowCustom({
+        Services: "Development work",
+        "Qty / Hours": "1",
+        "Line total": "$600",
+      }),
+    ).toBeVisible();
+    await expect(page.getByText("Original Notes")).toBeVisible();
+    await expect(page.getByText("Total$600")).toBeVisible();
+
+    await page.getByRole("link", { name: "Edit invoice" }).click();
+
+    await page.getByPlaceholder("Enter notes about your invoice (optional)").fill("Updated notes after first edit.");
+    await page.getByLabel("Hours / Qty").fill("02:00");
+    await page.getByPlaceholder("Description").first().fill("Updated development work");
+    await page.getByRole("button", { name: "Resubmit" }).click();
+
+    const invoiceRow = page.getByTableRowCustom({
+      "Invoice ID": "INV-SHOW-AFT-RESUBMISSION",
+      Amount: "$1,200",
+    });
+    await expect(invoiceRow).toBeVisible();
+
+    // Navigate back to show page
+    await invoiceRow.click();
+    await expect(
+      page.getByTableRowCustom({
+        Services: "Updated development work",
+        "Qty / Hours": "02:00",
+        "Line total": "$1,200",
+      }),
+    ).toBeVisible();
+    await expect(page.getByText("Total$1,200")).toBeVisible();
+    await expect(page.getByText("Updated notes after first edit.")).toBeVisible();
+  });
 });
