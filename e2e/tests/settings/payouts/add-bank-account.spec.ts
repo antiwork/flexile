@@ -87,6 +87,8 @@ test.describe("Bank account settings", () => {
 
     await page.getByLabel("Country").click();
     await page.getByRole("option", { name: "Mexico" }).click();
+    await page.getByLabel(/State/iu).click();
+    await page.getByRole("option", { name: "Puebla" }).click();
     await page.getByLabel("City").fill(" San Andres Cholula ");
     await page.getByLabel("Street address, apt number").fill(" 4 Oriente 820 ");
     await page.getByLabel("Post code").fill(" 72810 ");
