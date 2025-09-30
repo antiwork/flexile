@@ -18,9 +18,9 @@ import { md5Checksum } from "@/utils";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
 
 const formSchema = z.object({
-  website: z.string().url().nullish().or(z.literal("")),
+  website: z.string().trim().min(1, "This field is required.").url("Please enter a valid URL."),
   brandColor: z.string().nullable(),
-  publicName: z.string(),
+  publicName: z.string().trim().min(1, "This field is required"),
 });
 export default function SettingsPage() {
   const company = useCurrentCompany();
