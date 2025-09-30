@@ -128,17 +128,23 @@ export default async function HomePage() {
           </div>
         </Section>
 
-        <Section className="bg-black py-8 text-white md:py-16">
-          <div className="mx-auto flex w-full max-w-5xl flex-row items-center justify-between px-4 md:items-end">
-            <div className="flex flex-col items-start gap-8 md:gap-18">
-              <Image src={logo} alt="Flexile" className="block h-16 w-auto invert" />
+        <Section className="bg-black py-6 text-white md:py-10">
+          <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-between gap-6 px-4 text-center md:flex-row md:items-end md:gap-0 md:text-left">
+            <div className="flex flex-col items-center gap-6 md:items-start md:gap-18">
+              <Image src={logo} alt="Flexile" className="block h-12 w-auto invert md:h-16" />
             </div>
-            <div className="flex flex-col items-end gap-4 text-right">
-              <Link href="/privacy" className="text-base text-white no-underline hover:underline">
-                Privacy policy
+            <div className="flex flex-col items-center gap-2 text-center md:items-end md:gap-3 md:text-right">
+              <Link
+                href="/privacy"
+                className="text-sm text-white/90 no-underline underline-offset-4 hover:text-white hover:underline md:text-base"
+              >
+                Privacy Policy
               </Link>
-              <Link href="/terms" className="text-base text-white no-underline hover:underline">
-                Terms of service
+              <Link
+                href="/terms"
+                className="text-sm text-white/90 no-underline underline-offset-4 hover:text-white hover:underline md:text-base"
+              >
+                Terms of Service
               </Link>
             </div>
           </div>
