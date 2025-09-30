@@ -4,13 +4,20 @@ import { cn } from "@/utils";
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div data-slot="table-container" className="relative w-full overflow-x-auto">
-      <table data-slot="table" className={cn("w-full caption-bottom text-sm", className)} {...props} />
+      <table data-slot="table" className={cn("w-full caption-bottom text-sm", className)} {...props} role="table" />
     </div>
   );
 }
 
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
-  return <thead data-slot="table-header" className={cn("[&_tr]:border-muted [&_tr]:border-b", className)} {...props} />;
+  return (
+    <thead
+      data-slot="table-header"
+      className={cn("[&_tr]:border-muted [&_tr]:border-b", className)}
+      {...props}
+      role="rowgroup"
+    />
+  );
 }
 
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
@@ -19,6 +26,7 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
       data-slot="table-body"
       className={cn("[&_tr]:border-muted [&_tr]:border-b [&_tr:last-child]:border-0", className)}
       {...props}
+      role="rowgroup"
     />
   );
 }
@@ -29,6 +37,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
       data-slot="table-footer"
       className={cn("bg-muted/20 border-muted border-t font-medium [&>tr]:last:border-b-0", className)}
       {...props}
+      role="rowgroup"
     />
   );
 }
@@ -42,6 +51,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
         className,
       )}
       {...props}
+      role="row"
     />
   );
 }
@@ -55,6 +65,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
         className,
       )}
       {...props}
+      role="columnheader"
     />
   );
 }
@@ -68,6 +79,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
         className,
       )}
       {...props}
+      role="cell"
     />
   );
 }
