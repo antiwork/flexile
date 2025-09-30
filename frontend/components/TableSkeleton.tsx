@@ -32,7 +32,7 @@ export default function TableSkeleton({
   ));
 
   const mobileSkeletonRows = Array.from({ length: 3 }).map((_, rowIndex) => (
-    <TableRow key={`mobile-${rowIndex}`} className="md:hidden">
+    <TableRow key={`mobile-${rowIndex}`} className="flex flex-col md:hidden">
       <TableCell className="mb-2 flex flex-col gap-3 p-4">
         <Skeleton className="h-4 w-48 rounded" /> {/* Subtitle */}
         <div className="flex justify-between">
