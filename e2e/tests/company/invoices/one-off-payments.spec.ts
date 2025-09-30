@@ -302,7 +302,9 @@ test.describe("One-off payments", () => {
         async (modal) => {
           await modal.getByLabel("Amount").fill("123.45");
           await modal.getByLabel("What is this for?").fill("Bonus!");
+          await modal.getByLabel("What is this for?").blur();
           await modal.getByRole("button", { name: "Issue payment" }).click();
+          await page.waitForLoadState("networkidle");
         },
         { page },
       );
@@ -325,13 +327,13 @@ test.describe("One-off payments", () => {
         async (modal) => {
           await expect(modal).toContainText("Total value $123.45", { useInnerText: true });
           await modal.getByRole("button", { name: "Accept payment" }).click();
+          await page.waitForLoadState("networkidle");
         },
         { page },
       );
 
       await logout(page);
       await login(page, adminUser);
-
       await page.getByRole("link", { name: "Invoices" }).click();
       await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
 
