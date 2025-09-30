@@ -7,7 +7,7 @@ import { usersFactory } from "@test/factories/users";
 import { fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { subDays } from "date-fns";
+import { format, subDays } from "date-fns";
 import { and, desc, eq } from "drizzle-orm";
 import {
   activeStorageAttachments,
@@ -70,8 +70,8 @@ test.describe("invoice creation", () => {
     await expect(page.getByText("Net amount in cash$164")).toBeVisible();
 
     await page.getByLabel("Hours / Qty").fill("100:00");
-    await fillDatePicker(page, "Date", "08/08/2021");
-    await page.getByPlaceholder("Description").click(); // click on description to set date value properly
+    const date = new Date(2021, 7, 8); // August 8, 2021
+    await fillDatePicker(page, "Invoice date", format(date, "MM/dd/yyyy"));
 
     await expect(page.getByText("Total services$6,000")).toBeVisible();
     await expect(page.getByText("Swapped for equity (not paid in cash)$1,200")).toBeVisible();
