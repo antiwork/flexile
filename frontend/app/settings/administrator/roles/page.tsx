@@ -249,9 +249,15 @@ export default function RolesPage() {
             <div className="min-w-0">
               <div className="flex items-center gap-1 font-medium">
                 <span className="truncate">{user.name}</span>
-                {isCurrentUser ? <span className="text-muted-foreground shrink-0 text-xs">(You)</span> : null}
               </div>
-              <div className="text-muted-foreground truncate text-sm">{user.email}</div>
+              <div className="text-muted-foreground flex items-baseline gap-1 text-sm">
+                <span className="min-w-0 flex-1 truncate text-black md:overflow-visible md:whitespace-normal">
+                  {user.email}
+                </span>
+                {isCurrentUser ? (
+                  <span className="text-muted-foreground shrink-0 text-xs whitespace-nowrap">(You)</span>
+                ) : null}
+              </div>
             </div>
           );
         },
