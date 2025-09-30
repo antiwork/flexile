@@ -64,15 +64,16 @@ test.describe("invoice creation", () => {
 
     await page.getByPlaceholder("Description").fill("I worked on invoices");
     await page.getByLabel("Hours").fill("03:25");
-    await expect(page.getByText("Total services$60")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)$0")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$60")).toBeVisible();
+    await page.getByPlaceholder("Description").click(); // click to set the equity value as 20% before hand
+    await expect(page.getByText("Total services$205")).toBeVisible();
+    await expect(page.getByText("Swapped for equity (not paid in cash)$41")).toBeVisible();
+    await expect(page.getByText("Net amount in cash$164")).toBeVisible();
 
-    await fillDatePicker(page, "Date", "08/08/2021");
     await page.getByLabel("Hours / Qty").fill("100:00");
-    await page.getByPlaceholder("Description").fill("I worked on invoices");
+    await fillDatePicker(page, "Date", "08/08/2021");
+    await page.getByPlaceholder("Description").click(); // click on description to set date value properly
 
-    await expect(page.getByText("Total services$6,000")).toBeVisible();
+    await expect(page.getByText("Total services$6,000")).toBeVisible({ timeout: 5000 });
     await expect(page.getByText("Swapped for equity (not paid in cash)$1,200")).toBeVisible();
     await expect(page.getByText("Net amount in cash$4,800")).toBeVisible();
 
