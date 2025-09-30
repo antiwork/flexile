@@ -24,7 +24,7 @@ export default function DatePicker({ label, className, ...props }: DatePickerPro
       <RacLabel className="text-foreground text-base">{label}</RacLabel>
       <div className="flex">
         <Group className="w-full">
-          <DateInput className="pe-9 bg-transparent dark:hover:bg-accent dark:data-focus-within:bg-accent" />
+          <DateInput className="dark:hover:bg-accent dark:data-focus-within:bg-accent bg-transparent pe-9" />
         </Group>
         <RacButton className="text-muted-foreground hover:text-foreground data-focus-visible:ring-ring data-focus-visible:border-border z-10 -ms-9 -me-px flex w-9 items-center justify-center rounded-e-md transition-[color,box-shadow] outline-none data-focus-visible:ring-2">
           <CalendarIcon size={16} />
