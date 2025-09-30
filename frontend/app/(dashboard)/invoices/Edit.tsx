@@ -178,11 +178,17 @@ const Edit = () => {
   };
 
   const submit = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (payload: {
+      invoiceNumber: string;
+      issueDate: string;
+      lineItems: InvoiceFormLineItem[];
+      expenses: InvoiceFormExpense[];
+      notes: string;
+    }) => {
       const formData = new FormData();
-      formData.append("invoice[invoice_number]", invoiceNumber);
-      formData.append("invoice[invoice_date]", issueDate.toString());
-      for (const lineItem of lineItems) {
+      formData.append("invoice[invoice_number]", payload.invoiceNumber);
+      formData.append("invoice[invoice_date]", payload.issueDate);
+      for (const lineItem of payload.lineItems) {
         if (!lineItem.description || !lineItem.quantity) continue;
         if (lineItem.id) {
           formData.append("invoice_line_items[][id]", lineItem.id.toString());
@@ -192,7 +198,7 @@ const Edit = () => {
         formData.append("invoice_line_items[][hourly]", lineItem.hourly.toString());
         formData.append("invoice_line_items[][pay_rate_in_subunits]", lineItem.pay_rate_in_subunits.toString());
       }
-      for (const expense of expenses) {
+      for (const expense of payload.expenses) {
         if (expense.id) {
           formData.append("invoice_expenses[][id]", expense.id.toString());
         }
@@ -203,8 +209,7 @@ const Edit = () => {
           formData.append("invoice_expenses[][attachment]", expense.blob);
         }
       }
-
-      if (notes.length) formData.append("invoice[notes]", notes);
+      if (payload.notes.length) formData.append("invoice[notes]", payload.notes);
 
       if (document) {
         if (document.blob) formData.append("invoice[attachment]", document.blob);
@@ -378,7 +383,16 @@ const Edit = () => {
             <Button
               size="small"
               variant="primary"
-              onClick={() => validate() && submit.mutate()}
+              onClick={() => {
+                if (!validate()) return;
+                submit.mutate({
+                  invoiceNumber,
+                  issueDate: issueDate.toString(),
+                  lineItems: lineItems.toArray(),
+                  expenses: expenses.toArray(),
+                  notes,
+                });
+              }}
               disabled={submit.isPending}
             >
               {submit.isPending ? "Sending..." : data.invoice.id ? "Resubmit" : "Send invoice"}
