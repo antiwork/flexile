@@ -6,12 +6,10 @@ test.describe("Company billing settings", () => {
   test.beforeEach(async ({ page }) => {
     await page.route("**/internal/companies/*/administrator/settings/bank_accounts", async (route) => {
       await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          client_secret: "seti_1XXxxZzMockSecretKey92DTjAIWWr_secret_T9ONHxxxxxRfJ9L8dhjdMOCK",
+        json: {
+          client_secret: "pi_123456_secret_abcdef",
           bank_account_last4: null,
-        }),
+        },
       });
     });
   });
