@@ -183,27 +183,26 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
             </Form>
           )}
 
-          <div className="flex w-full justify-end gap-3">
+          <div className="flex w-full flex-col-reverse justify-end gap-3 md:flex-row">
             {update?.sentAt ? (
-              <Button className="w-full md:w-fit" size="small" onClick={() => void submit()}>
+              <Button className="w-full md:w-fit" variant="primary" onClick={() => void submit()}>
                 Update
               </Button>
             ) : (
               <>
                 <MutationStatusButton
                   type="button"
-                  size="small"
                   mutation={saveMutation}
                   idleVariant="outline"
                   loadingText="Saving..."
-                  className="w-1/2 md:w-fit"
+                  className="w-full md:w-fit"
                   onClick={() =>
                     void form.handleSubmit((values) => saveMutation.mutateAsync({ values, preview: true }))()
                   }
                 >
                   Preview
                 </MutationStatusButton>
-                <Button className="w-1/2 md:w-fit" size="small" onClick={() => void submit()}>
+                <Button className="w-full md:w-fit" variant="primary" onClick={() => void submit()}>
                   Publish
                 </Button>
               </>
@@ -223,15 +222,16 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
             <p>Your update will be emailed to {recipientCount.toLocaleString()} stakeholders.</p>
           )}
           <DialogFooter>
-            <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-              <Button variant="outline" size="small" onClick={() => setPublishModalOpen(false)}>
+            <div className="md:grid-flow-col-reverse flex flex-col-reverse items-center gap-3 md:grid md:auto-cols-fr">
+              <Button variant="outline" className="w-full md:w-fit" onClick={() => setPublishModalOpen(false)}>
                 No, cancel
               </Button>
               <MutationButton
                 mutation={saveMutation}
                 param={{ values: form.getValues(), preview: false }}
                 loadingText="Sending..."
-                size="small"
+                className="w-full md:w-fit"
+                idleVariant="primary"
               >
                 Yes, {update?.sentAt ? "update" : "publish"}
               </MutationButton>

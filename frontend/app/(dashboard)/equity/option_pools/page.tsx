@@ -49,7 +49,7 @@ export default function OptionPools() {
                 <Plus />
               </Button>
             ) : (
-              <Button size="small" onClick={() => setOpen(true)}>
+              <Button variant="primary" onClick={() => setOpen(true)}>
                 New option pool
               </Button>
             )
