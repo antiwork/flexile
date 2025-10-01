@@ -123,7 +123,7 @@ export const ColumnSettingsToggle = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="small">
+        <Button variant="outline">
           <div className="flex items-center gap-1">
             <Columns2 className="size-4" />
             Columns
@@ -164,9 +164,7 @@ export const ColumnSettingsToggle = ({
         {!isDefaultState && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onSelect={onResetToDefaults}>
-              Reset to defaults
-            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onResetToDefaults}>Reset to defaults</DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>

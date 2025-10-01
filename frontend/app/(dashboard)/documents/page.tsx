@@ -1,29 +1,37 @@
 "use client";
-import { useQueryClient } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, Info } from "lucide-react";
+import { CircleCheck, Download, Info, Share } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import React, { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FinishOnboarding } from "@/app/(dashboard)/documents/FinishOnboarding";
+import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
+import type { ActionConfig, ActionContext } from "@/components/actions/types";
+import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, filterValueSchema, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
+import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
+import { Editor as RichTextEditor } from "@/components/RichText";
 import SignForm from "@/components/SignForm";
-import Status, { type Variant as StatusVariant } from "@/components/Status";
-import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { DocumentType, trpc } from "@/trpc/client";
 import { assertDefined } from "@/utils/assert";
+import { request } from "@/utils/request";
+import { company_documents_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 
@@ -48,27 +56,26 @@ const getCompletedAt = (document: Document) =>
       )
     : undefined;
 
-function getStatus(document: Document): { variant: StatusVariant | undefined; name: string; text: string } {
+function getStatus(document: Document): { name: string; text: string } {
   const completedAt = getCompletedAt(document);
 
   switch (document.type) {
     case DocumentType.TaxDocument:
       if (document.name.startsWith("W-") || completedAt) {
         return {
-          variant: "success",
           name: "Signed",
           text: completedAt ? `Filed on ${formatDate(completedAt)}` : "Signed",
         };
       }
-      return { variant: undefined, name: "Ready for filing", text: "Ready for filing" };
+      return { name: "Ready for filing", text: "Ready for filing" };
     case DocumentType.ShareCertificate:
     case DocumentType.ExerciseNotice:
-      return { variant: "success", name: "Issued", text: "Issued" };
+      return { name: "Issued", text: "Issued" };
     case DocumentType.ConsultingContract:
     case DocumentType.EquityPlanContract:
       return completedAt
-        ? { variant: "success", name: "Signed", text: "Signed" }
-        : { variant: "critical", name: "Signature required", text: "Signature required" };
+        ? { name: "Signed", text: "Signed" }
+        : { name: "Signature required", text: "Signature required" };
   }
 }
 
@@ -88,6 +95,7 @@ export default function DocumentsPage() {
 
   const columnHelper = createColumnHelper<Document>();
   const [signDocumentParam] = useQueryState("sign");
+  const [sharingDocument, setSharingDocument] = useState<Document | null>(null);
   const [signDocumentId, setSignDocumentId] = useState<bigint | null>(null);
   const isSignable = (document: Document) =>
     document.hasText &&
@@ -133,36 +141,19 @@ export default function DocumentsPage() {
           header: "Status",
           meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
           cell: (info) => {
-            const { variant, text } = getStatus(info.row.original);
-            return <Status variant={variant}>{text}</Status>;
+            const { text } = getStatus(info.row.original);
+            return text;
           },
         }),
         columnHelper.display({
           id: "actions",
           cell: (info) => {
             const document = info.row.original;
-            return (
-              <>
-                {isSignable(document) ? (
-                  <Button
-                    variant="outline"
-                    size="small"
-                    onClick={() => setSignDocumentId(document.id)}
-                    disabled={!canSign}
-                  >
-                    Review and sign
-                  </Button>
-                ) : null}
-                {document.attachment ? (
-                  <Button variant="outline" size="small" asChild>
-                    <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
-                      <Download className="size-4" />
-                      Download
-                    </Link>
-                  </Button>
-                ) : null}
-              </>
-            );
+            return isSignable(document) ? (
+              <Button variant="outline" onClick={() => setSignDocumentId(document.id)} disabled={!canSign}>
+                Review and sign
+              </Button>
+            ) : null;
           },
         }),
       ].filter((column) => !!column),
@@ -174,19 +165,29 @@ export default function DocumentsPage() {
       [
         columnHelper.display({
           id: "documentNameSigner",
-          cell: (info) => (
-            <div className="flex flex-col gap-1">
-              <div className="text-base font-medium">{info.row.original.name}</div>
-              {isCompanyRepresentative ? (
-                <div className="text-sm font-normal">
-                  {
-                    info.row.original.signatories.find((signatory) => signatory.title !== "Company Representative")
-                      ?.name
-                  }
-                </div>
-              ) : null}
-            </div>
-          ),
+          cell: (info) => {
+            const document = info.row.original;
+            return (
+              <div className="flex flex-col gap-1">
+                <div className="text-base font-medium">{document.name}</div>
+                {isCompanyRepresentative ? (
+                  <div className="text-sm font-normal">
+                    {document.signatories.find((signatory) => signatory.title !== "Company Representative")?.name}
+                  </div>
+                ) : null}
+                {document.attachment ? (
+                  <div>
+                    <Button variant="outline" asChild>
+                      <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
+                        <Download className="mr-2 size-4" />
+                        Download
+                      </Link>
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            );
+          },
           meta: {
             cellClassName: "w-full",
           },
@@ -196,14 +197,12 @@ export default function DocumentsPage() {
           id: "statusSentOn",
           cell: (info) => {
             const document = info.row.original;
-            const { variant } = getStatus(info.row.original);
+            const { text } = getStatus(info.row.original);
 
             return (
               <div className="flex h-full flex-col items-end justify-between">
-                <div className="flex h-5 w-4 items-center justify-center">
-                  <Status variant={variant} />
-                </div>
-                <div className="text-gray-600">{formatDate(document.createdAt)}</div>
+                <div className="flex h-5 items-center justify-center">{text}</div>
+                <div className="text-muted-foreground">{formatDate(document.createdAt)}</div>
               </div>
             );
           },
@@ -269,6 +268,40 @@ export default function DocumentsPage() {
       }),
   });
 
+  const actionConfig: ActionConfig<Document> = {
+    entityName: "documents",
+    actions: {
+      edit: {
+        id: "download",
+        label: "Download",
+        icon: Download,
+        contexts: ["single"],
+        permissions: ["administrator", "worker"],
+        conditions: (document, _) => !!document.attachment,
+        href: (document: Document) => `/download/${document.attachment?.key}/${document.attachment?.filename}`,
+      },
+      reject: {
+        id: "share",
+        label: "Share",
+        icon: Share,
+        contexts: ["single"],
+        permissions: ["administrator"],
+        conditions: (document, _) => !!document.hasText,
+        action: "share",
+      },
+    },
+  };
+  const actionContext: ActionContext = {
+    userRole: user.roles.administrator ? "administrator" : "worker",
+    permissions: {},
+  };
+  const handleAction = (actionId: string, documents: Document[]) => {
+    const singleDocument = documents[0];
+    if (!singleDocument) return;
+
+    if (actionId === "share") setSharingDocument(singleDocument);
+  };
+
   const filingDueDateFor1099DIV = new Date(currentYear, 2, 31);
 
   return (
@@ -277,10 +310,7 @@ export default function DocumentsPage() {
         title="Documents"
         headerActions={
           isMobile && table.options.enableRowSelection ? (
-            <button
-              className="text-blue-600"
-              onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
-            >
+            <button className="text-link" onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}>
               {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
             </button>
           ) : null
@@ -326,12 +356,28 @@ export default function DocumentsPage() {
         </Alert>
       ) : null}
 
-      {isLoading ? (
-        <TableSkeleton columns={6} />
-      ) : documents.length > 0 ? (
+      {documents.length > 0 || isLoading ? (
         <>
-          <DataTable table={table} tabsColumn="status" {...(isCompanyRepresentative && { searchColumn: "signer" })} />
+          <DataTable
+            table={table}
+            tabsColumn="status"
+            {...(isCompanyRepresentative && { searchColumn: "signer" })}
+            contextMenuContent={({ row, selectedRows, onClearSelection }) => (
+              <ContextMenuActions
+                item={row}
+                selectedItems={selectedRows}
+                config={actionConfig}
+                actionContext={actionContext}
+                onAction={handleAction}
+                onClearSelection={onClearSelection}
+              />
+            )}
+            isLoading={isLoading}
+          />
           {signDocument ? <SignDocumentModal document={signDocument} onClose={() => setSignDocumentId(null)} /> : null}
+          {sharingDocument ? (
+            <ShareDocumentModal document={sharingDocument} onClose={() => setSharingDocument(null)} />
+          ) : null}
         </>
       ) : (
         <div className="mx-4">
@@ -379,10 +425,105 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
         </DialogHeader>
         <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
         <DialogFooter>
-          <Button size="small" onClick={sign} disabled={!signed}>
+          <Button variant="primary" onClick={sign} disabled={!signed}>
             Agree & Submit
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const shareDocumentSchema = z.object({
+  text: z.string(),
+  recipient: z.string(),
+});
+
+const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose: () => void }) => {
+  const company = useCurrentCompany();
+  const trpcUtils = trpc.useUtils();
+  const [data] = trpc.documents.get.useSuspenseQuery({ companyId: company.id, id: document.id });
+  const [recipients] = trpc.companies.listCompanyUsers.useSuspenseQuery({ companyId: company.id });
+  const form = useForm({
+    resolver: zodResolver(shareDocumentSchema),
+    defaultValues: {
+      text: data.text ?? "",
+      recipient: assertDefined(recipients[0]).id,
+    },
+  });
+  const submitMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof shareDocumentSchema>) => {
+      await request({
+        method: "POST",
+        url: company_documents_path(company.id),
+        accept: "json",
+        jsonData: {
+          document: {
+            text: values.text,
+            document_type: document.type,
+            name: document.name,
+          },
+          recipient: values.recipient,
+        },
+        assertOk: true,
+      });
+    },
+    onSuccess: async () => {
+      await trpcUtils.documents.list.invalidate();
+      onClose();
+    },
+  });
+  const submit = form.handleSubmit((values) => submitMutation.mutate(values));
+  return (
+    <Dialog open onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-screen-lg">
+        <DialogHeader>
+          <DialogTitle>Share document</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+            <FormField
+              control={form.control}
+              name="text"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <RichTextEditor value={field.value} onChange={field.onChange} className="max-w-none" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="recipient"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Recipient</FormLabel>
+                  <FormControl>
+                    <ComboBox
+                      {...field}
+                      value={field.value}
+                      options={recipients.map((recipient) => ({
+                        value: recipient.id.toString(),
+                        label: recipient.name,
+                      }))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <MutationStatusButton idleVariant="primary" type="submit" mutation={submitMutation}>
+                Send
+              </MutationStatusButton>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

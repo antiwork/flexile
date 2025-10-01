@@ -4,8 +4,8 @@ import { CircleAlert, CircleCheck, Info, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useDocumentTemplateQuery } from "@/app/(dashboard)/documents";
 import NewEquityGrantModal from "@/app/(dashboard)/equity/grants/NewEquityGrantModal";
-import { useExerciseDataConfig } from "@/app/(dashboard)/equity/options";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
@@ -46,10 +46,10 @@ export default function GrantsPage() {
     },
   });
 
-  const exerciseDataConfig = useExerciseDataConfig();
+  const exerciseNoticeConfig = useDocumentTemplateQuery("exercise_notice");
   const { data: exerciseData } = useQuery({
-    ...exerciseDataConfig,
-    enabled: exerciseDataConfig.enabled || !!user.roles.administrator,
+    ...exerciseNoticeConfig,
+    enabled: company.flags.includes("option_exercising") && !!user.roles.administrator,
   });
   const columnHelper = createColumnHelper<EquityGrant>();
   const columns = useMemo(
@@ -73,7 +73,7 @@ export default function GrantsPage() {
         header: "Actions",
         cell: (info) =>
           info.row.original.unvestedShares > 0 ? (
-            <Button variant="critical" size="small" onClick={() => setCancellingGrantId(info.row.original.id)}>
+            <Button variant="critical" onClick={() => setCancellingGrantId(info.row.original.id)}>
               Cancel
             </Button>
           ) : null,
@@ -94,19 +94,19 @@ export default function GrantsPage() {
               <Plus />
             </Button>
           ) : (
-            <Button size="small" onClick={() => setShowNewGrantModal(true)}>
+            <Button variant="primary" onClick={() => setShowNewGrantModal(true)}>
               New grant
             </Button>
           )
         }
       />
 
-      {exerciseData && !exerciseData.exercise_notice ? (
+      {exerciseData && !exerciseData.text ? (
         <Alert className="mx-4">
           <Info />
           <AlertDescription>
             Please{" "}
-            <Link href="/settings/administrator/equity" className={linkClasses}>
+            <Link href="/settings/administrator/templates?edit=exercise_notice" className={linkClasses}>
               add an exercise notice
             </Link>{" "}
             so investors can exercise their options.
@@ -136,7 +136,7 @@ export default function GrantsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-muted-foreground text-sm">Total options</h3>
-                  <p>{cancellingGrant.numberOfShares.toLocaleString()}</p>
+                  <p className="text-sm">{cancellingGrant.numberOfShares.toLocaleString()}</p>
                 </div>
                 <div>
                   <h3 className="text-muted-foreground text-sm">Vested Options</h3>
@@ -148,7 +148,7 @@ export default function GrantsPage() {
                 </div>
                 <div>
                   <h3 className="text-muted-foreground text-sm">Options to be forfeited</h3>
-                  <p className="text-sm text-red-500">{cancellingGrant.unvestedShares.toLocaleString()}</p>
+                  <p className="text-destructive text-sm">{cancellingGrant.unvestedShares.toLocaleString()}</p>
                 </div>
               </div>
               <Alert variant="destructive">
@@ -160,12 +160,11 @@ export default function GrantsPage() {
                 </AlertDescription>
               </Alert>
               <DialogFooter>
-                <Button variant="outline" size="small" onClick={() => setCancellingGrantId(null)}>
+                <Button variant="outline" onClick={() => setCancellingGrantId(null)}>
                   Cancel
                 </Button>
                 <MutationButton
                   idleVariant="critical"
-                  size="small"
                   mutation={cancelGrant}
                   param={{ companyId: company.id, id: cancellingGrant.id, reason: "Cancelled by admin" }}
                 >

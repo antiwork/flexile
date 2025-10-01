@@ -150,7 +150,10 @@ export default function Dividends() {
             user.hasPayoutMethodForDividends &&
             info.row.original.dividendRound.releaseDocument &&
             !info.row.original.signedReleaseAt ? (
-              <Button size="small" onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}>
+              <Button
+                variant="primary"
+                onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}
+              >
                 Sign
               </Button>
             ) : null}
@@ -266,7 +269,10 @@ export default function Dividends() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button size="small" onClick={() => setSigningDividend({ id: signingDividend.id, state: "signing" })}>
+                  <Button
+                    variant="primary"
+                    onClick={() => setSigningDividend({ id: signingDividend.id, state: "signing" })}
+                  >
                     Review and sign agreement
                   </Button>
                 </DialogFooter>

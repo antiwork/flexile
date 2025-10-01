@@ -217,7 +217,7 @@ function Sidebar({
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
-            : "border-muted group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+            : "border-sidebar-border group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
           className,
         )}
         {...props}
@@ -225,7 +225,7 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col bg-gray-50/50 group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm"
+          className="group-data-[variant=floating]:border-sidebar-border bg-sidebar flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm"
         >
           {children}
         </div>
@@ -444,11 +444,11 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-3 overflow-hidden rounded-sm p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:text-accent-foreground focus-visible:ring-2 active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-accent-foreground cursor-pointer hover:bg-gray-100 active:bg-gray-100/50 data-[active=true]:bg-gray-100/30 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>[data-state=open]>svg]:rotate-90",
+  "peer/menu-button flex w-full items-center gap-3 overflow-hidden rounded-sm p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:text-accent-foreground focus-visible:ring-2 active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 dark:text-muted-foreground aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium data-[active=true]:text-accent-foreground cursor-pointer hover:bg-sidebar-accent active:bg-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent dark:hover:text-white dark:data-[active=true]:text-white group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>[data-state=open]>svg]:rotate-90",
   {
     variants: {
       variant: {
-        default: "hover:text-accent-foreground hover:bg-gray-100/30",
+        default: "",
         outline:
           "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:text-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))] hover:bg-gray-100",
       },

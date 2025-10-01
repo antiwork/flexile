@@ -246,12 +246,12 @@ export default function RolesPage() {
           const user = info.row.original;
           const isCurrentUser = currentUser.email === user.email;
           return (
-            <div>
-              <div className="font-medium">
-                {user.name}
-                {isCurrentUser ? <span className="text-muted-foreground ml-1">(You)</span> : null}
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 font-medium">
+                <span className="truncate">{user.name}</span>
+                {isCurrentUser ? <span className="text-muted-foreground shrink-0 text-xs">(You)</span> : null}
               </div>
-              <div className="text-muted-foreground text-sm">{user.email}</div>
+              <div className="text-muted-foreground truncate text-sm">{user.email}</div>
             </div>
           );
         },
@@ -278,7 +278,6 @@ export default function RolesPage() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    size="small"
                     className="h-8 w-8 p-0"
                     disabled={isCurrentUserRow || isLoadingRevoke || isLastAdmin}
                   >
@@ -374,12 +373,7 @@ export default function RolesPage() {
                 table={table}
                 searchColumn="name"
                 actions={
-                  <Button
-                    variant="outline"
-                    size="small"
-                    onClick={() => setShowAddModal(true)}
-                    className="w-full md:w-auto"
-                  >
+                  <Button variant="primary" onClick={() => setShowAddModal(true)} className="w-full md:w-auto">
                     <Plus className="size-4" />
                     Add member
                   </Button>
@@ -455,7 +449,7 @@ export default function RolesPage() {
                 ) : null}
                 <Button
                   type="submit"
-                  size="small"
+                  variant="primary"
                   className="w-full md:w-auto"
                   disabled={
                     !addMemberForm.formState.isValid ||
@@ -485,10 +479,10 @@ export default function RolesPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button size="small" variant="outline" onClick={() => setConfirmRevoke(null)}>
+            <Button variant="outline" onClick={() => setConfirmRevoke(null)}>
               Cancel
             </Button>
-            <Button size="small" variant="critical" onClick={handleRemoveRole} disabled={removeRoleMutation.isPending}>
+            <Button variant="critical" onClick={handleRemoveRole} disabled={removeRoleMutation.isPending}>
               Remove {confirmRevoke?.role === "admin" ? "admin" : "lawyer"}
             </Button>
           </DialogFooter>

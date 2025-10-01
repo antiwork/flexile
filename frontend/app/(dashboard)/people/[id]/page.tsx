@@ -218,11 +218,11 @@ export default function ContractorPage() {
               </Status>
             </div>
             <DialogFooter>
-              <Button variant="outline" size="small" onClick={() => setEndModalOpen(false)}>
+              <Button variant="outline" onClick={() => setEndModalOpen(false)}>
                 No, cancel
               </Button>
               <MutationButton
-                size="small"
+                idleVariant="critical"
                 mutation={endContract}
                 param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate?.toString() ?? "" }}
               >
@@ -346,23 +346,21 @@ export default function ContractorPage() {
                   <small className="text-red">{issuePaymentForm.formState.errors.root.message}</small>
                 ) : null}
 
-                <small className="text-gray-600">
+                <small className="text-muted-foreground">
                   Your'll be able to initiate payment once it has been accepted by the recipient
                   {company.requiredInvoiceApprovals > 1 ? " and has sufficient approvals" : ""}.
                 </small>
 
                 <DialogFooter>
-                  <div className="flex justify-end">
-                    <MutationStatusButton
-                      type="submit"
-                      size="small"
-                      mutation={issuePaymentMutation}
-                      successText="Payment submitted!"
-                      loadingText="Saving..."
-                    >
-                      Issue payment
-                    </MutationStatusButton>
-                  </div>
+                  <MutationStatusButton
+                    type="submit"
+                    idleVariant="primary"
+                    mutation={issuePaymentMutation}
+                    successText="Payment submitted!"
+                    loadingText="Saving..."
+                  >
+                    Issue payment
+                  </MutationStatusButton>
                 </DialogFooter>
               </form>
             </Form>
@@ -425,7 +423,7 @@ const ActionPanel = ({
         <DialogDescription className="sr-only">Manage Payment or Contract</DialogDescription>
         <div className="flex flex-col gap-3">
           <DialogClose asChild onClick={handleIssuePaymentClick}>
-            <Button size="small">Issue payment</Button>
+            <Button variant="primary">Issue payment</Button>
           </DialogClose>
           {contractor.endedAt && !isFuture(contractor.endedAt) ? (
             <Status className="justify-center" variant="critical">
@@ -433,9 +431,7 @@ const ActionPanel = ({
             </Status>
           ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
             <DialogClose asChild onClick={handleEndContractClick}>
-              <Button variant="outline" size="small">
-                End contract
-              </Button>
+              <Button variant="outline">End contract</Button>
             </DialogClose>
           ) : null}
         </div>
@@ -443,13 +439,13 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex items-center gap-3">
-      <Button size="small" onClick={handleIssuePaymentClick}>
+      <Button variant="primary" onClick={handleIssuePaymentClick}>
         Issue payment
       </Button>
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
         <Status variant="critical">Alumni</Status>
       ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
-        <Button variant="outline" size="small" onClick={handleEndContractClick}>
+        <Button variant="outline" onClick={handleEndContractClick}>
           End contract
         </Button>
       ) : null}
@@ -514,7 +510,7 @@ const DetailsTab = ({
           {payRateInSubunits && company.flags.includes("equity") ? (
             <div>
               <span>Equity split</span>
-              <div className="my-2 flex h-2 overflow-hidden rounded-xs bg-gray-200">
+              <div className="bg-muted my-2 flex h-2 overflow-hidden rounded">
                 <div
                   style={{ width: `${contractor.equityPercentage}%` }}
                   className="flex flex-col justify-center bg-blue-600 whitespace-nowrap"
@@ -527,13 +523,13 @@ const DetailsTab = ({
               <div className="flex justify-between">
                 <span>
                   {(contractor.equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} Equity{" "}
-                  <span className="text-gray-600">
+                  <span className="text-muted-foreground">
                     ({formatMoneyFromCents((contractor.equityPercentage * payRateInSubunits) / 100)})
                   </span>
                 </span>
                 <span>
                   {((100 - contractor.equityPercentage) / 100).toLocaleString(undefined, { style: "percent" })} Cash{" "}
-                  <span className="text-gray-600">
+                  <span className="text-muted-foreground">
                     ({formatMoneyFromCents(((100 - contractor.equityPercentage) * payRateInSubunits) / 100)})
                   </span>
                 </span>
@@ -543,7 +539,6 @@ const DetailsTab = ({
           {!contractor.endedAt && (
             <MutationStatusButton
               type="submit"
-              size="small"
               mutation={updateContractor}
               loadingText="Saving..."
               className="justify-self-end"
@@ -587,7 +582,7 @@ const DetailsTab = ({
               </FormItem>
             )}
           />
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className={user.businessName ? "grid gap-3 md:grid-cols-2" : ""}>
             <FormField
               control={personalInfoForm.control}
               name="preferredName"
@@ -601,19 +596,21 @@ const DetailsTab = ({
                 </FormItem>
               )}
             />
-            <FormField
-              control={personalInfoForm.control}
-              name="businessName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Billing entity name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {user.businessName ? (
+              <FormField
+                control={personalInfoForm.control}
+                name="businessName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Billing entity name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
           </div>
           <FormField
             control={personalInfoForm.control}
@@ -802,7 +799,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
         id: "actions",
         cell: (info) =>
           info.row.original.status === "signed" ? (
-            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} size="small">
+            <MutationButton idleVariant="primary" mutation={confirmPaymentMutation} param={info.row.original.id}>
               Confirm payment
             </MutationButton>
           ) : undefined,

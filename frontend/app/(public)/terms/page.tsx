@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/utils";
 
@@ -40,7 +41,11 @@ export default function Terms() {
       </p>
       <div role="navigation" className={cn("grid gap-1", "not-prose")}>
         {sections.map((section, index) => (
-          <a key={index} href={`#jump_${index + 1}`} className="flex items-center text-gray-500 no-underline">
+          <a
+            key={index}
+            href={`#jump_${index + 1}`}
+            className="text-foreground hover:text-link flex items-center no-underline"
+          >
             <Badge variant="outline" className="mr-1 shrink-0">
               {index + 1}
             </Badge>
@@ -49,9 +54,9 @@ export default function Terms() {
         ))}
       </div>
       <p>
-        TO ACCESS AND USE THE FLEXILE PLATFORM, YOU MUST REVIEW AND ACCEPT THE TERMS OF THIS AGREEMENT BY CLICKING BY
-        CLICKING THE "CONTINUE" BUTTON DURING THE SIGNING UP PROCESS.. ONCE ACCEPTED, THIS AGREEMENT BECOMES A BINDING
-        LEGAL COMMITMENT BETWEEN YOU AND GUMROAD, INC. ("
+        TO ACCESS AND USE THE FLEXILE PLATFORM, YOU MUST REVIEW AND ACCEPT THE TERMS OF THIS AGREEMENT BY CLICKING THE
+        "CONTINUE" BUTTON DURING THE SIGNING UP PROCESS. ONCE ACCEPTED, THIS AGREEMENT BECOMES A BINDING LEGAL
+        COMMITMENT BETWEEN YOU AND GUMROAD, INC. ("
         <strong>GUMROAD</strong>"). YOU REPRESENT THAT (1) YOU HAVE READ, UNDERSTAND, AND AGREE TO BE BOUND BY THE TERMS
         OF THIS AGREEMENT, (2) YOU ARE OF LEGAL AGE TO FORM A BINDING CONTRACT WITH GUMROAD, AND (3) YOU HAVE THE
         AUTHORITY TO ENTER INTO THE AGREEMENT ON BEHALF OF THE CUSTOMER OR CONTRACTOR (AS APPLICABLE) YOU HAVE NAMED AS
@@ -76,8 +81,8 @@ export default function Terms() {
           the information or circumstances surrounding disclosure would be reasonably understood to be confidential or
           proprietary.
           <br />"<strong>Flexile Fees</strong>" means the compensation Customer owes to Gumroad for the Services as set
-          forth on this [Pricing Page] and on the Platform, which Gumroad may revise Gumroad from time to time by
-          providing notice to Customer on the Platform.
+          forth on the Platform, which Gumroad may revise from time to time by providing notice to Customer on the
+          Platform.
           <br />"<strong>Services</strong>" means the services provided by Gumroad whereby Customer can engage and pay
           Contractor(s) for services.
           <br />"<strong>Users</strong>" means users of the Services and includes both Customer and Contractor.
@@ -86,12 +91,12 @@ export default function Terms() {
           <strong>SERVICES. </strong>The Services act as a platform whereby Customer and Contractor can engage with one
           another for the provision of Contractor Services. Subject to the terms and conditions set forth in this
           Agreement, Gumroad will use commercially reasonable efforts to provide You with access to the Services. If You
-          are a Customer, You can submit to Gumroad the Contractor(s) You are seeking to engage, via email at [email
-          address] or through the proper functionality on the Gumroad Platform (each, a "<strong>Submission</strong>").
-          Gumroad reserves the right to refuse Submissions at any time. Submissions must be expressly accepted by
-          Gumroad. If You are a Contractor, You must also accept and abide by the terms and conditions of this Agreement
-          for a Submission naming You by the Customer to be accepted. You must provide all equipment and software
-          necessary to connect to the Services.
+          are a Customer, You can submit to Gumroad the Contractor(s) You are seeking to engage, via email at{" "}
+          <a href="mailto:hi@gumroad.com">hi@gumroad.com</a> or through the proper functionality on the Gumroad Platform
+          (each, a "<strong>Submission</strong>"). Gumroad reserves the right to refuse Submissions at any time.
+          Submissions must be expressly accepted by Gumroad. If You are a Contractor, You must also accept and abide by
+          the terms and conditions of this Agreement for a Submission naming You by the Customer to be accepted. You
+          must provide all equipment and software necessary to connect to the Services.
         </li>
         <li id="jump_3">
           <strong>RESTRICTIONS</strong>. You will not, and will not permit any Permitted User or third party, to
@@ -106,8 +111,8 @@ export default function Terms() {
           threatening, abusive, harassing, misleading, false, defamatory, libelous, deceptive, fraudulent, invasive of
           another&rsquo;s privacy, tortious, obscene, offensive, profane or racially, ethnically, or otherwise
           discriminatory; (iv) constitutes unauthorized or unsolicited advertising, junk or bulk e-mail; (v)
-          impersonates any person or entity, including any employee or representative of Gumroad; (vi)interferes with or
-          attempts to interfere with the proper functioning of the Services or uses the Services in any way not
+          impersonates any person or entity, including any employee or representative of Gumroad; (vi) interferes with
+          or attempts to interfere with the proper functioning of the Services or uses the Services in any way not
           expressly permitted by this Agreement; or (vii) attempts to engage in or engages in, any potentially harmful
           acts that are directed against the Services.
         </li>
@@ -134,16 +139,17 @@ export default function Terms() {
               royalty free right and license to use, display, perform, transmit, and otherwise exploit Your Registration
               Data in connection with the Services. For further information about Gumroad&rsquo;s collection, use and
               sharing of Your personal information, please refer to Gumroad&rsquo;s Flexile Platform privacy statement
-              available at[add link]. You are responsible for all activities that occur under Your Account and may not
-              share Account or password information with anyone. You agree to notify Gumroad immediately of any
-              unauthorized use of Your password or any other breach of security. If You provide any information that is
-              untrue, inaccurate, not current or incomplete, or Gumroad has reasonable grounds to suspect that any
-              information You provide is untrue, inaccurate, not current or incomplete, Gumroad has the right to suspend
-              or terminate Your Account and refuse any and all current or future use of the Services (or any portion
-              thereof). Customers may not have more than one Account at any given time. You may not create an Account or
-              use the Services if You have been previously banned from the Services. Gumroad reserves the right to
-              decline a registration to join Gumroad or to add an Account type, for any lawful reason, including supply
-              and demand, cost to maintain data, or other business considerations.
+              available at <Link href="/privacy">Privacy policy</Link>. You are responsible for all activities that
+              occur under Your Account and may not share Account or password information with anyone. You agree to
+              notify Gumroad immediately of any unauthorized use of Your password or any other breach of security. If
+              You provide any information that is untrue, inaccurate, not current or incomplete, or Gumroad has
+              reasonable grounds to suspect that any information You provide is untrue, inaccurate, not current or
+              incomplete, Gumroad has the right to suspend or terminate Your Account and refuse any and all current or
+              future use of the Services (or any portion thereof). Customers may not have more than one Account at any
+              given time. You may not create an Account or use the Services if You have been previously banned from the
+              Services. Gumroad reserves the right to decline a registration to join Gumroad or to add an Account type,
+              for any lawful reason, including supply and demand, cost to maintain data, or other business
+              considerations.
             </li>
             <li>
               <strong>Account Verification. </strong>When You register for an Account and from time to time thereafter,
@@ -210,7 +216,7 @@ export default function Terms() {
           legal authorities. Gumroad is entitled, except to the extent prohibited by applicable law, to disclose any
           information or materials on or in connection with the Services, including User Content or Registration Data,
           in Gumroad&rsquo;s possession in connection with Your use of the Services, to (i) comply with applicable laws,
-          legal process or governmental request; (ii) enforce the Agreement; (iii)respond to any claims that Your
+          legal process or governmental request; (ii) enforce the Agreement; (iii) respond to any claims that Your
           content, acts, or omissions violates the rights of third parties; (iv) respond to requests for customer
           service; or (v) protect the rights, property or personal safety of Gumroad, its Users or the public, and all
           enforcement or other government officials, as Gumroad in its sole discretion believes to be necessary or
@@ -369,11 +375,11 @@ export default function Terms() {
         <li id="jump_13">
           <strong>INDEMNIFICATION</strong>
           <strong>. </strong>You agree to defend, indemnify and hold Gumroad, its parents, subsidiaries, affiliates,
-          officers, employees, agents, partners, suppliers, and licensors (each, a<strong>"Gumroad Party"</strong> and
+          officers, employees, agents, partners, suppliers, and licensors (each, a <strong>"Gumroad Party"</strong> and
           collectively, the <strong>"Gumroad Parties"</strong>) harmless from any losses, costs, liabilities and
           expenses (including reasonable attorneys&rsquo; fees) relating to or arising out of any and all of the
-          following: (a) User Content; (b)Your use of the Services; (c) Your violation of the Agreement or of any rights
-          of another party, including any other Users; or (d)Your violation of any applicable laws, rules or
+          following: (a) User Content; (b) Your use of the Services; (c) Your violation of the Agreement or of any
+          rights of another party, including any other Users; or (d) Your violation of any applicable laws, rules or
           regulations. Gumroad reserves the right, at its own cost, to assume the exclusive defense and control of any
           matter otherwise subject to indemnification by You, in which event You will fully cooperate with Gumroad in
           asserting any available defenses. For purposes of this Section 13, You includes any of Your agents or any
@@ -399,10 +405,10 @@ export default function Terms() {
               ALL OF YOUR COMMUNICATIONS AND INTERACTIONS WITH OTHER USERS OF THE SERVICES.
             </li>
             <li>
-              <strong>Compliance with Laws. </strong>YOU ACKNOWLEDGE AND AGREE THAT YOU ARE SOLEY RESPONSIBLE FOR YOUR
+              <strong>Compliance with Laws. </strong>YOU ACKNOWLEDGE AND AGREE THAT YOU ARE SOLELY RESPONSIBLE FOR YOUR
               COMPLIANCE WITH APPLICABLE LAWS, INCLUDING APPLICABLE PRIVACY AND DATA PROTECTION LAWS, IN YOUR USE OF THE
               SERVICES AND IN ANY TRANSACTIONS OR ARRANGEMENTS MADE BY YOU IN CONNECTION THEREWITH. WITHOUT LIMITATION
-              TO THE FOREGOING, YOU (CUSTOMER) ARE SOLEY RESPONSIBLE FOR SATISFYING ANY OBLIGATIONS TO WHICH YOU MAY BE
+              TO THE FOREGOING, YOU (CUSTOMER) ARE SOLELY RESPONSIBLE FOR SATISFYING ANY OBLIGATIONS TO WHICH YOU MAY BE
               SUBJECT UNDER APPLICABLE LAWS TO (A) PROVIDE PRIVACY OR OTHER TRANSPARENCY NOTICES TO CONTRACTORS; AND (B)
               TO ENTER INTO ANY DATA PROCESSING OR OTHER SIMILAR AGREEMENTS IN RESPECT OF CONTRACTORS&rsquo; PROCESSING
               OF PERSONAL DATA ON YOUR BEHALF.
@@ -494,15 +500,16 @@ export default function Terms() {
           not be liable for any delay or failure to perform resulting from causes outside its reasonable control,
           including, but not limited to, acts of God, war, natural disasters, disease, terrorism, riots, embargos, acts
           of civil or military authorities, fire, floods, accidents, strikes or shortages of transportation facilities,
-          fuel, energy, labor or materials. You may give notice to Gumroad at the following address: hi@gumroad.com.
-          Such notice shall be deemed given when received by Gumroad by letter delivered by nationally recognized
-          overnight delivery service or first class postage prepaid mail at the above address. Any waiver or failure to
-          enforce any provision of the Agreement on one occasion will not be deemed a waiver of any other provision or
-          of such provision on any other occasion. If any portion of this Agreement is held invalid or unenforceable,
-          that portion shall be construed in a manner to reflect, as nearly as possible, the original intention of the
-          parties, and the remaining portions shall remain in full force and effect. The Agreement is the final,
-          complete and exclusive agreement of the parties with respect to the subject matter hereof and supersedes and
-          merges all prior discussions between the parties with respect to such subject matter.
+          fuel, energy, labor or materials. You may give notice to Gumroad at the following address:{" "}
+          <a href="mailto:hi@gumroad.com">hi@gumroad.com</a>. Such notice shall be deemed given when received by Gumroad
+          by letter delivered by nationally recognized overnight delivery service or first class postage prepaid mail at
+          the above address. Any waiver or failure to enforce any provision of the Agreement on one occasion will not be
+          deemed a waiver of any other provision or of such provision on any other occasion. If any portion of this
+          Agreement is held invalid or unenforceable, that portion shall be construed in a manner to reflect, as nearly
+          as possible, the original intention of the parties, and the remaining portions shall remain in full force and
+          effect. The Agreement is the final, complete and exclusive agreement of the parties with respect to the
+          subject matter hereof and supersedes and merges all prior discussions between the parties with respect to such
+          subject matter.
         </li>
       </ol>
     </section>

@@ -8,6 +8,9 @@ RSpec.describe DividendComputationGeneration do
     @A_class = create(:share_class, company:, name: "Series A", original_issue_price_in_dollars: 1.2389, hurdle_rate: 7, preferred: true)
     @common_class = create(:share_class, company:, name: "Common", original_issue_price_in_dollars: nil, hurdle_rate: nil)
 
+    # Deactivated investor with no shares or convertibles - should not appear in results
+    create(:company_investor, company:, deactivated_at: 1.day.ago, total_shares: 0, investment_amount_in_cents: 0, total_options: 0)
+
     @seed_investor = create(:company_investor, user: create(:user, legal_name: "Seed Investor"), company:)
     create(:share_holding, company_investor: @seed_investor, share_class: @seed_class, number_of_shares: 99_283, originally_acquired_at: 91.days.ago, total_amount_in_cents: 111_406_00)
     create(:share_holding, company_investor: @seed_investor, share_class: @seed_class, number_of_shares: 12_123, originally_acquired_at: 89.days.ago, total_amount_in_cents: 13_625_00)

@@ -2,7 +2,7 @@ export interface ActionDefinition<T = unknown> {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  variant?: "default" | "destructive" | "primary";
+  variant?: "default" | "destructive" | "primary" | "accent";
   contexts: ("single" | "bulk")[];
   permissions: string[];
   conditions: (item: T, context: ActionContext) => boolean;

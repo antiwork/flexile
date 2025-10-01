@@ -90,7 +90,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
               <Plus />
             </Button>
           ) : (
-            <Button onClick={handleContactSupportClick} size="small">
+            <Button variant="primary" onClick={handleContactSupportClick}>
               Contact support
             </Button>
           )
@@ -133,11 +133,11 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                               {conversation.subject}
                             </div>
                           </div>
-                          <div className="grow text-right font-[350] text-gray-600">
+                          <div className="text-muted-foreground grow text-right font-[350]">
                             {formatConversationDate(conversation.latestMessageAt ?? conversation.createdAt)}
                           </div>
                         </div>
-                        <div className="w-[calc(100vw-40px)] truncate text-base leading-5 font-[350] text-gray-600">
+                        <div className="text-muted-foreground w-[calc(100vw-40px)] truncate text-base leading-5 font-[350]">
                           {conversation.latestMessage}
                         </div>
                       </div>
@@ -188,7 +188,6 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                 <Button
                   type="button"
                   variant="ghost"
-                  size="small"
                   onClick={() => fileInputRef.current?.click()}
                   className="h-8 w-8 p-0"
                 >
@@ -227,11 +226,11 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" size="small" onClick={() => setIsModalOpen(false)}>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
             <MutationStatusButton
-              size="small"
+              idleVariant="primary"
               mutation={createConversation}
               disabled={!message.trim() && attachments.length === 0}
               onClick={() => void handleSubmit()}

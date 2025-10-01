@@ -59,15 +59,21 @@ test.describe("Onboarding checklist", () => {
 
     await withinModal(
       async (modal) => {
-        await expect(modal.getByText("Who's joining?")).toBeVisible();
         await modal.getByLabel("Email").fill(faker.internet.email());
         await modal.getByLabel("Role").fill("Software Engineer");
         await modal.getByLabel("Hourly").check();
         await modal.getByLabel("Rate").fill("100");
-        await modal.getByLabel("Already signed contract elsewhere").check({ force: true });
-        await modal.getByRole("button", { name: "Send invite" }).click();
+        await modal.getByRole("button", { name: "Continue" }).click();
       },
       { page, title: "Who's joining?" },
+    );
+
+    await withinModal(
+      async (modal) => {
+        await page.getByRole("switch", { name: "Already signed contract elsewhere" }).click({ force: true });
+        await modal.getByRole("button", { name: "Send invite" }).click();
+      },
+      { page, title: "Add a contract" },
     );
 
     const checkProgress = async () => {
@@ -97,7 +103,7 @@ test.describe("Onboarding checklist", () => {
     page,
   }) => {
     const { user: contractorUser } = await usersFactory.create(undefined, { withoutComplianceInfo: true });
-    await companyContractorsFactory.create({ userId: contractorUser.id });
+    await companyContractorsFactory.create({ userId: contractorUser.id }, { withoutBankAccount: true });
     await login(page, contractorUser);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
@@ -179,7 +185,10 @@ test.describe("Onboarding checklist", () => {
     page,
   }) => {
     const { user: contractorUser } = await usersFactory.create(undefined, { withoutComplianceInfo: true });
-    const { companyContractor } = await companyContractorsFactory.create({ userId: contractorUser.id });
+    const { companyContractor } = await companyContractorsFactory.create(
+      { userId: contractorUser.id },
+      { withoutBankAccount: true },
+    );
     await companyInvestorsFactory.create({ userId: contractorUser.id, companyId: companyContractor.companyId });
     await login(page, contractorUser);
 

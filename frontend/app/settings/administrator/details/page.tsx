@@ -73,7 +73,7 @@ export default function Details() {
   };
 
   return (
-    <form onSubmit={(e) => void onSubmit(e)} className="mb-24 grid gap-8">
+    <form onSubmit={(e) => void onSubmit(e)} className="grid gap-8">
       <hgroup>
         <h2 className="mb-1 text-3xl font-bold">Details</h2>
         <p className="text-muted-foreground text-base">
@@ -107,6 +107,7 @@ export default function Details() {
                     {...field}
                     placeholder="XX-XXXXXXX"
                     onChange={(e) => field.onChange(formatTaxId(e.target.value))}
+                    maxLength={10}
                   />
                 </FormControl>
                 <FormMessage />
@@ -194,12 +195,14 @@ export default function Details() {
             />
           </div>
 
-          <div className="text-xs">Flexile is only available for companies based in the United States.</div>
+          <div className="text-muted-foreground text-xs">
+            Flexile is only available for companies based in the United States.
+          </div>
         </div>
         <MutationStatusButton
           mutation={updateSettings}
           type="submit"
-          size="small"
+          idleVariant="primary"
           loadingText="Saving..."
           successText="Changes saved"
           className="w-fit"
