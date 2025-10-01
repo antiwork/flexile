@@ -204,13 +204,7 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
             autoFocus
           />
           <div className="absolute right-2 bottom-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="small"
-              onClick={() => fileInputRef.current?.click()}
-              className="h-8 w-8 p-0"
-            >
+            <Button type="button" variant="ghost" onClick={() => fileInputRef.current?.click()} className="h-8 w-8 p-0">
               <Paperclip className="size-4" />
             </Button>
           </div>
@@ -219,7 +213,7 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
           <MutationStatusButton
             mutation={createMessage}
             disabled={!content.trim() && attachments.length === 0}
-            size="small"
+            idleVariant="primary"
             type="submit"
           >
             <Send className="size-4" />

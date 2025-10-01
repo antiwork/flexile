@@ -513,7 +513,7 @@ export default function TaxPage() {
           <div className="flex flex-wrap gap-8">
             <MutationStatusButton
               type="submit"
-              size="small"
+              idleVariant="primary"
               disabled={!!isTaxInfoConfirmed && !form.formState.isDirty}
               mutation={saveMutation}
             >
@@ -737,7 +737,7 @@ const LegalCertificationModal = ({
         </div>
 
         <DialogFooter>
-          <MutationButton mutation={signMutation} loadingText="Saving..." disabled={!signature}>
+          <MutationButton idleVariant="primary" mutation={signMutation} loadingText="Saving..." disabled={!signature}>
             Save
           </MutationButton>
         </DialogFooter>
