@@ -1,0 +1,9 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "buildCommand": "cd backend && bundle install && bundle exec rails db:prepare"
+  },
+  "deploy": {
+    "startCommand": "cd backend && bundle exec rails server -b 0.0.0.0 -p $PORT"
+  }
+}
