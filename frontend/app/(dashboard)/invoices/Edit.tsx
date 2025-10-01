@@ -172,7 +172,9 @@ const Edit = () => {
 
     const nextLineItems = lineItems.map((lineItem) => {
       const errors: string[] = [];
-      if (lineItem.description.trim().length === 0) {
+      const hasContent =
+        lineItem.description.trim().length > 0 || (lineItem.quantity && parseQuantity(lineItem.quantity) > 0);
+      if (hasContent && lineItem.description.trim().length === 0) {
         errors.push("description");
       }
       return { ...lineItem, errors };
