@@ -4,6 +4,7 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
+import { eq } from "drizzle-orm";
 import { companyInvestors } from "@/db/schema";
 
 test.describe("Mobile navigation", () => {
@@ -75,10 +76,10 @@ test.describe("Mobile navigation", () => {
     await expect(page.getByRole("link", { name: "Buybacks" })).toBeVisible();
 
     // Deactivate investor and refresh page
-    await db.update(companyInvestors).set({
-      id: companyInvestor.id,
-      deactivatedAt: new Date(),
-    });
+    await db
+      .update(companyInvestors)
+      .set({ deactivatedAt: new Date() })
+      .where(eq(companyInvestors.id, companyInvestor.id));
     await page.reload();
     bottomNav = page.getByRole("navigation", { name: "Mobile navigation" });
     await expect(bottomNav).toBeVisible();
