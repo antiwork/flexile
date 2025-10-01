@@ -160,7 +160,7 @@ export default function DividendRounds() {
               <Plus />
             </Button>
           ) : (
-            <Button variant="outline" size="small" onClick={handleNewDistributionClick}>
+            <Button variant="primary" onClick={handleNewDistributionClick}>
               <Plus className="size-4" />
               New distribution
             </Button>
