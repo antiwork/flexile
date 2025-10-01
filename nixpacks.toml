@@ -1,18 +1,24 @@
 [phases.setup]
 nixPkgs = ['nodejs_22', 'ruby_3_4', 'postgresql']
-nixLibs = ['libiconv', 'libffi', 'openssl']
+nixLibs = ['libiconv', 'libffi', 'openssl', 'zlib', 'readline']
 
 [phases.install]
 cmds = [
     'corepack enable',
-    'cd backend && bundle install',
-    'pnpm install'
+    'node --version && npm --version',
+    'ruby --version && gem --version',
+    'gem install bundler -v 2.3.11 --no-document',
+    'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle install --jobs 4 --retry 3',
+    'pnpm install --frozen-lockfile'
 ]
 
 [phases.build]
 cmds = [
+    'echo "Starting build phase..."',
     'cd backend && bundle exec rails js:routes:typescript',
-    'pnpm run build-next'
+    'echo "TypeScript routes generated, building Next.js..."',
+    'pnpm run build-next',
+    'echo "Build completed successfully!"'
 ]
 
 [start]
@@ -21,3 +27,4 @@ cmd = 'cd backend && bundle exec rails server -p $PORT -e $RAILS_ENV -b 0.0.0.0'
 [variables]
 NODE_ENV = 'production'
 RAILS_ENV = 'production'
+BUNDLE_SILENCE_ROOT_WARNING = '1'
