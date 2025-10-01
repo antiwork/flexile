@@ -162,7 +162,7 @@ export default function Billing() {
                 <CardTitle>USD bank account</CardTitle>
                 <CardDescription>Ending in {stripeData.bank_account_last4}</CardDescription>
                 <CardAction>
-                  <Button variant="outline" size="small" onClick={() => setAddingBankAccount(true)}>
+                  <Button variant="outline" onClick={() => setAddingBankAccount(true)}>
                     Edit
                   </Button>
                 </CardAction>
@@ -171,7 +171,7 @@ export default function Billing() {
           ) : (
             <Placeholder icon={CircleDollarSign}>
               <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-              <Button onClick={() => setAddingBankAccount(true)} size="small" disabled={requiresCompanyName}>
+              <Button onClick={() => setAddingBankAccount(true)} disabled={requiresCompanyName}>
                 <Plus className="size-4" />
                 Link your bank account
               </Button>
@@ -238,7 +238,7 @@ const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
         cell: (info) => {
           const attachment = info.getValue();
           return attachment ? (
-            <Button asChild variant="outline" size="small">
+            <Button asChild variant="outline">
               <Link href={`/download/${attachment.key}/${attachment.filename}`} download>
                 <Download className="size-4" /> Download
               </Link>

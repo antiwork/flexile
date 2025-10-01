@@ -73,7 +73,7 @@ export default function GrantsPage() {
         header: "Actions",
         cell: (info) =>
           info.row.original.unvestedShares > 0 ? (
-            <Button variant="critical" size="small" onClick={() => setCancellingGrantId(info.row.original.id)}>
+            <Button variant="critical" onClick={() => setCancellingGrantId(info.row.original.id)}>
               Cancel
             </Button>
           ) : null,
@@ -94,7 +94,7 @@ export default function GrantsPage() {
               <Plus />
             </Button>
           ) : (
-            <Button size="small" onClick={() => setShowNewGrantModal(true)}>
+            <Button variant="primary" onClick={() => setShowNewGrantModal(true)}>
               New grant
             </Button>
           )
@@ -136,7 +136,7 @@ export default function GrantsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-muted-foreground text-sm">Total options</h3>
-                  <p>{cancellingGrant.numberOfShares.toLocaleString()}</p>
+                  <p className="text-sm">{cancellingGrant.numberOfShares.toLocaleString()}</p>
                 </div>
                 <div>
                   <h3 className="text-muted-foreground text-sm">Vested Options</h3>
@@ -148,7 +148,7 @@ export default function GrantsPage() {
                 </div>
                 <div>
                   <h3 className="text-muted-foreground text-sm">Options to be forfeited</h3>
-                  <p className="text-sm text-red-500">{cancellingGrant.unvestedShares.toLocaleString()}</p>
+                  <p className="text-destructive text-sm">{cancellingGrant.unvestedShares.toLocaleString()}</p>
                 </div>
               </div>
               <Alert variant="destructive">
@@ -160,12 +160,11 @@ export default function GrantsPage() {
                 </AlertDescription>
               </Alert>
               <DialogFooter>
-                <Button variant="outline" size="small" onClick={() => setCancellingGrantId(null)}>
+                <Button variant="outline" onClick={() => setCancellingGrantId(null)}>
                   Cancel
                 </Button>
                 <MutationButton
                   idleVariant="critical"
-                  size="small"
                   mutation={cancelGrant}
                   param={{ companyId: company.id, id: cancellingGrant.id, reason: "Cancelled by admin" }}
                 >
