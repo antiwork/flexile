@@ -60,7 +60,7 @@ test.describe("Role autocomplete", () => {
     await expect(page.getByRole("option", { name: role1 })).toBeVisible();
     await expect(page.getByRole("option", { name: role2 })).toBeVisible();
     await expect(page.getByRole("option", { name: role3 })).not.toBeVisible();
-    await roleField.press("Enter");
+    await page.getByRole("option", { name: role1 }).click();
     await expect(roleField).toHaveValue(role1);
     await expect(page.getByRole("option")).not.toBeVisible();
   };

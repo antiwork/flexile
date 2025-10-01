@@ -1,5 +1,4 @@
 import { companiesFactory } from "@test/factories/companies";
-import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, findRichTextEditor } from "@test/helpers";
@@ -17,9 +16,7 @@ test.describe("Contractor for multiple companies", () => {
     });
     await companyContractorsFactory.create({ userId: contractorUser.id });
 
-    const { company: secondCompany } = await companiesFactory.create({ name: "Second Company" });
-    const { user: adminUser } = await usersFactory.create({ email: "admin@example.com" });
-    await companyAdministratorsFactory.create({ companyId: secondCompany.id, userId: adminUser.id });
+    const { adminUser } = await companiesFactory.createCompletedOnboarding({ name: "Second Company" });
 
     await login(page, adminUser, "/people");
     await page.getByRole("button", { name: "Add contractor" }).click();
