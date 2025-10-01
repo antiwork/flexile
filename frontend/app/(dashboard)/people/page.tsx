@@ -14,7 +14,6 @@ import DataTable, { createColumnHelper, useTable } from "@/components/DataTable"
 import DatePicker from "@/components/DatePicker";
 import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -190,10 +189,14 @@ export default function PeoplePage() {
         }
       />
 
-      {isLoading ? (
-        <TableSkeleton columns={4} />
-      ) : workers.length > 0 ? (
-        <DataTable table={table} searchColumn="userName" tabsColumn="status" actions={<ActionPanel />} />
+      {workers.length > 0 || isLoading ? (
+        <DataTable
+          table={table}
+          searchColumn="userName"
+          tabsColumn="status"
+          actions={<ActionPanel />}
+          isLoading={isLoading}
+        />
       ) : (
         <div className="mx-4">
           <Placeholder icon={Users}>Contractors will show up here.</Placeholder>
@@ -240,7 +243,7 @@ const ActionPanel = () => {
         "contractor[pay_rate_type]",
         values.payRateType === PayRateType.Hourly ? "hourly" : "project_based",
       );
-      formData.append("contractor[role]", values.role);
+      formData.append("contractor[role]", values.role?.toString() ?? "");
       formData.append("contractor[contract_signed_elsewhere]", values.contractSignedElsewhere.toString());
       formData.append("contractor[contract]", values.contract);
 

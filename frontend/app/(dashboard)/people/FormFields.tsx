@@ -16,7 +16,7 @@ import { cn } from "@/utils";
 export const schema = z.object({
   payRateType: z.nativeEnum(PayRateType),
   payRateInSubunits: z.number().nullable(),
-  role: z.string(),
+  role: z.string().min(1).nullable(),
 });
 
 const defaultRoles = ["Software Engineer", "Designer", "Product Manager", "Data Analyst"];
@@ -39,7 +39,11 @@ export default function FormFields() {
   const suggestions: string[] = [];
   if (trimmedQuery && !availableRoles.some((role) => role.toLowerCase() === trimmedQuery.toLowerCase()))
     suggestions.push(trimmedQuery);
-  if (roleValue !== trimmedQuery && !availableRoles.some((role) => role.toLowerCase() === roleValue.toLowerCase()))
+  if (
+    roleValue &&
+    roleValue !== trimmedQuery &&
+    !availableRoles.some((role) => role.toLowerCase() === roleValue.toLowerCase())
+  )
     suggestions.push(roleValue);
 
   const handleSelect = (selectedRole: string) => {
@@ -63,6 +67,7 @@ export default function FormFields() {
                   <FormControl>
                     <Button
                       {...field}
+                      value={undefined}
                       aria-controls={rolePopoverOpen ? popoverId : undefined}
                       aria-expanded={rolePopoverOpen}
                       aria-haspopup="listbox"
@@ -83,7 +88,7 @@ export default function FormFields() {
                   style={{ width: "var(--radix-popover-trigger-width)" }}
                   role="listbox"
                 >
-                  <Command value={field.value}>
+                  <Command value={field.value ?? ""}>
                     <CommandInput
                       placeholder="Search or enter a role..."
                       value={searchQuery}

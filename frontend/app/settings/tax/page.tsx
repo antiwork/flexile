@@ -56,7 +56,7 @@ const formValuesSchema = z.object({
   business_name: z.string().nullable(),
   business_type: z.nativeEnum(BusinessType).nullable(),
   tax_classification: z.nativeEnum(TaxClassification).nullable(),
-  country_code: z.string(),
+  country_code: z.string().min(1, "Please select your country of residence."),
   tax_id: z.string().min(1, "This field is required."),
   birth_date: z.instanceof(CalendarDate).nullable(),
   street_address: z.string().min(1, "Please add your residential address."),
@@ -185,6 +185,9 @@ export default function TaxPage() {
 
     if (values.country_code === "US" && !/(^\d{5}|\d{9}|\d{5}[- ]\d{4})$/u.test(values.zip_code))
       return form.setError("zip_code", { message: "Please add a valid ZIP code (5 or 9 digits)." });
+
+    if (countrySubdivisions.length > 0 && values.state.length === 0)
+      return form.setError("state", { message: `Please select your ${stateLabel}.` });
     setShowCertificationModal(true);
   });
 
@@ -258,7 +261,13 @@ export default function TaxPage() {
                   <FormControl>
                     <RadioButtons
                       value={field.value ? "business" : "individual"}
-                      onChange={(value) => field.onChange(value === "business")}
+                      onChange={(value) => {
+                        const isBusiness = value === "business";
+                        field.onChange(isBusiness);
+                        if (!isBusiness) {
+                          form.setValue("business_name", null);
+                        }
+                      }}
                       options={[
                         { label: "Individual", value: "individual" },
                         { label: "Business", value: "business" },

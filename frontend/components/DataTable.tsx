@@ -357,6 +357,7 @@ export default function DataTable<T extends RowData>({
                 <TableHead className={cellClasses(null, "header")}>
                   <Checkbox
                     checked={table.getIsSomeRowsSelected() ? "indeterminate" : table.getIsAllRowsSelected()}
+                    disabled={isLoading}
                     aria-label="Select all"
                     onCheckedChange={() => table.toggleAllRowsSelected()}
                   />
