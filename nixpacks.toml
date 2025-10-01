@@ -1,6 +1,6 @@
 [phases.setup]
 nixPkgs = ['nodejs_22', 'ruby_3_4', 'postgresql', 'gcc', 'gnumake', 'pkg-config']
-nixLibs = ['libiconv', 'libffi', 'openssl', 'zlib', 'readline', 'gmp', 'libxml2', 'libxslt']
+nixLibs = ['libiconv', 'libffi', 'openssl', 'zlib', 'readline', 'gmp', 'libxml2', 'libxslt', 'libyaml', 'postgresql.dev']
 
 [phases.install]
 cmds = [
@@ -8,8 +8,9 @@ cmds = [
     'node --version && npm --version',
     'ruby --version && gem --version',
     'gem install bundler -v 2.3.11 --no-document',
+    'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle config --local deployment true',
     'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle config --global build.nokogiri --use-system-libraries',
-    'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle install --jobs 4 --retry 3 --deployment',
+    'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle install --jobs 4 --retry 3',
     'pnpm install --frozen-lockfile'
 ]
 
