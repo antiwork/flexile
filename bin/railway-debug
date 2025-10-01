@@ -29,7 +29,7 @@ echo "📁 Backend Directory:"
 ls -la backend/
 
 echo ""
-echo "📁 Frontend Directory:"  
+echo "📁 Frontend Directory:"
 ls -la frontend/
 
 echo ""
