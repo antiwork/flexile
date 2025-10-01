@@ -46,7 +46,7 @@ COPY . .
 
 # Generate TypeScript routes
 WORKDIR /app/backend
-RUN bundle exec rails js:routes:typescript
+RUN DOMAIN=localhost bundle exec rails js:routes:typescript
 
 # Build Next.js frontend
 WORKDIR /app
@@ -54,7 +54,7 @@ RUN pnpm run build-next
 
 # Precompile Rails assets
 WORKDIR /app/backend
-RUN SECRET_KEY_BASE=dummy bundle exec rails assets:precompile
+RUN DOMAIN=localhost SECRET_KEY_BASE=dummy bundle exec rails assets:precompile
 
 # Set environment variables
 ENV RAILS_ENV=production \
