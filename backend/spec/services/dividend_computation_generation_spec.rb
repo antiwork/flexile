@@ -19,30 +19,30 @@ RSpec.describe DividendComputationGeneration do
     create(:share_holding, company_investor: @deactivated_investor, share_class: @seed_class, number_of_shares: 10_000, originally_acquired_at: 120.days.ago, total_amount_in_cents: 11_234_00)
 
     @series_A_investor = create(:company_investor, user: create(:user, legal_name: "Series A Investor"), company:)
-    create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 32_123, total_amount_in_cents: 39_768_00)
-    create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 1_346, total_amount_in_cents: 1_666_00)
+    create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 32_123, originally_acquired_at: 95.days.ago, total_amount_in_cents: 39_768_00)
+    create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 1_346, originally_acquired_at: 93.days.ago, total_amount_in_cents: 1_666_00)
 
     @seed_and_series_A_investor = create(:company_investor,
                                          user: create(:user, legal_name: "Seed & Series A Investor"),
                                          company:)
-    create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @seed_class, number_of_shares: 3_098, total_amount_in_cents: 3_480_00)
-    create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @seed_class, number_of_shares: 4_820, total_amount_in_cents: 5_417_00)
+    create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @seed_class, number_of_shares: 3_098, originally_acquired_at: 95.days.ago, total_amount_in_cents: 3_480_00)
+    create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @seed_class, number_of_shares: 4_820, originally_acquired_at: 93.days.ago, total_amount_in_cents: 5_417_00)
     create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @A_class,
-                           number_of_shares: 2_934, total_amount_in_cents: 3_632_00)
+                           number_of_shares: 2_934, originally_acquired_at: 95.days.ago, total_amount_in_cents: 3_632_00)
     create(:share_holding, company_investor: @seed_and_series_A_investor, share_class: @A_class,
-                           number_of_shares: 1_589, total_amount_in_cents: 1_967_00)
+                           number_of_shares: 1_589, originally_acquired_at: 93.days.ago, total_amount_in_cents: 1_967_00)
 
     @common_investor = create(:company_investor, user: create(:user, legal_name: "Common Investor"), company:)
     create(:share_holding, company_investor: @common_investor, share_class: @common_class, number_of_shares: 123, originally_acquired_at: 30.days.ago, total_amount_in_cents: 138_00)
     create(:share_holding, company_investor: @common_investor, share_class: @common_class, number_of_shares: 768, originally_acquired_at: 31.days.ago, total_amount_in_cents: 863_00)
 
     @all_class_investor = create(:company_investor, user: create(:user, legal_name: "All class Investor"), company:)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @seed_class, number_of_shares: 9_876, total_amount_in_cents: 11_100_00)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @seed_class, number_of_shares: 5_432, total_amount_in_cents: 6_105_00)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @A_class, number_of_shares: 1_987, total_amount_in_cents: 2_460_00)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @A_class, number_of_shares: 6_543, total_amount_in_cents: 8_103_00)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @common_class, number_of_shares: 210, total_amount_in_cents: 236_00)
-    create(:share_holding, company_investor: @all_class_investor, share_class: @common_class, number_of_shares: 987, total_amount_in_cents: 1_109_00)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @seed_class, number_of_shares: 9_876, originally_acquired_at: 95.days.ago, total_amount_in_cents: 11_100_00)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @seed_class, number_of_shares: 5_432, originally_acquired_at: 93.days.ago, total_amount_in_cents: 6_105_00)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @A_class, number_of_shares: 1_987, originally_acquired_at: 95.days.ago, total_amount_in_cents: 2_460_00)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @A_class, number_of_shares: 6_543, originally_acquired_at: 93.days.ago, total_amount_in_cents: 8_103_00)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @common_class, number_of_shares: 210, originally_acquired_at: 65.days.ago, total_amount_in_cents: 236_00)
+    create(:share_holding, company_investor: @all_class_investor, share_class: @common_class, number_of_shares: 987, originally_acquired_at: 63.days.ago, total_amount_in_cents: 1_109_00)
 
     @entire_safe_owner = create(:company_investor, company:, user: create(:user, legal_name: "Richie Rich LLC"))
     @safe1 = create(:convertible_investment, company:, entity_name: "Richie Rich LLC", implied_shares: 987_632,
