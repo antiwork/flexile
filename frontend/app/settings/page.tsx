@@ -95,11 +95,11 @@ const DetailsSection = () => {
             </FormItem>
           )}
         />
-        {saveMutation.isError ? <p className="text-red-500">{saveMutation.error.message}</p> : null}
+        {saveMutation.isError ? <p className="text-destructive">{saveMutation.error.message}</p> : null}
         <MutationStatusButton
           className="w-fit"
+          idleVariant="primary"
           type="submit"
-          size="small"
           mutation={saveMutation}
           loadingText="Saving..."
           successText="Saved!"
@@ -192,12 +192,7 @@ const LeaveWorkspaceSection = () => {
               <span className="font-medium">{company.name}</span>
             </div>
             <CardAction>
-              <Button
-                variant="outline"
-                size="small"
-                className="text-destructive hover:text-destructive"
-                onClick={() => setIsModalOpen(true)}
-              >
+              <Button variant="destructive" onClick={() => setIsModalOpen(true)}>
                 Leave workspace
               </Button>
             </CardAction>
