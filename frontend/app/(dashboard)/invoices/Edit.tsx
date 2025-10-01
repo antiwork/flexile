@@ -169,20 +169,21 @@ const Edit = () => {
   const validate = () => {
     setErrorField(null);
     if (invoiceNumber.length === 0) setErrorField("invoiceNumber");
-    let hasDescriptionErrors = false;
+
     const nextLineItems = lineItems.map((lineItem) => {
       const errors: string[] = [];
       if (lineItem.description.trim().length === 0) {
         errors.push("description");
-        hasDescriptionErrors = true;
       }
       return { ...lineItem, errors };
     });
     setLineItems(nextLineItems);
 
+    const hasDescriptionErrors = nextLineItems.some((lineItem) => lineItem.errors.includes("description"));
+
     return (
       errorField === null &&
-      hasDescriptionErrors === false &&
+      !hasDescriptionErrors &&
       expenses.every((expense) => (expense.errors?.length ?? 0) === 0) &&
       (document?.errors?.length ?? 0) === 0
     );
