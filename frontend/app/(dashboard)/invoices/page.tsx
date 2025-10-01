@@ -215,15 +215,18 @@ export default function InvoicesPage() {
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
 
-  const getStatusFilterValue = (row: Invoice) => {
-    if (row.status === "received" || row.status === "approved") {
-      if (row.approvals.length < company.requiredInvoiceApprovals) {
-        return "Awaiting approval";
+  const getStatusFilterValue = useCallback(
+    (row: Invoice) => {
+      if (row.status === "received" || row.status === "approved") {
+        if (row.approvals.length < company.requiredInvoiceApprovals) {
+          return "Awaiting approval";
+        }
+        return "Approved";
       }
-      return "Approved";
-    }
-    return statusNames[row.status];
-  };
+      return statusNames[row.status];
+    },
+    [company.requiredInvoiceApprovals],
+  );
 
   const desktopColumns = useMemo(
     () => [
