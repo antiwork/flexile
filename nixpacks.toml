@@ -5,17 +5,18 @@ nixLibs = ['libiconv', 'libffi', 'openssl', 'zlib', 'readline', 'gmp', 'libxml2'
 [phases.install]
 cmds = [
     'corepack enable',
-    'node --version && npm --version',
-    'ruby --version && gem --version',
-    'echo "Installing bundler..."',
+    'echo "=== System Versions ==="',
+    'node --version && npm --version && ruby --version && gem --version',
+    'echo "=== Installing Bundler 2.3.11 ==="',
     'gem install bundler -v 2.3.11 --no-document',
-    'echo "Configuring bundle..."',
+    'echo "=== Configuring Bundle ==="',
     'cd backend && bundle config --local deployment true',
     'cd backend && bundle config build.nokogiri --use-system-libraries',
     'cd backend && bundle config build.pg --with-pg-config=$(which pg_config)',
-    'echo "Installing gems with proper paths..."',
-    'cd backend && bundle install --jobs 4 --retry 3 || (echo "Bundle install failed, retrying with verbose..." && bundle install --verbose)',
-    'echo "Installing Node dependencies..."',
+    'cd backend && bundle config build.psych --enable-bundled-libyaml',
+    'echo "=== Installing Ruby Gems ==="',
+    'cd backend && bundle install --jobs 4 --retry 3',
+    'echo "=== Installing Node Packages ==="',
     'pnpm install --frozen-lockfile'
 ]
 
