@@ -1,9 +1,11 @@
 {
-  "$schema": "https://railway.com/railway.schema.json",
+  "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "buildCommand": "cd backend && bundle install && bundle exec rails db:prepare"
+    "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "cd backend && bundle exec rails server -b 0.0.0.0 -p $PORT"
+    "numReplicas": 1,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
   }
 }

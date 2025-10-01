@@ -48,6 +48,10 @@
     "setup": "cd backend && bundle exec rails js:routes:typescript",
     "lint-fast": "DISABLE_TYPE_CHECKED=1 pnpm eslint",
     "build-next": "pnpm next build frontend --no-lint",
+    "build": "pnpm run setup && pnpm run build-next",
+    "start": "cd frontend && pnpm next start",
+    "railway:build": "cd backend && bundle install && cd .. && pnpm install && pnpm run build",
+    "railway:start": "cd backend && bundle exec rails server -p $PORT -e production",
     "prepare": "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config --local core.hooksPath .githooks || true"
   },
   "dependencies": {

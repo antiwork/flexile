@@ -37,6 +37,7 @@ import {
   useIsPayable,
 } from "@/app/(dashboard)/invoices/index";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
+import { ActivationDialog } from "@/components/ActivationDialog";
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
 import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
@@ -58,7 +59,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
@@ -67,6 +70,7 @@ import { request } from "@/utils/request";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
+import { track } from "@/utils/telemetry";
 import QuantityInput from "./QuantityInput";
 import { useCanSubmitInvoices } from ".";
 
@@ -113,6 +117,7 @@ export default function InvoicesPage() {
   const company = useCurrentCompany();
   const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
+  const [showActivationDialog, setShowActivationDialog] = useState(false);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const isDeletable = useIsDeletable();
@@ -122,6 +127,64 @@ export default function InvoicesPage() {
   });
 
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
+
+  const handleNewInvoiceClick = useCallback(
+    (e: React.MouseEvent) => {
+      track('ui_click_new_invoice');
+
+      if (canSubmitInvoices) {
+        // Allow navigation to proceed
+        return;
+      }
+
+      // Prevent navigation and show activation dialog
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Track specific blocking reason
+      if (!hasLegalDetails) {
+        track('ui_blocked_new_invoice_tax');
+      } else if (!user.hasPayoutMethodForInvoices) {
+        track('ui_blocked_new_invoice_bank');
+      }
+
+      setShowActivationDialog(true);
+    },
+    [canSubmitInvoices, hasLegalDetails, user.hasPayoutMethodForInvoices],
+  );
+
+  const getMissingRequirements = useCallback(() => {
+    const requirements = [];
+
+    if (!hasLegalDetails) {
+      requirements.push({
+        type: 'tax' as const,
+        message: 'Please provide your legal details before creating new invoices.',
+        actionText: 'Complete tax setup',
+        actionHref: '/settings/tax',
+      });
+    }
+
+    if (unsignedContractId) {
+      requirements.push({
+        type: 'contract' as const,
+        message: 'You have an unsigned contract that needs to be signed.',
+        actionText: 'Sign contract',
+        actionHref: `/documents?${new URLSearchParams({ sign: unsignedContractId.toString(), next: "/invoices" })}`,
+      });
+    }
+
+    if (!user.hasPayoutMethodForInvoices) {
+      requirements.push({
+        type: 'bank' as const,
+        message: 'Please provide a payout method for your invoices.',
+        actionText: 'Set up payouts',
+        actionHref: '/settings/payouts',
+      });
+    }
+
+    return requirements;
+  }, [hasLegalDetails, unsignedContractId, user.hasPayoutMethodForInvoices]);
 
   const isPayNowDisabled = useCallback(
     (invoice: Invoice) => {
@@ -421,8 +484,8 @@ export default function InvoicesPage() {
   return (
     <>
       {isMobile && user.roles.worker ? (
-        <Button variant="floating-action" {...(!canSubmitInvoices ? { disabled: true } : { asChild: true })}>
-          <Link href="/invoices/new" inert={!canSubmitInvoices}>
+        <Button variant="floating-action" asChild>
+          <Link href="/invoices/new" onClick={handleNewInvoiceClick}>
             <Plus />
           </Link>
         </Button>
@@ -456,9 +519,9 @@ export default function InvoicesPage() {
                 ) : null}
               </div>
             ) : null
-          ) : user.roles.worker ? (
-            <Button asChild variant="primary" disabled={!canSubmitInvoices}>
-              <Link href="/invoices/new" inert={!canSubmitInvoices}>
+            ) : user.roles.worker ? (
+            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+              <Link href="/invoices/new" onClick={handleNewInvoiceClick} inert={!canSubmitInvoices}>
                 <Plus className="size-4" />
                 New invoice
               </Link>
@@ -536,7 +599,7 @@ export default function InvoicesPage() {
         </>
       ) : null}
 
-      <QuickInvoicesSection />
+      <QuickInvoicesSection onShowActivationDialog={() => setShowActivationDialog(true)} />
 
       {data.length > 0 || isLoading ? (
         <DataTable
@@ -664,6 +727,14 @@ export default function InvoicesPage() {
           onAction={handleInvoiceAction}
         />
       ) : null}
+
+      <ActivationDialog
+        open={showActivationDialog}
+        onClose={() => setShowActivationDialog(false)}
+        title="Complete setup to create invoices"
+        description="You need to complete a few setup steps before you can create new invoices."
+        missingRequirements={getMissingRequirements()}
+      />
     </>
   );
 }
@@ -842,36 +913,64 @@ const quickInvoiceSchema = z.object({
   date: z.instanceof(CalendarDate, { message: "This field is required." }),
 });
 
-const QuickInvoicesSection = () => {
+const expandedInvoiceSchema = quickInvoiceSchema.extend({
+  description: z.string().optional(),
+  invoiceNumber: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+const QuickInvoicesSection = ({ onShowActivationDialog }: { onShowActivationDialog: () => void }) => {
   const user = useCurrentUser();
 
   // Early bail-out BEFORE any additional hooks that might change between renders.
   if (!user.roles.worker) return null;
 
-  return <QuickInvoicesSectionContent />;
+  return <QuickInvoicesSectionContent onShowActivationDialog={onShowActivationDialog} />;
 };
 
 // Separated component that contains all hooks related to the worker view. This
 // avoids violating the Rules of Hooks when the parent conditionally renders.
-const QuickInvoicesSectionContent = () => {
+const QuickInvoicesSectionContent = ({ onShowActivationDialog }: { onShowActivationDialog: () => void }) => {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const trpcUtils = trpc.useUtils();
   const queryClient = useQueryClient();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const payRateInSubunits = user.roles.worker?.payRateInSubunits ?? 0;
   const isHourly = user.roles.worker?.payRateType === "hourly";
 
   const { canSubmitInvoices } = useCanSubmitInvoices();
   const form = useForm({
-    resolver: zodResolver(quickInvoiceSchema),
+    resolver: zodResolver(isExpanded ? expandedInvoiceSchema : quickInvoiceSchema),
     defaultValues: {
       rate: payRateInSubunits ? payRateInSubunits / 100 : 0,
       quantity: { quantity: isHourly ? 60 : 1, hourly: isHourly },
       date: today(getLocalTimeZone()),
+      description: "",
+      invoiceNumber: "",
+      notes: "",
     },
     disabled: !canSubmitInvoices,
   });
+
+  const handleToggleExpanded = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const newExpanded = !isExpanded;
+    setIsExpanded(newExpanded);
+
+    track(newExpanded ? 'ui_expand_more_info' : 'ui_collapse_more_info');
+  }, [isExpanded]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setIsExpanded(!isExpanded);
+      track(!isExpanded ? 'ui_expand_more_info' : 'ui_collapse_more_info');
+    }
+  }, [isExpanded]);
 
   const date = form.watch("date");
   const quantity = form.watch("quantity").quantity;
@@ -899,18 +998,37 @@ const QuickInvoicesSectionContent = () => {
 
   const submit = useMutation({
     mutationFn: async () => {
+      const formData = form.getValues();
+      const invoiceData: any = {
+        invoice_date: date.toString(),
+      };
+
+      if (isExpanded && formData.invoiceNumber) {
+        invoiceData.invoice_number = formData.invoiceNumber;
+      }
+
+      if (isExpanded && formData.notes) {
+        invoiceData.notes = formData.notes;
+      }
+
       await request({
         method: "POST",
         url: company_invoices_path(company.id),
         assertOk: true,
         accept: "json",
         jsonData: {
-          invoice: { invoice_date: date.toString() },
-          invoice_line_items: [{ description: "-", pay_rate_in_subunits: rate, quantity, hourly }],
+          invoice: invoiceData,
+          invoice_line_items: [{
+            description: isExpanded && formData.description ? formData.description : "-",
+            pay_rate_in_subunits: rate,
+            quantity,
+            hourly
+          }],
         },
       });
 
       form.reset();
+      setIsExpanded(false); // Collapse after successful submission
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       await trpcUtils.invoices.list.invalidate();
     },
@@ -965,6 +1083,47 @@ const QuickInvoicesSectionContent = () => {
                 />
               </div>
 
+              {isExpanded && (
+                <div className="lg:col-span-3 space-y-6 border-t pt-6">
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Brief description of work" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="invoiceNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Invoice Number</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Custom invoice number (optional)" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} placeholder="Additional notes (optional)" className="min-h-20" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
               <Separator orientation="horizontal" className="block w-full lg:hidden" />
               <Separator orientation="vertical" className="hidden lg:block" />
 
@@ -983,10 +1142,19 @@ const QuickInvoicesSectionContent = () => {
                   ) : null}
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-3">
-                  <Button variant="outline" className="grow sm:grow-0" asChild disabled={!canSubmitInvoices}>
-                    <Link inert={!canSubmitInvoices} href={newCompanyInvoiceRoute()}>
-                      Add more info
-                    </Link>
+                  <Button
+                    variant="outline"
+                    className="grow sm:grow-0"
+                    onClick={canSubmitInvoices ? handleToggleExpanded : (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onShowActivationDialog();
+                    }}
+                    onKeyDown={handleKeyDown}
+                    aria-expanded={isExpanded}
+                    disabled={!canSubmitInvoices}
+                  >
+                    {isExpanded ? 'Show less' : 'Add more info'}
                   </Button>
                   <MutationStatusButton
                     disabled={!canSubmitInvoices || totalAmountInCents <= 0}

@@ -1,0 +1,23 @@
+[phases.setup]
+nixPkgs = ['nodejs_22', 'ruby_3_4', 'postgresql']
+nixLibs = ['libiconv', 'libffi', 'openssl']
+
+[phases.install]
+cmds = [
+    'corepack enable',
+    'cd backend && bundle install',
+    'pnpm install'
+]
+
+[phases.build]
+cmds = [
+    'cd backend && bundle exec rails js:routes:typescript',
+    'pnpm run build-next'
+]
+
+[start]
+cmd = 'cd backend && bundle exec rails server -p $PORT -e $RAILS_ENV -b 0.0.0.0'
+
+[variables]
+NODE_ENV = 'production'
+RAILS_ENV = 'production'

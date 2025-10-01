@@ -10,7 +10,7 @@ class WhodunnitMiddleware
 end
 
 Sidekiq.configure_server do |config|
-  config.redis = { url: ENV["SIDEKIQ_REDIS_URL"], ssl_params: { verify_mode: OpenSSL::SSL::VERIFY_NONE } }
+  config.redis = { url: ENV["SIDEKIQ_REDIS_URL"] || ENV["REDIS_URL"], ssl_params: { verify_mode: OpenSSL::SSL::VERIFY_NONE } }
 
   if defined?(Sidekiq::Pro)
     # https://github.com/mperham/sidekiq/wiki/Reliability#using-super_fetch
@@ -29,7 +29,7 @@ Sidekiq.configure_server do |config|
 end
 
 Sidekiq.configure_client do |config|
-  config.redis = { size: 3, url: ENV["SIDEKIQ_REDIS_URL"], ssl_params: { verify_mode: OpenSSL::SSL::VERIFY_NONE } }
+  config.redis = { size: 3, url: ENV["SIDEKIQ_REDIS_URL"] || ENV["REDIS_URL"], ssl_params: { verify_mode: OpenSSL::SSL::VERIFY_NONE } }
 end
 
 # https://github.com/mperham/sidekiq/wiki/Pro-Reliability-Client
