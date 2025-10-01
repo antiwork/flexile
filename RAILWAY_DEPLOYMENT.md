@@ -11,6 +11,7 @@ This guide covers deploying Flexile (Rails backend + Next.js frontend) to Railwa
 ## Deployment Architecture
 
 Flexile deploys as a monorepo with:
+
 - **Web Service**: Rails API backend (port 3001 in dev, $PORT in production)
 - **Worker Service**: Sidekiq background job processor
 - **PostgreSQL Database**: Managed by Railway
@@ -19,6 +20,7 @@ Flexile deploys as a monorepo with:
 ## Required Environment Variables
 
 ### Core Application
+
 ```bash
 # Rails Configuration
 RAILS_ENV=production
@@ -41,6 +43,7 @@ APP_DOMAIN=<your-production-domain>
 ```
 
 ### Authentication & Security
+
 ```bash
 # NextAuth
 NEXTAUTH_SECRET=<generate-secure-random-string>
@@ -60,6 +63,7 @@ API_SECRET_TOKEN=<generate-secure-token>
 ```
 
 ### Third-Party Services
+
 ```bash
 # AWS S3 Storage
 AWS_ACCESS_KEY_ID=<your-aws-access-key>
@@ -98,6 +102,7 @@ BUNDLE_GEMS__CONTRIBSYS__COM=<your-sidekiq-pro-token>
 ```
 
 ### Performance & Optimization
+
 ```bash
 # Node.js
 NODE_ENV=production
@@ -161,15 +166,18 @@ railway deploy
 ## Service Configuration
 
 ### Web Process (Rails API)
+
 - **Start Command**: `cd backend && bundle exec rails server -p $PORT -e $RAILS_ENV`
 - **Health Check**: `/up` endpoint
 - **Port**: Uses Railway's `$PORT` environment variable
 
 ### Worker Process (Sidekiq)
+
 - **Start Command**: `cd backend && bundle exec sidekiq -q default -q mailers`
 - **Scaling**: Can be scaled independently
 
 ### Database Migrations
+
 - Runs automatically on deploy via `release` process in Procfile
 - **Command**: `cd backend && bundle exec rails db:migrate`
 
@@ -185,18 +193,21 @@ Railway uses Nixpacks to build the application:
 ## Post-Deployment
 
 ### 1. Database Setup
+
 ```bash
 # Run migrations and seed data (if needed)
 railway run cd backend && bundle exec rails db:migrate db:seed
 ```
 
 ### 2. Verify Services
+
 - Check web service is responding at your domain
 - Verify Sidekiq worker is processing jobs
 - Test database connectivity
 - Confirm Redis is working for caching
 
 ### 3. Domain Configuration
+
 ```bash
 # Add custom domain
 railway domain add your-domain.com
@@ -209,6 +220,7 @@ railway env set NEXTAUTH_URL=https://your-domain.com
 ## Monitoring & Maintenance
 
 ### Logs
+
 ```bash
 # View application logs
 railway logs
@@ -218,6 +230,7 @@ railway logs --follow
 ```
 
 ### Scaling
+
 ```bash
 # Scale web service
 railway scale --service web --replicas 2
@@ -227,6 +240,7 @@ railway scale --service worker --replicas 1
 ```
 
 ### Environment Management
+
 ```bash
 # List all environment variables
 railway env list
@@ -253,6 +267,7 @@ railway env set VARIABLE_NAME=new_value
 4. **Worker Not Processing**: Check Redis connection and Sidekiq logs
 
 ### Debug Commands
+
 ```bash
 # Check service status
 railway status

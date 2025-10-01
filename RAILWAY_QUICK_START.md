@@ -16,6 +16,7 @@ Run the setup script to create your Railway project and configure basic settings
 ```
 
 This script will:
+
 - Create a new Railway project
 - Add PostgreSQL and Redis services
 - Set up basic environment variables
@@ -26,6 +27,7 @@ This script will:
 After running the setup script, configure these environment variables in the Railway dashboard:
 
 ### Required for Basic Functionality
+
 ```bash
 # Google OAuth (for authentication)
 GOOGLE_CLIENT_ID=your_google_client_id
@@ -48,6 +50,7 @@ RESEND_API_KEY=re_your_resend_api_key
 ```
 
 ### Optional but Recommended
+
 ```bash
 # Error tracking
 BUGSNAG_API_KEY=your_bugsnag_key
