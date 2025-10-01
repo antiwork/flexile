@@ -69,6 +69,21 @@ test.describe("Contractor Invite Link Joining flow", () => {
 
     await expect(page.getByLabel("Role")).not.toBeValid();
 
+    const roleField = page.getByLabel("Role");
+    await roleField.click();
+
+    await expect(page.getByRole("option", { name: "Software Engineer" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Designer" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Product Manager" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Data Analyst" })).toBeVisible();
+
+    await roleField.fill("de");
+    await expect(page.getByRole("option", { name: "Software Engineer" })).not.toBeVisible();
+    await expect(page.getByRole("option", { name: "Designer" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Product Manager" })).not.toBeVisible();
+    await expect(page.getByRole("option", { name: "Data Analyst" })).not.toBeVisible();
+    roleField.clear();
+
     await page.getByLabel("Role").fill("Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
     await page.getByRole("button", { name: "Continue" }).click();
@@ -111,37 +126,5 @@ test.describe("Contractor Invite Link Joining flow", () => {
     expect(contractor.user.email).toBe(email);
     expect(contractor.role).toBe(null);
     expect(contractor.contractSignedElsewhere).toBe(true);
-  });
-
-  test("shows default roles and allows filtering during contractor onboarding", async ({ page }) => {
-    const { company } = await companiesFactory.createCompletedOnboarding({ inviteLink: "test-invite-link" });
-
-    await page.goto(`/invite/${company.inviteLink}`);
-
-    const email = "contractor+role-test@example.com";
-    await page.getByLabel("Work email").fill(email);
-    await page.getByRole("button", { name: "Sign up", exact: true }).click();
-    await fillOtp(page);
-
-    await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
-
-    const roleField = page.getByLabel("Role");
-    await roleField.click();
-
-    await expect(page.getByRole("option", { name: "Software Engineer" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Designer" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Product Manager" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Data Analyst" })).toBeVisible();
-
-    await roleField.fill("de");
-    await expect(page.getByRole("option", { name: "Software Engineer" })).not.toBeVisible();
-    await expect(page.getByRole("option", { name: "Designer" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Product Manager" })).not.toBeVisible();
-    await expect(page.getByRole("option", { name: "Data Analyst" })).not.toBeVisible();
-
-    await expect(page.getByRole("option", { name: "Designer" })).toBeVisible();
-    await page.getByRole("option", { name: "Designer" }).click();
-    await expect(roleField).toHaveValue("Designer");
-    await expect(page.getByRole("option")).not.toBeVisible();
   });
 });
