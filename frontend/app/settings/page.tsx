@@ -191,11 +191,7 @@ const LeaveWorkspaceSection = () => {
               </Avatar>
               <span className="font-medium">{company.name}</span>
             </div>
-            <Button
-              variant="destructive"
-              className="w-full sm:w-auto"
-              onClick={() => setIsModalOpen(true)}
-            >
+            <Button variant="destructive" className="w-full sm:w-auto" onClick={() => setIsModalOpen(true)}>
               Leave workspace
             </Button>
           </CardHeader>
