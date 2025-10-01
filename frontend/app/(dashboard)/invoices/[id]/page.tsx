@@ -246,32 +246,26 @@ export default function InvoicePage() {
             </DropdownMenu>
           ) : (
             <>
-              <Button variant="outline" size="small" onClick={() => window.print()}>
+              <Button variant="outline" onClick={() => window.print()}>
                 <Printer className="size-4" />
                 Print
               </Button>
               {user.roles.administrator && isActionable(invoice) ? (
                 <>
-                  <Button variant="outline" size="small" onClick={() => setRejectModalOpen(true)}>
+                  <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
                     <Ban className="size-4" />
                     Reject
                   </Button>
 
-                  <ApproveButton
-                    className="border-blue-500 bg-blue-500 hover:border-blue-600 hover:bg-blue-600"
-                    invoice={invoice}
-                    onApprove={() => router.push(`/invoices`)}
-                  />
+                  <ApproveButton variant="primary" invoice={invoice} onApprove={() => router.push(`/invoices`)} />
                 </>
               ) : null}
               {user.id === invoice.userId ? (
                 <>
                   {invoice.requiresAcceptanceByPayee ? (
-                    <Button size="small" onClick={() => setAcceptPaymentModalOpen(true)}>
-                      Accept payment
-                    </Button>
+                    <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
                   ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                    <Button variant="default" size="small" asChild>
+                    <Button variant="primary" asChild>
                       <Link href={`/invoices/${invoice.id}/edit`}>
                         <SquarePen className="size-4" />
                         Edit invoice
@@ -280,7 +274,7 @@ export default function InvoicePage() {
                   ) : null}
 
                   {isDeletable(invoice) ? (
-                    <Button variant="destructive" size="small" onClick={() => setDeleteModalOpen(true)} className="">
+                    <Button variant="destructive" onClick={() => setDeleteModalOpen(true)} className="">
                       <Trash2 className="size-4" />
                       <span>Delete</span>
                     </Button>
