@@ -30,7 +30,6 @@ const ComboBox = ({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          size="small"
           role="combobox"
           aria-expanded={open}
           {...props}

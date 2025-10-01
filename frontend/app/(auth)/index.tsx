@@ -243,7 +243,7 @@ export function AuthPage({
                 <MutationStatusButton
                   mutation={sendOtp}
                   type="submit"
-                  className="text-foreground border-input dark:border-border dark:bg-input/30 hover:bg-accent dark:hover:bg-muted hover:border-input dark:hover:border-border w-full bg-white"
+                  className="text-foreground border-input dark:border-border dark:bg-input/30 hover:bg-accent dark:hover:bg-muted hover:border-input dark:hover:border-border h-11 w-full bg-white"
                   loadingText="Sending..."
                 >
                   {sendOtpText}
