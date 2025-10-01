@@ -207,7 +207,7 @@ export const DialogStackBody = ({ children, className, ...props }: DialogStackBo
         <div
           role="dialog"
           className={cn(
-            "pointer-events-none fixed inset-0 z-50 mx-auto flex max-h-[90vh] w-full max-w-lg flex-col items-center justify-start p-2 pt-16 sm:max-h-[95vh] sm:pt-32",
+            "pointer-events-none fixed top-auto right-4 bottom-20 left-4 z-50 flex max-h-[80vh] flex-col pt-16 sm:inset-0 sm:mx-auto sm:max-h-[95vh] sm:w-full sm:max-w-lg sm:items-center sm:justify-start sm:p-2 sm:pt-32",
             className,
           )}
           aria-labelledby={`dialog-title-${context.activeIndex}`}
@@ -265,12 +265,13 @@ export const DialogStackContent = ({ children, className, offset = 16, ...props 
   return (
     <div
       className={cn(
-        "bg-background h-auto max-h-full w-full rounded-lg p-6 shadow-lg [box-shadow:0_-12px_24px_-12px_rgba(0,0,0,0.15)] transition-all duration-300",
+        "bg-background h-auto max-h-full w-full rounded-2xl p-6 shadow-lg [box-shadow:0_-12px_24px_-12px_rgba(0,0,0,0.15)] transition-all duration-300 sm:rounded-lg",
         className,
       )}
       onClick={handleClick}
       style={{
         top: 0,
+        ...(distanceFromActive ? { left: 0, right: 0, marginLeft: "auto", marginRight: "auto" } : {}),
         transform: `translateY(${translateY})`,
         width: `calc(100% - ${Math.abs(distanceFromActive) * 32}px)`,
         zIndex: 50 - Math.abs(context.activeIndex - index),
@@ -337,7 +338,13 @@ export const DialogStackHeader = ({ className, ...props }: DialogStackHeaderProp
 export type DialogStackFooterProps = HTMLAttributes<HTMLDivElement>;
 
 export const DialogStackFooter = ({ children, className, ...props }: DialogStackFooterProps) => (
-  <div className={cn("flex items-center justify-end space-x-2", "sm:[&_button]:py-1.25", className)} {...props}>
+  <div
+    className={cn(
+      "flex w-full flex-col-reverse gap-2 md:flex-row md:justify-end [&_button]:w-full md:[&_button]:w-fit",
+      className,
+    )}
+    {...props}
+  >
     {children}
   </div>
 );

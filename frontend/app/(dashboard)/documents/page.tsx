@@ -518,7 +518,7 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
               <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <MutationStatusButton variant="primary" type="submit" mutation={submitMutation}>
+              <MutationStatusButton idleVariant="primary" type="submit" mutation={submitMutation}>
                 Send
               </MutationStatusButton>
             </DialogFooter>

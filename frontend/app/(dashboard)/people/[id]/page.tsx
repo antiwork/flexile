@@ -218,11 +218,11 @@ export default function ContractorPage() {
               </Status>
             </div>
             <DialogFooter>
-              <Button variant="outline" size="small" onClick={() => setEndModalOpen(false)}>
+              <Button variant="outline" onClick={() => setEndModalOpen(false)}>
                 No, cancel
               </Button>
               <MutationButton
-                size="small"
+                idleVariant="critical"
                 mutation={endContract}
                 param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate?.toString() ?? "" }}
               >
@@ -352,17 +352,15 @@ export default function ContractorPage() {
                 </small>
 
                 <DialogFooter>
-                  <div className="flex justify-end">
-                    <MutationStatusButton
-                      type="submit"
-                      size="small"
-                      mutation={issuePaymentMutation}
-                      successText="Payment submitted!"
-                      loadingText="Saving..."
-                    >
-                      Issue payment
-                    </MutationStatusButton>
-                  </div>
+                  <MutationStatusButton
+                    type="submit"
+                    idleVariant="primary"
+                    mutation={issuePaymentMutation}
+                    successText="Payment submitted!"
+                    loadingText="Saving..."
+                  >
+                    Issue payment
+                  </MutationStatusButton>
                 </DialogFooter>
               </form>
             </Form>
@@ -425,7 +423,7 @@ const ActionPanel = ({
         <DialogDescription className="sr-only">Manage Payment or Contract</DialogDescription>
         <div className="flex flex-col gap-3">
           <DialogClose asChild onClick={handleIssuePaymentClick}>
-            <Button size="small">Issue payment</Button>
+            <Button variant="primary">Issue payment</Button>
           </DialogClose>
           {contractor.endedAt && !isFuture(contractor.endedAt) ? (
             <Status className="justify-center" variant="critical">
@@ -433,9 +431,7 @@ const ActionPanel = ({
             </Status>
           ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
             <DialogClose asChild onClick={handleEndContractClick}>
-              <Button variant="outline" size="small">
-                End contract
-              </Button>
+              <Button variant="outline">End contract</Button>
             </DialogClose>
           ) : null}
         </div>
@@ -443,13 +439,11 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex items-center gap-3">
-      <Button size="small" onClick={handleIssuePaymentClick}>
-        Issue payment
-      </Button>
+      <Button onClick={handleIssuePaymentClick}>Issue payment</Button>
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
         <Status variant="critical">Alumni</Status>
       ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
-        <Button variant="outline" size="small" onClick={handleEndContractClick}>
+        <Button variant="outline" onClick={handleEndContractClick}>
           End contract
         </Button>
       ) : null}
