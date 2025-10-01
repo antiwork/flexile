@@ -7,11 +7,15 @@ cmds = [
     'corepack enable',
     'node --version && npm --version',
     'ruby --version && gem --version',
+    'echo "Installing bundler..."',
     'gem install bundler -v 2.3.11 --no-document',
-    'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle config --local deployment true',
-    'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle config --global build.nokogiri --use-system-libraries',
-    'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle config --global build.pg --with-pg-config=$(which pg_config)',
-    'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 LIBRARY_PATH=/nix/store/$(ls /nix/store | grep "^[a-z0-9]*-libyaml-" | head -1)/lib CPATH=/nix/store/$(ls /nix/store | grep "^[a-z0-9]*-libyaml-" | head -1)/include bundle install --jobs 4 --retry 3',
+    'echo "Configuring bundle..."',
+    'cd backend && bundle config --local deployment true',
+    'cd backend && bundle config build.nokogiri --use-system-libraries',
+    'cd backend && bundle config build.pg --with-pg-config=$(which pg_config)',
+    'echo "Installing gems with proper paths..."',
+    'cd backend && bundle install --jobs 4 --retry 3 || (echo "Bundle install failed, retrying with verbose..." && bundle install --verbose)',
+    'echo "Installing Node dependencies..."',
     'pnpm install --frozen-lockfile'
 ]
 
@@ -33,4 +37,3 @@ RAILS_ENV = 'production'
 BUNDLE_SILENCE_ROOT_WARNING = '1'
 MAKE = 'make'
 CC = 'gcc'
-PKG_CONFIG_PATH = '/nix/store/*-postgresql-*/lib/pkgconfig:/nix/store/*-libyaml-*/lib/pkgconfig'
