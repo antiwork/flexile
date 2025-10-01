@@ -312,7 +312,7 @@ export default function InvoicesPage() {
 
           return (
             <div className="flex h-full min-w-0 flex-col items-end justify-between text-right">
-              <div className="truncate text-xs font-medium">{getInvoiceStatusText(invoice, company)}</div>
+              <div className="truncate text-xs sm:font-medium">{getInvoiceStatusText(invoice, company)}</div>
               <div className="text-xs text-gray-600">{formatDate(invoice.invoiceDate)}</div>
             </div>
           );
