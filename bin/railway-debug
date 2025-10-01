@@ -1,0 +1,43 @@
+#!/bin/bash
+
+echo "🔍 Railway Build Debug Information"
+echo "================================="
+
+echo "📋 Environment Variables:"
+echo "NODE_ENV: $NODE_ENV"
+echo "RAILS_ENV: $RAILS_ENV"
+echo "DATABASE_URL: ${DATABASE_URL:0:30}..." # Show first 30 chars only
+echo "REDIS_URL: ${REDIS_URL:0:30}..."
+
+echo ""
+echo "🔧 System Information:"
+echo "Node.js: $(node --version)"
+echo "npm: $(npm --version)"
+echo "Ruby: $(ruby --version)"
+echo "Bundler: $(bundle --version)"
+
+echo ""
+echo "📦 Package Information:"
+echo "pnpm: $(pnpm --version)"
+
+echo ""
+echo "📁 Directory Structure:"
+ls -la
+
+echo ""
+echo "📁 Backend Directory:"
+ls -la backend/
+
+echo ""
+echo "📁 Frontend Directory:"
+ls -la frontend/
+
+echo ""
+echo "🔍 Checking critical files:"
+echo "Gemfile exists: $(test -f backend/Gemfile && echo "✅" || echo "❌")"
+echo "package.json exists: $(test -f package.json && echo "✅" || echo "❌")"
+echo "pnpm-lock.yaml exists: $(test -f pnpm-lock.yaml && echo "✅" || echo "❌")"
+echo "nixpacks.toml exists: $(test -f nixpacks.toml && echo "✅" || echo "❌")"
+
+echo ""
+echo "🚀 Build Debug Complete!"
