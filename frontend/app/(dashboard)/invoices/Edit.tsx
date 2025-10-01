@@ -181,12 +181,11 @@ const Edit = () => {
 
     const hasDescriptionErrors = nextLineItems.some((lineItem) => lineItem.errors.includes("description"));
 
-    return (
-      errorField === null &&
-      !hasDescriptionErrors &&
-      expenses.every((expense) => (expense.errors?.length ?? 0) === 0) &&
-      (document?.errors?.length ?? 0) === 0
-    );
+    const hasValidLineItems = nextLineItems.size === 0 || !hasDescriptionErrors;
+    const hasValidExpenses = expenses.every((expense) => (expense.errors?.length ?? 0) === 0);
+    const hasValidDocument = (document?.errors?.length ?? 0) === 0;
+
+    return errorField === null && hasValidLineItems && hasValidExpenses && hasValidDocument;
   };
 
   const submit = useMutation({
