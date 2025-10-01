@@ -182,7 +182,7 @@ const Edit = () => {
 
     return (
       errorField === null &&
-      !hasDescriptionErrors &&
+      hasDescriptionErrors === false &&
       expenses.every((expense) => (expense.errors?.length ?? 0) === 0) &&
       (document?.errors?.length ?? 0) === 0
     );
