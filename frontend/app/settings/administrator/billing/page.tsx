@@ -13,7 +13,6 @@ import StripeMicrodepositVerification from "@/app/settings/administrator/StripeM
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
-import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -163,7 +162,7 @@ export default function Billing() {
                 <CardTitle>USD bank account</CardTitle>
                 <CardDescription>Ending in {stripeData.bank_account_last4}</CardDescription>
                 <CardAction>
-                  <Button variant="outline" size="small" onClick={() => setAddingBankAccount(true)}>
+                  <Button variant="outline" onClick={() => setAddingBankAccount(true)}>
                     Edit
                   </Button>
                 </CardAction>
@@ -172,7 +171,7 @@ export default function Billing() {
           ) : (
             <Placeholder icon={CircleDollarSign}>
               <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-              <Button onClick={() => setAddingBankAccount(true)} size="small" disabled={requiresCompanyName}>
+              <Button onClick={() => setAddingBankAccount(true)} disabled={requiresCompanyName}>
                 <Plus className="size-4" />
                 Link your bank account
               </Button>
@@ -222,15 +221,15 @@ const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
       columnHelper.simple("status", "Status", (status) => {
         switch (status.toLowerCase()) {
           case "sent":
-            return <Status variant="primary">Sent</Status>;
+            return "Sent";
           case "processing":
-            return <Status variant="primary">Payment in progress</Status>;
+            return "Payment in progress";
           case "paid":
-            return <Status variant="success">Paid</Status>;
+            return "Paid";
           case "refunded":
-            return <Status variant="success">Refunded</Status>;
+            return "Refunded";
           case "failed":
-            return <Status variant="critical">Failed</Status>;
+            return "Failed";
         }
       }),
       columnHelper.accessor("attachment", {
@@ -239,7 +238,7 @@ const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
         cell: (info) => {
           const attachment = info.getValue();
           return attachment ? (
-            <Button asChild variant="outline" size="small">
+            <Button asChild variant="outline">
               <Link href={`/download/${attachment.key}/${attachment.filename}`} download>
                 <Download className="size-4" /> Download
               </Link>

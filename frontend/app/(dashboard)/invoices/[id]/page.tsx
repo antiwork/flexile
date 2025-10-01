@@ -1,12 +1,13 @@
 "use client";
 
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { InformationCircleIcon, PaperClipIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useMutation } from "@tanstack/react-query";
 import { Ban, CircleAlert, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { Fragment, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
+import AttachmentListCard from "@/components/AttachmentsList";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
 import MutationButton from "@/components/MutationButton";
@@ -245,32 +246,26 @@ export default function InvoicePage() {
             </DropdownMenu>
           ) : (
             <>
-              <Button variant="outline" size="small" onClick={() => window.print()}>
+              <Button variant="outline" onClick={() => window.print()}>
                 <Printer className="size-4" />
                 Print
               </Button>
               {user.roles.administrator && isActionable(invoice) ? (
                 <>
-                  <Button variant="outline" size="small" onClick={() => setRejectModalOpen(true)}>
+                  <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
                     <Ban className="size-4" />
                     Reject
                   </Button>
 
-                  <ApproveButton
-                    className="border-blue-500 bg-blue-500 hover:border-blue-600 hover:bg-blue-600"
-                    invoice={invoice}
-                    onApprove={() => router.push(`/invoices`)}
-                  />
+                  <ApproveButton variant="primary" invoice={invoice} onApprove={() => router.push(`/invoices`)} />
                 </>
               ) : null}
               {user.id === invoice.userId ? (
                 <>
                   {invoice.requiresAcceptanceByPayee ? (
-                    <Button size="small" onClick={() => setAcceptPaymentModalOpen(true)}>
-                      Accept payment
-                    </Button>
+                    <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
                   ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                    <Button variant="default" size="small" asChild>
+                    <Button variant="primary" asChild>
                       <Link href={`/invoices/${invoice.id}/edit`}>
                         <SquarePen className="size-4" />
                         Edit invoice
@@ -279,7 +274,7 @@ export default function InvoicePage() {
                   ) : null}
 
                   {isDeletable(invoice) ? (
-                    <Button variant="destructive" size="small" onClick={() => setDeleteModalOpen(true)} className="">
+                    <Button variant="destructive" onClick={() => setDeleteModalOpen(true)} className="">
                       <Trash2 className="size-4" />
                       <span>Delete</span>
                     </Button>
@@ -443,7 +438,7 @@ export default function InvoicePage() {
 
               {invoice.lineItems.length > 0 ? (
                 <div className="w-full overflow-x-auto">
-                  <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full print:my-3 print:w-full print:border-collapse print:text-xs">
+                  <Table className="w-full min-w-fit print:my-3 print:w-full print:border-collapse print:text-xs">
                     <TableHeader>
                       <TableRow className="print:border-b print:border-gray-300">
                         <PrintTableHeader className="w-[40%] md:w-[50%] print:text-left">
@@ -485,48 +480,46 @@ export default function InvoicePage() {
               ) : null}
 
               {invoice.expenses.length > 0 && (
-                <Card className="mx-4 print:my-3 print:border print:border-gray-300 print:bg-white print:p-2">
-                  <CardContent>
-                    <div className="flex justify-between gap-2">
-                      <div>Expense</div>
-                      <div>Amount</div>
-                    </div>
-                    {invoice.expenses.map((expense, i) => (
-                      <Fragment key={i}>
-                        <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
-                        <div className="flex justify-between gap-2">
-                          <Link
-                            href={`/download/${expense.attachment?.key}/${expense.attachment?.filename}`}
-                            download
-                            className={cn(linkClasses, "print:text-black print:no-underline")}
-                          >
-                            <PaperClipIcon className="inline size-4 print:hidden" />
-                            {
-                              expenseCategories.find((category) => category.id === expense.expenseCategoryId)?.name
-                            } – {expense.description}
-                          </Link>
-                          <span>{formatMoneyFromCents(expense.totalAmountInCents)}</span>
-                        </div>
-                      </Fragment>
-                    ))}
-                  </CardContent>
-                </Card>
+                <AttachmentListCard
+                  title="Expense"
+                  linkClasses={linkClasses}
+                  items={invoice.expenses.map((expense) => ({
+                    key: expense.attachment?.key || `expense-${expense.id}`,
+                    filename: expense.attachment?.filename || "No attachment",
+                    label: `${expenseCategories.find((c) => c.id === expense.expenseCategoryId)?.name || "Uncategorized"} – ${expense.description}`,
+                    right: <span className="text-sm">{formatMoneyFromCents(expense.totalAmountInCents)}</span>,
+                  }))}
+                />
               )}
 
-              <footer className="flex justify-between px-4 print:mt-4 print:flex print:items-start print:justify-between">
+              {invoice.attachment ? (
+                <AttachmentListCard
+                  title="Documents"
+                  linkClasses={linkClasses}
+                  items={[
+                    {
+                      key: invoice.attachment.key,
+                      filename: invoice.attachment.filename,
+                      label: invoice.attachment.filename,
+                    },
+                  ]}
+                />
+              ) : null}
+
+              <footer className="flex flex-col justify-between gap-3 px-4 lg:flex-row print:mt-4 print:flex print:items-start print:justify-between">
                 <div className="print:flex-1">
                   {invoice.notes ? (
                     <div>
                       <b className="print:text-sm print:font-bold">Notes</b>
                       <div>
                         <div className="text-xs">
-                          <p className="print:mt-1 print:text-xs">{invoice.notes}</p>
+                          <p className="whitespace-pre-wrap print:mt-1 print:text-xs">{invoice.notes}</p>
                         </div>
                       </div>
                     </div>
                   ) : null}
                 </div>
-                <Card className="print:min-w-36 print:border-none print:bg-transparent print:p-2">
+                <Card className="self-start print:min-w-36 print:border-none print:bg-transparent print:p-2">
                   <CardContent>
                     {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
                       <>

@@ -164,8 +164,8 @@ export default function Equity() {
               />
               <MutationStatusButton
                 type="submit"
-                size="small"
                 className="w-fit"
+                idleVariant="primary"
                 mutation={updateSettings}
                 loadingText="Saving..."
                 successText="Changes saved"
