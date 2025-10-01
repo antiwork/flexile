@@ -140,7 +140,8 @@ test.describe("Equity Grants", () => {
     await fillDatePicker(page, "Date", "10/15/2024");
     await page.getByPlaceholder("Description").fill("Software development work");
     await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
+      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() >= 200 && r.status() < 300),
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
       page.getByRole("button", { name: "Send invoice" }).click(),
     ]);
 
@@ -162,7 +163,8 @@ test.describe("Equity Grants", () => {
     await fillDatePicker(page, "Date", "11/01/2024");
     await page.getByPlaceholder("Description").fill("Promotional video production work");
     await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
+      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() >= 200 && r.status() < 300),
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
       page.getByRole("button", { name: "Send invoice" }).click(),
     ]);
 
