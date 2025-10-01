@@ -167,14 +167,28 @@ const Edit = () => {
   const actionColumnClass = "w-12";
 
   const validate = () => {
-    setErrorField(null);
-    if (invoiceNumber.length === 0) setErrorField("invoiceNumber");
-    return (
-      errorField === null &&
-      lineItems.every((lineItem) => !lineItem.errors?.length) &&
-      expenses.every((expense) => !expense.errors?.length) &&
-      (!document || !document.errors?.length)
-    );
+    let hasErrors = false;
+
+    if (invoiceNumber.length === 0) {
+      setErrorField("invoiceNumber");
+      hasErrors = true;
+    } else {
+      setErrorField(null);
+    }
+
+    const nextLineItems = lineItems.map((lineItem) => {
+      const updated = { ...lineItem };
+      const errors: string[] = [];
+      if (!updated.description || updated.description.trim().length === 0) errors.push("description");
+      if (!updated.quantity || parseQuantity(updated.quantity) < 0.01) errors.push("quantity");
+      if (!updated.pay_rate_in_subunits || updated.pay_rate_in_subunits <= 0) errors.push("rate");
+      if (errors.length > 0) hasErrors = true;
+      updated.errors = errors;
+      return updated;
+    });
+    if (nextLineItems !== lineItems) setLineItems(nextLineItems);
+
+    return !hasErrors;
   };
 
   const submit = useMutation({
@@ -329,15 +343,7 @@ const Edit = () => {
     invoiceYear,
   });
   const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
-    setLineItems((lineItems) =>
-      lineItems.update(index, (lineItem) => {
-        const updated = { ...assertDefined(lineItem), ...update };
-        updated.errors = [];
-        if (updated.description.length === 0) updated.errors.push("description");
-        if (!updated.quantity || parseQuantity(updated.quantity) < 0.01) updated.errors.push("quantity");
-        return updated;
-      }),
-    );
+    setLineItems((lineItems) => lineItems.update(index, (lineItem) => ({ ...assertDefined(lineItem), ...update })));
   const updateExpense = (index: number, update: Partial<InvoiceFormExpense>) =>
     setExpenses((expenses) =>
       expenses.update(index, (expense) => {
