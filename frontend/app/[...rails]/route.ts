@@ -9,16 +9,22 @@ async function handler(req: Request) {
   if (!routes.some((route) => url.pathname.match(route))) {
     throw notFound();
   }
-  switch (process.env.VERCEL_ENV) {
-    case "production":
-      url.host = "api.flexile.com";
-      break;
-    case "preview":
-      url.hostname = `flexile-pipeline-pr-${process.env.VERCEL_GIT_PULL_REQUEST_ID}.herokuapp.com`;
-      break;
-    default:
-      url.port = process.env.RAILS_ENV === "test" ? "3101" : "3001";
-      url.protocol = "http";
+  const configuredApiUrl = env.NEXT_PUBLIC_API_URL ? new URL(env.NEXT_PUBLIC_API_URL) : null;
+  if (configuredApiUrl) {
+    url.protocol = configuredApiUrl.protocol;
+    url.host = configuredApiUrl.host;
+  } else {
+    switch (process.env.VERCEL_ENV) {
+      case "production":
+        url.host = "api.flexile.com";
+        break;
+      case "preview":
+        url.hostname = `flexile-pipeline-pr-${process.env.VERCEL_GIT_PULL_REQUEST_ID}.herokuapp.com`;
+        break;
+      default:
+        url.port = process.env.RAILS_ENV === "test" ? "3101" : "3001";
+        url.protocol = "http";
+    }
   }
 
   const session = await getServerSession(authOptions);
