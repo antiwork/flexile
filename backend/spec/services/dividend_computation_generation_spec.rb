@@ -129,6 +129,13 @@ RSpec.describe DividendComputationGeneration do
 
       # Total should equal the input amount
       total_amount = dividend_computation.dividend_computation_outputs.sum(:total_amount_in_usd)
+      puts "\n=== Dividend Totals ==="
+      puts "Expected: #{amount_exceeding_preferred}"
+      puts "Actual total: #{total_amount}"
+      puts "Preferred total: #{dividend_computation.dividend_computation_outputs.sum(:preferred_dividend_amount_in_usd)}"
+      puts "Common total: #{dividend_computation.dividend_computation_outputs.sum(:dividend_amount_in_usd)}"
+      puts "Difference: #{total_amount - amount_exceeding_preferred}"
+
       expect(total_amount).to be_within(1.0).of(amount_exceeding_preferred)
     end
   end
@@ -157,6 +164,15 @@ RSpec.describe DividendComputationGeneration do
     #   = 1,667,966
 
     # Seed Investor
+    seed_investor_output = dividend_computation.dividend_computation_outputs.find_by(company_investor_id: @seed_investor.id, share_class: "Seed")
+    puts "\n=== Seed Investor Output ==="
+    puts "Number of shares: #{seed_investor_output&.number_of_shares}"
+    puts "Preferred dividend: #{seed_investor_output&.preferred_dividend_amount_in_usd}"
+    puts "Common dividend: #{seed_investor_output&.dividend_amount_in_usd}"
+    puts "Qualified dividend: #{seed_investor_output&.qualified_dividend_amount_usd}"
+    puts "Total: #{seed_investor_output&.total_amount_in_usd}"
+    puts "Investment amount: #{seed_investor_output&.investment_amount_cents}"
+
     expect(dividend_computation.dividend_computation_outputs.exists?(
              company_investor_id: @seed_investor.id,
              share_class: "Seed",
