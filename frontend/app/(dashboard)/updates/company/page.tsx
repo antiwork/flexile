@@ -8,7 +8,6 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MutationButton from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
-import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -60,7 +59,7 @@ export default function CompanyUpdates() {
                 <Plus />
               </Button>
             ) : (
-              <Button variant="outline" size="small" onClick={handleNewUpdate}>
+              <Button variant="primary" onClick={handleNewUpdate}>
                 New update
               </Button>
             )
@@ -127,7 +126,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
       columnHelper.simple("sentAt", "Sent On", (v) => (v ? formatDate(v) : "-")),
       columnHelper.accessor((row) => (row.sentAt ? "Sent" : "Draft"), {
         header: "Status",
-        cell: (info) => <Status variant={info.getValue() === "Sent" ? "success" : undefined}>{info.getValue()}</Status>,
+        cell: (info) => info.getValue(),
       }),
       columnHelper.display({
         id: "actions",
@@ -175,9 +174,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
 
           return (
             <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 items-center justify-center">
-                <Status variant={update.sentAt ? "success" : undefined}>{update.sentAt ? "Sent" : "Draft"}</Status>
-              </div>
+              <div className="flex h-5 items-center justify-center">{update.sentAt ? "Sent" : "Draft"}</div>
               <div className="text-muted-foreground">{update.sentAt ? formatDate(update.sentAt) : "-"}</div>
             </div>
           );
@@ -204,12 +201,12 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
           </p>
           <DialogFooter>
             <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-              <Button variant="outline" size="small" onClick={() => setDeletingUpdate(null)}>
+              <Button variant="outline" onClick={() => setDeletingUpdate(null)}>
                 No, cancel
               </Button>
               <MutationButton
+                idleVariant="critical"
                 mutation={deleteMutation}
-                size="small"
                 param={deletingUpdate ?? ""}
                 loadingText="Deleting..."
               >

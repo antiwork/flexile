@@ -281,6 +281,25 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     [allFields],
   );
 
+  useEffect(() => {
+    if (!visibleFields) return;
+
+    setDetails((prevDetails) => {
+      let updated = prevDetails;
+
+      for (const field of visibleFields) {
+        if ((field.type === "select" || field.type === "radio") && field.valuesAllowed) {
+          const value = prevDetails.get(field.key);
+          const isValid = field.valuesAllowed.some((option) => option.key === value);
+          if (value && !isValid) {
+            updated = updated.set(field.key, "");
+          }
+        }
+      }
+      return updated;
+    });
+  }, [visibleFields]);
+
   const hasVisibleErrors = visibleFields?.some((field) => errors.has(field.key));
 
   const hasRequiredFieldsEmpty = visibleFields?.some((field) => field.required && !details.get(field.key)?.trim());
@@ -556,10 +575,11 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
           })}
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex w-full sm:justify-end">
           <MutationButton
+            className="w-full sm:w-fit"
             mutation={submitMutation}
-            size="small"
+            idleVariant="primary"
             loadingText="Saving bank account..."
             disabled={hasRequiredFieldsEmpty || hasVisibleErrors}
           >

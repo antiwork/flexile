@@ -48,7 +48,7 @@ export default function Buybacks() {
                 <Plus className="size-4" />
               </Button>
             ) : (
-              <Button size="small" variant="outline" onClick={() => setShowBuyBackModal(true)}>
+              <Button variant="primary" onClick={() => setShowBuyBackModal(true)}>
                 <Plus className="size-4" />
                 New buyback
               </Button>
@@ -68,7 +68,7 @@ export default function Buybacks() {
       )}
 
       <Dialog open={showBuyBackModal} onOpenChange={setShowBuyBackModal}>
-        <DialogContent className="max-h-[90vh]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>New buyback</DialogTitle>
           </DialogHeader>
