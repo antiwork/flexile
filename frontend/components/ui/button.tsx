@@ -12,6 +12,7 @@ const buttonVariants = cva(
           "bg-secondary text-foreground border-muted hover:bg-black hover:border-black hover:text-white dark:bg-white/5 dark:hover:bg-white/85 dark:hover:text-black",
         primary:
           "bg-foreground border-foreground hover:bg-foreground/80 hover:border-foreground/80 dark:bg-blue-600 dark:border-transparent text-white dark:hover:bg-blue-500 ",
+        accent: "bg-blue-600 text-white border-blue-600 hover:bg-blue-500 hover:border-blue-500",
         critical: "bg-red text-white border-red hover:bg-red-700 hover:border-red-700",
         success: "bg-green text-white border-green",
         outline: "bg-transparent text-inherit border-muted hover:bg-accent dark:hover:bg-accent",

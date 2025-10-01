@@ -162,7 +162,7 @@ export default function InvoicesPage() {
           id: "approve",
           label: "Approve",
           icon: CheckCircle,
-          variant: "primary",
+          variant: "accent",
           contexts: ["single", "bulk"],
           permissions: ["administrator"],
           conditions: (invoice: Invoice, _context: ActionContext) =>
@@ -804,7 +804,7 @@ const InvoiceBulkActionsBar = ({
           ) : null}
           {approveAction ? (
             <Button
-              variant="primary"
+              variant="accent"
               className="flex h-9 items-center gap-2 border-none text-sm"
               onClick={() => approveAction.action && onAction(approveAction.action, selectedInvoices)}
             >
