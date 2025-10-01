@@ -1,6 +1,6 @@
 [phases.setup]
-nixPkgs = ['nodejs_22', 'ruby_3_4', 'postgresql', 'gcc', 'gnumake', 'pkg-config']
-nixLibs = ['libiconv', 'libffi', 'openssl', 'zlib', 'readline', 'gmp', 'libxml2', 'libxslt', 'libyaml', 'postgresql.dev']
+nixPkgs = ['nodejs_22', 'ruby_3_4', 'postgresql', 'postgresql.dev', 'libyaml', 'gcc', 'gnumake', 'pkg-config', 'autoconf', 'automake', 'libtool']
+nixLibs = ['libiconv', 'libffi', 'openssl', 'zlib', 'readline', 'gmp', 'libxml2', 'libxslt']
 
 [phases.install]
 cmds = [
@@ -10,6 +10,8 @@ cmds = [
     'gem install bundler -v 2.3.11 --no-document',
     'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle config --local deployment true',
     'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle config --global build.nokogiri --use-system-libraries',
+    'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle config --global build.pg --with-pg-config=$(which pg_config)',
+    'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle config --global build.psych --with-libyaml-dir=/nix/store/*-libyaml-*',
     'cd backend && BUNDLE_SILENCE_ROOT_WARNING=1 bundle install --jobs 4 --retry 3',
     'pnpm install --frozen-lockfile'
 ]
@@ -32,3 +34,4 @@ RAILS_ENV = 'production'
 BUNDLE_SILENCE_ROOT_WARNING = '1'
 MAKE = 'make'
 CC = 'gcc'
+PKG_CONFIG_PATH = '/nix/store/*-postgresql-*/lib/pkgconfig:/nix/store/*-libyaml-*/lib/pkgconfig'
