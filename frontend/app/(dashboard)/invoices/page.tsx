@@ -214,6 +214,17 @@ export default function InvoicesPage() {
   });
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
+
+  const getStatusFilterValue = (row: Invoice) => {
+    if (row.status === "received" || row.status === "approved") {
+      if (row.approvals.length < company.requiredInvoiceApprovals) {
+        return "Awaiting approval";
+      }
+      return "Approved";
+    }
+    return statusNames[row.status];
+  };
+
   const desktopColumns = useMemo(
     () => [
       user.roles.administrator
@@ -241,25 +252,14 @@ export default function InvoicesPage() {
         (value) => (value ? formatMoneyFromCents(value) : "N/A"),
         "numeric",
       ),
-      columnHelper.accessor(
-        (row) => {
-          if (row.status === "received" || row.status === "approved") {
-            if (row.approvals.length < company.requiredInvoiceApprovals) {
-              return "Awaiting approval";
-            }
-            return "Approved";
-          }
-          return statusNames[row.status];
+      columnHelper.accessor(getStatusFilterValue, {
+        id: "status",
+        header: "Status",
+        cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
+        meta: {
+          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
         },
-        {
-          id: "status",
-          header: "Status",
-          cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
-          meta: {
-            filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
-          },
-        },
-      ),
+      }),
       columnHelper.accessor(isActionable, {
         id: "actions",
         header: () => null,
@@ -332,24 +332,13 @@ export default function InvoicesPage() {
         },
       }),
 
-      columnHelper.accessor(
-        (row) => {
-          if (row.status === "received" || row.status === "approved") {
-            if (row.approvals.length < company.requiredInvoiceApprovals) {
-              return "Awaiting approval";
-            }
-            return "Approved";
-          }
-          return statusNames[row.status];
+      columnHelper.accessor(getStatusFilterValue, {
+        id: "status",
+        meta: {
+          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
+          hidden: true,
         },
-        {
-          id: "status",
-          meta: {
-            filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
-            hidden: true,
-          },
-        },
-      ),
+      }),
 
       columnHelper.accessor((row) => row.billFrom, {
         header: "Contractor",
