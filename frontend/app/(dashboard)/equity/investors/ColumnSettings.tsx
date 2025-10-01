@@ -123,7 +123,7 @@ export const ColumnSettingsToggle = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="small">
+        <Button variant="outline">
           <div className="flex items-center gap-1">
             <Columns2 className="size-4" />
             Columns

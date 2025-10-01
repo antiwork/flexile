@@ -71,11 +71,16 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
         {!isLoading && !isError && !update.sentAt && (
           <DialogFooter>
             <DialogClose asChild>
-              <Button size="small" variant="outline">
+              <Button variant="outline" className="w-full md:w-fit">
                 Close
               </Button>
             </DialogClose>
-            <MutationButton size="small" loadingText="Sending..." mutation={sendTestEmail}>
+            <MutationButton
+              idleVariant="primary"
+              className="w-full md:w-fit"
+              loadingText="Sending..."
+              mutation={sendTestEmail}
+            >
               <EnvelopeIcon className="size-4" />
               Send test email
             </MutationButton>
