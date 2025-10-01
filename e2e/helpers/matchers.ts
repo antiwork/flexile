@@ -1,9 +1,11 @@
-import { type Page } from "@playwright/test";
-import { assert } from "@/utils/assert";
+import { type Locator, type Page } from "@playwright/test";
 
-export const findTableRow = async (page: Page, columnValues: Record<string, string>) => {
+const EMPTY_ROW_FILTER = "__FLEXILE_TABLE_ROW_NOT_FOUND__";
+
+export const findTableRow = async (page: Page, columnValues: Record<string, string>): Promise<Locator> => {
   const headerCells = page.locator("thead tr").last().locator("th");
   const headerTexts = await headerCells.allTextContents();
+  const headerLookup = new Map(headerTexts.map((text, index) => [text.trim(), index] as const));
 
   const rows = page.locator("tbody tr");
   const rowCount = await rows.count();
@@ -17,8 +19,8 @@ export const findTableRow = async (page: Page, columnValues: Record<string, stri
     let matchesAll = true;
 
     for (const [columnLabel, expectedValue] of Object.entries(columnValues)) {
-      const columnIndex = headerTexts.findIndex((text) => text.trim() === columnLabel);
-      if (columnIndex === -1) {
+      const columnIndex = headerLookup.get(columnLabel);
+      if (columnIndex === undefined) {
         matchesAll = false;
         break;
       }
@@ -43,12 +45,5 @@ export const findTableRow = async (page: Page, columnValues: Record<string, stri
     }
   }
 
-  return null;
-};
-
-// TODO (techdebt) clean this up
-export const findRequiredTableRow = async (...args: Parameters<typeof findTableRow>) => {
-  const row = await findTableRow(...args);
-  assert(row !== null);
-  return row;
+  return page.locator("tbody tr").filter({ hasText: EMPTY_ROW_FILTER });
 };
