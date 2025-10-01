@@ -1,0 +1,113 @@
+#!/bin/bash
+
+set -e
+
+echo "🚂 Setting up Flexile for Railway deployment..."
+
+# Check if Railway CLI is installed
+if ! command -v railway &> /dev/null; then
+    echo "❌ Railway CLI is not installed. Please install it first:"
+    echo "npm install -g @railway/cli"
+    exit 1
+fi
+
+# Login check
+if ! railway whoami &> /dev/null; then
+    echo "🔐 Please login to Railway first:"
+    railway login
+fi
+
+echo "📝 Creating Railway project..."
+read -p "Enter your project name (default: flexile): " PROJECT_NAME
+PROJECT_NAME=${PROJECT_NAME:-flexile}
+
+# Create new project
+railway create "$PROJECT_NAME"
+
+echo "🗄️ Adding database services..."
+# Add PostgreSQL
+railway add postgresql
+
+# Add Redis
+railway add redis
+
+echo "⚙️ Setting up environment variables..."
+
+# Core Rails variables
+railway env set RAILS_ENV=production
+railway env set RACK_ENV=production
+railway env set RAILS_LOG_TO_STDOUT=true
+railway env set RAILS_SERVE_STATIC_FILES=true
+railway env set NODE_ENV=production
+
+# Generate secrets
+echo "🔐 Generating secure secrets..."
+RAILS_MASTER_KEY=$(openssl rand -hex 32)
+SECRET_KEY_BASE=$(openssl rand -hex 64)
+NEXTAUTH_SECRET=$(openssl rand -hex 32)
+API_SECRET_TOKEN=$(openssl rand -hex 32)
+ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=$(openssl rand -hex 32)
+ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=$(openssl rand -hex 32)
+ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=$(openssl rand -hex 32)
+
+railway env set RAILS_MASTER_KEY="$RAILS_MASTER_KEY"
+railway env set SECRET_KEY_BASE="$SECRET_KEY_BASE"
+railway env set NEXTAUTH_SECRET="$NEXTAUTH_SECRET"
+railway env set API_SECRET_TOKEN="$API_SECRET_TOKEN"
+railway env set ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY="$ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY"
+railway env set ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY="$ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY"
+railway env set ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT="$ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT"
+
+# Domain configuration
+read -p "Enter your production domain (e.g., myapp.railway.app): " DOMAIN
+if [ -n "$DOMAIN" ]; then
+    railway env set DOMAIN="$DOMAIN"
+    railway env set APP_DOMAIN="$DOMAIN"
+    railway env set PROTOCOL=https
+    railway env set NEXTAUTH_URL="https://$DOMAIN"
+fi
+
+echo "📋 Environment variables set! Please configure the following manually in Railway dashboard:"
+echo ""
+echo "🔐 Authentication & External Services:"
+echo "  - GOOGLE_CLIENT_ID"
+echo "  - GOOGLE_CLIENT_SECRET"
+echo ""
+echo "☁️ AWS S3 Storage:"
+echo "  - AWS_ACCESS_KEY_ID"
+echo "  - AWS_SECRET_ACCESS_KEY"
+echo "  - AWS_REGION"
+echo "  - S3_PRIVATE_BUCKET"
+echo "  - S3_PUBLIC_BUCKET"
+echo ""
+echo "💳 Stripe Payments:"
+echo "  - STRIPE_SECRET_KEY"
+echo "  - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+echo "  - STRIPE_ENDPOINT_SECRET"
+echo ""
+echo "📧 Email (Resend):"
+echo "  - RESEND_API_KEY"
+echo ""
+echo "💰 Wise Payments:"
+echo "  - WISE_API_KEY"
+echo "  - WISE_PROFILE_ID"
+echo ""
+echo "📢 Slack Notifications:"
+echo "  - SLACK_WEBHOOK_URL"
+echo "  - SLACK_WEBHOOK_CHANNEL"
+echo "  - SLACK_TOKEN"
+echo "  - SLACK_CHANNEL_ID"
+echo ""
+echo "🐛 Error Tracking:"
+echo "  - BUGSNAG_API_KEY"
+echo ""
+echo "🤖 AI Integration:"
+echo "  - OPENAI_API_KEY"
+echo "  - HELPER_HMAC_SECRET"
+echo ""
+echo "⚡ Optional Performance:"
+echo "  - BUNDLE_GEMS__CONTRIBSYS__COM (for Sidekiq Pro)"
+echo ""
+echo "🚀 Ready to deploy! Run 'railway deploy' when you've set all required environment variables."
+echo ""
+echo "📚 For detailed setup instructions, see RAILWAY_DEPLOYMENT.md"

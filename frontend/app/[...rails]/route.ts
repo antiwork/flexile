@@ -9,6 +9,8 @@ async function handler(req: Request) {
   if (!routes.some((route) => url.pathname.match(route))) {
     throw notFound();
   }
+
+  // Check for configured API URL first (takes precedence)
   const configuredApiUrl = env.NEXT_PUBLIC_API_URL ? new URL(env.NEXT_PUBLIC_API_URL) : null;
   if (configuredApiUrl) {
     url.protocol = configuredApiUrl.protocol;
@@ -22,8 +24,16 @@ async function handler(req: Request) {
         url.hostname = `flexile-pipeline-pr-${process.env.VERCEL_GIT_PULL_REQUEST_ID}.herokuapp.com`;
         break;
       default:
-        url.port = process.env.RAILS_ENV === "test" ? "3101" : "3001";
-        url.protocol = "http";
+        // Railway deployment: use internal service URL if available, otherwise localhost
+        if (process.env.RAILWAY_ENVIRONMENT) {
+          // In Railway, services can communicate via internal URLs
+          url.hostname = process.env.RAILS_INTERNAL_URL || "localhost";
+          url.port = process.env.RAILS_PORT || "3001";
+          url.protocol = "http";
+        } else {
+          url.port = process.env.RAILS_ENV === "test" ? "3101" : "3001";
+          url.protocol = "http";
+        }
     }
   }
 
