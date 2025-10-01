@@ -46,12 +46,12 @@ RSpec.describe DividendComputationGeneration do
 
     @entire_safe_owner = create(:company_investor, company:, user: create(:user, legal_name: "Richie Rich LLC"))
     @safe1 = create(:convertible_investment, company:, entity_name: "Richie Rich LLC", implied_shares: 987_632,
-                                             amount_in_cents: 1_000_000_00)
+                                             amount_in_cents: 1_000_000_00, issued_at: 65.days.ago)
     create(:convertible_security, company_investor: @entire_safe_owner, convertible_investment: @safe1,
                                   implied_shares: 987_632, principal_value_in_cents: 1_000_000_00)
 
     @safe2 = create(:convertible_investment, company:, entity_name: "Wefunder", implied_shares: 497_092,
-                                             amount_in_cents: 2_000_000_00)
+                                             amount_in_cents: 2_000_000_00, issued_at: 65.days.ago)
     @partial_safe_owner1 = create(:company_investor, company:,)
     @partial_safe_owner2 = create(:company_investor, company:,)
     @partial_safe_owner3 = create(:company_investor, company:,)
