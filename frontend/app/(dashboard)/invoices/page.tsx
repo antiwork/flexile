@@ -261,7 +261,7 @@ export default function InvoicesPage() {
 
           if (invoice.requiresAcceptanceByPayee && user.id === invoice.contractor.user.id) {
             return (
-              <Button size="small" asChild>
+              <Button variant="primary" asChild>
                 <Link href={`/invoices/${invoice.id}?accept=true`}>Accept payment</Link>
               </Button>
             );
@@ -546,7 +546,7 @@ export default function InvoicesPage() {
           tabsColumn="status"
           actions={
             user.roles.administrator && !isMobile ? (
-              <Button variant="outline" size="small" asChild>
+              <Button variant="outline" asChild>
                 <a href={export_company_invoices_path(company.id)}>
                   <Download className="size-4" />
                   Download CSV
@@ -702,7 +702,7 @@ const TasksModal = ({
           ) : null}
           <header className="flex items-center justify-between gap-4">
             <h3 className="text-base max-md:leading-5">Invoice details</h3>
-            <Button variant="outline" size="small" asChild className="max-md:font-regular max-md:h-7.5 max-md:text-sm">
+            <Button variant="outline" asChild className="max-md:font-regular max-md:h-7.5 max-md:text-sm">
               <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
             </Button>
           </header>

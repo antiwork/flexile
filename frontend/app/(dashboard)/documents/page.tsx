@@ -150,7 +150,7 @@ export default function DocumentsPage() {
           cell: (info) => {
             const document = info.row.original;
             return isSignable(document) ? (
-              <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)} disabled={!canSign}>
+              <Button variant="outline" onClick={() => setSignDocumentId(document.id)} disabled={!canSign}>
                 Review and sign
               </Button>
             ) : null;
@@ -177,7 +177,7 @@ export default function DocumentsPage() {
                 ) : null}
                 {document.attachment ? (
                   <div>
-                    <Button variant="outline" size="small" asChild>
+                    <Button variant="outline" asChild>
                       <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
                         <Download className="mr-2 size-4" />
                         Download
@@ -425,7 +425,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
         </DialogHeader>
         <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
         <DialogFooter>
-          <Button size="small" onClick={sign} disabled={!signed}>
+          <Button variant="primary" onClick={sign} disabled={!signed}>
             Agree & Submit
           </Button>
         </DialogFooter>

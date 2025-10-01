@@ -439,7 +439,9 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex items-center gap-3">
-      <Button onClick={handleIssuePaymentClick}>Issue payment</Button>
+      <Button variant="primary" onClick={handleIssuePaymentClick}>
+        Issue payment
+      </Button>
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
         <Status variant="critical">Alumni</Status>
       ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
@@ -537,7 +539,6 @@ const DetailsTab = ({
           {!contractor.endedAt && (
             <MutationStatusButton
               type="submit"
-              size="small"
               mutation={updateContractor}
               loadingText="Saving..."
               className="justify-self-end"
@@ -798,7 +799,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
         id: "actions",
         cell: (info) =>
           info.row.original.status === "signed" ? (
-            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} size="small">
+            <MutationButton idleVariant="primary" mutation={confirmPaymentMutation} param={info.row.original.id}>
               Confirm payment
             </MutationButton>
           ) : undefined,
