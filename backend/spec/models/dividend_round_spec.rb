@@ -45,7 +45,7 @@ RSpec.describe DividendRound do
     end
 
     it "only sends emails to investors with pending signup dividends" do
-      allow_any_instance_of(InvestorDividendRound).to receive(:send_dividend_issued_email)
+      allow(CompanyInvestorMailer).to receive(:dividend_issued).and_return(double(deliver_later: true))
 
       dividend_round.remind_dividend_investors
 
@@ -55,6 +55,9 @@ RSpec.describe DividendRound do
 
       expect(created_rounds.count).to eq(2)
       expect(created_rounds.pluck(:company_investor_id)).to match_array(pending_investor_ids)
+
+      # Verify that CompanyInvestorMailer was called for each pending signup investor
+      expect(CompanyInvestorMailer).to have_received(:dividend_issued).twice
     end
 
     it "creates investor dividend rounds for pending signup investors" do
@@ -64,7 +67,7 @@ RSpec.describe DividendRound do
 
     it "does not send emails to investors with issued dividends" do
       # Mock the method to track calls
-      allow_any_instance_of(InvestorDividendRound).to receive(:send_dividend_issued_email)
+      allow(CompanyInvestorMailer).to receive(:dividend_issued).and_return(double(deliver_later: true))
 
       dividend_round.remind_dividend_investors
 
@@ -89,13 +92,13 @@ RSpec.describe DividendRound do
       create(:dividend, dividend_round: dividend_round, company_investor: investor3, status: Dividend::ISSUED)
     end
 
-    it "only sends emails to investors with Issued dividends, excluding Pending signup" do
+    it "sends emails to all investors regardless of dividend status" do
       allow_any_instance_of(InvestorDividendRound).to receive(:send_dividend_issued_email)
 
       dividend_round.send_dividend_emails
 
-      expect(InvestorDividendRound.where(company_investor: [investor1, investor3]).count).to eq(2)
-      expect(InvestorDividendRound.where(company_investor: investor2).count).to eq(0)
+      # Should create investor dividend rounds for all investors
+      expect(InvestorDividendRound.where(company_investor: [investor1, investor2, investor3]).count).to eq(3)
     end
   end
 end

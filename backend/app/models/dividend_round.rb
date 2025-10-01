@@ -18,7 +18,7 @@ class DividendRound < ApplicationRecord
 
   def send_dividend_emails
     company.company_investors.joins(:dividends)
-      .where(dividends: { dividend_round_id: id, status: Dividend::ISSUED })
+      .where(dividends: { dividend_round_id: id })
       .group(:id)
       .each do |investor|
         investor_dividend_round = investor.investor_dividend_rounds.find_or_create_by!(dividend_round_id: id)
@@ -32,7 +32,7 @@ class DividendRound < ApplicationRecord
       .group(:id)
       .each do |investor|
         investor_dividend_round = investor.investor_dividend_rounds.find_or_create_by!(dividend_round_id: id)
-        investor_dividend_round.send_dividend_issued_email
+        CompanyInvestorMailer.dividend_issued(investor_dividend_round_id: investor_dividend_round.id).deliver_later
       end
   end
 end
