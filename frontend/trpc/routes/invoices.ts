@@ -130,7 +130,7 @@ export const invoicesRouter = createRouter({
     if (!companyWorker) throw new TRPCError({ code: "NOT_FOUND" });
 
     const invoiceNumber = await getNextAdminInvoiceNumber(ctx.company.id, invoicer.id);
-    const billFrom = assertDefined(invoicer.userComplianceInfos[0]?.businessName || invoicer.legalName);
+    const billFrom = invoicer.userComplianceInfos[0]?.businessName || invoicer.legalName || null;
 
     let equityAmountInCents = BigInt(0);
     let equityAmountInOptions = 0;
@@ -279,6 +279,15 @@ export const invoicesRouter = createRouter({
       const equityPercentage = equityResult.equityPercentage;
       const cashAmountInCents = invoice.totalAmountInUsdCents - equityAmountInCents;
 
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, invoice.userId),
+        with: {
+          userComplianceInfos: latestUserComplianceInfo,
+        },
+      });
+
+      const billFrom = user?.userComplianceInfos[0]?.businessName || user?.legalName || null;
+
       await db
         .update(invoices)
         .set(
@@ -289,8 +298,9 @@ export const invoicesRouter = createRouter({
                 cashAmountInCents,
                 equityAmountInCents,
                 equityAmountInOptions,
+                billFrom,
               }
-            : { acceptedAt: new Date() },
+            : { acceptedAt: new Date(), billFrom },
         )
         .where(eq(invoices.id, invoice.id));
     }),
