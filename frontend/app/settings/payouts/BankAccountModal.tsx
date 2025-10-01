@@ -132,6 +132,8 @@ const validateCPF = (cpf: string): boolean => {
   return parseInt(digits.charAt(10), 10) === secondCheckDigit;
 };
 
+const OPTIONAL_VISIBLE_FIELD_KEYS = new Set<string>(["bankName"]);
+
 const fieldGroups: string[][] = [
   [
     "ifscCode",
@@ -254,7 +256,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
       allFields
         ?.filter(
           (field) =>
-            (field.required || field.key === KEY_ADDRESS_STATE) &&
+            (field.required || field.key === KEY_ADDRESS_STATE || OPTIONAL_VISIBLE_FIELD_KEYS.has(field.key)) &&
             !((field.type === "select" || field.type === "radio") && !field.valuesAllowed) &&
             field.key !== KEY_LEGAL_TYPE,
         )
