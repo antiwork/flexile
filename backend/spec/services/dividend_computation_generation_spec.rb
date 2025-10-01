@@ -16,7 +16,9 @@ RSpec.describe DividendComputationGeneration do
     create(:share_holding, company_investor: @zero_share_investor, share_class: @seed_class, number_of_shares: 0, originally_acquired_at: 120.days.ago, total_amount_in_cents: 0)
 
     @deactivated_investor = create(:company_investor, user: create(:user, legal_name: "Deactivated Investor"), company:, deactivated_at: 30.days.ago)
-    create(:share_holding, company_investor: @deactivated_investor, share_class: @seed_class, number_of_shares: 10_000, originally_acquired_at: 120.days.ago, total_amount_in_cents: 11_234_00)    @series_A_investor = create(:company_investor, user: create(:user, legal_name: "Series A Investor"), company:)
+    create(:share_holding, company_investor: @deactivated_investor, share_class: @seed_class, number_of_shares: 10_000, originally_acquired_at: 120.days.ago, total_amount_in_cents: 11_234_00)
+
+    @series_A_investor = create(:company_investor, user: create(:user, legal_name: "Series A Investor"), company:)
     create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 32_123, total_amount_in_cents: 39_768_00)
     create(:share_holding, company_investor: @series_A_investor, share_class: @A_class, number_of_shares: 1_346, total_amount_in_cents: 1_666_00)
 

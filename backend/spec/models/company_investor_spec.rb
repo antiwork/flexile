@@ -94,5 +94,38 @@ RSpec.describe CompanyInvestor do
         )
       end
     end
+
+    describe ".active" do
+      let!(:active_investor) { create(:company_investor) }
+      let!(:deactivated_investor) { create(:company_investor, deactivated_at: 1.day.ago) }
+
+      it "returns only active company investors" do
+        expect(described_class.active).to include(active_investor)
+        expect(described_class.active).not_to include(deactivated_investor)
+      end
+    end
+  end
+
+  describe "#active?" do
+    it "returns true if deactivated_at is not set, false otherwise" do
+      company_investor = create(:company_investor)
+      expect(company_investor.active?).to be true
+
+      company_investor.deactivated_at = 1.hour.from_now
+      expect(company_investor.active?).to be true
+
+      company_investor.deactivated_at = 1.hour.ago
+      expect(company_investor.active?).to be false
+    end
+  end
+
+  describe "#deactivate!" do
+    it "sets deactivated_at timestamp", :freeze_time do
+      company_investor = create(:company_investor)
+
+      expect do
+        company_investor.deactivate!
+      end.to change { company_investor.reload.deactivated_at }.from(nil).to(Time.current)
+    end
   end
 end

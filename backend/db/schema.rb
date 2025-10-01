@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_05_123957) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_01_091321) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -169,6 +169,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_05_123957) do
     t.bigint "total_options", default: 0, null: false
     t.virtual "fully_diluted_shares", type: :bigint, as: "(total_shares + total_options)", stored: true
     t.boolean "invested_in_angel_list_ruv", default: false, null: false
+    t.datetime "deactivated_at"
     t.index ["company_id"], name: "index_company_investors_on_company_id"
     t.index ["external_id"], name: "index_company_investors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_investors_on_user_id_and_company_id", unique: true
