@@ -30,6 +30,7 @@ WORKDIR /app
 
 # Copy dependency files
 COPY package.json pnpm-lock.yaml ./
+COPY patches ./patches/
 COPY backend/Gemfile backend/Gemfile.lock ./backend/
 
 # Install Ruby dependencies
