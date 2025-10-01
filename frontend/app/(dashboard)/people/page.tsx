@@ -231,6 +231,7 @@ const ActionPanel = () => {
       contract: "",
     },
     resolver: zodResolver(inviteSchema),
+    mode: "onChange",
   });
   const inviteMutation = useMutation({
     mutationFn: async (values: z.infer<typeof inviteSchema>) => {
@@ -267,6 +268,15 @@ const ActionPanel = () => {
     },
   });
   const submit = inviteForm.handleSubmit((values) => inviteMutation.mutate(values));
+
+  const step1Values = inviteForm.watch(["email", "startDate"]);
+  const step1FieldsHaveErrors =
+    inviteForm.formState.errors.email ||
+    inviteForm.formState.errors.startDate ||
+    inviteForm.formState.errors.payRateInSubunits ||
+    inviteForm.formState.errors.payRateType;
+
+  const isContinueDisabled = !step1Values.every((v) => v) || !!step1FieldsHaveErrors;
 
   return (
     <>
@@ -315,43 +325,51 @@ const ActionPanel = () => {
               <DialogStackHeader>
                 <DialogStackTitle>Who's joining?</DialogStackTitle>
               </DialogStackHeader>
-              <FormField
-                control={inviteForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="Contractor's email"
-                        onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid h-auto gap-4 p-0.5">
+                <FormField
+                  control={inviteForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="Contractor's email"
+                          onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={inviteForm.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <DatePicker {...field} label="Start date" granularity="day" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={inviteForm.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <DatePicker {...field} label="Start date" granularity="day" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormFields />
+                <FormFields />
+              </div>
               <DialogStackFooter>
-                <DialogStackNext>
-                  <Button variant="primary">Continue</Button>
-                </DialogStackNext>
+                {isContinueDisabled ? (
+                  <Button variant="primary" disabled={isContinueDisabled}>
+                    Continue
+                  </Button>
+                ) : (
+                  <DialogStackNext>
+                    <Button variant="primary">Continue</Button>
+                  </DialogStackNext>
+                )}
               </DialogStackFooter>
             </DialogStackContent>
             <DialogStackContent>
