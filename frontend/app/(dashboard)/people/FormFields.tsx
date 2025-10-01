@@ -47,6 +47,7 @@ export default function FormFields() {
                       {...field}
                       type="text"
                       autoComplete="off"
+                      aria-label="Role"
                       className="focus-visible:ring-ring focus-visible:border-border focus-visible:ring-2"
                       onFocus={() => setRolePopoverOpen(true)}
                       onBlur={() => setRolePopoverOpen(false)}
