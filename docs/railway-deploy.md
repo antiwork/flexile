@@ -30,7 +30,7 @@
 
 ### Frontend (Next.js)
 
-- `NEXT_PUBLIC_API_URL=https://<rails-service>.up.railway.app`
+- `NEXT_PUBLIC_API_URL=https://<rails-service>.up.railway.app` (used by the API proxy & CSP)
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...`
 
 ## Custom Domains

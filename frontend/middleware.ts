@@ -12,12 +12,14 @@ export default function middleware(req: NextRequest) {
   const helperUrls = ["https://help.flexile.com", "wss://xmrztjqxvugqpgvxpmzz.supabase.co/realtime/v1/websocket"].join(
     " ",
   );
+  const apiOrigin = env.NEXT_PUBLIC_API_URL ? new URL(env.NEXT_PUBLIC_API_URL).origin : undefined;
+  const connectSrc = ["'self'", helperUrls, s3Urls, apiOrigin].filter(Boolean).join(" ");
 
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-inline' https://js.stripe.com ${NODE_ENV === "production" ? "" : `'unsafe-eval'`};
     style-src 'self' 'unsafe-inline';
-    connect-src 'self' ${helperUrls} ${s3Urls};
+    connect-src ${connectSrc};
     img-src 'self' blob: data: ${s3Urls};
     worker-src 'self' blob:;
     font-src 'self';
