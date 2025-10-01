@@ -172,7 +172,7 @@ const Edit = () => {
     let hasDescriptionErrors = false;
     const nextLineItems = lineItems.map((lineItem) => {
       const errors: string[] = [];
-      if ((lineItem.description ?? "").trim().length === 0) {
+      if (lineItem.description.trim().length === 0) {
         errors.push("description");
         hasDescriptionErrors = true;
       }
@@ -183,8 +183,8 @@ const Edit = () => {
     return (
       errorField === null &&
       !hasDescriptionErrors &&
-      expenses.every((expense) => !expense.errors?.length) &&
-      (!document || !document.errors?.length)
+      expenses.every((expense) => (expense.errors?.length ?? 0) === 0) &&
+      (document?.errors?.length ?? 0) === 0
     );
   };
 
