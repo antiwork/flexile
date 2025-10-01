@@ -176,17 +176,17 @@ const Edit = () => {
       setErrorField(null);
     }
 
-    const nextLineItems = lineItems.map((lineItem) => {
-      const updated = { ...lineItem };
+    const updatedLineItems = lineItems.map((lineItem) => {
+      const updatedLineItem = { ...lineItem };
       const errors: string[] = [];
-      if (!updated.description || updated.description.trim().length === 0) errors.push("description");
-      if (!updated.quantity || parseQuantity(updated.quantity) < 0.01) errors.push("quantity");
-      if (!updated.pay_rate_in_subunits || updated.pay_rate_in_subunits <= 0) errors.push("rate");
+      if (!updatedLineItem.description || updatedLineItem.description.trim().length === 0) errors.push("description");
+      if (!updatedLineItem.quantity || parseQuantity(updatedLineItem.quantity) < 0.01) errors.push("quantity");
+      if (!updatedLineItem.pay_rate_in_subunits || updatedLineItem.pay_rate_in_subunits <= 0) errors.push("rate");
       if (errors.length > 0) hasErrors = true;
-      updated.errors = errors;
-      return updated;
+      updatedLineItem.errors = errors;
+      return updatedLineItem;
     });
-    if (nextLineItems !== lineItems) setLineItems(nextLineItems);
+    setLineItems(updatedLineItems);
 
     return !hasErrors;
   };
@@ -483,6 +483,7 @@ const Edit = () => {
                         updateLineItem(rowIndex, { pay_rate_in_subunits: (value ?? 0) * 100 })
                       }
                       aria-label="Rate"
+                      aria-invalid={item.errors?.includes("rate")}
                       placeholder="0"
                       prefix="$"
                       decimal
