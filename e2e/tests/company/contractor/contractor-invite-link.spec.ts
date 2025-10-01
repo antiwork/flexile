@@ -82,7 +82,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await expect(page.getByRole("option", { name: "Designer" })).toBeVisible();
     await expect(page.getByRole("option", { name: "Product Manager" })).not.toBeVisible();
     await expect(page.getByRole("option", { name: "Data Analyst" })).not.toBeVisible();
-    roleField.clear();
+    await roleField.clear();
 
     await page.getByLabel("Role").fill("Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
