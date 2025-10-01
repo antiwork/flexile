@@ -1,5 +1,4 @@
 import { companiesFactory } from "@test/factories/companies";
-import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { fillDatePicker, findRichTextEditor } from "@test/helpers";
@@ -17,9 +16,7 @@ test.describe("Contractor for multiple companies", () => {
     });
     await companyContractorsFactory.create({ userId: contractorUser.id });
 
-    const { company: secondCompany } = await companiesFactory.create({ name: "Second Company" });
-    const { user: adminUser } = await usersFactory.create({ email: "admin@example.com" });
-    await companyAdministratorsFactory.create({ companyId: secondCompany.id, userId: adminUser.id });
+    const { adminUser } = await companiesFactory.createCompletedOnboarding({ name: "Second Company" });
 
     await login(page, adminUser, "/people");
     await page.getByRole("button", { name: "Add contractor" }).click();
@@ -27,6 +24,7 @@ test.describe("Contractor for multiple companies", () => {
     await page.getByLabel("Email").fill(contractorUser.email);
     await fillDatePicker(page, "Start date", "08/08/2025");
     await page.getByLabel("Role").fill("Role");
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
     await page.getByRole("button", { name: "Send invite" }).click();

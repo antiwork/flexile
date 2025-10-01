@@ -201,7 +201,7 @@ const MobileInvestorCard = ({
     <Card className="mb-4">
       <CardContent className="space-y-3 px-4 py-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-600">Investor {fieldIndex + 1}</h3>
+          <h3 className="text-muted-foreground text-sm font-medium">Investor {fieldIndex + 1}</h3>
           <Button
             type="button"
             variant="ghost"
@@ -226,11 +226,9 @@ const MobileInvestorCard = ({
             {formFields.SharesField}
           </div>
 
-          <div className="border-t border-gray-100 pt-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Ownership:</span>
-              <span className="font-medium">{percentage.toFixed(1)}%</span>
-            </div>
+          <div className="flex justify-between pt-2 text-sm font-medium">
+            <span>Ownership:</span>
+            <span>{percentage.toFixed(1)}%</span>
           </div>
         </div>
       </CardContent>
@@ -437,13 +435,7 @@ const AddCapTablePage = () => {
         <DashboardHeader
           title="Cap table"
           headerActions={
-            <Button
-              type="submit"
-              variant="default"
-              size="default"
-              className="bg-gray-800 hover:bg-gray-900"
-              disabled={createCapTableMutation.isPending}
-            >
+            <Button type="submit" variant="default" size="default" disabled={createCapTableMutation.isPending}>
               {createCapTableMutation.isPending ? "Creating..." : "Finalize cap table"}
             </Button>
           }
@@ -484,16 +476,10 @@ const AddCapTablePage = () => {
                 Add new investor
               </Button>
 
-              <Card className="bg-gray-50">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold">Total</span>
-                    <div className="font-semibold">
-                      {calculateTotalShares(form.watch("investors")).toLocaleString()} shares
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-center justify-between px-4 text-sm font-semibold">
+                <span>Total</span>
+                <div>{calculateTotalShares(form.watch("investors")).toLocaleString()} shares</div>
+              </div>
             </div>
           ) : (
             <DataTable table={table} />

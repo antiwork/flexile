@@ -85,7 +85,7 @@ export default function SettingsPage() {
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
-    <div className="mb-24 grid gap-8">
+    <div className="grid gap-8">
       <hgroup>
         <h2 className="mb-1 text-3xl font-bold">Workspace settings</h2>
         <p className="text-muted-foreground text-base">
@@ -111,7 +111,7 @@ export default function SettingsPage() {
                 />
                 <Avatar
                   className={`flex size-12 items-center justify-center rounded-md ${
-                    isDefaultLogo ? "border-input border bg-gray-50/50" : ""
+                    isDefaultLogo ? "border-input bg-accent border" : ""
                   }`}
                 >
                   <AvatarImage
@@ -170,7 +170,7 @@ export default function SettingsPage() {
           <MutationStatusButton
             mutation={saveMutation}
             type="submit"
-            size="small"
+            idleVariant="primary"
             successText="Changes saved"
             loadingText="Saving..."
             className="w-fit"

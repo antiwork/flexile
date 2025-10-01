@@ -111,7 +111,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
                       ]}
                       value={field.value}
                       onChange={field.onChange}
-                      className="grid-flow-col"
+                      className="grid-flow-row md:grid-flow-col"
                     />
                   </FormControl>
                 </FormItem>
@@ -147,7 +147,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
             />
 
             <DialogFooter>
-              <Button type="submit" size="small" disabled={!form.formState.isValid || mutation.isPending}>
+              <Button type="submit" variant="primary" disabled={!form.formState.isValid || mutation.isPending}>
                 Create distribution
               </Button>
             </DialogFooter>

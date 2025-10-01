@@ -77,7 +77,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                       />
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
+                      <span className="text-foreground truncate font-semibold">
                         {user.companies.find((c) => c.id === user.currentCompanyId)?.name ?? "Personal"}
                       </span>
                       <span className="text-muted-foreground truncate text-xs">{user.email}</span>
@@ -198,8 +198,8 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
       </Sidebar>
 
       <SidebarInset>
-        <div className="flex flex-col not-print:h-screen not-print:overflow-hidden">
-          <main className={cn("flex flex-1 flex-col pb-20 not-print:overflow-y-auto sm:pb-4")}>
+        <div className="flex flex-col not-print:md:h-screen not-print:md:overflow-hidden">
+          <main className={cn("flex flex-1 flex-col pb-20 sm:pb-4 not-print:md:overflow-y-auto")}>
             <div className="flex flex-col gap-2 md:gap-4">{children}</div>
           </main>
         </div>

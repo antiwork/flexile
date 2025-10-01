@@ -5,10 +5,18 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccounts";
 import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoicesFactory } from "@test/factories/invoices";
-import { login } from "@test/helpers/auth";
+import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq, exists, isNull, not } from "drizzle-orm";
-import { companies, companyContractors, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
+import {
+  companies,
+  companyContractors,
+  consolidatedInvoices,
+  expenseCategories,
+  invoiceApprovals,
+  invoices,
+  users,
+} from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 const setupCompany = async ({
@@ -172,10 +180,10 @@ test.describe("Invoices admin flow", () => {
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await expect(page.getByText("2 selected")).toBeVisible();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await page.getByRole("button", { name: "Approve selected" }).click();
 
       // TODO missing check - need to verify ChargeConsolidatedInvoiceJob not enqueued
@@ -243,7 +251,7 @@ test.describe("Invoices admin flow", () => {
         await login(page, adminUser);
         await page.getByRole("link", { name: "Invoices" }).click();
 
-        await page.locator("th").getByLabel("Select all").check();
+        await page.getByRole("checkbox", { name: "Select all" }).check();
         await expect(page.getByText("4 selected")).toBeVisible();
         await page.getByRole("button", { name: "Approve selected" }).click();
 
@@ -289,7 +297,7 @@ test.describe("Invoices admin flow", () => {
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await expect(page.getByText("2 selected")).toBeVisible();
       await page.getByRole("button", { name: "Reject selected" }).click();
 
@@ -312,7 +320,7 @@ test.describe("Invoices admin flow", () => {
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await expect(page.getByText("2 selected")).toBeVisible();
       await page.getByRole("button", { name: "Reject selected" }).click();
 
@@ -372,6 +380,106 @@ test.describe("Invoices admin flow", () => {
       },
       { page, assertClosed: false },
     );
+  });
+
+  test("shows attached document when viewing an invoice as an admin", async ({ page }) => {
+    const { company, user: adminUser } = await setupCompany();
+
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+
+    const contractorUser = await db.query.users.findFirst({
+      where: eq(users.id, companyContractor.userId),
+    });
+    assert(contractorUser !== undefined);
+
+    await login(page, contractorUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("link", { name: "New invoice" }).click();
+
+    await page.getByPlaceholder("Description").fill("Invoice with document for admin review");
+    await page.getByLabel("Hours").fill("10:00");
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "admin-review-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("document content for admin review"),
+    });
+    await page.waitForTimeout(300);
+    await expect(page.getByText("admin-review-document.pdf")).toBeVisible();
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    await logout(page);
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+
+    const invoiceRow = page.getByRole("row").filter({ hasText: "Awaiting approval" }).first();
+    await expect(invoiceRow).toBeVisible();
+    await invoiceRow.click();
+
+    await expect(page.getByRole("dialog")).toBeVisible();
+
+    await page.getByRole("link", { name: "View Invoice" }).click();
+
+    await expect(page.getByText("admin-review-document.pdf")).toBeVisible();
+
+    const documentLink = page.getByRole("link", { name: "admin-review-document.pdf" });
+    await expect(documentLink).toBeVisible();
+  });
+
+  test("shows expense attachments when viewing an invoice as an admin", async ({ page }) => {
+    const { company, user: adminUser } = await setupCompany();
+
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+
+    const contractorUser = await db.query.users.findFirst({
+      where: eq(users.id, companyContractor.userId),
+    });
+    assert(contractorUser !== undefined);
+
+    await db.insert(expenseCategories).values({
+      companyId: company.id,
+      name: "Office Supplies",
+    });
+
+    await login(page, contractorUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("link", { name: "New invoice" }).click();
+
+    await page.getByPlaceholder("Description").fill("Invoice with expense attachment");
+    await page.getByLabel("Hours").fill("5:00");
+
+    await page.getByLabel("Add expense").setInputFiles({
+      name: "expense-receipt.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("expense receipt content"),
+    });
+
+    await page.getByLabel("Merchant").fill("Office Depot");
+    await page.getByLabel("Amount").fill("200");
+
+    await expect(page.getByText("expense-receipt.pdf")).toBeVisible();
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    await logout(page);
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+
+    const invoiceRow = page.getByRole("row").filter({ hasText: "Awaiting approval" }).first();
+    await expect(invoiceRow).toBeVisible();
+    await invoiceRow.click();
+
+    await expect(page.getByRole("dialog")).toBeVisible();
+
+    await page.getByRole("link", { name: "View Invoice" }).click();
+
+    await expect(page.getByRole("table").filter({ hasText: "Expense" })).toBeVisible();
+    await expect(page.getByText("Office Depot")).toBeVisible();
   });
 });
 

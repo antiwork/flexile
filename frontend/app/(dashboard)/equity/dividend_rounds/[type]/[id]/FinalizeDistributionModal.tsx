@@ -60,9 +60,7 @@ const FinalizeDistributionModal = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="default" size="small">
-          Finalize distribution
-        </Button>
+        <Button variant="primary">Finalize distribution</Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
@@ -105,7 +103,7 @@ const FinalizeDistributionModal = ({
           <div className="flex justify-between">
             <div>
               <div>Processing fees:</div>
-              <div className="mt-1 text-sm text-gray-500">
+              <div className="text-muted-foreground mt-1 text-sm">
                 {formatMoneyFromCents(DIVIDEND_BASE_FEE_CENTS)} + {DIVIDEND_PERCENTAGE}%, up to{" "}
                 {formatMoneyFromCents(DIVIDEND_MAX_FEE_CENTS)}/investor
               </div>

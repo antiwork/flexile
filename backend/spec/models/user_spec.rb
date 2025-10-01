@@ -505,6 +505,23 @@ RSpec.describe User do
     end
   end
 
+  describe "#active_company_investor_for?" do
+    let(:user) { create(:user) }
+    let(:company) { create(:company) }
+
+    it "returns true if the user is an active company investor" do
+      create(:company_investor, user:, company:)
+      expect(user.active_company_investor_for?(company)).to eq(true)
+    end
+
+    it "returns false if the user is not an active company investor" do
+      expect(user.active_company_investor_for?(create(:company))).to eq(false)
+
+      create(:company_investor, user:, company:, deactivated_at: 1.day.ago)
+      expect(user.active_company_investor_for?(company)).to eq(false)
+    end
+  end
+
   describe "#company_investor_for" do
     let(:user) { create(:user) }
 

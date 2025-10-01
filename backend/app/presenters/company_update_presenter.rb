@@ -22,7 +22,7 @@ class CompanyUpdatePresenter
       financial_periods:,
       recipient_count: {
         contractors: company.company_workers.active.count,
-        investors: company.company_investors.where.not(user_id: company.company_workers.active.select(:user_id)).count,
+        investors: company.company_investors.active.where.not(user_id: company.company_workers.active.select(:user_id)).count,
       },
     }
 
@@ -34,24 +34,18 @@ class CompanyUpdatePresenter
   end
 
   def props
-    props = {
+    {
       id: company_update.external_id,
       title: company_update.title,
       sender_name: company.primary_admin.user.name,
       body: company_update.body,
       status: company_update.status,
+      sent_at: company_update.sent_at,
     }
-
-
-
-    props
   end
 
   private
     attr_reader :company_update, :company
-
-
-
 
     def present_update(company_update)
       {

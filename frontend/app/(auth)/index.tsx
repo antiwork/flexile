@@ -126,7 +126,7 @@ export function AuthPage({
       <Card className="w-full max-w-md border-0 bg-transparent">
         <CardHeader className="text-center">
           <div className="mb-8 flex justify-center">
-            <Image src={logo} alt="Flexile" className="size-16" />
+            <Image src={logo} alt="Flexile" className="size-16 dark:invert" />
           </div>
           <CardTitle className="pb-1 text-xl font-medium">
             {sendOtp.isSuccess ? "Check your email for a code" : title}
@@ -180,12 +180,12 @@ export function AuthPage({
                 />
                 <div className="text-center">
                   {verifyOtp.isPending || redirectInProgress ? (
-                    <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                    <div className="text-muted-foreground flex items-center justify-center gap-2 text-sm">
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
                       Verifying your code...
                     </div>
                   ) : (
-                    <Button className="text-gray-600" variant="link" onClick={() => sendOtp.reset()}>
+                    <Button className="text-muted-foreground text-sm" variant="link" onClick={() => sendOtp.reset()}>
                       Back to email
                     </Button>
                   )}
@@ -206,8 +206,8 @@ export function AuthPage({
                   ) : null}
                   <Button
                     type="button"
-                    variant="outline"
-                    className="font-base flex h-11 w-full items-center justify-center gap-2 border-none bg-blue-600 text-base text-white hover:bg-blue-500"
+                    variant="primary"
+                    className="font-base flex h-11 w-full items-center justify-center gap-2"
                     onClick={() => providerSignIn(SignInMethod.Google)}
                   >
                     <Image src={googleLogoLight} alt="Google" width={20} height={20} />
@@ -230,7 +230,7 @@ export function AuthPage({
                           {...field}
                           type="email"
                           placeholder="Enter your work email..."
-                          className="bg-white"
+                          className="dark:bg-input/30 bg-white"
                           style={{ height: "42px" }}
                           required
                           disabled={sendOtp.isPending}
@@ -243,13 +243,13 @@ export function AuthPage({
                 <MutationStatusButton
                   mutation={sendOtp}
                   type="submit"
-                  className="border-input hover:border-input hover:bg-accent w-full bg-white text-gray-900"
+                  className="text-foreground border-input dark:border-border dark:bg-input/30 hover:bg-accent dark:hover:bg-muted hover:border-input dark:hover:border-border h-11 w-full bg-white"
                   loadingText="Sending..."
                 >
                   {sendOtpText}
                 </MutationStatusButton>
 
-                <div className="pt-6 text-center text-gray-600">{switcher}</div>
+                <div className="text-muted-foreground pt-6 text-center text-sm">{switcher}</div>
               </form>
             </Form>
           ) : null}

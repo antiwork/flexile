@@ -43,7 +43,7 @@ export default function Templates() {
   return (
     <div className="grid gap-8">
       <hgroup>
-        <h2 className="mb-1 text-3xl font-bold">Templates</h2>
+        <h2 className="mb-2 text-3xl font-bold">Templates</h2>
         <p className="text-muted-foreground text-base">
           Create and edit legal document templates with rich-text editing, linked to the right events in your account.
         </p>
@@ -77,7 +77,7 @@ export default function Templates() {
                 <TableCell>{name}</TableCell>
                 <TableCell>{usedFor}</TableCell>
                 <TableCell>{template ? formatDate(template.updated_at) : "-"}</TableCell>
-                <TableCell className="h-14">{template ? null : <Button size="small">Add</Button>}</TableCell>
+                <TableCell className="h-14">{template ? null : <Button>Add</Button>}</TableCell>
               </TableRow>
             );
           })}
@@ -129,6 +129,7 @@ function EditTemplate({ type, onClose }: { type: TemplateType; onClose: () => vo
               </Button>
               <MutationStatusButton
                 type="submit"
+                idleVariant="primary"
                 mutation={submitMutation}
                 loadingText="Saving..."
                 successText="Changes saved"

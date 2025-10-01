@@ -124,7 +124,7 @@ export default function OptionsPage() {
                       <span className="font-bold">
                         You have {totalUnexercisedVestedShares.toLocaleString()} vested options available for exercise.
                       </span>
-                      <Button size="small" onClick={openExerciseModal}>
+                      <Button variant="primary" onClick={openExerciseModal}>
                         Exercise Options
                       </Button>
                     </div>
@@ -142,7 +142,6 @@ export default function OptionsPage() {
                         exercise {exerciseInProgress.numberOfOptions.toLocaleString()} options.
                       </span>
                       <MutationButton
-                        size="small"
                         mutation={resendPaymentInstructions}
                         param={exerciseInProgress.id}
                         successText="Payment instructions sent!"
@@ -323,7 +322,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
                     <div>
                       Options value
                       <br />
-                      <span className="text-sm text-gray-600">
+                      <span className="text-muted-foreground text-sm">
                         Based on {(company.valuationInDollars ?? 0).toLocaleString([], { notation: "compact" })}{" "}
                         valuation
                       </span>
@@ -340,7 +339,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
               </Card>
             </div>
             <DialogFooter>
-              <Button size="small" onClick={() => setState("signing")} disabled={optionsToExercise === 0}>
+              <Button variant="primary" onClick={() => setState("signing")} disabled={optionsToExercise === 0}>
                 Proceed
               </Button>
             </DialogFooter>
@@ -349,7 +348,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
           <>
             <SignForm content={exerciseNotice.text} signed={state === "signed"} onSign={() => setState("signed")} />
             <DialogFooter>
-              <MutationButton mutation={submitMutation} disabled={state !== "signed"}>
+              <MutationButton idleVariant="primary" mutation={submitMutation} disabled={state !== "signed"}>
                 Agree & Submit
               </MutationButton>
             </DialogFooter>

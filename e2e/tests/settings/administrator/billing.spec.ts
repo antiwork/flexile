@@ -3,6 +3,17 @@ import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 
 test.describe("Company billing settings", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route("**/internal/companies/*/administrator/settings/bank_accounts", async (route) => {
+      await route.fulfill({
+        json: {
+          client_secret: "pi_123456_secret_abcdef",
+          bank_account_last4: null,
+        },
+      });
+    });
+  });
+
   test("billing settings gated until company name is set", async ({ page }) => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding(
       { name: null },

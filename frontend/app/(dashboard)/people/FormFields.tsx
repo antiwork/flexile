@@ -46,7 +46,7 @@ export default function FormFields() {
                       {...field}
                       type="text"
                       autoComplete="off"
-                      className="focus-visible:ring-ring/15 focus-visible:border-gray-300 focus-visible:ring-[3px]"
+                      className="focus-visible:ring-ring focus-visible:border-border focus-visible:ring-2"
                       onFocus={() => setRolePopoverOpen(true)}
                       onBlur={() => setRolePopoverOpen(false)}
                       onChange={(e) => {
