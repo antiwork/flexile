@@ -59,7 +59,7 @@ export default function CompanyUpdates() {
                 <Plus />
               </Button>
             ) : (
-              <Button variant="outline" size="small" onClick={handleNewUpdate}>
+              <Button variant="primary" onClick={handleNewUpdate}>
                 New update
               </Button>
             )
@@ -201,12 +201,12 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
           </p>
           <DialogFooter>
             <div className="grid auto-cols-fr grid-flow-col items-center gap-3">
-              <Button variant="outline" size="small" onClick={() => setDeletingUpdate(null)}>
+              <Button variant="outline" onClick={() => setDeletingUpdate(null)}>
                 No, cancel
               </Button>
               <MutationButton
+                idleVariant="critical"
                 mutation={deleteMutation}
-                size="small"
                 param={deletingUpdate ?? ""}
                 loadingText="Deleting..."
               >
