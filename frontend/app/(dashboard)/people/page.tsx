@@ -29,7 +29,6 @@ import {
   DialogStackContent,
   DialogStackFooter,
   DialogStackHeader,
-  DialogStackNext,
   DialogStackPrevious,
   DialogStackTitle,
 } from "@/components/ui/dialog-stack";
@@ -206,46 +205,61 @@ export default function PeoplePage() {
   );
 }
 
-const inviteSchema = formSchema.merge(documentSchema).extend({
+const detailsSchema = formSchema.extend({
   email: z.string().email(),
   startDate: z.instanceof(CalendarDate),
+});
+const contractSchema = documentSchema.extend({
   contractSignedElsewhere: z.boolean().default(false),
 });
+
 const ActionPanel = () => {
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
+  const [step, setStep] = useState(0);
 
   const { data: workers = [], refetch } = trpc.contractors.list.useQuery({ companyId: company.id });
   const lastContractor = workers[0];
-  const inviteForm = useForm({
+
+  const detailsForm = useForm({
+    resolver: zodResolver(detailsSchema),
     values: {
       email: "",
       role: lastContractor?.role ?? "",
       payRateType: lastContractor?.payRateType ?? PayRateType.Hourly,
       payRateInSubunits: lastContractor?.payRateInSubunits ?? null,
       startDate: today(getLocalTimeZone()),
+    },
+    mode: "onChange",
+  });
+
+  const contractForm = useForm({
+    resolver: zodResolver(contractSchema),
+    values: {
       contractSignedElsewhere: lastContractor?.contractSignedElsewhere ?? false,
       contract: "",
     },
-    resolver: zodResolver(inviteSchema),
     mode: "onChange",
   });
+
   const inviteMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof inviteSchema>) => {
+    mutationFn: async () => {
+      const detailsValues = detailsForm.getValues();
+      const contractValues = contractForm.getValues();
       const formData = new FormData();
-      formData.append("contractor[email]", values.email);
-      formData.append("contractor[started_at]", formatISO(values.startDate.toDate(getLocalTimeZone())));
-      formData.append("contractor[pay_rate_in_subunits]", values.payRateInSubunits?.toString() ?? "");
+      formData.append("contractor[email]", detailsValues.email);
+      formData.append("contractor[started_at]", formatISO(detailsValues.startDate.toDate(getLocalTimeZone())));
+      formData.append("contractor[pay_rate_in_subunits]", detailsValues.payRateInSubunits?.toString() ?? "");
       formData.append(
         "contractor[pay_rate_type]",
-        values.payRateType === PayRateType.Hourly ? "hourly" : "project_based",
+        detailsValues.payRateType === PayRateType.Hourly ? "hourly" : "project_based",
       );
-      formData.append("contractor[role]", values.role);
-      formData.append("contractor[contract_signed_elsewhere]", values.contractSignedElsewhere.toString());
-      formData.append("contractor[contract]", values.contract);
+      formData.append("contractor[role]", detailsValues.role);
+      formData.append("contractor[contract_signed_elsewhere]", contractValues.contractSignedElsewhere.toString());
+      formData.append("contractor[contract]", contractValues.contract);
 
       const response = await request({
         url: company_workers_path(company.id),
@@ -263,20 +277,15 @@ const ActionPanel = () => {
     onSuccess: async () => {
       await refetch();
       setShowInviteModal(false);
-      inviteForm.reset();
+      detailsForm.reset();
+      contractForm.reset();
+      setStep(0);
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });
-  const submit = inviteForm.handleSubmit((values) => inviteMutation.mutate(values));
 
-  const step1Values = inviteForm.watch(["email", "startDate"]);
-  const step1FieldsHaveErrors =
-    inviteForm.formState.errors.email ||
-    inviteForm.formState.errors.startDate ||
-    inviteForm.formState.errors.payRateInSubunits ||
-    inviteForm.formState.errors.payRateType;
-
-  const isContinueDisabled = !step1Values.every((v) => v) || !!step1FieldsHaveErrors;
+  const submitDetails = detailsForm.handleSubmit(() => setStep(1));
+  const submitContract = contractForm.handleSubmit(() => inviteMutation.mutate());
 
   return (
     <>
@@ -318,69 +327,67 @@ const ActionPanel = () => {
           </Button>
         </div>
       )}
-      <DialogStack open={showInviteModal} onOpenChange={setShowInviteModal}>
-        <Form {...inviteForm}>
-          <DialogStackBody>
-            <DialogStackContent>
-              <DialogStackHeader>
-                <DialogStackTitle>Who's joining?</DialogStackTitle>
-              </DialogStackHeader>
-              <div className="grid h-auto gap-4 p-0.5">
-                <FormField
-                  control={inviteForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="email"
-                          placeholder="Contractor's email"
-                          onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+      <DialogStack open={showInviteModal} onOpenChange={setShowInviteModal} activeIndex={step} setActiveIndex={setStep}>
+        <DialogStackBody>
+          <DialogStackContent>
+            <DialogStackHeader>
+              <DialogStackTitle>Who's joining?</DialogStackTitle>
+            </DialogStackHeader>
+            <Form {...detailsForm}>
+              <form onSubmit={(e) => void submitDetails(e)} className="contents">
+                <div className="grid h-auto gap-4 p-0.5">
+                  <FormField
+                    control={detailsForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="email"
+                            placeholder="Contractor's email"
+                            onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={inviteForm.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <DatePicker {...field} label="Start date" granularity="day" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={detailsForm.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <DatePicker {...field} label="Start date" granularity="day" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormFields />
-              </div>
-              <DialogStackFooter>
-                {isContinueDisabled ? (
-                  <Button variant="primary" disabled={isContinueDisabled}>
+                  <FormFields />
+                </div>
+                <DialogStackFooter>
+                  <Button variant="primary" type="submit" disabled={!detailsForm.formState.isValid}>
                     Continue
                   </Button>
-                ) : (
-                  <DialogStackNext>
-                    <Button variant="primary">Continue</Button>
-                  </DialogStackNext>
-                )}
-              </DialogStackFooter>
-            </DialogStackContent>
-            <DialogStackContent>
-              <DialogStackHeader>
-                <DialogStackTitle>Add a contract</DialogStackTitle>
-              </DialogStackHeader>
-              <form onSubmit={(e) => void submit(e)} className="contents">
-                {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField type="consulting_contract" />}
+                </DialogStackFooter>
+              </form>
+            </Form>
+          </DialogStackContent>
+          <DialogStackContent>
+            <DialogStackHeader>
+              <DialogStackTitle>Add a contract</DialogStackTitle>
+            </DialogStackHeader>
+            <Form {...contractForm}>
+              <form onSubmit={(e) => void submitContract(e)} className="contents">
+                {!contractForm.watch("contractSignedElsewhere") && <NewDocumentField type="consulting_contract" />}
 
                 <FormField
-                  control={inviteForm.control}
+                  control={contractForm.control}
                   name="contractSignedElsewhere"
                   render={({ field }) => (
                     <FormItem>
@@ -399,14 +406,19 @@ const ActionPanel = () => {
                   <DialogStackPrevious>
                     <Button variant="outline">Back</Button>
                   </DialogStackPrevious>
-                  <MutationStatusButton idleVariant="primary" mutation={inviteMutation} type="submit">
+                  <MutationStatusButton
+                    idleVariant="primary"
+                    mutation={inviteMutation}
+                    type="submit"
+                    disabled={!contractForm.formState.isValid}
+                  >
                     Send invite
                   </MutationStatusButton>
                 </DialogStackFooter>
               </form>
-            </DialogStackContent>
-          </DialogStackBody>
-        </Form>
+            </Form>
+          </DialogStackContent>
+        </DialogStackBody>
       </DialogStack>
       <InviteLinkModal open={showInviteLinkModal} onOpenChange={setShowInviteLinkModal} />
     </>
