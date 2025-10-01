@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ['nodejs_22', 'ruby_3_4', 'postgresql', 'postgresql.dev', 'libyaml', 'gcc', 'gnumake', 'pkg-config', 'autoconf', 'automake', 'libtool']
+nixPkgs = ['nodejs_22', 'ruby_3_4', 'postgresql.dev', 'libyaml', 'gcc', 'gnumake', 'pkg-config', 'autoconf', 'automake', 'libtool']
 nixLibs = ['libiconv', 'libffi', 'openssl', 'zlib', 'readline', 'gmp', 'libxml2', 'libxslt']
 
 [phases.install]
