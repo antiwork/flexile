@@ -257,7 +257,12 @@ export default function BuybackView() {
                 <div>
                   <strong>Total amount:</strong> {formatMoney(form.getValues("numberOfShares") * pricePerShare)}
                 </div>
-                <MutationStatusButton type="submit" mutation={createMutation} className="justify-self-end">
+                <MutationStatusButton
+                  idleVariant="primary"
+                  type="submit"
+                  mutation={createMutation}
+                  className="justify-self-end"
+                >
                   Submit bid
                 </MutationStatusButton>
               </form>
@@ -282,12 +287,12 @@ export default function BuybackView() {
                 Bid price: {formatMoneyFromCents(cancelingBid.sharePriceCents)}
               </p>
               <DialogFooter>
-                <Button size="small" variant="outline" onClick={() => setCancelingBid(null)}>
+                <Button variant="outline" onClick={() => setCancelingBid(null)}>
                   No, keep bid
                 </Button>
                 <MutationButton
                   mutation={destroyMutation}
-                  size="small"
+                  idleVariant="critical"
                   param={{ companyId: company.id, id: cancelingBid.id }}
                   loadingText="Canceling..."
                 >
