@@ -1,11 +1,10 @@
 "use client";
 
-import { ArrowUpTrayIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useRef, useState } from "react";
@@ -16,6 +15,15 @@ import DatePicker from "@/components/DatePicker";
 import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,12 +93,21 @@ const dataSchema = z.object({
         attachment: z.object({ name: z.string(), url: z.string() }),
       }),
     ),
+    attachment: z
+      .object({
+        name: z.string(),
+        url: z.string(),
+        signed_id: z.string().optional(),
+      })
+      .nullable()
+      .default(null),
   }),
 });
 type Data = z.infer<typeof dataSchema>;
 
 type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: string[] | null };
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
+type InvoiceFormDocument = Data["invoice"]["attachment"] & { errors?: string[] | null; blob?: File | null };
 
 const Edit = () => {
   const user = useCurrentUser();
@@ -102,11 +119,14 @@ const Edit = () => {
   const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
-  const queryClient = useQueryClient();
   const worker = user.roles.worker;
   assert(worker != null);
 
-  const { data } = useSuspenseQuery({
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const { data, refetch } = useSuspenseQuery({
     queryKey: ["invoice", id],
     queryFn: async () => {
       const response = await request({
@@ -118,7 +138,6 @@ const Edit = () => {
       return dataSchema.parse(await response.json());
     },
   });
-
   const payRateInSubunits = data.user.pay_rate_in_subunits;
 
   const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
@@ -142,7 +161,10 @@ const Edit = () => {
   const [showExpenses, setShowExpenses] = useState(false);
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
   const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
+  const uploadDocumentRef = useRef<HTMLInputElement>(null);
+  const [document, setDocument] = useState<InvoiceFormDocument | null>(data.invoice.attachment);
   const showExpensesTable = showExpenses || expenses.size > 0;
+  const actionColumnClass = "w-12";
 
   const validate = () => {
     setErrorField(null);
@@ -150,7 +172,8 @@ const Edit = () => {
     return (
       errorField === null &&
       lineItems.every((lineItem) => !lineItem.errors?.length) &&
-      expenses.every((expense) => !expense.errors?.length)
+      expenses.every((expense) => !expense.errors?.length) &&
+      (!document || !document.errors?.length)
     );
   };
 
@@ -180,7 +203,13 @@ const Edit = () => {
           formData.append("invoice_expenses[][attachment]", expense.blob);
         }
       }
+
       if (notes.length) formData.append("invoice[notes]", notes);
+
+      if (document) {
+        if (document.blob) formData.append("invoice[attachment]", document.blob);
+        else if (document.signed_id) formData.append("invoice[attachment]", document.signed_id);
+      }
 
       await request({
         method: id ? "PATCH" : "POST",
@@ -192,8 +221,7 @@ const Edit = () => {
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       await trpcUtils.documents.list.invalidate();
       if (id) {
-        await trpcUtils.invoices.get.invalidate({ companyId: company.id, id });
-        await queryClient.invalidateQueries({ queryKey: ["invoice", id] });
+        await refetch();
       }
       router.push("/invoices");
     },
@@ -211,20 +239,78 @@ const Edit = () => {
 
   const createNewExpenseEntries = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    const oversizedFiles: string[] = [];
+    const validFiles: File[] = [];
+
+    Array.from(files).forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        oversizedFiles.push(file.name);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    // Show alert if any files exceed size limit
+    if (oversizedFiles.length > 0) {
+      setAlertTitle("File Size Exceeded");
+      if (oversizedFiles.length === 1) {
+        setAlertMessage(`File "${oversizedFiles[0]}" exceeds the maximum limit of 10MB. Please select a smaller file.`);
+      } else {
+        setAlertMessage(
+          `${oversizedFiles.length} files exceed the maximum limit of 10MB: ${oversizedFiles.join(", ")}. Please select smaller files.`,
+        );
+      }
+      setAlertOpen(true);
+
+      if (validFiles.length === 0) {
+        e.target.value = "";
+        return;
+      }
+    }
+
     const expenseCategory = assertDefined(data.company.expense_categories[0]);
     setShowExpenses(true);
-    setExpenses((expenses) =>
-      expenses.push(
-        ...[...files].map((file) => ({
+
+    // Add each valid file as a separate expense
+    validFiles.forEach((file) => {
+      setExpenses((expenses) =>
+        expenses.push({
           description: "",
           category_id: expenseCategory.id,
           total_amount_in_cents: 0,
           attachment: { name: file.name, url: URL.createObjectURL(file) },
           blob: file,
-        })),
-      ),
-    );
+        }),
+      );
+    });
+  };
+
+  const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    if (!file) return;
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+    if (file.size > MAX_FILE_SIZE) {
+      setAlertTitle("File Size Exceeded");
+      setAlertMessage("File size exceeds the maximum limit of 10MB. Please select a smaller file.");
+      setAlertOpen(true);
+      e.target.value = "";
+      return;
+    }
+
+    setDocument({
+      name: file.name,
+      url: URL.createObjectURL(file),
+      blob: file,
+      errors: null,
+    });
   };
 
   const parseQuantity = (value: string | null | undefined) => {
@@ -266,6 +352,18 @@ const Edit = () => {
 
   return (
     <>
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{alertMessage}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setAlertOpen(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <DashboardHeader
         title={data.invoice.id ? "Edit invoice" : "New invoice"}
         headerActions={
@@ -273,16 +371,11 @@ const Edit = () => {
             {data.invoice.id && data.invoice.status === "rejected" ? (
               <div className="inline-flex items-center">Action required</div>
             ) : (
-              <Button size="small" variant="outline" asChild>
+              <Button variant="outline" asChild>
                 <Link href="/invoices">Cancel</Link>
               </Button>
             )}
-            <Button
-              size="small"
-              variant="primary"
-              onClick={() => validate() && submit.mutate()}
-              disabled={submit.isPending}
-            >
+            <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
               {submit.isPending ? "Sending..." : data.invoice.id ? "Resubmit" : "Send invoice"}
             </Button>
           </>
@@ -345,7 +438,7 @@ const Edit = () => {
                 <TableHead>Hours / Qty</TableHead>
                 <TableHead>Rate</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead />
+                <TableHead className={actionColumnClass} />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -385,7 +478,7 @@ const Edit = () => {
                     />
                   </TableCell>
                   <TableCell>{formatMoneyFromCents(lineItemTotal(item))}</TableCell>
-                  <TableCell>
+                  <TableCell className={actionColumnClass}>
                     <Button
                       variant="link"
                       aria-label="Remove"
@@ -402,13 +495,38 @@ const Edit = () => {
                 <TableCell colSpan={5}>
                   <div className="flex gap-3">
                     <Button variant="link" onClick={addLineItem}>
-                      <PlusIcon className="inline size-4" />
+                      <Plus className="inline size-4" />
                       Add line item
                     </Button>
                     {data.company.expense_categories.length && !showExpensesTable ? (
-                      <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
-                        <ArrowUpTrayIcon className="inline size-4" />
-                        Add expense
+                      <Button asChild variant="link">
+                        <Label>
+                          <Upload className="inline size-4" />
+                          Add expense
+                          <input
+                            ref={uploadExpenseRef}
+                            type="file"
+                            className="hidden"
+                            accept="application/pdf, image/*"
+                            multiple
+                            onChange={createNewExpenseEntries}
+                          />
+                        </Label>
+                      </Button>
+                    ) : null}
+                    {!document ? (
+                      <Button asChild variant="link">
+                        <Label>
+                          <Upload className="inline size-4" />
+                          Add document
+                          <input
+                            ref={uploadDocumentRef}
+                            type="file"
+                            className="hidden"
+                            accept="application/pdf"
+                            onChange={handleDocumentUpload}
+                          />
+                        </Label>
                       </Button>
                     ) : null}
                   </div>
@@ -416,16 +534,6 @@ const Edit = () => {
               </TableRow>
             </TableFooter>
           </Table>
-          {data.company.expense_categories.length ? (
-            <input
-              ref={uploadExpenseRef}
-              type="file"
-              className="hidden"
-              accept="application/pdf, image/*"
-              multiple
-              onChange={createNewExpenseEntries}
-            />
-          ) : null}
           {showExpensesTable ? (
             <Table>
               <TableHeader>
@@ -434,7 +542,7 @@ const Edit = () => {
                   <TableHead>Merchant</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Amount</TableHead>
-                  <TableHead />
+                  <TableHead className={actionColumnClass} />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -494,13 +602,47 @@ const Edit = () => {
               <TableFooter>
                 <TableRow>
                   <TableCell colSpan={5}>
-                    <Button variant="link" onClick={() => uploadExpenseRef.current?.click()}>
-                      <PlusIcon className="inline size-4" />
-                      Add expense
+                    <Button asChild variant="link">
+                      <Label>
+                        <Upload className="inline size-4" />
+                        Add expense
+                        <input
+                          ref={uploadExpenseRef}
+                          type="file"
+                          className="hidden"
+                          accept="application/pdf, image/*"
+                          multiple
+                          onChange={createNewExpenseEntries}
+                        />
+                      </Label>
                     </Button>
                   </TableCell>
                 </TableRow>
               </TableFooter>
+            </Table>
+          ) : null}
+          {document ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Document</TableHead>
+                  <TableHead className={actionColumnClass} />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>
+                    <a href={document.url} download>
+                      <PaperClipIcon className="inline size-4" /> {document.name}
+                    </a>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="link" aria-label="Remove" onClick={() => setDocument(null)}>
+                      <TrashIcon className="size-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
             </Table>
           ) : null}
 
@@ -509,7 +651,7 @@ const Edit = () => {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Enter notes about your invoice (optional)"
-              className="w-full lg:w-96"
+              className="w-full whitespace-pre-wrap lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
               {showExpensesTable || company.equityEnabled ? (

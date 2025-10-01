@@ -363,7 +363,10 @@ const InvestorBulkActionsBar = ({
   onClose: () => void;
 }) => (
   <Dialog open={selectedCount > 0} modal={false}>
-    <DialogContent className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0">
+    <DialogContent
+      className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0"
+      showCloseButton={false}
+    >
       <DialogHeader className="sr-only">
         <DialogTitle>Selected investors</DialogTitle>
       </DialogHeader>

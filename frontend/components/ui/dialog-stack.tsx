@@ -207,9 +207,10 @@ export const DialogStackBody = ({ children, className, ...props }: DialogStackBo
         <div
           role="dialog"
           className={cn(
-            "pointer-events-none fixed inset-0 z-50 mx-auto flex max-h-[90vh] w-full max-w-lg flex-col items-center justify-start p-2 pt-16 sm:max-h-[95vh] sm:pt-32",
+            "pointer-events-none fixed inset-0 z-50 mx-auto flex max-h-[90vh] w-full max-w-lg flex-col items-center justify-start p-2 pt-16 sm:max-h-[95vh] sm:pt-24",
             className,
           )}
+          aria-labelledby={`dialog-title-${context.activeIndex}`}
           {...props}
         >
           <div className="pointer-events-auto relative flex max-h-full w-full flex-col items-center justify-center">
@@ -264,12 +265,13 @@ export const DialogStackContent = ({ children, className, offset = 16, ...props 
   return (
     <div
       className={cn(
-        "bg-background h-auto max-h-full w-full rounded-lg p-6 shadow-lg [box-shadow:0_-12px_24px_-12px_rgba(0,0,0,0.15)] transition-all duration-300",
+        "bg-background h-auto max-h-full w-full overflow-y-auto rounded-2xl p-6 shadow-lg [box-shadow:0_-12px_24px_-12px_rgba(0,0,0,0.15)] transition-all duration-300 sm:max-h-[95vh] sm:rounded-lg sm:pb-6",
         className,
       )}
       onClick={handleClick}
       style={{
         top: 0,
+        ...(distanceFromActive ? { left: 0, right: 0, marginLeft: "auto", marginRight: "auto" } : {}),
         transform: `translateY(${translateY})`,
         width: `calc(100% - ${Math.abs(distanceFromActive) * 32}px)`,
         zIndex: 50 - Math.abs(context.activeIndex - index),
@@ -301,11 +303,23 @@ export const DialogStackContent = ({ children, className, offset = 16, ...props 
 
 export type DialogStackTitleProps = HTMLAttributes<HTMLHeadingElement>;
 
-export const DialogStackTitle = ({ children, className, ...props }: DialogStackTitleProps) => (
-  <h2 className={cn("text-lg leading-none font-semibold", className)} {...props}>
-    {children}
-  </h2>
-);
+export const DialogStackTitle = ({ children, className, ...props }: DialogStackTitleProps) => {
+  const indexContext = useContext(DialogStackContentContext);
+
+  if (!indexContext) {
+    throw new Error("DialogStackContent must be used within a DialogStackTitle");
+  }
+
+  return (
+    <h2
+      id={`dialog-title-${indexContext.index}`}
+      className={cn("text-lg leading-none font-semibold", className)}
+      {...props}
+    >
+      {children}
+    </h2>
+  );
+};
 
 export type DialogStackDescriptionProps = HTMLAttributes<HTMLParagraphElement>;
 
@@ -324,7 +338,13 @@ export const DialogStackHeader = ({ className, ...props }: DialogStackHeaderProp
 export type DialogStackFooterProps = HTMLAttributes<HTMLDivElement>;
 
 export const DialogStackFooter = ({ children, className, ...props }: DialogStackFooterProps) => (
-  <div className={cn("flex items-center justify-end space-x-2", "sm:[&_button]:py-1.25", className)} {...props}>
+  <div
+    className={cn(
+      "bg-background sticky bottom-0 z-10 flex w-full flex-col-reverse gap-2 md:flex-row md:justify-end [&_button]:w-full md:[&_button]:w-fit",
+      className,
+    )}
+    {...props}
+  >
     {children}
   </div>
 );

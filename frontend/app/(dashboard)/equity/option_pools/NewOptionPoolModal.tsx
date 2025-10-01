@@ -17,7 +17,6 @@ import { useCurrentCompany } from "@/global";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { company_administrator_option_pools_path } from "@/utils/routes";
-import { useIsMobile } from "@/utils/use-mobile";
 
 const schema = z.object({
   name: z.string().min(1, "Must be present."),
@@ -43,7 +42,6 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
   const company = useCurrentCompany();
   const trpcUtils = trpc.useUtils();
   const [showExercise, setShowExercise] = useState(false);
-  const isMobile = useIsMobile();
 
   const { data: shareClasses } = trpc.shareClasses.list.useQuery({ companyId: company.id });
 
@@ -121,7 +119,7 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+      <DialogContent className="max-w-xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-medium">New option pool</DialogTitle>
           <DialogDescription>Fill in the details below to create an option pool.</DialogDescription>
@@ -299,20 +297,18 @@ export default function NewOptionPoolModal({ open, onOpenChange }: Props) {
 
             {form.formState.errors.root ? (
               <div className="grid gap-2">
-                <div className="text-red text-center text-xs">{form.formState.errors.root.message}</div>
+                <div className="text-destructive text-center text-xs">{form.formState.errors.root.message}</div>
               </div>
             ) : null}
 
-            <div className="flex justify-end">
-              <MutationStatusButton
-                type="submit"
-                mutation={createPool}
-                disabled={!form.formState.isValid}
-                size={isMobile ? "default" : "small"}
-              >
-                Create option pool
-              </MutationStatusButton>
-            </div>
+            <MutationStatusButton
+              type="submit"
+              idleVariant="primary"
+              mutation={createPool}
+              disabled={!form.formState.isValid}
+            >
+              Create option pool
+            </MutationStatusButton>
           </form>
         </Form>
       </DialogContent>

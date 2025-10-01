@@ -218,11 +218,11 @@ export default function ContractorPage() {
               </Status>
             </div>
             <DialogFooter>
-              <Button variant="outline" size="small" onClick={() => setEndModalOpen(false)}>
+              <Button variant="outline" onClick={() => setEndModalOpen(false)}>
                 No, cancel
               </Button>
               <MutationButton
-                size="small"
+                idleVariant="critical"
                 mutation={endContract}
                 param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate?.toString() ?? "" }}
               >
@@ -352,17 +352,15 @@ export default function ContractorPage() {
                 </small>
 
                 <DialogFooter>
-                  <div className="flex justify-end">
-                    <MutationStatusButton
-                      type="submit"
-                      size="small"
-                      mutation={issuePaymentMutation}
-                      successText="Payment submitted!"
-                      loadingText="Saving..."
-                    >
-                      Issue payment
-                    </MutationStatusButton>
-                  </div>
+                  <MutationStatusButton
+                    type="submit"
+                    idleVariant="primary"
+                    mutation={issuePaymentMutation}
+                    successText="Payment submitted!"
+                    loadingText="Saving..."
+                  >
+                    Issue payment
+                  </MutationStatusButton>
                 </DialogFooter>
               </form>
             </Form>
@@ -425,7 +423,7 @@ const ActionPanel = ({
         <DialogDescription className="sr-only">Manage Payment or Contract</DialogDescription>
         <div className="flex flex-col gap-3">
           <DialogClose asChild onClick={handleIssuePaymentClick}>
-            <Button size="small">Issue payment</Button>
+            <Button variant="primary">Issue payment</Button>
           </DialogClose>
           {contractor.endedAt && !isFuture(contractor.endedAt) ? (
             <Status className="justify-center" variant="critical">
@@ -433,9 +431,7 @@ const ActionPanel = ({
             </Status>
           ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
             <DialogClose asChild onClick={handleEndContractClick}>
-              <Button variant="outline" size="small">
-                End contract
-              </Button>
+              <Button variant="outline">End contract</Button>
             </DialogClose>
           ) : null}
         </div>
@@ -443,13 +439,13 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex items-center gap-3">
-      <Button size="small" onClick={handleIssuePaymentClick}>
+      <Button variant="primary" onClick={handleIssuePaymentClick}>
         Issue payment
       </Button>
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
         <Status variant="critical">Alumni</Status>
       ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
-        <Button variant="outline" size="small" onClick={handleEndContractClick}>
+        <Button variant="outline" onClick={handleEndContractClick}>
           End contract
         </Button>
       ) : null}
@@ -543,7 +539,6 @@ const DetailsTab = ({
           {!contractor.endedAt && (
             <MutationStatusButton
               type="submit"
-              size="small"
               mutation={updateContractor}
               loadingText="Saving..."
               className="justify-self-end"
@@ -587,7 +582,7 @@ const DetailsTab = ({
               </FormItem>
             )}
           />
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className={user.businessName ? "grid gap-3 md:grid-cols-2" : ""}>
             <FormField
               control={personalInfoForm.control}
               name="preferredName"
@@ -601,19 +596,21 @@ const DetailsTab = ({
                 </FormItem>
               )}
             />
-            <FormField
-              control={personalInfoForm.control}
-              name="businessName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Billing entity name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {user.businessName ? (
+              <FormField
+                control={personalInfoForm.control}
+                name="businessName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Billing entity name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
           </div>
           <FormField
             control={personalInfoForm.control}
@@ -802,7 +799,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
         id: "actions",
         cell: (info) =>
           info.row.original.status === "signed" ? (
-            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} size="small">
+            <MutationButton idleVariant="primary" mutation={confirmPaymentMutation} param={info.row.original.id}>
               Confirm payment
             </MutationButton>
           ) : undefined,
