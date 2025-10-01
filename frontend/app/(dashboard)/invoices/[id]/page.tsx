@@ -25,6 +25,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
 import { cn } from "@/utils";
@@ -32,6 +33,7 @@ import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { formatDate, formatDuration } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
+import { track } from "@/utils/telemetry";
 import {
   Address,
   ApproveButton,
@@ -120,6 +122,28 @@ export default function InvoicePage() {
   const isActionable = useIsActionable();
   const isDeletable = useIsDeletable();
   const isMobile = useIsMobile();
+
+  const handleEditClick = () => {
+    if (EDITABLE_INVOICE_STATES.includes(invoice.status)) {
+      track('ui_click_edit_invoice', { invoice_id: invoice.id });
+      router.push(`/invoices/${invoice.id}/edit`);
+    } else {
+      track('ui_edit_locked_status', { invoice_id: invoice.id, status: invoice.status });
+    }
+  };
+
+  const handleDuplicateClick = () => {
+    track('ui_click_duplicate_invoice', { invoice_id: invoice.id });
+    // Create URL with invoice data for duplication
+    const params = new URLSearchParams({
+      duplicate: invoice.id,
+      rate: (invoice.lineItems[0]?.payRateInSubunits || 0).toString(),
+      quantity: (invoice.lineItems[0]?.quantity || "0").toString(),
+      hourly: (invoice.lineItems[0]?.hourly || false).toString(),
+      description: invoice.lineItems[0]?.description || "",
+    });
+    router.push(`/invoices/new?${params.toString()}`);
+  };
   const searchParams = useSearchParams();
   const [acceptPaymentModalOpen, setAcceptPaymentModalOpen] = useState(
     invoice.requiresAcceptanceByPayee && searchParams.get("accept") === "true",
@@ -206,13 +230,36 @@ export default function InvoicePage() {
 
                 {user.id === invoice.userId && (
                   <>
-                    {EDITABLE_INVOICE_STATES.includes(invoice.status) && (
+                    {EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
                       <DropdownMenuItem asChild>
-                        <Link href={`/invoices/${invoice.id}/edit`} className="flex items-center gap-2">
+                        <Link href={`/invoices/${invoice.id}/edit`} className="flex items-center gap-2" onClick={() => track('ui_click_edit_invoice', { invoice_id: invoice.id })}>
                           <SquarePen className="size-4" />
                           Edit invoice
                         </Link>
                       </DropdownMenuItem>
+                    ) : (
+                      <>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            handleEditClick();
+                          }}
+                          className="flex items-center gap-2 opacity-50"
+                        >
+                          <SquarePen className="size-4" />
+                          Edit invoice (locked)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            handleDuplicateClick();
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <SquarePen className="size-4" />
+                          Duplicate invoice
+                        </DropdownMenuItem>
+                      </>
                     )}
 
                     <DropdownMenuItem
@@ -265,13 +312,33 @@ export default function InvoicePage() {
                   {invoice.requiresAcceptanceByPayee ? (
                     <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
                   ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                    <Button variant="primary" asChild>
-                      <Link href={`/invoices/${invoice.id}/edit`}>
+                    <Button variant="default" size="small" asChild>
+                      <Link href={`/invoices/${invoice.id}/edit`} onClick={() => track('ui_click_edit_invoice', { invoice_id: invoice.id })}>
                         <SquarePen className="size-4" />
                         Edit invoice
                       </Link>
                     </Button>
-                  ) : null}
+                  ) : (
+                    <TooltipProvider>
+                      <div className="flex gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="small" onClick={handleEditClick} className="opacity-50">
+                              <SquarePen className="size-4" />
+                              Edit invoice
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>This invoice cannot be edited because it's {invoice.status}. Try duplicating instead.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Button variant="default" size="small" onClick={handleDuplicateClick}>
+                          <SquarePen className="size-4" />
+                          Duplicate
+                        </Button>
+                      </div>
+                    </TooltipProvider>
+                  )}
 
                   {isDeletable(invoice) ? (
                     <Button variant="destructive" onClick={() => setDeleteModalOpen(true)} className="">
