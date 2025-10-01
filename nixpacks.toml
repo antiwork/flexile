@@ -14,8 +14,8 @@ cmds = [
     'cd backend && bundle config build.nokogiri --use-system-libraries',
     'cd backend && bundle config build.pg --with-pg-config=$(which pg_config)',
     'cd backend && bundle config build.psych --enable-bundled-libyaml',
-    'echo "=== Installing Ruby Gems ==="',
-    'cd backend && bundle install --jobs 4 --retry 3',
+    'echo "=== Installing Ruby Gems (PRODUCTION ONLY - NO DEV/TEST) ==="',
+    'cd backend && bundle install --jobs 4 --retry 3 --without development test',
     'echo "=== Installing Node Packages ==="',
     'pnpm install --frozen-lockfile'
 ]
