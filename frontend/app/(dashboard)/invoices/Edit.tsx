@@ -378,7 +378,13 @@ const Edit = () => {
             <Button
               size="small"
               variant="primary"
-              onClick={() => validate() && submit.mutate()}
+              onClick={() => {
+                if (typeof document !== "undefined") {
+                  const activeElement = document.activeElement;
+                  if (activeElement instanceof HTMLElement) activeElement.blur();
+                }
+                if (validate()) submit.mutate();
+              }}
               disabled={submit.isPending}
             >
               {submit.isPending ? "Sending..." : data.invoice.id ? "Resubmit" : "Send invoice"}
