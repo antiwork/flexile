@@ -48,7 +48,7 @@
     "setup": "cd backend && bundle exec rails js:routes:typescript",
     "lint-fast": "DISABLE_TYPE_CHECKED=1 pnpm eslint",
     "build-next": "pnpm next build frontend --no-lint",
-    "prepare": "git config --local core.hooksPath .githooks"
+    "prepare": "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config --local core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.688.0",
@@ -159,6 +159,11 @@
     },
     "onlyBuiltDependencies": [
       "bcrypt"
-    ]
+    ],
+    "allowedScripts": {
+      "esbuild": true,
+      "puppeteer": true,
+      "sharp": true
+    }
   }
 }
