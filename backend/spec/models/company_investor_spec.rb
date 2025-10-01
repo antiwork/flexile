@@ -112,7 +112,7 @@ RSpec.describe CompanyInvestor do
       expect(company_investor.active?).to be true
 
       company_investor.deactivated_at = 1.hour.from_now
-      expect(company_investor.active?).to be true
+      expect(company_investor.active?).to be false
 
       company_investor.deactivated_at = 1.hour.ago
       expect(company_investor.active?).to be false

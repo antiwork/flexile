@@ -6,7 +6,7 @@ RSpec.describe DividendComputationGeneration do
   def seed_data
     @seed_class = create(:share_class, company:, name: "Seed", original_issue_price_in_dollars: 1.1234, hurdle_rate: 12, preferred: true)
     @A_class = create(:share_class, company:, name: "Series A", original_issue_price_in_dollars: 1.2389, hurdle_rate: 7, preferred: true)
-    @common_class = create(:share_class, company:, name: "Common", original_issue_price_in_dollars: nil, hurdle_rate: nil)
+    @common_class = create(:share_class, company:, name: "Common", original_issue_price_in_dollars: nil, hurdle_rate: nil, preferred: false)
 
     @seed_investor = create(:company_investor, user: create(:user, legal_name: "Seed Investor"), company:)
     create(:share_holding, company_investor: @seed_investor, share_class: @seed_class, number_of_shares: 99_283, originally_acquired_at: 91.days.ago, total_amount_in_cents: 111_406_00)
