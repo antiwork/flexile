@@ -12,9 +12,12 @@ test.describe("Contractor Invite Link", () => {
     await page.getByRole("link", { name: "People" }).click();
     await expect(page.getByRole("heading", { name: "People" })).toBeVisible();
 
+    await page.waitForResponse((response) => response.url().includes("contractors.list") && response.status() === 200);
+
     await page.getByRole("button", { name: "Invite link" }).click();
     await expect(page.getByRole("heading", { name: "Invite Link" })).toBeVisible();
 
+    await expect(page.getByRole("textbox", { name: "Link" })).not.toHaveValue("");
     await expect(page.getByRole("button", { name: "Copy" })).toBeEnabled();
     await expect(page.getByRole("textbox", { name: "Link" })).toBeVisible();
 
