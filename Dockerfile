@@ -46,7 +46,11 @@ COPY . .
 
 # Generate TypeScript routes
 WORKDIR /app/backend
-RUN DOMAIN=localhost bundle exec rails js:routes:typescript
+RUN DOMAIN=localhost \
+    ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=dummy_key_for_build \
+    ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=dummy_key_for_build \
+    ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=dummy_salt_for_build \
+    bundle exec rails js:routes:typescript
 
 # Build Next.js frontend
 WORKDIR /app
@@ -54,7 +58,12 @@ RUN pnpm run build-next
 
 # Precompile Rails assets
 WORKDIR /app/backend
-RUN DOMAIN=localhost SECRET_KEY_BASE=dummy bundle exec rails assets:precompile
+RUN DOMAIN=localhost \
+    SECRET_KEY_BASE=dummy_secret_for_build \
+    ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=dummy_key_for_build \
+    ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=dummy_key_for_build \
+    ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=dummy_salt_for_build \
+    bundle exec rails assets:precompile
 
 # Set environment variables
 ENV RAILS_ENV=production \
