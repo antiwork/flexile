@@ -94,7 +94,7 @@ const OnboardingCompleteModal = ({ open, onNext }: OnboardingStepProps) => {
           </div>
           <div className="flex w-full flex-col items-end space-y-2">
             <Button
-              size="small"
+              variant="primary"
               onClick={() => {
                 onNext();
               }}
