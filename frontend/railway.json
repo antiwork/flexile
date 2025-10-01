@@ -1,0 +1,5 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": { "buildCommand": "pnpm install && pnpm build" },
+  "deploy": { "startCommand": "pnpm start -- -p $PORT" }
+}
