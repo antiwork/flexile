@@ -119,6 +119,9 @@ test.describe("invoice creation", () => {
     });
     await login(page, contractorUser, "/invoices/new");
 
+    // Remove the default line item
+    await page.getByLabel("Remove").click();
+
     await page.getByLabel("Add expense").setInputFiles({
       name: "receipt.pdf",
       mimeType: "application/pdf",
@@ -150,6 +153,9 @@ test.describe("invoice creation", () => {
       { companyId: company.id, name: "Travel" },
     ]);
     await login(page, contractorUser, "/invoices/new");
+
+    // Remove the default line item
+    await page.getByLabel("Remove").click();
 
     await page.getByLabel("Add expense").setInputFiles({
       name: "receipt1.pdf",
