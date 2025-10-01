@@ -88,8 +88,15 @@ class DividendComputationGeneration
       available_amount = @amount_in_usd - @preferred_dividend_total
       return if available_amount == 0
 
+      # Calculate total shares excluding deactivated investors and zero-share holdings
+      eligible_share_holdings_total = company
+        .share_holdings
+        .joins(:company_investor)
+        .where("company_investors.deactivated_at IS NULL")
+        .sum(:number_of_shares)
+
       eligible_fully_diluted_shares =
-        company.convertible_investments.sum(:implied_shares) + company.share_holdings.sum(:number_of_shares)
+        company.convertible_investments.sum(:implied_shares) + eligible_share_holdings_total
 
       shares_per_class_per_investor.each do |share_holding|
         dividend_usd =
