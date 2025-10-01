@@ -23,6 +23,10 @@ The easiest way to set up the development environment is to use the [`bin/setup`
 
 Finally, set up your environment: `cp .env.example .env`. If you're an Antiwork team member, you can use `vercel env pull .env`.
 
+## Deploy to Railway
+
+Review the [Railway deployment guide](docs/railway-deploy.md) for config-as-code setup steps covering both the Rails API and Next.js frontend.
+
 ## Running the App
 
 You can start the local app using the [`bin/dev` script](bin/dev) - or feel free to run the commands contained in it yourself.
