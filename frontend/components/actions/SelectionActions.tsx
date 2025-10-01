@@ -65,7 +65,6 @@ export function SelectionActions<T>({ selectedItems, config, availableActions, o
             <Button
               key={action.key}
               variant={action.variant || "outline"}
-              size="small"
               onClick={() => action.action && onAction(action.action, selectedItems)}
               className={action.iconOnly ? "aspect-square px-2" : ""}
               aria-label={`${action.label} selected ${config.entityName}`}

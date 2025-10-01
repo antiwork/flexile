@@ -575,10 +575,11 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
           })}
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex w-full sm:justify-end">
           <MutationButton
+            className="w-full sm:w-fit"
             mutation={submitMutation}
-            size="small"
+            idleVariant="primary"
             loadingText="Saving bank account..."
             disabled={hasRequiredFieldsEmpty || hasVisibleErrors}
           >
