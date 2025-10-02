@@ -995,11 +995,11 @@ const QuickInvoicesSectionContent = ({ onShowActivationDialog }: { onShowActivat
         invoice_date: date.toString(),
       };
 
-      if (isExpanded && formData.invoiceNumber) {
+      if (isExpanded && "invoiceNumber" in formData && formData.invoiceNumber) {
         invoiceData.invoice_number = formData.invoiceNumber;
       }
 
-      if (isExpanded && formData.notes) {
+      if (isExpanded && "notes" in formData && formData.notes) {
         invoiceData.notes = formData.notes;
       }
 
@@ -1011,7 +1011,7 @@ const QuickInvoicesSectionContent = ({ onShowActivationDialog }: { onShowActivat
         jsonData: {
           invoice: invoiceData,
           invoice_line_items: [{
-            description: isExpanded && formData.description ? formData.description : "-",
+            description: isExpanded && "description" in formData && formData.description ? formData.description : "-",
             pay_rate_in_subunits: rate,
             quantity,
             hourly
