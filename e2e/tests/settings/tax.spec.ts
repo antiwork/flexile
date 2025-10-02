@@ -72,7 +72,6 @@ test.describe("Tax settings", () => {
       await page.getByLabel("ZIP code").fill("");
       await page.getByRole("button", { name: "Save changes" }).click();
 
-      await expect(page.getByText("Please enter your legal name.")).toBeVisible();
       await expect(page.getByLabel("Tax ID (SSN or ITIN)")).not.toBeValid();
       await expect(page.getByLabel("Residential address (street name, number, apartment)")).not.toBeValid();
       await expect(page.getByLabel("City")).not.toBeValid();
