@@ -364,6 +364,9 @@ test.describe("One-off payments", () => {
 
       await expect(page.locator("tbody")).toBeVisible();
 
+      await expect(page.getByText("Failed")).toBeVisible();
+      await expect(page.getByText("$500")).toBeVisible();
+
       const invoiceRow = await findRequiredTableRow(page, {
         Amount: "$500",
         Status: "Failed",
