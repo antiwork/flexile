@@ -130,7 +130,10 @@ export const invoicesRouter = createRouter({
     if (!companyWorker) throw new TRPCError({ code: "NOT_FOUND" });
 
     const invoiceNumber = await getNextAdminInvoiceNumber(ctx.company.id, invoicer.id);
-    const billFrom = assertDefined(invoicer.userComplianceInfos[0]?.businessName || invoicer.legalName);
+    const billFrom = assertDefined(
+      invoicer.userComplianceInfos[0]?.businessName || invoicer.legalName,
+      "Recipient must have a legal name or business name set before receiving payments. Please ask them to complete their profile in Settings.",
+    );
 
     let equityAmountInCents = BigInt(0);
     let equityAmountInOptions = 0;
@@ -180,7 +183,7 @@ export const invoicesRouter = createRouter({
           invoiceDate: date,
           dueOn: date,
           billFrom,
-          billTo: assertDefined(ctx.company.name),
+          billTo: assertDefined(ctx.company.name, "Company must have a name set"),
           streetAddress: invoicer.streetAddress,
           city: invoicer.city,
           state: invoicer.state,
@@ -194,7 +197,7 @@ export const invoicesRouter = createRouter({
           flexileFeeCents: getFlexileFeeCents(totalAmountCents),
         })
         .returning();
-      const invoice = assertDefined(invoiceResult[0]);
+      const invoice = assertDefined(invoiceResult[0], "Failed to create invoice");
 
       const lineItems = await tx
         .insert(invoiceLineItems)
