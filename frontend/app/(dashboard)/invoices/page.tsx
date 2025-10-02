@@ -1079,7 +1079,7 @@ const QuickInvoicesSectionContent = ({ onShowActivationDialog }: { onShowActivat
                 <div className="lg:col-span-3 space-y-6 border-t pt-6">
                   <FormField
                     control={form.control}
-                    name="description"
+                    name={"description" as any}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Description</FormLabel>
@@ -1091,7 +1091,7 @@ const QuickInvoicesSectionContent = ({ onShowActivationDialog }: { onShowActivat
                   />
                   <FormField
                     control={form.control}
-                    name="invoiceNumber"
+                    name={"invoiceNumber" as any}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Invoice Number</FormLabel>
@@ -1103,7 +1103,7 @@ const QuickInvoicesSectionContent = ({ onShowActivationDialog }: { onShowActivat
                   />
                   <FormField
                     control={form.control}
-                    name="notes"
+                    name={"notes" as any}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Notes</FormLabel>
