@@ -9,8 +9,8 @@ RSpec.describe PublishCompanyUpdate do
     context "when the update hasn't been sent" do
       let!(:active_company_worker) { create(:company_worker, company:) }
       let!(:inactive_company_worker) { create(:company_worker, company:, ended_at: 1.day.ago) }
-      let!(:company_investor) { create(:company_investor, company:) }
-      let!(:company_lawyer) { create(:company_lawyer, company:) }
+      let!(:active_company_investor) { create(:company_investor, company:) }
+      let!(:inactive_company_investor) { create(:company_investor, company:, deactivated_at: 1.day.ago) }
 
       it "sets sent_at and returns success" do
         expect do
@@ -25,14 +25,14 @@ RSpec.describe PublishCompanyUpdate do
         end.to change { CompanyUpdateEmailJob.jobs.size }.by(2)
 
         expect(CompanyUpdateEmailJob).to have_enqueued_sidekiq_job(company_update.id, active_company_worker.user_id)
-        expect(CompanyUpdateEmailJob).to have_enqueued_sidekiq_job(company_update.id, company_investor.user_id)
+        expect(CompanyUpdateEmailJob).to have_enqueued_sidekiq_job(company_update.id, active_company_investor.user_id)
       end
 
-      it "doesn't enqueue email jobs for inactive contractors or lawyers" do
+      it "doesn't enqueue email jobs for inactive contractors or investors" do
         service.perform!
 
         expect(CompanyUpdateEmailJob).not_to have_enqueued_sidekiq_job(company_update.id, inactive_company_worker.user_id)
-        expect(CompanyUpdateEmailJob).not_to have_enqueued_sidekiq_job(company_update.id, company_lawyer.user_id)
+        expect(CompanyUpdateEmailJob).not_to have_enqueued_sidekiq_job(company_update.id, inactive_company_investor.user_id)
       end
     end
 
