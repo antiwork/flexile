@@ -131,11 +131,11 @@ export default function RolesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState<{ id: string; name: string; role: string } | null>(null);
 
-  const { data: adminsAndLawyers = [] } = trpc.companies.listCompanyUsers.useQuery({
+  const { data: adminsAndLawyers = [], isLoading: isLoadingAdmins, isError: isErrorAdmins } = trpc.companies.listCompanyUsers.useQuery({
     companyId: company.id,
     roles: ["administrators", "lawyers"],
   });
-  const { data: companyUsers = [] } = trpc.companies.listCompanyUsers.useQuery({ companyId: company.id });
+  const { data: companyUsers = [], isLoading: isLoadingUsers, isError: isErrorUsers } = trpc.companies.listCompanyUsers.useQuery({ companyId: company.id });
 
   const trpcUtils = trpc.useUtils();
 
@@ -365,8 +365,12 @@ export default function RolesPage() {
           <p className="text-muted-foreground text-base">Use roles to grant deeper access to your workspace.</p>
         </hgroup>
         <div className="[&_td:first-child]:!pl-0 [&_td:last-child]:!pr-0 [&_th:first-child]:!pl-0 [&_th:last-child]:!pr-0">
-          {adminsAndLawyers.length === 0 ? (
+          {isLoadingAdmins || isLoadingUsers ? (
             <TableSkeleton columns={3} />
+          ) : isErrorAdmins || isErrorUsers ? (
+            <div className="text-destructive p-4 text-center">Failed to load roles. Please try refreshing the page.</div>
+          ) : adminsAndLawyers.length === 0 ? (
+            <div className="text-muted-foreground p-4 text-center">No administrators or lawyers yet.</div>
           ) : (
             <div className="[&_table]:w-full [&_table]:table-fixed [&_td:nth-child(1)]:w-[65%] [&_td:nth-child(2)]:w-[25%] [&_td:nth-child(2)]:pr-1 [&_td:nth-child(2)]:text-left [&_td:nth-child(3)]:w-[10%] [&_td:nth-child(3)]:pr-0 [&_td:nth-child(3)]:pl-0 [&_th:nth-child(1)]:w-[65%] [&_th:nth-child(2)]:w-[25%] [&_th:nth-child(3)]:w-[10%] [&>div>div:first-child]:mx-0">
               <DataTable
