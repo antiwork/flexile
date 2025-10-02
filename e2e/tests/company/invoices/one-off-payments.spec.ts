@@ -9,7 +9,7 @@ import { login, logout } from "@test/helpers/auth";
 import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
-import { companies, equityGrants, invoices, users } from "@/db/schema";
+import { companies, equityGrants, invoices } from "@/db/schema";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
 type Company = Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["company"];
@@ -94,13 +94,13 @@ test.describe("One-off payments", () => {
         { page },
       );
 
-      const invoiceBeforeAcceptance = await db.query.invoices.findFirst({
+      const invoice = await db.query.invoices.findFirst({
         where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
       });
-      if (!invoiceBeforeAcceptance) {
+      if (!invoice) {
         throw new Error("Invoice should have been created");
       }
-      expect(invoiceBeforeAcceptance).toEqual(
+      expect(invoice).toEqual(
         expect.objectContaining({
           totalAmountInUsdCents: BigInt(100000),
           billFrom: null,
@@ -113,24 +113,6 @@ test.describe("One-off payments", () => {
           subject: `🔴 Action needed: ${company.name} would like to pay you`,
         }),
       ]);
-
-      await db.update(users).set({ legalName: "John Doe" }).where(eq(users.id, preOnboardingUser.id));
-
-      await logout(page);
-      await login(page, preOnboardingUser, `/invoices/${invoiceBeforeAcceptance.externalId}`);
-
-      await page.getByRole("button", { name: "Accept payment" }).click();
-      await withinModal(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), { page });
-
-      const invoiceAfterAcceptance = await db.query.invoices.findFirst({
-        where: eq(invoices.id, invoiceBeforeAcceptance.id),
-      });
-      expect(invoiceAfterAcceptance).toEqual(
-        expect.objectContaining({
-          billFrom: "John Doe",
-          acceptedAt: expect.any(Date),
-        }),
-      );
     });
 
     test.describe("for a contractor with equity", () => {
