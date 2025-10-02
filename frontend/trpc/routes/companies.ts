@@ -100,6 +100,14 @@ export const companiesRouter = createRouter({
     const response = await fetch(microdeposit_verification_details_company_invoices_url(ctx.company.externalId), {
       headers: ctx.headers,
     });
+    
+    if (!response.ok) {
+      throw new TRPCError({ 
+        code: response.status === 401 ? "UNAUTHORIZED" : "INTERNAL_SERVER_ERROR",
+        message: `Failed to fetch microdeposit verification details: ${response.statusText}`,
+      });
+    }
+    
     const data = z
       .object({
         details: z
