@@ -980,16 +980,6 @@ const QuickInvoicesSectionContent = ({ onShowActivationDialog }: { onShowActivat
   const rate = form.watch("rate") * 100;
   const totalAmountInCents = Math.ceil((quantity / (hourly ? 60 : 1)) * rate);
 
-  const newCompanyInvoiceRoute = () => {
-    const params = new URLSearchParams({
-      date: date.toString(),
-      rate: rate.toString(),
-      quantity: quantity.toString(),
-      hourly: hourly.toString(),
-    });
-    return `/invoices/new?${params.toString()}` as const;
-  };
-
   const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery({
     companyId: company.id,
     invoiceYear: date.year,

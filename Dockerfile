@@ -77,7 +77,7 @@ RUN DOMAIN=localhost \
 WORKDIR /app
 RUN pnpm run build-next
 
-# Precompile Rails assets  
+# Precompile Rails assets
 WORKDIR /app/backend
 RUN DOMAIN=localhost \
     PROTOCOL=https \
