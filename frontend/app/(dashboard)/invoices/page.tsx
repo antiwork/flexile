@@ -947,9 +947,11 @@ const QuickInvoicesSectionContent = ({ onShowActivationDialog }: { onShowActivat
       rate: payRateInSubunits ? payRateInSubunits / 100 : 0,
       quantity: { quantity: isHourly ? 60 : 1, hourly: isHourly },
       date: today(getLocalTimeZone()),
-      description: "",
-      invoiceNumber: "",
-      notes: "",
+      ...(isExpanded && {
+        description: "",
+        invoiceNumber: "",
+        notes: "",
+      }),
     },
     disabled: !canSubmitInvoices,
   });
