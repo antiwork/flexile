@@ -147,5 +147,5 @@ EXPOSE 3000
 # Set runtime working directory to backend
 WORKDIR /app/backend
 
-# Start server
-CMD ["sh", "-c", "bundle exec rails server -b 0.0.0.0 -p ${PORT:-3000}"]
+# Start server (run migrations first)
+CMD ["sh", "-c", "bundle exec rails db:migrate && bundle exec rails server -b 0.0.0.0 -p ${PORT:-3000}"]
