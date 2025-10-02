@@ -75,7 +75,10 @@ RUN DOMAIN=localhost \
 
 # Build Next.js frontend
 WORKDIR /app
-RUN SKIP_TYPE_CHECK=true pnpm run build-next
+RUN SKIP_TYPE_CHECK=true \
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dummy \
+    NEXT_PUBLIC_API_URL=http://localhost:3001 \
+    pnpm run build-next
 
 # Precompile Rails assets
 WORKDIR /app/backend
