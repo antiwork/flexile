@@ -67,7 +67,7 @@ export function ActivationDialog({
           </Button>
           {missingRequirements.length === 1 && (
             <Button asChild>
-              <Link href={missingRequirements[0].actionHref} onClick={onClose}>
+              <Link href={missingRequirements[0].actionHref as any} onClick={onClose}>
                 {missingRequirements[0].actionText}
               </Link>
             </Button>
