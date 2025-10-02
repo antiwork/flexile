@@ -49,10 +49,10 @@ RSpec.describe User do
     describe "legal_name format" do
       it do
         is_expected.to(allow_values(
-          "John Smith", "Jean-Claude Van Damme", "Aitana Sánchez-Gijón", "Jay Z", "S R D", nil
+          "John Smith", "Jean-Claude Van Damme", "Aitana Sánchez-Gijón", "Jay Z", "S R D", "john", "Jay", "Madonna", nil
         ).for(:legal_name))
       end
-      it { is_expected.to_not allow_values("Jay", "John", "").for(:legal_name) }
+      it { is_expected.to_not allow_values(" ", "  ", "").for(:legal_name) }
     end
 
     describe "minimum_dividend_payment_in_cents_is_within_range" do
