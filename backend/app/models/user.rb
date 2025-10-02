@@ -52,7 +52,7 @@ class User < ApplicationRecord
 
   validates :email, presence: true, length: { minimum: MIN_EMAIL_LENGTH }
   validates :legal_name,
-            format: { with: /\S+\s+\S+/, message: "requires at least two parts", allow_nil: true }
+            format: { with: /\A\S+(?:\s+\S+)*\z/, message: "Please enter your legal name.", allow_nil: true }
   validates :minimum_dividend_payment_in_cents, presence: true
   validate :minimum_dividend_payment_in_cents_is_within_range
   validates :preferred_name, length: { maximum: MAX_PREFERRED_NAME_LENGTH }, allow_nil: true

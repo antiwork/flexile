@@ -50,7 +50,7 @@ const dataSchema = z.object({
 });
 
 const formValuesSchema = z.object({
-  legal_name: z.string().regex(/\S+\s+\S+/u, "This doesn't look like a complete full name."),
+  legal_name: z.string().regex(/^\S+(?:\s+\S+)*$/u, "Please enter your legal name."),
   citizenship_country_code: z.string(),
   business_entity: z.boolean(),
   business_name: z.string().nullable(),
