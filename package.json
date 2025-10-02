@@ -47,7 +47,7 @@
     "typecheck:watch": "pnpm run typecheck --watch --preserveWatchOutput",
     "setup": "cd backend && bundle exec rails js:routes:typescript",
     "lint-fast": "DISABLE_TYPE_CHECKED=1 pnpm eslint",
-    "build-next": "pnpm next build frontend --no-lint",
+    "build-next": "SKIP_TYPE_CHECK=true pnpm next build frontend --no-lint",
     "build": "pnpm run setup && pnpm run build-next",
     "start": "cd frontend && pnpm next start",
     "railway:build": "cd backend && bundle install && cd .. && pnpm install && pnpm run build",

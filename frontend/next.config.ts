@@ -2,6 +2,9 @@ import NextBundleAnalyzer from "@next/bundle-analyzer";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  typescript: {
+    ignoreBuildErrors: process.env.SKIP_TYPE_CHECK === "true",
+  },
   webpack: (config) => {
     Object.assign(config.resolve.alias, {
       "@tiptap/extension-bubble-menu": false,

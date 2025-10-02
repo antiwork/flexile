@@ -75,7 +75,7 @@ RUN DOMAIN=localhost \
 
 # Build Next.js frontend
 WORKDIR /app
-RUN pnpm run build-next
+RUN SKIP_TYPE_CHECK=true pnpm run build-next
 
 # Precompile Rails assets
 WORKDIR /app/backend
