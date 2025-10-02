@@ -145,5 +145,5 @@ ENV RAILS_ENV=production \
 EXPOSE 3000
 
 # Start server
-CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-p", "$PORT"]
+CMD ["sh", "-c", "cd backend && bundle exec rails server -b 0.0.0.0 -p ${PORT:-3000}"]
 
