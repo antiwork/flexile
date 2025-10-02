@@ -3,11 +3,23 @@ import { defaultShouldDehydrateQuery, QueryClient } from "@tanstack/react-query"
 import { TRPCClientError } from "@trpc/client";
 import superjson from "superjson";
 
-if (process.env.BUGSNAG_API_KEY)
+let bugsnagInitialized = false;
+if (process.env.BUGSNAG_API_KEY) {
   Bugsnag.start({
     apiKey: process.env.BUGSNAG_API_KEY,
     releaseStage: process.env.VERCEL_ENV || "development",
   });
+  bugsnagInitialized = true;
+}
+
+// Safe Bugsnag notify wrapper
+export function safeBugsnagNotify(error: string | Error) {
+  if (bugsnagInitialized) {
+    Bugsnag.notify(error);
+  } else {
+    console.error("Bugsnag not initialized:", error);
+  }
+}
 
 export function createClient() {
   return new QueryClient({
