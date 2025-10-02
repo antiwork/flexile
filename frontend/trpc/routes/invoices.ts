@@ -130,7 +130,7 @@ export const invoicesRouter = createRouter({
     if (!companyWorker) throw new TRPCError({ code: "NOT_FOUND" });
 
     const invoiceNumber = await getNextAdminInvoiceNumber(ctx.company.id, invoicer.id);
-    const billFrom = invoicer.userComplianceInfos[0]?.businessName || invoicer.legalName || null;
+    const billFrom = invoicer.userComplianceInfos[0]?.businessName || invoicer.legalName;
 
     let equityAmountInCents = BigInt(0);
     let equityAmountInOptions = 0;
@@ -279,14 +279,7 @@ export const invoicesRouter = createRouter({
       const equityPercentage = equityResult.equityPercentage;
       const cashAmountInCents = invoice.totalAmountInUsdCents - equityAmountInCents;
 
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, invoice.userId),
-        with: {
-          userComplianceInfos: latestUserComplianceInfo,
-        },
-      });
-
-      const billFrom = user?.userComplianceInfos[0]?.businessName || user?.legalName || null;
+      const billFrom = assertDefined(ctx.user.userComplianceInfos[0]?.businessName || ctx.user.legalName);
 
       await db
         .update(invoices)
