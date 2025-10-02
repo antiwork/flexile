@@ -104,7 +104,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
     t.decimal "conversion_share_price_usd"
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
-    t.text "exercise_notice"
     t.string "invite_link"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
     t.index ["invite_link"], name: "index_companies_on_invite_link", unique: true
