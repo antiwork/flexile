@@ -49,7 +49,7 @@ export function ActivationDialog({
                 <AlertDescription className="text-orange-800">
                   {requirement.message}{" "}
                   <Link
-                    href={requirement.actionHref}
+                    href={requirement.actionHref as any}
                     className={linkClasses}
                     onClick={onClose}
                   >
