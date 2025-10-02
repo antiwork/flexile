@@ -9,7 +9,7 @@ import { login, logout } from "@test/helpers/auth";
 import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
-import { companies, equityGrants, invoices } from "@/db/schema";
+import { companies, equityGrants, invoices, users } from "@/db/schema";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
 type Company = Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["company"];
@@ -73,6 +73,64 @@ test.describe("One-off payments", () => {
           text: expect.stringContaining("would like to send you money"),
         }),
       ]);
+    });
+    test("allows admin to create a payment for a user without a completed profile", async ({ page, sentEmails }) => {
+      const preOnboardingUser = (await usersFactory.createPreOnboarding()).user;
+      await companyContractorsFactory.create({
+        companyId: company.id,
+        userId: preOnboardingUser.id,
+      });
+
+      await login(page, adminUser, `/people/${preOnboardingUser.externalId}?tab=invoices`);
+
+      await page.getByRole("button", { name: "Issue payment" }).click();
+
+      await withinModal(
+        async (modal) => {
+          await modal.getByLabel("Amount").fill("1000.00");
+          await modal.getByLabel("What is this for?").fill("Payment before profile completion");
+          await modal.getByRole("button", { name: "Issue payment" }).click();
+        },
+        { page },
+      );
+
+      const invoiceBeforeAcceptance = await db.query.invoices.findFirst({
+        where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
+      });
+      if (!invoiceBeforeAcceptance) {
+        throw new Error("Invoice should have been created");
+      }
+      expect(invoiceBeforeAcceptance).toEqual(
+        expect.objectContaining({
+          totalAmountInUsdCents: BigInt(100000),
+          billFrom: null,
+        }),
+      );
+
+      expect(sentEmails).toEqual([
+        expect.objectContaining({
+          to: preOnboardingUser.email,
+          subject: `🔴 Action needed: ${company.name} would like to pay you`,
+        }),
+      ]);
+
+      await db.update(users).set({ legalName: "John Doe" }).where(eq(users.id, preOnboardingUser.id));
+
+      await logout(page);
+      await login(page, preOnboardingUser, `/invoices/${invoiceBeforeAcceptance.externalId}`);
+
+      await page.getByRole("button", { name: "Accept payment" }).click();
+      await withinModal(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), { page });
+
+      const invoiceAfterAcceptance = await db.query.invoices.findFirst({
+        where: eq(invoices.id, invoiceBeforeAcceptance.id),
+      });
+      expect(invoiceAfterAcceptance).toEqual(
+        expect.objectContaining({
+          billFrom: "John Doe",
+          acceptedAt: expect.any(Date),
+        }),
+      );
     });
 
     test.describe("for a contractor with equity", () => {
