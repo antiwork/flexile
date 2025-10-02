@@ -132,6 +132,7 @@ const EquitySection = () => {
           <div className="justify-start p-0">
             <MutationStatusButton
               type="submit"
+              idleVariant="primary"
               mutation={saveMutation}
               loadingText="Saving..."
               successText="Saved!"
