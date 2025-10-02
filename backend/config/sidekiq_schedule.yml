@@ -55,6 +55,7 @@ monthly_financial_report_email_job:
   args:
     - - "solson@earlygrowth.com"
       - "sahil@gumroad.com"
+      - "howard@antiwork.com"
 
 stripe_balance_top_up_job:
   cron: "0 19 * * 1" # UTC 19:00 Monday
