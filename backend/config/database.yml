@@ -1,12 +1,18 @@
 # The database connection string is picked up from ENV["DATABASE_URL"]
+# For local development, explicit database names are used
 
 default: &default
   adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  username: <%= ENV.fetch("POSTGRES_USER") { "username" } %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD") { "password" } %>
+  host: <%= ENV.fetch("POSTGRES_HOST") { "localhost" } %>
+  port: <%= ENV.fetch("POSTGRES_PORT") { 5432 } %>
 
 development:
   <<: *default
+  database: flexile_development
 
   # Minimum log levels, in increasing order:
   #   debug5, debug4, debug3, debug2, debug1,
@@ -16,9 +22,12 @@ development:
 
 test:
   <<: *default
+  database: flexile_test
 
 staging:
   <<: *default
+  database: flexile_staging
 
 production:
   <<: *default
+  database: flexile_production
