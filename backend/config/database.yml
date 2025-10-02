@@ -1,18 +1,18 @@
 # The database connection string is picked up from ENV["DATABASE_URL"]
-# For local development, explicit database names are used
+# If DATABASE_URL is not set, falls back to explicit connection settings for local development
 
 default: &default
   adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: <%= ENV.fetch("POSTGRES_DB") { "flexile_development" } %>
   username: <%= ENV.fetch("POSTGRES_USER") { "username" } %>
   password: <%= ENV.fetch("POSTGRES_PASSWORD") { "password" } %>
   host: <%= ENV.fetch("POSTGRES_HOST") { "localhost" } %>
   port: <%= ENV.fetch("POSTGRES_PORT") { 5432 } %>
-
-development:
-  <<: *default
-  database: flexile_development
 
   # Minimum log levels, in increasing order:
   #   debug5, debug4, debug3, debug2, debug1,
@@ -22,12 +22,26 @@ development:
 
 test:
   <<: *default
-  database: flexile_test
+  database: <%= ENV.fetch("POSTGRES_DB") { "flexile_test" } %>
+  username: <%= ENV.fetch("POSTGRES_USER") { "username" } %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD") { "password" } %>
+  host: <%= ENV.fetch("POSTGRES_HOST") { "localhost" } %>
+  port: <%= ENV.fetch("POSTGRES_PORT") { 5432 } %>
 
 staging:
   <<: *default
-  database: flexile_staging
+  # Uses DATABASE_URL if set, otherwise falls back to these settings
+  database: <%= ENV.fetch("POSTGRES_DB") { "flexile_staging" } %>
+  username: <%= ENV["POSTGRES_USER"] %>
+  password: <%= ENV["POSTGRES_PASSWORD"] %>
+  host: <%= ENV["POSTGRES_HOST"] %>
+  port: <%= ENV["POSTGRES_PORT"] %>
 
 production:
   <<: *default
-  database: flexile_production
+  # Uses DATABASE_URL if set (Railway/Heroku), otherwise falls back to explicit settings
+  database: <%= ENV["POSTGRES_DB"] %>
+  username: <%= ENV["POSTGRES_USER"] %>
+  password: <%= ENV["POSTGRES_PASSWORD"] %>
+  host: <%= ENV["POSTGRES_HOST"] %>
+  port: <%= ENV["POSTGRES_PORT"] %>
