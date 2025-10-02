@@ -92,7 +92,7 @@ RSpec.describe Document do
     context "when type is share_certificate" do
       subject { build(:document, document_type: :share_certificate) }
 
-      it { is_expected.to validate_presence_of(:share_holding) }
+      it { is_expected.to validate_presence_of(:share_holding_id) }
     end
   end
 
