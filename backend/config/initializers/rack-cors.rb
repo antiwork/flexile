@@ -10,7 +10,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
              if: proc { |env| API_DOMAIN == env["HTTP_HOST"] }
   end
   allow do
-    origins "#{PROTOCOL}://#{DOMAIN}"
-    resource "*", headers: :any, methods: [:get]
+    origins "#{PROTOCOL}://#{DOMAIN}", /https:\/\/.*\.vercel\.app$/
+    resource "*", headers: :any, methods: [:get, :post, :put, :patch, :delete]
   end
 end
