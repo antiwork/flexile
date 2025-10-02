@@ -65,7 +65,7 @@ test.describe("Tax settings", () => {
       await expect(page.getByLabel("Province")).toBeEnabled();
       await selectComboboxOption(page, "Country of residence", "United States");
 
-      await page.getByLabel("Full legal name (must match your ID)").fill("Janet");
+      await page.getByLabel("Full legal name (must match your ID)").fill("Janet Flexile");
       await page.getByLabel("Tax ID (SSN or ITIN)").fill("");
       await page.getByLabel("Residential address (street name, number, apartment)").fill("");
       await page.getByLabel("City").fill("");
@@ -76,7 +76,6 @@ test.describe("Tax settings", () => {
       await expect(page.getByLabel("Residential address (street name, number, apartment)")).not.toBeValid();
       await expect(page.getByLabel("City")).not.toBeValid();
       await expect(page.getByLabel("ZIP code")).not.toBeValid();
-      await page.getByLabel("Full legal name (must match your ID)").fill("Janet Flexile");
       await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Grove St");
       await page.getByLabel("City").fill("Grove");
       await page.getByLabel("ZIP code").fill("12345");
@@ -435,6 +434,20 @@ test.describe("Tax settings", () => {
 
       const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) }).then(takeOrThrow);
       expect(updatedUser.legalName).toBe("John Middle Doe");
+    });
+
+    test("allows legal names with only first name", async ({ page }) => {
+      await login(page, user, "/settings/tax");
+
+      await page.getByLabel("Full legal name (must match your ID)").fill("Madonna");
+      await page.getByLabel("Tax ID (SSN or ITIN)").fill("123456789");
+
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await page.getByRole("button", { name: "Save", exact: true }).click();
+      await expect(page.getByText("W-9 Certification and Tax Forms Delivery")).not.toBeVisible();
+
+      const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) }).then(takeOrThrow);
+      expect(updatedUser.legalName).toBe("Madonna");
     });
 
     test("allows changing birth_date and verifies it is saved", async ({ page }) => {
