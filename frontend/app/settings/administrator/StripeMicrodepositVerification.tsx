@@ -31,7 +31,7 @@ const StripeMicrodepositVerification = () => {
     companyId: company.id,
   });
   const microdepositVerificationDetails = data?.microdepositVerificationDetails;
-  
+
   const microdepositVerification = trpc.companies.microdepositVerification.useMutation({
     onSuccess: () => setShowVerificationModal(false),
   });
@@ -76,7 +76,7 @@ const StripeMicrodepositVerification = () => {
 
   // Don't render if loading, error, no details needed, or already successfully verified
   if (isLoading || isError || !microdepositVerificationDetails || microdepositVerification.isSuccess) return null;
-  
+
   return (
     <>
       <Alert>

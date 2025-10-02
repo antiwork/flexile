@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+echo "🔧 Setting up Vercel environment variables..."
+echo ""
+
+# Preview environment (for PR deployments - points to Railway staging)
+echo "Setting NEXT_PUBLIC_API_URL for Preview environment (staging backend)..."
+echo "https://flexile-staging.up.railway.app" | vercel env add NEXT_PUBLIC_API_URL preview
+
+# Production environment (for main branch - points to Railway production)
+echo "Setting NEXT_PUBLIC_API_URL for Production environment (production backend)..."
+echo "https://flexile-production.up.railway.app" | vercel env add NEXT_PUBLIC_API_URL production
+
+# Development environment (for local dev)
+echo "Setting NEXT_PUBLIC_API_URL for Development environment (local backend)..."
+echo "http://localhost:3001" | vercel env add NEXT_PUBLIC_API_URL development
+
+echo ""
+echo "✅ Environment variables configured!"
+echo ""
+echo "Preview deployments will use: https://flexile-staging.up.railway.app"
+echo "Production deployments will use: https://flexile-production.up.railway.app"
+echo ""
+echo "🚀 Next steps:"
+echo "1. Push a branch: git push origin your-branch"
+echo "2. Create PR on GitHub"
+echo "3. Vercel will create preview deployment using staging backend"
+
