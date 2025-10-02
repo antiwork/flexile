@@ -130,7 +130,7 @@ export const invoicesRouter = createRouter({
     if (!companyWorker) throw new TRPCError({ code: "NOT_FOUND" });
 
     const invoiceNumber = await getNextAdminInvoiceNumber(ctx.company.id, invoicer.id);
-    const billFrom = invoicer.userComplianceInfos[0]?.businessName || invoicer.legalName;
+    const billFrom = invoicer.userComplianceInfos[0]?.businessName || invoicer.legalName || null;
 
     let equityAmountInCents = BigInt(0);
     let equityAmountInOptions = 0;
