@@ -37,18 +37,31 @@ import { useIsMobile } from "@/utils/use-mobile";
 
 type Document = RouterOutput["documents"]["list"][number];
 
-const typeLabels = {
-  [DocumentType.ConsultingContract]: "Consulting agreement",
-  [DocumentType.ShareCertificate]: "Share certificate",
-  [DocumentType.FormW8BEN]: "W8-BEN",
-  [DocumentType.FormW8BENE]: "W8-BEN-E",
-  [DocumentType.FormW9]: "W9",
-  [DocumentType.Form1099NEC]: "1099-NEC",
-  [DocumentType.Form1099DIV]: "1099-DIV",
-  [DocumentType.Form1042S]: "1042-S",
-  [DocumentType.ExerciseNotice]: "Exercise notice",
-  [DocumentType.EquityPlanContract]: "Equity plan",
-  [DocumentType.ReleaseAgreement]: "Release agreement",
+const documentName = (document: Document) => {
+  switch (document.type) {
+    case DocumentType.ConsultingContract:
+      return "Consulting contract";
+    case DocumentType.EquityPlanContract:
+      return `Equity incentive plan ${document.year}`;
+    case DocumentType.ShareCertificate:
+      return document.shareHolding ? `${document.shareHolding.name} share certificate` : "Share certificate";
+    case DocumentType.Form1099NEC:
+      return "1099-NEC";
+    case DocumentType.Form1099DIV:
+      return "1099-DIV";
+    case DocumentType.Form1042S:
+      return "1042-S";
+    case DocumentType.FormW9:
+      return "W-9";
+    case DocumentType.ExerciseNotice:
+      return "Exercise notice";
+    case DocumentType.ReleaseAgreement:
+      return "Release agreement";
+    case DocumentType.FormW8BEN:
+      return "W8-BEN";
+    case DocumentType.FormW8BENE:
+      return "W8-BEN-E";
+  }
 };
 
 const columnFiltersSchema = z.array(z.object({ id: z.string(), value: filterValueSchema }));
@@ -131,9 +144,9 @@ export default function DocumentsPage() {
               { id: "signer", header: "Signer" },
             )
           : null,
-        columnHelper.accessor((row) => typeLabels[row.type], {
+        columnHelper.accessor(documentName, {
           header: "Name",
-          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))] },
+          meta: { filterOptions: [...new Set(documents.map(documentName))] },
         }),
         columnHelper.accessor("createdAt", {
           header: "Date",
@@ -177,7 +190,7 @@ export default function DocumentsPage() {
             const document = info.row.original;
             return (
               <div className="flex flex-col gap-1">
-                <div className="text-base font-medium">{typeLabels[document.type]}</div>
+                <div className="text-base font-medium">{documentName(document)}</div>
                 {isCompanyRepresentative ? (
                   <div className="text-sm font-normal">
                     {document.signatories.find((signatory) => signatory.title !== "Company Representative")?.name}
@@ -244,9 +257,9 @@ export default function DocumentsPage() {
             Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
         }),
 
-        columnHelper.accessor((row) => typeLabels[row.type], {
+        columnHelper.accessor(documentName, {
           header: "Type",
-          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))], hidden: true },
+          meta: { filterOptions: [...new Set(documents.map(documentName))], hidden: true },
         }),
       ].filter((column) => !!column),
     [documents, isCompanyRepresentative],
@@ -429,7 +442,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>{typeLabels[document.type]}</DialogTitle>
+          <DialogTitle>{documentName(document)}</DialogTitle>
         </DialogHeader>
         <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
         <DialogFooter>

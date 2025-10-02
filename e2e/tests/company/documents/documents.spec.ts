@@ -3,6 +3,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { documentsFactory } from "@test/factories/documents";
+import { shareHoldingsFactory } from "@test/factories/shareHoldings";
 import { usersFactory } from "@test/factories/users";
 import { selectComboboxOption } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
@@ -109,5 +110,24 @@ test.describe("Documents", () => {
     await expect(page.getByText("Some other text")).toBeVisible();
     await page.getByRole("button", { name: "Add your signature" }).click();
     await page.getByRole("button", { name: "Agree & Submit" }).click();
+  });
+
+  test("shows the correct names for documents", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
+    await documentsFactory.create({ companyId: company.id, type: DocumentType.EquityPlanContract });
+    const shareHolding = await shareHoldingsFactory.create();
+    await documentsFactory.create({
+      companyId: company.id,
+      type: DocumentType.ShareCertificate,
+      shareHoldingId: shareHolding.id,
+    });
+    await login(page, adminUser, "/documents");
+    await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
+    await page.locator("main").getByRole("button", { name: "Filter" }).click();
+    await page.getByRole("menuitem", { name: "Status" }).click();
+    await page.getByRole("menuitemcheckbox", { name: "All" }).click();
+    await expect(page.locator("tbody tr")).toHaveCount(2);
+    await expect(page.getByText("Equity incentive plan 2025")).toBeVisible();
+    await expect(page.getByText(`${shareHolding.name} share certificate`)).toBeVisible();
   });
 });

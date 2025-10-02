@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_26_102109) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -104,6 +104,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_26_102109) do
     t.decimal "conversion_share_price_usd"
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
+    t.text "exercise_notice"
     t.string "invite_link"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
     t.index ["invite_link"], name: "index_companies_on_invite_link", unique: true
@@ -417,8 +418,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_26_102109) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.text "text"
+    t.bigint "share_holding_id"
     t.index ["company_id"], name: "index_documents_on_company_id"
     t.index ["equity_grant_id"], name: "index_documents_on_equity_grant_id"
+    t.index ["share_holding_id"], name: "index_documents_on_share_holding_id"
     t.index ["user_compliance_info_id"], name: "index_documents_on_user_compliance_info_id"
   end
 

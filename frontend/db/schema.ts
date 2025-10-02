@@ -497,6 +497,7 @@ export const documents = pgTable(
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     userComplianceInfoId: bigint("user_compliance_info_id", { mode: "bigint" }),
     equityGrantId: bigint("equity_grant_id", { mode: "bigint" }),
+    shareHoldingId: bigint("share_holding_id", { mode: "bigint" }),
     type: integer("document_type").$type<DocumentType>().notNull(),
     year: integer().notNull(),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
@@ -511,6 +512,7 @@ export const documents = pgTable(
   (table) => [
     index("index_documents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
     index("index_documents_on_equity_grant_id").using("btree", table.equityGrantId.asc().nullsLast().op("int8_ops")),
+    index("index_documents_on_share_holding_id").using("btree", table.shareHoldingId.asc().nullsLast().op("int8_ops")),
     index("index_documents_on_user_compliance_info_id").using(
       "btree",
       table.userComplianceInfoId.asc().nullsLast().op("int8_ops"),

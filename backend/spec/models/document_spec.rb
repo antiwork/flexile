@@ -88,6 +88,12 @@ RSpec.describe Document do
 
       it { is_expected.to validate_presence_of(:equity_grant_id) }
     end
+
+    context "when type is share_certificate" do
+      subject { build(:document, document_type: :share_certificate) }
+
+      it { is_expected.to validate_presence_of(:share_holding) }
+    end
   end
 
   describe ".irs_tax_forms" do

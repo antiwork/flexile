@@ -6,6 +6,7 @@ class Document < ApplicationRecord
   belongs_to :company
   belongs_to :user_compliance_info, optional: true
   belongs_to :equity_grant, optional: true
+  belongs_to :share_holding, optional: true
 
   has_many :signatures, class_name: "DocumentSignature"
   has_many :signatories, through: :signatures, source: :user
@@ -20,6 +21,7 @@ class Document < ApplicationRecord
   validates :year, presence: true, numericality: { only_integer: true, less_than_or_equal_to: Date.current.year }
   validates :user_compliance_info_id, presence: true, if: :tax_document?
   validates :equity_grant_id, presence: true, if: -> { equity_plan_contract? }
+  validates :share_holding_id, presence: true, if: -> { share_certificate? }
   validate :tax_document_must_be_unique, if: :tax_document?
 
   enum :document_type, {
@@ -61,9 +63,9 @@ class Document < ApplicationRecord
     when "consulting_contract"
       "Consulting Contract"
     when "equity_plan_contract"
-      "Equity Plan Contract"
+      "Equity Incentive Plan #{year}"
     when "share_certificate"
-      "Share Certificate"
+      share_holding ? "#{share_holding.name} Share Certificate" : "Share Certificate"
     when "form_1099nec"
       "1099-NEC"
     when "exercise_notice"

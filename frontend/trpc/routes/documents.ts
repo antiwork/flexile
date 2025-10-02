@@ -9,6 +9,7 @@ import {
   documents,
   documentSignatures,
   equityGrants,
+  shareHoldings,
   users,
 } from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
@@ -41,13 +42,15 @@ export const documentsRouter = createRouter({
       );
       const rows = await db
         .selectDistinctOn([documents.id], {
-          ...pick(documents, "id", "createdAt", "type"),
+          ...pick(documents, "id", "createdAt", "type", "year"),
+          shareHolding: pick(shareHoldings, "name"),
           attachment: pick(activeStorageBlobs, "key", "filename"),
           hasText: isNotNull(documents.text),
         })
         .from(documents)
         .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
         .innerJoin(users, eq(documentSignatures.userId, users.id))
+        .leftJoin(shareHoldings, eq(documents.shareHoldingId, shareHoldings.id))
         .leftJoin(
           activeStorageAttachments,
           and(eq(activeStorageAttachments.recordType, "Document"), eq(documents.id, activeStorageAttachments.recordId)),
