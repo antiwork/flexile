@@ -2,19 +2,16 @@
 
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { useMutation } from "@tanstack/react-query";
 import { Ban, CircleAlert, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import React, { useState } from "react";
 import AttachmentListCard from "@/components/AttachmentsList";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
-import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
@@ -109,7 +105,7 @@ export default function InvoicePage() {
   const { id } = useParams<{ id: string }>();
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const [invoice, { refetch }] = trpc.invoices.get.useSuspenseQuery({ companyId: company.id, id });
+  const [invoice] = trpc.invoices.get.useSuspenseQuery({ companyId: company.id, id });
   const payRateInSubunits = invoice.contractor.payRateInSubunits;
   const complianceInfo = invoice.contractor.user.complianceInfo;
   const [expenseCategories] = trpc.expenseCategories.list.useSuspenseQuery({ companyId: company.id });
@@ -120,32 +116,6 @@ export default function InvoicePage() {
   const isActionable = useIsActionable();
   const isDeletable = useIsDeletable();
   const isMobile = useIsMobile();
-  const searchParams = useSearchParams();
-  const [acceptPaymentModalOpen, setAcceptPaymentModalOpen] = useState(
-    invoice.requiresAcceptanceByPayee && searchParams.get("accept") === "true",
-  );
-  const acceptPayment = trpc.invoices.acceptPayment.useMutation();
-  const defaultEquityPercentage = invoice.minAllowedEquityPercentage ?? invoice.equityPercentage;
-  const [equityPercentage, setEquityPercentageElected] = useState(defaultEquityPercentage);
-
-  const equityAmountInCents = useMemo(
-    () => (invoice.totalAmountInUsdCents * BigInt(equityPercentage)) / BigInt(100),
-    [equityPercentage],
-  );
-
-  const cashAmountInCents = useMemo(() => invoice.totalAmountInUsdCents - equityAmountInCents, [equityAmountInCents]);
-
-  const acceptPaymentMutation = useMutation({
-    mutationFn: async () => {
-      await acceptPayment.mutateAsync({ companyId: company.id, id, equityPercentage });
-      await refetch();
-      setEquityPercentageElected(defaultEquityPercentage);
-      setAcceptPaymentModalOpen(false);
-    },
-    onSettled: () => {
-      acceptPaymentMutation.reset();
-    },
-  });
 
   const lineItemTotal = (lineItem: (typeof invoice.lineItems)[number]) =>
     Math.ceil((Number(lineItem.quantity) / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits);
@@ -246,26 +216,28 @@ export default function InvoicePage() {
             </DropdownMenu>
           ) : (
             <>
-              <Button variant="outline" onClick={() => window.print()}>
+              <Button variant="outline" size="small" onClick={() => window.print()}>
                 <Printer className="size-4" />
                 Print
               </Button>
               {user.roles.administrator && isActionable(invoice) ? (
                 <>
-                  <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
+                  <Button variant="outline" size="small" onClick={() => setRejectModalOpen(true)}>
                     <Ban className="size-4" />
                     Reject
                   </Button>
 
-                  <ApproveButton variant="primary" invoice={invoice} onApprove={() => router.push(`/invoices`)} />
+                  <ApproveButton
+                    className="border-blue-500 bg-blue-500 hover:border-blue-600 hover:bg-blue-600"
+                    invoice={invoice}
+                    onApprove={() => router.push(`/invoices`)}
+                  />
                 </>
               ) : null}
               {user.id === invoice.userId ? (
                 <>
-                  {invoice.requiresAcceptanceByPayee ? (
-                    <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
-                  ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                    <Button variant="primary" asChild>
+                  {EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
+                    <Button variant="default" size="small" asChild>
                       <Link href={`/invoices/${invoice.id}/edit`}>
                         <SquarePen className="size-4" />
                         Edit invoice
@@ -274,7 +246,7 @@ export default function InvoicePage() {
                   ) : null}
 
                   {isDeletable(invoice) ? (
-                    <Button variant="destructive" onClick={() => setDeleteModalOpen(true)} className="">
+                    <Button variant="destructive" size="small" onClick={() => setDeleteModalOpen(true)} className="">
                       <Trash2 className="size-4" />
                       <span>Delete</span>
                     </Button>
@@ -286,79 +258,6 @@ export default function InvoicePage() {
         }
       />
       <div className="space-y-4">
-        {invoice.requiresAcceptanceByPayee && user.id === invoice.userId ? (
-          <Dialog open={acceptPaymentModalOpen} onOpenChange={setAcceptPaymentModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Accept invoice</DialogTitle>
-              </DialogHeader>
-              <div>
-                If everything looks correct, accept the invoice. Then your company administrator can initiate payment.
-              </div>
-              <Card>
-                <CardContent>
-                  {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null ? (
-                    <>
-                      <div>
-                        <div className="mb-4 flex items-center justify-between">
-                          <span className="text-muted-foreground mb-4">Cash vs equity split</span>
-                          <span className="font-medium">
-                            {(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} equity
-                          </span>
-                        </div>
-                        <Slider
-                          className="mb-4"
-                          value={[equityPercentage]}
-                          onValueChange={([selection]) =>
-                            setEquityPercentageElected(selection ?? invoice.minAllowedEquityPercentage ?? 0)
-                          }
-                          min={invoice.minAllowedEquityPercentage}
-                          max={invoice.maxAllowedEquityPercentage}
-                        />
-                        <div className="text-muted-foreground flex justify-between">
-                          <span>
-                            {(invoice.minAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })}{" "}
-                            equity
-                          </span>
-                          <span>
-                            {(invoice.maxAllowedEquityPercentage / 100).toLocaleString(undefined, { style: "percent" })}{" "}
-                            equity
-                          </span>
-                        </div>
-                      </div>
-                      <Separator />
-                    </>
-                  ) : null}
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span>Cash amount</span>
-                      <span className="font-medium">{formatMoneyFromCents(cashAmountInCents)}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Equity value</span>
-                      <span className="font-medium">{formatMoneyFromCents(equityAmountInCents)}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Total value</span>
-                      <span className="font-medium">{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <DialogFooter>
-                <div className="flex justify-end">
-                  <MutationButton mutation={acceptPaymentMutation} successText="Success!" loadingText="Saving...">
-                    {invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null
-                      ? `Confirm ${(equityPercentage / 100).toLocaleString(undefined, { style: "percent" })} split`
-                      : "Accept payment"}
-                  </MutationButton>
-                </div>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        ) : null}
-
         {!taxRequirementsMet(invoice) && (
           <Alert className="mx-4 mb-4 print:hidden" variant="destructive">
             <ExclamationTriangleIcon />
@@ -438,7 +337,7 @@ export default function InvoicePage() {
 
               {invoice.lineItems.length > 0 ? (
                 <div className="w-full overflow-x-auto">
-                  <Table className="w-full min-w-fit print:my-3 print:w-full print:border-collapse print:text-xs">
+                  <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full print:my-3 print:w-full print:border-collapse print:text-xs">
                     <TableHeader>
                       <TableRow className="print:border-b print:border-gray-300">
                         <PrintTableHeader className="w-[40%] md:w-[50%] print:text-left">
@@ -506,20 +405,20 @@ export default function InvoicePage() {
                 />
               ) : null}
 
-              <footer className="flex flex-col justify-between gap-3 px-4 lg:flex-row print:mt-4 print:flex print:items-start print:justify-between">
+              <footer className="flex justify-between px-4 print:mt-4 print:flex print:items-start print:justify-between">
                 <div className="print:flex-1">
                   {invoice.notes ? (
                     <div>
                       <b className="print:text-sm print:font-bold">Notes</b>
                       <div>
                         <div className="text-xs">
-                          <p className="whitespace-pre-wrap print:mt-1 print:text-xs">{invoice.notes}</p>
+                          <p className="print:mt-1 print:text-xs">{invoice.notes}</p>
                         </div>
                       </div>
                     </div>
                   ) : null}
                 </div>
-                <Card className="self-start print:min-w-36 print:border-none print:bg-transparent print:p-2">
+                <Card className="print:min-w-36 print:border-none print:bg-transparent print:p-2">
                   <CardContent>
                     {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
                       <>
@@ -565,15 +464,6 @@ export default function InvoicePage() {
             onApprove={() => router.push(`/invoices`)}
           />
         </div>
-      ) : null}
-      {isMobile && user.id === invoice.userId ? (
-        invoice.requiresAcceptanceByPayee ? (
-          <div className="fixed bottom-14 left-0 z-10 w-full bg-white px-4 py-3">
-            <Button className="w-full" onClick={() => setAcceptPaymentModalOpen(true)}>
-              Accept payment
-            </Button>
-          </div>
-        ) : null
       ) : null}
       <RejectModal
         open={rejectModalOpen}
