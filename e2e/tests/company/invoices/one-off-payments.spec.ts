@@ -362,7 +362,6 @@ test.describe("One-off payments", () => {
 
       await login(page, adminUser, "/invoices");
 
-      await expect(page.locator("tbody")).toBeVisible();
       const invoiceRow = page
         .locator("tbody")
         .filter({ has: page.getByRole("cell", { name: "$500" }) })
