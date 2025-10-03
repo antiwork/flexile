@@ -56,6 +56,7 @@ export const calculateInvoiceEquity = async ({
     equityCents: equityAmountInCents,
     equityOptions: equityAmountInOptions,
     equityPercentage,
+    unvestedGrant,
   };
 };
 

@@ -15,7 +15,6 @@ import {
   wiseRecipients,
 } from "@/db/schema";
 import env from "@/env";
-import { MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
 import { companyProcedure, createRouter } from "@/trpc";
 import { sendEmail } from "@/trpc/email";
 import { calculateInvoiceEquity } from "@/trpc/routes/equityCalculations";
@@ -63,44 +62,10 @@ const getFlexileFeeCents = (totalAmountCents: bigint) => {
   return feeCents > MAX_FLEXILE_FEE_CENTS ? MAX_FLEXILE_FEE_CENTS : feeCents;
 };
 
-const invoiceInputSchema = createInsertSchema(invoiceLineItems)
-  .pick({ description: true })
-  .extend({
-    userExternalId: z.string(),
-    totalAmountCents: z.bigint(),
-    ...createInsertSchema(invoices).pick({
-      equityPercentage: true,
-      minAllowedEquityPercentage: true,
-      maxAllowedEquityPercentage: true,
-    }).shape,
-  })
-  .refine(
-    (data) =>
-      !data.minAllowedEquityPercentage ||
-      !data.maxAllowedEquityPercentage ||
-      data.minAllowedEquityPercentage <= data.maxAllowedEquityPercentage,
-    {
-      message: "Minimum equity percentage must be less than or equal to maximum equity percentage",
-    },
-  )
-  .refine(
-    (data) =>
-      !data.minAllowedEquityPercentage ||
-      (data.minAllowedEquityPercentage >= MINIMUM_EQUITY_PERCENTAGE &&
-        data.minAllowedEquityPercentage <= MAXIMUM_EQUITY_PERCENTAGE),
-    {
-      message: `Minimum equity percentage must be between ${MINIMUM_EQUITY_PERCENTAGE} and ${MAXIMUM_EQUITY_PERCENTAGE}`,
-    },
-  )
-  .refine(
-    (data) =>
-      !data.maxAllowedEquityPercentage ||
-      (data.maxAllowedEquityPercentage >= MINIMUM_EQUITY_PERCENTAGE &&
-        data.maxAllowedEquityPercentage <= MAXIMUM_EQUITY_PERCENTAGE),
-    {
-      message: `Maximum equity percentage must be between ${MINIMUM_EQUITY_PERCENTAGE} and ${MAXIMUM_EQUITY_PERCENTAGE}`,
-    },
-  );
+const invoiceInputSchema = createInsertSchema(invoiceLineItems).pick({ description: true }).extend({
+  userExternalId: z.string(),
+  totalAmountCents: z.bigint(),
+});
 
 export const invoicesRouter = createRouter({
   createAsAdmin: companyProcedure.input(invoiceInputSchema).mutation(async ({ ctx, input }) => {
@@ -135,7 +100,7 @@ export const invoicesRouter = createRouter({
     let equityAmountInCents = BigInt(0);
     let equityAmountInOptions = 0;
     let equityPercentage = 0;
-    const { userExternalId, description, totalAmountCents, ...values } = input;
+    const { description, totalAmountCents } = input;
     const dateToday = new Date();
 
     if (ctx.company.equityEnabled) {
@@ -143,18 +108,33 @@ export const invoicesRouter = createRouter({
         companyContractor: companyWorker,
         serviceAmountCents: Number(totalAmountCents),
         invoiceYear: dateToday.getFullYear(),
-        providedEquityPercentage: values.equityPercentage,
       });
 
       if (!equityResult) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Recipient has insufficient unvested equity",
+          message: `Recipient has insufficient unvested equity for their default equity percentage (${companyWorker.equityPercentage}%).`,
         });
       }
 
-      if (equityResult.equityPercentage !== values.equityPercentage) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "No options would be granted" });
+      if (equityResult.equityPercentage !== companyWorker.equityPercentage) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `No options would be granted at ${companyWorker.equityPercentage}% equity.`,
+        });
+      }
+
+      if (equityResult.unvestedGrant && equityResult.equityOptions > 0) {
+        const availableShares =
+          equityResult.unvestedGrant.unvestedShares -
+          equityResult.unvestedGrant.exercisedShares -
+          equityResult.unvestedGrant.forfeitedShares;
+        if (equityResult.equityOptions > availableShares) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Recipient has insufficient unvested equity for their default equity percentage (${companyWorker.equityPercentage}%).`,
+          });
+        }
       }
 
       equityAmountInCents = BigInt(equityResult.equityCents);
@@ -169,14 +149,13 @@ export const invoicesRouter = createRouter({
       const invoiceResult = await tx
         .insert(invoices)
         .values({
-          ...values,
           companyId: ctx.company.id,
           userId: invoicer.id,
           createdById: ctx.user.id,
           companyContractorId: companyWorker.id,
           invoiceType: "other",
           invoiceNumber,
-          status: "received",
+          status: "approved",
           invoiceDate: date,
           dueOn: date,
           billFrom,
@@ -192,6 +171,7 @@ export const invoicesRouter = createRouter({
           totalAmountInUsdCents: totalAmountCents,
           cashAmountInCents,
           flexileFeeCents: getFlexileFeeCents(totalAmountCents),
+          acceptedAt: new Date(),
         })
         .returning();
       const invoice = assertDefined(invoiceResult[0]);
@@ -214,7 +194,7 @@ export const invoicesRouter = createRouter({
       from: `Flexile <support@${env.DOMAIN}>`,
       to: companyWorker.user.email,
       replyTo: companyWorker.company.email,
-      subject: `🔴 Action needed: ${companyWorker.company.name} would like to pay you`,
+      subject: `💰 ${companyWorker.company.name} has sent you money`,
       react: OneOffInvoiceCreated({
         companyName: companyWorker.company.name || companyWorker.company.email,
         invoice,
@@ -225,78 +205,6 @@ export const invoicesRouter = createRouter({
 
     return invoice;
   }),
-
-  acceptPayment: companyProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        equityPercentage: z.number().min(MINIMUM_EQUITY_PERCENTAGE).max(MAXIMUM_EQUITY_PERCENTAGE),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.companyContractor) throw new TRPCError({ code: "FORBIDDEN" });
-
-      const invoice = await db.query.invoices.findFirst({
-        where: and(
-          eq(invoices.externalId, input.id),
-          eq(invoices.companyId, ctx.company.id),
-          isNull(invoices.deletedAt),
-        ),
-      });
-      if (!invoice) throw new TRPCError({ code: "NOT_FOUND" });
-      if (invoice.userId !== ctx.companyContractor.userId) throw new TRPCError({ code: "FORBIDDEN" });
-      if (invoice.invoiceType !== "other") throw new TRPCError({ code: "FORBIDDEN" });
-
-      if (invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null) {
-        if (
-          input.equityPercentage < invoice.minAllowedEquityPercentage ||
-          input.equityPercentage > invoice.maxAllowedEquityPercentage
-        ) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Equity percentage is out of range" });
-        }
-      }
-
-      const equityResult = await calculateInvoiceEquity({
-        companyContractor: ctx.companyContractor,
-        serviceAmountCents: Number(invoice.totalAmountInUsdCents),
-        invoiceYear: new Date(invoice.invoiceDate).getFullYear(),
-        providedEquityPercentage: input.equityPercentage,
-      });
-
-      if (!equityResult) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Error calculating equity. Please contact the administrator.",
-        });
-      }
-
-      if (equityResult.equityPercentage !== input.equityPercentage) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "No options would be granted" });
-      }
-
-      const equityAmountInCents = BigInt(equityResult.equityCents);
-      const equityAmountInOptions = equityResult.equityOptions;
-      const equityPercentage = equityResult.equityPercentage;
-      const cashAmountInCents = invoice.totalAmountInUsdCents - equityAmountInCents;
-
-      const billFrom = assertDefined(ctx.user.userComplianceInfos[0]?.businessName || ctx.user.legalName);
-
-      await db
-        .update(invoices)
-        .set(
-          invoice.minAllowedEquityPercentage !== null && invoice.maxAllowedEquityPercentage !== null
-            ? {
-                acceptedAt: new Date(),
-                equityPercentage,
-                cashAmountInCents,
-                equityAmountInCents,
-                equityAmountInOptions,
-                billFrom,
-              }
-            : { acceptedAt: new Date(), billFrom },
-        )
-        .where(eq(invoices.id, invoice.id));
-    }),
 
   list: companyProcedure
     .input(
