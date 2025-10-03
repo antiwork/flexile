@@ -211,6 +211,7 @@ const inviteSchema = formSchema.merge(documentSchema).extend({
   startDate: z.instanceof(CalendarDate),
   contractSignedElsewhere: z.boolean().default(false),
 });
+
 const ActionPanel = () => {
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
@@ -242,7 +243,7 @@ const ActionPanel = () => {
         "contractor[pay_rate_type]",
         values.payRateType === PayRateType.Hourly ? "hourly" : "project_based",
       );
-      formData.append("contractor[role]", values.role);
+      formData.append("contractor[role]", values.role?.toString() ?? "");
       formData.append("contractor[contract_signed_elsewhere]", values.contractSignedElsewhere.toString());
       formData.append("contractor[contract]", values.contract);
 
