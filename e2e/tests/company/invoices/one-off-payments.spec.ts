@@ -314,12 +314,8 @@ test.describe("One-off payments", () => {
       await page.getByRole("link", { name: "Invoices" }).click();
       const invoiceRow = page
         .locator("tbody tr")
-        .filter({
-          has: page.getByRole("link", { name: "O-0001" }),
-        })
-        .filter({
-          has: page.getByRole("cell", { name: "$123.45" }),
-        });
+        .filter({ has: page.getByRole("link", { name: "O-0001" }) })
+        .filter({ has: page.getByRole("cell", { name: "$123.45" }) });
       await expect(invoiceRow).toBeVisible();
 
       await invoiceRow.getByRole("link", { name: "O-0001" }).click();
@@ -366,18 +362,11 @@ test.describe("One-off payments", () => {
       await login(page, adminUser, "/invoices");
 
       await expect(page.locator("tbody")).toBeVisible();
-
       const invoiceRow = page
         .locator("tbody tr")
-        .filter({
-          has: page.getByRole("link", { name: "O-0002" }),
-        })
-        .filter({
-          has: page.getByRole("cell", { name: "$500.00" }),
-        })
-        .filter({
-          has: page.getByRole("cell", { name: "Failed" }),
-        });
+        .filter({ has: page.getByRole("link", { name: "O-0002" }) })
+        .filter({ has: page.getByRole("cell", { name: "$500.00" }) })
+        .filter({ has: page.getByRole("cell", { name: "Failed" }) });
       await expect(invoiceRow).toBeVisible();
 
       await invoiceRow.getByRole("button", { name: "Pay again" }).click();
