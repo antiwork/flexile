@@ -40,7 +40,7 @@ type Document = RouterOutput["documents"]["list"][number];
 const documentName = (document: Document) => {
   switch (document.type) {
     case DocumentType.ConsultingContract:
-      return "Consulting contract";
+      return "Consulting agreement";
     case DocumentType.EquityPlanContract:
       return `Equity incentive plan ${document.year}`;
     case DocumentType.ShareCertificate:

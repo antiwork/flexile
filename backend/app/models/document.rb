@@ -61,7 +61,7 @@ class Document < ApplicationRecord
   def name
     case document_type
     when "consulting_contract"
-      "Consulting Contract"
+      "Consulting agreement"
     when "equity_plan_contract"
       "Equity Incentive Plan #{year}"
     when "share_certificate"
