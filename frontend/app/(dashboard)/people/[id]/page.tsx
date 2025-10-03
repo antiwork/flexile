@@ -252,7 +252,6 @@ export default function ContractorPage() {
                     </AlertDescription>
                   </Alert>
                 ) : null}
-
                 <FormField
                   control={issuePaymentForm.control}
                   name="amountInCents"
