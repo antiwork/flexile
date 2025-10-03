@@ -216,28 +216,24 @@ export default function InvoicePage() {
             </DropdownMenu>
           ) : (
             <>
-              <Button variant="outline" size="small" onClick={() => window.print()}>
+              <Button variant="outline" onClick={() => window.print()}>
                 <Printer className="size-4" />
                 Print
               </Button>
               {user.roles.administrator && isActionable(invoice) ? (
                 <>
-                  <Button variant="outline" size="small" onClick={() => setRejectModalOpen(true)}>
+                  <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
                     <Ban className="size-4" />
                     Reject
                   </Button>
 
-                  <ApproveButton
-                    className="border-blue-500 bg-blue-500 hover:border-blue-600 hover:bg-blue-600"
-                    invoice={invoice}
-                    onApprove={() => router.push(`/invoices`)}
-                  />
+                   <ApproveButton variant="primary" invoice={invoice} onApprove={() => router.push(`/invoices`)} />
                 </>
               ) : null}
               {user.id === invoice.userId ? (
                 <>
                   {EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
-                    <Button variant="default" size="small" asChild>
+                    <Button variant="default" asChild>
                       <Link href={`/invoices/${invoice.id}/edit`}>
                         <SquarePen className="size-4" />
                         Edit invoice
@@ -246,7 +242,7 @@ export default function InvoicePage() {
                   ) : null}
 
                   {isDeletable(invoice) ? (
-                    <Button variant="destructive" size="small" onClick={() => setDeleteModalOpen(true)} className="">
+                    <Button variant="destructive" onClick={() => setDeleteModalOpen(true)} className="">
                       <Trash2 className="size-4" />
                       <span>Delete</span>
                     </Button>
@@ -337,7 +333,7 @@ export default function InvoicePage() {
 
               {invoice.lineItems.length > 0 ? (
                 <div className="w-full overflow-x-auto">
-                  <Table className="w-full min-w-[600px] table-fixed md:max-w-full md:min-w-full print:my-3 print:w-full print:border-collapse print:text-xs">
+                  <Table className="w-full min-w-fit print:my-3 print:w-full print:border-collapse print:text-xs">
                     <TableHeader>
                       <TableRow className="print:border-b print:border-gray-300">
                         <PrintTableHeader className="w-[40%] md:w-[50%] print:text-left">
@@ -412,13 +408,13 @@ export default function InvoicePage() {
                       <b className="print:text-sm print:font-bold">Notes</b>
                       <div>
                         <div className="text-xs">
-                          <p className="print:mt-1 print:text-xs">{invoice.notes}</p>
+                          <p className="whitespace-pre-wrap print:mt-1 print:text-xs">{invoice.notes}</p>
                         </div>
                       </div>
                     </div>
                   ) : null}
                 </div>
-                <Card className="print:min-w-36 print:border-none print:bg-transparent print:p-2">
+                <Card className="self-start print:min-w-36 print:border-none print:bg-transparent print:p-2">
                   <CardContent>
                     {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
                       <>
