@@ -95,6 +95,36 @@ test.describe("One-off payments", () => {
         );
       });
 
+      test("errors if there is insufficient equity for the payment", async ({ page }) => {
+        await db
+          .update(companyContractors)
+          .set({ equityPercentage: 80 })
+          .where(eq(companyContractors.id, companyContractor.id));
+
+        await db.update(companies).set({ fmvPerShareInUsd: null }).where(eq(companies.id, company.id));
+        await db.delete(equityGrants).where(eq(equityGrants.companyInvestorId, companyInvestor.id));
+
+        await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
+        await page.getByRole("button", { name: "Issue payment" }).click();
+
+        await withinModal(
+          async (modal) => {
+            await expect(modal.getByText("will receive 80% equity")).toBeVisible();
+            await modal.getByLabel("Amount").fill("50000.00");
+            await modal.getByLabel("What is this for?").fill("Bonus payment for Q4");
+            await modal.getByRole("button", { name: "Issue payment" }).click();
+
+            await expect(modal.getByText("Recipient has insufficient unvested equity")).toBeVisible();
+          },
+          { page, assertClosed: false },
+        );
+
+        const invoice = await db.query.invoices.findFirst({
+          where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
+        });
+        expect(invoice).toBeUndefined();
+      });
+
       test("uses the contractor's configured equity percentage", async ({ page, sentEmails }) => {
         await db
           .update(companyContractors)
@@ -138,36 +168,6 @@ test.describe("One-off payments", () => {
             text: expect.stringContaining("has sent you money"),
           }),
         ]);
-      });
-
-      test("errors if there is insufficient equity for the payment", async ({ page }) => {
-        await db
-          .update(companyContractors)
-          .set({ equityPercentage: 80 })
-          .where(eq(companyContractors.id, companyContractor.id));
-
-        await db.update(companies).set({ fmvPerShareInUsd: null }).where(eq(companies.id, company.id));
-        await db.delete(equityGrants).where(eq(equityGrants.companyInvestorId, companyInvestor.id));
-
-        await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
-        await page.getByRole("button", { name: "Issue payment" }).click();
-
-        await withinModal(
-          async (modal) => {
-            await expect(modal.getByText("will receive 80% equity")).toBeVisible();
-            await modal.getByLabel("Amount").fill("50000.00");
-            await modal.getByLabel("What is this for?").fill("Bonus payment for Q4");
-            await modal.getByRole("button", { name: "Issue payment" }).click();
-
-            await expect(modal.getByText("Recipient has insufficient unvested equity")).toBeVisible();
-          },
-          { page, assertClosed: false },
-        );
-
-        const invoice = await db.query.invoices.findFirst({
-          where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
-        });
-        expect(invoice).toBeUndefined();
       });
     });
   });

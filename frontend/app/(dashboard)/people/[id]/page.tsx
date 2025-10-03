@@ -379,7 +379,9 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex items-center gap-3">
-      <Button onClick={handleIssuePaymentClick}>Issue payment</Button>
+      <Button variant="primary" onClick={handleIssuePaymentClick}>
+        Issue payment
+      </Button>
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
         <Status variant="critical">Alumni</Status>
       ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (

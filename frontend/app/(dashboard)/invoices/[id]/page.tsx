@@ -401,7 +401,7 @@ export default function InvoicePage() {
                 />
               ) : null}
 
-              <footer className="flex justify-between px-4 print:mt-4 print:flex print:items-start print:justify-between">
+              <footer className="flex flex-col justify-between gap-3 px-4 lg:flex-row print:mt-4 print:flex print:items-start print:justify-between">
                 <div className="print:flex-1">
                   {invoice.notes ? (
                     <div>
