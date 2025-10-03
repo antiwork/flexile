@@ -6,7 +6,6 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { login, logout } from "@test/helpers/auth";
-import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companies, equityGrants, invoices } from "@/db/schema";
@@ -313,11 +312,15 @@ test.describe("One-off payments", () => {
       await login(page, workerUser);
 
       await page.getByRole("link", { name: "Invoices" }).click();
-
-      const invoiceRow = await findRequiredTableRow(page, {
-        "Invoice ID": "O-0001",
-        Amount: "$123.45",
-      });
+      const invoiceRow = page
+        .locator("tbody tr")
+        .filter({
+          has: page.getByRole("link", { name: "O-0001" }),
+        })
+        .filter({
+          has: page.getByRole("cell", { name: "$123.45" }),
+        });
+      await expect(invoiceRow).toBeVisible();
 
       await invoiceRow.getByRole("link", { name: "O-0001" }).click();
       await expect(page.getByRole("cell", { name: "Bonus!" })).toBeVisible();
@@ -364,10 +367,18 @@ test.describe("One-off payments", () => {
 
       await expect(page.locator("tbody")).toBeVisible();
 
-      const invoiceRow = await findRequiredTableRow(page, {
-        Amount: "$500",
-        Status: "Failed",
-      });
+      const invoiceRow = page
+        .locator("tbody tr")
+        .filter({
+          has: page.getByRole("link", { name: "O-0002" }),
+        })
+        .filter({
+          has: page.getByRole("cell", { name: "$500.00" }),
+        })
+        .filter({
+          has: page.getByRole("cell", { name: "Failed" }),
+        });
+      await expect(invoiceRow).toBeVisible();
 
       await invoiceRow.getByRole("button", { name: "Pay again" }).click();
 
