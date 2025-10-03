@@ -18,13 +18,13 @@ RSpec.describe GenerateTaxFormService do
   describe "#process" do
     subject(:generate_tax_form_service) do
       user.reload
-      described_class.new(user_compliance_info:, form_name:, tax_year:, company:)
+      described_class.new(user_compliance_info:, document_type:, tax_year:, company:)
     end
 
     context "when the user does not have confirmed tax info" do
       let(:user) { create(:user, :pre_onboarding) }
       let(:user_compliance_info) { user.compliance_info }
-      let(:form_name) { Document::ALL_SUPPORTED_TAX_FORM_NAMES.sample }
+      let(:document_type) { Document::TAX_FORM_TYPES.sample }
 
       it "does not create a new tax document" do
         expect do
@@ -35,7 +35,7 @@ RSpec.describe GenerateTaxFormService do
 
     shared_examples_for "existing tax document" do
       let!(:tax_document) do
-        create(:tax_doc, user_compliance_info:, name: form_name, year: tax_year, company:)
+        create(:document, user_compliance_info:, document_type:, year: tax_year, company:)
       end
 
       it "does not create a new tax document" do
@@ -46,7 +46,7 @@ RSpec.describe GenerateTaxFormService do
     end
 
     context "when the form name is invalid" do
-      let(:form_name) { "invalid_form" }
+      let(:document_type) { "invalid_form" }
       let(:business_entity) { false }
       let(:business_name) { nil }
       let(:business_type) { nil }
@@ -66,7 +66,7 @@ RSpec.describe GenerateTaxFormService do
       let(:business_name) { nil }
       let(:business_type) { nil }
       let(:tax_classification) { nil }
-      let(:form_name) { Document::FORM_W_8BEN }
+      let(:document_type) { "form_w8ben" }
 
       before { create(:company_worker, company:, user:) }
 
@@ -84,7 +84,7 @@ RSpec.describe GenerateTaxFormService do
           end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
           tax_document = user_compliance_info.documents.tax_document.last
-          expect(tax_document.name).to eq(form_name)
+          expect(tax_document.document_type).to eq(document_type)
           expect(tax_document.year).to eq(tax_year)
           expect(tax_document.company_id).to eq(company.id)
           expect(tax_document.live_attachment.filename).to eq("#{tax_year}-W-8BEN-#{company.name.parameterize}-#{user.billing_entity_name.parameterize}.pdf")
@@ -125,7 +125,7 @@ RSpec.describe GenerateTaxFormService do
           end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
           tax_document = user_compliance_info.documents.tax_document.last
-          expect(tax_document.name).to eq(form_name)
+          expect(tax_document.document_type).to eq(document_type)
           expect(tax_document.year).to eq(tax_year)
           expect(tax_document.company_id).to eq(company.id)
           expect(tax_document.live_attachment.filename).to eq("#{tax_year}-W-8BEN-#{company.name.parameterize}-#{user.billing_entity_name.parameterize}.pdf")
@@ -154,7 +154,7 @@ RSpec.describe GenerateTaxFormService do
       let(:business_name) { "Flexile" }
       let(:business_type) { "partnership" }
       let(:tax_classification) { nil }
-      let(:form_name) { Document::FORM_W_8BEN_E }
+      let(:document_type) { "form_w8bene" }
 
       before { create(:company_worker, company:, user:) }
 
@@ -172,7 +172,7 @@ RSpec.describe GenerateTaxFormService do
           end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
           tax_document = user_compliance_info.documents.tax_document.last
-          expect(tax_document.name).to eq(form_name)
+          expect(tax_document.document_type).to eq(document_type)
           expect(tax_document.year).to eq(tax_year)
           expect(tax_document.company_id).to eq(company.id)
           expect(tax_document.live_attachment.filename).to eq("#{tax_year}-W-8BEN-E-#{company.name.parameterize}-#{user.billing_entity_name.parameterize}.pdf")
@@ -213,7 +213,7 @@ RSpec.describe GenerateTaxFormService do
             end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
             tax_document = user_compliance_info.documents.tax_document.last
-            expect(tax_document.name).to eq(form_name)
+            expect(tax_document.document_type).to eq(document_type)
             expect(tax_document.year).to eq(tax_year)
             expect(tax_document.company_id).to eq(company.id)
             expect(tax_document.live_attachment.filename).to eq("#{tax_year}-W-8BEN-E-#{company.name.parameterize}-#{user.billing_entity_name.parameterize}.pdf")
@@ -240,7 +240,7 @@ RSpec.describe GenerateTaxFormService do
     end
 
     context "when form is a W-9" do
-      let(:form_name) { Document::FORM_W_9 }
+      let(:document_type) { "form_w9" }
       let(:user_compliance_info) do
         create(:user_compliance_info, :us_resident, :confirmed, user:, business_entity:, business_name:, business_type:, tax_classification:)
       end
@@ -261,7 +261,7 @@ RSpec.describe GenerateTaxFormService do
           end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
           tax_document = user_compliance_info.documents.tax_document.last
-          expect(tax_document.name).to eq(form_name)
+          expect(tax_document.document_type).to eq(document_type)
           expect(tax_document.year).to eq(tax_year)
           expect(tax_document.company_id).to eq(company.id)
           expect(tax_document.live_attachment.filename).to eq("#{tax_year}-W-9-#{company.name.parameterize}-#{user.billing_entity_name.parameterize}.pdf")
@@ -293,7 +293,7 @@ RSpec.describe GenerateTaxFormService do
           end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
           tax_document = user_compliance_info.documents.tax_document.last
-          expect(tax_document.name).to eq(form_name)
+          expect(tax_document.document_type).to eq(document_type)
           expect(tax_document.year).to eq(tax_year)
           expect(tax_document.company_id).to eq(company.id)
           expect(tax_document.live_attachment.filename).to eq("#{tax_year}-W-9-#{company.name.parameterize}-#{user.billing_entity_name.parameterize}.pdf")
@@ -313,7 +313,7 @@ RSpec.describe GenerateTaxFormService do
     end
 
     context "when form is a 1099-DIV" do
-      let(:form_name) { Document::FORM_1099_DIV }
+      let(:document_type) { "form_1099div" }
       let(:business_entity) { false }
       let(:business_name) { nil }
       let(:business_type) { nil }
@@ -366,7 +366,7 @@ RSpec.describe GenerateTaxFormService do
         end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
         tax_document = user_compliance_info.documents.tax_document.last
-        expect(tax_document.name).to eq(form_name)
+        expect(tax_document.document_type).to eq(document_type)
         expect(tax_document.year).to eq(tax_year)
         expect(tax_document.company_id).to eq(company.id)
         expect(tax_document.live_attachment.filename).to eq("#{tax_year}-1099-DIV-#{company.name.parameterize}-#{user.billing_entity_name.parameterize}.pdf")
@@ -393,7 +393,7 @@ RSpec.describe GenerateTaxFormService do
     end
 
     context "when form is a 1099-NEC" do
-      let(:form_name) { Document::FORM_1099_NEC }
+      let(:document_type) { "form_1099nec" }
       let(:business_entity) { false }
       let(:business_name) { nil }
       let(:business_type) { nil }
@@ -431,7 +431,7 @@ RSpec.describe GenerateTaxFormService do
         end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
         tax_document = user_compliance_info.documents.tax_document.last
-        expect(tax_document.name).to eq(form_name)
+        expect(tax_document.document_type).to eq(document_type)
         expect(tax_document.year).to eq(tax_year)
         expect(tax_document.company_id).to eq(company.id)
         expect(tax_document.live_attachment.filename).to eq("#{tax_year}-1099-NEC-#{company.name.parameterize}-#{user.billing_entity_name.parameterize}.pdf")
@@ -456,7 +456,7 @@ RSpec.describe GenerateTaxFormService do
     end
 
     context "when form is a 1042-S" do
-      let(:form_name) { Document::FORM_1042_S }
+      let(:document_type) { "form_1042s" }
       let(:business_entity) { false }
       let(:business_name) { nil }
       let(:business_type) { nil }
@@ -526,7 +526,7 @@ RSpec.describe GenerateTaxFormService do
         end.to change { user_compliance_info.documents.tax_document.count }.by(1)
 
         tax_document = user_compliance_info.documents.tax_document.last
-        expect(tax_document.name).to eq(form_name)
+        expect(tax_document.document_type).to eq(document_type)
         expect(tax_document.year).to eq(tax_year)
         expect(tax_document.company_id).to eq(company.id)
         expect(tax_document.live_attachment.filename).to eq("#{tax_year}-1042-S-#{company.name.parameterize}-#{user.billing_entity_name.parameterize}.pdf")

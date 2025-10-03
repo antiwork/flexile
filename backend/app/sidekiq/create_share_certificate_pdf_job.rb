@@ -24,11 +24,10 @@ class CreateShareCertificatePdfJob
                              launch_args: ["--disable-web-security", "--no-sandbox", "--disable-setuid-sandbox"],
                              executable_path: ENV["PUPPETEER_EXECUTABLE_PATH"]).to_pdf
 
-    certificate_name = "#{share_holding.name} Share Certificate"
-    share_certificate = Document.new(company:, document_type: :share_certificate, name: certificate_name, year: Time.current.year)
+    share_certificate = Document.new(company:, document_type: :share_certificate, share_holding:, year: Time.current.year)
     share_certificate.attachments.attach(
       io: StringIO.new(pdf_content),
-      filename: "#{certificate_name}.pdf",
+      filename: "#{share_certificate.name}.pdf",
       content_type: "application/pdf",
     )
     share_certificate.signatures.build(user: company_investor.user, title: "Signer", signed_at: Time.current)
