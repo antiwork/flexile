@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
 import { isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
-import { AlertTriangle, CircleCheck, Copy, Plus } from "lucide-react";
+import { AlertTriangle, CircleCheck, Copy, Info, Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from "react";
@@ -238,6 +238,14 @@ export default function ContractorPage() {
             <DialogHeader>
               <DialogTitle>Issue one-time payment</DialogTitle>
             </DialogHeader>
+            {company.flags.includes("equity") && (contractor?.equityPercentage ?? 0) > 0 ? (
+              <Alert>
+                <Info />
+                <AlertDescription>
+                  {user.displayName} will receive {contractor?.equityPercentage ?? 0}% equity
+                </AlertDescription>
+              </Alert>
+            ) : null}
             <Form {...issuePaymentForm}>
               <form onSubmit={(e) => void submitIssuePayment(e)} className="grid gap-4">
                 <FormField
@@ -274,24 +282,6 @@ export default function ContractorPage() {
                     </FormItem>
                   )}
                 />
-                {company.flags.includes("equity") && contractor && contractor.equityPercentage > 0 ? (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Equity
-                      </label>
-                      <div className="bg-muted mt-2 rounded-md p-3">
-                        <p className="text-sm">
-                          Contractor will get{" "}
-                          <span className="font-semibold">
-                            {(contractor.equityPercentage / 100).toLocaleString(undefined, { style: "percent" })}
-                          </span>{" "}
-                          equity based on their default preference.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
 
                 {issuePaymentForm.formState.errors.root ? (
                   <small className="text-red">{issuePaymentForm.formState.errors.root.message}</small>
