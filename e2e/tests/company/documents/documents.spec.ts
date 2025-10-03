@@ -74,7 +74,7 @@ test.describe("Documents", () => {
       "href",
       "/download/blobkey/test.pdf",
     );
-    await expect(page.getByRole("row").filter({ hasText: "Equity plan" })).toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: "Equity incentive plan" })).toBeVisible();
 
     const searchInput = page.getByPlaceholder("Search by Signer...");
     await expect(searchInput).toBeVisible();
@@ -82,7 +82,7 @@ test.describe("Documents", () => {
     await searchInput.fill(contractor1User.preferredName || "");
 
     await expect(page.getByRole("row").filter({ hasText: "Consulting agreement" })).toBeVisible();
-    await expect(page.getByRole("row").filter({ hasText: "Equity plan" })).not.toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: "Equity incentive plan" })).not.toBeVisible();
   });
 
   test("allows administrators to share documents", async ({ page }) => {
@@ -114,7 +114,10 @@ test.describe("Documents", () => {
 
   test("shows the correct names for documents", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
-    await documentsFactory.create({ companyId: company.id, type: DocumentType.EquityPlanContract });
+    const { document: equityPlanContract } = await documentsFactory.create({
+      companyId: company.id,
+      type: DocumentType.EquityPlanContract,
+    });
     const shareHolding = await shareHoldingsFactory.create();
     await documentsFactory.create({
       companyId: company.id,
@@ -127,7 +130,7 @@ test.describe("Documents", () => {
     await page.getByRole("menuitem", { name: "Status" }).click();
     await page.getByRole("menuitemcheckbox", { name: "All" }).click();
     await expect(page.locator("tbody tr")).toHaveCount(2);
-    await expect(page.getByText("Equity incentive plan 2025")).toBeVisible();
+    await expect(page.getByText(`Equity incentive plan ${equityPlanContract.year}`)).toBeVisible();
     await expect(page.getByText(`${shareHolding.name} share certificate`)).toBeVisible();
   });
 });
