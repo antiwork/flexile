@@ -1,4 +1,4 @@
-import { db } from "@test/db";
+import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
@@ -74,12 +74,10 @@ test.describe("One-off payments", () => {
         }),
       ]);
     });
-    test("allows admin to create a payment for a user without a completed profile", async ({ page, sentEmails }) => {
-      const preOnboardingUser = (await usersFactory.createPreOnboarding()).user;
-      await companyContractorsFactory.create({
-        companyId: company.id,
-        userId: preOnboardingUser.id,
-      });
+
+    test("allows admin to create a payment for a user without a completed profile", async ({ page, sentEmails: _ }) => {
+      const preOnboardingUser = (await usersFactory.create({ legalName: null }, { withoutComplianceInfo: true })).user;
+      await companyContractorsFactory.create({ companyId: company.id, userId: preOnboardingUser.id });
 
       await login(page, adminUser, `/people/${preOnboardingUser.externalId}?tab=invoices`);
 
@@ -94,25 +92,27 @@ test.describe("One-off payments", () => {
         { page },
       );
 
-      const invoice = await db.query.invoices.findFirst({
-        where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
-      });
-      if (!invoice) {
-        throw new Error("Invoice should have been created");
-      }
-      expect(invoice).toEqual(
-        expect.objectContaining({
-          totalAmountInUsdCents: BigInt(100000),
-          billFrom: null,
-        }),
-      );
+      const invoice = await db.query.invoices
+        .findFirst({ where: eq(invoices.companyId, company.id) })
+        .then(takeOrThrow);
+      expect(invoice.billFrom).toBeNull();
 
-      expect(sentEmails).toEqual([
-        expect.objectContaining({
-          to: preOnboardingUser.email,
-          subject: `🔴 Action needed: ${company.name} would like to pay you`,
-        }),
-      ]);
+      await logout(page);
+      await login(page, preOnboardingUser, `/invoices/${invoice.externalId}`);
+      await expect(page.getByRole("button", { name: "Accept payment" })).toBeDisabled();
+      await expect(page.getByText("Missing tax information.")).toBeVisible();
+      await page.getByRole("link", { name: "Invoices" }).click();
+      await page.getByRole("link").getByText("provide your legal details").click();
+      await page.getByLabel("Full legal name (must match your ID)").fill("Legal Name");
+      await page.getByLabel("Tax ID").fill("123456789");
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await withinModal(async (modal) => modal.getByRole("button", { name: "Save", exact: true }).click(), { page });
+      await page.getByRole("link", { name: "Back to app" }).click();
+      await page.getByRole("link", { name: "Invoices" }).click();
+      await page.getByRole("link", { name: invoice.invoiceNumber }).click();
+      await page.getByRole("button", { name: "Accept payment" }).click();
+      await withinModal(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), { page });
+      await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
     });
 
     test.describe("for a contractor with equity", () => {
