@@ -227,7 +227,7 @@ export default function InvoicePage() {
                     Reject
                   </Button>
 
-                   <ApproveButton variant="primary" invoice={invoice} onApprove={() => router.push(`/invoices`)} />
+                  <ApproveButton variant="primary" invoice={invoice} onApprove={() => router.push(`/invoices`)} />
                 </>
               ) : null}
               {user.id === invoice.userId ? (

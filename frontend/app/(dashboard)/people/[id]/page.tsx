@@ -292,15 +292,15 @@ export default function ContractorPage() {
                 ) : null}
 
                 <DialogFooter>
-                    <MutationStatusButton
-                      type="submit"
-                      idleVariant="primary"
-                      mutation={issuePaymentMutation}
-                      successText="Payment submitted!"
-                      loadingText="Saving..."
-                    >
-                      Issue payment
-                    </MutationStatusButton>
+                  <MutationStatusButton
+                    type="submit"
+                    idleVariant="primary"
+                    mutation={issuePaymentMutation}
+                    successText="Payment submitted!"
+                    loadingText="Saving..."
+                  >
+                    Issue payment
+                  </MutationStatusButton>
                 </DialogFooter>
               </form>
             </Form>
@@ -379,9 +379,7 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex items-center gap-3">
-      <Button onClick={handleIssuePaymentClick}>
-        Issue payment
-      </Button>
+      <Button onClick={handleIssuePaymentClick}>Issue payment</Button>
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
         <Status variant="critical">Alumni</Status>
       ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
