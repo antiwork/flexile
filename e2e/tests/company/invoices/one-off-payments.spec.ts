@@ -95,7 +95,7 @@ test.describe("One-off payments", () => {
         );
       });
 
-      test("errors if there is insufficient equity for the payment", async ({ page }) => {
+      test("errors if the worker has no equity grant and the company does not have a share price", async ({ page }) => {
         await db
           .update(companyContractors)
           .set({ equityPercentage: 80 })
@@ -112,8 +112,10 @@ test.describe("One-off payments", () => {
             await expect(modal.getByText("will receive 80% equity")).toBeVisible();
             await modal.getByLabel("Amount").fill("50000.00");
             await modal.getByLabel("What is this for?").fill("Bonus payment for Q4");
-            await modal.getByRole("button", { name: "Issue payment" }).click();
-
+            await Promise.all([
+              page.waitForResponse((r) => r.url().includes("invoices.createAsAdmin") && r.status() === 400),
+              modal.getByRole("button", { name: "Issue payment" }).click(),
+            ]);
             await expect(modal.getByText("Recipient has insufficient unvested equity")).toBeVisible();
           },
           { page, assertClosed: false },
