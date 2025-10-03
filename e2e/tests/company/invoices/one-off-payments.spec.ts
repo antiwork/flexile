@@ -6,7 +6,6 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { login, logout } from "@test/helpers/auth";
-import { findTableRow } from "@test/helpers/matchers";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companies, equityGrants, invoices } from "@/db/schema";
@@ -314,11 +313,13 @@ test.describe("One-off payments", () => {
 
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      const invoiceRow = await findTableRow(page, {
-        "Invoice ID": "O-0001",
-        Amount: "$123.45",
-      });
-      await invoiceRow.getByRole("link", { name: "O-0001" }).click();
+      await page
+        .getByTableRowCustom({
+          "Invoice ID": "O-0001",
+          Amount: "$123.45",
+        })
+        .getByRole("link", { name: "O-0001" })
+        .click();
 
       await expect(page.getByRole("cell", { name: "Bonus!" })).toBeVisible();
 
@@ -362,12 +363,13 @@ test.describe("One-off payments", () => {
 
       await login(page, adminUser, "/invoices");
 
-      const invoiceRow = await findTableRow(page, {
-        Amount: "$500",
-        Status: "Failed",
-      });
-
-      await invoiceRow.getByRole("button", { name: "Pay again" }).click();
+      await page
+        .getByTableRowCustom({
+          Amount: "$500",
+          Status: "Failed",
+        })
+        .getByRole("button", { name: "Pay again" })
+        .click();
 
       await expect(page.getByText("Payment initiated")).toBeVisible();
     });
