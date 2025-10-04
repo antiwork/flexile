@@ -1,33 +1,31 @@
-import { type Page } from "@playwright/test";
-import { assert } from "@/utils/assert";
+import { type Locator, type Page } from "@playwright/test";
 
-export const findTableRow = async (page: Page, columnValues: Record<string, string>) => {
-  const rows = await page.locator("tbody tr").all();
-  for (const row of rows) {
-    let matchesAll = true;
+const REGEX_SPECIAL_CHARACTERS = new Set(["\\", ".", "*", "+", "?", "^", "$", "{", "}", "(", ")", "|", "[", "]"]);
+const escapeForRegex = (value: string) =>
+  value
+    .split("")
+    .map((char) => (REGEX_SPECIAL_CHARACTERS.has(char) ? `\\${char}` : char))
+    .join("");
 
-    for (const [columnLabel, expectedValue] of Object.entries(columnValues)) {
-      const headerCell = page.locator("th").filter({ hasText: columnLabel });
-      const columnIndex = await headerCell.evaluate((el) => Array.from(el.parentElement?.children || []).indexOf(el));
+export const findTableRow = (page: Page, columnValues: Record<string, string>): Locator => {
+  const rows = page.locator("tbody tr:not([hidden])");
+  const cellLocator = page.locator("tbody tr td");
 
-      const cellText = await row.getByRole("cell").nth(columnIndex).textContent();
-      if (!cellText?.includes(expectedValue)) {
-        matchesAll = false;
-        break;
-      }
+  let matchingRows = rows;
+
+  for (const [columnLabel, expectedValue] of Object.entries(columnValues)) {
+    const trimmedValue = expectedValue.trim();
+    if (!trimmedValue) {
+      continue;
     }
 
-    if (matchesAll) {
-      return row;
-    }
+    const columnLabelLocator = page.locator("div[aria-hidden]", { hasText: columnLabel });
+    const valueMatcher = new RegExp(escapeForRegex(trimmedValue), "iu");
+
+    const cellInColumn = cellLocator.filter({ has: columnLabelLocator }).filter({ hasText: valueMatcher });
+
+    matchingRows = matchingRows.filter({ has: cellInColumn });
   }
 
-  return null;
-};
-
-// TODO (techdebt) clean this up
-export const findRequiredTableRow = async (...args: Parameters<typeof findTableRow>) => {
-  const row = await findTableRow(...args);
-  assert(row !== null);
-  return row;
+  return matchingRows.first();
 };
