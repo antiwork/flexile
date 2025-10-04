@@ -29,7 +29,6 @@ export default function InvoiceLoading() {
         {/* Invoice details section */}
         <section className="mx-4">
           <div className="grid gap-4 pb-28">
-            {/* Header info grid */}
             <div className="grid auto-cols-fr gap-3 p-4 md:grid-flow-col">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i}>
