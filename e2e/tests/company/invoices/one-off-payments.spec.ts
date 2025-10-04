@@ -354,7 +354,7 @@ test.describe("One-off payments", () => {
 
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      const invoiceRow = await findTableRow(page, {
+      const invoiceRow = findTableRow(page, {
         "Invoice ID": "O-0001",
         Amount: "$123.45",
       });
@@ -406,7 +406,7 @@ test.describe("One-off payments", () => {
 
       await expect(page.locator("tbody")).toBeVisible();
 
-      const invoiceRow = await findTableRow(page, {
+      const invoiceRow = findTableRow(page, {
         Amount: "$500",
         Status: "Failed",
       });
