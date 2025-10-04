@@ -38,7 +38,7 @@ export default function InvoiceLoading() {
               ))}
             </div>
 
-            {/* Invoice items table */}
+            {/* Invoice items list table */}
             <div className="w-full overflow-x-auto">
               <Table className="w-full min-w-fit">
                 <TableHeader>
