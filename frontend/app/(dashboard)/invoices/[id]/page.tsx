@@ -37,6 +37,7 @@ import {
   RejectModal,
   StatusDetails,
   taxRequirementsMet,
+  useCanSubmitInvoices,
   useIsActionable,
   useIsDeletable,
 } from "..";
@@ -424,7 +425,7 @@ export default function InvoicePage() {
                             {formatMoneyFromCents(
                               invoice.lineItems.reduce(
                                 (acc, lineItem) => acc + lineItemTotal(lineItem) * cashFactor,
-                                0,
+                                0,f
                               ),
                             )}
                           </span>
