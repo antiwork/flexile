@@ -187,21 +187,6 @@ test.describe("Invoice Status Filtering", () => {
         ],
       },
       {
-        status: "Approved",
-        expectedContractors: ["Fully Approved Dev"],
-        hiddenContractors: [
-          "Zero Approval Dev",
-          "One Approval Dev",
-          "Frontend Developer",
-          "Main Contractor",
-          "Processing Dev",
-          "Paid Dev",
-          "Rejected Dev",
-          "Failed Dev",
-          "Payment Pending Dev",
-        ],
-      },
-      {
         status: "Processing",
         expectedContractors: ["Processing Dev", "Payment Pending Dev"],
         hiddenContractors: [

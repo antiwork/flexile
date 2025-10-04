@@ -80,6 +80,8 @@ const statusNames = {
   failed: "Failed",
 };
 
+const statusFilterOptions = [...new Set(Object.values(statusNames))];
+
 const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
   switch (invoice.status) {
     case "received":
@@ -221,6 +223,7 @@ export default function InvoicesPage() {
         if (row.approvals.length < company.requiredInvoiceApprovals) {
           return "Awaiting approval";
         }
+        // Display "Approved" status but don't filter by it - invoices should auto-transition to payment
         return "Approved";
       }
       return statusNames[row.status];
@@ -260,7 +263,7 @@ export default function InvoicesPage() {
         header: "Status",
         cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
         meta: {
-          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
+          filterOptions: statusFilterOptions,
         },
       }),
       columnHelper.accessor(isActionable, {
@@ -338,7 +341,7 @@ export default function InvoicesPage() {
       columnHelper.accessor(getStatusFilterValue, {
         id: "status",
         meta: {
-          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
+          filterOptions: statusFilterOptions,
           hidden: true,
         },
       }),
