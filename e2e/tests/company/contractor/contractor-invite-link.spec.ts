@@ -69,6 +69,21 @@ test.describe("Contractor Invite Link Joining flow", () => {
 
     await expect(page.getByLabel("Role")).not.toBeValid();
 
+    const roleField = page.getByLabel("Role");
+    await roleField.click();
+
+    await expect(page.getByRole("option", { name: "Software Engineer" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Designer" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Product Manager" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Data Analyst" })).toBeVisible();
+
+    await roleField.fill("de");
+    await expect(page.getByRole("option", { name: "Software Engineer" })).not.toBeVisible();
+    await expect(page.getByRole("option", { name: "Designer" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Product Manager" })).not.toBeVisible();
+    await expect(page.getByRole("option", { name: "Data Analyst" })).not.toBeVisible();
+    await roleField.clear();
+
     await page.getByLabel("Role").fill("Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
     await page.getByRole("button", { name: "Continue" }).click();

@@ -27,9 +27,8 @@ export default function FormFields() {
 
   const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
   const roleRegex = new RegExp(form.watch("role"), "iu");
-  const filteredRoles = workers
-    ? [...new Set(workers.map((worker) => worker.role))].sort().filter((value) => roleRegex.test(value))
-    : defaultRoles;
+  const allRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : defaultRoles;
+  const filteredRoles = allRoles.filter((value) => roleRegex.test(value));
 
   return (
     <>
