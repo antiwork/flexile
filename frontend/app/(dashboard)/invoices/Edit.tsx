@@ -169,12 +169,25 @@ const Edit = () => {
   const validate = () => {
     setErrorField(null);
     if (invoiceNumber.length === 0) setErrorField("invoiceNumber");
-    return (
-      errorField === null &&
-      lineItems.every((lineItem) => !lineItem.errors?.length) &&
-      expenses.every((expense) => !expense.errors?.length) &&
-      (!document || !document.errors?.length)
-    );
+
+    const nextLineItems = lineItems.map((lineItem) => {
+      const errors: string[] = [];
+      const hasContent =
+        lineItem.description.trim().length > 0 || (lineItem.quantity && parseQuantity(lineItem.quantity) > 0);
+      if (hasContent && lineItem.description.trim().length === 0) {
+        errors.push("description");
+      }
+      return { ...lineItem, errors };
+    });
+    setLineItems(nextLineItems);
+
+    const hasDescriptionErrors = nextLineItems.some((lineItem) => lineItem.errors.includes("description"));
+
+    const hasValidLineItems = nextLineItems.size === 0 || !hasDescriptionErrors;
+    const hasValidExpenses = expenses.every((expense) => (expense.errors?.length ?? 0) === 0);
+    const hasValidDocument = (document?.errors?.length ?? 0) === 0;
+
+    return errorField === null && hasValidLineItems && hasValidExpenses && hasValidDocument;
   };
 
   const submit = useMutation({
