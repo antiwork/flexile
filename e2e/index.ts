@@ -1,4 +1,4 @@
-import { expect as baseExpected, type Locator, type Page } from "@playwright/test";
+import { expect as baseExpect, type Locator, type Page } from "@playwright/test";
 import { createTableRowEngine, serializeColumnValues } from "@test/selectors/tableRowEngine";
 import { test as baseTest } from "next/experimental/testmode/playwright.js";
 import type { CreateEmailOptions } from "resend";
@@ -25,7 +25,6 @@ export const test = baseTest.extend<
   selectorRegistration: [
     async ({ playwright }, use) => {
       await playwright.selectors.register("tableRow", createTableRowEngine);
-      console.log("[DEBUG] tableRow selector engine registered successfully");
       await use();
     },
     { scope: "worker", auto: true },
@@ -52,7 +51,7 @@ export const test = baseTest.extend<
   },
 });
 
-export const expect = baseExpected.extend({
+export const expect = baseExpect.extend({
   async toBeValid(locator: Locator) {
     let error: unknown;
     try {
