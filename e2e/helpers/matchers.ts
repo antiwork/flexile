@@ -1,49 +1,31 @@
 import { type Locator, type Page } from "@playwright/test";
 
-const EMPTY_ROW_FILTER = "__FLEXILE_TABLE_ROW_NOT_FOUND__";
+const REGEX_SPECIAL_CHARACTERS = new Set(["\\", ".", "*", "+", "?", "^", "$", "{", "}", "(", ")", "|", "[", "]"]);
+const escapeForRegex = (value: string) =>
+  value
+    .split("")
+    .map((char) => (REGEX_SPECIAL_CHARACTERS.has(char) ? `\\${char}` : char))
+    .join("");
 
-export const findTableRow = async (page: Page, columnValues: Record<string, string>): Promise<Locator> => {
-  const headerCells = page.locator("thead tr").last().locator("th");
-  const headerTexts = await headerCells.allTextContents();
-  const headerLookup = new Map(headerTexts.map((text, index) => [text.trim(), index] as const));
+export const findTableRow = (page: Page, columnValues: Record<string, string>): Locator => {
+  const rows = page.locator("tbody tr:not([hidden])");
+  const cellLocator = page.locator("tbody tr td");
 
-  const rows = page.locator("tbody tr");
-  const rowCount = await rows.count();
+  let matchingRows = rows;
 
-  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
-    const row = rows.nth(rowIndex);
-    if (await row.isHidden()) {
+  for (const [columnLabel, expectedValue] of Object.entries(columnValues)) {
+    const trimmedValue = expectedValue.trim();
+    if (!trimmedValue) {
       continue;
     }
 
-    let matchesAll = true;
+    const columnLabelLocator = page.locator("div[aria-hidden]", { hasText: columnLabel });
+    const valueMatcher = new RegExp(escapeForRegex(trimmedValue), "iu");
 
-    for (const [columnLabel, expectedValue] of Object.entries(columnValues)) {
-      const columnIndex = headerLookup.get(columnLabel);
-      if (columnIndex === undefined) {
-        matchesAll = false;
-        break;
-      }
+    const cellInColumn = cellLocator.filter({ has: columnLabelLocator }).filter({ hasText: valueMatcher });
 
-      const cells = row.getByRole("cell");
-      const cellCount = await cells.count();
-
-      if (cellCount <= columnIndex) {
-        matchesAll = false;
-        break;
-      }
-
-      const cellText = await cells.nth(columnIndex).textContent();
-      if (!cellText?.includes(expectedValue)) {
-        matchesAll = false;
-        break;
-      }
-    }
-
-    if (matchesAll) {
-      return row;
-    }
+    matchingRows = matchingRows.filter({ has: cellInColumn });
   }
 
-  return page.locator("tbody tr").filter({ hasText: EMPTY_ROW_FILTER });
+  return matchingRows.first();
 };
