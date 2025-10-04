@@ -80,6 +80,8 @@ const statusNames = {
   failed: "Failed",
 };
 
+const statusFilterOptions = [...new Set(Object.values(statusNames))];
+
 const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
   switch (invoice.status) {
     case "received":
@@ -214,6 +216,21 @@ export default function InvoicesPage() {
   });
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
+
+  const getStatusFilterValue = useCallback(
+    (row: Invoice) => {
+      if (row.status === "received" || row.status === "approved") {
+        if (row.approvals.length < company.requiredInvoiceApprovals) {
+          return "Awaiting approval";
+        }
+        // Display "Approved" status but don't filter by it - invoices should auto-transition to payment
+        return "Approved";
+      }
+      return statusNames[row.status];
+    },
+    [company.requiredInvoiceApprovals],
+  );
+
   const desktopColumns = useMemo(
     () => [
       user.roles.administrator
@@ -241,12 +258,12 @@ export default function InvoicesPage() {
         (value) => (value ? formatMoneyFromCents(value) : "N/A"),
         "numeric",
       ),
-      columnHelper.accessor((row) => statusNames[row.status], {
+      columnHelper.accessor(getStatusFilterValue, {
         id: "status",
         header: "Status",
         cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
         meta: {
-          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
+          filterOptions: statusFilterOptions,
         },
       }),
       columnHelper.accessor(isActionable, {
@@ -321,10 +338,10 @@ export default function InvoicesPage() {
         },
       }),
 
-      columnHelper.accessor((row) => statusNames[row.status], {
+      columnHelper.accessor(getStatusFilterValue, {
         id: "status",
         meta: {
-          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
+          filterOptions: statusFilterOptions,
           hidden: true,
         },
       }),
