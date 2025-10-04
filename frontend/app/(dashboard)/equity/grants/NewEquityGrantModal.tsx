@@ -284,7 +284,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
           </DialogStackHeader>
           <Form {...detailsForm}>
             <form onSubmit={(e) => void submitDetails(e)} className="contents">
-              <div className="grid h-auto gap-4 overflow-y-auto">
+              <div className="grid h-auto gap-4 overflow-y-auto p-0.5">
                 <FormField
                   control={detailsForm.control}
                   name="userId"
