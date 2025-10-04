@@ -134,6 +134,7 @@ test.describe("invoice editing", () => {
 
     await page.getByRole("cell", { name: "INV-STALE-TEST" }).click();
     await page.getByRole("link", { name: "Edit invoice" }).click();
+    await page.waitForSelector('[data-slot="skeleton"]', { state: "detached" });
     await expect(page.getByRole("link", { name: "Edit invoice" })).toBeVisible();
 
     // Verify initial data is loaded correctly
