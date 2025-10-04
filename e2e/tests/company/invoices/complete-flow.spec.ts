@@ -48,6 +48,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await expect(page.getByText("$683", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
     await expect(page.locator("tbody")).toContainText("$683");
@@ -60,6 +61,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
     await expect(page.locator("tbody")).toContainText("$23");
@@ -87,6 +89,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
     await expect(page.locator("tbody")).toContainText("$33");
@@ -110,6 +113,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await fillByLabel(page, "Hours / Qty", "10:23", { index: 0 });
     await fillDatePicker(page, "Date", "11/20/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByText("Awaiting approval")).toBeVisible();
 
     await logout(page);
