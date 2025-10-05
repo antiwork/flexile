@@ -98,7 +98,6 @@ test.describe("One-off payments", () => {
 
       await logout(page);
       await login(page, preOnboardingUser, `/invoices/${invoice.externalId}`);
-      await expect(page.getByRole("button", { name: "Accept payment" })).toBeDisabled();
       await expect(page.getByText("Missing tax information.")).toBeVisible();
       await page.getByRole("link", { name: "Invoices" }).click();
       await page.getByRole("link").getByText("provide your legal details").click();
@@ -109,9 +108,12 @@ test.describe("One-off payments", () => {
       await page.getByRole("link", { name: "Back to app" }).click();
       await page.getByRole("link", { name: "Invoices" }).click();
       await page.getByRole("link", { name: invoice.invoiceNumber }).click();
-      await page.getByRole("button", { name: "Accept payment" }).click();
-      await withinModal(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), { page });
       await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
+
+      const updatedInvoice = await db.query.invoices
+        .findFirst({ where: eq(invoices.id, invoice.id) })
+        .then(takeOrThrow);
+      expect(updatedInvoice.billFrom).toBe("Legal Name");
     });
 
     test.describe("for a contractor with equity", () => {

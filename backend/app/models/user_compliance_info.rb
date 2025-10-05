@@ -25,6 +25,7 @@ class UserComplianceInfo < ApplicationRecord
   after_create_commit :delete_outdated_compliance_infos!, unless: :deleted?
   after_commit :generate_tax_information_document, if: -> { alive? && tax_information_confirmed_at? }
   after_commit :generate_irs_tax_forms, if: -> { alive? && tax_information_confirmed_at? }
+  after_commit :update_pending_invoice_bill_from, if: -> { alive? && tax_information_confirmed_at? }
   before_save :update_tax_id_status
 
   delegate :worker?, to: :user
@@ -95,5 +96,9 @@ class UserComplianceInfo < ApplicationRecord
     def prior_compliance_info
       return @_prior_compliance_info if defined?(@_prior_compliance_info)
       @_prior_compliance_info = user.user_compliance_infos.where.not(id:).order(id: :desc).take
+    end
+
+    def update_pending_invoice_bill_from
+      user.invoices.where(bill_from: nil).update_all(bill_from: user.billing_entity_name)
     end
 end
