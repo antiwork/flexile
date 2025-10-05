@@ -37,7 +37,6 @@ import {
   RejectModal,
   StatusDetails,
   taxRequirementsMet,
-  useCanSubmitInvoices,
   useIsActionable,
   useIsDeletable,
 } from "..";
@@ -110,7 +109,6 @@ export default function InvoicePage() {
   const payRateInSubunits = invoice.contractor.payRateInSubunits;
   const complianceInfo = invoice.contractor.user.complianceInfo;
   const [expenseCategories] = trpc.expenseCategories.list.useSuspenseQuery({ companyId: company.id });
-  const { canSubmitInvoices } = useCanSubmitInvoices();
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
