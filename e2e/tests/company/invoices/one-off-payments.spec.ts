@@ -100,20 +100,9 @@ test.describe("One-off payments", () => {
 
       await logout(page);
       await login(page, preOnboardingUser, `/invoices/${invoice.externalId}`);
-      await expect(page.getByRole("button", { name: "Accept payment" })).toBeDisabled();
       await expect(page.getByText("Missing tax information.")).toBeVisible();
       await page.getByRole("link", { name: "Invoices" }).click();
-      await page.getByRole("link").getByText("provide your legal details").click();
-      await page.getByLabel("Full legal name (must match your ID)").fill("Legal Name");
-      await page.getByLabel("Tax ID").fill("123456789");
-      await page.getByRole("button", { name: "Save changes" }).click();
-      await withinModal(async (modal) => modal.getByRole("button", { name: "Save", exact: true }).click(), { page });
-      await page.getByRole("link", { name: "Back to app" }).click();
-      await page.getByRole("link", { name: "Invoices" }).click();
-      await page.getByRole("link", { name: invoice.invoiceNumber }).click();
-      await page.getByRole("button", { name: "Accept payment" }).click();
-      await withinModal(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), { page });
-      await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
+      await expect(page.getByRole("link").getByText("provide your legal details")).toBeVisible();
     });
 
     test.describe("for a contractor with equity", () => {
@@ -215,7 +204,7 @@ test.describe("One-off payments", () => {
   });
 
   test.describe("invoice list visibility", () => {
-    test("does not show one-off payments in the admin invoice list while they're not accepted by the payee", async ({
+    test("displays one-off payments in the admin invoice list without requiring acceptance by the payee", async ({
       page,
       sentEmails: _,
     }) => {
