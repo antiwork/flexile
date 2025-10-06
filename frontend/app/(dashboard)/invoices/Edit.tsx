@@ -323,11 +323,11 @@ const Edit = () => {
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
   const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
-  const [equityCalculation] = trpc.equityCalculations.calculate.useSuspenseQuery({
-    companyId: company.id,
-    servicesInCents: totalServicesAmountInCents,
-    invoiceYear,
-  });
+  const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery(
+    { companyId: company.id, servicesInCents: totalServicesAmountInCents, invoiceYear },
+    { refetchOnWindowFocus: false },
+  );
+  const equityCents = equityCalculation?.equityCents ?? 0;
   const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
     setLineItems((lineItems) =>
       lineItems.update(index, (lineItem) => {
@@ -674,13 +674,13 @@ const Edit = () => {
                         Swapped for equity (not paid in cash)
                       </Link>
                     </span>
-                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
+                    <span className="numeric text-xl">{formatMoneyFromCents(equityCents)}</span>
                   </div>
                   <Separator />
                   <div className="flex flex-col items-end">
                     <span>Net amount in cash</span>
                     <span className="numeric text-3xl">
-                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
+                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCents)}
                     </span>
                   </div>
                 </>
