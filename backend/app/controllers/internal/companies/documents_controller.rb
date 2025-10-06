@@ -7,8 +7,7 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
     document.signatures.build(user: User.find_by(external_id: params[:recipient]), title: "Signer")
     document.save!
 
-    CreateDocumentPdfJob.perform_async(document.id)
-
+    CreateDocumentPdfJob.perform_async(document.id, document.text)
     head :created
   end
 

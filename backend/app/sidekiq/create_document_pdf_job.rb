@@ -4,9 +4,9 @@ class CreateDocumentPdfJob
   include Sidekiq::Job
   sidekiq_options retry: 3
 
-  def perform(document_id)
+  def perform(document_id, document_text)
     document = Document.find(document_id)
-    pdf = CreatePdf.new(body_html: ActionController::Base.helpers.sanitize(document.text)).perform
+    pdf = CreatePdf.new(body_html: ActionController::Base.helpers.sanitize(document_text)).perform
     document.attachments.attach(
       io: StringIO.new(pdf),
       filename: "#{document.name}.pdf",

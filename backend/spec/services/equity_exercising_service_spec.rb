@@ -86,6 +86,7 @@ RSpec.describe EquityExercisingService, :skip_pdf_generation do
       expect(document.name).to eq("Notice of Exercise")
       expect(document.json_data).to eq({ equity_grant_exercise_id: exercise.id }.as_json)
       expect(document.signatures.count).to eq(1)
+      expect(CreateDocumentPdfJob).to have_enqueued_sidekiq_job(document.id, exercise_notice.text)
 
       user_signature = document.signatures.find_by(user:)
       expect(user_signature.title).to eq("Signer")

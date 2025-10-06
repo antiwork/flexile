@@ -44,7 +44,7 @@ RSpec.describe Internal::Companies::DocumentsController, type: :controller do
       expect(signature.user).to eq(recipient)
       expect(signature.title).to eq("Signer")
 
-      expect(CreateDocumentPdfJob).to have_enqueued_sidekiq_job(document.id)
+      expect(CreateDocumentPdfJob).to have_enqueued_sidekiq_job(document.id, document.text)
     end
   end
 end
