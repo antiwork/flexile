@@ -25,7 +25,7 @@ const OneOffInvoiceCreated = ({
     <Container className="mb-8">
       <Heading as="h1">{companyName} has sent you money.</Heading>
       <Heading as="h2">
-        Please review the information below.
+        This one-off payment has been automatically approved and will be processed soon.
         {!bankAccountLastFour ? " You'll also need to connect your bank account to receive payment." : null}
       </Heading>
 
@@ -63,29 +63,22 @@ const OneOffInvoiceCreated = ({
           <div className="font-bold">{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
         </div>
 
-        {invoice.equityAmountInCents > 0 && (
+        {invoice.cashAmountInCents > 0 && (
           <div className="mb-4">
-            <div className="mb-1 text-gray-500">Amount to be paid in cash</div>
+            <div className="mb-1 text-gray-500">Cash payment</div>
             <div className="font-bold">{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
           </div>
         )}
 
-        {invoice.minAllowedEquityPercentage && invoice.maxAllowedEquityPercentage ? (
+        {invoice.equityAmountInCents > 0 && (
           <div className="mb-4">
-            <div className="mb-1 text-gray-500">Able to be swapped for equity</div>
-            <div className="font-bold">
-              {invoice.minAllowedEquityPercentage}% - {invoice.maxAllowedEquityPercentage}%
-            </div>
-          </div>
-        ) : invoice.equityAmountInCents > 0 ? (
-          <div className="mb-4">
-            <div className="mb-1 text-gray-500">Amount to be paid in equity</div>
+            <div className="mb-1 text-gray-500">Equity grant</div>
             <div className="font-bold">
               {formatMoneyFromCents(invoice.equityAmountInCents)} ({invoice.equityAmountInOptions.toLocaleString()}{" "}
-              options)
+              options at {invoice.equityPercentage}%)
             </div>
           </div>
-        ) : null}
+        )}
 
         <div>
           <div className="mb-1 text-gray-500">Bank account</div>

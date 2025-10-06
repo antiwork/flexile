@@ -61,15 +61,14 @@ test.describe("One-off payments", () => {
           cashAmountInCents: BigInt(215430),
           equityAmountInCents: BigInt(0),
           equityAmountInOptions: 0,
-          minAllowedEquityPercentage: null,
-          maxAllowedEquityPercentage: null,
+          acceptedAt: expect.any(Date),
         }),
       );
 
       expect(sentEmails).toEqual([
         expect.objectContaining({
           to: workerUser.email,
-          subject: `${company.name} has sent you money`,
+          subject: `💰 ${company.name} has sent you money`,
           text: expect.stringContaining("has sent you money"),
         }),
       ]);
@@ -194,10 +193,45 @@ test.describe("One-off payments", () => {
         expect(sentEmails).toEqual([
           expect.objectContaining({
             to: workerUser.email,
-            subject: `${company.name} has sent you money`,
+            subject: `💰 ${company.name} has sent you money`,
             text: expect.stringContaining("has sent you money"),
           }),
         ]);
+      });
+
+      test("fails payment creation when insufficient equity available", async ({ page }) => {
+        await db
+          .update(equityGrants)
+          .set({
+            unvestedShares: 10,
+            exercisedShares: 0,
+            forfeitedShares: 0,
+          })
+          .where(eq(equityGrants.companyInvestorId, companyInvestor.id));
+
+        await db
+          .update(companyContractors)
+          .set({ equityPercentage: 80 })
+          .where(eq(companyContractors.id, companyContractor.id));
+
+        await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
+
+        await page.getByRole("button", { name: "Issue payment" }).click();
+
+        await withinModal(
+          async (modal) => {
+            await modal.getByLabel("Amount").fill("400.00");
+            await modal.getByLabel("What is this for?").fill("Bonus payment");
+
+            await Promise.all([
+              page.waitForResponse((r) => r.url().includes("invoices.createAsAdmin") && r.status() === 400),
+              modal.getByRole("button", { name: "Issue payment" }).click(),
+            ]);
+
+            await expect(modal.getByText("Recipient has insufficient unvested equity")).toBeVisible();
+          },
+          { page, assertClosed: false },
+        );
       });
     });
   });
@@ -221,6 +255,11 @@ test.describe("One-off payments", () => {
         },
         { page },
       );
+
+      const invoice = await db.query.invoices.findFirst({
+        where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
+      });
+      expect(invoice?.acceptedAt).toBeDefined();
 
       await logout(page);
       await login(page, workerUser);
