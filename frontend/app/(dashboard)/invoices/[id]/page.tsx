@@ -41,6 +41,7 @@ import {
   RejectModal,
   StatusDetails,
   taxRequirementsMet,
+  useCanSubmitInvoices,
   useIsActionable,
   useIsDeletable,
 } from "..";
@@ -113,6 +114,7 @@ export default function InvoicePage() {
   const payRateInSubunits = invoice.contractor.payRateInSubunits;
   const complianceInfo = invoice.contractor.user.complianceInfo;
   const [expenseCategories] = trpc.expenseCategories.list.useSuspenseQuery({ companyId: company.id });
+  const { canSubmitInvoices } = useCanSubmitInvoices();
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -263,7 +265,9 @@ export default function InvoicePage() {
               {user.id === invoice.userId ? (
                 <>
                   {invoice.requiresAcceptanceByPayee ? (
-                    <Button onClick={() => setAcceptPaymentModalOpen(true)}>Accept payment</Button>
+                    <Button onClick={() => setAcceptPaymentModalOpen(true)} disabled={!canSubmitInvoices}>
+                      Accept payment
+                    </Button>
                   ) : EDITABLE_INVOICE_STATES.includes(invoice.status) ? (
                     <Button variant="primary" asChild>
                       <Link href={`/invoices/${invoice.id}/edit`}>
@@ -569,7 +573,7 @@ export default function InvoicePage() {
       {isMobile && user.id === invoice.userId ? (
         invoice.requiresAcceptanceByPayee ? (
           <div className="fixed bottom-14 left-0 z-10 w-full bg-white px-4 py-3">
-            <Button className="w-full" onClick={() => setAcceptPaymentModalOpen(true)}>
+            <Button className="w-full" onClick={() => setAcceptPaymentModalOpen(true)} disabled={!canSubmitInvoices}>
               Accept payment
             </Button>
           </div>
