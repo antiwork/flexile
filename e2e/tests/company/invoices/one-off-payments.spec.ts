@@ -1,4 +1,4 @@
-import { db } from "@test/db";
+import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
@@ -6,7 +6,6 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { login, logout } from "@test/helpers/auth";
-import { findRequiredTableRow } from "@test/helpers/matchers";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companies, equityGrants, invoices } from "@/db/schema";
@@ -73,6 +72,46 @@ test.describe("One-off payments", () => {
           text: expect.stringContaining("would like to send you money"),
         }),
       ]);
+    });
+
+    test("allows admin to create a payment for a user without a completed profile", async ({ page, sentEmails: _ }) => {
+      const preOnboardingUser = (await usersFactory.create({ legalName: null }, { withoutComplianceInfo: true })).user;
+      await companyContractorsFactory.create({ companyId: company.id, userId: preOnboardingUser.id });
+
+      await login(page, adminUser, `/people/${preOnboardingUser.externalId}?tab=invoices`);
+
+      await page.getByRole("button", { name: "Issue payment" }).click();
+
+      await withinModal(
+        async (modal) => {
+          await modal.getByLabel("Amount").fill("1000.00");
+          await modal.getByLabel("What is this for?").fill("Payment before profile completion");
+          await modal.getByRole("button", { name: "Issue payment" }).click();
+        },
+        { page },
+      );
+
+      const invoice = await db.query.invoices
+        .findFirst({ where: eq(invoices.companyId, company.id) })
+        .then(takeOrThrow);
+      expect(invoice.billFrom).toBeNull();
+
+      await logout(page);
+      await login(page, preOnboardingUser, `/invoices/${invoice.externalId}`);
+      await expect(page.getByRole("button", { name: "Accept payment" })).toBeDisabled();
+      await expect(page.getByText("Missing tax information.")).toBeVisible();
+      await page.getByRole("link", { name: "Invoices" }).click();
+      await page.getByRole("link").getByText("provide your legal details").click();
+      await page.getByLabel("Full legal name (must match your ID)").fill("Legal Name");
+      await page.getByLabel("Tax ID").fill("123456789");
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await withinModal(async (modal) => modal.getByRole("button", { name: "Save", exact: true }).click(), { page });
+      await page.getByRole("link", { name: "Back to app" }).click();
+      await page.getByRole("link", { name: "Invoices" }).click();
+      await page.getByRole("link", { name: invoice.invoiceNumber }).click();
+      await page.getByRole("button", { name: "Accept payment" }).click();
+      await withinModal(async (modal) => modal.getByRole("button", { name: "Accept payment" }).click(), { page });
+      await expect(page.getByRole("button", { name: "Accept payment" })).not.toBeVisible();
     });
 
     test.describe("for a contractor with equity", () => {
@@ -314,12 +353,14 @@ test.describe("One-off payments", () => {
 
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      const invoiceRow = await findRequiredTableRow(page, {
-        "Invoice ID": "O-0001",
-        Amount: "$123.45",
-      });
+      await page
+        .getByTableRowCustom({
+          "Invoice ID": "O-0001",
+          Amount: "$123.45",
+        })
+        .getByRole("link", { name: "O-0001" })
+        .click();
 
-      await invoiceRow.getByRole("link", { name: "O-0001" }).click();
       await expect(page.getByRole("cell", { name: "Bonus!" })).toBeVisible();
 
       await page.getByRole("button", { name: "Accept payment" }).click();
@@ -362,14 +403,13 @@ test.describe("One-off payments", () => {
 
       await login(page, adminUser, "/invoices");
 
-      await expect(page.locator("tbody")).toBeVisible();
-
-      const invoiceRow = await findRequiredTableRow(page, {
-        Amount: "$500",
-        Status: "Failed",
-      });
-
-      await invoiceRow.getByRole("button", { name: "Pay again" }).click();
+      await page
+        .getByTableRowCustom({
+          Amount: "$500",
+          Status: "Failed",
+        })
+        .getByRole("button", { name: "Pay again" })
+        .click();
 
       await expect(page.getByText("Payment initiated")).toBeVisible();
     });

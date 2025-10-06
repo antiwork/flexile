@@ -770,7 +770,7 @@ export const invoices = pgTable(
     description: varchar(),
     paidAt: timestamp("paid_at", { precision: 6, mode: "date" }),
     dueOn: date("due_on", { mode: "string" }).notNull(),
-    billFrom: varchar("bill_from").notNull(),
+    billFrom: varchar("bill_from"),
     billTo: varchar("bill_to").notNull(),
     notes: text(),
     invoiceApprovalsCount: integer("invoice_approvals_count").default(0).notNull(),
@@ -1194,6 +1194,7 @@ export const companyInvestors = pgTable(
     ),
 
     investedInAngelListRuv: boolean("invested_in_angel_list_ruv").notNull().default(false),
+    deactivatedAt: timestamp("deactivated_at", { precision: 6, mode: "date" }),
   },
   (table) => [
     index("index_company_investors_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

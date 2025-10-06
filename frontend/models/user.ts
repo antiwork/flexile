@@ -62,6 +62,7 @@ export const currentUserSchema = z.object({
     investor: z
       .object({
         id: z.string(),
+        deactivatedAt: z.string().nullable(),
         hasDocuments: z.boolean(),
         investedInAngelListRuv: z.boolean(),
         hasGrants: z.boolean(),
