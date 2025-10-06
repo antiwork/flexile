@@ -359,7 +359,6 @@ test.describe("One-off payments", () => {
         .filter({ has: page.getByRole("link", { name: "Accept payment" }) });
       await expect(invoiceRow).toBeVisible();
 
-      await invoiceRow.getByRole("link", { name: "O-0001" }).click();
       await expect(page.getByRole("cell", { name: "Bonus!" })).toBeVisible();
 
       await page.getByRole("button", { name: "Accept payment" }).click();
