@@ -325,7 +325,11 @@ const Edit = () => {
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
   const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery(
     { companyId: company.id, servicesInCents: totalServicesAmountInCents, invoiceYear },
-    { refetchOnWindowFocus: false },
+    {
+      refetchOnWindowFocus: false,
+      enabled: company.equityEnabled && worker.equityPercentage > 0,
+      placeholderData: (previousData) => previousData,
+    },
   );
   const equityCents = equityCalculation?.equityCents ?? 0;
   const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
