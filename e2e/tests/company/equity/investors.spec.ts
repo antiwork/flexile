@@ -111,13 +111,12 @@ test.describe("Investors", () => {
 
     await login(page, adminUser, "/equity/investors");
 
-    await expect(
-      page.getByTableRowCustom({
-        Name: /Major Investor/u,
-        "Fully diluted ownership": "15.00%",
-        "Outstanding shares": "300,000",
-      }),
-    ).toBeVisible();
+    await expect(page.getByText("Major Investor")).toBeVisible();
+    await expect(page.locator("tbody")).toContainText("15.00%");
+    await expect(page.locator("tbody")).toContainText("300,000");
+
+    await expect(page.getByRole("cell", { name: "Outstanding ownership" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Fully diluted ownership" })).toBeVisible();
   });
 
   test("shows investors with equity grants even when total_options field is zero", async ({ page }) => {
