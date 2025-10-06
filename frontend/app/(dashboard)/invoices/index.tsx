@@ -106,10 +106,11 @@ export function useIsPayable() {
   const isApprovedByCurrentUser = useIsApprovedByCurrentUser();
 
   return (invoice: Invoice) =>
-    invoice.status === "failed" ||
-    (["received", "approved"].includes(invoice.status) &&
-      !invoice.requiresAcceptanceByPayee &&
-      company.requiredInvoiceApprovals - invoice.approvals.length <= (isApprovedByCurrentUser(invoice) ? 0 : 1));
+    company.isTrusted &&
+    (invoice.status === "failed" ||
+      (["received", "approved"].includes(invoice.status) &&
+        !invoice.requiresAcceptanceByPayee &&
+        company.requiredInvoiceApprovals - invoice.approvals.length <= (isApprovedByCurrentUser(invoice) ? 0 : 1)));
 }
 
 export function useIsDeletable() {
