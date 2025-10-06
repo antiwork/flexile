@@ -15,7 +15,7 @@ test.describe("Invoice submission, approval and rejection", () => {
   let workerUserB: User;
 
   test.beforeEach(async () => {
-    company = await companiesFactory.create({ requiredInvoiceApprovalCount: 1 });
+    company = await companiesFactory.create({ requiredInvoiceApprovalCount: 1, isTrusted: true });
     adminUser = (await usersFactory.create()).user;
     workerUserA = (await usersFactory.create()).user;
     workerUserB = (await usersFactory.create()).user;

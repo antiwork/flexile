@@ -8,8 +8,6 @@ class ApproveAndPayOrChargeForInvoices
   end
 
   def perform
-    raise StandardError, "Non-trusted companies cannot initiate payments" unless company.is_trusted?
-
     chargeable_invoice_ids = []
     invoice_ids.each do |external_id|
       invoice = company.invoices.alive.find_by!(external_id:)

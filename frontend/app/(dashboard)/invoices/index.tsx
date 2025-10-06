@@ -106,11 +106,10 @@ export function useIsPayable() {
   const isApprovedByCurrentUser = useIsApprovedByCurrentUser();
 
   return (invoice: Invoice) =>
-    company.isTrusted &&
-    (invoice.status === "failed" ||
-      (["received", "approved"].includes(invoice.status) &&
-        !invoice.requiresAcceptanceByPayee &&
-        company.requiredInvoiceApprovals - invoice.approvals.length <= (isApprovedByCurrentUser(invoice) ? 0 : 1)));
+    invoice.status === "failed" ||
+    (["received", "approved"].includes(invoice.status) &&
+      !invoice.requiresAcceptanceByPayee &&
+      company.requiredInvoiceApprovals - invoice.approvals.length <= (isApprovedByCurrentUser(invoice) ? 0 : 1));
 }
 
 export function useIsDeletable() {
@@ -170,7 +169,7 @@ export const ApproveButton = ({
       param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
       successText={pay ? "Payment initiated" : "Approved!"}
       loadingText={pay ? "Sending payment..." : "Approving..."}
-      disabled={!!pay && !company.completedPaymentMethodSetup}
+      disabled={!!pay && (!company.completedPaymentMethodSetup || !company.isTrusted)}
     >
       {pay ? (
         <>
