@@ -20,12 +20,12 @@ const OneOffInvoiceCreated = ({
   paymentDescriptions: string[];
 }) => (
   <EmailLayout>
-    <Preview>{companyName} would like to send you money</Preview>
+    <Preview>{companyName} has sent you money</Preview>
 
     <Container className="mb-8">
-      <Heading as="h1">{companyName} would like to send you money.</Heading>
+      <Heading as="h1">{companyName} has sent you money.</Heading>
       <Heading as="h2">
-        Please review the information below and click the link to accept.
+        Please review the information below.
         {!bankAccountLastFour ? " You'll also need to connect your bank account to receive payment." : null}
       </Heading>
 
@@ -98,8 +98,6 @@ const OneOffInvoiceCreated = ({
           </div>
         </div>
       </div>
-
-      <LinkButton href={`${host}/invoices/${invoice.externalId}?accept=true`}>Accept payment</LinkButton>
     </Container>
   </EmailLayout>
 );
