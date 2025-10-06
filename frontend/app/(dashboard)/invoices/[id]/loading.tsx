@@ -20,13 +20,10 @@ export default function InvoiceLoading() {
         }
       />
       <div className="space-y-4">
-        {/* Status section */}
         <div className="mx-4">
           <Skeleton className="mb-2 h-4 w-16" />
           <Skeleton className="h-5 w-40" />
         </div>
-
-        {/* Invoice details section */}
         <section className="mx-4">
           <div className="grid gap-4 pb-28">
             <div className="grid auto-cols-fr gap-3 p-4 md:grid-flow-col">
@@ -37,8 +34,6 @@ export default function InvoiceLoading() {
                 </div>
               ))}
             </div>
-
-            {/* Invoice items list table */}
             <div className="w-full overflow-x-auto">
               <Table className="w-full min-w-fit">
                 <TableHeader>
@@ -77,8 +72,6 @@ export default function InvoiceLoading() {
                 </TableBody>
               </Table>
             </div>
-
-            {/* Footer with totals */}
             <footer className="flex flex-col justify-between gap-3 px-4 lg:flex-row">
               <div className="flex-1">
                 <Skeleton className="mb-2 h-5 w-16" />
