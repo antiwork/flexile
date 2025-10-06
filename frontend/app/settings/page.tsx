@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
@@ -183,7 +183,7 @@ const LeaveWorkspaceSection = () => {
       <div className="grid gap-4">
         <h3 className="text mt-4 font-medium">Workspace access</h3>
         <Card>
-          <CardHeader className="flex items-center justify-between">
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="size-8 rounded-md">
                 <AvatarImage src={company.logo_url ?? defaultLogo.src} alt="Company logo" />
@@ -191,11 +191,9 @@ const LeaveWorkspaceSection = () => {
               </Avatar>
               <span className="font-medium">{company.name}</span>
             </div>
-            <CardAction>
-              <Button variant="destructive" onClick={() => setIsModalOpen(true)}>
-                Leave workspace
-              </Button>
-            </CardAction>
+            <Button variant="destructive" className="w-full sm:w-auto" onClick={() => setIsModalOpen(true)}>
+              Leave workspace
+            </Button>
           </CardHeader>
         </Card>
       </div>
