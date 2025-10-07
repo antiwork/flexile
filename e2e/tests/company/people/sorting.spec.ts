@@ -68,7 +68,6 @@ test.describe("People table sorting", () => {
     expect(rows[4]).toContain("Invited"); // started most recently
 
     await statusHeader.click();
-    await page.waitForTimeout(500);
 
     rows = await getRowText();
     expect(rows[0]).toContain("Invited"); // started most recently
