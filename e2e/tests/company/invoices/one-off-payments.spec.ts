@@ -5,6 +5,7 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
+import { expectRecentTimestamp } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
@@ -54,9 +55,7 @@ test.describe("One-off payments", () => {
         where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
       });
       expect(invoice?.acceptedAt).not.toBeNull();
-      if (invoice?.acceptedAt) {
-        expect(Math.abs(invoice.acceptedAt.getTime() - Date.now())).toBeLessThan(100000);
-      }
+      if (invoice?.acceptedAt) expectRecentTimestamp(invoice.acceptedAt);
       expect(invoice).toEqual(
         expect.objectContaining({
           totalAmountInUsdCents: BigInt(215430),
@@ -180,9 +179,7 @@ test.describe("One-off payments", () => {
           where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
         });
         expect(invoice?.acceptedAt).not.toBeNull();
-        if (invoice?.acceptedAt) {
-          expect(Math.abs(invoice.acceptedAt.getTime() - Date.now())).toBeLessThan(100000);
-        }
+        if (invoice?.acceptedAt) expectRecentTimestamp(invoice.acceptedAt);
         expect(invoice).toEqual(
           expect.objectContaining({
             totalAmountInUsdCents: BigInt(50000),
@@ -228,9 +225,7 @@ test.describe("One-off payments", () => {
         where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
       });
       expect(invoice?.acceptedAt).not.toBeNull();
-      if (invoice?.acceptedAt) {
-        expect(Math.abs(invoice.acceptedAt.getTime() - Date.now())).toBeLessThan(100000);
-      }
+      if (invoice?.acceptedAt) expectRecentTimestamp(invoice.acceptedAt);
       expect(invoice).toEqual(
         expect.objectContaining({
           totalAmountInUsdCents: BigInt(`12345`),

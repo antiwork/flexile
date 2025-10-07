@@ -32,3 +32,7 @@ export const fillByLabel = async (page: Page, name: string, value: string, optio
   await field.fill(value);
   await expect(field).toHaveValue(value);
 };
+
+export function expectRecentTimestamp(date: Date, toleranceMs = 100_000) {
+  expect(Math.abs(date.getTime() - Date.now())).toBeLessThan(toleranceMs);
+}
