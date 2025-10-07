@@ -113,7 +113,7 @@ export default function PeoplePage() {
           },
           filterFn: (row, _columnId, filterValue) => {
             const statusCategory = getStatusCategory(row.original);
-            return filterValue.includes(statusCategory);
+            return !!filterValue.includes(statusCategory);
           },
         },
       ),
@@ -168,7 +168,7 @@ export default function PeoplePage() {
           },
           filterFn: (row, _columnId, filterValue) => {
             const statusCategory = getStatusCategory(row.original);
-            return filterValue.includes(statusCategory);
+            return !!filterValue.includes(statusCategory);
           },
         },
       ),
