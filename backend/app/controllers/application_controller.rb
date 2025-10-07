@@ -46,7 +46,7 @@ class ApplicationController < ActionController::Base
         value: form_authenticity_token,
       }
 
-      if Rails.env.production?
+      if Rails.env.staging? || Rails.env.production?
         cookie_options.merge!(
           same_site: :strict,
           secure: true,
