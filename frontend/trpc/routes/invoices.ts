@@ -142,7 +142,7 @@ export const invoicesRouter = createRouter({
           companyContractorId: companyWorker.id,
           invoiceType: "other",
           invoiceNumber,
-          status: "received",
+          status: "approved",
           invoiceDate: date,
           dueOn: date,
           billFrom,

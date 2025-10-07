@@ -61,8 +61,7 @@ test.describe("One-off payments", () => {
           cashAmountInCents: BigInt(215430),
           equityAmountInCents: BigInt(0),
           equityAmountInOptions: 0,
-          minAllowedEquityPercentage: null,
-          maxAllowedEquityPercentage: null,
+          acceptedAt: expect.any(Date),
         }),
       );
 
@@ -186,8 +185,7 @@ test.describe("One-off payments", () => {
             cashAmountInCents: BigInt(42500),
             equityAmountInCents: BigInt(7500),
             equityAmountInOptions: 8,
-            minAllowedEquityPercentage: null,
-            maxAllowedEquityPercentage: null,
+            acceptedAt: expect.any(Date),
           }),
         );
 
@@ -222,6 +220,18 @@ test.describe("One-off payments", () => {
         { page },
       );
 
+      const invoice = await db.query.invoices.findFirst({
+        where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
+      });
+      expect(invoice?.acceptedAt).not.toBeNull();
+      expect(invoice).toEqual(
+        expect.objectContaining({
+          totalAmountInUsdCents: BigInt(`12345`),
+          cashAmountInCents: BigInt(`12345`),
+          acceptedAt: expect.any(Date),
+        }),
+      );
+
       await logout(page);
       await login(page, workerUser);
 
@@ -231,6 +241,7 @@ test.describe("One-off payments", () => {
         .getByTableRowCustom({
           "Invoice ID": "O-0001",
           Amount: "$123.45",
+          Status: "Awaiting approval (1/2)",
         })
         .getByRole("link", { name: "O-0001" })
         .click();
