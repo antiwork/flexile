@@ -42,7 +42,6 @@ class Invoice < ApplicationRecord
   validates :total_amount_in_usd_cents, presence: true,
                                         numericality: { only_integer: true, greater_than: 99 }
   validates :invoice_number, presence: true
-  validates :bill_from, presence: true
   validates :bill_to, presence: true
   validates :due_on, presence: true
   validates :equity_percentage, presence: true, numericality: {

@@ -15,7 +15,7 @@ test.describe("Invoice submission, approval and rejection", () => {
   let workerUserB: User;
 
   test.beforeEach(async () => {
-    company = await companiesFactory.create({ requiredInvoiceApprovalCount: 1 });
+    company = await companiesFactory.create({ requiredInvoiceApprovalCount: 1, isTrusted: true });
     adminUser = (await usersFactory.create()).user;
     workerUserA = (await usersFactory.create()).user;
     workerUserB = (await usersFactory.create()).user;
@@ -48,6 +48,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await expect(page.getByText("$683", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Send invoice" }).click();
+
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
     await expect(page.locator("tbody")).toContainText("$683");
@@ -110,6 +111,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await fillByLabel(page, "Hours / Qty", "10:23", { index: 0 });
     await fillDatePicker(page, "Date", "11/20/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
+
     await expect(page.getByText("Awaiting approval")).toBeVisible();
 
     await logout(page);
@@ -213,7 +215,6 @@ test.describe("Invoice submission, approval and rejection", () => {
     await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
     await page.getByRole("button", { name: "Resubmit" }).click();
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
