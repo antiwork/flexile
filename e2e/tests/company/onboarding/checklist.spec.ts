@@ -14,7 +14,8 @@ test.describe("Onboarding checklist", () => {
   test("completes admin onboarding checklist by adding company details, bank account, and inviting contractor", async ({
     page,
   }) => {
-    const company = (await companiesFactory.createPreOnboarding({ requiredInvoiceApprovalCount: 1 })).company;
+    const company = (await companiesFactory.createPreOnboarding({ requiredInvoiceApprovalCount: 1, isTrusted: true }))
+      .company;
     const adminUser = (await usersFactory.create()).user;
     await companyAdministratorsFactory.create({
       companyId: company.id,

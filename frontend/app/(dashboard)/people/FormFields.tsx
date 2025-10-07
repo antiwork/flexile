@@ -16,7 +16,7 @@ import { cn } from "@/utils";
 export const schema = z.object({
   payRateType: z.nativeEnum(PayRateType),
   payRateInSubunits: z.number().nullable(),
-  role: z.string().min(1).nullable(),
+  role: z.string(),
 });
 
 const defaultRoles = ["Software Engineer", "Designer", "Product Manager", "Data Analyst"];
@@ -57,78 +57,64 @@ export default function FormFields() {
       <FormField
         control={form.control}
         name="role"
-        render={({ field }) => {
-          const popoverId = `${field.name}-popover`;
-          return (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              <Popover open={rolePopoverOpen} onOpenChange={setRolePopoverOpen}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      {...field}
-                      value={undefined}
-                      aria-controls={rolePopoverOpen ? popoverId : undefined}
-                      aria-expanded={rolePopoverOpen}
-                      aria-haspopup="listbox"
-                      className="border-input focus-visible:ring-ring focus-visible:border-border aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive h-9 w-full min-w-0 justify-between outline-none focus-visible:ring-2 focus-visible:outline-hidden dark:bg-transparent"
-                      role="combobox"
-                      size="small"
-                      variant="outline"
-                    >
-                      <div className="truncate">{field.value || "Search or enter a role..."}</div>
-                      <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Role</FormLabel>
+            <Popover open={rolePopoverOpen} onOpenChange={setRolePopoverOpen}>
+              <FormControl>
+                <PopoverTrigger aria-haspopup="listbox" asChild role="combobox">
+                  <Button
+                    {...field}
+                    value={undefined}
+                    className="border-input focus-visible:ring-ring focus-visible:border-border aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive h-9 w-full min-w-0 justify-between outline-none focus-visible:ring-2 focus-visible:outline-hidden dark:bg-transparent"
+                    size="small"
+                    variant="outline"
+                  >
+                    <div className="truncate">{field.value || "Search or enter a role..."}</div>
+                    <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
+                  </Button>
                 </PopoverTrigger>
-                <PopoverContent
-                  aria-label={`${field.name} options`}
-                  id={popoverId}
-                  className="p-0"
-                  style={{ width: "var(--radix-popover-trigger-width)" }}
-                  role="listbox"
-                >
-                  <Command value={field.value ?? ""}>
-                    <CommandInput
-                      placeholder="Search or enter a role..."
-                      value={searchQuery}
-                      onValueChange={(query: string) => {
-                        setSearchQuery(query);
-                      }}
-                    />
-                    <CommandList>
-                      {filteredRoles.length > 0 && (
-                        <CommandGroup heading="Available Roles">
-                          {filteredRoles.map((role) => (
-                            <CommandItem key={role} value={role} onSelect={handleSelect}>
-                              <Check
-                                className={cn("mr-2 h-4 w-4", role === field.value ? "opacity-100" : "opacity-0")}
-                              />
-                              {role}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      )}
-                      {suggestions.length > 0 && (
-                        <CommandGroup heading="Create New Role">
-                          {suggestions.map((role) => (
-                            <CommandItem key={role} value={role} onSelect={handleSelect}>
-                              <Check
-                                className={cn("mr-2 h-4 w-4", role === field.value ? "opacity-100" : "opacity-0")}
-                              />
-                              {role}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      )}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          );
-        }}
+              </FormControl>
+              <PopoverContent
+                aria-label={`${field.name} options`}
+                className="p-0"
+                style={{ width: "var(--radix-popover-trigger-width)" }}
+                role="listbox"
+              >
+                <Command value={field.value}>
+                  <CommandInput
+                    placeholder="Search or enter a role..."
+                    value={searchQuery}
+                    onValueChange={setSearchQuery}
+                  />
+                  <CommandList>
+                    {filteredRoles.length > 0 && (
+                      <CommandGroup heading="Available Roles">
+                        {filteredRoles.map((role) => (
+                          <CommandItem key={role} value={role} onSelect={handleSelect}>
+                            <Check className={cn("mr-2 h-4 w-4", role === field.value ? "opacity-100" : "opacity-0")} />
+                            {role}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
+                    {suggestions.length > 0 && (
+                      <CommandGroup heading="Create New Role">
+                        {suggestions.map((role) => (
+                          <CommandItem key={role} value={role} onSelect={handleSelect}>
+                            <Check className={cn("mr-2 h-4 w-4", role === field.value ? "opacity-100" : "opacity-0")} />
+                            {role}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            <FormMessage />
+          </FormItem>
+        )}
       />
 
       <FormField

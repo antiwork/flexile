@@ -243,7 +243,7 @@ const ActionPanel = () => {
         "contractor[pay_rate_type]",
         values.payRateType === PayRateType.Hourly ? "hourly" : "project_based",
       );
-      formData.append("contractor[role]", values.role?.toString() ?? "");
+      formData.append("contractor[role]", values.role);
       formData.append("contractor[contract_signed_elsewhere]", values.contractSignedElsewhere.toString());
       formData.append("contractor[contract]", values.contract);
 
