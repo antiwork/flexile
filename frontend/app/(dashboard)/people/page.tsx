@@ -89,12 +89,19 @@ export default function PeoplePage() {
         meta: { filterOptions: [...new Set(workers.map((worker) => worker.role))] },
       }),
       columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
-      columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
-        id: "status",
-        header: "Status",
-        meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
-        cell: (info) => getStatusLabel(info.row.original),
-      }),
+      columnHelper.accessor(
+        (row) => {
+          if (row.endedAt) return row.endedAt;
+          if (row.startedAt) return row.startedAt;
+          if (row.user.invitationAcceptedAt) return row.user.invitationAcceptedAt;
+          return new Date(0);
+        },
+        {
+          id: "status",
+          header: "Status",
+          cell: (info) => getStatusLabel(info.row.original),
+        },
+      ),
     ],
     [workers],
   );
@@ -132,14 +139,21 @@ export default function PeoplePage() {
         ),
       }),
 
-      columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
-        id: "status",
-        header: "Status",
-        meta: {
-          filterOptions: ["Active", "Onboarding", "Alumni"],
-          hidden: true,
+      columnHelper.accessor(
+        (row) => {
+          if (row.endedAt) return row.endedAt;
+          if (row.startedAt) return row.startedAt;
+          if (row.user.invitationAcceptedAt) return row.user.invitationAcceptedAt;
+          return new Date(0);
         },
-      }),
+        {
+          id: "status",
+          header: "Status",
+          meta: {
+            hidden: true,
+          },
+        },
+      ),
 
       columnHelper.accessor("user.name", {
         id: "userName",
