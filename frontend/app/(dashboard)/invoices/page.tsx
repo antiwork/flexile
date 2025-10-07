@@ -128,9 +128,9 @@ export default function InvoicesPage() {
   const isPayNowDisabled = useCallback(
     (invoice: Invoice) => {
       const payable = isPayable(invoice);
-      return payable && !company.completedPaymentMethodSetup;
+      return payable && (!company.completedPaymentMethodSetup || !company.isTrusted);
     },
-    [isPayable, company.completedPaymentMethodSetup],
+    [isPayable, company.completedPaymentMethodSetup, company.isTrusted],
   );
   const actionConfig = useMemo(
     (): ActionConfig<Invoice> => ({
@@ -543,10 +543,10 @@ export default function InvoicesPage() {
           {company.completedPaymentMethodSetup && !company.isTrusted ? (
             <Alert className="mx-4" variant="destructive">
               <AlertTriangle className="my-auto max-h-4 max-w-4" />
-              <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
+              <AlertTitle>Account verification required to initiate payments.</AlertTitle>
               <AlertDescription>
-                Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
-                verification steps.
+                You can approve invoices, but cannot initiate immediate payments until your account is verified. Email
+                us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete verification.
               </AlertDescription>
             </Alert>
           ) : null}

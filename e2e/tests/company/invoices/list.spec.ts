@@ -85,7 +85,7 @@ test.describe("Invoices admin flow", () => {
       await login(page, user);
 
       await page.getByRole("link", { name: "Invoices" }).click();
-      await expect(page.getByText("Payments to contractors may take up to 10 business days to process.")).toBeVisible();
+      await expect(page.getByText("Account verification required to initiate payments.")).toBeVisible();
     });
 
     test("when payment method setup is complete but company is not trusted and has no invoices, does not show the status message", async ({
@@ -96,9 +96,7 @@ test.describe("Invoices admin flow", () => {
 
       await page.getByRole("link", { name: "Invoices" }).click();
       await expect(page.getByText("Bank account setup incomplete.")).not.toBeVisible();
-      await expect(
-        page.getByText("Payments to contractors may take up to 10 business days to process."),
-      ).not.toBeVisible();
+      await expect(page.getByText("Account verification required to initiate payments.")).not.toBeVisible();
     });
 
     test("when payment method setup is complete and company is trusted, does not show the status message", async ({
@@ -112,9 +110,7 @@ test.describe("Invoices admin flow", () => {
 
       await page.getByRole("link", { name: "Invoices" }).click();
       await expect(page.getByText("Bank account setup incomplete.")).not.toBeVisible();
-      await expect(
-        page.getByText("Payments to contractors may take up to 10 business days to process."),
-      ).not.toBeVisible();
+      await expect(page.getByText("Account verification required to initiate payments.")).not.toBeVisible();
     });
 
     test("loads successfully for alumni", async ({ page }) => {
