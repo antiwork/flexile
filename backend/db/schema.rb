@@ -640,7 +640,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
     t.string "description"
     t.datetime "paid_at"
     t.date "due_on", null: false
-    t.string "bill_from", null: false
+    t.string "bill_from"
     t.string "bill_to", null: false
     t.text "notes"
     t.integer "invoice_approvals_count", default: 0, null: false

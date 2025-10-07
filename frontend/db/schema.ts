@@ -771,7 +771,7 @@ export const invoices = pgTable(
     description: varchar(),
     paidAt: timestamp("paid_at", { precision: 6, mode: "date" }),
     dueOn: date("due_on", { mode: "string" }).notNull(),
-    billFrom: varchar("bill_from").notNull(),
+    billFrom: varchar("bill_from"),
     billTo: varchar("bill_to").notNull(),
     notes: text(),
     invoiceApprovalsCount: integer("invoice_approvals_count").default(0).notNull(),
