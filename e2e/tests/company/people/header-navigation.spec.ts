@@ -80,25 +80,25 @@ test.describe("People Status column sorting", () => {
     const baseDate = new Date();
     const contractorData = [
       {
-        name: "Contractor A",
-        startedAt: subDays(baseDate, 100),
-        endedAt: subDays(baseDate, 50), // Ended 50 days ago
-      },
-      {
-        name: "Contractor B",
-        startedAt: subDays(baseDate, 200),
+        name: "Early Contractor (Ended)",
+        startedAt: subDays(baseDate, 200), // Started 200 days ago
         endedAt: subDays(baseDate, 10), // Ended 10 days ago
       },
       {
-        name: "Contractor C",
-        startedAt: subDays(baseDate, 60), // Started 60 days ago
+        name: "Mid Contractor (Ended)",
+        startedAt: subDays(baseDate, 100), // Started 100 days ago
+        endedAt: subDays(baseDate, 50), // Ended 50 days ago
       },
       {
-        name: "Contractor D",
-        startedAt: subDays(baseDate, 20), // Started 20 days ago
+        name: "Late Contractor (Active)",
+        startedAt: subDays(baseDate, 60), // Started 60 days ago, still active
       },
       {
-        name: "Contractor E",
+        name: "Recent Contractor (Active)",
+        startedAt: subDays(baseDate, 20), // Started 20 days ago, still active
+      },
+      {
+        name: "Future Contractor (Starting Soon)",
         startedAt: addDays(baseDate, 5), // Starts in 5 days
       },
     ];
@@ -118,16 +118,12 @@ test.describe("People Status column sorting", () => {
 
     // Wait for the table to load and first row to be visible
     await expect(page.locator("tbody tr").first()).toBeVisible();
-
-    // Wait for the first row to have actual content (not empty cells)
     await page.waitForFunction(() => {
       const firstRow = document.querySelector("tbody tr:first-child");
       if (!firstRow) return false;
       const cells = firstRow.querySelectorAll("td");
       return cells.length > 0 && Array.from(cells).some((cell) => cell.textContent?.trim() !== "");
     });
-
-    // await page.waitForTimeout(1000); // Additional buffer
 
     // Get all status cells to verify sorting
     const getStatusCells = () => page.locator("tbody tr td:last-child");
@@ -141,6 +137,7 @@ test.describe("People Status column sorting", () => {
         return new Date(0);
       });
 
+    // Check dates are sorted ascending by default
     const initialStatusCells = await getStatusCells().allTextContents();
     const initialDates = extractDatesFromStatus(initialStatusCells);
 
@@ -164,6 +161,7 @@ test.describe("People Status column sorting", () => {
     await page.getByRole("columnheader", { name: "Status" }).click();
     await page.waitForTimeout(1000);
 
+    // Check dates are sorted descending after second click
     const statusCellsAfterSecondClick = await getStatusCells().allTextContents();
     expect(statusCellsAfterSecondClick).not.toEqual(statusCellsAfterFirstClick);
 
