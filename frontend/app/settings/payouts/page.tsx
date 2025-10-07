@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { AlertTriangle, Check, CircleDollarSign, Plus } from "lucide-react";
-import React, { Fragment, useState } from "react";
+import React, { Fragment, Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
@@ -28,6 +28,7 @@ import {
   settings_equity_path,
 } from "@/utils/routes";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
+import PayoutsLoading from "./LoadingSkeleton";
 
 const getPayRateDisplayText = (payRateType: "hourly" | "project_based"): string =>
   payRateType === "project_based" ? "project" : "hourly";
@@ -37,14 +38,14 @@ export default function PayoutsPage() {
   const company = useCurrentCompany();
 
   return (
-    <>
+    <Suspense fallback={<PayoutsLoading />}>
       <h2 className="mb-8 text-3xl font-bold">Payouts</h2>
       <div className="grid gap-16">
         <BankAccountsSection />
         {user.roles.worker && company.equityEnabled ? <EquitySection /> : null}
         {user.roles.investor ? <DividendSection /> : null}
       </div>
-    </>
+    </Suspense>
   );
 }
 
@@ -250,6 +251,8 @@ const BankAccountsSection = () => {
   const { data } = useSuspenseQuery({
     queryKey: ["settings", "bank_accounts"],
     queryFn: async () => {
+      // TODO: Remove this artificial delay - for testing loading skeleton
+      // await new Promise((resolve) => setTimeout(resolve, 5000));
       const response = await request({
         method: "GET",
         accept: "json",
