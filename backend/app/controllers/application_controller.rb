@@ -46,6 +46,8 @@ class ApplicationController < ActionController::Base
         value: form_authenticity_token,
       }
 
+      # Only apply strict cookie options in staging and production environments.
+      # In development, omitting domain and secure options avoids issues with local cookies being rejected by the browser.
       if Rails.env.staging? || Rails.env.production?
         cookie_options.merge!(
           same_site: :strict,
