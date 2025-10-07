@@ -94,6 +94,11 @@ export default function PeoplePage() {
         header: "Status",
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
         cell: (info) => getStatusLabel(info.row.original),
+        sortingFn: (rowA, rowB) => {
+          const dateA = new Date(rowA.original.endedAt || rowA.original.startedAt);
+          const dateB = new Date(rowB.original.endedAt || rowB.original.startedAt);
+          return dateB.getTime() - dateA.getTime();
+        },
       }),
     ],
     [workers],
