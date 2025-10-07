@@ -119,21 +119,12 @@ export const invoicesRouter = createRouter({
         });
       }
 
-      let hasInsufficientUnvestedEquity = false;
-
-      if (equityResult.unvestedGrant) {
+      if (equityResult.unvestedGrant && equityResult.equityOptions > 0) {
         const { unvestedShares, exercisedShares, forfeitedShares } = equityResult.unvestedGrant;
-        const availableUnvestedShares = unvestedShares - exercisedShares - forfeitedShares;
-        if (equityResult.equityOptions > availableUnvestedShares) {
-          hasInsufficientUnvestedEquity = true;
+        const availableShares = unvestedShares - exercisedShares - forfeitedShares;
+        if (equityResult.equityOptions > availableShares) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Recipient has insufficient unvested equity" });
         }
-      }
-
-      if (hasInsufficientUnvestedEquity) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Recipient has insufficient unvested equity",
-        });
       }
 
       if (equityResult.equityPercentage !== companyWorker.equityPercentage) {
