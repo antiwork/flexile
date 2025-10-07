@@ -15,8 +15,19 @@ const ComboBox = ({
   className,
   modal,
   showSearch = true,
+  searchValue,
+  onSearchChange,
+  searchPlaceholder,
   ...props
-}: { options: { value: string; label: string }[]; placeholder?: string; modal?: boolean; showSearch?: boolean } & (
+}: {
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  modal?: boolean;
+  showSearch?: boolean;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
+} & (
   | { multiple: true; value: string[]; onChange: (value: string[]) => void }
   | { multiple?: false; value: string | null | undefined; onChange: (value: string) => void }
 ) &
@@ -27,10 +38,9 @@ const ComboBox = ({
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={modal || false}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger aria-haspopup="listbox" asChild role="combobox">
         <Button
           variant="outline"
-          role="combobox"
           aria-expanded={open}
           {...props}
           className={cn(
@@ -44,12 +54,19 @@ const ComboBox = ({
           <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
+      <PopoverContent
+        aria-label={`${props.name} listbox options`}
+        className="p-0"
+        role="listbox"
+        style={{ width: "var(--radix-popover-trigger-width)" }}
+      >
         <Command>
           {showSearch ? (
             <CommandInput
-              placeholder="Search..."
-              onValueChange={() => {
+              placeholder={searchPlaceholder ?? "Search..."}
+              value={searchValue ?? ""}
+              onValueChange={(value) => {
+                onSearchChange?.(value);
                 requestAnimationFrame(() => {
                   if (listRef.current) {
                     listRef.current.scrollTop = 0;

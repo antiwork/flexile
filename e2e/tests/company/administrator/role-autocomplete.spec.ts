@@ -54,6 +54,7 @@ test.describe("Role autocomplete", () => {
         await expect(page.getByRole("option", { name: role1 })).toBeVisible();
         await expect(page.getByRole("option", { name: role2 })).toBeVisible();
         await expect(page.getByRole("option", { name: role3 })).not.toBeVisible();
+        await searchField.fill("Designer");
         await searchField.press("Enter");
         await expect(combobox).toHaveText(role1);
       },

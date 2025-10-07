@@ -1,17 +1,13 @@
 import { skipToken } from "@tanstack/react-query";
-import { Check, ChevronDown } from "lucide-react";
 import React, { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { z } from "zod";
+import ComboBox from "@/components/ComboBox";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
-import { Button } from "@/components/ui/button";
-import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useUserStore } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
-import { cn } from "@/utils";
 
 export const schema = z.object({
   payRateType: z.nativeEnum(PayRateType),
@@ -27,30 +23,21 @@ export default function FormFields() {
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
-  const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const trimmedQuery = searchQuery.trim();
   const roleValue = form.getValues("role");
-  const availableRoles = [...new Set([...(workers?.map((worker) => worker.role) ?? []), ...defaultRoles])].sort(
-    (a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase()),
-  );
-  const filteredRoles = availableRoles.filter((role) => role.toLowerCase().includes(trimmedQuery.toLowerCase()));
+  const availableRoles = [...(workers ? new Set(workers.map((worker) => worker.role)) : defaultRoles)];
 
-  const suggestions: string[] = [];
   if (trimmedQuery && !availableRoles.some((role) => role.toLowerCase() === trimmedQuery.toLowerCase()))
-    suggestions.push(trimmedQuery);
+    availableRoles.push(trimmedQuery);
   if (
     roleValue &&
     roleValue !== trimmedQuery &&
     !availableRoles.some((role) => role.toLowerCase() === roleValue.toLowerCase())
   )
-    suggestions.push(roleValue);
+    availableRoles.push(roleValue);
 
-  const handleSelect = (selectedRole: string) => {
-    form.setValue("role", selectedRole);
-    setRolePopoverOpen(false);
-    setSearchQuery("");
-  };
+  availableRoles.sort((a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
   return (
     <>
@@ -60,58 +47,20 @@ export default function FormFields() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Role</FormLabel>
-            <Popover open={rolePopoverOpen} onOpenChange={setRolePopoverOpen}>
-              <FormControl>
-                <PopoverTrigger aria-haspopup="listbox" asChild role="combobox">
-                  <Button
-                    {...field}
-                    value={undefined}
-                    className="border-input focus-visible:ring-ring focus-visible:border-border aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive h-9 w-full min-w-0 justify-between outline-none focus-visible:ring-2 focus-visible:outline-hidden dark:bg-transparent"
-                    size="small"
-                    variant="outline"
-                  >
-                    <div className="truncate">{field.value || "Search or enter a role..."}</div>
-                    <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-              </FormControl>
-              <PopoverContent
-                aria-label={`${field.name} options`}
-                className="p-0"
-                style={{ width: "var(--radix-popover-trigger-width)" }}
-                role="listbox"
-              >
-                <Command value={field.value}>
-                  <CommandInput
-                    placeholder="Search or enter a role..."
-                    value={searchQuery}
-                    onValueChange={setSearchQuery}
-                  />
-                  <CommandList>
-                    {filteredRoles.length > 0 && (
-                      <CommandGroup heading="Available Roles">
-                        {filteredRoles.map((role) => (
-                          <CommandItem key={role} value={role} onSelect={handleSelect}>
-                            <Check className={cn("mr-2 h-4 w-4", role === field.value ? "opacity-100" : "opacity-0")} />
-                            {role}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    )}
-                    {suggestions.length > 0 && (
-                      <CommandGroup heading="Create New Role">
-                        {suggestions.map((role) => (
-                          <CommandItem key={role} value={role} onSelect={handleSelect}>
-                            <Check className={cn("mr-2 h-4 w-4", role === field.value ? "opacity-100" : "opacity-0")} />
-                            {role}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    )}
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <FormControl>
+              <ComboBox
+                {...field}
+                options={availableRoles.map((role) => ({ label: role, value: role }))}
+                onChange={(value) => {
+                  field.onChange(value);
+                  setSearchQuery("");
+                }}
+                placeholder="Search or enter a role..."
+                searchValue={searchQuery}
+                onSearchChange={setSearchQuery}
+                searchPlaceholder="Search or enter a role..."
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}

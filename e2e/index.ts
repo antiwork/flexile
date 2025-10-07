@@ -95,8 +95,7 @@ export const withinCombobox = async (
 ) => {
   const combobox = page.getByRole("combobox", { name, exact: true });
   await combobox.click();
-  const popover = page.getByRole("listbox", { name: popoverName ?? `${name} options` });
-  await expect(popover).toBeVisible();
+  const popover = page.getByRole("listbox", { name: popoverName ?? `${name} listbox options` });
   const searchField = popover.getByPlaceholder(searchPlaceholder);
   await expect(searchField).toBeVisible();
   await callback(searchField, combobox);
