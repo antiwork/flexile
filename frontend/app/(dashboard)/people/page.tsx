@@ -111,10 +111,7 @@ export default function PeoplePage() {
           meta: {
             filterOptions: ["Active", "Onboarding", "Alumni"],
           },
-          filterFn: (row, _columnId, filterValue) => {
-            const statusCategory = getStatusCategory(row.original);
-            return !!filterValue.includes(statusCategory);
-          },
+          filterFn: (row, _columnId, filterValue: string[]) => filterValue.includes(getStatusCategory(row.original)),
         },
       ),
     ],
@@ -166,10 +163,7 @@ export default function PeoplePage() {
             hidden: true,
             filterOptions: ["Active", "Onboarding", "Alumni"],
           },
-          filterFn: (row, _columnId, filterValue) => {
-            const statusCategory = getStatusCategory(row.original);
-            return !!filterValue.includes(statusCategory);
-          },
+          filterFn: (row, _columnId, filterValue: string[]) => filterValue.includes(getStatusCategory(row.original)),
         },
       ),
 
