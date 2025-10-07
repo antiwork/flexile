@@ -92,9 +92,7 @@ export default function PeoplePage() {
       columnHelper.accessor(
         (row) => {
           if (row.endedAt) return row.endedAt;
-          if (row.startedAt) return row.startedAt;
-          if (row.user.invitationAcceptedAt) return row.user.invitationAcceptedAt;
-          return new Date(0);
+          return row.startedAt;
         },
         {
           id: "status",
@@ -142,9 +140,7 @@ export default function PeoplePage() {
       columnHelper.accessor(
         (row) => {
           if (row.endedAt) return row.endedAt;
-          if (row.startedAt) return row.startedAt;
-          if (row.user.invitationAcceptedAt) return row.user.invitationAcceptedAt;
-          return new Date(0);
+          return row.startedAt;
         },
         {
           id: "status",
