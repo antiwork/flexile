@@ -3,7 +3,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
-import { fillDatePicker } from "@test/helpers";
+import { fillByLabel, fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { desc, eq } from "drizzle-orm";
@@ -32,9 +32,9 @@ test.describe("invoice editing", () => {
 
     // Fill in the invoice form
     await page.getByPlaceholder("Description").fill("Development work for Q1");
-    await page.getByLabel("Hours / Qty").fill("10:00");
-    await page.getByLabel("Rate").fill("75");
-    await page.getByLabel("Invoice ID").fill("INV-EDIT-001");
+    await fillByLabel(page, "Hours / Qty", "10:00", { index: 0 });
+    await fillByLabel(page, "Rate", "75", { index: 0 });
+    await fillByLabel(page, "Invoice ID", "INV-EDIT-001", { index: 0 });
     await fillDatePicker(page, "Date", "12/15/2024");
     await page
       .getByPlaceholder("Enter notes about your invoice (optional)")
@@ -76,18 +76,18 @@ test.describe("invoice editing", () => {
 
     // Make some changes
     await page.getByPlaceholder("Description").first().fill("Updated development work for Q1");
-    await page.getByLabel("Hours / Qty").first().fill("12:00");
+    await fillByLabel(page, "Hours / Qty", "12:00", { index: 0 });
     await page
       .getByPlaceholder("Enter notes about your invoice (optional)")
       .fill(
         "Updated notes: This invoice covers the Q1 development sprint including new features, bug fixes, and additional enhancements. Please process within 30 days.",
       );
+    await expect(page.locator("tbody")).toContainText("$900");
 
-    // Submit the updated invoice
     await page.getByRole("button", { name: "Resubmit" }).click();
+
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    // Verify the invoice was updated
     await expect(page.locator("tbody")).toContainText("$900"); // $75 * 12 hours
 
     // Verify the database was updated
@@ -134,7 +134,7 @@ test.describe("invoice editing", () => {
 
     await page.getByRole("cell", { name: "INV-STALE-TEST" }).click();
     await page.getByRole("link", { name: "Edit invoice" }).click();
-    await expect(page.getByRole("link", { name: "Edit invoice" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
 
     // Verify initial data is loaded correctly
     await expect(page.getByPlaceholder("Enter notes about your invoice (optional)")).toHaveValue("Original notes.");

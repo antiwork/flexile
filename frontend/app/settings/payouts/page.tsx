@@ -80,7 +80,7 @@ const EquitySection = () => {
   const submit = form.handleSubmit((values) => saveMutation.mutate(values));
 
   return (
-    <div className="mb-24 grid gap-4">
+    <div className="grid gap-4">
       <h2 className="font-bold">Equity</h2>
       <Form {...form}>
         <form onSubmit={(e) => void submit(e)}>
@@ -132,7 +132,7 @@ const EquitySection = () => {
           <div className="justify-start p-0">
             <MutationStatusButton
               type="submit"
-              size="small"
+              idleVariant="primary"
               mutation={saveMutation}
               loadingText="Saving..."
               successText="Saved!"
@@ -228,7 +228,7 @@ const DividendSection = () => {
           <div className="justify-start p-0">
             <MutationStatusButton
               type="submit"
-              size="small"
+              idleVariant="primary"
               mutation={saveMutation}
               loadingText="Saving..."
               successText="Saved!"
@@ -343,7 +343,7 @@ const BankAccountsSection = () => {
       ) : bankAccounts.length === 0 && (user.roles.investor || user.roles.worker) ? (
         <Placeholder icon={CircleDollarSign}>
           <p>Set up your bank account to receive payouts.</p>
-          <Button onClick={() => setAddingBankAccount(true)} size="small">
+          <Button onClick={() => setAddingBankAccount(true)} variant="outline">
             Add bank account
           </Button>
         </Placeholder>
@@ -364,7 +364,6 @@ const BankAccountsSection = () => {
                         <>
                           {bankAccount.id !== bankAccountForInvoices && (
                             <MutationButton
-                              size="small"
                               idleVariant="outline"
                               mutation={useBankAccountMutation}
                               param={{ bankAccountId: bankAccount.id, useFor: "invoices" as const }}
@@ -388,7 +387,6 @@ const BankAccountsSection = () => {
                                   ? "Updating..."
                                   : undefined
                               }
-                              size="small"
                             >
                               Use for dividends
                             </MutationButton>
@@ -396,7 +394,7 @@ const BankAccountsSection = () => {
                         </>
                       ) : (
                         <>
-                          <Button variant="outline" size="small" onClick={() => setEditingBankAccount(bankAccount)}>
+                          <Button variant="outline" onClick={() => setEditingBankAccount(bankAccount)}>
                             Edit
                           </Button>
                           {editingBankAccount ? (
@@ -423,7 +421,7 @@ const BankAccountsSection = () => {
           </Card>
           {user.roles.investor || user.roles.worker ? (
             <div>
-              <Button onClick={() => setAddingBankAccount(true)} variant="default" size="small">
+              <Button variant="outline" onClick={() => setAddingBankAccount(true)}>
                 <Plus className="size-4" />
                 Add bank account
               </Button>

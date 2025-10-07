@@ -14,7 +14,8 @@ test.describe("Onboarding checklist", () => {
   test("completes admin onboarding checklist by adding company details, bank account, and inviting contractor", async ({
     page,
   }) => {
-    const company = (await companiesFactory.createPreOnboarding({ requiredInvoiceApprovalCount: 1 })).company;
+    const company = (await companiesFactory.createPreOnboarding({ requiredInvoiceApprovalCount: 1, isTrusted: true }))
+      .company;
     const adminUser = (await usersFactory.create()).user;
     await companyAdministratorsFactory.create({
       companyId: company.id,
@@ -59,16 +60,21 @@ test.describe("Onboarding checklist", () => {
 
     await withinModal(
       async (modal) => {
-        await expect(modal.getByText("Who's joining?")).toBeVisible();
         await modal.getByLabel("Email").fill(faker.internet.email());
         await modal.getByLabel("Role").fill("Software Engineer");
         await modal.getByLabel("Hourly").check();
         await modal.getByLabel("Rate").fill("100");
-        await page.getByRole("button", { name: "Continue" }).click();
-        await modal.getByLabel("Already signed contract elsewhere").check({ force: true });
-        await modal.getByRole("button", { name: "Send invite" }).click();
+        await modal.getByRole("button", { name: "Continue" }).click();
       },
       { page, title: "Who's joining?" },
+    );
+
+    await withinModal(
+      async (modal) => {
+        await page.getByRole("switch", { name: "Already signed contract elsewhere" }).click({ force: true });
+        await modal.getByRole("button", { name: "Send invite" }).click();
+      },
+      { page, title: "Add a contract" },
     );
 
     const checkProgress = async () => {

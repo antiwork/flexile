@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/react-query";
 import { isFuture } from "date-fns";
 import { Decimal } from "decimal.js";
-import { AlertTriangle, CircleCheck, Copy, Plus } from "lucide-react";
+import { AlertTriangle, CircleCheck, Copy, Info, Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from "react";
@@ -22,7 +22,6 @@ import DatePicker from "@/components/DatePicker";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
-import RadioButtons from "@/components/RadioButtons";
 import Status from "@/components/Status";
 import TableSkeleton from "@/components/TableSkeleton";
 import Tabs from "@/components/Tabs";
@@ -40,7 +39,6 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
 import { countries } from "@/models/constants";
@@ -147,14 +145,7 @@ export default function ContractorPage() {
   const issuePaymentMutation = useMutation({
     mutationFn: async (values: z.infer<typeof issuePaymentSchema>) => {
       const invoice = await issuePayment.mutateAsync({
-        ...(values.equityType === "range"
-          ? {
-              ...values,
-              equityPercentage: values.equityRange[0],
-              minAllowedEquityPercentage: values.equityRange[0],
-              maxAllowedEquityPercentage: values.equityRange[1],
-            }
-          : values),
+        ...values,
         companyId: company.id,
         userExternalId: id,
         totalAmountCents: BigInt(values.amountInCents),
@@ -179,7 +170,6 @@ export default function ContractorPage() {
       });
     },
   });
-  const issuePaymentValues = issuePaymentForm.watch();
   const submitIssuePayment = issuePaymentForm.handleSubmit((values) => issuePaymentMutation.mutateAsync(values));
 
   return (
@@ -218,11 +208,11 @@ export default function ContractorPage() {
               </Status>
             </div>
             <DialogFooter>
-              <Button variant="outline" size="small" onClick={() => setEndModalOpen(false)}>
+              <Button variant="outline" onClick={() => setEndModalOpen(false)}>
                 No, cancel
               </Button>
               <MutationButton
-                size="small"
+                idleVariant="critical"
                 mutation={endContract}
                 param={{ companyId: company.id, id: contractor?.id ?? "", endDate: endDate?.toString() ?? "" }}
               >
@@ -254,6 +244,14 @@ export default function ContractorPage() {
             </DialogHeader>
             <Form {...issuePaymentForm}>
               <form onSubmit={(e) => void submitIssuePayment(e)} className="grid gap-4">
+                {company.flags.includes("equity") && (contractor?.equityPercentage ?? 0) > 0 ? (
+                  <Alert>
+                    <Info />
+                    <AlertDescription>
+                      {user.displayName} will receive {contractor?.equityPercentage ?? 0}% equity
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
                 <FormField
                   control={issuePaymentForm.control}
                   name="amountInCents"
@@ -288,81 +286,20 @@ export default function ContractorPage() {
                     </FormItem>
                   )}
                 />
-                {company.flags.includes("equity") ? (
-                  <div className="space-y-4">
-                    <FormField
-                      control={issuePaymentForm.control}
-                      name="equityType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <RadioButtons
-                              {...field}
-                              options={[
-                                { label: "Fixed equity percentage", value: "fixed" },
-                                { label: "Equity percentage range", value: "range" },
-                              ]}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={issuePaymentForm.control}
-                      name="equityPercentage"
-                      render={({ field }) => (
-                        <FormItem hidden={issuePaymentValues.equityType === "range"}>
-                          <FormLabel>Equity percentage</FormLabel>
-                          <FormControl>
-                            <NumberInput {...field} suffix="%" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={issuePaymentForm.control}
-                      name="equityRange"
-                      render={({ field }) => (
-                        <FormItem hidden={issuePaymentValues.equityType === "fixed"}>
-                          <FormControl>
-                            <Slider value={field.value} minStepsBetweenThumbs={1} onValueChange={field.onChange} />
-                          </FormControl>
-                          <FormMessage>
-                            <div className="flex justify-between">
-                              <span>{(field.value[0] / 100).toLocaleString(undefined, { style: "percent" })}</span>
-                              <span>{(field.value[1] / 100).toLocaleString(undefined, { style: "percent" })}</span>
-                            </div>
-                          </FormMessage>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                ) : null}
-
                 {issuePaymentForm.formState.errors.root ? (
                   <small className="text-red">{issuePaymentForm.formState.errors.root.message}</small>
                 ) : null}
 
-                <small className="text-muted-foreground">
-                  Your'll be able to initiate payment once it has been accepted by the recipient
-                  {company.requiredInvoiceApprovals > 1 ? " and has sufficient approvals" : ""}.
-                </small>
-
                 <DialogFooter>
-                  <div className="flex justify-end">
-                    <MutationStatusButton
-                      type="submit"
-                      size="small"
-                      mutation={issuePaymentMutation}
-                      successText="Payment submitted!"
-                      loadingText="Saving..."
-                    >
-                      Issue payment
-                    </MutationStatusButton>
-                  </div>
+                  <MutationStatusButton
+                    type="submit"
+                    idleVariant="primary"
+                    mutation={issuePaymentMutation}
+                    successText="Payment submitted!"
+                    loadingText="Saving..."
+                  >
+                    Issue payment
+                  </MutationStatusButton>
                 </DialogFooter>
               </form>
             </Form>
@@ -425,7 +362,7 @@ const ActionPanel = ({
         <DialogDescription className="sr-only">Manage Payment or Contract</DialogDescription>
         <div className="flex flex-col gap-3">
           <DialogClose asChild onClick={handleIssuePaymentClick}>
-            <Button size="small">Issue payment</Button>
+            <Button variant="primary">Issue payment</Button>
           </DialogClose>
           {contractor.endedAt && !isFuture(contractor.endedAt) ? (
             <Status className="justify-center" variant="critical">
@@ -433,9 +370,7 @@ const ActionPanel = ({
             </Status>
           ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
             <DialogClose asChild onClick={handleEndContractClick}>
-              <Button variant="outline" size="small">
-                End contract
-              </Button>
+              <Button variant="outline">End contract</Button>
             </DialogClose>
           ) : null}
         </div>
@@ -443,13 +378,13 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex items-center gap-3">
-      <Button size="small" onClick={handleIssuePaymentClick}>
+      <Button variant="primary" onClick={handleIssuePaymentClick}>
         Issue payment
       </Button>
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
         <Status variant="critical">Alumni</Status>
       ) : !contractor.endedAt || isFuture(contractor.endedAt) ? (
-        <Button variant="outline" size="small" onClick={handleEndContractClick}>
+        <Button variant="outline" onClick={handleEndContractClick}>
           End contract
         </Button>
       ) : null}
@@ -543,7 +478,6 @@ const DetailsTab = ({
           {!contractor.endedAt && (
             <MutationStatusButton
               type="submit"
-              size="small"
               mutation={updateContractor}
               loadingText="Saving..."
               className="justify-self-end"
@@ -804,7 +738,7 @@ function ExercisesTab({ investorId }: { investorId: string }) {
         id: "actions",
         cell: (info) =>
           info.row.original.status === "signed" ? (
-            <MutationButton mutation={confirmPaymentMutation} param={info.row.original.id} size="small">
+            <MutationButton idleVariant="primary" mutation={confirmPaymentMutation} param={info.row.original.id}>
               Confirm payment
             </MutationButton>
           ) : undefined,

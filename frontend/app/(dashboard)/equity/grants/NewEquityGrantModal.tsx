@@ -533,7 +533,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                   <Button variant="outline" onClick={handleClose}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={!detailsForm.formState.isValid}>
+                  <Button type="submit" variant="primary" disabled={!detailsForm.formState.isValid}>
                     Continue
                   </Button>
                 </DialogStackFooter>
@@ -669,7 +669,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                   <DialogStackPrevious>
                     <Button variant="outline">Back</Button>
                   </DialogStackPrevious>
-                  <Button type="submit" disabled={!vestingForm.formState.isValid}>
+                  <Button type="submit" variant="primary" disabled={!vestingForm.formState.isValid}>
                     Continue
                   </Button>
                 </DialogStackFooter>
@@ -698,6 +698,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
                 </DialogStackPrevious>
                 <MutationStatusButton
                   type="submit"
+                  idleVariant="primary"
                   mutation={createEquityGrant}
                   disabled={!documentForm.formState.isValid}
                 >
