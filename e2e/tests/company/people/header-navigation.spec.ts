@@ -134,8 +134,8 @@ test.describe("People Status column sorting", () => {
 
     const extractDatesFromStatus = (statusTexts: string[]) =>
       statusTexts.map((text) => {
-        const dateMatch = text.match(/(?:Started on|Ended on|Starts on)\s+(.+)$/u);
-        if (dateMatch && dateMatch[1]) {
+        const dateMatch = /(?:Started on|Ended on|Starts on)\s+(.+)$/u.exec(text);
+        if (dateMatch?.[1]) {
           return new Date(dateMatch[1]);
         }
         return new Date(0);
