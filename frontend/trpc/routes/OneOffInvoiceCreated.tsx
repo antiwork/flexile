@@ -25,7 +25,7 @@ const OneOffInvoiceCreated = ({
     <Container className="mb-8">
       <Heading as="h1">{companyName} has sent you money.</Heading>
       <Heading as="h2">
-        This one-off payment has been automatically approved and will be processed soon.
+        Please review the information below.
         {!bankAccountLastFour ? " You'll also need to connect your bank account to receive payment." : null}
       </Heading>
 

@@ -54,6 +54,9 @@ test.describe("One-off payments", () => {
         where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
       });
       expect(invoice?.acceptedAt).not.toBeNull();
+      if (invoice?.acceptedAt) {
+        expect(Math.abs(invoice.acceptedAt.getTime() - Date.now())).toBeLessThan(100000);
+      }
       expect(invoice).toEqual(
         expect.objectContaining({
           totalAmountInUsdCents: BigInt(215430),
@@ -61,7 +64,6 @@ test.describe("One-off payments", () => {
           cashAmountInCents: BigInt(215430),
           equityAmountInCents: BigInt(0),
           equityAmountInOptions: 0,
-          acceptedAt: expect.any(Date),
         }),
       );
 
@@ -178,6 +180,9 @@ test.describe("One-off payments", () => {
           where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
         });
         expect(invoice?.acceptedAt).not.toBeNull();
+        if (invoice?.acceptedAt) {
+          expect(Math.abs(invoice.acceptedAt.getTime() - Date.now())).toBeLessThan(100000);
+        }
         expect(invoice).toEqual(
           expect.objectContaining({
             totalAmountInUsdCents: BigInt(50000),
@@ -185,7 +190,6 @@ test.describe("One-off payments", () => {
             cashAmountInCents: BigInt(42500),
             equityAmountInCents: BigInt(7500),
             equityAmountInOptions: 8,
-            acceptedAt: expect.any(Date),
           }),
         );
 
@@ -224,11 +228,13 @@ test.describe("One-off payments", () => {
         where: and(eq(invoices.invoiceNumber, "O-0001"), eq(invoices.companyId, company.id)),
       });
       expect(invoice?.acceptedAt).not.toBeNull();
+      if (invoice?.acceptedAt) {
+        expect(Math.abs(invoice.acceptedAt.getTime() - Date.now())).toBeLessThan(100000);
+      }
       expect(invoice).toEqual(
         expect.objectContaining({
           totalAmountInUsdCents: BigInt(`12345`),
           cashAmountInCents: BigInt(`12345`),
-          acceptedAt: expect.any(Date),
         }),
       );
 
