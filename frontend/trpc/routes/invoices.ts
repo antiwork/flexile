@@ -115,7 +115,8 @@ export const invoicesRouter = createRouter({
       if (!equityResult) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Error calculating equity. Please contact the administrator.",
+          message:
+            "Unable to calculate equity for this payment. Please ensure the contractor has active equity grants and the company has a share price configured.",
         });
       }
 

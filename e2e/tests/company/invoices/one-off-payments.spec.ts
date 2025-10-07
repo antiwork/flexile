@@ -144,7 +144,11 @@ test.describe("One-off payments", () => {
               page.waitForResponse((r) => r.url().includes("invoices.createAsAdmin") && r.status() === 400),
               modal.getByRole("button", { name: "Issue payment" }).click(),
             ]);
-            await expect(modal.getByText("Error calculating equity. Please contact the administrator.")).toBeVisible();
+            await expect(
+              modal.getByText(
+                "Unable to calculate equity for this payment. Please ensure the contractor has active equity grants and the company has a share price configured.",
+              ),
+            ).toBeVisible();
           },
           { page, assertClosed: false },
         );
