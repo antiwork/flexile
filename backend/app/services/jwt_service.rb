@@ -36,6 +36,16 @@ class JwtService
       authorization_header.present? && authorization_header.start_with?("Bearer ")
     end
 
+    def generate_actor_token(user)
+      payload = {
+        user_id: user.id,
+        email: user.email,
+        exp: 30.minutes.from_now.to_i,
+      }
+
+      JWT.encode(payload, jwt_secret, "HS256")
+    end
+
     private
       def extract_jwt_token_from_request(request)
         authorization_header = request.headers["x-flexile-auth"]

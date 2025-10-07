@@ -1,11 +1,11 @@
 "use client";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { ChevronDown, ChevronRight, LogOut, MessageCircleQuestion, Settings, Sparkles, X } from "lucide-react";
+import { ChevronDown, ChevronRight, LogOut, MessageCircleQuestion, Settings, Sparkles, UserX, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import React from "react";
 import { GettingStarted } from "@/components/GettingStarted";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
@@ -50,6 +50,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useUserStore();
   const isDefaultLogo = !company.logo_url || company.logo_url.includes("default-company-logo");
   const { switchCompany } = useSwitchCompany();
+  const { data: session } = useSession();
 
   return (
     <SidebarProvider>
@@ -183,6 +184,17 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                 label="Support center"
                 badge={<SupportBadge />}
               />
+              {session?.user.actorToken ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => router.push(`/impersonate?actor_token=null`)}
+                    className="text-destructive dark:text-destructive hover:text-destructive dark:hover:text-destructive"
+                  >
+                    <UserX className="size-6" />
+                    Stop impersonating
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => void signOut({ redirect: false }).then(logout)}

@@ -799,4 +799,17 @@ RSpec.describe Company do
       expect(company.display_country).to eq("Romania")
     end
   end
+
+  describe "#generate_impersonation_url" do
+    let(:company) { create(:company, :completed_onboarding) }
+
+    it "returns a valid impersonation URL with a token for the primary admin" do
+      url = company.generate_impersonation_url
+      expect(url).to include("/impersonate")
+
+      token = url.split("actor_token=").last
+      decoded_user = JwtService.user_from_token(token)
+      expect(decoded_user).to eq(company.primary_admin.user)
+    end
+  end
 end

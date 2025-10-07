@@ -228,6 +228,10 @@ class Company < ApplicationRecord
       !share_holdings.exists?
   end
 
+  def generate_impersonation_url
+    "#{PROTOCOL}://#{DOMAIN}/impersonate?actor_token=#{JwtService.generate_actor_token(primary_admin.user)}"
+  end
+
   private
     def update_convertible_implied_shares
       convertible_investments.each do |investment|

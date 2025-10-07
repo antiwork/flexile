@@ -2,6 +2,15 @@
 
 module Admin
   class UsersController < Admin::ApplicationController
+    def impersonate
+      user = User.find_by!(external_id: params[:id])
+      authorize user
+
+      redirect_to user.generate_impersonation_url, allow_other_host: true
+    rescue ActiveRecord::RecordNotFound, Pundit::NotAuthorizedError
+      redirect_to admin_users_path, alert: "The requested resource could not be accessed"
+    end
+
     # Overwrite any of the RESTful controller actions to implement custom behavior
     # For example, you may want to send an email after a foo is updated.
     #

@@ -583,4 +583,17 @@ RSpec.describe User do
       expect(user.should_regenerate_consulting_contract?(changeset)).to eq false
     end
   end
+
+  describe "#generate_impersonation_url" do
+    let(:user) { create(:user) }
+
+    it "returns a valid impersonation URL with a token for the user" do
+      url = user.generate_impersonation_url
+      expect(url).to include("/impersonate")
+
+      token = url.split("actor_token=").last
+      decoded_user = JwtService.user_from_token(token)
+      expect(decoded_user).to eq(user)
+    end
+  end
 end

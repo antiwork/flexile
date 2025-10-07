@@ -29,6 +29,9 @@ RSpec.describe HelperUserInfoService do
 
       expect(result).to eq(
         name: user.email,
+        actions: {
+          "Impersonate" => "http://localhost:3100/admin/users/#{user.external_id}/impersonate",
+        },
         metadata: {
           "Country of residence" => user.display_country,
           "Contractor for companies" => "Gumroad",
