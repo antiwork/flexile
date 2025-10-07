@@ -115,6 +115,23 @@ export const invoicesRouter = createRouter({
       if (!equityResult) {
         throw new TRPCError({
           code: "BAD_REQUEST",
+          message: "Error calculating equity. Please contact the administrator.",
+        });
+      }
+
+      let hasInsufficientUnvestedEquity = false;
+
+      if (equityResult.unvestedGrant) {
+        const { unvestedShares, exercisedShares, forfeitedShares } = equityResult.unvestedGrant;
+        const availableUnvestedShares = unvestedShares - exercisedShares - forfeitedShares;
+        if (equityResult.equityOptions > availableUnvestedShares) {
+          hasInsufficientUnvestedEquity = true;
+        }
+      }
+
+      if (hasInsufficientUnvestedEquity) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
           message: "Recipient has insufficient unvested equity",
         });
       }
