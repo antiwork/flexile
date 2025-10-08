@@ -28,13 +28,8 @@ export default function FormFields() {
   const roleValue = form.getValues("role");
   const availableRoles = [...(workers ? new Set(workers.map((worker) => worker.role)) : defaultRoles)];
 
-  if (trimmedQuery && !availableRoles.some((role) => role.toLowerCase() === trimmedQuery.toLowerCase()))
-    availableRoles.push(trimmedQuery);
-  if (
-    roleValue &&
-    roleValue !== trimmedQuery &&
-    !availableRoles.some((role) => role.toLowerCase() === roleValue.toLowerCase())
-  )
+  if (trimmedQuery && !availableRoles.some((role) => role === trimmedQuery)) availableRoles.push(trimmedQuery);
+  if (roleValue && roleValue !== trimmedQuery && !availableRoles.some((role) => role === roleValue))
     availableRoles.push(roleValue);
 
   availableRoles.sort((a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase()));
