@@ -23,8 +23,8 @@ export default function ImpersonatePage() {
 
   return (
     <BrandedLayout>
-      <div className="bg-background flex flex-col items-center rounded-xl p-8 shadow-lg">
-        <div className="border-muted mb-4 size-8 animate-spin rounded-full border-4 border-t-black dark:border-t-white" />
+      <div className="bg-background flex flex-col items-center gap-4 rounded-xl p-8 shadow-lg">
+        <div className="border-muted size-8 animate-spin rounded-full border-4 border-t-black dark:border-t-white" />
         <div className="text-md font-semibold">Setting up your session...</div>
       </div>
     </BrandedLayout>
