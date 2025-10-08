@@ -9,7 +9,6 @@ RSpec.describe Internal::Companies::DocumentsController, type: :controller do
     let(:valid_params) do
       {
         document: {
-          name: "Test Document",
           document_type: "consulting_contract",
           text: "<p>Test content</p>",
         },
@@ -35,7 +34,6 @@ RSpec.describe Internal::Companies::DocumentsController, type: :controller do
       expect(response).to have_http_status(:created)
 
       document = Document.last
-      expect(document.name).to eq("Test Document")
       expect(document.document_type).to eq("consulting_contract")
       expect(document.text).to eq("<p>Test content</p>")
       expect(document.company).to eq(company)
