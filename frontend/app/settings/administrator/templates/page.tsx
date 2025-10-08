@@ -21,9 +21,11 @@ import { useCurrentCompany } from "@/global";
 import { request } from "@/utils/request";
 import { company_template_path, company_templates_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import { useIsMobile } from "@/utils/use-mobile";
 
 export default function Templates() {
   const company = useCurrentCompany();
+  const isMobile = useIsMobile();
   const [editingTemplate, setEditingTemplate] = useQueryState("edit", parseAsStringLiteral(templateTypes));
   const { data: templates } = useSuspenseQuery({
     queryKey: ["templates", company.id],
@@ -48,41 +50,65 @@ export default function Templates() {
           Create and edit legal document templates with rich-text editing, linked to the right events in your account.
         </p>
       </hgroup>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Used for</TableHead>
-            <TableHead>Last edited</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {templateTypes.map((type) => {
-            switch (type) {
-              case "exercise_notice":
-                if (!company.flags.includes("option_exercising")) return null;
-                break;
-              case "stock_option_agreement":
-              case "letter_of_transmittal":
-                if (!company.equityEnabled) return null;
-                break;
-              default:
-                break;
-            }
-            const { name, usedFor } = templateTypeNames[type];
-            const template = templates.find((template) => template.document_type === type);
-            return (
-              <TableRow key={type} onClick={() => void setEditingTemplate(type)} className="cursor-pointer">
-                <TableCell>{name}</TableCell>
-                <TableCell>{usedFor}</TableCell>
-                <TableCell>{template ? formatDate(template.updated_at) : "-"}</TableCell>
-                <TableCell className="h-14">{template ? null : <Button>Add</Button>}</TableCell>
+      <div>
+        <Table className={isMobile ? "w-full table-fixed" : ""}>
+          {!isMobile && (
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Used for</TableHead>
+                <TableHead>Last edited</TableHead>
+                <TableHead />
               </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+            </TableHeader>
+          )}
+          <TableBody>
+            {templateTypes.map((type) => {
+              switch (type) {
+                case "exercise_notice":
+                  if (!company.flags.includes("option_exercising")) return null;
+                  break;
+                case "stock_option_agreement":
+                case "letter_of_transmittal":
+                  if (!company.equityEnabled) return null;
+                  break;
+                default:
+                  break;
+              }
+              const { name, usedFor } = templateTypeNames[type];
+              const template = templates.find((template) => template.document_type === type);
+              return (
+                <TableRow key={type} onClick={() => void setEditingTemplate(type)} className="cursor-pointer">
+                  {isMobile ? (
+                    <TableCell className="w-full px-0 py-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-1 flex-col justify-start">
+                          <div>{name}</div>
+                          <div className="text-muted-foreground flex justify-between text-sm">
+                            <div>{usedFor}</div>
+                            <div className="text-muted-foreground">
+                              {template ? formatDate(template.updated_at) : null}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>{!template && <Button>Add</Button>}</div>
+                      </div>
+                    </TableCell>
+                  ) : (
+                    <>
+                      <TableCell>{name}</TableCell>
+                      <TableCell>{usedFor}</TableCell>
+                      <TableCell>{template ? formatDate(template.updated_at) : "-"}</TableCell>
+                      <TableCell className="h-14">{template ? null : <Button>Add</Button>}</TableCell>
+                    </>
+                  )}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
       {editingTemplate ? <EditTemplate type={editingTemplate} onClose={() => void setEditingTemplate(null)} /> : null}
     </div>
   );
