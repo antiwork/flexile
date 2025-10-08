@@ -82,13 +82,11 @@ export default function Templates() {
                   {isMobile ? (
                     <TableCell className="w-full px-0 py-3">
                       <div className="flex items-center justify-between">
-                        <div className="flex flex-1 flex-col justify-start">
+                        <div className="flex flex-1 flex-col">
                           <div>{name}</div>
                           <div className="text-muted-foreground flex justify-between text-sm">
                             <div>{usedFor}</div>
-                            <div className="text-muted-foreground">
-                              {template ? formatDate(template.updated_at) : null}
-                            </div>
+                            <div>{template ? formatDate(template.updated_at) : null}</div>
                           </div>
                         </div>
 
