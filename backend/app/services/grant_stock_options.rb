@@ -71,7 +71,6 @@ class GrantStockOptions
         equity_grant = equity_grant_creation_result.equity_grant
         document = user.documents.build(equity_grant:,
                                         company:,
-                                        name: "Equity Incentive Plan #{Date.current.year}",
                                         year: Date.current.year,
                                         document_type: :equity_plan_contract)
         if contract.is_a?(String)
