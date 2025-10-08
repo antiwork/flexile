@@ -184,11 +184,11 @@ class User < ApplicationRecord
     end
   end
 
-  private
-    def generate_impersonation_url
-      "#{PROTOCOL}://#{DOMAIN}/impersonate?actor_token=#{JwtService.generate_actor_token(self)}"
-    end
+  def generate_impersonation_url
+    "#{PROTOCOL}://#{DOMAIN}/impersonate?actor_token=#{JwtService.generate_actor_token(self)}"
+  end
 
+  private
     def update_dividend_status
       dividends.pending_signup.each do |dividend|
         dividend.update!(status: Dividend::ISSUED)
