@@ -40,7 +40,6 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentCompany, useCurrentUser } from "@/global";
-import { MAXIMUM_EQUITY_PERCENTAGE, MINIMUM_EQUITY_PERCENTAGE } from "@/models";
 import { countries } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
@@ -54,9 +53,6 @@ import FormFields, { schema as formSchema } from "../FormFields";
 const issuePaymentSchema = z.object({
   amountInCents: z.number().min(0),
   description: z.string().min(1, "This field is required"),
-  equityType: z.enum(["fixed", "range"]),
-  equityPercentage: z.number().min(MINIMUM_EQUITY_PERCENTAGE).max(MAXIMUM_EQUITY_PERCENTAGE),
-  equityRange: z.tuple([z.number().min(MINIMUM_EQUITY_PERCENTAGE), z.number().max(MAXIMUM_EQUITY_PERCENTAGE)]),
 });
 
 export default function ContractorPage() {
@@ -97,11 +93,6 @@ export default function ContractorPage() {
   const [endDate, setEndDate] = useState<DateValue | null>(today(getLocalTimeZone()));
   const [issuePaymentModalOpen, setIssuePaymentModalOpen] = useState(false);
   const issuePaymentForm = useForm({
-    defaultValues: {
-      equityType: "fixed",
-      equityPercentage: 0,
-      equityRange: [MINIMUM_EQUITY_PERCENTAGE, MAXIMUM_EQUITY_PERCENTAGE],
-    },
     resolver: zodResolver(issuePaymentSchema),
   });
 

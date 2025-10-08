@@ -99,7 +99,7 @@ RSpec.describe UpdateUser do
         context "when compliance infos already exist" do
           let(:user) { create(:user) }
           let!(:old_compliance_info) { create(:user_compliance_info, user:) }
-          let!(:old_tax_document) { create(:tax_doc, :form_w9, user_compliance_info: old_compliance_info) }
+          let!(:old_tax_document) { create(:document, document_type: :form_w9, user_compliance_info: old_compliance_info) }
 
           it "updates the user and creates a new compliance info record" do
             expect do
