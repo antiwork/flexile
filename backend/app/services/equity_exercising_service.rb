@@ -60,7 +60,7 @@ class EquityExercisingService
           exercise_price_usd: equity_grant.exercise_price_usd
         )
       end
-      document = company.documents.exercise_notice.build(name: "Notice of Exercise", year: current_time.year, json_data: { equity_grant_exercise_id: exercise.id })
+      document = company.documents.exercise_notice.build(year: current_time.year, json_data: { equity_grant_exercise_id: exercise.id })
       document.signatures.build(user: company_investor.user, title: "Signer", signed_at: current_time)
       document.save!
 

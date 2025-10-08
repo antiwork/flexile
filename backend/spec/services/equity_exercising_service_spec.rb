@@ -80,10 +80,9 @@ RSpec.describe EquityExercisingService, :skip_pdf_generation do
       expect(exercise.signed_at).to be_present
       expect(exercise.bank_account).to eq(equity_exercise_bank_account)
 
-      document = Document.last
+      document = Document.exercise_notice.last
       expect(document.year).to eq(exercise.signed_at.year)
       expect(document.company).to eq(company)
-      expect(document.name).to eq("Notice of Exercise")
       expect(document.json_data).to eq({ equity_grant_exercise_id: exercise.id }.as_json)
       expect(document.signatures.count).to eq(1)
       expect(CreateDocumentPdfJob).to have_enqueued_sidekiq_job(document.id, exercise_notice.text)
