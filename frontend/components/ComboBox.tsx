@@ -64,7 +64,7 @@ const ComboBox = ({
           {showSearch ? (
             <CommandInput
               placeholder={searchPlaceholder ?? "Search..."}
-              value={searchValue ?? ""}
+              {...(searchValue !== undefined && { value: searchValue })}
               onValueChange={(value) => {
                 onSearchChange?.(value);
                 requestAnimationFrame(() => {

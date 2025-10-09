@@ -15,7 +15,7 @@ export const schema = z.object({
   role: z.string(),
 });
 
-const defaultRoles = ["Software Engineer", "Designer", "Product Manager", "Data Analyst"];
+const defaultOnboardingRoles = ["Software Engineer", "Designer", "Product Manager", "Data Analyst"];
 
 export default function FormFields() {
   const form = useFormContext<z.infer<typeof schema>>();
@@ -26,13 +26,13 @@ export default function FormFields() {
   const [searchQuery, setSearchQuery] = useState("");
   const trimmedQuery = searchQuery.trim();
   const roleValue = form.getValues("role");
-  const availableRoles = [...(workers ? new Set(workers.map((worker) => worker.role)) : defaultRoles)];
 
-  if (trimmedQuery && !availableRoles.some((role) => role === trimmedQuery)) availableRoles.push(trimmedQuery);
-  if (roleValue && roleValue !== trimmedQuery && !availableRoles.some((role) => role === roleValue))
-    availableRoles.push(roleValue);
+  const roleSet = new Set(workers ? workers.map((worker) => worker.role) : defaultOnboardingRoles);
+  if (trimmedQuery) roleSet.add(trimmedQuery);
+  if (roleValue) roleSet.add(roleValue);
 
-  availableRoles.sort((a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  const collator = new Intl.Collator(undefined, { sensitivity: "base" });
+  const availableRoles = Array.from(roleSet).sort((a, b) => collator.compare(a, b));
 
   return (
     <>
@@ -46,10 +46,7 @@ export default function FormFields() {
               <ComboBox
                 {...field}
                 options={availableRoles.map((role) => ({ label: role, value: role }))}
-                onChange={(value) => {
-                  field.onChange(value);
-                  setSearchQuery("");
-                }}
+                onChange={field.onChange}
                 placeholder="Search or enter a role..."
                 searchValue={searchQuery}
                 onSearchChange={setSearchQuery}
