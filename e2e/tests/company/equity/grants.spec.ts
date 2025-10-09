@@ -6,7 +6,7 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
-import { clickComboboxOption, fillDatePicker, findRichTextEditor } from "@test/helpers";
+import { clickComboboxOption, fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq } from "drizzle-orm";
@@ -50,9 +50,15 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("Estimated value of $25,000, based on a $2.50 share price")).toBeVisible();
 
     await page.getByLabel("Number of options").fill("10");
-    await clickComboboxOption(page, "Relationship to company", "Consultant");
+    // Verifies search and selection behavior for an uncontrolled search input in the combobox
+    await selectComboboxOption(page, "Relationship to company", "Consultant", {
+      popoverName: "issueDateRelationship listbox options",
+    });
 
-    await clickComboboxOption(page, "Grant type", "NSO");
+    // Consecutive usage of selectComboboxOption should work
+    await selectComboboxOption(page, "Grant type", "NSO", {
+      popoverName: "optionGrantType listbox options",
+    });
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
     await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
 
