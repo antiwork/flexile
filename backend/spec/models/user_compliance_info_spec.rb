@@ -307,7 +307,7 @@ RSpec.describe UserComplianceInfo do
     end
   end
 
-  describe "#tax_information_document_name" do
+  describe "#tax_information_document_type" do
     let(:user_compliance_info) { build(:user_compliance_info, user:, business_entity:) }
 
     context "when user is a US resident" do
@@ -316,16 +316,16 @@ RSpec.describe UserComplianceInfo do
       context "and is an individual" do
         let(:business_entity) { false }
 
-        it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
+        it "returns the W-9 form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
 
       context "and is a business entity" do
         let(:business_entity) { true }
 
-        it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
+        it "returns the W-9 form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
     end
@@ -336,16 +336,16 @@ RSpec.describe UserComplianceInfo do
       context "and is an individual" do
         let(:business_entity) { false }
 
-        it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
+        it "returns the W-9 form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
 
       context "and is a business entity" do
         let(:business_entity) { true }
 
-        it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
+        it "returns the W-9 form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
     end
@@ -356,37 +356,37 @@ RSpec.describe UserComplianceInfo do
       context "and is an individual" do
         let(:business_entity) { false }
 
-        it "returns the W-8BEN form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_8BEN)
+        it "returns the W-8BEN form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w8ben)
         end
       end
 
       context "and is a business entity" do
         let(:business_entity) { true }
 
-        it "returns the W-8BEN-E form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_8BEN_E)
+        it "returns the W-8BEN-E form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w8bene)
         end
       end
     end
   end
 
-  describe "#investor_tax_document_name" do
+  describe "#investor_tax_document_type" do
     let(:user_compliance_info) { build(:user_compliance_info, user:) }
 
     context "when user is a US resident" do
       let(:user) { create(:user, country_code: "US", citizenship_country_code: "RO") }
 
-      it "returns the 1099-DIV form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1099_DIV)
+      it "returns the 1099-DIV form type" do
+        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1099div)
       end
     end
 
     context "when user is a US citizen" do
       let(:user) { create(:user, country_code: "RO", citizenship_country_code: "US") }
 
-      it "returns the 1099-DIV form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1099_DIV)
+      it "returns the 1099-DIV form type" do
+        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1099div)
       end
     end
 
@@ -395,8 +395,8 @@ RSpec.describe UserComplianceInfo do
         create(:user, country_code: "RO", citizenship_country_code: "RO")
       end
 
-      it "returns the 1042-S form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1042_S)
+      it "returns the 1042-S form type" do
+        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1042s)
       end
     end
   end
@@ -416,7 +416,7 @@ RSpec.describe UserComplianceInfo do
 
 
       context "when there are paid dividends attached to the user compliance info" do
-        let!(:form_1099_div) { create(:tax_doc, :form_1099div, user_compliance_info:) }
+        let!(:form_1099_div) { create(:document, document_type: :form_1099div, user_compliance_info:) }
 
         before { create(:dividend, :paid, user_compliance_info:) }
 
@@ -430,7 +430,7 @@ RSpec.describe UserComplianceInfo do
         end
 
         context "with 1042-S forms" do
-          let!(:form_1042_s) { create(:tax_doc, :form_1042s, user_compliance_info:) }
+          let!(:form_1042_s) { create(:document, document_type: :form_1042s, user_compliance_info:) }
 
           it "preserves dividend-related tax documents" do
             user_compliance_info.mark_deleted!
@@ -440,9 +440,9 @@ RSpec.describe UserComplianceInfo do
       end
     end
 
-    let!(:tax_document) { create(:tax_doc, :form_w9, user_compliance_info:) }
-    let!(:form_1099_nec) { create(:tax_doc, :form_1099nec, year: 2023, user_compliance_info:, signed: false) }
-    let!(:submitted_1099_nec) { create(:tax_doc, :form_1099nec, year: 2022, user_compliance_info:, signed: true) }
+    let!(:tax_document) { create(:document, document_type: :form_w9, user_compliance_info:) }
+    let!(:form_1099_nec) { create(:document, document_type: :form_1099nec, year: 2023, user_compliance_info:, signed: false) }
+    let!(:submitted_1099_nec) { create(:document, document_type: :form_1099nec, year: 2022, user_compliance_info:, signed: true) }
 
     include_examples "common assertions"
   end
