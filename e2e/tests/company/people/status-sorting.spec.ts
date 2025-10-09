@@ -52,8 +52,22 @@ test.describe("Status Column Sorting in People Page", () => {
         return new Date(0);
       });
 
+    // Initial state should be sorted ascending (desc: false in initialState)
     const initialStatusCells = await getStatusCells().allTextContents();
+    const initialDates = extractDatesFromStatus(initialStatusCells);
 
+    let isInitialSortedAscending = true;
+    for (let i = 0; i < initialDates.length - 1; i++) {
+      const currentDate = initialDates[i];
+      const nextDate = initialDates[i + 1];
+      if (currentDate && nextDate && currentDate.getTime() > nextDate.getTime()) {
+        isInitialSortedAscending = false;
+        break;
+      }
+    }
+    expect(isInitialSortedAscending).toBe(true);
+
+    // First click - should toggle to descending
     await page.getByRole("columnheader", { name: "Status" }).click();
     await page.waitForTimeout(1000);
 
@@ -61,34 +75,24 @@ test.describe("Status Column Sorting in People Page", () => {
     expect(statusCellsAfterFirstClick).not.toEqual(initialStatusCells);
 
     const datesAfterFirstClick = extractDatesFromStatus(statusCellsAfterFirstClick);
-    let isSortedAscending = true;
+    let isSortedDescending = true;
     for (let i = 0; i < datesAfterFirstClick.length - 1; i++) {
       const currentDate = datesAfterFirstClick[i];
       const nextDate = datesAfterFirstClick[i + 1];
-      if (currentDate && nextDate && currentDate.getTime() > nextDate.getTime()) {
-        isSortedAscending = false;
-        break;
-      }
-    }
-    expect(isSortedAscending).toBe(true);
-
-    await page.getByRole("columnheader", { name: "Status" }).click();
-    await page.waitForTimeout(1000);
-
-    const statusCellsAfterSecondClick = await getStatusCells().allTextContents();
-    expect(statusCellsAfterSecondClick).not.toEqual(statusCellsAfterFirstClick);
-
-    const datesAfterSecondClick = extractDatesFromStatus(statusCellsAfterSecondClick);
-    let isSortedDescending = true;
-    for (let i = 0; i < datesAfterSecondClick.length - 1; i++) {
-      const currentDate = datesAfterSecondClick[i];
-      const nextDate = datesAfterSecondClick[i + 1];
       if (currentDate && nextDate && currentDate.getTime() < nextDate.getTime()) {
         isSortedDescending = false;
         break;
       }
     }
     expect(isSortedDescending).toBe(true);
+
+    // Second click - should toggle back to ascending
+    await page.getByRole("columnheader", { name: "Status" }).click();
+    await page.waitForTimeout(1000);
+
+    const statusCellsAfterSecondClick = await getStatusCells().allTextContents();
+    expect(statusCellsAfterSecondClick).not.toEqual(statusCellsAfterFirstClick);
+    expect(statusCellsAfterSecondClick).toEqual(initialStatusCells);
 
     expect(statusCellsAfterSecondClick).toHaveLength(4);
   });
