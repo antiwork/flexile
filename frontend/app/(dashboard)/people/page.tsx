@@ -63,7 +63,6 @@ const getStatusLabel = (contractor: RouterOutput["contractors"]["list"][number])
   return "Invited";
 };
 
-
 const statusSortingFn = (
   rowA: { original: RouterOutput["contractors"]["list"][number] },
   rowB: { original: RouterOutput["contractors"]["list"][number] },
