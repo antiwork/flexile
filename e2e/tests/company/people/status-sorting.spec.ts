@@ -3,149 +3,61 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
-import { addDays, subDays } from "date-fns";
+import { addDays } from "date-fns";
 
 test.describe("People Status Column Sorting", () => {
   test("sorts contractors by date in ascending and descending order on desktop", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
 
-    const baseDate = new Date();
-    const contractorData = [
-      {
-        name: "Contractor 1",
-        startedAt: subDays(baseDate, 100),
-        endedAt: subDays(baseDate, 50),
-        role: "Software Engineer",
-      },
-      {
-        name: "Contractor 2",
-        startedAt: subDays(baseDate, 80),
-        endedAt: subDays(baseDate, 60),
-        role: "Data Analyst",
-      },
-      {
-        name: "Contractor 3",
-        startedAt: subDays(baseDate, 60),
-        endedAt: subDays(baseDate, 20),
-        role: "Project Manager",
-      },
-      {
-        name: "Contractor 4",
-        startedAt: subDays(baseDate, 30),
-        role: "Product Manager",
-      },
-      {
-        name: "Contractor 5",
-        startedAt: subDays(baseDate, 200),
-        role: "Designer",
-      },
-      {
-        name: "Contractor 6",
-        startedAt: addDays(baseDate, 30),
-        role: "UI/UX Designer",
-      },
-      {
-        name: "Contractor 7",
-        startedAt: addDays(baseDate, 50),
-        endedAt: addDays(baseDate, 10),
-        role: "Marketing Manager",
-      },
-    ];
-
-    for (const contractor of contractorData) {
-      const { user } = await usersFactory.create({
-        legalName: contractor.name,
-        preferredName: contractor.name.split(" ")[0],
-        countryCode: "US",
-      });
-      if (contractor.endedAt) {
-        await companyContractorsFactory.createInactive({
-          companyId: company.id,
-          userId: user.id,
-          startedAt: contractor.startedAt,
-          endedAt: contractor.endedAt,
-          role: contractor.role,
-        });
-      } else {
-        await companyContractorsFactory.create({
-          companyId: company.id,
-          userId: user.id,
-          startedAt: contractor.startedAt,
-          role: contractor.role,
-        });
-      }
-    }
+    // Create contractors with specific dates for predictable sorting
+    await companyContractorsFactory.createInactive({
+      companyId: company.id,
+      role: "Alumni Old",
+      startedAt: new Date("2022-01-01"),
+      endedAt: new Date("2023-01-01"),
+    });
+    await companyContractorsFactory.createInactive({
+      companyId: company.id,
+      role: "Alumni New",
+      startedAt: new Date("2022-06-01"),
+      endedAt: new Date("2024-01-01"),
+    });
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      role: "Active Old",
+      startedAt: new Date("2023-05-01"),
+    });
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      role: "Active New",
+      startedAt: new Date("2024-05-01"),
+    });
 
     await login(page, adminUser, "/people");
 
-    await expect(page.locator("tbody tr").first()).toBeVisible();
-    await page.waitForFunction(() => {
-      const firstRow = document.querySelector("tbody tr:first-child");
-      if (!firstRow) return false;
-      const cells = firstRow.querySelectorAll("td");
-      return cells.length > 0 && Array.from(cells).some((cell) => cell.textContent?.trim() !== "");
-    });
+    // Wait for specific content to be visible
+    await expect(page.getByText("Alumni Old")).toBeVisible();
 
-    const getStatusColumn = () => page.getByRole("columnheader", { name: "Status" });
-    const getRows = () => page.locator("tbody tr");
+    const getRowText = async () => await page.locator("tbody tr").allInnerTexts();
+    const statusHeader = page.getByRole("columnheader", { name: "Status" }).getByRole("img");
 
-    const extractDates = async () => {
-      const rows = await getRows().all();
-      const dates = [];
-      for (const row of rows) {
-        const statusCell = row.locator("td").last();
-        const text = await statusCell.textContent();
-        const dateMatch = /(?:Started on|Ended on|Starts on)\s+(.+)$/u.exec(text || "");
-        if (dateMatch?.[1]) {
-          dates.push(new Date(dateMatch[1]));
-        } else {
-          dates.push(null);
-        }
-      }
-      return dates;
-    };
+    // First click - chronological order (oldest to newest)
+    await statusHeader.click();
 
-    const isSortedAscending = (dates: (Date | null)[]) => {
-      for (let i = 0; i < dates.length - 1; i++) {
-        const current = dates[i];
-        const next = dates[i + 1];
-        if (current && next && current.getTime() > next.getTime()) {
-          return false;
-        }
-      }
-      return true;
-    };
+    let rows = await getRowText();
+    expect(rows[0]).toContain("Alumni Old"); // ended Jan 1, 2023
+    expect(rows[1]).toContain("Active Old"); // started May 1, 2023
+    expect(rows[2]).toContain("Alumni New"); // ended Jan 1, 2024
+    expect(rows[3]).toContain("Active New"); // started May 1, 2024
 
-    const isSortedDescending = (dates: (Date | null)[]) => {
-      for (let i = 0; i < dates.length - 1; i++) {
-        const current = dates[i];
-        const next = dates[i + 1];
-        if (current && next && current.getTime() < next.getTime()) {
-          return false;
-        }
-      }
-      return true;
-    };
+    // Second click - reverse chronological (newest to oldest)
+    await statusHeader.click();
 
-    const initialDates = await extractDates();
-    expect(isSortedAscending(initialDates)).toBe(true);
-
-    await getStatusColumn().click();
-    await page.waitForTimeout(500);
-
-    const descendingDates = await extractDates();
-    expect(isSortedDescending(descendingDates)).toBe(true);
-    expect(descendingDates).not.toEqual(initialDates);
-
-    await getStatusColumn().click();
-    await page.waitForTimeout(500);
-
-    const ascendingDates = await extractDates();
-    expect(isSortedAscending(ascendingDates)).toBe(true);
-    expect(ascendingDates).toEqual(initialDates);
-
-    const rowCount = await getRows().count();
-    expect(rowCount).toBe(contractorData.length);
+    rows = await getRowText();
+    expect(rows[0]).toContain("Active New"); // started May 1, 2024
+    expect(rows[1]).toContain("Alumni New"); // ended Jan 1, 2024
+    expect(rows[2]).toContain("Active Old"); // started May 1, 2023
+    expect(rows[3]).toContain("Alumni Old"); // ended Jan 1, 2023
   });
 
   test("sorts contractors by date on mobile", async ({ page }) => {
@@ -153,70 +65,41 @@ test.describe("People Status Column Sorting", () => {
 
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
 
-    const baseDate = new Date();
-    const contractorData = [
-      {
-        name: "Alumni Mobile",
-        startedAt: subDays(baseDate, 100),
-        endedAt: subDays(baseDate, 10),
-        role: "Mobile Dev 1",
-      },
-      {
-        name: "Active Mobile",
-        startedAt: subDays(baseDate, 30),
-        role: "Mobile Dev 2",
-      },
-      {
-        name: "Future Mobile",
-        startedAt: addDays(baseDate, 5),
-        role: "Mobile Dev 3",
-      },
-    ];
-
-    for (const contractor of contractorData) {
-      const { user } = await usersFactory.create({
-        legalName: contractor.name,
-        preferredName: contractor.name.split(" ")[0],
-        countryCode: "US",
-      });
-      if (contractor.endedAt) {
-        await companyContractorsFactory.createInactive({
-          companyId: company.id,
-          userId: user.id,
-          startedAt: contractor.startedAt,
-          endedAt: contractor.endedAt,
-          role: contractor.role,
-        });
-      } else {
-        await companyContractorsFactory.create({
-          companyId: company.id,
-          userId: user.id,
-          startedAt: contractor.startedAt,
-          role: contractor.role,
-        });
-      }
-    }
+    // Create contractors with specific dates
+    await companyContractorsFactory.createInactive({
+      companyId: company.id,
+      role: "Alumni Mobile",
+      startedAt: new Date("2022-01-01"),
+      endedAt: new Date("2023-12-01"),
+    });
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      role: "Active Mobile",
+      startedAt: new Date("2024-01-01"),
+    });
+    await companyContractorsFactory.create({
+      companyId: company.id,
+      role: "Future Mobile",
+      startedAt: addDays(new Date(), 5),
+    });
 
     await login(page, adminUser, "/people");
 
-    await expect(page.locator("tbody tr").first()).toBeVisible();
-    await page.waitForFunction(() => {
-      const rows = document.querySelectorAll("tbody tr");
-      return rows.length >= 3;
-    });
+    // Wait for specific content to be visible
+    await expect(page.getByText("Alumni Mobile")).toBeVisible();
 
     const rows = page.locator("tbody tr");
     await expect(rows).toHaveCount(3);
 
-    await expect(rows.nth(0)).toContainText("Alumni Mobile");
-    await expect(rows.nth(1)).toContainText("Active Mobile");
-    await expect(rows.nth(2)).toContainText("Future Mobile");
+    // Check initial chronological order
+    const rowText = await rows.allInnerTexts();
+    expect(rowText[0]).toContain("Alumni Mobile"); // ended Dec 2023
+    expect(rowText[1]).toContain("Active Mobile"); // started Jan 2024
+    expect(rowText[2]).toContain("Future Mobile"); // starts in future
   });
 
   test("displays correct status labels with chronological sort", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
-
-    const baseDate = new Date();
 
     const { user: alumniUser } = await usersFactory.create({
       legalName: "Test Alumni",
@@ -226,8 +109,8 @@ test.describe("People Status Column Sorting", () => {
     await companyContractorsFactory.createInactive({
       companyId: company.id,
       userId: alumniUser.id,
-      startedAt: subDays(baseDate, 50),
-      endedAt: subDays(baseDate, 10),
+      startedAt: new Date("2023-01-01"),
+      endedAt: new Date("2023-12-01"),
       role: "Developer",
     });
 
@@ -239,17 +122,14 @@ test.describe("People Status Column Sorting", () => {
     await companyContractorsFactory.create({
       companyId: company.id,
       userId: activeUser.id,
-      startedAt: subDays(baseDate, 20),
+      startedAt: new Date("2024-01-01"),
       role: "Engineer",
     });
 
     await login(page, adminUser, "/people");
 
-    await expect(page.locator("tbody tr").first()).toBeVisible();
-    await page.waitForFunction(() => {
-      const rows = document.querySelectorAll("tbody tr");
-      return rows.length >= 2;
-    });
+    // Wait for specific content to be visible
+    await expect(page.getByText("Test Alumni")).toBeVisible();
 
     await expect(page.getByText(/Ended on/u)).toBeVisible();
     await expect(page.getByText(/Started on/u)).toBeVisible();
@@ -257,7 +137,9 @@ test.describe("People Status Column Sorting", () => {
     const rows = page.locator("tbody tr");
     await expect(rows).toHaveCount(2);
 
-    await expect(rows.nth(0)).toContainText("Test Alumni");
-    await expect(rows.nth(1)).toContainText("Test Active");
+    // Check chronological order
+    const rowText = await rows.allInnerTexts();
+    expect(rowText[0]).toContain("Test Alumni"); // ended Dec 2023
+    expect(rowText[1]).toContain("Test Active"); // started Jan 2024
   });
 });
