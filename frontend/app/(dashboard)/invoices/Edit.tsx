@@ -1,13 +1,14 @@
 "use client";
 
 import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { type DateValue, parseDate } from "@internationalized/date";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarDate, parseDate } from "@internationalized/date";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { List } from "immutable";
 import { CircleAlert, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useRef, useState } from "react";
+import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -25,6 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -103,11 +105,72 @@ const dataSchema = z.object({
       .default(null),
   }),
 });
-type Data = z.infer<typeof dataSchema>;
 
-type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: string[] | null };
-type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
-type InvoiceFormDocument = Data["invoice"]["attachment"] & { errors?: string[] | null; blob?: File | null };
+const invoiceSchema = z
+  .object({
+    invoiceNumber: z.string().min(1, "Invoice number is required"),
+    issueDate: z.instanceof(CalendarDate, { message: "Date is required" }),
+    notes: z.string(),
+    lineItems: z.array(
+      z.object({
+        id: z.number().optional(),
+        description: z.string().min(1, "Description is required"),
+        billingDetails: z
+          .object({
+            quantity: z.number().min(0.01, "Quantity must be at least 0.01"),
+            hourly: z.boolean(),
+          })
+          .nullable(),
+        pay_rate_in_subunits: z.number(),
+      }),
+    ),
+    expenses: z.array(
+      z.object({
+        id: z.string().optional(),
+        description: z.string(),
+        category_id: z.number(),
+        total_amount_in_cents: z.number(),
+        attachment: z.object({ name: z.string(), url: z.string() }),
+        blob: z.instanceof(File).optional(),
+      }),
+    ),
+    document: z
+      .object({
+        name: z.string(),
+        url: z.string(),
+        signed_id: z.string().optional(),
+        blob: z.instanceof(File).optional(),
+      })
+      .nullable(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.lineItems.length === 0 && data.expenses.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "At least one line item or expense is required",
+        path: ["lineItems"],
+        fatal: true,
+      });
+    }
+    data.lineItems.forEach((lineItem, index) => {
+      if (lineItem.description && !lineItem.billingDetails) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Quantity is required",
+          path: ["lineItems", index, "billingDetails"],
+        });
+      }
+      if (lineItem.pay_rate_in_subunits <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Pay rate must be greater than $0.00",
+          path: ["lineItems", index, "pay_rate_in_subunits"],
+        });
+      }
+    });
+  });
+
+type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
 const Edit = () => {
   const user = useCurrentUser();
@@ -116,7 +179,6 @@ const Edit = () => {
   if (!canSubmitInvoices) throw redirect("/invoices");
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
-  const [errorField, setErrorField] = useState<string | null>(null);
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const worker = user.roles.worker;
@@ -139,60 +201,85 @@ const Edit = () => {
     },
   });
   const payRateInSubunits = data.user.pay_rate_in_subunits;
-
-  const [invoiceNumber, setInvoiceNumber] = useState(data.invoice.invoice_number);
-  const [issueDate, setIssueDate] = useState<DateValue>(() =>
-    parseDate(searchParams.get("date") || data.invoice.invoice_date),
-  );
-  const invoiceYear = issueDate.year;
-  const [notes, setNotes] = useState(data.invoice.notes ?? "");
-  const [lineItems, setLineItems] = useState<List<InvoiceFormLineItem>>(() => {
-    if (data.invoice.line_items.length) return List(data.invoice.line_items);
-
-    return List([
-      {
-        description: "",
-        quantity: (parseFloat(searchParams.get("quantity") ?? "") || (data.user.project_based ? 1 : 60)).toString(),
-        hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : !data.user.project_based,
-        pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || (payRateInSubunits ?? 0),
-      },
-    ]);
+  const form = useForm<InvoiceFormData>({
+    resolver: zodResolver(invoiceSchema),
+    mode: "onChange",
+    defaultValues: {
+      invoiceNumber: data.invoice.invoice_number,
+      issueDate: parseDate(searchParams.get("date") || data.invoice.invoice_date),
+      notes: data.invoice.notes ?? "",
+      lineItems: data.invoice.line_items.length
+        ? data.invoice.line_items.map((item) => ({
+            id: item.id,
+            description: item.description,
+            billingDetails: item.quantity
+              ? {
+                  quantity: parseFloat(item.quantity),
+                  hourly: item.hourly,
+                }
+              : null,
+            pay_rate_in_subunits: item.pay_rate_in_subunits,
+          }))
+        : [
+            {
+              description: "",
+              billingDetails: {
+                quantity: parseFloat(searchParams.get("quantity") ?? "") || (data.user.project_based ? 1 : 60),
+                hourly: searchParams.has("hourly") ? searchParams.get("hourly") === "true" : !data.user.project_based,
+              },
+              pay_rate_in_subunits: parseInt(searchParams.get("rate") ?? "", 10) || (payRateInSubunits ?? 0),
+            },
+          ],
+      expenses: data.invoice.expenses,
+      document: data.invoice.attachment,
+    },
   });
-  const [showExpenses, setShowExpenses] = useState(false);
+
+  const {
+    fields: lineItemFields,
+    append: appendLineItem,
+    remove: removeLineItem,
+  } = useFieldArray({
+    control: form.control,
+    name: "lineItems",
+  });
+
+  const {
+    fields: expenseFields,
+    append: appendExpense,
+    remove: removeExpense,
+  } = useFieldArray({
+    control: form.control,
+    name: "expenses",
+  });
+
+  const lineItems = form.watch("lineItems");
+  const expenses = form.watch("expenses");
+  const document = form.watch("document");
+
   const uploadExpenseRef = useRef<HTMLInputElement>(null);
-  const [expenses, setExpenses] = useState(List<InvoiceFormExpense>(data.invoice.expenses));
   const uploadDocumentRef = useRef<HTMLInputElement>(null);
-  const [document, setDocument] = useState<InvoiceFormDocument | null>(data.invoice.attachment);
-  const showExpensesTable = showExpenses || expenses.size > 0;
   const actionColumnClass = "w-12";
 
-  const validate = () => {
-    setErrorField(null);
-    if (invoiceNumber.length === 0) setErrorField("invoiceNumber");
-    return (
-      errorField === null &&
-      lineItems.every((lineItem) => !lineItem.errors?.length) &&
-      expenses.every((expense) => !expense.errors?.length) &&
-      (!document || !document.errors?.length)
-    );
-  };
-
   const submit = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (formDataToSubmit: InvoiceFormData) => {
       const formData = new FormData();
-      formData.append("invoice[invoice_number]", invoiceNumber);
-      formData.append("invoice[invoice_date]", issueDate.toString());
-      for (const lineItem of lineItems) {
-        if (!lineItem.description || !lineItem.quantity) continue;
+      formData.append("invoice[invoice_number]", formDataToSubmit.invoiceNumber);
+      formData.append("invoice[invoice_date]", formDataToSubmit.issueDate.toString());
+
+      for (const lineItem of formDataToSubmit.lineItems) {
+        if (!lineItem.description || !lineItem.billingDetails) continue;
+
         if (lineItem.id) {
           formData.append("invoice_line_items[][id]", lineItem.id.toString());
         }
         formData.append("invoice_line_items[][description]", lineItem.description);
-        formData.append("invoice_line_items[][quantity]", lineItem.quantity.toString());
-        formData.append("invoice_line_items[][hourly]", lineItem.hourly.toString());
+        formData.append("invoice_line_items[][quantity]", lineItem.billingDetails.quantity.toString());
+        formData.append("invoice_line_items[][hourly]", lineItem.billingDetails.hourly.toString());
         formData.append("invoice_line_items[][pay_rate_in_subunits]", lineItem.pay_rate_in_subunits.toString());
       }
-      for (const expense of expenses) {
+
+      for (const expense of formDataToSubmit.expenses) {
         if (expense.id) {
           formData.append("invoice_expenses[][id]", expense.id.toString());
         }
@@ -204,11 +291,14 @@ const Edit = () => {
         }
       }
 
-      if (notes.length) formData.append("invoice[notes]", notes);
+      if (formDataToSubmit.notes.length) {
+        formData.append("invoice[notes]", formDataToSubmit.notes);
+      }
 
-      if (document) {
-        if (document.blob) formData.append("invoice[attachment]", document.blob);
-        else if (document.signed_id) formData.append("invoice[attachment]", document.signed_id);
+      if (formDataToSubmit.document) {
+        if (formDataToSubmit.document.blob) formData.append("invoice[attachment]", formDataToSubmit.document.blob);
+        else if (formDataToSubmit.document.signed_id)
+          formData.append("invoice[attachment]", formDataToSubmit.document.signed_id);
       }
 
       await request({
@@ -228,15 +318,16 @@ const Edit = () => {
     },
   });
 
-  const addLineItem = () =>
-    setLineItems((lineItems) =>
-      lineItems.push({
-        description: "",
-        quantity: (data.user.project_based ? 1 : 60).toString(),
+  const addLineItem = () => {
+    appendLineItem({
+      description: "",
+      billingDetails: {
+        quantity: data.user.project_based ? 1 : 60,
         hourly: !data.user.project_based,
-        pay_rate_in_subunits: payRateInSubunits ?? 0,
-      }),
-    );
+      },
+      pay_rate_in_subunits: payRateInSubunits ?? 0,
+    });
+  };
 
   const createNewExpenseEntries = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -273,19 +364,16 @@ const Edit = () => {
     }
 
     const expenseCategory = assertDefined(data.company.expense_categories[0]);
-    setShowExpenses(true);
 
     // Add each valid file as a separate expense
     validFiles.forEach((file) => {
-      setExpenses((expenses) =>
-        expenses.push({
-          description: "",
-          category_id: expenseCategory.id,
-          total_amount_in_cents: 0,
-          attachment: { name: file.name, url: URL.createObjectURL(file) },
-          blob: file,
-        }),
-      );
+      appendExpense({
+        description: "",
+        category_id: expenseCategory.id,
+        total_amount_in_cents: 0,
+        attachment: { name: file.name, url: URL.createObjectURL(file) },
+        blob: file,
+      });
     });
   };
 
@@ -306,200 +394,347 @@ const Edit = () => {
       return;
     }
 
-    setDocument({
+    form.setValue("document", {
       name: file.name,
       url: URL.createObjectURL(file),
       blob: file,
-      errors: null,
     });
   };
 
-  const parseQuantity = (value: string | null | undefined) => {
-    const parsed = value ? Number.parseFloat(value) : NaN;
-    return Number.isNaN(parsed) ? 0 : parsed;
+  const lineItemTotal = (lineItem: InvoiceFormData["lineItems"][number]) => {
+    const quantity = lineItem.billingDetails?.quantity ?? 0;
+    const divisor = lineItem.billingDetails?.hourly ? 60 : 1;
+    const result = Math.ceil((quantity / divisor) * lineItem.pay_rate_in_subunits);
+    return result;
   };
-
-  const lineItemTotal = (lineItem: InvoiceFormLineItem) =>
-    Math.ceil((parseQuantity(lineItem.quantity) / (lineItem.hourly ? 60 : 1)) * lineItem.pay_rate_in_subunits);
-  const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
-  const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
+  const totalExpensesAmountInCents = expenses.reduce((acc: number, expense) => acc + expense.total_amount_in_cents, 0);
+  const totalServicesAmountInCents = lineItems.reduce((acc: number, lineItem) => acc + lineItemTotal(lineItem), 0);
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
   const [equityCalculation] = trpc.equityCalculations.calculate.useSuspenseQuery({
     companyId: company.id,
     servicesInCents: totalServicesAmountInCents,
-    invoiceYear,
+    invoiceYear: form.watch("issueDate").year,
   });
-  const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
-    setLineItems((lineItems) =>
-      lineItems.update(index, (lineItem) => {
-        const updated = { ...assertDefined(lineItem), ...update };
-        updated.errors = [];
-        if (updated.description.length === 0) updated.errors.push("description");
-        if (!updated.quantity || parseQuantity(updated.quantity) < 0.01) updated.errors.push("quantity");
-        return updated;
-      }),
-    );
-  const updateExpense = (index: number, update: Partial<InvoiceFormExpense>) =>
-    setExpenses((expenses) =>
-      expenses.update(index, (expense) => {
-        const updated = { ...assertDefined(expense), ...update };
-        updated.errors = [];
-        if (updated.description.length === 0) updated.errors.push("description");
-        if (!updated.category_id) updated.errors.push("category");
-        if (!updated.total_amount_in_cents) updated.errors.push("amount");
-        return updated;
-      }),
-    );
+  const onSubmit = form.handleSubmit(
+    (formData) => submit.mutate(formData),
+    (errors) => {
+      if (errors.lineItems?.root?.message) {
+        setAlertTitle("Add items to your invoice");
+        setAlertMessage(String(errors.lineItems.root.message));
+        setAlertOpen(true);
+      }
+    },
+  );
 
   return (
-    <>
-      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{alertTitle}</AlertDialogTitle>
-            <AlertDialogDescription>{alertMessage}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setAlertOpen(false)}>OK</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+    <Form {...form}>
+      <form
+        className="flex flex-col gap-2 md:gap-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void onSubmit(e);
+        }}
+      >
+        <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{alertTitle}</AlertDialogTitle>
+              <AlertDialogDescription>{alertMessage}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => setAlertOpen(false)}>OK</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-      <DashboardHeader
-        title={data.invoice.id ? "Edit invoice" : "New invoice"}
-        headerActions={
-          <>
-            {data.invoice.id && data.invoice.status === "rejected" ? (
-              <div className="inline-flex items-center">Action required</div>
-            ) : (
-              <Button variant="outline" asChild>
-                <Link href="/invoices">Cancel</Link>
+        <DashboardHeader
+          title={data.invoice.id ? "Edit invoice" : "New invoice"}
+          headerActions={
+            <>
+              {data.invoice.id && data.invoice.status === "rejected" ? (
+                <div className="inline-flex items-center">Action required</div>
+              ) : (
+                <Button variant="outline" asChild>
+                  <Link href="/invoices">Cancel</Link>
+                </Button>
+              )}
+              <Button type="submit" variant="primary" disabled={submit.isPending}>
+                {submit.isPending ? "Sending..." : data.invoice.id ? "Resubmit" : "Send invoice"}
               </Button>
-            )}
-            <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
-              {submit.isPending ? "Sending..." : data.invoice.id ? "Resubmit" : "Send invoice"}
-            </Button>
-          </>
-        }
-      />
+            </>
+          }
+        />
 
-      {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
-        <Alert className="mx-4" variant="warning">
-          <CircleAlert />
-          <AlertDescription>
-            This invoice includes rates above your default of {formatMoneyFromCents(payRateInSubunits)}/
-            {data.user.project_based ? "project" : "hour"}. Please check before submitting.
-          </AlertDescription>
-        </Alert>
-      ) : null}
+        {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
+          <Alert className="mx-4" variant="warning">
+            <CircleAlert />
+            <AlertDescription>
+              This invoice includes rates above your default of {formatMoneyFromCents(payRateInSubunits)}/
+              {data.user.project_based ? "project" : "hour"}. Please check before submitting.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        <section>
+          <div className="grid gap-4">
+            <div className="mx-4 grid auto-cols-fr gap-3 md:grid-flow-col">
+              <div>
+                From
+                <br />
+                <strong>{data.user.billing_entity_name}</strong>
+                <br />
+                <Address address={data.invoice.bill_address} />
+              </div>
+              <div>
+                To
+                <br />
+                <strong>{data.company.name}</strong>
+                <br />
+                <Address address={data.company.address} />
+              </div>
+              <div className="flex flex-col gap-2">
+                <FormField
+                  control={form.control}
+                  name="invoiceNumber"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <Label htmlFor="invoice-id">Invoice ID</Label>
+                      <FormControl>
+                        <Input id="invoice-id" {...field} aria-invalid={!!fieldState.error} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <FormField
+                  control={form.control}
+                  name="issueDate"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <FormControl>
+                        <DatePicker
+                          {...field}
+                          onChange={(date) => date && field.onChange(date)}
+                          aria-invalid={!!fieldState.error}
+                          label="Invoice date"
+                          granularity="day"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
 
-      <section>
-        <div className="grid gap-4">
-          <div className="mx-4 grid auto-cols-fr gap-3 md:grid-flow-col">
-            <div>
-              From
-              <br />
-              <strong>{data.user.billing_entity_name}</strong>
-              <br />
-              <Address address={data.invoice.bill_address} />
-            </div>
-            <div>
-              To
-              <br />
-              <strong>{data.company.name}</strong>
-              <br />
-              <Address address={data.company.address} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="invoice-id">Invoice ID</Label>
-              <Input
-                id="invoice-id"
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-                aria-invalid={errorField === "invoiceNumber"}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <DatePicker
-                value={issueDate}
-                onChange={(date) => {
-                  if (date) setIssueDate(date);
-                }}
-                aria-invalid={errorField === "issueDate"}
-                label="Invoice date"
-                granularity="day"
-              />
-            </div>
-          </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50%]">Line item</TableHead>
-                <TableHead>Hours / Qty</TableHead>
-                <TableHead>Rate</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead className={actionColumnClass} />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {lineItems.toArray().map((item, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  <TableCell>
-                    <Input
-                      value={item.description}
-                      placeholder="Description"
-                      aria-invalid={item.errors?.includes("description")}
-                      onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <QuantityInput
-                      value={item.quantity ? { quantity: parseQuantity(item.quantity), hourly: item.hourly } : null}
-                      aria-label="Hours / Qty"
-                      aria-invalid={item.errors?.includes("quantity")}
-                      onChange={(value) =>
-                        updateLineItem(rowIndex, {
-                          quantity: value?.quantity.toString() ?? null,
-                          hourly: value?.hourly ?? false,
-                        })
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <NumberInput
-                      value={item.pay_rate_in_subunits / 100}
-                      onChange={(value: number | null) =>
-                        updateLineItem(rowIndex, { pay_rate_in_subunits: (value ?? 0) * 100 })
-                      }
-                      aria-label="Rate"
-                      placeholder="0"
-                      prefix="$"
-                      decimal
-                    />
-                  </TableCell>
-                  <TableCell>{formatMoneyFromCents(lineItemTotal(item))}</TableCell>
-                  <TableCell className={actionColumnClass}>
-                    <Button
-                      variant="link"
-                      aria-label="Remove"
-                      onClick={() => setLineItems((lineItems) => lineItems.delete(rowIndex))}
-                    >
-                      <TrashIcon className="size-4" />
-                    </Button>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50%]">Line item</TableHead>
+                  <TableHead>Hours / Qty</TableHead>
+                  <TableHead>Rate</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead className={actionColumnClass} />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {lineItemFields.map((field, rowIndex) => (
+                  <TableRow key={field.id}>
+                    <TableCell>
+                      <FormField
+                        control={form.control}
+                        name={`lineItems.${rowIndex}.description`}
+                        render={({ field, fieldState }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input {...field} placeholder="Description" aria-invalid={!!fieldState.error} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <FormField
+                        control={form.control}
+                        name={`lineItems.${rowIndex}.billingDetails`}
+                        render={({ field, fieldState }) => (
+                          <FormItem>
+                            <FormControl>
+                              <QuantityInput {...field} aria-label="Hours / Qty" aria-invalid={!!fieldState.error} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <FormField
+                        control={form.control}
+                        name={`lineItems.${rowIndex}.pay_rate_in_subunits`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <NumberInput
+                                value={field.value / 100}
+                                onChange={(value: number | null) => field.onChange((value ?? 0) * 100)}
+                                aria-label="Rate"
+                                placeholder="0"
+                                prefix="$"
+                                decimal
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {formatMoneyFromCents(
+                        lineItemTotal(
+                          lineItems[rowIndex] ?? {
+                            pay_rate_in_subunits: 0,
+                            billingDetails: { quantity: 0, hourly: false },
+                            description: "",
+                          },
+                        ),
+                      )}
+                    </TableCell>
+                    <TableCell className={actionColumnClass}>
+                      <Button variant="link" aria-label="Remove" onClick={() => removeLineItem(rowIndex)}>
+                        <TrashIcon className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={5}>
+                    <div className="flex gap-3">
+                      <Button variant="link" onClick={addLineItem}>
+                        <Plus className="inline size-4" />
+                        Add line item
+                      </Button>
+                      {data.company.expense_categories.length && expenses.length === 0 ? (
+                        <Button asChild variant="link">
+                          <Label>
+                            <Upload className="inline size-4" />
+                            Add expense
+                            <input
+                              ref={uploadExpenseRef}
+                              type="file"
+                              className="hidden"
+                              accept="application/pdf, image/*"
+                              multiple
+                              onChange={createNewExpenseEntries}
+                            />
+                          </Label>
+                        </Button>
+                      ) : null}
+                      {!document ? (
+                        <Button asChild variant="link">
+                          <Label>
+                            <Upload className="inline size-4" />
+                            Add document
+                            <input
+                              ref={uploadDocumentRef}
+                              type="file"
+                              className="hidden"
+                              accept="application/pdf"
+                              onChange={handleDocumentUpload}
+                            />
+                          </Label>
+                        </Button>
+                      ) : null}
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell colSpan={5}>
-                  <div className="flex gap-3">
-                    <Button variant="link" onClick={addLineItem}>
-                      <Plus className="inline size-4" />
-                      Add line item
-                    </Button>
-                    {data.company.expense_categories.length && !showExpensesTable ? (
+              </TableFooter>
+            </Table>
+            {expenses.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Expense</TableHead>
+                    <TableHead>Merchant</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead className={actionColumnClass} />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {expenseFields.map((field, rowIndex) => (
+                    <TableRow key={field.id}>
+                      <TableCell>
+                        <a href={expenses[rowIndex]?.attachment.url} download>
+                          <PaperClipIcon className="inline size-4" />
+                          {expenses[rowIndex]?.attachment.name}
+                        </a>
+                      </TableCell>
+                      <TableCell>
+                        <FormField
+                          control={form.control}
+                          name={`expenses.${rowIndex}.description`}
+                          render={({ field, fieldState }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input {...field} aria-label="Merchant" aria-invalid={!!fieldState.error} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <FormField
+                          control={form.control}
+                          name={`expenses.${rowIndex}.category_id`}
+                          render={({ field, fieldState }) => (
+                            <FormItem>
+                              <FormControl>
+                                <ComboBox
+                                  value={field.value.toString()}
+                                  options={data.company.expense_categories.map((category) => ({
+                                    value: category.id.toString(),
+                                    label: category.name,
+                                  }))}
+                                  aria-label="Category"
+                                  aria-invalid={!!fieldState.error}
+                                  onChange={(value) => field.onChange(Number(value))}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        <FormField
+                          control={form.control}
+                          name={`expenses.${rowIndex}.total_amount_in_cents`}
+                          render={({ field, fieldState }) => (
+                            <FormItem>
+                              <FormControl>
+                                <NumberInput
+                                  value={field.value / 100}
+                                  placeholder="0"
+                                  onChange={(value: number | null) => field.onChange((value ?? 0) * 100)}
+                                  aria-label="Amount"
+                                  aria-invalid={!!fieldState.error}
+                                  prefix="$"
+                                  decimal
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="link" aria-label="Remove" onClick={() => removeExpense(rowIndex)}>
+                          <TrashIcon className="size-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={5}>
                       <Button asChild variant="link">
                         <Label>
                           <Upload className="inline size-4" />
@@ -514,189 +749,98 @@ const Edit = () => {
                           />
                         </Label>
                       </Button>
-                    ) : null}
-                    {!document ? (
-                      <Button asChild variant="link">
-                        <Label>
-                          <Upload className="inline size-4" />
-                          Add document
-                          <input
-                            ref={uploadDocumentRef}
-                            type="file"
-                            className="hidden"
-                            accept="application/pdf"
-                            onChange={handleDocumentUpload}
-                          />
-                        </Label>
-                      </Button>
-                    ) : null}
-                  </div>
-                </TableCell>
-              </TableRow>
-            </TableFooter>
-          </Table>
-          {showExpensesTable ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Expense</TableHead>
-                  <TableHead>Merchant</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead className={actionColumnClass} />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {expenses.toArray().map((expense, rowIndex) => (
-                  <TableRow key={rowIndex}>
+                    </TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            ) : null}
+            {document ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Document</TableHead>
+                    <TableHead className={actionColumnClass} />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
                     <TableCell>
-                      <a href={expense.attachment.url} download>
-                        <PaperClipIcon className="inline size-4" />
-                        {expense.attachment.name}
+                      <a href={document.url} download>
+                        <PaperClipIcon className="inline size-4" /> {document.name}
                       </a>
                     </TableCell>
-                    <TableCell>
-                      <Input
-                        value={expense.description}
-                        aria-label="Merchant"
-                        aria-invalid={expense.errors?.includes("description")}
-                        onChange={(e) => updateExpense(rowIndex, { description: e.target.value })}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <ComboBox
-                        value={expense.category_id.toString()}
-                        options={data.company.expense_categories.map((category) => ({
-                          value: category.id.toString(),
-                          label: category.name,
-                        }))}
-                        aria-label="Category"
-                        aria-invalid={expense.errors?.includes("category")}
-                        onChange={(value) => updateExpense(rowIndex, { category_id: Number(value) })}
-                      />
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      <NumberInput
-                        value={expense.total_amount_in_cents / 100}
-                        placeholder="0"
-                        onChange={(value: number | null) =>
-                          updateExpense(rowIndex, { total_amount_in_cents: (value ?? 0) * 100 })
-                        }
-                        aria-label="Amount"
-                        aria-invalid={expense.errors?.includes("amount") ?? false}
-                        prefix="$"
-                        decimal
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="link"
-                        aria-label="Remove"
-                        onClick={() => setExpenses((expenses) => expenses.delete(rowIndex))}
-                      >
+                    <TableCell className="text-right">
+                      <Button variant="link" aria-label="Remove" onClick={() => form.setValue("document", null)}>
                         <TrashIcon className="size-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <Button asChild variant="link">
-                      <Label>
-                        <Upload className="inline size-4" />
-                        Add expense
-                        <input
-                          ref={uploadExpenseRef}
-                          type="file"
-                          className="hidden"
-                          accept="application/pdf, image/*"
-                          multiple
-                          onChange={createNewExpenseEntries}
-                        />
-                      </Label>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-          ) : null}
-          {document ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Document</TableHead>
-                  <TableHead className={actionColumnClass} />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <a href={document.url} download>
-                      <PaperClipIcon className="inline size-4" /> {document.name}
-                    </a>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="link" aria-label="Remove" onClick={() => setDocument(null)}>
-                      <TrashIcon className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          ) : null}
+                </TableBody>
+              </Table>
+            ) : null}
 
-          <footer className="mx-4 flex flex-col gap-3 lg:flex-row lg:justify-between">
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Enter notes about your invoice (optional)"
-              className="w-full whitespace-pre-wrap lg:w-96"
-            />
-            <div className="flex flex-col gap-2 md:self-start lg:items-end">
-              {showExpensesTable || company.equityEnabled ? (
-                <div className="flex flex-col items-end">
-                  <span>Total services</span>
-                  <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
-                </div>
-              ) : null}
-              {showExpensesTable ? (
-                <div className="flex flex-col items-end">
-                  <span>Total expenses</span>
-                  <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
-                </div>
-              ) : null}
-              {company.equityEnabled ? (
-                <>
+            <footer className="mx-4 flex flex-col gap-3 lg:flex-row lg:justify-between">
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Enter notes about your invoice (optional)"
+                        className="w-full whitespace-pre-wrap lg:w-96"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <div className="flex flex-col gap-2 md:self-start lg:items-end">
+                {expenses.length > 0 || company.equityEnabled ? (
                   <div className="flex flex-col items-end">
-                    <span>
-                      <Link href="/settings/payouts" className={linkClasses}>
-                        Swapped for equity (not paid in cash)
-                      </Link>
-                    </span>
-                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
+                    <span>Total services</span>
+                    <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
                   </div>
-                  <Separator />
+                ) : null}
+                {expenses.length > 0 ? (
                   <div className="flex flex-col items-end">
-                    <span>Net amount in cash</span>
-                    <span className="numeric text-3xl">
-                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
-                    </span>
+                    <span>Total expenses</span>
+                    <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
                   </div>
-                </>
-              ) : (
-                <div className="flex flex-col gap-1 lg:items-end">
-                  <span>Total</span>
-                  <span className="numeric text-3xl">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
-                </div>
-              )}
-            </div>
-          </footer>
-        </div>
-      </section>
-    </>
+                ) : null}
+                {company.equityEnabled ? (
+                  <>
+                    <div className="flex flex-col items-end">
+                      <span>
+                        <Link href="/settings/payouts" className={linkClasses}>
+                          Swapped for equity (not paid in cash)
+                        </Link>
+                      </span>
+                      <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex flex-col items-end">
+                      <span>Net amount in cash</span>
+                      <span className="numeric text-3xl">
+                        {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-1 lg:items-end">
+                    <span>Total</span>
+                    <span className="numeric text-3xl">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
+                  </div>
+                )}
+              </div>
+            </footer>
+          </div>
+        </section>
+      </form>
+    </Form>
   );
 };
+
+Edit.displayName = "Edit";
 
 export default Edit;

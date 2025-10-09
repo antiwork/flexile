@@ -139,10 +139,7 @@ test.describe("Equity Grants", () => {
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "10/15/2024");
     await page.getByPlaceholder("Description").fill("Software development work");
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
-      page.getByRole("button", { name: "Send invoice" }).click(),
-    ]);
+    await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
@@ -161,10 +158,7 @@ test.describe("Equity Grants", () => {
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await fillDatePicker(page, "Date", "11/01/2024");
     await page.getByPlaceholder("Description").fill("Promotional video production work");
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
-      page.getByRole("button", { name: "Send invoice" }).click(),
-    ]);
+    await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
