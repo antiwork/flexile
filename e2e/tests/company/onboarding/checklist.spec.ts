@@ -7,8 +7,9 @@ import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccou
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { wiseRecipientsFactory } from "@test/factories/wiseRecipients";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { expect, test, withinCombobox, withinModal } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 
 test.describe("Onboarding checklist", () => {
   test("completes admin onboarding checklist by adding company details, bank account, and inviting contractor", async ({
@@ -61,13 +62,9 @@ test.describe("Onboarding checklist", () => {
     await withinModal(
       async (modal) => {
         await modal.getByLabel("Email").fill(faker.internet.email());
-        await withinCombobox(
-          async (searchField) => {
-            await searchField.fill("Software Engineer");
-            await searchField.press("Enter");
-          },
-          { page, name: "Role", searchPlaceholder: "Search or enter a role..." },
-        );
+        await selectComboboxOption(page, "Role", "Software Engineer", {
+          searchPlaceholder: "Search or enter a role...",
+        });
         await modal.getByLabel("Hourly").check();
         await modal.getByLabel("Rate").fill("100");
         await modal.getByRole("button", { name: "Continue" }).click();

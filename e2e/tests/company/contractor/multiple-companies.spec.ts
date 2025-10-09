@@ -1,9 +1,9 @@
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
-import { fillDatePicker, findRichTextEditor } from "@test/helpers";
+import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
-import { expect, test, withinCombobox } from "@test/index";
+import { expect, test } from "@test/index";
 import { assertDefined } from "@/utils/assert";
 
 test.describe("Contractor for multiple companies", () => {
@@ -23,13 +23,9 @@ test.describe("Contractor for multiple companies", () => {
 
     await page.getByLabel("Email").fill(contractorUser.email);
     await fillDatePicker(page, "Start date", "08/08/2025");
-    await withinCombobox(
-      async (searchField) => {
-        await searchField.fill("Role");
-        await searchField.press("Enter");
-      },
-      { page, name: "Role", searchPlaceholder: "Search or enter a role..." },
-    );
+    await selectComboboxOption(page, "Role", "Role", {
+      searchPlaceholder: "Search or enter a role...",
+    });
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");

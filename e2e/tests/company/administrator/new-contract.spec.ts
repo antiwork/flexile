@@ -4,9 +4,9 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
-import { fillDatePicker, findRichTextEditor } from "@test/helpers";
+import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
-import { expect, type Page, test, withinCombobox } from "@test/index";
+import { expect, type Page, test } from "@test/index";
 import { addMonths, format } from "date-fns";
 import { eq } from "drizzle-orm";
 import { PayRateType } from "@/db/enums";
@@ -51,13 +51,9 @@ test.describe("New Contractor", () => {
 
   test("allows inviting a contractor", async ({ page }) => {
     const { email } = await fillForm(page);
-    await withinCombobox(
-      async (searchField) => {
-        await searchField.fill("Hourly Role 1");
-        await searchField.press("Enter");
-      },
-      { page, name: "Role", searchPlaceholder: "Search or enter a role..." },
-    );
+    await selectComboboxOption(page, "Role", "Hourly Role 1", {
+      searchPlaceholder: "Search or enter a role...",
+    });
     await page.getByLabel("Rate").fill("99");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
@@ -83,13 +79,9 @@ test.describe("New Contractor", () => {
 
   test("allows inviting a project-based contractor", async ({ page }) => {
     const { email } = await fillForm(page);
-    await withinCombobox(
-      async (searchField) => {
-        await searchField.fill("Project-based Role");
-        await searchField.press("Enter");
-      },
-      { page, name: "Role", searchPlaceholder: "Search or enter a role..." },
-    );
+    await selectComboboxOption(page, "Role", "Project-based Role", {
+      searchPlaceholder: "Search or enter a role...",
+    });
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("1000");
     await page.getByRole("button", { name: "Continue" }).click();

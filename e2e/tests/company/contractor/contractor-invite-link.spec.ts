@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
+import { selectComboboxOption } from "@test/helpers";
 import { externalProviderMock, fillOtp, login } from "@test/helpers/auth";
-import { expect, test, withinCombobox } from "@test/index";
+import { expect, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { SignInMethod } from "@/db/enums";
 import { companyContractors } from "@/db/schema";
@@ -69,13 +70,9 @@ test.describe("Contractor Invite Link Joining flow", () => {
 
     await expect(page.getByLabel("Role")).not.toBeValid();
 
-    await withinCombobox(
-      async (searchField) => {
-        await searchField.fill("Hourly Role 1");
-        await searchField.press("Enter");
-      },
-      { page, name: "Role", searchPlaceholder: "Search or enter a role..." },
-    );
+    await selectComboboxOption(page, "Role", "Hourly Role 1", {
+      searchPlaceholder: "Search or enter a role...",
+    });
     await page.getByLabel("Rate").fill("99");
     await page.getByRole("button", { name: "Continue" }).click();
 
