@@ -5,10 +5,6 @@ export type EquityCalculationData = {
   sharePriceUsd: number;
 };
 
-/**
- * Calculates equity amounts in cents on the frontend to avoid backend requests on every keystroke.
- * This matches the backend calculation logic in trpc/routes/equityCalculations.ts
- */
 export function calculateEquityInCents(serviceAmountCents: number, calculationData: EquityCalculationData): number {
   const { equityPercentage, sharePriceUsd } = calculationData;
 
