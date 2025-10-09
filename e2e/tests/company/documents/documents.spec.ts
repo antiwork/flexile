@@ -3,11 +3,13 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { documentsFactory } from "@test/factories/documents";
+import { shareHoldingsFactory } from "@test/factories/shareHoldings";
 import { usersFactory } from "@test/factories/users";
 import { selectComboboxOption } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
+import { DocumentType } from "@/db/enums";
 import { activeStorageAttachments, activeStorageBlobs, users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
@@ -38,13 +40,8 @@ test.describe("Documents", () => {
     });
     assert(contractor2User !== undefined);
     const { document: document1 } = await documentsFactory.create(
-      {
-        companyId: company.id,
-        name: "Test Document 1",
-      },
-      {
-        signatures: [{ userId: contractor1User.id, title: "Signer" }],
-      },
+      { companyId: company.id },
+      { signatures: [{ userId: contractor1User.id, title: "Signer" }] },
     );
     const [blob] = await db
       .insert(activeStorageBlobs)
@@ -63,46 +60,41 @@ test.describe("Documents", () => {
       name: "test.pdf",
     });
 
-    const { document: document2 } = await documentsFactory.create(
-      {
-        companyId: company.id,
-        name: "Test Document 2",
-      },
-      {
-        signatures: [{ userId: contractor2User.id, title: "Signer" }],
-      },
+    await documentsFactory.create(
+      { companyId: company.id, type: DocumentType.EquityPlanContract },
+      { signatures: [{ userId: contractor2User.id, title: "Signer" }] },
     );
 
     await login(page, admin, "/documents");
 
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
 
-    await page.getByRole("row").filter({ hasText: document1.name }).click({ button: "right" });
+    await page.getByRole("row").filter({ hasText: "Consulting agreement" }).click({ button: "right" });
     await expect(page.getByRole("menuitem", { name: "Download" })).toHaveAttribute(
       "href",
       "/download/blobkey/test.pdf",
     );
-    await expect(page.getByRole("row").filter({ hasText: document2.name })).toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: "Equity incentive plan" })).toBeVisible();
 
     const searchInput = page.getByPlaceholder("Search by Signer...");
     await expect(searchInput).toBeVisible();
 
     await searchInput.fill(contractor1User.preferredName || "");
 
-    await expect(page.getByRole("row").filter({ hasText: document1.name })).toBeVisible();
-    await expect(page.getByRole("row").filter({ hasText: document2.name })).not.toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: "Consulting agreement" })).toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: "Equity incentive plan" })).not.toBeVisible();
   });
 
   test("allows administrators to share documents", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
-    const { document } = await documentsFactory.create({ companyId: company.id, text: "Test document text" });
+    await documentsFactory.create({ companyId: company.id, text: "Test document text" });
     const { user: recipient } = await usersFactory.create({ legalName: "Recipient 1" });
     await companyContractorsFactory.create({ companyId: company.id, userId: recipient.id });
     await login(page, adminUser, "/documents");
     await logout(page);
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
     await expect(page.locator("tbody tr")).toHaveCount(1);
-    await page.getByRole("row").filter({ hasText: document.name }).click({ button: "right" });
+    await page.getByRole("row").filter({ hasText: "Consulting agreement" }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Share" }).click();
     await expect(page.locator("[contenteditable='true']")).toHaveText("Test document text");
     await page.locator("[contenteditable='true']").fill("Some other text");
@@ -118,5 +110,27 @@ test.describe("Documents", () => {
     await expect(page.getByText("Some other text")).toBeVisible();
     await page.getByRole("button", { name: "Add your signature" }).click();
     await page.getByRole("button", { name: "Agree & Submit" }).click();
+  });
+
+  test("shows the correct names for documents", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
+    const { document: equityPlanContract } = await documentsFactory.create({
+      companyId: company.id,
+      type: DocumentType.EquityPlanContract,
+    });
+    const shareHolding = await shareHoldingsFactory.create();
+    await documentsFactory.create({
+      companyId: company.id,
+      type: DocumentType.ShareCertificate,
+      shareHoldingId: shareHolding.id,
+    });
+    await login(page, adminUser, "/documents");
+    await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
+    await page.locator("main").getByRole("button", { name: "Filter" }).click();
+    await page.getByRole("menuitem", { name: "Status" }).click();
+    await page.getByRole("menuitemcheckbox", { name: "All" }).click();
+    await expect(page.locator("tbody tr")).toHaveCount(2);
+    await expect(page.getByText(`Equity incentive plan ${equityPlanContract.year}`)).toBeVisible();
+    await expect(page.getByText(`${shareHolding.name} share certificate`)).toBeVisible();
   });
 });
