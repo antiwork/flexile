@@ -5,7 +5,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyLawyersFactory } from "@test/factories/companyLawyers";
 import { usersFactory } from "@test/factories/users";
-import { selectComboboxOption } from "@test/helpers";
+import { clickComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
@@ -371,7 +371,7 @@ test.describe("Roles page invite functionality", () => {
     await withinModal(
       async (modal) => {
         await modal.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
-        await selectComboboxOption(page, "Role", "Admin");
+        await clickComboboxOption(page, "Role", "Admin");
         await modal.getByRole("button", { name: "Add member" }).click();
       },
       { page },
@@ -404,7 +404,7 @@ test.describe("Roles page invite functionality", () => {
     await withinModal(
       async (modal) => {
         await modal.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
-        await selectComboboxOption(page, "Role", "Lawyer");
+        await clickComboboxOption(page, "Role", "Lawyer");
         await modal.getByRole("button", { name: "Add member" }).click();
       },
       { page },
@@ -463,7 +463,7 @@ test.describe("Roles page invite functionality", () => {
       async (modal) => {
         // Use the email of the user who already exists in another company
         await modal.getByPlaceholder("Search by name or enter email...").fill(existingUser.email);
-        await selectComboboxOption(page, "Role", "Lawyer");
+        await clickComboboxOption(page, "Role", "Lawyer");
         await modal.getByRole("button", { name: "Add member" }).click();
       },
       { page },

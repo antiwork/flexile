@@ -6,7 +6,7 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
-import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/helpers";
+import { clickComboboxOption, fillDatePicker, findRichTextEditor } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq } from "drizzle-orm";
@@ -38,7 +38,7 @@ test.describe("Equity Grants", () => {
 
     await page.getByRole("button", { name: "New grant" }).click();
     await expect(page.getByLabel("Number of options")).toHaveValue("10000");
-    await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
+    await clickComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
 
     await page.getByLabel("Number of options").fill("1000");
     await expect(page.getByText("Estimated value of $2,500, based on a $2.50 share price")).toBeVisible();
@@ -50,9 +50,9 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("Estimated value of $25,000, based on a $2.50 share price")).toBeVisible();
 
     await page.getByLabel("Number of options").fill("10");
-    await selectComboboxOption(page, "Relationship to company", "Consultant");
+    await clickComboboxOption(page, "Relationship to company", "Consultant");
 
-    await selectComboboxOption(page, "Grant type", "NSO");
+    await clickComboboxOption(page, "Grant type", "NSO");
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
     await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
 
@@ -66,7 +66,7 @@ test.describe("Equity Grants", () => {
 
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
+    await clickComboboxOption(page, "Shares will vest", "As invoices are paid");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByLabel("Contract", { exact: true }).setInputFiles({
       name: "contract.pdf",
@@ -93,11 +93,11 @@ test.describe("Equity Grants", () => {
 
     await page.getByRole("button", { name: "New grant" }).click();
 
-    await selectComboboxOption(page, "Recipient", `${projectBasedUser.preferredName} (${projectBasedUser.email})`);
+    await clickComboboxOption(page, "Recipient", `${projectBasedUser.preferredName} (${projectBasedUser.email})`);
 
     await page.getByLabel("Number of options").fill("20");
-    await selectComboboxOption(page, "Relationship to company", "Consultant");
-    await selectComboboxOption(page, "Grant type", "NSO");
+    await clickComboboxOption(page, "Relationship to company", "Consultant");
+    await clickComboboxOption(page, "Grant type", "NSO");
 
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
 
@@ -111,7 +111,7 @@ test.describe("Equity Grants", () => {
 
     await page.getByRole("button", { name: "Continue" }).click();
 
-    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
+    await clickComboboxOption(page, "Shares will vest", "As invoices are paid");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
@@ -326,12 +326,12 @@ test.describe("Equity Grants", () => {
     await page.getByRole("button", { name: "New grant" }).click();
 
     await page.getByLabel("Number of options").fill("100");
-    await selectComboboxOption(page, "Relationship to company", "Consultant");
-    await selectComboboxOption(page, "Recipient", `${otherAdminUser.preferredName} (${otherAdminUser.email})`);
+    await clickComboboxOption(page, "Relationship to company", "Consultant");
+    await clickComboboxOption(page, "Recipient", `${otherAdminUser.preferredName} (${otherAdminUser.email})`);
 
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Shares will vest")).not.toBeVisible();
-    await selectComboboxOption(page, "Vesting schedule", "4-year with 1-year cliff (1/48th monthly after cliff)");
+    await clickComboboxOption(page, "Vesting schedule", "4-year with 1-year cliff (1/48th monthly after cliff)");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
