@@ -37,45 +37,45 @@ RSpec.describe "Documents page" do
     let(:us_user_compliance_info_2) { create(:user_compliance_info, :us_resident, user: company_investor_and_contractor.user) }
     let(:non_us_user_compliance_info) { create(:user_compliance_info, :non_us_resident, user: company_investor.user) }
     let!(:form_w9_1) do
-      build(:tax_doc, :form_w9, company:, user: us_user_compliance_info_1.user, user_compliance_info: us_user_compliance_info_1, created_at: 1.day.ago)
+      build(:document, document_type: :form_w9, company:, user: us_user_compliance_info_1.user, user_compliance_info: us_user_compliance_info_1, created_at: 1.day.ago)
     end
     let!(:form_w9_2) do
-      create(:tax_doc, :form_w9, company:, user: us_user_compliance_info_2.user, user_compliance_info: us_user_compliance_info_2, created_at: 1.day.ago)
+      create(:document, document_type: :form_w9, company:, user: us_user_compliance_info_2.user, user_compliance_info: us_user_compliance_info_2, created_at: 1.day.ago)
     end
     let!(:form_w8ben) do
-      create(:tax_doc, :form_w8ben, company:, user: non_us_user_compliance_info.user, user_compliance_info: non_us_user_compliance_info, created_at: 1.day.ago)
+      create(:document, document_type: :form_w8ben, company:, user: non_us_user_compliance_info.user, user_compliance_info: non_us_user_compliance_info, created_at: 1.day.ago)
     end
     let!(:form_1042s) do
-      create(:tax_doc, :submitted, :form_1042s, company:, user: non_us_user_compliance_info.user, user_compliance_info: non_us_user_compliance_info)
+      create(:document, :submitted, :form_1042s, company:, user: non_us_user_compliance_info.user, user_compliance_info: non_us_user_compliance_info)
     end
     let!(:unsubmitted_form_1099nec) do
-      build(:tax_doc, :form_1099nec, company:, user: us_user_compliance_info_1.user, user_compliance_info: us_user_compliance_info_1)
+      build(:document, document_type: :form_1099nec, company:, user: us_user_compliance_info_1.user, user_compliance_info: us_user_compliance_info_1)
     end
     let!(:submitted_form_1099nec) do
-      create(:tax_doc, :form_1099nec, :submitted, company:, user: us_user_compliance_info_2.user, user_compliance_info: us_user_compliance_info_2, created_at: 1.hour.ago)
+      create(:document, :submitted, document_type: :form_1099nec, company:, user: us_user_compliance_info_2.user, user_compliance_info: us_user_compliance_info_2, created_at: 1.hour.ago)
     end
     let!(:past_year_submitted_form_1099nec) do
-      create(:tax_doc, :form_1099nec, :submitted,
-             company:,
-             user: us_user_compliance_info_1.user,
-             user_compliance_info: us_user_compliance_info_1,
-             year: Date.current.year - 1,
-             created_at: 1.year.ago,
-             completed_at: 1.year.ago)
+      create(:document, :submitted, document_type: :form_1099nec,
+                                    company:,
+                                    user: us_user_compliance_info_1.user,
+                                    user_compliance_info: us_user_compliance_info_1,
+                                    year: Date.current.year - 1,
+                                    created_at: 1.year.ago,
+                                    completed_at: 1.year.ago)
     end
     let!(:submitted_form_1099div) do
-      create(:tax_doc, :form_1099div, :submitted, company:, user: us_user_compliance_info_2.user, user_compliance_info: us_user_compliance_info_2)
+      create(:document, :submitted, document_type: :form_1099div, company:, user: us_user_compliance_info_2.user, user_compliance_info: us_user_compliance_info_2)
     end
 
     before do
       old_user_compliance_info = create(:user_compliance_info, :us_resident,
                                         user: company_worker.user,
                                         created_at: 2.days.ago, deleted_at: 1.day.ago)
-      create(:tax_doc, :form_w9, :deleted, user: old_user_compliance_info.user, user_compliance_info: old_user_compliance_info, company:)
-      create(:tax_doc, :form_1099nec, :deleted, user: old_user_compliance_info.user, user_compliance_info: old_user_compliance_info, company:)
+      create(:document, :deleted, document_type: :form_w9, user: old_user_compliance_info.user, user_compliance_info: old_user_compliance_info, company:)
+      create(:document, :deleted, document_type: :form_1099nec, user: old_user_compliance_info.user, user_compliance_info: old_user_compliance_info, company:)
 
-      create(:tax_doc, :form_w9, :deleted, user: us_user_compliance_info_1.user, user_compliance_info: us_user_compliance_info_1, company:)
-      create(:tax_doc, :form_1099nec, :deleted, user: us_user_compliance_info_1.user, user_compliance_info: us_user_compliance_info_1, company:)
+      create(:document, :deleted, document_type: :form_w9, user: us_user_compliance_info_1.user, user_compliance_info: us_user_compliance_info_1, company:)
+      create(:document, :deleted, document_type: :form_1099nec, user: us_user_compliance_info_1.user, user_compliance_info: us_user_compliance_info_1, company:)
 
       unsubmitted_form_1099nec.save! # to bypass the uniqueness validation error
       form_w9_1.save! # to bypass the uniqueness validation error
@@ -304,9 +304,9 @@ RSpec.describe "Documents page" do
 
   context "when signed in as an investor or contractor" do
     let(:user_compliance_info) { create(:user_compliance_info, :us_resident, user: user_1) }
-    let!(:form_w9) { create(:tax_doc, :form_w9, company:, user: user_1, user_compliance_info:, created_at: 1.day.ago) }
-    let!(:form_1099nec) { create(:tax_doc, :submitted, :form_1099nec, company:, user: user_1, user_compliance_info:) }
-    let!(:form_1099div) { create(:tax_doc, :form_1099div, company:, user: user_1, user_compliance_info:) }
+    let!(:form_w9) { create(:document, document_type: :form_w9, company:, user: user_1, user_compliance_info:, created_at: 1.day.ago) }
+    let!(:form_1099nec) { create(:document, :submitted, :form_1099nec, company:, user: user_1, user_compliance_info:) }
+    let!(:form_1099div) { create(:document, document_type: :form_1099div, company:, user: user_1, user_compliance_info:) }
 
     before { sign_in user_1 }
 
