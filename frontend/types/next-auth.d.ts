@@ -16,7 +16,7 @@ declare module "next-auth" {
       name?: string;
       legalName?: string;
       preferredName?: string;
-      jwt: string; // Either primaryToken or actorToken
+      jwt: string;
       primaryToken: string;
       actorToken?: string | null;
     };
