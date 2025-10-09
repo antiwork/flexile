@@ -12,7 +12,7 @@ function extractUrls(text: string): { url: string; cleanUrl: string; start: numb
     const trailingPunctuationRegex = /[,;!?)]+$/u;
     const cleanUrl = url.replace(trailingPunctuationRegex, "");
 
-    if (cleanUrl.endsWith(".") && !cleanUrl.match(/\.[a-z]{2,4}$/iu)) {
+    if (cleanUrl.endsWith(".") && !/\.[a-z]{2,4}$/iu.exec(cleanUrl)) {
       urls.push({
         url,
         cleanUrl: cleanUrl.slice(0, -1),
