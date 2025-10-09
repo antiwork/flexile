@@ -53,7 +53,7 @@ export default function Dividends() {
         url: company_switch_path(companyId),
         accept: "json",
       });
-      await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
+      await queryClient.resetQueries({ queryKey: ["currentUser"] });
       router.replace("/equity/dividends");
     } finally {
       useUserStore.setState((state) => ({ ...state, pending: false }));
