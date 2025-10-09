@@ -89,8 +89,10 @@ export const equityCalculationsRouter = createRouter({
         if (company?.fmvPerShareInUsd) {
           sharePriceUsd = Number(company.fmvPerShareInUsd);
         } else {
-          // If FMV price is not set, we can't calculate equity, so return 0
-          sharePriceUsd = 0;
+          Bugsnag.notify(
+            `calculationData: Error determining share price for CompanyWorker ${ctx.companyContractor.id}`,
+          );
+          return null;
         }
       }
 
