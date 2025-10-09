@@ -127,18 +127,22 @@ test.describe("People Status Column Sorting", () => {
       return true;
     };
 
-    await getStatusColumn().click();
-    await page.waitForTimeout(500);
-
-    const ascendingDates = await extractDates();
-    expect(isSortedAscending(ascendingDates)).toBe(true);
+    const initialDates = await extractDates();
+    expect(isSortedAscending(initialDates)).toBe(true);
 
     await getStatusColumn().click();
     await page.waitForTimeout(500);
 
     const descendingDates = await extractDates();
     expect(isSortedDescending(descendingDates)).toBe(true);
-    expect(descendingDates).not.toEqual(ascendingDates);
+    expect(descendingDates).not.toEqual(initialDates);
+
+    await getStatusColumn().click();
+    await page.waitForTimeout(500);
+
+    const ascendingDates = await extractDates();
+    expect(isSortedAscending(ascendingDates)).toBe(true);
+    expect(ascendingDates).toEqual(initialDates);
 
     const rowCount = await getRows().count();
     expect(rowCount).toBe(contractorData.length);
@@ -152,26 +156,20 @@ test.describe("People Status Column Sorting", () => {
     const baseDate = new Date();
     const contractorData = [
       {
-        name: "Contractor 1",
+        name: "Alumni Mobile",
         startedAt: subDays(baseDate, 100),
         endedAt: subDays(baseDate, 10),
-        role: "Software Engineer",
+        role: "Mobile Dev 1",
       },
       {
-        name: "Contractor 2",
+        name: "Active Mobile",
         startedAt: subDays(baseDate, 30),
-        role: "Data Analyst",
+        role: "Mobile Dev 2",
       },
       {
-        name: "Contractor 3",
-        startedAt: addDays(baseDate, 50),
-        endedAt: addDays(baseDate, 10),
-        role: "Project Manager",
-      },
-      {
-        name: "Contractor 4",
-        startedAt: addDays(baseDate, 30),
-        role: "Product Manager",
+        name: "Future Mobile",
+        startedAt: addDays(baseDate, 5),
+        role: "Mobile Dev 3",
       },
     ];
 
@@ -201,10 +199,11 @@ test.describe("People Status Column Sorting", () => {
 
     await login(page, adminUser, "/people");
 
-    await expect(page.getByRole("table")).toBeVisible();
-    await expect(page.getByText("Alumni Mobile")).toBeVisible();
-    await expect(page.getByText("Active Mobile")).toBeVisible();
-    await expect(page.getByText("Future Mobile")).toBeVisible();
+    await expect(page.locator("tbody tr").first()).toBeVisible();
+    await page.waitForFunction(() => {
+      const rows = document.querySelectorAll("tbody tr");
+      return rows.length >= 3;
+    });
 
     const rows = page.locator("tbody tr");
     await expect(rows).toHaveCount(3);
@@ -220,7 +219,7 @@ test.describe("People Status Column Sorting", () => {
     const baseDate = new Date();
 
     const { user: alumniUser } = await usersFactory.create({
-      legalName: "Alumni User",
+      legalName: "Test Alumni",
       preferredName: "Alumni",
       countryCode: "US",
     });
@@ -229,11 +228,11 @@ test.describe("People Status Column Sorting", () => {
       userId: alumniUser.id,
       startedAt: subDays(baseDate, 50),
       endedAt: subDays(baseDate, 10),
-      role: "Alumni Role",
+      role: "Developer",
     });
 
     const { user: activeUser } = await usersFactory.create({
-      legalName: "Active User",
+      legalName: "Test Active",
       preferredName: "Active",
       countryCode: "US",
     });
@@ -241,24 +240,24 @@ test.describe("People Status Column Sorting", () => {
       companyId: company.id,
       userId: activeUser.id,
       startedAt: subDays(baseDate, 20),
-      role: "Active Role",
+      role: "Engineer",
     });
 
     await login(page, adminUser, "/people");
 
-    await expect(page.getByRole("table")).toBeVisible();
-    await expect(page.getByText(/Ended on/)).toBeVisible();
-    await expect(page.getByText(/Started on/)).toBeVisible();
+    await expect(page.locator("tbody tr").first()).toBeVisible();
+    await page.waitForFunction(() => {
+      const rows = document.querySelectorAll("tbody tr");
+      return rows.length >= 2;
+    });
 
-    const statusHeader = page.getByRole("columnheader", { name: "Status" });
-    await statusHeader.click();
-    await page.waitForTimeout(500);
-
-    await expect(page.getByText(/Ended on/)).toBeVisible();
-    await expect(page.getByText(/Started on/)).toBeVisible();
+    await expect(page.getByText(/Ended on/u)).toBeVisible();
+    await expect(page.getByText(/Started on/u)).toBeVisible();
 
     const rows = page.locator("tbody tr");
-    await expect(rows.nth(0)).toContainText("Alumni User");
-    await expect(rows.nth(1)).toContainText("Active User");
+    await expect(rows).toHaveCount(2);
+
+    await expect(rows.nth(0)).toContainText("Test Alumni");
+    await expect(rows.nth(1)).toContainText("Test Active");
   });
 });
