@@ -36,7 +36,7 @@ class UserMailer < ApplicationMailer
                                                .alive
                                                .irs_tax_forms
                                                .where(year: @tax_year)
-                                               .pluck(:name)
+                                               .map(&:name)
     @title = @tax_document_names.one? ?
                   "Your form #{@tax_document_names.first} from #{@company.name} is ready for review" :
                   "Your tax forms for #{@tax_year} are ready for review"
