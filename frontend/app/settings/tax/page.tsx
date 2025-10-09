@@ -90,7 +90,6 @@ const formSchema = formValuesSchema
 export default function TaxPage() {
   const user = useCurrentUser();
   const queryClient = useQueryClient();
-  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
 
   const { data } = useSuspenseQuery({
     queryKey: ["settings-tax"],
@@ -541,7 +540,6 @@ export default function TaxPage() {
         isBusiness={formValues.business_entity}
         mutation={saveMutation}
       />
-      <ContactSupportModal open={isSupportModalOpen} onOpenChange={setIsSupportModalOpen} />
     </>
   );
 }
@@ -565,6 +563,7 @@ const LegalCertificationModal = ({
 }) => {
   const uid = useId();
   const [signature, setSignature] = useState(legalName);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   useEffect(() => setSignature(legalName), [legalName]);
   const certificateType = isForeignUser ? (isBusiness ? "W-8BEN-E" : "W-8BEN") : "W-9";
   const foreignEntityTitle = isBusiness ? "entity" : "person";
@@ -745,6 +744,7 @@ const LegalCertificationModal = ({
           </MutationButton>
         </DialogFooter>
       </DialogContent>
+      <ContactSupportModal open={isSupportModalOpen} onOpenChange={setIsSupportModalOpen} />
     </Dialog>
   );
 };
