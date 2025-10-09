@@ -78,7 +78,7 @@ test.describe("invoice creation", () => {
 
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-    await expect(page.locator("tbody").filter({ hasText: "Aug 8, 2021" })).toContainText(
+    await expect(page.locator("tbody")).toContainText(
       ["Invoice ID", "1", "Sent on", "Aug 8, 2021", "Amount", "$6,000", "Status", "Awaiting approval (0/2)"].join(""),
     );
 

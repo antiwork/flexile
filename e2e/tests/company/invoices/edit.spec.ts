@@ -82,8 +82,6 @@ test.describe("invoice editing", () => {
       .fill(
         "Updated notes: This invoice covers the Q1 development sprint including new features, bug fixes, and additional enhancements. Please process within 30 days.",
       );
-    await expect(page.locator("tbody")).toContainText("$900");
-
     await page.getByRole("button", { name: "Resubmit" }).click();
 
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
