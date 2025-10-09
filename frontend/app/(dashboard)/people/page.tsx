@@ -63,6 +63,18 @@ const getStatusLabel = (contractor: RouterOutput["contractors"]["list"][number])
   return "Invited";
 };
 
+
+const statusSortingFn = (
+  rowA: { original: RouterOutput["contractors"]["list"][number] },
+  rowB: { original: RouterOutput["contractors"]["list"][number] },
+) => {
+  const a = rowA.original;
+  const b = rowB.original;
+  const dateA = a.endedAt ? new Date(a.endedAt) : new Date(a.startedAt);
+  const dateB = b.endedAt ? new Date(b.endedAt) : new Date(b.startedAt);
+  return dateA.getTime() - dateB.getTime();
+};
+
 export default function PeoplePage() {
   const company = useCurrentCompany();
   const { data: workers = [], isLoading } = trpc.contractors.list.useQuery({ companyId: company.id });
@@ -96,6 +108,7 @@ export default function PeoplePage() {
         header: "Status",
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
         cell: (info) => getStatusLabel(info.row.original),
+        sortingFn: statusSortingFn,
       }),
     ],
     [workers],
@@ -141,6 +154,7 @@ export default function PeoplePage() {
           filterOptions: ["Active", "Onboarding", "Alumni"],
           hidden: true,
         },
+        sortingFn: statusSortingFn,
       }),
 
       columnHelper.accessor("user.name", {
