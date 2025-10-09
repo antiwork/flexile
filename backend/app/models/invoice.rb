@@ -49,7 +49,6 @@ class Invoice < ApplicationRecord
     message: proc { |record| record.invoice_number_taken_message },
     on: [:create, :update],
   }
-  validates :bill_from, presence: true
   validates :bill_to, presence: true
   validates :due_on, presence: true
   validates :equity_percentage, presence: true, numericality: {
