@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert, assertDefined } from "@/utils/assert";
+import { calculateEquityInCents } from "@/utils/equityCalculation";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import {
@@ -323,11 +324,17 @@ const Edit = () => {
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
   const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
-  const [equityCalculation] = trpc.equityCalculations.calculate.useSuspenseQuery({
-    companyId: company.id,
-    servicesInCents: totalServicesAmountInCents,
-    invoiceYear,
-  });
+  const [equityCalculationData] = trpc.equityCalculations.calculationData.useSuspenseQuery(
+    { companyId: company.id, invoiceYear },
+    {
+      refetchOnWindowFocus: false,
+    },
+  );
+
+  const equityCents = equityCalculationData
+    ? calculateEquityInCents(totalServicesAmountInCents, equityCalculationData)
+    : 0;
+
   const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
     setLineItems((lineItems) =>
       lineItems.update(index, (lineItem) => {
@@ -674,13 +681,13 @@ const Edit = () => {
                         Swapped for equity (not paid in cash)
                       </Link>
                     </span>
-                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
+                    <span className="numeric text-xl">{formatMoneyFromCents(equityCents)}</span>
                   </div>
                   <Separator />
                   <div className="flex flex-col items-end">
                     <span>Net amount in cash</span>
                     <span className="numeric text-3xl">
-                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
+                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCents)}
                     </span>
                   </div>
                 </>

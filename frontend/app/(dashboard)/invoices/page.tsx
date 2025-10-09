@@ -62,6 +62,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
+import { calculateEquityInCents } from "@/utils/equityCalculation";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
@@ -889,12 +890,14 @@ const QuickInvoicesSectionContent = () => {
     return `/invoices/new?${params.toString()}` as const;
   };
 
-  const { data: equityCalculation } = trpc.equityCalculations.calculate.useQuery({
+  const [equityCalculationData] = trpc.equityCalculations.calculationData.useSuspenseQuery({
     companyId: company.id,
     invoiceYear: date.year,
-    servicesInCents: totalAmountInCents,
   });
-  const equityAmountCents = equityCalculation?.equityCents ?? 0;
+
+  const equityAmountCents = equityCalculationData
+    ? calculateEquityInCents(totalAmountInCents, equityCalculationData)
+    : 0;
   const cashAmountCents = totalAmountInCents - equityAmountCents;
 
   const submit = useMutation({

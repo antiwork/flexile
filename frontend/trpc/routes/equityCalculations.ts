@@ -60,15 +60,13 @@ export const calculateInvoiceEquity = async ({
 };
 
 export const equityCalculationsRouter = createRouter({
-  calculate: companyProcedure
+  calculationData: companyProcedure
     .input(
       z.object({
-        servicesInCents: z.number(),
         invoiceYear: z
           .number()
           .optional()
           .default(() => new Date().getFullYear()),
-        selectedPercentage: z.number().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -76,20 +74,29 @@ export const equityCalculationsRouter = createRouter({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      const result = await calculateInvoiceEquity({
-        companyContractor: ctx.companyContractor,
-        serviceAmountCents: input.servicesInCents,
-        invoiceYear: input.invoiceYear,
-        ...(input.selectedPercentage ? { providedEquityPercentage: input.selectedPercentage } : {}),
-      });
+      const equityPercentage = ctx.companyContractor.equityPercentage;
 
-      if (!result) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Something went wrong. Please contact the company administrator.",
+      const unvestedGrant = await getUniqueUnvestedEquityGrantForYear(ctx.companyContractor, input.invoiceYear);
+      let sharePriceUsd = unvestedGrant?.sharePriceUsd ?? 0;
+
+      if (equityPercentage !== 0 && !unvestedGrant) {
+        const company = await db.query.companies.findFirst({
+          where: eq(companies.id, ctx.companyContractor.companyId),
+          columns: {
+            fmvPerShareInUsd: true,
+          },
         });
+        if (company?.fmvPerShareInUsd) {
+          sharePriceUsd = Number(company.fmvPerShareInUsd);
+        } else {
+          // If FMV price is not set, we can't calculate equity, so return 0
+          sharePriceUsd = 0;
+        }
       }
 
-      return result;
+      return {
+        equityPercentage,
+        sharePriceUsd: Number(sharePriceUsd),
+      };
     }),
 });
