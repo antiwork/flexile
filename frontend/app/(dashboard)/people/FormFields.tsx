@@ -31,8 +31,9 @@ export default function FormFields() {
   if (trimmedQuery) roleSet.add(trimmedQuery);
   if (roleValue) roleSet.add(roleValue);
 
-  const collator = new Intl.Collator(undefined, { sensitivity: "base" });
-  const availableRoles = Array.from(roleSet).sort((a, b) => collator.compare(a, b));
+  const availableRoles = Array.from(roleSet)
+    .sort((a, b) => new Intl.Collator(undefined, { sensitivity: "base" }).compare(a, b))
+    .map((role) => ({ label: role, value: role }));
 
   return (
     <>
@@ -45,12 +46,12 @@ export default function FormFields() {
             <FormControl>
               <ComboBox
                 {...field}
-                options={availableRoles.map((role) => ({ label: role, value: role }))}
                 onChange={field.onChange}
-                placeholder="Search or enter a role..."
-                searchValue={searchQuery}
                 onSearchChange={setSearchQuery}
+                options={availableRoles}
+                placeholder="Search or enter a role..."
                 searchPlaceholder="Search or enter a role..."
+                searchValue={searchQuery}
               />
             </FormControl>
             <FormMessage />

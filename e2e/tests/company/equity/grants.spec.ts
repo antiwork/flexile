@@ -50,12 +50,11 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("Estimated value of $25,000, based on a $2.50 share price")).toBeVisible();
 
     await page.getByLabel("Number of options").fill("10");
-    // Verifies search and selection behavior for an uncontrolled search input in the combobox
+    // Verifies search and selection behavior for an uncontrolled search input inside combobox
     await selectComboboxOption(page, "Relationship to company", "Consultant", {
       popoverName: "issueDateRelationship listbox options",
     });
 
-    // Consecutive usage of selectComboboxOption should work
     await selectComboboxOption(page, "Grant type", "NSO", {
       popoverName: "optionGrantType listbox options",
     });

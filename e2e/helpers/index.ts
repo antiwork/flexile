@@ -49,11 +49,10 @@ export const selectComboboxOption = async (
   await combobox.click();
   const popover = page.getByRole("listbox", { name: popoverName ?? `${name} listbox options` });
   const searchField = popover.getByPlaceholder(searchPlaceholder);
-  await expect(searchField).toBeVisible();
 
   await searchField.fill(option);
   await expect(popover.getByRole("option", { name: option, exact: true })).toBeVisible();
-  await searchField.press("Enter");
 
+  await searchField.press("Enter");
   await expect(popover).not.toBeVisible();
 };
