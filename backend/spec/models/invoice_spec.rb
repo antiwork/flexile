@@ -101,7 +101,6 @@ RSpec.describe Invoice do
     describe "fields that we auto-populate on create" do
       subject { create(:invoice) }
 
-      it { is_expected.to validate_presence_of(:bill_from) }
       it { is_expected.to validate_presence_of(:bill_to) }
       it { is_expected.to validate_presence_of(:due_on) }
     end

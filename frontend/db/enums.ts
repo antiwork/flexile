@@ -7,8 +7,14 @@ export enum DocumentType {
   ConsultingContract = 0,
   EquityPlanContract,
   ShareCertificate,
-  TaxDocument,
+  Form1099NEC,
   ExerciseNotice,
+  ReleaseAgreement,
+  Form1099DIV,
+  Form1042S,
+  FormW9,
+  FormW8BEN,
+  FormW8BENE,
 }
 
 export enum DocumentTemplateType {

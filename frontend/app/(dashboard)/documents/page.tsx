@@ -21,7 +21,6 @@ import { MutationStatusButton } from "@/components/MutationButton";
 import Placeholder from "@/components/Placeholder";
 import { Editor as RichTextEditor } from "@/components/RichText";
 import SignForm from "@/components/SignForm";
-import Status, { type Variant as StatusVariant } from "@/components/Status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -38,12 +37,31 @@ import { useIsMobile } from "@/utils/use-mobile";
 
 type Document = RouterOutput["documents"]["list"][number];
 
-const typeLabels = {
-  [DocumentType.ConsultingContract]: "Agreement",
-  [DocumentType.ShareCertificate]: "Certificate",
-  [DocumentType.TaxDocument]: "Tax form",
-  [DocumentType.ExerciseNotice]: "Exercise notice",
-  [DocumentType.EquityPlanContract]: "Equity plan",
+const documentName = (document: Document) => {
+  switch (document.type) {
+    case DocumentType.ConsultingContract:
+      return "Consulting agreement";
+    case DocumentType.EquityPlanContract:
+      return `Equity incentive plan ${document.year}`;
+    case DocumentType.ShareCertificate:
+      return document.shareHolding ? `${document.shareHolding.name} share certificate` : "Share certificate";
+    case DocumentType.Form1099NEC:
+      return "1099-NEC";
+    case DocumentType.Form1099DIV:
+      return "1099-DIV";
+    case DocumentType.Form1042S:
+      return "1042-S";
+    case DocumentType.FormW9:
+      return "W-9";
+    case DocumentType.ExerciseNotice:
+      return "Exercise notice";
+    case DocumentType.ReleaseAgreement:
+      return "Release agreement";
+    case DocumentType.FormW8BEN:
+      return "W8-BEN";
+    case DocumentType.FormW8BENE:
+      return "W8-BEN-E";
+  }
 };
 
 const columnFiltersSchema = z.array(z.object({ id: z.string(), value: filterValueSchema }));
@@ -57,27 +75,29 @@ const getCompletedAt = (document: Document) =>
       )
     : undefined;
 
-function getStatus(document: Document): { variant: StatusVariant | undefined; name: string; text: string } {
+function getStatus(document: Document): { name: string; text: string } {
   const completedAt = getCompletedAt(document);
 
   switch (document.type) {
-    case DocumentType.TaxDocument:
-      if (document.name.startsWith("W-") || completedAt) {
-        return {
-          variant: "success",
-          name: "Signed",
-          text: completedAt ? `Filed on ${formatDate(completedAt)}` : "Signed",
-        };
-      }
-      return { variant: undefined, name: "Ready for filing", text: "Ready for filing" };
+    case DocumentType.FormW8BEN:
+    case DocumentType.FormW8BENE:
+    case DocumentType.FormW9:
+      return { name: "Signed", text: "Signed" };
+    case DocumentType.Form1099NEC:
+    case DocumentType.Form1099DIV:
+    case DocumentType.Form1042S:
+      return completedAt
+        ? { name: "Signed", text: `Filed on ${formatDate(completedAt)}` }
+        : { name: "Ready for filing", text: "Ready for filing" };
     case DocumentType.ShareCertificate:
     case DocumentType.ExerciseNotice:
-      return { variant: "success", name: "Issued", text: "Issued" };
+      return { name: "Issued", text: "Issued" };
     case DocumentType.ConsultingContract:
+    case DocumentType.ReleaseAgreement:
     case DocumentType.EquityPlanContract:
       return completedAt
-        ? { variant: "success", name: "Signed", text: "Signed" }
-        : { variant: "critical", name: "Signature required", text: "Signature required" };
+        ? { name: "Signed", text: "Signed" }
+        : { name: "Signature required", text: "Signature required" };
   }
 }
 
@@ -124,10 +144,9 @@ export default function DocumentsPage() {
               { id: "signer", header: "Signer" },
             )
           : null,
-        columnHelper.simple("name", "Document"),
-        columnHelper.accessor((row) => typeLabels[row.type], {
-          header: "Type",
-          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))] },
+        columnHelper.accessor(documentName, {
+          header: "Name",
+          meta: { filterOptions: [...new Set(documents.map(documentName))] },
         }),
         columnHelper.accessor("createdAt", {
           header: "Date",
@@ -143,8 +162,8 @@ export default function DocumentsPage() {
           header: "Status",
           meta: { filterOptions: [...new Set(documents.map((document) => getStatus(document).name))] },
           cell: (info) => {
-            const { variant, text } = getStatus(info.row.original);
-            return <Status variant={variant}>{text}</Status>;
+            const { text } = getStatus(info.row.original);
+            return text;
           },
         }),
         columnHelper.display({
@@ -152,7 +171,7 @@ export default function DocumentsPage() {
           cell: (info) => {
             const document = info.row.original;
             return isSignable(document) ? (
-              <Button variant="outline" size="small" onClick={() => setSignDocumentId(document.id)} disabled={!canSign}>
+              <Button variant="outline" onClick={() => setSignDocumentId(document.id)} disabled={!canSign}>
                 Review and sign
               </Button>
             ) : null;
@@ -167,19 +186,29 @@ export default function DocumentsPage() {
       [
         columnHelper.display({
           id: "documentNameSigner",
-          cell: (info) => (
-            <div className="flex flex-col gap-1">
-              <div className="text-base font-medium">{info.row.original.name}</div>
-              {isCompanyRepresentative ? (
-                <div className="text-sm font-normal">
-                  {
-                    info.row.original.signatories.find((signatory) => signatory.title !== "Company Representative")
-                      ?.name
-                  }
-                </div>
-              ) : null}
-            </div>
-          ),
+          cell: (info) => {
+            const document = info.row.original;
+            return (
+              <div className="flex flex-col gap-1">
+                <div className="text-base font-medium">{documentName(document)}</div>
+                {isCompanyRepresentative ? (
+                  <div className="text-sm font-normal">
+                    {document.signatories.find((signatory) => signatory.title !== "Company Representative")?.name}
+                  </div>
+                ) : null}
+                {document.attachment ? (
+                  <div>
+                    <Button variant="outline" asChild>
+                      <Link href={`/download/${document.attachment.key}/${document.attachment.filename}`} download>
+                        <Download className="mr-2 size-4" />
+                        Download
+                      </Link>
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            );
+          },
           meta: {
             cellClassName: "w-full",
           },
@@ -189,13 +218,11 @@ export default function DocumentsPage() {
           id: "statusSentOn",
           cell: (info) => {
             const document = info.row.original;
-            const { variant } = getStatus(info.row.original);
+            const { text } = getStatus(info.row.original);
 
             return (
               <div className="flex h-full flex-col items-end justify-between">
-                <div className="flex h-5 w-4 items-center justify-center">
-                  <Status variant={variant} />
-                </div>
+                <div className="flex h-5 items-center justify-center">{text}</div>
                 <div className="text-muted-foreground">{formatDate(document.createdAt)}</div>
               </div>
             );
@@ -230,9 +257,9 @@ export default function DocumentsPage() {
             Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
         }),
 
-        columnHelper.accessor((row) => typeLabels[row.type], {
+        columnHelper.accessor(documentName, {
           header: "Type",
-          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))], hidden: true },
+          meta: { filterOptions: [...new Set(documents.map(documentName))], hidden: true },
         }),
       ].filter((column) => !!column),
     [documents, isCompanyRepresentative],
@@ -415,11 +442,11 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>{document.name}</DialogTitle>
+          <DialogTitle>{documentName(document)}</DialogTitle>
         </DialogHeader>
         <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
         <DialogFooter>
-          <Button size="small" onClick={sign} disabled={!signed}>
+          <Button variant="primary" onClick={sign} disabled={!signed}>
             Agree & Submit
           </Button>
         </DialogFooter>
@@ -455,7 +482,6 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
           document: {
             text: values.text,
             document_type: document.type,
-            name: document.name,
           },
           recipient: values.recipient,
         },
@@ -509,10 +535,10 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
               )}
             />
             <DialogFooter>
-              <Button size="small" variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <MutationStatusButton type="submit" mutation={submitMutation} size="small">
+              <MutationStatusButton idleVariant="primary" type="submit" mutation={submitMutation}>
                 Send
               </MutationStatusButton>
             </DialogFooter>

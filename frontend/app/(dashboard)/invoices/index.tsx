@@ -147,11 +147,13 @@ export const useApproveInvoices = (onSuccess?: () => void) => {
 };
 
 export const ApproveButton = ({
+  variant,
   invoice,
   onApprove,
   className,
 }: {
   invoice: Invoice;
+  variant?: React.ComponentProps<typeof Button>["variant"];
   onApprove?: () => void;
   className?: string;
 }) => {
@@ -162,12 +164,12 @@ export const ApproveButton = ({
   return (
     <MutationButton
       className={className}
-      size="small"
       mutation={approveInvoices}
+      idleVariant={variant}
       param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
       successText={pay ? "Payment initiated" : "Approved!"}
       loadingText={pay ? "Sending payment..." : "Approving..."}
-      disabled={!!pay && !company.completedPaymentMethodSetup}
+      disabled={!!pay && (!company.completedPaymentMethodSetup || !company.isTrusted)}
     >
       {pay ? (
         <>
@@ -232,11 +234,16 @@ export const RejectModal = ({
             className="min-h-32"
           />
         </div>
-        <DialogFooter className="max-md:grid max-md:grid-cols-2">
+        <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             No, cancel
           </Button>
-          <MutationButton mutation={rejectInvoices} param={{ ids, reason }} loadingText="Rejecting...">
+          <MutationButton
+            idleVariant="primary"
+            mutation={rejectInvoices}
+            param={{ ids, reason }}
+            loadingText="Rejecting..."
+          >
             Yes, reject
           </MutationButton>
         </DialogFooter>

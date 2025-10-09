@@ -386,16 +386,11 @@ const Edit = () => {
             {data.invoice.id && data.invoice.status === "rejected" ? (
               <div className="inline-flex items-center">Action required</div>
             ) : (
-              <Button size="small" variant="outline" asChild>
+              <Button variant="outline" asChild>
                 <Link href="/invoices">Cancel</Link>
               </Button>
             )}
-            <Button
-              size="small"
-              variant="primary"
-              onClick={() => validate() && submit.mutate()}
-              disabled={submit.isPending}
-            >
+            <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
               {submit.isPending ? "Sending..." : data.invoice.id ? "Resubmit" : "Send invoice"}
             </Button>
           </>
@@ -674,7 +669,7 @@ const Edit = () => {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Enter notes about your invoice (optional)"
-              className="w-full lg:w-96"
+              className="w-full whitespace-pre-wrap lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
               {showExpensesTable || company.equityEnabled ? (

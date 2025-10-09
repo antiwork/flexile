@@ -47,7 +47,6 @@ import { linkClasses } from "@/components/Link";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
-import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -127,9 +126,9 @@ export default function InvoicesPage() {
   const isPayNowDisabled = useCallback(
     (invoice: Invoice) => {
       const payable = isPayable(invoice);
-      return payable && !company.completedPaymentMethodSetup;
+      return payable && (!company.completedPaymentMethodSetup || !company.isTrusted);
     },
-    [isPayable, company.completedPaymentMethodSetup],
+    [isPayable, company.completedPaymentMethodSetup, company.isTrusted],
   );
   const actionConfig = useMemo(
     (): ActionConfig<Invoice> => ({
@@ -163,7 +162,7 @@ export default function InvoicesPage() {
           id: "approve",
           label: "Approve",
           icon: CheckCircle,
-          variant: "primary",
+          variant: "accent",
           contexts: ["single", "bulk"],
           permissions: ["administrator"],
           conditions: (invoice: Invoice, _context: ActionContext) =>
@@ -262,7 +261,7 @@ export default function InvoicesPage() {
 
           if (invoice.requiresAcceptanceByPayee && user.id === invoice.contractor.user.id) {
             return (
-              <Button size="small" asChild>
+              <Button variant="primary" asChild>
                 <Link href={`/invoices/${invoice.id}?accept=true`}>Accept payment</Link>
               </Button>
             );
@@ -458,7 +457,7 @@ export default function InvoicesPage() {
               </div>
             ) : null
           ) : user.roles.worker ? (
-            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+            <Button asChild variant="primary" disabled={!canSubmitInvoices}>
               <Link href="/invoices/new" inert={!canSubmitInvoices}>
                 <Plus className="size-4" />
                 New invoice
@@ -527,10 +526,10 @@ export default function InvoicesPage() {
           {company.completedPaymentMethodSetup && !company.isTrusted ? (
             <Alert className="mx-4" variant="destructive">
               <AlertTriangle className="my-auto max-h-4 max-w-4" />
-              <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
+              <AlertTitle>Account verification required to initiate payments.</AlertTitle>
               <AlertDescription>
-                Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
-                verification steps.
+                You can approve invoices, but cannot initiate immediate payments until your account is verified. Email
+                us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete verification.
               </AlertDescription>
             </Alert>
           ) : null}
@@ -539,9 +538,7 @@ export default function InvoicesPage() {
 
       <QuickInvoicesSection />
 
-      {isLoading ? (
-        <TableSkeleton columns={6} />
-      ) : data.length > 0 ? (
+      {data.length > 0 || isLoading ? (
         <DataTable
           table={table}
           onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
@@ -549,7 +546,7 @@ export default function InvoicesPage() {
           tabsColumn="status"
           actions={
             user.roles.administrator && !isMobile ? (
-              <Button variant="outline" size="small" asChild>
+              <Button variant="outline" asChild>
                 <a href={export_company_invoices_path(company.id)}>
                   <Download className="size-4" />
                   Download CSV
@@ -575,6 +572,7 @@ export default function InvoicesPage() {
               onClearSelection={onClearSelection}
             />
           )}
+          isLoading={isLoading}
         />
       ) : (
         <div className="mx-4">
@@ -615,6 +613,7 @@ export default function InvoicesPage() {
               No, cancel
             </Button>
             <MutationButton
+              idleVariant="primary"
               mutation={approveInvoices}
               param={{
                 approve_ids: selectedApprovableInvoices.map((invoice) => invoice.id),
@@ -703,7 +702,7 @@ const TasksModal = ({
           ) : null}
           <header className="flex items-center justify-between gap-4">
             <h3 className="text-base max-md:leading-5">Invoice details</h3>
-            <Button variant="outline" size="small" asChild className="max-md:font-regular max-md:h-7.5 max-md:text-sm">
+            <Button variant="outline" asChild className="max-md:font-regular max-md:h-7.5 max-md:text-sm">
               <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
             </Button>
           </header>
@@ -736,12 +735,10 @@ const TasksModal = ({
         </section>
         {isActionable(invoice) ? (
           <DialogFooter>
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" size="small" onClick={onReject} className="max-md:h-9 max-md:text-sm">
-                Reject
-              </Button>
-              <ApproveButton invoice={invoice} onApprove={onClose} className="max-md:h-9 max-md:text-sm" />
-            </div>
+            <Button variant="outline" onClick={onReject}>
+              Reject
+            </Button>
+            <ApproveButton variant="primary" invoice={invoice} onApprove={onClose} />
           </DialogFooter>
         ) : null}
       </DialogContent>
@@ -807,7 +804,7 @@ const InvoiceBulkActionsBar = ({
           ) : null}
           {approveAction ? (
             <Button
-              variant="primary"
+              variant="accent"
               className="flex h-9 items-center gap-2 border-none text-sm"
               onClick={() => approveAction.action && onAction(approveAction.action, selectedInvoices)}
             >

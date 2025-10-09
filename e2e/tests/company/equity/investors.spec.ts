@@ -49,7 +49,7 @@ test.describe("Investors", () => {
       .where(eq(companyInvestors.id, companyInvestor2.id));
 
     await login(page, adminUser, "/equity/investors");
-    await expect(page.getByText("Investors")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Investors" })).toBeVisible();
     await expect(page.getByText("Alice Investor")).toBeVisible();
     await expect(page.getByText("Bob Investor")).toBeVisible();
 
@@ -111,12 +111,13 @@ test.describe("Investors", () => {
 
     await login(page, adminUser, "/equity/investors");
 
-    await expect(page.getByText("Major Investor")).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("15.00%");
-    await expect(page.locator("tbody")).toContainText("300,000");
-
-    await expect(page.getByRole("cell", { name: "Outstanding ownership" })).toBeVisible();
-    await expect(page.getByRole("cell", { name: "Fully diluted ownership" })).toBeVisible();
+    await expect(
+      page.getByTableRowCustom({
+        Name: /Major Investor/u,
+        "Fully diluted ownership": "15.00%",
+        "Outstanding shares": "300,000",
+      }),
+    ).toBeVisible();
   });
 
   test("shows investors with equity grants even when total_options field is zero", async ({ page }) => {
