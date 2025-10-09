@@ -34,7 +34,6 @@
     "app/**/error.tsx",
     "app/**/not-found.tsx",
     "app/**/layout.tsx",
-    "app/**/loading.tsx",
     "app/**/route.ts",
     "trpc/**/*.ts",
     ".next/types/**/*.ts",
