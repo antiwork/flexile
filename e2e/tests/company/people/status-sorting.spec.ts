@@ -53,24 +53,24 @@ test.describe("Status Column Sorting in People Page", () => {
       });
 
     const initialStatusCells = await getStatusCells().allTextContents();
-    const initialDates = extractDatesFromStatus(initialStatusCells);
-
-    let isSortedAscending = true;
-    for (let i = 0; i < initialDates.length - 1; i++) {
-      const currentDate = initialDates[i];
-      const nextDate = initialDates[i + 1];
-      if (currentDate && nextDate && currentDate.getTime() > nextDate.getTime()) {
-        isSortedAscending = false;
-        break;
-      }
-    }
-    expect(isSortedAscending).toBe(true);
 
     await page.getByRole("columnheader", { name: "Status" }).click();
     await page.waitForTimeout(1000);
 
     const statusCellsAfterFirstClick = await getStatusCells().allTextContents();
     expect(statusCellsAfterFirstClick).not.toEqual(initialStatusCells);
+
+    const datesAfterFirstClick = extractDatesFromStatus(statusCellsAfterFirstClick);
+    let isSortedAscending = true;
+    for (let i = 0; i < datesAfterFirstClick.length - 1; i++) {
+      const currentDate = datesAfterFirstClick[i];
+      const nextDate = datesAfterFirstClick[i + 1];
+      if (currentDate && nextDate && currentDate.getTime() > nextDate.getTime()) {
+        isSortedAscending = false;
+        break;
+      }
+    }
+    expect(isSortedAscending).toBe(true);
 
     await page.getByRole("columnheader", { name: "Status" }).click();
     await page.waitForTimeout(1000);
