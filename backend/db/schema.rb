@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_01_000000) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -409,7 +409,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_01_000000) do
     t.bigint "company_id", null: false
     t.bigint "user_compliance_info_id"
     t.bigint "equity_grant_id"
-    t.string "name", null: false
     t.integer "document_type", null: false
     t.integer "year", null: false
     t.datetime "deleted_at"
@@ -418,8 +417,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_01_000000) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.datetime "updated_at", null: false
     t.text "text"
+    t.bigint "share_holding_id"
     t.index ["company_id"], name: "index_documents_on_company_id"
     t.index ["equity_grant_id"], name: "index_documents_on_equity_grant_id"
+    t.index ["share_holding_id"], name: "index_documents_on_share_holding_id"
     t.index ["user_compliance_info_id"], name: "index_documents_on_user_compliance_info_id"
   end
 

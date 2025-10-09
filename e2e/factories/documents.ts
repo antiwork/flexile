@@ -25,7 +25,6 @@ export const documentsFactory = {
       .insert(documents)
       .values({
         companyId: overrides.companyId || (await companiesFactory.create()).company.id,
-        name: "Consulting Agreement",
         type: DocumentType.ConsultingContract,
         year: new Date().getFullYear(),
         ...overrides,
@@ -43,21 +42,6 @@ export const documentsFactory = {
       }
     }
 
-    return { document };
-  },
-
-  createTaxDocument: async (
-    overrides: Partial<typeof documents.$inferInsert> = {},
-    options: CreateOptions = { signatures: [], signed: true },
-  ) => {
-    const { document } = await documentsFactory.create(
-      {
-        name: "W-9",
-        ...overrides,
-        type: DocumentType.TaxDocument,
-      },
-      options,
-    );
     return { document };
   },
 };
