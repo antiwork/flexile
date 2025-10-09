@@ -10,6 +10,7 @@ import { useTheme } from "next-themes";
 import React, { useMemo, useState } from "react";
 import { z } from "zod";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
+import { ContactSupportModal } from "@/components/ContactSupportModal";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
 import Placeholder from "@/components/Placeholder";
@@ -113,6 +114,7 @@ export default function Billing() {
   const company = useCurrentCompany();
   const requiresCompanyName = !company.name || company.name.trim().length === 0;
   const [addingBankAccount, setAddingBankAccount] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const appearance = useMemo(() => (resolvedTheme === "dark" ? darkAppearance : stripeAppearance), [resolvedTheme]);
   const { data: stripeData } = useQuery({
     queryKey: ["administratorBankAccount", company.id],
@@ -194,8 +196,11 @@ export default function Billing() {
         <InformationCircleIcon />
         <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
         <AlertDescription>
-          Want faster payments? Email us at <a href="mailto:support@flexile.com">support@flexile.com</a> to complete
-          additional verification steps.
+          Want faster payments? Email us at{" "}
+          <button onClick={() => setIsSupportModalOpen(true)} className="text-blue-600 hover:underline">
+            support@flexile.com
+          </button>{" "}
+          to complete additional verification steps.
         </AlertDescription>
       </Alert>
       {isLoading ? (
@@ -205,6 +210,7 @@ export default function Billing() {
       ) : (
         <Placeholder icon={CircleDollarSign}>Invoices will appear here.</Placeholder>
       )}
+      <ContactSupportModal open={isSupportModalOpen} onOpenChange={setIsSupportModalOpen} />
     </div>
   );
 }

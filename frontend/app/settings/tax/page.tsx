@@ -9,6 +9,7 @@ import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
+import { ContactSupportModal } from "@/components/ContactSupportModal";
 import DatePicker from "@/components/DatePicker";
 import { linkClasses } from "@/components/Link";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
@@ -89,6 +90,7 @@ const formSchema = formValuesSchema
 export default function TaxPage() {
   const user = useCurrentUser();
   const queryClient = useQueryClient();
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
 
   const { data } = useSuspenseQuery({
     queryKey: ["settings-tax"],
@@ -539,6 +541,7 @@ export default function TaxPage() {
         isBusiness={formValues.business_entity}
         mutation={saveMutation}
       />
+      <ContactSupportModal open={isSupportModalOpen} onOpenChange={setIsSupportModalOpen} />
     </>
   );
 }
@@ -701,9 +704,9 @@ const LegalCertificationModal = ({
             <li>Your consent applies to all tax documents during your time using Flexile services.</li>
             <li>
               You can withdraw this consent or request paper copies anytime by contacting{" "}
-              <a href="mailto:support@flexile.com" className={linkClasses}>
+              <button onClick={() => setIsSupportModalOpen(true)} className={linkClasses}>
                 support@flexile.com
-              </a>
+              </button>
               .
             </li>
             <li>
@@ -713,9 +716,9 @@ const LegalCertificationModal = ({
             <li>Your tax forms will be available for download for at least one year.</li>
             <li>
               If you don't consent to electronic delivery, contact us at{" "}
-              <a href="mailto:support@flexile.com" className={linkClasses}>
+              <button onClick={() => setIsSupportModalOpen(true)} className={linkClasses}>
                 support@flexile.com
-              </a>{" "}
+              </button>{" "}
               to arrange postal delivery.
             </li>
           </ol>
