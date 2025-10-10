@@ -216,7 +216,6 @@ export default function InvoicesPage() {
   });
 
   const columnHelper = createColumnHelper<(typeof data)[number]>();
-
   const desktopColumns = useMemo(
     () => [
       user.roles.administrator
