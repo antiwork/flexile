@@ -78,9 +78,3 @@ export function parseTextLinks(text: string): React.ReactNode {
 
   return elements;
 }
-
-export function hasLinks(text: string): boolean {
-  if (!text) return false;
-  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/giu;
-  return urlRegex.test(text);
-}
