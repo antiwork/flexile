@@ -63,6 +63,16 @@ const getStatusLabel = (contractor: RouterOutput["contractors"]["list"][number])
   return "Invited";
 };
 
+const getStatusCategory = (contractor: RouterOutput["contractors"]["list"][number]) => {
+  const { endedAt, startedAt } = contractor;
+  if (endedAt) {
+    return "Alumni";
+  } else if (startedAt > new Date()) {
+    return "Onboarding";
+  }
+  return "Active";
+};
+
 export default function PeoplePage() {
   const company = useCurrentCompany();
   const { data: workers = [], isLoading } = trpc.contractors.list.useQuery({ companyId: company.id });
@@ -91,12 +101,21 @@ export default function PeoplePage() {
         meta: { filterOptions: [...new Set(workers.map((worker) => worker.role))] },
       }),
       columnHelper.simple("user.countryCode", "Country", (v) => v && countries.get(v)),
-      columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
-        id: "status",
-        header: "Status",
-        meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
-        cell: (info) => getStatusLabel(info.row.original),
-      }),
+      columnHelper.accessor(
+        (row) => {
+          if (row.endedAt) return row.endedAt;
+          return row.startedAt;
+        },
+        {
+          id: "status",
+          header: "Status",
+          cell: (info) => getStatusLabel(info.row.original),
+          meta: {
+            filterOptions: ["Active", "Onboarding", "Alumni"],
+          },
+          filterFn: (row, _columnId, filterValue: string[]) => filterValue.includes(getStatusCategory(row.original)),
+        },
+      ),
     ],
     [workers],
   );
@@ -134,14 +153,21 @@ export default function PeoplePage() {
         ),
       }),
 
-      columnHelper.accessor((row) => (row.endedAt ? "Alumni" : row.startedAt > new Date() ? "Onboarding" : "Active"), {
-        id: "status",
-        header: "Status",
-        meta: {
-          filterOptions: ["Active", "Onboarding", "Alumni"],
-          hidden: true,
+      columnHelper.accessor(
+        (row) => {
+          if (row.endedAt) return row.endedAt;
+          return row.startedAt;
         },
-      }),
+        {
+          id: "status",
+          header: "Status",
+          meta: {
+            hidden: true,
+            filterOptions: ["Active", "Onboarding", "Alumni"],
+          },
+          filterFn: (row, _columnId, filterValue: string[]) => filterValue.includes(getStatusCategory(row.original)),
+        },
+      ),
 
       columnHelper.accessor("user.name", {
         id: "userName",
