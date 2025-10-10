@@ -44,11 +44,11 @@
   --popover-foreground: hsl(0 0% 3.9%);
   --primary: hsl(0 0% 9%);
   --primary-foreground: hsl(0 0% 98%);
-  --secondary: hsla(0 0% 94.5% / 0.5);
+  --secondary: hsl(0 0% 94.5%);
   --secondary-foreground: hsl(0 0% 9%);
   --muted: hsl(0 0% 84%);
   --muted-foreground: hsl(0 0% 45%);
-  --accent: hsl(0 0% 93.1%);
+  --accent: hsl(0 0% 97.1%);
   --accent-foreground: hsl(0 0% 9%);
   --info: var(--color-blue-600);
   --info-foreground: var(--color-blue-50);
