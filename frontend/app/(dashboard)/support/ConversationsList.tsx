@@ -120,7 +120,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
               {conversations.map((conversation) => (
                 <TableRow
                   key={conversation.slug}
-                  className="cursor-pointer hover:bg-gray-50"
+                  className="cursor-pointer"
                   onClick={() => onSelectConversation(conversation.slug)}
                 >
                   {isMobile ? (
