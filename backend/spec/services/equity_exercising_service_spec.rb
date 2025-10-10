@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe EquityExercisingService, :skip_pdf_generation do
+RSpec.describe EquityExercisingService do
   let!(:company) { create(:company, :completed_onboarding, name: "Gumroad") }
   let!(:exercise_notice) { create(:document_template, :exercise_notice, company:) }
   let(:user) { create(:user) }
@@ -109,6 +109,8 @@ RSpec.describe EquityExercisingService, :skip_pdf_generation do
       expect(exercise.total_cost_cents).to eq((equity_grant.exercise_price_usd * 100 * 100).round)
       expect(exercise.status).to eq(EquityGrantExercise::SIGNED)
       expect(exercise.bank_reference).to eq(equity_grant.name)
+
+      expect(CreateDocumentPdfJob).to have_enqueued_sidekiq_job.once
     end
 
     context "when there is no exercise notice" do
