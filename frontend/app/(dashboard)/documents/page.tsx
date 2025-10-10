@@ -193,16 +193,16 @@ export default function DocumentsPage() {
                     Review and sign
                   </Button>
                 ) : null}
-                {availableActions.length > 0 ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {availableActions.map((action) => {
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {availableActions.length > 0 ? (
+                      availableActions.map((action) => {
                         if (action.href) {
                           return (
                             <DropdownMenuItem key={action.key} asChild>
@@ -225,10 +225,12 @@ export default function DocumentsPage() {
                           );
                         }
                         return null;
-                      })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : null}
+                      })
+                    ) : (
+                      <DropdownMenuItem disabled>No actions available</DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             );
           },
