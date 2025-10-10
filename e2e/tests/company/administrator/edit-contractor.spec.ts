@@ -109,9 +109,11 @@ test.describe("Edit contractor", () => {
     await selectComboboxOption(page, "Role", "Stuff-doer", {
       searchPlaceholder: "Search or enter a role...",
     });
+
     // Wait for the radio button to be available and click its label instead
     const customRadioLabel = page.locator("label", { hasText: "Custom" });
     await expect(customRadioLabel).toBeVisible();
+    await customRadioLabel.click();
 
     await page.getByLabel("Rate").fill("2000");
     await page.getByRole("button", { name: "Save changes" }).click();
