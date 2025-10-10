@@ -2,7 +2,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, Info, Share } from "lucide-react";
+import { CircleCheck, Download, Info, MoreHorizontal, Share } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,6 +24,12 @@ import SignForm from "@/components/SignForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
@@ -170,11 +176,63 @@ export default function DocumentsPage() {
           id: "actions",
           cell: (info) => {
             const document = info.row.original;
-            return isSignable(document) ? (
-              <Button variant="outline" onClick={() => setSignDocumentId(document.id)} disabled={!canSign}>
-                Review and sign
-              </Button>
-            ) : null;
+
+            const availableActions = Object.entries(actionConfig.actions)
+              .filter(
+                ([_, action]) =>
+                  action.permissions.includes(actionContext.userRole) &&
+                  action.contexts.includes("single") &&
+                  action.conditions(document, actionContext),
+              )
+              .map(([key, action]) => ({ key, ...action }));
+
+            return (
+              <div className="flex items-center justify-end gap-2">
+                {isSignable(document) ? (
+                  <Button variant="outline" onClick={() => setSignDocumentId(document.id)} disabled={!canSign}>
+                    Review and sign
+                  </Button>
+                ) : null}
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {availableActions.length > 0 ? (
+                      availableActions.map((action) => {
+                        if (action.href) {
+                          return (
+                            <DropdownMenuItem key={action.key} asChild>
+                              <Link href={{ pathname: action.href(document) }}>
+                                <action.icon className="size-4" />
+                                {action.label}
+                              </Link>
+                            </DropdownMenuItem>
+                          );
+                        }
+                        if (action.action) {
+                          return (
+                            <DropdownMenuItem
+                              key={action.key}
+                              onClick={() => action.action && handleAction(action.action, [document])}
+                            >
+                              <action.icon className="size-4" />
+                              {action.label}
+                            </DropdownMenuItem>
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <DropdownMenuItem disabled>No actions available</DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            );
           },
         }),
       ].filter((column) => !!column),
