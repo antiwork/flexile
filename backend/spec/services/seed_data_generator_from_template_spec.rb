@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe SeedDataGeneratorFromTemplate, :skip_pdf_generation do
+RSpec.describe SeedDataGeneratorFromTemplate do
   it "does not raise an error" do
     # Turn off VCR and allow network requests to ensure the seed generation works
     VCR.turned_off do
