@@ -81,7 +81,6 @@ const statusNames = {
 };
 
 const statusFilterOptions = [...new Set(Object.values(statusNames))];
-
 const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
   switch (invoice.status) {
     case "received":
