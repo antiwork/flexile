@@ -116,7 +116,7 @@ function EditTemplate({ type, onClose }: { type: TemplateType; onClose: () => vo
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-screen-lg">
+      <DialogContent className="max-w-screen-lg" onPrimaryAction={() => submit()}>
         <DialogHeader>
           <DialogTitle>{name}</DialogTitle>
         </DialogHeader>

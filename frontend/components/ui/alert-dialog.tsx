@@ -1,6 +1,7 @@
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import * as React from "react";
 import { cn } from "@/utils";
+import { useModalKeyboardShortcut } from "@/utils/use-modal-keyboard-shortcut";
 
 function AlertDialog({ ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
@@ -30,8 +31,13 @@ function AlertDialogOverlay({ className, ...props }: React.ComponentProps<typeof
 function AlertDialogContent({
   className,
   children,
+  onPrimaryAction,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
+  onPrimaryAction?: () => void;
+}) {
+  useModalKeyboardShortcut(onPrimaryAction ?? (() => undefined), !!onPrimaryAction);
+
   return (
     <AlertDialogPortal data-slot="alert-dialog-portal">
       <AlertDialogOverlay className="grid place-items-center overflow-auto">

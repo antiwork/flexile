@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import * as React from "react";
 import { cn } from "@/utils";
 import { useIsMobile } from "@/utils/use-mobile";
+import { useModalKeyboardShortcut } from "@/utils/use-modal-keyboard-shortcut";
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
@@ -32,13 +33,17 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onPrimaryAction,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
+  onPrimaryAction?: () => void;
 }) {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const hideCloseButton = isMobile && pathname === "/invoices";
+
+  useModalKeyboardShortcut(onPrimaryAction ?? (() => undefined), !!onPrimaryAction);
 
   return (
     <DialogPortal data-slot="dialog-portal">

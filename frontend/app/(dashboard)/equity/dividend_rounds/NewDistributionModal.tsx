@@ -86,7 +86,7 @@ const NewDistributionModal = ({ open, onOpenChange }: NewDistributionModalProps)
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent>
+      <DialogContent onPrimaryAction={() => submit()}>
         <DialogHeader>
           <DialogTitle>Start a new distribution</DialogTitle>
           <DialogDescription>

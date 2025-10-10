@@ -180,7 +180,15 @@ export default function ContractorPage() {
 
       <div className="px-4">
         <Dialog open={endModalOpen} onOpenChange={setEndModalOpen}>
-          <DialogContent>
+          <DialogContent
+            onPrimaryAction={() =>
+              endContract.mutate({
+                companyId: company.id,
+                id: contractor?.id ?? "",
+                endDate: endDate?.toString() ?? "",
+              })
+            }
+          >
             <DialogHeader>
               <DialogTitle>End contract with {user.displayName}?</DialogTitle>
             </DialogHeader>
@@ -214,7 +222,7 @@ export default function ContractorPage() {
         </Dialog>
 
         <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
-          <DialogContent>
+          <DialogContent onPrimaryAction={() => cancelContractEndMutation.mutate()}>
             <DialogHeader>
               <DialogTitle>Cancel contract end with {user.displayName}?</DialogTitle>
             </DialogHeader>
@@ -229,7 +237,7 @@ export default function ContractorPage() {
         </Dialog>
 
         <Dialog open={issuePaymentModalOpen} onOpenChange={closeIssuePaymentModal}>
-          <DialogContent>
+          <DialogContent onPrimaryAction={() => submitIssuePayment()}>
             <DialogHeader>
               <DialogTitle>Issue one-time payment</DialogTitle>
             </DialogHeader>

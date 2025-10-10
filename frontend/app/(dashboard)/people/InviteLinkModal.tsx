@@ -76,7 +76,7 @@ const InviteLinkModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
         </DialogContent>
       </Dialog>
       <Dialog open={showResetLinkModal} onOpenChange={setShowResetLinkModal}>
-        <DialogContent className="md:mb-80">
+        <DialogContent className="md:mb-80" onPrimaryAction={() => resetMutation.mutate()}>
           <DialogHeader>
             <DialogTitle>Reset invite link?</DialogTitle>
             <DialogDescription>

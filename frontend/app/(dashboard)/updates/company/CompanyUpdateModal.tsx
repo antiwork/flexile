@@ -117,7 +117,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="flex flex-col sm:max-w-4xl">
+        <DialogContent className="flex flex-col sm:max-w-4xl" onPrimaryAction={() => submit()}>
           <DialogHeader>
             <DialogTitle>{update ? "Edit company update" : "New company update"}</DialogTitle>
           </DialogHeader>
@@ -212,7 +212,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       </Dialog>
 
       <Dialog open={publishModalOpen} onOpenChange={setPublishModalOpen}>
-        <DialogContent>
+        <DialogContent onPrimaryAction={() => saveMutation.mutate({ values: form.getValues(), preview: false })}>
           <DialogHeader>
             <DialogTitle>Publish update?</DialogTitle>
           </DialogHeader>

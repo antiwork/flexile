@@ -53,7 +53,7 @@ const WorkerOnboardingModal = ({ open, onClose, onNext }: OnboardingStepProps) =
   const otherRolesExist = Object.keys(user.roles).some((role) => role !== "worker");
   return (
     <Dialog open={open} onOpenChange={() => (otherRolesExist ? onClose() : undefined)}>
-      <DialogContent showCloseButton={otherRolesExist}>
+      <DialogContent showCloseButton={otherRolesExist} onPrimaryAction={() => submit()}>
         <DialogHeader>
           <DialogTitle>What will you be doing at {company.name}?</DialogTitle>
           <DialogDescription>

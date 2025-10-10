@@ -217,9 +217,13 @@ export const RejectModal = ({
   });
   const [reason, setReason] = useState("");
 
+  const handlePrimaryAction = () => {
+    rejectInvoices.mutate({ ids, reason });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent onPrimaryAction={handlePrimaryAction}>
         <DialogHeader>
           <DialogTitle>Reject {ids.length > 1 ? `${ids.length} invoices` : "invoice"}?</DialogTitle>
         </DialogHeader>
@@ -287,9 +291,13 @@ export const DeleteModal = ({
     },
   });
 
+  const handlePrimaryAction = () => {
+    deleteInvoices.mutate({ ids });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent onPrimaryAction={handlePrimaryAction}>
         <DialogHeader>
           <DialogTitle>
             Delete {invoices.length > 1 ? `${invoices.length} invoices` : `invoice "${invoices[0]?.invoiceNumber}"`}?

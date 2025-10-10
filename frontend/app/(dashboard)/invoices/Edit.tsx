@@ -353,7 +353,7 @@ const Edit = () => {
   return (
     <>
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent onPrimaryAction={() => setAlertOpen(false)}>
           <AlertDialogHeader>
             <AlertDialogTitle>{alertTitle}</AlertDialogTitle>
             <AlertDialogDescription>{alertMessage}</AlertDialogDescription>

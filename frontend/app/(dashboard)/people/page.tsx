@@ -370,7 +370,7 @@ const InviteModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: (ope
               </DialogStackNext>
             </DialogStackFooter>
           </DialogStackContent>
-          <DialogStackContent>
+          <DialogStackContent onPrimaryAction={() => submit()}>
             <DialogStackHeader>
               <DialogStackTitle>Add a contract</DialogStackTitle>
             </DialogStackHeader>

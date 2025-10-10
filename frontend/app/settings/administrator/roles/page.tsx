@@ -385,7 +385,10 @@ export default function RolesPage() {
       </div>
 
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent className="overflow-visible sm:max-w-lg">
+        <DialogContent
+          className="overflow-visible sm:max-w-lg"
+          onPrimaryAction={() => addMemberForm.handleSubmit(handleSubmit)()}
+        >
           <DialogHeader>
             <DialogTitle>Add a member</DialogTitle>
             <DialogDescription>
@@ -467,7 +470,7 @@ export default function RolesPage() {
       </Dialog>
 
       <Dialog open={!!confirmRevoke} onOpenChange={() => setConfirmRevoke(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg" onPrimaryAction={handleRemoveRole}>
           <DialogHeader>
             <DialogTitle>
               Remove {confirmRevoke?.role === "admin" ? "admin" : "lawyer"} access for{" "}

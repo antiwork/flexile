@@ -62,7 +62,10 @@ const FinalizeDistributionModal = ({
       <DialogTrigger asChild>
         <Button variant="primary">Finalize distribution</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent
+        className="max-w-md"
+        {...(isConfirmed ? { onPrimaryAction: () => finalizeMutation.mutate() } : {})}
+      >
         <DialogHeader>
           <DialogTitle>Distribution details</DialogTitle>
           <DialogDescription>

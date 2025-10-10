@@ -123,7 +123,13 @@ export default function GrantsPage() {
         </div>
       )}
       <Dialog open={!!cancellingGrantId} onOpenChange={() => setCancellingGrantId(null)}>
-        <DialogContent>
+        <DialogContent
+          {...(cancellingGrantId
+            ? {
+                onPrimaryAction: () => cancelGrant.mutate({ companyId: company.id, id: cancellingGrantId, reason: "" }),
+              }
+            : {})}
+        >
           <DialogHeader>
             <DialogTitle>Cancel equity grant</DialogTitle>
           </DialogHeader>
