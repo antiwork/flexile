@@ -6,7 +6,9 @@ export default function TaxSettingsLoading() {
     <div className="grid gap-8">
       <hgroup>
         <h2 className="mb-1 text-3xl font-bold">Tax information</h2>
-        <p className="text-muted-foreground text-base">These details will be included in your applicable tax forms.</p>
+        <p className="text-muted-foreground text-base">
+          These details will be included in your invoices and applicable tax forms.
+        </p>
       </hgroup>
       <div className="grid gap-4">
         {Array.from({ length: 2 }).map((_, i) => (
