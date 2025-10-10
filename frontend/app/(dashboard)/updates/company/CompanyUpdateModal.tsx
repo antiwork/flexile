@@ -212,7 +212,7 @@ const CompanyUpdateModal = ({ open, onClose, updateId }: CompanyUpdateModalProps
       </Dialog>
 
       <Dialog open={publishModalOpen} onOpenChange={setPublishModalOpen}>
-        <DialogContent onPrimaryAction={() => void saveMutation.mutate({ values: form.getValues(), preview: false })}>
+        <DialogContent onPrimaryAction={() => saveMutation.mutate({ values: form.getValues(), preview: false })}>
           <DialogHeader>
             <DialogTitle>Publish update?</DialogTitle>
           </DialogHeader>

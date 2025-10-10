@@ -470,7 +470,7 @@ export default function RolesPage() {
       </Dialog>
 
       <Dialog open={!!confirmRevoke} onOpenChange={() => setConfirmRevoke(null)}>
-        <DialogContent className="sm:max-w-lg" onPrimaryAction={() => void handleRemoveRole()}>
+        <DialogContent className="sm:max-w-lg" onPrimaryAction={() => handleRemoveRole()}>
           <DialogHeader>
             <DialogTitle>
               Remove {confirmRevoke?.role === "admin" ? "admin" : "lawyer"} access for{" "}
