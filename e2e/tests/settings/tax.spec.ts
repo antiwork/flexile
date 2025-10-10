@@ -6,7 +6,7 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyLawyersFactory } from "@test/factories/companyLawyers";
 import { userComplianceInfosFactory } from "@test/factories/userComplianceInfos";
 import { usersFactory } from "@test/factories/users";
-import { fillDatePicker, selectComboboxOption } from "@test/helpers";
+import { clickComboboxOption, fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { desc, eq } from "drizzle-orm";
@@ -59,11 +59,11 @@ test.describe("Tax settings", () => {
       await page.getByRole("button", { name: "Save changes" }).click();
       await expect(page.getByText("Please select your country of residence.")).toBeVisible();
 
-      await selectComboboxOption(page, "Country of residence", "American Samoa");
+      await clickComboboxOption(page, "Country of residence", "American Samoa");
       await expect(page.getByLabel("Province")).not.toBeEnabled();
-      await selectComboboxOption(page, "Country of residence", "United Kingdom");
+      await clickComboboxOption(page, "Country of residence", "United Kingdom");
       await expect(page.getByLabel("Province")).toBeEnabled();
-      await selectComboboxOption(page, "Country of residence", "United States");
+      await clickComboboxOption(page, "Country of residence", "United States");
 
       await page.getByLabel("Full legal name (must match your ID)").fill("Janet");
       await page.getByLabel("Tax ID (SSN or ITIN)").fill("");
@@ -94,8 +94,8 @@ test.describe("Tax settings", () => {
       await page.locator("label").filter({ hasText: "Business" }).click();
       await expect(page.getByLabel("Type")).toBeValid();
       await expect(page.getByLabel("Tax classification")).not.toBeVisible();
-      await selectComboboxOption(page, "Country of citizenship", "Mexico");
-      await selectComboboxOption(page, "Country of incorporation", "United States");
+      await clickComboboxOption(page, "Country of citizenship", "Mexico");
+      await clickComboboxOption(page, "Country of incorporation", "United States");
       await page.getByLabel("Tax ID (EIN)").fill("111111111");
 
       await page.getByRole("button", { name: "Save changes" }).click();
@@ -104,15 +104,15 @@ test.describe("Tax settings", () => {
       await expect(page.getByText("Please select a business type.")).toBeVisible();
 
       await page.getByLabel("Business legal name").fill("Flexile Inc.");
-      await selectComboboxOption(page, "Type", "LLC");
+      await clickComboboxOption(page, "Type", "LLC");
 
       await page.getByRole("button", { name: "Save changes" }).click();
 
       await expect(page.getByText("Please select a tax classification.")).toBeVisible();
 
-      await selectComboboxOption(page, "Tax classification", "Partnership");
+      await clickComboboxOption(page, "Tax classification", "Partnership");
       await fillDatePicker(page, "Date of incorporation (optional)", "06/07/1980");
-      await selectComboboxOption(page, "State", "New York");
+      await clickComboboxOption(page, "State", "New York");
       await page.getByRole("button", { name: "Save changes" }).click();
 
       await expect(page.getByText("Your EIN can't have all identical digits.")).toBeVisible();
@@ -246,11 +246,11 @@ test.describe("Tax settings", () => {
         await expect(page.getByText("W-8BEN-E Certification and Tax Forms Delivery")).not.toBeVisible();
         await page.goto("/settings/tax", { waitUntil: "load" });
 
-        await selectComboboxOption(page, "Country of citizenship", "United States");
-        await selectComboboxOption(page, "Country of incorporation", "United States");
+        await clickComboboxOption(page, "Country of citizenship", "United States");
+        await clickComboboxOption(page, "Country of incorporation", "United States");
 
-        await selectComboboxOption(page, "Type", "LLC");
-        await selectComboboxOption(page, "Tax classification", "Partnership");
+        await clickComboboxOption(page, "Type", "LLC");
+        await clickComboboxOption(page, "Tax classification", "Partnership");
         await page.getByRole("button", { name: "Save changes" }).click();
 
         await page.getByLabel("Full legal name (must match your ID)").fill("John Smith");
@@ -268,7 +268,7 @@ test.describe("Tax settings", () => {
         await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Sydney St");
         await page.getByLabel("City").fill("Sydney");
         if (await page.getByLabel("Province").isEnabled())
-          await selectComboboxOption(page, "Province", "New South Wales");
+          await clickComboboxOption(page, "Province", "New South Wales");
 
         await page.getByLabel("Postal code").fill("1234");
         await page.getByRole("button", { name: "Save changes" }).click();
@@ -315,7 +315,7 @@ test.describe("Tax settings", () => {
       await page.getByLabel("Full legal name (must match your ID)").fill("Hans Schmidt");
       await page.getByLabel("Residential address (street name, number, apartment)").fill("123 Berlin St");
       await page.getByLabel("City").fill("Berlin");
-      await selectComboboxOption(page, "Province", "Berlin");
+      await clickComboboxOption(page, "Province", "Berlin");
       await page.getByLabel("Postal code").fill("10115");
 
       await page.getByRole("button", { name: "Save changes" }).click();
@@ -359,8 +359,8 @@ test.describe("Tax settings", () => {
 
       await page.locator("label").filter({ hasText: "Business" }).click();
       await page.getByLabel("Business legal name").fill("Test Business LLC");
-      await selectComboboxOption(page, "Type", "LLC");
-      await selectComboboxOption(page, "Tax classification", "Partnership");
+      await clickComboboxOption(page, "Type", "LLC");
+      await clickComboboxOption(page, "Tax classification", "Partnership");
 
       await page.getByLabel("Tax ID (EIN)").fill("123456789");
 
@@ -406,8 +406,8 @@ test.describe("Tax settings", () => {
       await page.getByLabel("Tax ID (SSN or ITIN)").fill("123456789");
       await expect(page.getByLabel("Tax ID (SSN or ITIN)")).toHaveValue("123-45-6789");
 
-      await selectComboboxOption(page, "Country of citizenship", "Germany");
-      await selectComboboxOption(page, "Country of residence", "Germany");
+      await clickComboboxOption(page, "Country of citizenship", "Germany");
+      await clickComboboxOption(page, "Country of residence", "Germany");
 
       await expect(page.getByText("Foreign tax ID")).toBeVisible();
 
@@ -416,8 +416,8 @@ test.describe("Tax settings", () => {
       await page.getByLabel("Foreign tax ID").fill("DE-123/456.789");
       await expect(page.getByLabel("Foreign tax ID")).toHaveValue("DE123456789");
 
-      await selectComboboxOption(page, "Country of citizenship", "United States");
-      await selectComboboxOption(page, "Country of residence", "United States");
+      await clickComboboxOption(page, "Country of citizenship", "United States");
+      await clickComboboxOption(page, "Country of residence", "United States");
 
       await expect(page.getByText("Tax ID (SSN or ITIN)")).toBeVisible();
 

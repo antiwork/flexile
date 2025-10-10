@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-export const selectComboboxOption = async (page: Locator | Page, name: string, option: string) => {
+export const clickComboboxOption = async (page: Locator | Page, name: string, option: string) => {
   await page.getByRole("combobox", { name }).click();
   await page.getByRole("option", { name: option, exact: true }).first().click();
 };
@@ -31,4 +31,28 @@ export const fillByLabel = async (page: Page, name: string, value: string, optio
   }
   await field.fill(value);
   await expect(field).toHaveValue(value);
+};
+
+export const selectComboboxOption = async (
+  page: Page,
+  name: string,
+  option: string,
+  {
+    popoverName,
+    searchPlaceholder = "Search...",
+  }: {
+    popoverName?: string;
+    searchPlaceholder?: string;
+  } = {},
+) => {
+  const combobox = page.getByRole("combobox", { name, exact: true });
+  await combobox.click();
+  const popover = page.getByRole("listbox", { name: popoverName ?? `${name} listbox options` });
+  const searchField = popover.getByPlaceholder(searchPlaceholder);
+
+  await searchField.fill(option);
+  await expect(popover.getByRole("option", { name: option, exact: true })).toBeVisible();
+
+  await searchField.press("Enter");
+  await expect(popover).not.toBeVisible();
 };
