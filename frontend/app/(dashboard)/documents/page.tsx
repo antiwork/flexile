@@ -498,7 +498,7 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
     <Dialog open onOpenChange={() => onClose()}>
       <DialogContent
         className="max-w-screen-lg"
-        onPrimaryAction={() => form.handleSubmit((values) => submitMutation.mutate(values))()}
+        onPrimaryAction={() => void form.handleSubmit((values) => submitMutation.mutate(values))()}
       >
         <DialogHeader>
           <DialogTitle>Share document</DialogTitle>

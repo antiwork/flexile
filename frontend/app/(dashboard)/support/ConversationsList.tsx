@@ -163,7 +163,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent onPrimaryAction={() => handleSubmit()}>
+        <DialogContent onPrimaryAction={() => void handleSubmit()}>
           <DialogHeader>
             <DialogTitle>How can we help you today?</DialogTitle>
           </DialogHeader>

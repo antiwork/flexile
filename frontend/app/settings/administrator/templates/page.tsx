@@ -83,7 +83,14 @@ export default function Templates() {
           })}
         </TableBody>
       </Table>
-      {editingTemplate ? <EditTemplate type={editingTemplate} onClose={() => void setEditingTemplate(null)} /> : null}
+      {editingTemplate ? (
+        <EditTemplate
+          type={editingTemplate}
+          onClose={() => {
+            void setEditingTemplate(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
@@ -116,7 +123,7 @@ function EditTemplate({ type, onClose }: { type: TemplateType; onClose: () => vo
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-screen-lg" onPrimaryAction={() => submit()}>
+      <DialogContent className="max-w-screen-lg" onPrimaryAction={() => void submit()}>
         <DialogHeader>
           <DialogTitle>{name}</DialogTitle>
         </DialogHeader>

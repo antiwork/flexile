@@ -277,7 +277,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
       setActiveIndex={setStep}
     >
       <DialogStackBody>
-        <DialogStackContent onPrimaryAction={() => submitDetails()}>
+        <DialogStackContent onPrimaryAction={() => void submitDetails()}>
           <DialogStackHeader>
             <DialogStackTitle>New equity grant</DialogStackTitle>
             <DialogStackDescription>Fill in the details below to create an equity grant.</DialogStackDescription>
@@ -541,7 +541,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
             </form>
           </Form>
         </DialogStackContent>
-        <DialogStackContent onPrimaryAction={() => submitVesting()}>
+        <DialogStackContent onPrimaryAction={() => void submitVesting()}>
           <DialogStackHeader>
             <DialogStackTitle>Vesting details</DialogStackTitle>
           </DialogStackHeader>
@@ -677,7 +677,7 @@ export default function NewEquityGrantModal({ open, onOpenChange }: NewEquityGra
             </form>
           </Form>
         </DialogStackContent>
-        <DialogStackContent onPrimaryAction={() => submit()}>
+        <DialogStackContent onPrimaryAction={() => void submit()}>
           <DialogStackHeader>
             <DialogStackTitle>Equity contract</DialogStackTitle>
           </DialogStackHeader>
