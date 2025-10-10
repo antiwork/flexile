@@ -40,6 +40,7 @@ import StripeMicrodepositVerification from "@/app/settings/administrator/StripeM
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
 import type { ActionConfig, ActionContext, AvailableActions } from "@/components/actions/types";
+import { ContactSupportModal } from "@/components/ContactSupportModal";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import DatePicker from "@/components/DatePicker";
@@ -113,6 +114,7 @@ export default function InvoicesPage() {
   const company = useCurrentCompany();
   const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
   const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const isDeletable = useIsDeletable();
@@ -529,7 +531,11 @@ export default function InvoicesPage() {
               <AlertTitle>Account verification required to initiate payments.</AlertTitle>
               <AlertDescription>
                 You can approve invoices, but cannot initiate immediate payments until your account is verified. Email
-                us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete verification.
+                us at{" "}
+                <button onClick={() => setIsSupportModalOpen(true)} className="text-blue-600 hover:underline">
+                  support@flexile.com
+                </button>{" "}
+                to complete verification.
               </AlertDescription>
             </Alert>
           ) : null}
@@ -664,6 +670,7 @@ export default function InvoicesPage() {
           onAction={handleInvoiceAction}
         />
       ) : null}
+      <ContactSupportModal open={isSupportModalOpen} onOpenChange={setIsSupportModalOpen} />
     </>
   );
 }

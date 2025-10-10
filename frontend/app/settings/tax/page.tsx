@@ -9,6 +9,7 @@ import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
+import { ContactSupportModal } from "@/components/ContactSupportModal";
 import DatePicker from "@/components/DatePicker";
 import { linkClasses } from "@/components/Link";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
@@ -562,6 +563,7 @@ const LegalCertificationModal = ({
 }) => {
   const uid = useId();
   const [signature, setSignature] = useState(legalName);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   useEffect(() => setSignature(legalName), [legalName]);
   const certificateType = isForeignUser ? (isBusiness ? "W-8BEN-E" : "W-8BEN") : "W-9";
   const foreignEntityTitle = isBusiness ? "entity" : "person";
@@ -701,9 +703,9 @@ const LegalCertificationModal = ({
             <li>Your consent applies to all tax documents during your time using Flexile services.</li>
             <li>
               You can withdraw this consent or request paper copies anytime by contacting{" "}
-              <a href="mailto:support@flexile.com" className={linkClasses}>
+              <button onClick={() => setIsSupportModalOpen(true)} className={linkClasses}>
                 support@flexile.com
-              </a>
+              </button>
               .
             </li>
             <li>
@@ -713,9 +715,9 @@ const LegalCertificationModal = ({
             <li>Your tax forms will be available for download for at least one year.</li>
             <li>
               If you don't consent to electronic delivery, contact us at{" "}
-              <a href="mailto:support@flexile.com" className={linkClasses}>
+              <button onClick={() => setIsSupportModalOpen(true)} className={linkClasses}>
                 support@flexile.com
-              </a>{" "}
+              </button>{" "}
               to arrange postal delivery.
             </li>
           </ol>
@@ -742,6 +744,7 @@ const LegalCertificationModal = ({
           </MutationButton>
         </DialogFooter>
       </DialogContent>
+      <ContactSupportModal open={isSupportModalOpen} onOpenChange={setIsSupportModalOpen} />
     </Dialog>
   );
 };

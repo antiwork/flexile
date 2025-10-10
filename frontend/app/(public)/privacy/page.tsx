@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/utils";
 
@@ -357,7 +358,7 @@ export default function Privacy() {
       <p>
         <strong>Delete your content or close your account.</strong> You can choose to delete certain content through
         your account. If you wish to request to close your account, please contact us at
-        <a href="mailto:support@flexile.com">support@flexile.com</a>.
+        <Link href="/support">support@flexile.com</Link>.
       </p>
       <p />
       <h2 id="jump_5">Other sites and services</h2>
@@ -400,7 +401,7 @@ export default function Privacy() {
       </p>
       <h2 id="jump_10">How to contact us</h2>
       <p>
-        Email: <a href="mailto:support@flexile.com">support@flexile.com</a>
+        Email: <Link href="/support">support@flexile.com</Link>
       </p>
     </section>
   );
