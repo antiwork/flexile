@@ -376,7 +376,7 @@ RSpec.describe PayInvoice, :vcr do
 
   describe "duplicate payment prevention (fix for #1426)" do
     let(:test_company) { create(:company, is_trusted: true) }
-    let(:test_user) { create(:user, :confirmed) }
+    let(:test_user) { create(:user, :confirmed, without_bank_account: true) }
     let(:company_worker) { create(:company_worker, company: test_company, user: test_user) }
     let!(:wise_recipient) { create(:wise_recipient, user: test_user, used_for_invoices: true) }
     let(:test_invoice) do
