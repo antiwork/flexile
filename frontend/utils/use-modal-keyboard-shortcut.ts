@@ -7,7 +7,7 @@ export function useModalKeyboardShortcut(onPrimaryAction: () => void, enabled = 
       const target = event.target;
       if (target && target instanceof HTMLElement && target.matches("input, select")) return;
 
-      const isMac = /(Mac|iPhone|iPod|iPad)/iu.test(navigator.userAgent);
+      const isMac = /(Macintosh|Mac|iPhone|iPod|iPad)/iu.test(navigator.userAgent);
       const isShortcutPressed = isMac ? event.metaKey : event.ctrlKey;
 
       if (event.key === "Enter" && isShortcutPressed) {
