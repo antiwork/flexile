@@ -4,21 +4,16 @@ RSpec.describe CreateDocumentPdfJob, type: :job do
   include ActiveJob::TestHelper
 
   let(:company) { create(:company) }
-  let(:pdf_service) { instance_double(CreatePdf, perform: "pdf content") }
-
-  before do
-    allow(CreatePdf).to receive(:new).and_return(pdf_service)
-  end
 
   it "generates and attaches a PDF to the document" do
-    document_type = Document.document_types[:consulting_contract]
-    document_text = "<h1>Test Document</h1>"
-
-    document = company.documents.build(document_type: document_type, text: document_text, year: Time.current.year)
-    document.save!
+    document = company.documents.create!(
+      document_type: Document.document_types[:consulting_contract],
+      text: %Q{<h1>Test</h1><script>alert('x')</script><img src="x" onerror="alert('y')">},
+      year: Time.current.year
+    )
 
     sanitized_text = ActionController::Base.helpers.sanitize(document.text)
-    expect(CreatePdf).to receive(:new).with(body_html: sanitized_text).and_return(pdf_service)
+    expect(sanitized_text).to eq("<h1>Test</h1>alert('x')<img src=\"x\">")
 
     expect { described_class.new.perform(document.id, document.text) }
       .to change { document.reload.attachments.attached? }.from(false).to(true)
