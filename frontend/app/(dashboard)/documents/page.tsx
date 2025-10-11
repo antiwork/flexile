@@ -2,7 +2,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { CircleCheck, Download, Info, Share } from "lucide-react";
+import { CircleCheck, Download, Info, MoreHorizontal, Share } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,6 +24,12 @@ import SignForm from "@/components/SignForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
@@ -37,12 +43,31 @@ import { useIsMobile } from "@/utils/use-mobile";
 
 type Document = RouterOutput["documents"]["list"][number];
 
-const typeLabels = {
-  [DocumentType.ConsultingContract]: "Agreement",
-  [DocumentType.ShareCertificate]: "Certificate",
-  [DocumentType.TaxDocument]: "Tax form",
-  [DocumentType.ExerciseNotice]: "Exercise notice",
-  [DocumentType.EquityPlanContract]: "Equity plan",
+const documentName = (document: Document) => {
+  switch (document.type) {
+    case DocumentType.ConsultingContract:
+      return "Consulting agreement";
+    case DocumentType.EquityPlanContract:
+      return `Equity incentive plan ${document.year}`;
+    case DocumentType.ShareCertificate:
+      return document.shareHolding ? `${document.shareHolding.name} share certificate` : "Share certificate";
+    case DocumentType.Form1099NEC:
+      return "1099-NEC";
+    case DocumentType.Form1099DIV:
+      return "1099-DIV";
+    case DocumentType.Form1042S:
+      return "1042-S";
+    case DocumentType.FormW9:
+      return "W-9";
+    case DocumentType.ExerciseNotice:
+      return "Exercise notice";
+    case DocumentType.ReleaseAgreement:
+      return "Release agreement";
+    case DocumentType.FormW8BEN:
+      return "W8-BEN";
+    case DocumentType.FormW8BENE:
+      return "W8-BEN-E";
+  }
 };
 
 const columnFiltersSchema = z.array(z.object({ id: z.string(), value: filterValueSchema }));
@@ -60,18 +85,21 @@ function getStatus(document: Document): { name: string; text: string } {
   const completedAt = getCompletedAt(document);
 
   switch (document.type) {
-    case DocumentType.TaxDocument:
-      if (document.name.startsWith("W-") || completedAt) {
-        return {
-          name: "Signed",
-          text: completedAt ? `Filed on ${formatDate(completedAt)}` : "Signed",
-        };
-      }
-      return { name: "Ready for filing", text: "Ready for filing" };
+    case DocumentType.FormW8BEN:
+    case DocumentType.FormW8BENE:
+    case DocumentType.FormW9:
+      return { name: "Signed", text: "Signed" };
+    case DocumentType.Form1099NEC:
+    case DocumentType.Form1099DIV:
+    case DocumentType.Form1042S:
+      return completedAt
+        ? { name: "Signed", text: `Filed on ${formatDate(completedAt)}` }
+        : { name: "Ready for filing", text: "Ready for filing" };
     case DocumentType.ShareCertificate:
     case DocumentType.ExerciseNotice:
       return { name: "Issued", text: "Issued" };
     case DocumentType.ConsultingContract:
+    case DocumentType.ReleaseAgreement:
     case DocumentType.EquityPlanContract:
       return completedAt
         ? { name: "Signed", text: "Signed" }
@@ -122,10 +150,9 @@ export default function DocumentsPage() {
               { id: "signer", header: "Signer" },
             )
           : null,
-        columnHelper.simple("name", "Document"),
-        columnHelper.accessor((row) => typeLabels[row.type], {
-          header: "Type",
-          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))] },
+        columnHelper.accessor(documentName, {
+          header: "Name",
+          meta: { filterOptions: [...new Set(documents.map(documentName))] },
         }),
         columnHelper.accessor("createdAt", {
           header: "Date",
@@ -149,11 +176,63 @@ export default function DocumentsPage() {
           id: "actions",
           cell: (info) => {
             const document = info.row.original;
-            return isSignable(document) ? (
-              <Button variant="outline" onClick={() => setSignDocumentId(document.id)} disabled={!canSign}>
-                Review and sign
-              </Button>
-            ) : null;
+
+            const availableActions = Object.entries(actionConfig.actions)
+              .filter(
+                ([_, action]) =>
+                  action.permissions.includes(actionContext.userRole) &&
+                  action.contexts.includes("single") &&
+                  action.conditions(document, actionContext),
+              )
+              .map(([key, action]) => ({ key, ...action }));
+
+            return (
+              <div className="flex items-center justify-end gap-2">
+                {isSignable(document) ? (
+                  <Button variant="outline" onClick={() => setSignDocumentId(document.id)} disabled={!canSign}>
+                    Review and sign
+                  </Button>
+                ) : null}
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {availableActions.length > 0 ? (
+                      availableActions.map((action) => {
+                        if (action.href) {
+                          return (
+                            <DropdownMenuItem key={action.key} asChild>
+                              <Link href={{ pathname: action.href(document) }}>
+                                <action.icon className="size-4" />
+                                {action.label}
+                              </Link>
+                            </DropdownMenuItem>
+                          );
+                        }
+                        if (action.action) {
+                          return (
+                            <DropdownMenuItem
+                              key={action.key}
+                              onClick={() => action.action && handleAction(action.action, [document])}
+                            >
+                              <action.icon className="size-4" />
+                              {action.label}
+                            </DropdownMenuItem>
+                          );
+                        }
+                        return null;
+                      })
+                    ) : (
+                      <DropdownMenuItem disabled>No actions available</DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            );
           },
         }),
       ].filter((column) => !!column),
@@ -169,7 +248,7 @@ export default function DocumentsPage() {
             const document = info.row.original;
             return (
               <div className="flex flex-col gap-1">
-                <div className="text-base font-medium">{document.name}</div>
+                <div className="text-base font-medium">{documentName(document)}</div>
                 {isCompanyRepresentative ? (
                   <div className="text-sm font-normal">
                     {document.signatories.find((signatory) => signatory.title !== "Company Representative")?.name}
@@ -236,9 +315,9 @@ export default function DocumentsPage() {
             Array.isArray(filterValue) && filterValue.includes(row.original.createdAt.getFullYear().toString()),
         }),
 
-        columnHelper.accessor((row) => typeLabels[row.type], {
+        columnHelper.accessor(documentName, {
           header: "Type",
-          meta: { filterOptions: [...new Set(documents.map((document) => typeLabels[document.type]))], hidden: true },
+          meta: { filterOptions: [...new Set(documents.map(documentName))], hidden: true },
         }),
       ].filter((column) => !!column),
     [documents, isCompanyRepresentative],
@@ -421,7 +500,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>{document.name}</DialogTitle>
+          <DialogTitle>{documentName(document)}</DialogTitle>
         </DialogHeader>
         <SignForm content={data.text ?? ""} signed={signed} onSign={() => setSigned(true)} />
         <DialogFooter>
@@ -461,7 +540,6 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
           document: {
             text: values.text,
             document_type: document.type,
-            name: document.name,
           },
           recipient: values.recipient,
         },
