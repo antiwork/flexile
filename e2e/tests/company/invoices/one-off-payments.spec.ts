@@ -23,7 +23,10 @@ test.describe("One-off payments", () => {
   let companyInvestor: CompanyInvestor;
 
   test.beforeEach(async () => {
-    const result = await companiesFactory.createCompletedOnboarding({ isTrusted: true });
+    const result = await companiesFactory.createCompletedOnboarding({
+      requiredInvoiceApprovalCount: 1,
+      isTrusted: true,
+    });
     adminUser = result.adminUser;
     company = result.company;
     workerUser = (await usersFactory.create()).user;
