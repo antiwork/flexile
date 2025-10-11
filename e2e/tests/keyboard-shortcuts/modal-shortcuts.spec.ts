@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
-import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
+import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { invoicesFactory } from "@test/factories/invoices";
 import { login } from "@test/helpers/auth";
 import { withinModal } from "@test/index";
@@ -10,18 +10,23 @@ import { users } from "@/db/schema";
 
 test.describe("Modal Keyboard Shortcuts", () => {
   const setupCompany = async () => {
-    const { company } = await companiesFactory.createCompletedOnboarding();
-    const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
-    const user = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) });
-    if (!user) throw new Error("User not found");
-    return { company, user };
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      isTrusted: true,
+      requiredInvoiceApprovalCount: 1,
+    });
+
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+    const contractorUser = await db.query.users.findFirst({ where: eq(users.id, companyContractor.userId) });
+    if (!contractorUser) throw new Error("Contractor user not found");
+
+    return { company, user: adminUser, companyContractor, contractorUser };
   };
 
   test.describe("Cmd+Enter / Ctrl+Enter shortcuts", () => {
     test("triggers primary action in invoice rejection modal", async ({ page, browserName }) => {
-      const { company, user } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id });
-      await invoicesFactory.create({ companyId: company.id });
+      const { company, user, companyContractor } = await setupCompany();
+      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
+      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
 
       await login(page, user);
       await page.getByRole("link", { name: "Invoices" }).click();
@@ -52,8 +57,8 @@ test.describe("Modal Keyboard Shortcuts", () => {
     });
 
     test("triggers primary action in invoice deletion modal", async ({ page, browserName }) => {
-      const { company, user } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id });
+      const { company, user, companyContractor } = await setupCompany();
+      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
 
       await login(page, user);
       await page.getByRole("link", { name: "Invoices" }).click();
@@ -83,9 +88,9 @@ test.describe("Modal Keyboard Shortcuts", () => {
     });
 
     test("triggers primary action in invoice approval modal", async ({ page, browserName }) => {
-      const { company, user } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id });
-      await invoicesFactory.create({ companyId: company.id });
+      const { company, user, companyContractor } = await setupCompany();
+      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
+      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
 
       await login(page, user);
       await page.getByRole("link", { name: "Invoices" }).click();
@@ -115,9 +120,9 @@ test.describe("Modal Keyboard Shortcuts", () => {
     });
 
     test("does not trigger when focused on input fields", async ({ page }) => {
-      const { company, user } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id });
-      await invoicesFactory.create({ companyId: company.id });
+      const { company, user, companyContractor } = await setupCompany();
+      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
+      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
 
       await login(page, user);
       await page.getByRole("link", { name: "Invoices" }).click();
@@ -141,8 +146,8 @@ test.describe("Modal Keyboard Shortcuts", () => {
     });
 
     test("works with AlertDialog components", async ({ page, browserName }) => {
-      const { company, user } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id });
+      const { company, user, companyContractor } = await setupCompany();
+      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
 
       await login(page, user);
       await page.getByRole("link", { name: "Invoices" }).click();
@@ -176,8 +181,8 @@ test.describe("Modal Keyboard Shortcuts", () => {
     });
 
     test("works with Ctrl+Enter on Windows/Linux", async ({ page }) => {
-      const { company, user } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id });
+      const { company, user, companyContractor } = await setupCompany();
+      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
 
       await login(page, user);
       await page.getByRole("link", { name: "Invoices" }).click();
@@ -201,8 +206,8 @@ test.describe("Modal Keyboard Shortcuts", () => {
     });
 
     test("prevents default browser behavior", async ({ page, browserName }) => {
-      const { company, user } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id });
+      const { company, user, companyContractor } = await setupCompany();
+      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
 
       await login(page, user);
       await page.getByRole("link", { name: "Invoices" }).click();
