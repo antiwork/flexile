@@ -24,7 +24,7 @@ test.describe("One-off payments", () => {
 
   test.beforeEach(async () => {
     const result = await companiesFactory.createCompletedOnboarding({
-      requiredInvoiceApprovalCount: 1,
+      requiredInvoiceApprovalCount: 2,
       isTrusted: true,
     });
     adminUser = result.adminUser;
@@ -264,6 +264,7 @@ test.describe("One-off payments", () => {
         status: "approved",
         totalAmountInUsdCents: BigInt(50000),
         invoiceNumber: "O-0002",
+        invoiceApprovalsCount: 2,
       });
 
       await db.update(invoices).set({ status: "failed" }).where(eq(invoices.id, invoice.id));
