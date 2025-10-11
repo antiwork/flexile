@@ -238,7 +238,7 @@ const ExerciseModal = ({ equityGrants, onClose }: { equityGrants: EquityGrant[];
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="ml-auto max-w-prose md:mr-0">
+      <DialogContent className="ml-auto max-w-prose md:mr-0" onPrimaryAction={() => submitMutation.mutate()}>
         <DialogHeader>
           <DialogTitle>Exercise your options</DialogTitle>
         </DialogHeader>

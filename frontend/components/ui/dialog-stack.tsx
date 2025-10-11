@@ -14,6 +14,7 @@ import type {
 } from "react";
 import { Children, cloneElement, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { cn } from "@/utils/index";
+import { useModalKeyboardShortcut } from "@/utils/use-modal-keyboard-shortcut";
 
 type DialogStackContextType = {
   activeIndex: number;
@@ -231,9 +232,16 @@ const DialogStackContentContext = createContext<{ index: number } | null>(null);
 
 export type DialogStackContentProps = HTMLAttributes<HTMLDivElement> & {
   offset?: number;
+  onPrimaryAction?: () => void;
 };
 
-export const DialogStackContent = ({ children, className, offset = 16, ...props }: DialogStackContentProps) => {
+export const DialogStackContent = ({
+  children,
+  className,
+  offset = 16,
+  onPrimaryAction,
+  ...props
+}: DialogStackContentProps) => {
   const context = useContext(DialogStackContext);
   const indexContext = useContext(DialogStackContentContext);
 
@@ -245,6 +253,8 @@ export const DialogStackContent = ({ children, className, offset = 16, ...props 
     throw new Error("DialogStackContent must be used within a DialogStackBody");
   }
   const { index } = indexContext;
+
+  useModalKeyboardShortcut(onPrimaryAction ?? (() => undefined), !!onPrimaryAction && context.activeIndex === index);
 
   if (!context.isOpen) {
     return null;

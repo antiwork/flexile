@@ -581,7 +581,14 @@ export default function InvoicesPage() {
       )}
 
       <Dialog open={openModal === "approve"} onOpenChange={() => setOpenModal(null)}>
-        <DialogContent>
+        <DialogContent
+          onPrimaryAction={() =>
+            approveInvoices.mutate({
+              approve_ids: selectedApprovableInvoices.map((invoice) => invoice.id),
+              pay_ids: selectedPayableInvoices.map((invoice) => invoice.id),
+            })
+          }
+        >
           <DialogHeader>
             <DialogTitle>Approve these invoices?</DialogTitle>
           </DialogHeader>
@@ -681,10 +688,18 @@ const TasksModal = ({
   const [invoiceData] = trpc.invoices.get.useSuspenseQuery({ companyId: company.id, id: invoice.id });
   const payRateInSubunits = invoiceData.contractor.payRateInSubunits;
   const isActionable = useIsActionable();
+  const isPayable = useIsPayable();
+  const approveInvoices = useApproveInvoices(onClose);
+  const pay = isPayable(invoice);
+  const canApprove = isActionable(invoice) && (!pay || (company.completedPaymentMethodSetup && company.isTrusted));
+
+  const handleApprove = () => {
+    approveInvoices.mutate({ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] });
+  };
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="md:w-110">
+      <DialogContent className="md:w-110" {...(canApprove ? { onPrimaryAction: handleApprove } : {})}>
         <DialogHeader>
           <DialogTitle className="max-md:text-base max-md:leading-5 max-md:font-medium">{invoice.billFrom}</DialogTitle>
         </DialogHeader>

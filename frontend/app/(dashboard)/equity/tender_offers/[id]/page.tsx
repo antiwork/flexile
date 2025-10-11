@@ -274,7 +274,9 @@ export default function BuybackView() {
 
         {cancelingBid ? (
           <Dialog open onOpenChange={() => setCancelingBid(null)}>
-            <DialogContent>
+            <DialogContent
+              onPrimaryAction={() => destroyMutation.mutate({ companyId: company.id, id: cancelingBid.id })}
+            >
               <DialogHeader>
                 <DialogTitle>Cancel bid?</DialogTitle>
               </DialogHeader>

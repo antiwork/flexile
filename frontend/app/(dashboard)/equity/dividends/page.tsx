@@ -201,7 +201,7 @@ export default function Dividends() {
         </div>
       )}
       <Dialog open={!!dividendData} onOpenChange={() => setSigningDividend(null)}>
-        <DialogContent>
+        <DialogContent onPrimaryAction={() => signDividend.mutate()}>
           {dividendData && signingDividend && hasLegalDetails && user.legalName ? (
             signingDividend.state !== "initial" ? (
               <>

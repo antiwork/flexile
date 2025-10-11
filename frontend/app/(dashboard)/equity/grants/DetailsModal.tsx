@@ -43,7 +43,7 @@ const DetailsModal = ({
 
   return (
     <Sheet open onOpenChange={onClose}>
-      <SheetContent>
+      <SheetContent {...(onUpdateExercise ? { onPrimaryAction: onUpdateExercise } : {})}>
         <SheetHeader>
           <SheetTitle>{`${equityGrant.periodEndedAt.getFullYear()} Stock option grant`}</SheetTitle>
         </SheetHeader>

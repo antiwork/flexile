@@ -191,7 +191,7 @@ const AdminList = ({ onEditUpdate }: { onEditUpdate: (update: UpdateListItem) =>
     <>
       <DataTable table={table} onRowClicked={(row) => onEditUpdate(row)} />
       <Dialog open={!!deletingUpdate} onOpenChange={() => setDeletingUpdate(null)}>
-        <DialogContent>
+        <DialogContent {...(deletingUpdate ? { onPrimaryAction: () => deleteMutation.mutate(deletingUpdate) } : {})}>
           <DialogHeader>
             <DialogTitle>Delete update?</DialogTitle>
           </DialogHeader>

@@ -498,7 +498,7 @@ const SignDocumentModal = ({ document, onClose }: { document: Document; onClose:
 
   return (
     <Dialog open onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl" onPrimaryAction={() => sign()}>
         <DialogHeader>
           <DialogTitle>{documentName(document)}</DialogTitle>
         </DialogHeader>
@@ -554,7 +554,10 @@ const ShareDocumentModal = ({ document, onClose }: { document: Document; onClose
   const submit = form.handleSubmit((values) => submitMutation.mutate(values));
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-screen-lg">
+      <DialogContent
+        className="max-w-screen-lg"
+        onPrimaryAction={() => void form.handleSubmit((values) => submitMutation.mutate(values))()}
+      >
         <DialogHeader>
           <DialogTitle>Share document</DialogTitle>
         </DialogHeader>

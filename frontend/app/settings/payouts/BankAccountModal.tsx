@@ -473,7 +473,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="flex flex-col">
+      <DialogContent className="flex flex-col" onPrimaryAction={() => submitMutation.mutate()}>
         <DialogHeader>
           <DialogTitle>Bank account</DialogTitle>
         </DialogHeader>
