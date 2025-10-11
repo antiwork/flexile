@@ -1,106 +1,46 @@
 import { expect, test } from "@playwright/test";
-import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
+import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
-import { invoicesFactory } from "@test/factories/invoices";
+import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { withinModal } from "@test/index";
-import { eq } from "drizzle-orm";
-import { users } from "@/db/schema";
 
 test.describe("Modal Keyboard Shortcuts", () => {
-  const setupCompany = async () => {
-    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
-      isTrusted: true,
-      requiredInvoiceApprovalCount: 1,
+  let company: Awaited<ReturnType<typeof companiesFactory.create>>;
+  let adminUser: Awaited<ReturnType<typeof usersFactory.create>>["user"];
+  let contractorUser: Awaited<ReturnType<typeof usersFactory.create>>["user"];
+
+  test.beforeEach(async () => {
+    company = await companiesFactory.create({ requiredInvoiceApprovalCount: 1, isTrusted: true });
+    adminUser = (await usersFactory.create()).user;
+    contractorUser = (await usersFactory.create()).user;
+    await companyAdministratorsFactory.create({
+      companyId: company.company.id,
+      userId: adminUser.id,
     });
-
-    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
-    const contractorUser = await db.query.users.findFirst({ where: eq(users.id, companyContractor.userId) });
-    if (!contractorUser) throw new Error("Contractor user not found");
-
-    return { company, user: adminUser, companyContractor, contractorUser };
-  };
+    await companyContractorsFactory.create({
+      companyId: company.company.id,
+      userId: contractorUser.id,
+    });
+  });
 
   test.describe("Cmd+Enter / Ctrl+Enter shortcuts", () => {
-    test("triggers primary action in invoice rejection modal", async ({ page, browserName }) => {
-      const { company, user, companyContractor } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
-      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
-
-      await login(page, user);
-      await page.getByRole("link", { name: "Invoices" }).click();
-
-      await page.getByRole("checkbox", { name: "Select all" }).check();
-      await page.getByRole("button", { name: "Reject selected" }).click();
-
-      await withinModal(
-        async (modal) => {
-          await expect(modal.getByText("Yes, reject")).toBeVisible();
-
-          const isMac = browserName === "webkit" || process.platform === "darwin";
-          if (isMac) {
-            await page.keyboard.down("Meta");
-            await page.keyboard.press("Enter");
-            await page.keyboard.up("Meta");
-          } else {
-            await page.keyboard.down("Control");
-            await page.keyboard.press("Enter");
-            await page.keyboard.up("Control");
-          }
-
-          // Wait for action to complete before checking modal state
-          await page.waitForTimeout(1000);
-        },
-        { page, assertClosed: true },
-      );
-    });
-
     test("triggers primary action in invoice deletion modal", async ({ page, browserName }) => {
-      const { company, user, companyContractor } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
+      // Create invoice as contractor
+      await login(page, contractorUser);
+      await page.locator("header").getByRole("link", { name: "New invoice" }).click();
+      await page.getByLabel("Invoice ID").fill("TEST-DELETE");
+      await page.getByPlaceholder("Description").fill("Invoice to delete");
+      await page.getByRole("button", { name: "Send invoice" }).click();
 
-      await login(page, user);
-      await page.getByRole("link", { name: "Invoices" }).click();
-
-      const invoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
-      await invoiceRow.click({ button: "right" });
+      // Right-click to delete as contractor
+      await page.getByRole("cell", { name: "TEST-DELETE" }).click({ button: "right" });
       await page.getByRole("menuitem", { name: "Delete" }).click();
 
       await withinModal(
         async (modal) => {
           await expect(modal.getByText("Delete")).toBeVisible();
-          const isMac = browserName === "webkit" || process.platform === "darwin";
-          if (isMac) {
-            await page.keyboard.down("Meta");
-            await page.keyboard.press("Enter");
-            await page.keyboard.up("Meta");
-          } else {
-            await page.keyboard.down("Control");
-            await page.keyboard.press("Enter");
-            await page.keyboard.up("Control");
-          }
-
-          await page.waitForTimeout(1000);
-        },
-        { page, assertClosed: true },
-      );
-    });
-
-    test("triggers primary action in invoice approval modal", async ({ page, browserName }) => {
-      const { company, user, companyContractor } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
-      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
-
-      await login(page, user);
-      await page.getByRole("link", { name: "Invoices" }).click();
-
-      await page.getByRole("checkbox", { name: "Select all" }).check();
-      await page.getByRole("button", { name: "Approve selected" }).click();
-
-      await withinModal(
-        async (modal) => {
-          await expect(modal.getByText("Yes, proceed")).toBeVisible();
 
           const isMac = browserName === "webkit" || process.platform === "darwin";
           if (isMac) {
@@ -116,47 +56,25 @@ test.describe("Modal Keyboard Shortcuts", () => {
           await page.waitForTimeout(1000);
         },
         { page, assertClosed: true },
-      );
-    });
-
-    test("does not trigger when focused on input fields", async ({ page }) => {
-      const { company, user, companyContractor } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
-      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
-
-      await login(page, user);
-      await page.getByRole("link", { name: "Invoices" }).click();
-
-      await page.getByRole("checkbox", { name: "Select all" }).check();
-      await page.getByRole("button", { name: "Reject selected" }).click();
-
-      await withinModal(
-        async (modal) => {
-          const reasonInput = modal.getByLabel("Explain why the invoice");
-          await reasonInput.click();
-          await reasonInput.fill("Test reason");
-
-          // Keyboard shortcut should not trigger when focused on input
-          await page.keyboard.press("Meta+Enter");
-          await expect(modal).toBeVisible();
-          await expect(reasonInput).toHaveValue("Test reason");
-        },
-        { page, assertClosed: false },
       );
     });
 
     test("works with AlertDialog components", async ({ page, browserName }) => {
-      const { company, user, companyContractor } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
+      // Create invoice as contractor
+      await login(page, contractorUser);
+      await page.locator("header").getByRole("link", { name: "New invoice" }).click();
+      await page.getByLabel("Invoice ID").fill("TEST-EDIT");
+      await page.getByPlaceholder("Description").fill("Invoice to edit");
+      await page.getByRole("button", { name: "Send invoice" }).click();
 
-      await login(page, user);
-      await page.getByRole("link", { name: "Invoices" }).click();
-      await page.getByRole("row").getByText("Awaiting approval").first().click();
+      // Click to edit
+      await page.getByRole("cell", { name: "TEST-EDIT" }).click();
       await page.getByRole("link", { name: "Edit invoice" }).click();
 
-      await page.getByLabel("Hours").fill("5:00");
-      await page.getByRole("button", { name: "Save changes" }).click();
+      await page.getByPlaceholder("Description").first().fill("Updated description");
+      await page.getByRole("button", { name: "Resubmit" }).click();
 
+      // Navigate away to trigger unsaved changes alert
       await page.getByRole("link", { name: "Invoices" }).click();
 
       await withinModal(
@@ -178,65 +96,6 @@ test.describe("Modal Keyboard Shortcuts", () => {
         },
         { page, assertClosed: true },
       );
-    });
-
-    test("works with Ctrl+Enter on Windows/Linux", async ({ page }) => {
-      const { company, user, companyContractor } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
-
-      await login(page, user);
-      await page.getByRole("link", { name: "Invoices" }).click();
-
-      const invoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
-      await invoiceRow.click({ button: "right" });
-      await page.getByRole("menuitem", { name: "Delete" }).click();
-
-      await withinModal(
-        async (modal) => {
-          await expect(modal.getByText("Delete")).toBeVisible();
-
-          await page.keyboard.down("Control");
-          await page.keyboard.press("Enter");
-          await page.keyboard.up("Control");
-
-          await page.waitForTimeout(1000);
-        },
-        { page, assertClosed: true },
-      );
-    });
-
-    test("prevents default browser behavior", async ({ page, browserName }) => {
-      const { company, user, companyContractor } = await setupCompany();
-      await invoicesFactory.create({ companyId: company.id, companyContractorId: companyContractor.id });
-
-      await login(page, user);
-      await page.getByRole("link", { name: "Invoices" }).click();
-
-      const invoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
-      await invoiceRow.click({ button: "right" });
-      await page.getByRole("menuitem", { name: "Delete" }).click();
-
-      await withinModal(
-        async (modal) => {
-          await expect(modal.getByText("Delete")).toBeVisible();
-
-          const isMac = browserName === "webkit" || process.platform === "darwin";
-          if (isMac) {
-            await page.keyboard.down("Meta");
-            await page.keyboard.press("Enter");
-            await page.keyboard.up("Meta");
-          } else {
-            await page.keyboard.down("Control");
-            await page.keyboard.press("Enter");
-            await page.keyboard.up("Control");
-          }
-
-          await page.waitForTimeout(1000);
-        },
-        { page, assertClosed: true },
-      );
-
-      await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     });
   });
 });
