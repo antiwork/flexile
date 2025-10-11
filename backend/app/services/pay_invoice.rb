@@ -23,9 +23,34 @@ class PayInvoice
     payout_service = Wise::PayoutApi.new
     bank_account = invoice.user.bank_account
 
-    # TODO: Disallow if old payment records exist in non-terminal unpaid states.
-    # I've asked Wise which sates that includes because their own documentation contradicts the
-    # diagram they've drawn.
+    # Prevent duplicate payments by checking existing payment states
+    # https://docs.wise.com/api-docs/guides/send-money/tracking#transfer-statuses
+    blocking_states = [
+      Payments::Wise::BOUNCED_BACK,
+      Payments::Wise::INCOMING_PAYMENT_WAITING,
+      Payments::Wise::INCOMING_PAYMENT_INITIATED,
+      Payments::Wise::PROCESSING,
+      Payments::Wise::FUNDS_CONVERTED
+    ]
+
+    existing_payments = invoice.payments.includes(:wise_recipient)
+
+    payments_in_progress = existing_payments.where(wise_transfer_status: blocking_states)
+
+    if payments_in_progress.any?
+      payments_in_progress.each do |payment|
+        Bugsnag.notify("Attempted duplicate payment for invoice with active transfer",
+                       metadata: {
+                         invoice_id: invoice.id,
+                         active_payment_id: payment.id,
+                         active_payment_state: payment.wise_transfer_status,
+                         local_payment_status: payment.status,
+                       })
+      end
+
+      raise "Payment already in progress for invoice #{invoice.id}"
+    end
+
     payment = invoice.payments.create!(status: Payment::INITIAL, net_amount_in_cents: invoice.cash_amount_in_cents,
                                        processor_uuid: SecureRandom.uuid, wise_credential: WiseCredential.flexile_credential,
                                        wise_recipient: bank_account)

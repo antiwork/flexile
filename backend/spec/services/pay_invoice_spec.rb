@@ -127,6 +127,76 @@ RSpec.describe PayInvoice, :vcr do
       described_class.new(invoice.id).process
     end
 
+    context "with existing active payment" do
+      let!(:active_payment) { create(:payment, invoice:, wise_transfer_status: Payments::Wise::PROCESSING) }
+
+      it "logs Bugsnag notification and blocks duplicate payment attempt" do
+        expect(Bugsnag).to receive(:notify).with(
+          "Attempted duplicate payment for invoice with active transfer",
+          metadata: {
+            invoice_id: invoice.id,
+            active_payment_id: active_payment.id,
+            active_payment_state: Payments::Wise::PROCESSING,
+            local_payment_status: Payment::INITIAL,
+          }
+        )
+
+        expect do
+          described_class.new(invoice.id).process
+        end.to raise_error("Payment already in progress for invoice #{invoice.id}")
+      end
+
+      it "does not create a new payment when active payment exists" do
+        expect do
+          described_class.new(invoice.id).process
+        rescue StandardError
+          # Expected error
+        end.not_to change { invoice.payments.count }
+      end
+    end
+
+    context "with existing bounced back payment" do
+      let!(:bounced_payment) { create(:payment, invoice:, wise_transfer_status: Payments::Wise::BOUNCED_BACK) }
+
+      it "blocks payment when existing payment has bounced_back status" do
+        expect(Bugsnag).to receive(:notify).with(
+          "Attempted duplicate payment for invoice with active transfer",
+          metadata: {
+            invoice_id: invoice.id,
+            active_payment_id: bounced_payment.id,
+            active_payment_state: Payments::Wise::BOUNCED_BACK,
+            local_payment_status: Payment::INITIAL,
+          }
+        )
+
+        expect do
+          described_class.new(invoice.id).process
+        end.to raise_error("Payment already in progress for invoice #{invoice.id}")
+      end
+    end
+
+    context "with existing failed payment", :vcr do
+      let!(:failed_payment) { create(:payment, invoice:, wise_transfer_status: Payments::Wise::CANCELLED) }
+
+      it "allows payment when existing payment has failed (cancelled) status" do
+        expect(Bugsnag).not_to receive(:notify)
+
+        # Mock all Wise API calls to avoid VCR issues
+        allow_any_instance_of(Wise::PayoutApi).to receive(:get_exchange_rate).and_return([{ "rate" => 0.8 }])
+        allow_any_instance_of(Wise::PayoutApi).to receive(:get_recipient_account).and_return({ "active" => true })
+        allow_any_instance_of(Wise::PayoutApi).to receive(:create_quote).and_return({
+          "id" => "quote123",
+          "paymentOptions" => [{ "payIn" => "BALANCE", "fee" => { "total" => 1.50 } }],
+        })
+        allow_any_instance_of(Wise::PayoutApi).to receive(:create_transfer).and_return({ "id" => "transfer123", "rate" => 0.8, "sourceValue" => 80.0 })
+        allow_any_instance_of(Wise::PayoutApi).to receive(:fund_transfer).and_return({ "status" => "COMPLETED" })
+
+        expect do
+          described_class.new(invoice.id).process
+        end.to change { invoice.payments.count }.by(1)
+      end
+    end
+
     context "for a trusted company" do
       before do
         company.update!(is_trusted: true)
