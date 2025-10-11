@@ -374,44 +374,52 @@ RSpec.describe PayInvoice, :vcr do
     end
   end
 
+  end
+
   describe "duplicate payment prevention (fix for #1426)" do
-    let(:company) { create(:company, is_trusted: true) }
-    let(:user) { create(:company_worker, company:, user: create(:user, :confirmed)).user }
-    let(:contractor) { user.company_worker_for(company) }
-    let(:invoice) { create(:invoice, company:, user:, company_contractor: contractor, status: Invoice::PAYMENT_PENDING, cash_amount_in_cents: 100_00) }
+    let(:test_company) { create(:company, is_trusted: true) }
+    let(:test_user) { create(:user, :confirmed) }
+    let(:company_worker) { create(:company_worker, company: test_company, user: test_user) }
+    let(:test_invoice) do
+      create(:invoice, :payment_pending,
+             company_worker:,
+             company: test_company,
+             user: test_user,
+             cash_amount_in_cents: 100_00,
+             total_amount_in_usd_cents: 100_00)
+    end
 
     before do
-      create(:wise_recipient, user:, used_for_invoices: true)
-      create(:consolidated_invoice, :paid, company:, invoices: [invoice])
+      create(:wise_recipient, user: test_user, used_for_invoices: true)
       allow_any_instance_of(Company).to receive(:bank_account_ready?).and_return(true)
       allow_any_instance_of(Company).to receive(:has_sufficient_balance?).and_return(true)
     end
 
     context "when an active payment already exists" do
       let!(:existing_payment) do
-        create(:payment, invoice:, status: Payment::INITIAL, net_amount_in_cents: invoice.cash_amount_in_cents)
+        create(:payment, invoice: test_invoice, status: Payment::INITIAL, net_amount_in_cents: test_invoice.cash_amount_in_cents)
       end
 
       it "does not create a duplicate payment" do
         expect do
-          described_class.new(invoice.id).process
-        end.not_to change { invoice.reload.payments.count }
+          described_class.new(test_invoice.id).process
+        end.not_to change { test_invoice.reload.payments.count }
       end
 
       it "logs a warning about the duplicate attempt" do
-        expect(Rails.logger).to receive(:warn).with(/Active payment already exists for invoice #{invoice.id}/)
-        described_class.new(invoice.id).process
+        expect(Rails.logger).to receive(:warn).with(/Active payment already exists for invoice #{test_invoice.id}/)
+        described_class.new(test_invoice.id).process
       end
 
       it "returns early without calling Wise API" do
         expect(Wise::PayoutApi).not_to receive(:new)
-        described_class.new(invoice.id).process
+        described_class.new(test_invoice.id).process
       end
 
       it "does not change the invoice status" do
-        original_status = invoice.status
-        described_class.new(invoice.id).process
-        expect(invoice.reload.status).to eq(original_status)
+        original_status = test_invoice.status
+        described_class.new(test_invoice.id).process
+        expect(test_invoice.reload.status).to eq(original_status)
       end
     end
   end
