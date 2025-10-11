@@ -11,6 +11,7 @@ class HelperUserInfoService
 
     {
       name: user.email,
+      actions: impersonation_actions,
       metadata: {
         "Country of residence" => user.display_country,
         "Contractor for companies" => user.clients.map(&:display_name).to_sentence.presence,
@@ -63,5 +64,11 @@ class HelperUserInfoService
         company_name = invoice.company.display_name
         { "Company" => company_name, "Invoice number" => invoice.invoice_number, "Status" => invoice.status, "Total" => total_amount, "Cash" => cash_amount, "Equity" => equity_amount, "Date" => invoice.invoice_date.to_s }
       end
+    end
+
+    def impersonation_actions
+      return {} if user.team_member?
+
+      { "Impersonate" => Rails.application.routes.url_helpers.impersonate_admin_user_url(user.external_id) }
     end
 end

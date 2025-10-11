@@ -12,4 +12,8 @@ class UserPolicy < ApplicationPolicy
   def leave_company?
     (company_worker.present? || company_lawyer.present?) && company_administrator.blank?
   end
+
+  def impersonate?
+    !record.team_member?
+  end
 end

@@ -21,7 +21,7 @@ export const useSwitchCompany = () => {
           url: company_switch_path(companyId),
           accept: "json",
         });
-        await queryClient.resetQueries({ queryKey: ["currentUser", user.email] });
+        await queryClient.resetQueries({ queryKey: ["currentUser"] });
         router.refresh();
       } finally {
         useUserStore.setState((state) => ({ ...state, pending: false }));

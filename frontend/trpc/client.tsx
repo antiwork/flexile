@@ -19,10 +19,10 @@ export const UserDataProvider = ({ children }: { children: React.ReactNode }) =>
   const { user, login, logout } = useUserStore();
 
   const isSignedIn = !!session?.user;
-  const userId = session?.user.email;
+  const jwt = session?.user.jwt;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["currentUser", userId],
+    queryKey: ["currentUser", jwt],
     queryFn: isSignedIn
       ? async (): Promise<unknown> => {
           const response = await request({
