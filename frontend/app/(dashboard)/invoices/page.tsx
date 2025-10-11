@@ -890,10 +890,15 @@ const QuickInvoicesSectionContent = () => {
     return `/invoices/new?${params.toString()}` as const;
   };
 
-  const [equityCalculationData] = trpc.equityCalculations.calculationData.useSuspenseQuery({
-    companyId: company.id,
-    invoiceYear: date.year,
-  });
+  const { data: equityCalculationData } = trpc.equityCalculations.calculationData.useQuery(
+    {
+      companyId: company.id,
+      invoiceYear: date.year,
+    },
+    {
+      refetchOnWindowFocus: false,
+    },
+  );
 
   const equityAmountCents = equityCalculationData
     ? calculateEquityInCents(totalAmountInCents, equityCalculationData)

@@ -324,10 +324,12 @@ const Edit = () => {
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
   const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
   const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
-  const [equityCalculationData] = trpc.equityCalculations.calculationData.useSuspenseQuery(
+  const { data: equityCalculationData } = trpc.equityCalculations.calculationData.useQuery(
     { companyId: company.id, invoiceYear },
     {
       refetchOnWindowFocus: false,
+      enabled: company.equityEnabled && worker.equityPercentage > 0,
+      placeholderData: (previousData) => previousData,
     },
   );
 
