@@ -105,16 +105,11 @@ export function useIsPayable() {
   const company = useCurrentCompany();
   const isApprovedByCurrentUser = useIsApprovedByCurrentUser();
 
-  return (invoice: Invoice) => {
-    const taxRequirementsMet = !!invoice.contractor.user.complianceInfo?.taxInformationConfirmedAt;
-    return (
-      (invoice.status === "failed" ||
-        (["received", "approved"].includes(invoice.status) &&
-          !invoice.requiresAcceptanceByPayee &&
-          company.requiredInvoiceApprovals - invoice.approvals.length <= (isApprovedByCurrentUser(invoice) ? 0 : 1))) &&
-      taxRequirementsMet
-    );
-  };
+  return (invoice: Invoice) =>
+    ["failed", "received", "approved"].includes(invoice.status) &&
+    !invoice.requiresAcceptanceByPayee &&
+    company.requiredInvoiceApprovals - invoice.approvals.length <= (isApprovedByCurrentUser(invoice) ? 0 : 1) &&
+    !!invoice.contractor.user.complianceInfo?.taxInformationConfirmedAt;
 }
 
 export function useIsDeletable() {
