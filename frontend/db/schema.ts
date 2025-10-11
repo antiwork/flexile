@@ -840,6 +840,9 @@ export const payments = pgTable(
       table.wiseCredentialId.asc().nullsLast().op("int8_ops"),
     ),
     index("index_payments_on_wise_recipient_id").using("btree", table.wiseRecipientId.asc().nullsLast().op("int8_ops")),
+    uniqueIndex("index_payments_on_invoice_id_where_active")
+      .on(table.invoiceId)
+      .where(sql`status = 'initial'`),
   ],
 );
 
