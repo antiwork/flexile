@@ -20,15 +20,24 @@ class PayInvoice
       return
     end
 
+    # CRITICAL: Prevent duplicate payments by checking for active payments with a lock
+    # This addresses the race condition where multiple jobs might try to create payments simultaneously
+    payment = nil
+    invoice.with_lock do
+      if invoice.payments.active.exists?
+        Rails.logger.warn("PayInvoice: Active payment already exists for invoice #{invoice.id}, skipping duplicate payment creation")
+        return
+      end
+
+      # Create the payment record - protected by the lock above
+      payment = invoice.payments.create!(status: Payment::INITIAL, net_amount_in_cents: invoice.cash_amount_in_cents,
+                                         processor_uuid: SecureRandom.uuid, wise_credential: WiseCredential.flexile_credential,
+                                         wise_recipient: invoice.user.bank_account)
+    end
+
+    # Now process the payment with Wise API calls (outside the lock for better concurrency)
     payout_service = Wise::PayoutApi.new
     bank_account = invoice.user.bank_account
-
-    # TODO: Disallow if old payment records exist in non-terminal unpaid states.
-    # I've asked Wise which sates that includes because their own documentation contradicts the
-    # diagram they've drawn.
-    payment = invoice.payments.create!(status: Payment::INITIAL, net_amount_in_cents: invoice.cash_amount_in_cents,
-                                       processor_uuid: SecureRandom.uuid, wise_credential: WiseCredential.flexile_credential,
-                                       wise_recipient: bank_account)
     target_currency = bank_account.currency
     if target_currency == "USD"
       amount = invoice.cash_amount_in_usd

@@ -148,7 +148,7 @@ class Invoice < ApplicationRecord
   end
 
   def immediately_payable?
-    payable? && (company.is_trusted? ? company_charged? : company_paid?)
+    payable? && (company.is_trusted? ? company_charged? : company_paid?) && !has_active_payment?
   end
 
   def company_charged?
@@ -161,6 +161,10 @@ class Invoice < ApplicationRecord
 
   def tax_requirements_met?
     user.tax_information_confirmed_at.present?
+  end
+
+  def has_active_payment?
+    payments.active.exists?
   end
 
   def payment_expected_by

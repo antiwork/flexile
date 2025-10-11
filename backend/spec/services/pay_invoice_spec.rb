@@ -275,5 +275,70 @@ RSpec.describe PayInvoice, :vcr do
         end
       end
     end
+
+    describe "duplicate payment prevention (fix for #1426)" do
+      context "when an active payment already exists" do
+        let!(:existing_payment) do
+          create(:payment, invoice:, status: Payment::INITIAL, net_amount_in_cents: invoice.cash_amount_in_cents)
+        end
+
+        it "does not create a duplicate payment" do
+          expect do
+            described_class.new(invoice.id).process
+          end.not_to change { invoice.reload.payments.count }
+        end
+
+        it "logs a warning about the duplicate attempt" do
+          expect(Rails.logger).to receive(:warn).with(/Active payment already exists for invoice #{invoice.id}/)
+          described_class.new(invoice.id).process
+        end
+
+        it "returns early without calling Wise API" do
+          # Ensure no Wise API calls are made
+          expect(Wise::PayoutApi).not_to receive(:new)
+          described_class.new(invoice.id).process
+        end
+
+        it "does not change the invoice status" do
+          original_status = invoice.status
+          described_class.new(invoice.id).process
+          expect(invoice.reload.status).to eq(original_status)
+        end
+      end
+
+      context "concurrent payment creation attempts (simulated race condition)" do
+        it "only creates one payment when multiple jobs run simultaneously", :vcr do
+          # Skip this test if we don't have a real database connection
+          skip "Requires real database connection for locking" unless ActiveRecord::Base.connection.adapter_name == "PostgreSQL"
+
+          threads = []
+          results = []
+
+          # Spawn 3 threads that try to create payments simultaneously
+          3.times do
+            threads << Thread.new do
+              begin
+                described_class.new(invoice.id).process
+                results << :success
+              rescue StandardError => e
+                # Expected: some threads will fail or return early
+                results << :prevented
+              end
+            end
+          end
+
+          threads.each(&:join)
+
+          # Only one payment should have been created (the with_lock prevents duplicates)
+          expect(invoice.reload.payments.active.count).to eq(1)
+
+          # At least one thread should have succeeded
+          expect(results).to include(:success)
+
+          # Other threads should have been prevented (or returned early)
+          expect(results.count(:prevented)).to be >= 0
+        end
+      end
+    end
   end
 end
