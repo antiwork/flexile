@@ -395,9 +395,16 @@ RSpec.describe PayInvoice, :vcr do
       allow_any_instance_of(Company).to receive(:has_sufficient_balance?).and_return(true)
     end
 
-    context "when an active payment already exists" do
+    context "when an active payment already exists (race condition caught by lock)" do
       let!(:existing_payment) do
         create(:payment, invoice: test_invoice, status: Payment::INITIAL, net_amount_in_cents: test_invoice.cash_amount_in_cents)
+      end
+
+      before do
+        # Mock immediately_payable? to return true to simulate race condition
+        # In reality, the first defense (!has_active_payment? in immediately_payable?) would prevent this
+        # But we're testing the second defense (the lock in PayInvoice) here
+        allow_any_instance_of(Invoice).to receive(:immediately_payable?).and_return(true)
       end
 
       it "does not create a duplicate payment" do

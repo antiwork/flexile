@@ -611,6 +611,34 @@ RSpec.describe Invoice do
         expect(invoice.immediately_payable?).to eq(true)
       end
     end
+
+    context "when an active payment already exists (fix for #1426)" do
+      let(:invoice) { create(:invoice, company: create(:company, is_trusted: true)) }
+
+      before do
+        allow(invoice).to receive(:payable?).and_return(true)
+        create(:consolidated_invoice, :paid, invoices: [invoice])
+      end
+
+      it "returns false when an active payment exists" do
+        create(:payment, invoice:, status: Payment::INITIAL)
+        expect(invoice.immediately_payable?).to eq(false)
+      end
+
+      it "returns true when only failed payments exist" do
+        create(:payment, invoice:, status: Payment::FAILED)
+        expect(invoice.immediately_payable?).to eq(true)
+      end
+
+      it "returns true when only succeeded payments exist" do
+        create(:payment, invoice:, status: Payment::SUCCEEDED)
+        expect(invoice.immediately_payable?).to eq(true)
+      end
+
+      it "returns true when no payments exist" do
+        expect(invoice.immediately_payable?).to eq(true)
+      end
+    end
   end
 
   describe "#tax_requirements_met?" do
