@@ -3,12 +3,13 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
+import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { fillByLabel, fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import {
   activeStorageAttachments,
   companies,
@@ -442,5 +443,32 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Merchant").fill("Office Supplies Store");
     await page.getByLabel("Amount").fill("42.99");
     await expect(page.getByText("Total expenses$42.99")).toBeVisible();
+  });
+
+  test("shows inline field error on duplicate invoice number and prevents creation", async ({ page }) => {
+    await invoicesFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+      companyContractorId: companyContractor.id,
+      invoiceNumber: "INV-123",
+    });
+
+    await login(page, contractorUser, "/invoices/new");
+
+    await page.getByLabel("Invoice ID").fill("INV-123");
+    await page.getByPlaceholder("Description").fill("Work item");
+    await page.getByLabel("Hours / Qty").fill("01:00");
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+
+    await expect(page.getByText("This invoice number is already in use. Please try 'INV-124' instead.")).toBeVisible();
+
+    const afterCount = await db
+      .select({ c: count() })
+      .from(invoices)
+      .where(and(eq(invoices.companyId, company.id), eq(invoices.userId, contractorUser.id)))
+      .then((rows) => rows[0]?.c ?? 0n);
+
+    expect(Number(afterCount)).toBe(1);
   });
 });

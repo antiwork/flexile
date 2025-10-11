@@ -44,6 +44,8 @@ import {
 import QuantityInput from "./QuantityInput";
 import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
 
+const KEY_INVOICE_NUMBER = "invoice_number";
+
 const addressSchema = z.object({
   street_address: z.string(),
   city: z.string(),
@@ -117,6 +119,7 @@ const Edit = () => {
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const [errorField, setErrorField] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const router = useRouter();
   const trpcUtils = trpc.useUtils();
   const worker = user.roles.worker;
@@ -168,6 +171,7 @@ const Edit = () => {
 
   const validate = () => {
     setErrorField(null);
+    setFormErrors({});
     if (invoiceNumber.length === 0) setErrorField("invoiceNumber");
     return (
       errorField === null &&
@@ -179,6 +183,7 @@ const Edit = () => {
 
   const submit = useMutation({
     mutationFn: async () => {
+      setFormErrors({});
       const formData = new FormData();
       formData.append("invoice[invoice_number]", invoiceNumber);
       formData.append("invoice[invoice_date]", issueDate.toString());
@@ -211,13 +216,23 @@ const Edit = () => {
         else if (document.signed_id) formData.append("invoice[attachment]", document.signed_id);
       }
 
-      await request({
+      const response = await request({
         method: id ? "PATCH" : "POST",
         url: id ? company_invoice_path(company.id, id) : company_invoices_path(company.id),
         accept: "json",
         formData,
-        assertOk: true,
       });
+      if (!response.ok) {
+        const { form_errors } = z
+          .object({
+            error_message: z.string().nullable(),
+            form_errors: z.array(z.object({ path: z.string(), message: z.string() })),
+          })
+          .parse(await response.json());
+        const formErrors = Object.fromEntries(form_errors.map((e) => [e.path, e.message]));
+        setFormErrors(formErrors);
+        return;
+      }
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       await trpcUtils.documents.list.invalidate();
       if (id) {
@@ -415,8 +430,11 @@ const Edit = () => {
                 id="invoice-id"
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
-                aria-invalid={errorField === "invoiceNumber"}
+                aria-invalid={errorField === "invoiceNumber" || Boolean(formErrors[KEY_INVOICE_NUMBER])}
               />
+              {formErrors[KEY_INVOICE_NUMBER] ? (
+                <div className="text-sm text-red-500">{formErrors[KEY_INVOICE_NUMBER]}</div>
+              ) : null}
             </div>
             <div className="flex flex-col gap-2">
               <DatePicker
