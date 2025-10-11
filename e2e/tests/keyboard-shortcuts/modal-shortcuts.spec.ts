@@ -18,7 +18,7 @@ test.describe("Modal Keyboard Shortcuts", () => {
   };
 
   test.describe("Cmd+Enter / Ctrl+Enter shortcuts", () => {
-    test("triggers primary action in invoice rejection modal", async ({ page }) => {
+    test("triggers primary action in invoice rejection modal", async ({ page, browserName }) => {
       const { company, user } = await setupCompany();
       await invoicesFactory.create({ companyId: company.id });
       await invoicesFactory.create({ companyId: company.id });
@@ -33,8 +33,17 @@ test.describe("Modal Keyboard Shortcuts", () => {
         async (modal) => {
           await expect(modal.getByText("Yes, reject")).toBeVisible();
 
-          // Test keyboard shortcut triggers the primary action
-          await page.keyboard.press("Meta+Enter");
+          // Platform-aware shortcut with explicit modifiers
+          const isMac = browserName === "webkit" || process.platform === "darwin";
+          if (isMac) {
+            await page.keyboard.down("Meta");
+            await page.keyboard.press("Enter");
+            await page.keyboard.up("Meta");
+          } else {
+            await page.keyboard.down("Control");
+            await page.keyboard.press("Enter");
+            await page.keyboard.up("Control");
+          }
           await expect(modal).not.toBeVisible();
         },
         { page, assertClosed: false },
@@ -45,7 +54,7 @@ test.describe("Modal Keyboard Shortcuts", () => {
       expect(updatedInvoices.every((invoice) => invoice.status === "rejected")).toBe(true);
     });
 
-    test("triggers primary action in invoice deletion modal", async ({ page }) => {
+    test("triggers primary action in invoice deletion modal", async ({ page, browserName }) => {
       const { company, user } = await setupCompany();
       await invoicesFactory.create({ companyId: company.id });
 
@@ -54,14 +63,23 @@ test.describe("Modal Keyboard Shortcuts", () => {
 
       const invoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
       await invoiceRow.click({ button: "right" });
-      await page.getByRole("menuitem", { name: "Delete" }).click();
+      const deleteItem = page.getByRole("menuitem", { name: "Delete" });
+      await expect(deleteItem).toBeVisible();
+      await deleteItem.click();
 
       await withinModal(
         async (modal) => {
           await expect(modal.getByText("Delete")).toBeVisible();
-
-          // Test keyboard shortcut triggers the primary action
-          await page.keyboard.press("Meta+Enter");
+          const isMac = browserName === "webkit" || process.platform === "darwin";
+          if (isMac) {
+            await page.keyboard.down("Meta");
+            await page.keyboard.press("Enter");
+            await page.keyboard.up("Meta");
+          } else {
+            await page.keyboard.down("Control");
+            await page.keyboard.press("Enter");
+            await page.keyboard.up("Control");
+          }
           await expect(modal).not.toBeVisible();
         },
         { page, assertClosed: false },
@@ -74,7 +92,7 @@ test.describe("Modal Keyboard Shortcuts", () => {
       expect(remainingInvoices.length).toBe(0);
     });
 
-    test("triggers primary action in invoice approval modal", async ({ page }) => {
+    test("triggers primary action in invoice approval modal", async ({ page, browserName }) => {
       const { company, user } = await setupCompany();
       await invoicesFactory.create({ companyId: company.id });
       await invoicesFactory.create({ companyId: company.id });
@@ -89,8 +107,16 @@ test.describe("Modal Keyboard Shortcuts", () => {
         async (modal) => {
           await expect(modal.getByText("Yes, proceed")).toBeVisible();
 
-          // Test keyboard shortcut triggers the primary action
-          await page.keyboard.press("Meta+Enter");
+          const isMac = browserName === "webkit" || process.platform === "darwin";
+          if (isMac) {
+            await page.keyboard.down("Meta");
+            await page.keyboard.press("Enter");
+            await page.keyboard.up("Meta");
+          } else {
+            await page.keyboard.down("Control");
+            await page.keyboard.press("Enter");
+            await page.keyboard.up("Control");
+          }
           await expect(modal).not.toBeVisible();
         },
         { page, assertClosed: false },
@@ -127,7 +153,7 @@ test.describe("Modal Keyboard Shortcuts", () => {
       );
     });
 
-    test("works with AlertDialog components", async ({ page }) => {
+    test("works with AlertDialog components", async ({ page, browserName }) => {
       const { company, user } = await setupCompany();
       await invoicesFactory.create({ companyId: company.id });
 
@@ -147,8 +173,16 @@ test.describe("Modal Keyboard Shortcuts", () => {
         async (modal) => {
           await expect(modal.getByText("Discard changes")).toBeVisible();
 
-          // Test keyboard shortcut triggers the primary action
-          await page.keyboard.press("Meta+Enter");
+          const isMac = browserName === "webkit" || process.platform === "darwin";
+          if (isMac) {
+            await page.keyboard.down("Meta");
+            await page.keyboard.press("Enter");
+            await page.keyboard.up("Meta");
+          } else {
+            await page.keyboard.down("Control");
+            await page.keyboard.press("Enter");
+            await page.keyboard.up("Control");
+          }
           await expect(modal).not.toBeVisible();
         },
         { page, assertClosed: false },
@@ -164,21 +198,26 @@ test.describe("Modal Keyboard Shortcuts", () => {
 
       const invoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
       await invoiceRow.click({ button: "right" });
-      await page.getByRole("menuitem", { name: "Delete" }).click();
+      {
+        const deleteItem2 = page.getByRole("menuitem", { name: "Delete" });
+        await expect(deleteItem2).toBeVisible();
+        await deleteItem2.click();
+      }
 
       await withinModal(
         async (modal) => {
           await expect(modal.getByText("Delete")).toBeVisible();
 
-          // Test Ctrl+Enter shortcut (Windows/Linux)
-          await page.keyboard.press("Control+Enter");
+          await page.keyboard.down("Control");
+          await page.keyboard.press("Enter");
+          await page.keyboard.up("Control");
           await expect(modal).not.toBeVisible();
         },
         { page, assertClosed: false },
       );
     });
 
-    test("prevents default browser behavior", async ({ page }) => {
+    test("prevents default browser behavior", async ({ page, browserName }) => {
       const { company, user } = await setupCompany();
       await invoicesFactory.create({ companyId: company.id });
 
@@ -187,14 +226,26 @@ test.describe("Modal Keyboard Shortcuts", () => {
 
       const invoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
       await invoiceRow.click({ button: "right" });
-      await page.getByRole("menuitem", { name: "Delete" }).click();
+      {
+        const deleteItem3 = page.getByRole("menuitem", { name: "Delete" });
+        await expect(deleteItem3).toBeVisible();
+        await deleteItem3.click();
+      }
 
       await withinModal(
         async (modal) => {
           await expect(modal.getByText("Delete")).toBeVisible();
 
-          // Test that the shortcut prevents default behavior
-          await page.keyboard.press("Meta+Enter");
+          const isMac = browserName === "webkit" || process.platform === "darwin";
+          if (isMac) {
+            await page.keyboard.down("Meta");
+            await page.keyboard.press("Enter");
+            await page.keyboard.up("Meta");
+          } else {
+            await page.keyboard.down("Control");
+            await page.keyboard.press("Enter");
+            await page.keyboard.up("Control");
+          }
           await expect(modal).not.toBeVisible();
 
           // Verify no unexpected page navigation or form submission occurred
