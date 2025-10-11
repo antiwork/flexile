@@ -258,14 +258,16 @@ test.describe("One-off payments", () => {
     });
 
     test("shows 'Pay again' button for failed payments", async ({ page }) => {
-      const { invoice } = await invoicesFactory.create({
-        companyId: company.id,
-        companyContractorId: companyContractor.id,
-        status: "approved",
-        totalAmountInUsdCents: BigInt(50000),
-        invoiceNumber: "O-0002",
-        invoiceApprovalsCount: 2,
-      });
+      const { invoice } = await invoicesFactory.create(
+        {
+          companyId: company.id,
+          companyContractorId: companyContractor.id,
+          status: "approved",
+          totalAmountInUsdCents: BigInt(50000),
+          invoiceNumber: "O-0002",
+        },
+        { approvalCount: 2 },
+      );
 
       await db.update(invoices).set({ status: "failed" }).where(eq(invoices.id, invoice.id));
 

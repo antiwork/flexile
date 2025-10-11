@@ -1,5 +1,6 @@
 import { db } from "@test/db";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
+import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoiceLineItemsFactory } from "@test/factories/invoiceLineItems";
 import { format, subDays } from "date-fns";
 import { eq } from "drizzle-orm";
@@ -15,7 +16,10 @@ const calculateFlexileFeeCents = (totalAmountInUsdCents: number) => {
 };
 
 export const invoicesFactory = {
-  create: async (overrides: Partial<typeof invoices.$inferInsert> = {}) => {
+  create: async (
+    overrides: Partial<typeof invoices.$inferInsert> = {},
+    options: { approvalCount?: number; approverId?: bigint } = {},
+  ) => {
     const contractor = overrides.companyContractorId
       ? await db.query.companyContractors.findFirst({
           where: eq(companyContractors.id, overrides.companyContractorId),
@@ -86,6 +90,15 @@ export const invoicesFactory = {
       payRateInSubunits: Number(invoice.totalAmountInUsdCents),
       quantity: "1",
     });
+
+    if (options.approvalCount && options.approvalCount > 0) {
+      for (let i = 0; i < options.approvalCount; i++) {
+        await invoiceApprovalsFactory.create({
+          invoiceId: invoice.id,
+          ...(options.approverId !== undefined ? { approverId: options.approverId } : {}),
+        });
+      }
+    }
 
     return { invoice };
   },
