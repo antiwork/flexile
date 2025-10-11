@@ -59,13 +59,8 @@ test.describe("Modal Keyboard Shortcuts", () => {
       await page.getByRole("link", { name: "Invoices" }).click();
 
       const invoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
-      await invoiceRow.hover();
-      await page.waitForTimeout(500);
       await invoiceRow.click({ button: "right" });
-
-      await page.waitForSelector('[role="menu"]', { timeout: 5000 });
-      const deleteItem = page.getByRole("menuitem", { name: "Delete" });
-      await deleteItem.click();
+      await page.getByRole("menuitem", { name: "Delete" }).click();
 
       await withinModal(
         async (modal) => {
@@ -152,9 +147,7 @@ test.describe("Modal Keyboard Shortcuts", () => {
       await login(page, user);
       await page.getByRole("link", { name: "Invoices" }).click();
       await page.getByRole("row").getByText("Awaiting approval").first().click();
-
-      await page.waitForSelector('[role="button"][name="Edit"]', { timeout: 10000 });
-      await page.getByRole("button", { name: "Edit" }).click();
+      await page.getByRole("link", { name: "Edit invoice" }).click();
 
       await page.getByLabel("Hours").fill("5:00");
       await page.getByRole("button", { name: "Save changes" }).click();
@@ -190,13 +183,8 @@ test.describe("Modal Keyboard Shortcuts", () => {
       await page.getByRole("link", { name: "Invoices" }).click();
 
       const invoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
-      await invoiceRow.hover();
-      await page.waitForTimeout(500);
       await invoiceRow.click({ button: "right" });
-
-      await page.waitForSelector('[role="menu"]', { timeout: 5000 });
-      const deleteItem = page.getByRole("menuitem", { name: "Delete" });
-      await deleteItem.click();
+      await page.getByRole("menuitem", { name: "Delete" }).click();
 
       await withinModal(
         async (modal) => {
@@ -220,13 +208,8 @@ test.describe("Modal Keyboard Shortcuts", () => {
       await page.getByRole("link", { name: "Invoices" }).click();
 
       const invoiceRow = page.getByRole("row").getByText("Awaiting approval").first();
-      await invoiceRow.hover();
-      await page.waitForTimeout(500);
       await invoiceRow.click({ button: "right" });
-
-      await page.waitForSelector('[role="menu"]', { timeout: 5000 });
-      const deleteItem = page.getByRole("menuitem", { name: "Delete" });
-      await deleteItem.click();
+      await page.getByRole("menuitem", { name: "Delete" }).click();
 
       await withinModal(
         async (modal) => {
