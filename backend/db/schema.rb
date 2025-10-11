@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_11_233759) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -718,6 +718,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
     t.bigint "transfer_fee_in_cents"
     t.bigint "wise_recipient_id"
     t.index ["invoice_id"], name: "index_payments_on_invoice_id"
+    t.index ["invoice_id"], name: "index_payments_on_invoice_id_where_active", unique: true, where: "(status = 'initial'::text)"
     t.index ["wise_credential_id"], name: "index_payments_on_wise_credential_id"
     t.index ["wise_recipient_id"], name: "index_payments_on_wise_recipient_id"
   end
