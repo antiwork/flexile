@@ -5,6 +5,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccounts";
 import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoicesFactory } from "@test/factories/invoices";
+import { usersFactory } from "@test/factories/users";
 import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq, exists, isNull, not } from "drizzle-orm";
@@ -476,6 +477,54 @@ test.describe("Invoices admin flow", () => {
 
     await expect(page.getByRole("table").filter({ hasText: "Expense" })).toBeVisible();
     await expect(page.getByText("Office Depot")).toBeVisible();
+  });
+
+  test("disables Pay now button for invoices with missing tax information", async ({ page }) => {
+    const { company, user: adminUser } = await setupCompany();
+
+    const contractorUser = (
+      await usersFactory.create(
+        {
+          legalName: "Caro Example",
+          preferredName: "Caro",
+          birthDate: "1980-06-27",
+        },
+        { withoutComplianceInfo: true },
+      )
+    ).user;
+
+    const { companyContractor } = await companyContractorsFactory.create({
+      companyId: company.id,
+      userId: contractorUser.id,
+    });
+
+    await invoicesFactory.create({
+      companyId: company.id,
+      companyContractorId: companyContractor.id,
+      status: "approved",
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+
+    const invoiceRow = page.getByRole("row").filter({ hasText: contractorUser.legalName || "" });
+    await expect(invoiceRow).toBeVisible();
+
+    await page.getByRole("checkbox", { name: "Select all" }).check();
+    await expect(page.getByText("1 selected")).toBeVisible();
+
+    await expect(invoiceRow.getByRole("button", { name: "Pay now" })).not.toBeVisible();
+    await expect(invoiceRow.getByRole("button", { name: "Approve" })).toBeVisible();
+
+    await invoiceRow.click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+
+    await page.getByRole("link", { name: "View Invoice" }).click();
+
+    await expect(page.getByText("Missing tax information.")).toBeVisible();
+    await expect(page.getByText("Invoice is not payable until contractor provides tax information.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Pay now" })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Approve" })).toBeVisible();
   });
 });
 
