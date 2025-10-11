@@ -95,8 +95,8 @@ export default function PeoplePage() {
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
         cell: (info) => getStatusLabel(info.row.original),
         sortingFn: (rowA, rowB) => {
-          const dateA = new Date(rowA.original.endedAt || rowA.original.startedAt);
-          const dateB = new Date(rowB.original.endedAt || rowB.original.startedAt);
+          const dateA = rowA.original.endedAt || rowA.original.startedAt;
+          const dateB = rowB.original.endedAt || rowB.original.startedAt;
           return dateB.getTime() - dateA.getTime();
         },
       }),
