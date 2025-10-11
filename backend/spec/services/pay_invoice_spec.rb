@@ -317,13 +317,11 @@ RSpec.describe PayInvoice, :vcr do
           # Spawn 3 threads that try to create payments simultaneously
           3.times do
             threads << Thread.new do
-              begin
-                described_class.new(invoice.id).process
-                results << :success
-              rescue StandardError => e
-                # Expected: some threads will fail or return early
-                results << :prevented
-              end
+              described_class.new(invoice.id).process
+              results << :success
+            rescue StandardError
+              # Expected: some threads will fail or return early
+              results << :prevented
             end
           end
 
