@@ -276,66 +276,142 @@ RSpec.describe PayInvoice, :vcr do
       end
     end
 
-    describe "duplicate payment prevention (fix for #1426)" do
-      context "when an active payment already exists" do
-        let!(:existing_payment) do
-          create(:payment, invoice:, status: Payment::INITIAL, net_amount_in_cents: invoice.cash_amount_in_cents)
+    describe "errors" do
+      it "marks the invoice and payment as failed if the bank account is no longer active" do
+        allow_any_instance_of(Wise::PayoutApi).to receive(:get_recipient_account) do
+          { "active" => false }
         end
-
-        it "does not create a duplicate payment" do
-          expect do
-            described_class.new(invoice.id).process
-          end.not_to change { invoice.reload.payments.count }
-        end
-
-        it "logs a warning about the duplicate attempt" do
-          expect(Rails.logger).to receive(:warn).with(/Active payment already exists for invoice #{invoice.id}/)
+        allow(Bugsnag).to receive(:notify)
+        rate = Wise::PayoutApi.new.get_exchange_rate(target_currency: invoice.user.bank_account.currency).first["rate"]
+        invoice_amount = invoice.cash_amount_in_usd * rate
+        expect do
           described_class.new(invoice.id).process
-        end
+        end.to raise_error(described_class::WiseError) { |error| expect(error.message).to eq "Bank account is no longer active for payment #{Payment.last.id}" }
+          .and change { invoice.payments.count }.by(1)
+          .and have_enqueued_mail(CompanyWorkerMailer, :payment_failed_reenter_bank_details).with { |payment_id, amount, currency|
+            expect(payment_id).to eq(Payment.last.id)
+            expect(amount).to eq(invoice_amount)
+            expect(currency).to eq(invoice.user.bank_account.currency)
+          }
 
-        it "returns early without calling Wise API" do
-          # Ensure no Wise API calls are made
-          expect(Wise::PayoutApi).not_to receive(:new)
-          described_class.new(invoice.id).process
-        end
-
-        it "does not change the invoice status" do
-          original_status = invoice.status
-          described_class.new(invoice.id).process
-          expect(invoice.reload.status).to eq(original_status)
-        end
+        payment = Payment.last
+        expect(payment.processor_uuid).to be_present
+        expect(payment.status).to eq(Payment::FAILED)
+        expect(invoice.reload.status).to eq(Invoice::FAILED)
       end
 
-      context "concurrent payment creation attempts (simulated race condition)" do
-        it "only creates one payment when multiple jobs run simultaneously", :vcr do
-          # Skip this test if we don't have a real database connection
-          skip "Requires real database connection for locking" unless ActiveRecord::Base.connection.adapter_name == "PostgreSQL"
+      it "marks the invoice and payment as failed and notifies on quote creation failure" do
+        allow_any_instance_of(Wise::PayoutApi).to receive(:create_quote).and_raise(PayInvoice::WiseError.new("Creating quote failed"))
+        allow(Bugsnag).to receive(:notify)
 
-          threads = []
-          results = []
+        expect do
+          described_class.new(invoice.id).process
+        end.to raise_error(described_class::WiseError, "Creating quote failed")
+          .and change { invoice.payments.count }.by(1)
+          .and have_enqueued_mail(CompanyWorkerMailer, :payment_failed_generic)
 
-          # Spawn 3 threads that try to create payments simultaneously
-          3.times do
-            threads << Thread.new do
-              described_class.new(invoice.id).process
-              results << :success
-            rescue StandardError
-              # Expected: some threads will fail or return early
-              results << :prevented
-            end
-          end
+        payment = Payment.last
+        expect(payment.processor_uuid).to be_present
+        expect(payment.wise_quote_id).not_to be_present
+        expect(payment.wise_transfer_id).not_to be_present
+        expect(payment.status).to eq(Payment::FAILED)
+        expect(invoice.reload.status).to eq(Invoice::FAILED)
+      end
 
-          threads.each(&:join)
+      it "marks the invoice and payment as failed and notifies on transfer creation failure" do
+        allow_any_instance_of(Wise::PayoutApi).to receive(:create_transfer).and_raise(PayInvoice::WiseError.new("Creating transfer failed"))
+        allow(Bugsnag).to receive(:notify)
 
-          # Only one payment should have been created (the with_lock prevents duplicates)
-          expect(invoice.reload.payments.active.count).to eq(1)
+        expect do
+          described_class.new(invoice.id).process
+        end.to raise_error(described_class::WiseError, "Creating transfer failed")
+          .and change { invoice.payments.count }.by(1)
+          .and have_enqueued_mail(CompanyWorkerMailer, :payment_failed_generic)
 
-          # At least one thread should have succeeded
-          expect(results).to include(:success)
+        payment = Payment.last
+        expect(payment.processor_uuid).to be_present
+        expect(payment.wise_quote_id).to be_present
+        expect(payment.wise_transfer_id).not_to be_present
+        expect(payment.status).to eq(Payment::FAILED)
+        expect(invoice.reload.status).to eq(Invoice::FAILED)
+      end
 
-          # Other threads should have been prevented (or returned early)
-          expect(results.count(:prevented)).to be >= 0
+      it "marks the invoice and payment as failed and notifies on funding failure" do
+        allow_any_instance_of(Wise::PayoutApi).to receive(:fund_transfer).and_raise(PayInvoice::WiseError.new("Funding transfer failed"))
+        allow(Bugsnag).to receive(:notify)
+
+        expect do
+          described_class.new(invoice.id).process
+        end.to raise_error(described_class::WiseError, "Funding transfer failed")
+          .and change { invoice.payments.count }.by(1)
+          .and have_enqueued_mail(CompanyWorkerMailer, :payment_failed_generic)
+
+        payment = Payment.last
+        expect(payment.processor_uuid).to be_present
+        expect(payment.wise_quote_id).to be_present
+        expect(payment.wise_transfer_id).to be_present
+        expect(payment.status).to eq(Payment::FAILED)
+        expect(invoice.reload.status).to eq(Invoice::FAILED)
+      end
+
+      it "sends an email with the correct arguments on payment failure" do
+        allow_any_instance_of(Company).to receive(:has_sufficient_balance?).and_return(true)
+        rate = 1.2
+        allow_any_instance_of(Wise::PayoutApi).to receive(:get_exchange_rate).and_return([{ "rate" => rate }])
+        allow_any_instance_of(Wise::PayoutApi).to receive(:get_recipient_account).and_return({ "active" => true })
+        allow_any_instance_of(Wise::PayoutApi).to receive(:create_quote).and_raise(PayInvoice::WiseError.new("Quote creation failed for test"))
+
+        expect do
+          expect do
+            described_class.new(invoice.id).process
+          end.to raise_error(PayInvoice::WiseError, "Quote creation failed for test")
+        end.to have_enqueued_mail(CompanyWorkerMailer, :payment_failed_generic).with do |payment_id, amount, currency|
+          expect(payment_id).to eq(Payment.last.id)
+          expect(amount).to eq(invoice.cash_amount_in_usd * rate)
+          expect(currency).to eq("GBP")
         end
+      end
+    end
+  end
+
+  describe "duplicate payment prevention (fix for #1426)" do
+    let(:company) { create(:company, is_trusted: true) }
+    let(:user) { create(:user, :confirmed) }
+    let(:contractor) { create(:company_contractor, company:, user:) }
+    let(:invoice) { create(:invoice, company:, user:, company_contractor: contractor, status: Invoice::PAYMENT_PENDING, cash_amount_in_cents: 100_00) }
+
+    before do
+      create(:wise_recipient, user:, used_for_invoices: true)
+      create(:consolidated_invoice, :paid, company:, invoices: [invoice])
+      allow_any_instance_of(Company).to receive(:bank_account_ready?).and_return(true)
+      allow_any_instance_of(Company).to receive(:has_sufficient_balance?).and_return(true)
+    end
+
+    context "when an active payment already exists" do
+      let!(:existing_payment) do
+        create(:payment, invoice:, status: Payment::INITIAL, net_amount_in_cents: invoice.cash_amount_in_cents)
+      end
+
+      it "does not create a duplicate payment" do
+        expect do
+          described_class.new(invoice.id).process
+        end.not_to change { invoice.reload.payments.count }
+      end
+
+      it "logs a warning about the duplicate attempt" do
+        expect(Rails.logger).to receive(:warn).with(/Active payment already exists for invoice #{invoice.id}/)
+        described_class.new(invoice.id).process
+      end
+
+      it "returns early without calling Wise API" do
+        expect(Wise::PayoutApi).not_to receive(:new)
+        described_class.new(invoice.id).process
+      end
+
+      it "does not change the invoice status" do
+        original_status = invoice.status
+        described_class.new(invoice.id).process
+        expect(invoice.reload.status).to eq(original_status)
       end
     end
   end
