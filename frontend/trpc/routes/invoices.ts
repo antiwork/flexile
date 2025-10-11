@@ -114,8 +114,17 @@ export const invoicesRouter = createRouter({
       if (!equityResult) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Recipient has insufficient unvested equity",
+          message:
+            "Unable to calculate equity for this payment. Please ensure the contractor has active equity grants and the company has a share price configured.",
         });
+      }
+
+      if (equityResult.unvestedGrant && equityResult.equityOptions > 0) {
+        const { unvestedShares, exercisedShares, forfeitedShares } = equityResult.unvestedGrant;
+        const availableShares = unvestedShares - exercisedShares - forfeitedShares;
+        if (equityResult.equityOptions > availableShares) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Recipient has insufficient unvested equity" });
+        }
       }
 
       if (equityResult.equityPercentage !== companyWorker.equityPercentage) {
