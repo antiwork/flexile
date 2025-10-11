@@ -40,7 +40,7 @@ test.describe("Modal Keyboard Shortcuts", () => {
 
       await withinModal(
         async (modal) => {
-          await expect(modal.getByText("Delete")).toBeVisible();
+          await expect(modal.getByRole("button", { name: "Delete" })).toBeVisible();
 
           const isMac = browserName === "webkit" || process.platform === "darwin";
           if (isMac) {
@@ -59,27 +59,29 @@ test.describe("Modal Keyboard Shortcuts", () => {
       );
     });
 
-    test("works with AlertDialog components", async ({ page, browserName }) => {
-      // Create invoice as contractor
+    test("works with approval modal", async ({ page, browserName }) => {
+      // Create invoices as contractor
       await login(page, contractorUser);
       await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-      await page.getByLabel("Invoice ID").fill("TEST-EDIT");
-      await page.getByPlaceholder("Description").fill("Invoice to edit");
+      await page.getByLabel("Invoice ID").fill("TEST-APPROVE-1");
+      await page.getByPlaceholder("Description").fill("Invoice to approve");
       await page.getByRole("button", { name: "Send invoice" }).click();
 
-      // Click to edit
-      await page.getByRole("cell", { name: "TEST-EDIT" }).click();
-      await page.getByRole("link", { name: "Edit invoice" }).click();
+      await page.locator("header").getByRole("link", { name: "New invoice" }).click();
+      await page.getByLabel("Invoice ID").fill("TEST-APPROVE-2");
+      await page.getByPlaceholder("Description").fill("Another invoice to approve");
+      await page.getByRole("button", { name: "Send invoice" }).click();
 
-      await page.getByPlaceholder("Description").first().fill("Updated description");
-      await page.getByRole("button", { name: "Resubmit" }).click();
-
-      // Navigate away to trigger unsaved changes alert
+      // Switch to admin to approve
+      await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
+
+      await page.getByRole("checkbox", { name: "Select all" }).check();
+      await page.getByRole("button", { name: "Approve selected" }).click();
 
       await withinModal(
         async (modal) => {
-          await expect(modal.getByText("Discard changes")).toBeVisible();
+          await expect(modal.getByText("Yes, proceed")).toBeVisible();
 
           const isMac = browserName === "webkit" || process.platform === "darwin";
           if (isMac) {
