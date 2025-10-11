@@ -134,7 +134,7 @@ export default function InvoicePage() {
               <DropdownMenuTrigger className="p-2">
                 <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="">
+              <DropdownMenuContent align="end" className="print:hidden">
                 {user.roles.administrator && isActionable(invoice) ? (
                   <>
                     <DropdownMenuItem
