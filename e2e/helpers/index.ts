@@ -46,7 +46,7 @@ export const selectComboboxOption = async (
   const combobox = page.getByRole("combobox", { name, exact: true });
   await combobox.click();
   const popover = page.getByRole("listbox", { name: popoverName ?? `${name} listbox options` });
-  const searchField = popover.locator('input[type="search"]');
+  const searchField = popover.locator("input[cmdk-input]");
 
   await searchField.fill(option);
   await expect(popover.getByRole("option", { name: option, exact: true })).toBeVisible();
