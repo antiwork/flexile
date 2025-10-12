@@ -49,6 +49,8 @@ test.describe("Buyback creation", () => {
       })
       .click();
 
+    await page.getByRole("button", { name: "Place Bid" }).click();
+
     await expect(page.getByRole("article", { name: "Letter of transmittal" })).toContainText(letterOfTransmittal, {
       useInnerText: true,
     });

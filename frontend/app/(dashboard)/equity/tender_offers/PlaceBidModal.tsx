@@ -85,7 +85,9 @@ function ReviewAndSignStep({
 
           <Separator />
 
-          <SignForm content={letterOfTransmittal} signed={signed} onSign={onSign} />
+          <article aria-label="Letter of transmittal" className="flex flex-col gap-4">
+            <SignForm content={letterOfTransmittal} signed={signed} onSign={onSign} />
+          </article>
         </div>
 
         <DialogFooter>
