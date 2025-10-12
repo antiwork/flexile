@@ -3,18 +3,9 @@
 class ApplicationController < ActionController::Base
   include PunditAuthorization, SetCurrent
   before_action :set_paper_trail_whodunnit
-  before_action :authenticate_user_json!, only: [:userid]
 
   after_action :set_csrf_cookie
 
-  def userid
-    render json: { id: Current.user.id }
-  end
-
-  def current_user_data
-    return e401_json if Current.user.nil?
-    render json: UserPresenter.new(current_context:).logged_in_user
-  end
 
   private
     def authenticate_user_json!
