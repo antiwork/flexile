@@ -60,9 +60,7 @@ test.describe("Role autocomplete", () => {
     await expect(page.getByRole("option", { name: role2 })).toBeVisible();
     await expect(page.getByRole("option", { name: role3 })).not.toBeVisible();
 
-    await selectComboboxOption(page, "Role", role1, {
-      searchPlaceholder: "Search or enter a role...",
-    });
+    await selectComboboxOption(page, "Role", role1);
     await expect(combobox).toHaveText(role1);
   };
 

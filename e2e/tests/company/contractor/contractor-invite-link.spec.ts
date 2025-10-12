@@ -87,9 +87,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await expect(page.getByRole("option", { name: "Product Manager" })).not.toBeVisible();
     await expect(page.getByRole("option", { name: "Data Analyst" })).not.toBeVisible();
 
-    await selectComboboxOption(page, "Role", "Hourly Role 1", {
-      searchPlaceholder: "Search or enter a role...",
-    });
+    await selectComboboxOption(page, "Role", "Hourly Role 1");
     await expect(roleField).toHaveText("Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
     await page.getByRole("button", { name: "Continue" }).click();

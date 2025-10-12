@@ -26,7 +26,7 @@ export default function FormFields() {
   const [searchQuery, setSearchQuery] = useState("");
   const trimmedQuery = searchQuery.trim();
   const roleValue = form.getValues("role");
-  const roleRegex = new RegExp(searchQuery.trim(), "iu");
+  const roleRegex = new RegExp(trimmedQuery, "iu");
 
   const roleSet = new Set(workers ? workers.map((worker) => worker.role) : defaultOnboardingRoles);
   if (trimmedQuery) roleSet.add(trimmedQuery);

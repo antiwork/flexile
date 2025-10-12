@@ -51,9 +51,7 @@ test.describe("New Contractor", () => {
 
   test("allows inviting a contractor", async ({ page }) => {
     const { email } = await fillForm(page);
-    await selectComboboxOption(page, "Role", "Hourly Role 1", {
-      searchPlaceholder: "Search or enter a role...",
-    });
+    await selectComboboxOption(page, "Role", "Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
@@ -79,9 +77,7 @@ test.describe("New Contractor", () => {
 
   test("allows inviting a project-based contractor", async ({ page }) => {
     const { email } = await fillForm(page);
-    await selectComboboxOption(page, "Role", "Project-based Role", {
-      searchPlaceholder: "Search or enter a role...",
-    });
+    await selectComboboxOption(page, "Role", "Project-based Role");
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("1000");
     await page.getByRole("button", { name: "Continue" }).click();

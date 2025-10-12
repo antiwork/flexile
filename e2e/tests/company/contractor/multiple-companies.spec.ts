@@ -23,9 +23,7 @@ test.describe("Contractor for multiple companies", () => {
 
     await page.getByLabel("Email").fill(contractorUser.email);
     await fillDatePicker(page, "Start date", "08/08/2025");
-    await selectComboboxOption(page, "Role", "Role", {
-      searchPlaceholder: "Search or enter a role...",
-    });
+    await selectComboboxOption(page, "Role", "Role");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");

@@ -50,7 +50,6 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("Estimated value of $25,000, based on a $2.50 share price")).toBeVisible();
 
     await page.getByLabel("Number of options").fill("10");
-    // Verifies search and selection behavior for an uncontrolled search input inside combobox
     await selectComboboxOption(page, "Relationship to company", "Consultant", {
       popoverName: "issueDateRelationship listbox options",
     });

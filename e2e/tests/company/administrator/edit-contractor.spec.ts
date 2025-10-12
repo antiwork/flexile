@@ -71,9 +71,7 @@ test.describe("Edit contractor", () => {
     await expect(page.getByRole("combobox", { name: "Role" })).toHaveText(assertDefined(companyContractor.role));
     await expect(page.getByLabel("Legal name")).toHaveValue(contractor.legalName);
     await expect(page.getByLabel("Legal name")).toBeDisabled();
-    await selectComboboxOption(page, "Role", "Stuff-doer", {
-      searchPlaceholder: "Search or enter a role...",
-    });
+    await selectComboboxOption(page, "Role", "Stuff-doer");
     await page.getByLabel("Rate").fill("107");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Save changes" })).not.toBeDisabled();
@@ -106,9 +104,7 @@ test.describe("Edit contractor", () => {
     await page.getByRole("link", { name: user.preferredName }).click();
     await page.getByRole("heading", { name: user.preferredName }).click();
 
-    await selectComboboxOption(page, "Role", "Stuff-doer", {
-      searchPlaceholder: "Search or enter a role...",
-    });
+    await selectComboboxOption(page, "Role", "Stuff-doer");
 
     // Wait for the radio button to be available and click its label instead
     const customRadioLabel = page.locator("label", { hasText: "Custom" });

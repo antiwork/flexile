@@ -62,9 +62,7 @@ test.describe("Onboarding checklist", () => {
     await withinModal(
       async (modal) => {
         await modal.getByLabel("Email").fill(faker.internet.email());
-        await selectComboboxOption(page, "Role", "Software Engineer", {
-          searchPlaceholder: "Search or enter a role...",
-        });
+        await selectComboboxOption(page, "Role", "Software Engineer");
         await modal.getByLabel("Hourly").check();
         await modal.getByLabel("Rate").fill("100");
         await modal.getByRole("button", { name: "Continue" }).click();
