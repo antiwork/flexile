@@ -1,5 +1,5 @@
 "use client";
-import { CircleCheck, Mail, Plus, Users, X } from "lucide-react";
+import { CircleCheck, Download, Mail, Plus, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
@@ -22,6 +22,7 @@ import {
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatOwnershipPercentage } from "@/utils/numbers";
+import { export_company_cap_tables_path } from "@/utils/routes";
 import { useIsMobile } from "@/utils/use-mobile";
 import { type ColumnConfig, ColumnSettingsToggle, useColumnSettings } from "./ColumnSettings";
 
@@ -293,31 +294,43 @@ export default function CapTable() {
         <TableSkeleton columns={columnConfigs.filter((config) => isColumnVisible(config.id)).length || 0} />
       ) : data.investors.length > 0 ? (
         <div className="overflow-x-auto">
-          <div className="mx-4 mb-2 flex flex-row gap-2">
-            <ColumnSettingsToggle
-              columns={columnConfigs}
-              columnVisibility={columnVisibility}
-              onToggleColumn={toggleColumn}
-              onResetToDefaults={resetToDefaults}
-            />
-            {!isMobile && canViewInvestor ? (
-              <div className={`flex gap-2 ${selectedInvestors.length === 0 ? "pointer-events-none opacity-0" : ""}`}>
-                <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
-                  <span className="text-sm whitespace-nowrap">
-                    <span className="inline-block text-center tabular-nums">{selectedInvestors.length}</span> selected
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="-mr-1 size-6 p-0 hover:bg-transparent"
-                    onClick={() => investorsTable.toggleAllRowsSelected(false)}
-                  >
-                    <X className="size-4 shrink-0" aria-hidden="true" />
-                  </Button>
+          <div className="mx-4 mb-2 flex flex-row items-center justify-between">
+            <div className="flex gap-2">
+              <ColumnSettingsToggle
+                columns={columnConfigs}
+                columnVisibility={columnVisibility}
+                onToggleColumn={toggleColumn}
+                onResetToDefaults={resetToDefaults}
+              />
+              {!isMobile && canViewInvestor ? (
+                <div className={`flex gap-2 ${selectedInvestors.length === 0 ? "pointer-events-none opacity-0" : ""}`}>
+                  <div className="bg-accent border-muted flex h-9 items-center justify-center rounded-md border border-dashed px-2 font-medium">
+                    <span className="text-sm whitespace-nowrap">
+                      <span className="inline-block text-center tabular-nums">{selectedInvestors.length}</span> selected
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="-mr-1 size-6 p-0 hover:bg-transparent"
+                      onClick={() => investorsTable.toggleAllRowsSelected(false)}
+                    >
+                      <X className="size-4 shrink-0" aria-hidden="true" />
+                    </Button>
+                  </div>
+                  <ContactSelectedCopyButton emails={selectedInvestorEmails} />
                 </div>
-                <ContactSelectedCopyButton emails={selectedInvestorEmails} />
-              </div>
-            ) : null}
+              ) : null}
+            </div>
+            <Button variant="outline" asChild>
+              <a
+                href={export_company_cap_tables_path(company.id, newSchema ? { new_schema: true } : {})}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Download className="size-4" />
+                Download CSV
+              </a>
+            </Button>
           </div>
           <DataTable table={investorsTable} />
         </div>
