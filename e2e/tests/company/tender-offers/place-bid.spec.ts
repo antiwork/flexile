@@ -15,15 +15,22 @@ test.describe("Tender Offer Bid Placement", () => {
     await navigateToTenderOffers(page);
     await openTenderOfferDetails(page, scenario.tenderOffer.externalId);
 
-    await page.getByRole("button", { name: "Add your signature" }).click();
+    await page.getByRole("button", { name: "Place Bid" }).click();
 
+    await expect(page.getByText("Step 1 of 3")).toBeVisible();
+    await page.getByRole("button", { name: "Add your signature" }).click();
+    await page.getByRole("button", { name: "Next" }).click();
+
+    await expect(page.getByText("Step 2 of 3")).toBeVisible();
     await page.getByLabel("Share class").click();
     await page.getByRole("option").first().click();
     await page.getByLabel("Number of shares").fill("100");
     await page.getByLabel("Price per share").fill("45");
-
     await expect(page.getByText("Total amount: $4,500")).toBeVisible();
+    await page.getByRole("button", { name: "Next" }).click();
 
+    await expect(page.getByText("Step 3 of 3")).toBeVisible();
+    await expect(page.getByText("$4,500")).toBeVisible();
     await page.getByRole("button", { name: "Submit bid" }).click();
 
     await expect(page.getByRole("cell", { name: "100" })).toBeVisible();
@@ -39,7 +46,7 @@ test.describe("Tender Offer Bid Placement", () => {
 
     await openTenderOfferDetails(page, scenario.tenderOffer.externalId);
 
-    await expect(page.getByRole("button", { name: "Submit bid" })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: "Place Bid" })).not.toBeVisible();
   });
 
   test("investor can view existing bids", async ({ page }) => {
@@ -85,7 +92,9 @@ test.describe("Tender Offer Bid Placement", () => {
     await navigateToTenderOffers(page);
     await openTenderOfferDetails(page, scenario.tenderOffer.externalId);
 
+    await page.getByRole("button", { name: "Place Bid" }).click();
     await page.getByRole("button", { name: "Add your signature" }).click();
+    await page.getByRole("button", { name: "Next" }).click();
 
     await page.getByLabel("Share class").click();
     await page.getByRole("option").first().click();
@@ -93,7 +102,7 @@ test.describe("Tender Offer Bid Placement", () => {
     await page.getByLabel("Number of shares").fill(excessiveShares);
     await page.getByLabel("Price per share").fill("45");
 
-    await page.getByRole("button", { name: "Submit bid" }).click();
+    await page.getByRole("button", { name: "Next" }).click();
     await expect(page.getByText(/Number of shares must be between/iu)).toBeVisible();
   });
 });

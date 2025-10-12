@@ -2,24 +2,17 @@
 import { utc } from "@date-fns/utc";
 import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { isFuture, isPast } from "date-fns";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
-import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
-import NumberInput from "@/components/NumberInput";
-import SignForm from "@/components/SignForm";
+import MutationButton from "@/components/MutationButton";
 import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -28,13 +21,8 @@ import { trpc } from "@/trpc/client";
 import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
 import { serverDateToLocal } from "@/utils/time";
 import { VESTED_SHARES_CLASS } from "..";
+import PlaceBidModal from "../PlaceBidModal";
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
-
-const formSchema = z.object({
-  shareClass: z.string().min(1, "This field is required"),
-  numberOfShares: z.number().min(1),
-  pricePerShare: z.number().min(0),
-});
 
 export default function BuybackView() {
   const { id } = useParams<{ id: string }>();
@@ -71,40 +59,14 @@ export default function BuybackView() {
     [ownShareHoldings, ownTotalVestedShares],
   );
 
-  const form = useForm({
-    defaultValues: { shareClass: holdings[0]?.className ?? "", pricePerShare: 0, numberOfShares: 0 },
-    resolver: zodResolver(formSchema),
-  });
-  const pricePerShare = form.watch("pricePerShare");
-  const [signed, setSigned] = useState(false);
+  const [showPlaceBidModal, setShowPlaceBidModal] = useState(false);
   const [cancelingBid, setCancelingBid] = useState<Bid | null>(null);
-  const maxShares = holdings.find((h) => h.className === form.watch("shareClass"))?.count || 0;
 
-  const createMutation = trpc.tenderOffers.bids.create.useMutation({
-    onSuccess: async () => {
-      form.reset();
-      await refetchBids();
-    },
-  });
   const destroyMutation = trpc.tenderOffers.bids.destroy.useMutation({
     onSuccess: async () => {
       setCancelingBid(null);
       await refetchBids();
     },
-  });
-
-  const submit = form.handleSubmit(async (values) => {
-    if (values.numberOfShares > maxShares)
-      return form.setError("numberOfShares", {
-        message: `Number of shares must be between 1 and ${maxShares.toLocaleString()}`,
-      });
-    await createMutation.mutateAsync({
-      companyId: company.id,
-      tenderOfferId: id,
-      numberOfShares: Number(values.numberOfShares),
-      sharePriceCents: Math.round(Number(values.pricePerShare) * 100),
-      shareClass: values.shareClass,
-    });
   });
 
   const columnHelper = createColumnHelper<Bid>();
@@ -164,113 +126,44 @@ export default function BuybackView() {
             <p>{formatMoney(data.minimumValuation)}</p>
           </div>
           <div className="sm:col-span-2">
-            {data.attachment ? (
-              <Button asChild>
-                <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
-                  <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-                  Download buyback documents
-                </Link>
-              </Button>
-            ) : null}
+            <div className="flex gap-2">
+              {data.attachment ? (
+                <Button asChild>
+                  <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
+                    <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
+                    Download buyback documents
+                  </Link>
+                </Button>
+              ) : null}
+              {(isOpen && holdings.length) || user.roles.administrator ? (
+                <Button variant="primary" onClick={() => setShowPlaceBidModal(true)}>
+                  Place Bid
+                </Button>
+              ) : null}
+            </div>
           </div>
         </div>
 
-        {(isOpen && holdings.length) || user.roles.administrator ? (
+        {bids.length > 0 ? (
           <>
             <Separator />
-            <h2 className="text-xl font-medium">Letter of transmittal</h2>
-            <div>
-              <div>
-                THIS DOCUMENT AND THE INFORMATION REFERENCED HEREIN OR PROVIDED TO YOU IN CONNECTION WITH THIS OFFER TO
-                PURCHASE CONSTITUTES CONFIDENTIAL INFORMATION REGARDING {company.name?.toUpperCase()} (THE "COMPANY").
-                BY OPENING OR READING THIS DOCUMENT, YOU HEREBY AGREE TO MAINTAIN THE CONFIDENTIALITY OF SUCH
-                INFORMATION AND NOT TO DISCLOSE IT TO ANY PERSON (OTHER THAN TO YOUR LEGAL, FINANCIAL AND TAX ADVISORS,
-                AND THEN ONLY IF THEY HAVE SIMILARLY AGREED TO MAINTAIN THE CONFIDENTIALITY OF SUCH INFORMATION), AND
-                SUCH INFORMATION SHALL BE SUBJECT TO THE CONFIDENTIALITY OBLIGATIONS UNDER [THE NON-DISCLOSURE AGREEMENT
-                INCLUDED] ON THE PLATFORM (AS DEFINED BELOW) AND ANY OTHER AGREEMENT YOU HAVE WITH THE COMPANY,
-                INCLUDING ANY "INVENTION AND NON-DISCLOSURE AGREEMENT", "CONFIDENTIALITY, INVENTION AND NON-SOLICITATION
-                AGREEMENT" OR OTHER NONDISCLOSURE AGREEMENT. BY YOU ACCEPTING TO RECEIVE THIS OFFER TO PURCHASE, YOU
-                ACKNOWLEDGE AND AGREE TO THE FOREGOING RESTRICTIONS.
-              </div>
-              <Separator />
-              <article aria-label="Letter of transmittal" className="flex flex-col gap-4">
-                <SignForm content={data.letterOfTransmittal} signed={signed} onSign={() => setSigned(true)} />
-              </article>
-            </div>
-
-            <Separator />
-            <h2 className="text-xl font-medium">Submit a bid ("Sell Order")</h2>
-            <Form {...form}>
-              <form onSubmit={(e) => void submit(e)} className="grid gap-4">
-                <FormField
-                  control={form.control}
-                  name="shareClass"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Share class</FormLabel>
-                      <FormControl>
-                        <ComboBox
-                          {...field}
-                          options={holdings.map((holding) => ({
-                            value: holding.className,
-                            label: `${holding.className} (${holding.count.toLocaleString()} shares)`,
-                          }))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="numberOfShares"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of shares</FormLabel>
-                      <FormControl>
-                        <NumberInput {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="pricePerShare"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Price per share</FormLabel>
-                      <FormControl>
-                        <NumberInput {...field} decimal prefix="$" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {company.fullyDilutedShares ? (
-                  <div>
-                    <strong>Implied company valuation:</strong>{" "}
-                    {formatMoney(company.fullyDilutedShares * pricePerShare)}
-                  </div>
-                ) : null}
-                <div>
-                  <strong>Total amount:</strong> {formatMoney(form.getValues("numberOfShares") * pricePerShare)}
-                </div>
-                <MutationStatusButton
-                  idleVariant="primary"
-                  type="submit"
-                  mutation={createMutation}
-                  className="justify-self-end"
-                >
-                  Submit bid
-                </MutationStatusButton>
-              </form>
-            </Form>
+            <h2 className="text-xl font-medium">Bids</h2>
           </>
         ) : null}
 
         {isLoading ? <TableSkeleton columns={5} /> : bids.length > 0 ? <DataTable table={bidsTable} /> : null}
+
+        <PlaceBidModal
+          open={showPlaceBidModal}
+          onOpenChange={setShowPlaceBidModal}
+          tenderOfferId={id}
+          companyId={company.id}
+          companyName={company.name || ""}
+          letterOfTransmittal={data.letterOfTransmittal}
+          holdings={holdings}
+          fullyDilutedShares={company.fullyDilutedShares}
+          refetchBids={refetchBids}
+        />
 
         {cancelingBid ? (
           <Dialog open onOpenChange={() => setCancelingBid(null)}>
