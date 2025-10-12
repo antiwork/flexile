@@ -12,6 +12,7 @@ scope path: :internal, module: :internal do
   end
 
   resources :oauth, only: :create
+  resource :current_user_data, only: :show
 
   namespace :demo do
     resources :companies, only: :show

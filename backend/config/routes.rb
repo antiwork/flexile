@@ -73,8 +73,6 @@ Rails.application.routes.draw do
   get "/invoices/:id/edit", to: redirect("/companies/_/invoices/%{id}/edit")
   get "/people", to: redirect("/companies/_/people")
   get "/people/new", to: redirect { |_path_params, req| "/companies/_/people/new#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/internal/userid", to: "application#userid"
-  get "/internal/current_user_data", to: "application#current_user_data"
   get "/companies/:company_id/settings/equity", to: redirect("/settings/equity")
   resource :oauth_redirect, only: :show
 
