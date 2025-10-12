@@ -4,7 +4,7 @@ import { companyLawyersFactory } from "@test/factories/companyLawyers";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { shareClassesFactory } from "@test/factories/shareClasses";
 import { usersFactory } from "@test/factories/users";
-import { clickComboboxOption } from "@test/helpers";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -26,7 +26,7 @@ test.describe("Option Pools", () => {
     await expect(page.getByRole("dialog", { name: "New option pool" })).toBeVisible();
 
     await page.getByLabel("Pool name").fill("2025 Equity plan");
-    await clickComboboxOption(page, "Share class", "Common");
+    await selectComboboxOption(page, "Share class", "Common");
     await page.getByLabel("Authorized shares").fill("1000000");
 
     await page.getByRole("button", { name: "Create option pool" }).click();
@@ -79,7 +79,7 @@ test.describe("Option Pools", () => {
 
     await page.getByRole("button", { name: "New option pool" }).click();
     await page.getByLabel("Pool name").fill("Plan with custom exercise windows");
-    await clickComboboxOption(page, "Share class", "Common");
+    await selectComboboxOption(page, "Share class", "Common");
     await page.getByLabel("Authorized shares").fill("500000");
 
     await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
@@ -120,7 +120,7 @@ test.describe("Option Pools", () => {
 
     await page.getByRole("button", { name: "New option pool" }).click();
     await page.getByLabel("Pool name").fill("Plan with defaults");
-    await clickComboboxOption(page, "Share class", "Common");
+    await selectComboboxOption(page, "Share class", "Common");
     await page.getByLabel("Authorized shares").fill("250000");
     await page.getByRole("button", { name: "Create option pool" }).click();
 

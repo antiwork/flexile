@@ -5,7 +5,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { documentsFactory } from "@test/factories/documents";
 import { shareHoldingsFactory } from "@test/factories/shareHoldings";
 import { usersFactory } from "@test/factories/users";
-import { clickComboboxOption } from "@test/helpers";
+import { selectComboboxOption } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -98,7 +98,7 @@ test.describe("Documents", () => {
     await page.getByRole("menuitem", { name: "Share" }).click();
     await expect(page.locator("[contenteditable='true']")).toHaveText("Test document text");
     await page.locator("[contenteditable='true']").fill("Some other text");
-    await clickComboboxOption(page, "Recipient", "Recipient 1");
+    await selectComboboxOption(page, "Recipient", "Recipient 1");
     await page.getByRole("button", { name: "Send" }).click();
     await expect(page.locator("tbody tr")).toHaveCount(2);
 

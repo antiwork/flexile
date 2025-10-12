@@ -5,7 +5,7 @@ import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { optionPoolsFactory } from "@test/factories/optionPools";
 import { usersFactory } from "@test/factories/users";
-import { clickComboboxOption, fillDatePicker, findRichTextEditor } from "@test/helpers";
+import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { addMonths, format } from "date-fns";
@@ -248,10 +248,10 @@ test.describe("Equity Grant Vesting Events", () => {
 
     // Create grant with invoice-based vesting
     await page.getByRole("button", { name: "New grant" }).click();
-    await clickComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
+    await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
     await page.getByLabel("Number of options").fill("10000");
-    await clickComboboxOption(page, "Relationship to company", "Consultant");
-    await clickComboboxOption(page, "Grant type", "NSO");
+    await selectComboboxOption(page, "Relationship to company", "Consultant");
+    await selectComboboxOption(page, "Grant type", "NSO");
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
 
     // Fill exercise periods
@@ -263,7 +263,7 @@ test.describe("Equity Grant Vesting Events", () => {
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
     await page.getByRole("button", { name: "Continue" }).click();
-    await clickComboboxOption(page, "Shares will vest", "As invoices are paid");
+    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");

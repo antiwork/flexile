@@ -1,10 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-export const clickComboboxOption = async (page: Locator | Page, name: string, option: string) => {
-  await page.getByRole("combobox", { name }).click();
-  await page.getByRole("option", { name: option, exact: true }).first().click();
-};
-
 export const fillDatePicker = async (page: Page, name: string, value: string) => {
   const date = page.getByRole("spinbutton", { name }).first();
   // Wait for the field to be interactive before typing to avoid lost keystrokes
