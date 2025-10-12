@@ -1,5 +1,18 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+export const selectComboboxOption = async (page: Page, name: string, option: string) => {
+  const combobox = page.getByRole("combobox", { name, exact: true });
+  await combobox.click();
+  const popover = page.getByRole("listbox", { name: /listbox options/u });
+  const searchField = popover.locator("input[cmdk-input]");
+
+  await searchField.fill(option);
+  await expect(popover.getByRole("option", { name: option, exact: true })).toBeVisible();
+
+  await searchField.press("Enter");
+  await expect(popover).not.toBeVisible();
+};
+
 export const fillDatePicker = async (page: Page, name: string, value: string) => {
   const date = page.getByRole("spinbutton", { name }).first();
   // Wait for the field to be interactive before typing to avoid lost keystrokes
@@ -26,26 +39,4 @@ export const fillByLabel = async (page: Page, name: string, value: string, optio
   }
   await field.fill(value);
   await expect(field).toHaveValue(value);
-};
-
-export const selectComboboxOption = async (
-  page: Page,
-  name: string,
-  option: string,
-  {
-    popoverName,
-  }: {
-    popoverName?: string;
-  } = {},
-) => {
-  const combobox = page.getByRole("combobox", { name, exact: true });
-  await combobox.click();
-  const popover = page.getByRole("listbox", { name: popoverName ?? `${name} listbox options` });
-  const searchField = popover.locator("input[cmdk-input]");
-
-  await searchField.fill(option);
-  await expect(popover.getByRole("option", { name: option, exact: true })).toBeVisible();
-
-  await searchField.press("Enter");
-  await expect(popover).not.toBeVisible();
 };

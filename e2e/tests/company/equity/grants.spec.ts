@@ -50,13 +50,9 @@ test.describe("Equity Grants", () => {
     await expect(page.getByText("Estimated value of $25,000, based on a $2.50 share price")).toBeVisible();
 
     await page.getByLabel("Number of options").fill("10");
-    await selectComboboxOption(page, "Relationship to company", "Consultant", {
-      popoverName: "issueDateRelationship listbox options",
-    });
+    await selectComboboxOption(page, "Relationship to company", "Consultant");
 
-    await selectComboboxOption(page, "Grant type", "NSO", {
-      popoverName: "optionGrantType listbox options",
-    });
+    await selectComboboxOption(page, "Grant type", "NSO");
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
     await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
 
