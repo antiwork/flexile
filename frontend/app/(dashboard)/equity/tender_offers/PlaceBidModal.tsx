@@ -34,7 +34,7 @@ interface PlaceBidModalProps {
   letterOfTransmittal: string;
   holdings: Holding[];
   fullyDilutedShares?: number;
-  refetchBids: () => Promise<void>;
+  refetchBids: () => Promise<unknown>;
 }
 
 const bidFormSchema = z.object({

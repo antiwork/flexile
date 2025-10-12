@@ -161,7 +161,7 @@ export default function BuybackView() {
           companyName={company.name || ""}
           letterOfTransmittal={data.letterOfTransmittal}
           holdings={holdings}
-          fullyDilutedShares={company.fullyDilutedShares ?? undefined}
+          {...(company.fullyDilutedShares !== null && { fullyDilutedShares: company.fullyDilutedShares })}
           refetchBids={refetchBids}
         />
 
