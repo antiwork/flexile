@@ -69,7 +69,7 @@ class InvestorsCsv
     def investor_name(investor)
       return investor[:name] if !show_investor_email? || investor[:email].blank?
 
-      "#{investor[:name]} #{investor[:email]}"
+      "#{investor[:name]} (#{investor[:email]})"
     end
 
     def build_totals_row(data)

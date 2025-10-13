@@ -20,7 +20,7 @@ class Internal::Companies::CapTablesController < Internal::Companies::BaseContro
     def user_role
       if Current.company_administrator?
         "administrator"
-      elsif Current.company_lawyer?
+      elsif Current.company_lawyer.present?
         "lawyer"
       else
         "investor"

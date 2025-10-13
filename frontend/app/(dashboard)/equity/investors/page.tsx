@@ -322,11 +322,7 @@ export default function CapTable() {
               ) : null}
             </div>
             <Button variant="outline" asChild>
-              <a
-                href={export_company_cap_tables_path(company.id, newSchema ? { new_schema: true } : {})}
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href={export_company_cap_tables_path(company.id, newSchema ? { new_schema: true } : {})}>
                 <Download className="size-4" />
                 Download CSV
               </a>
