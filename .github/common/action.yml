@@ -13,6 +13,17 @@ runs:
     - run: pnpm i
       shell: bash
 
+    - run: pnpm puppeteer browsers install chrome
+
+    - name: Cache Next build
+      id: next-cache
+      uses: actions/cache@v4
+      with:
+        path: frontend/.next/cache
+        key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}-${{ hashFiles('frontend/**/*.{ts,tsx}') }}
+        restore-keys: |
+          next-${{ runner.os }}-
+
     - run: cp .env.example .env && ln -s $PWD/.env ./frontend/.env
       shell: bash
 
