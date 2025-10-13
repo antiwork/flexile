@@ -375,7 +375,7 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
             {session?.user.actorToken ? (
               <SheetNavItem
                 pathname={pathname}
-                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                onClick={(e) => {
                   e.preventDefault();
                   handleOpenChange(false);
                   redirect("/impersonate?actor_token=null");
