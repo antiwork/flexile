@@ -14,9 +14,8 @@ import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { useCurrentCompany } from "@/global";
@@ -72,17 +71,15 @@ const InvestorSearchInput = ({
     <Command shouldFilter={false}>
       <Popover open={isPopoverOpen ? availableUsers.length > 0 : false}>
         <PopoverAnchor asChild>
-          <Input
+          <CommandInput
             id={fieldId}
-            type="text"
             value={displayValue}
             autoComplete="off"
             aria-invalid={hasError}
             disabled={isLoading}
             onFocus={() => setIsPopoverOpen(true)}
             onBlur={() => setIsPopoverOpen(false)}
-            onChange={(e) => {
-              const value = e.target.value;
+            onValueChange={(value) => {
               form.setValue(`investors.${fieldIndex}.searchTerm`, value);
               field.onChange("");
               setIsPopoverOpen(true);

@@ -4,9 +4,8 @@ import { useFormContext } from "react-hook-form";
 import { z } from "zod";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { useUserStore } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
@@ -42,14 +41,12 @@ export default function FormFields() {
               <Popover open={!!rolePopoverOpen && filteredRoles.length > 0}>
                 <PopoverAnchor asChild>
                   <FormControl>
-                    <Input
+                    <CommandInput
                       {...field}
-                      type="text"
                       autoComplete="off"
-                      className="focus-visible:ring-ring focus-visible:border-border focus-visible:ring-2"
                       onFocus={() => setRolePopoverOpen(true)}
                       onBlur={() => setRolePopoverOpen(false)}
-                      onChange={(e) => {
+                      onValueChange={(e) => {
                         field.onChange(e);
                         setRolePopoverOpen(true);
                       }}

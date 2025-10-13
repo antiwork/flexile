@@ -41,7 +41,7 @@ function CommandDialog({
   );
 }
 
-function CommandInput({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Input>) {
+function CommandSearchInput({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
     <div data-slot="command-input-wrapper" className="border-input flex h-9 items-center gap-2 border-b px-3">
       <SearchIcon className="size-4 shrink-0 opacity-50" />
@@ -54,6 +54,21 @@ function CommandInput({ className, ...props }: React.ComponentProps<typeof Comma
         {...props}
       />
     </div>
+  );
+}
+
+function CommandInput({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Input>) {
+  return (
+    <CommandPrimitive.Input
+      data-slot="command-input"
+      className={cn(
+        "placeholder:text-muted-foreground dark:enabled:hover:bg-accent dark:focus-visible:bg-accent selection:text-dark border-input disabled:bg-muted/50 dark:disabled:bg-input/50 text-normal flex h-9 w-full min-w-0 items-center rounded-md border bg-transparent px-3 py-1 transition-[color,box-shadow] outline-none selection:bg-blue-500/10 focus-visible:ring-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+        "focus-visible:ring-ring focus-visible:border-border focus-visible:ring-2",
+        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+        className,
+      )}
+      {...props}
+    />
   );
 }
 
@@ -125,6 +140,7 @@ export {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSearchInput,
   CommandSeparator,
   CommandShortcut,
 };

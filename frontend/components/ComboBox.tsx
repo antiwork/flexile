@@ -1,7 +1,14 @@
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { Check, ChevronDown } from "lucide-react";
 import React, { useRef, useState } from "react";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+  CommandSearchInput,
+} from "@/components/ui/command";
 import { Popover, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/utils";
 import { Button } from "./ui/button";
@@ -47,7 +54,7 @@ const ComboBox = ({
       <PopoverContent className="p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
         <Command>
           {showSearch ? (
-            <CommandInput
+            <CommandSearchInput
               placeholder="Search..."
               onValueChange={() => {
                 requestAnimationFrame(() => {
