@@ -4,7 +4,9 @@ export const selectComboboxOption = async (page: Page, name: string, option: str
   const combobox = page.getByRole("combobox", { name, exact: true });
   await combobox.click();
   const popover = page.getByRole("listbox", { name: /listbox options/u });
-  const searchField = popover.locator("input[cmdk-input]");
+  // Not ideal that we end up with a combobox nested inside another, but this issue exists in shadcn too so we can address it elsewhere.
+  // Let's use the role selector here for now.
+  const searchField = popover.getByRole("combobox");
 
   await searchField.fill(option);
   await expect(popover.getByRole("option", { name: option, exact: true })).toBeVisible();
