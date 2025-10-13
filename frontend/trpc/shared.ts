@@ -32,16 +32,17 @@ export function createClient() {
   });
 }
 
-async function onError(error: unknown) {
+function onError(error: unknown) {
   if (!(error instanceof ResponseError)) return;
   const { response } = error;
   if (!response) return;
 
   switch (response.status) {
     case 401: {
-      const session = await getSession();
-      const impersonating = session?.user.actorToken;
-      if (impersonating) redirect(`/impersonate?actor_token=null`);
+      void getSession().then((session) => {
+        const impersonating = session?.user.actorToken;
+        if (impersonating) redirect("/impersonate?actor_token=null");
+      });
       break;
     }
   }
