@@ -1392,30 +1392,6 @@ export const company_workers_path: ((
 
 /**
  * Generates rails route to
- * /internal/demo/companies/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const demo_company_url: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/demo/companies/:id(.:format)
- * @param {any} id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const demo_company_path: ((
-  id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /admin/companies/:id/edit(.:format)
  * @param {any} id
  * @param {object | undefined} options
