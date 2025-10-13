@@ -530,7 +530,7 @@ export default function InvoicesPage() {
               <AlertTitle>Account verification required to initiate payments.</AlertTitle>
               <AlertDescription>
                 You can approve invoices, but cannot initiate immediate payments until your account is verified. Email
-                us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete verification.
+                us at <Link href="/support">Write to us</Link> to complete verification.
               </AlertDescription>
             </Alert>
           ) : null}

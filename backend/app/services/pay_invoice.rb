@@ -11,13 +11,17 @@ class PayInvoice
   end
 
   def process
-    raise "Payout method not set up for company #{company.id}" unless company.bank_account_ready?
-    raise "Not enough account balance to pay out for company #{company.id}" unless company.has_sufficient_balance?(invoice.cash_amount_in_usd)
-    raise "Invoice not immediately payable for company #{company.id}" unless invoice.immediately_payable?
+    invoice.with_lock do
+      raise "Payout method not set up for company #{company.id}" unless company.bank_account_ready?
+      raise "Not enough account balance to pay out for company #{company.id}" unless company.has_sufficient_balance?(invoice.cash_amount_in_usd)
+      raise "Invoice not immediately payable for company #{company.id}" unless invoice.immediately_payable?
 
-    if invoice.cash_amount_in_cents.zero? && invoice.equity_amount_in_options != 0
-      invoice.mark_as_paid!(timestamp: Time.current)
-      return
+      if invoice.cash_amount_in_cents.zero? && invoice.equity_amount_in_options != 0
+        invoice.mark_as_paid!(timestamp: Time.current)
+        return
+      end
+
+      invoice.update!(status: Invoice::PROCESSING)
     end
 
     payout_service = Wise::PayoutApi.new
@@ -57,7 +61,6 @@ class PayInvoice
     transfer_id = transfer["id"]
     raise WiseError, "Creating transfer failed for payment #{payment.id}" unless transfer_id.present?
 
-    invoice.update!(status: Invoice::PROCESSING)
     payment.update!(wise_transfer_id: transfer_id, conversion_rate: transfer["rate"],
                     recipient_last4: bank_account.last_four_digits)
     response = payout_service.fund_transfer(transfer_id:)
