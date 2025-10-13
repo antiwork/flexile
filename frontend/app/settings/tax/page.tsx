@@ -5,6 +5,7 @@ import { CalendarDate, parseDate } from "@internationalized/date";
 import { useMutation, type UseMutationResult, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { iso31662 } from "iso-3166";
 import { AlertTriangle, ArrowUpRightFromSquare, Eye, EyeOff, Info } from "lucide-react";
+import Link from "next/link";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -701,9 +702,9 @@ const LegalCertificationModal = ({
             <li>Your consent applies to all tax documents during your time using Flexile services.</li>
             <li>
               You can withdraw this consent or request paper copies anytime by contacting{" "}
-              <a href="mailto:support@flexile.com" className={linkClasses}>
-                support@flexile.com
-              </a>
+              <Link href="/support" className={linkClasses}>
+                Write to us
+              </Link>
               .
             </li>
             <li>
@@ -713,9 +714,9 @@ const LegalCertificationModal = ({
             <li>Your tax forms will be available for download for at least one year.</li>
             <li>
               If you don't consent to electronic delivery, contact us at{" "}
-              <a href="mailto:support@flexile.com" className={linkClasses}>
-                support@flexile.com
-              </a>{" "}
+              <Link href="/support" className={linkClasses}>
+                Write to us
+              </Link>{" "}
               to arrange postal delivery.
             </li>
           </ol>

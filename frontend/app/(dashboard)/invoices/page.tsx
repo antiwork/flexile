@@ -80,6 +80,7 @@ const statusNames = {
   failed: "Failed",
 };
 
+const statusFilterOptions = [...new Set(Object.values(statusNames))];
 const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
   switch (invoice.status) {
     case "received":
@@ -246,7 +247,7 @@ export default function InvoicesPage() {
         header: "Status",
         cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
         meta: {
-          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
+          filterOptions: statusFilterOptions,
         },
       }),
       columnHelper.accessor(isActionable, {
@@ -324,7 +325,7 @@ export default function InvoicesPage() {
       columnHelper.accessor((row) => statusNames[row.status], {
         id: "status",
         meta: {
-          filterOptions: ["Awaiting approval", "Approved", "Processing", "Paid", "Rejected", "Failed"],
+          filterOptions: statusFilterOptions,
           hidden: true,
         },
       }),
@@ -529,7 +530,7 @@ export default function InvoicesPage() {
               <AlertTitle>Account verification required to initiate payments.</AlertTitle>
               <AlertDescription>
                 You can approve invoices, but cannot initiate immediate payments until your account is verified. Email
-                us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete verification.
+                us at <Link href="/support">Write to us</Link> to complete verification.
               </AlertDescription>
             </Alert>
           ) : null}
