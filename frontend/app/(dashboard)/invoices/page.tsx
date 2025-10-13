@@ -533,7 +533,7 @@ export default function InvoicesPage() {
                 You can approve invoices, but cannot initiate immediate payments until your account is verified. Email
                 us at{" "}
                 <button onClick={() => setIsSupportModalOpen(true)} className="text-blue-600 hover:underline">
-                  support@flexile.com
+                  Write to us
                 </button>{" "}
                 to complete verification.
               </AlertDescription>

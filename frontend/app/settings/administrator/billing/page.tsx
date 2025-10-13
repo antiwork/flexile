@@ -198,7 +198,7 @@ export default function Billing() {
         <AlertDescription>
           Want faster payments? Email us at{" "}
           <button onClick={() => setIsSupportModalOpen(true)} className="text-blue-600 hover:underline">
-            support@flexile.com
+            Write to us
           </button>{" "}
           to complete additional verification steps.
         </AlertDescription>

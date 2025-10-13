@@ -704,7 +704,7 @@ const LegalCertificationModal = ({
             <li>
               You can withdraw this consent or request paper copies anytime by contacting{" "}
               <button onClick={() => setIsSupportModalOpen(true)} className={linkClasses}>
-                support@flexile.com
+                Write to us
               </button>
               .
             </li>
@@ -716,7 +716,7 @@ const LegalCertificationModal = ({
             <li>
               If you don't consent to electronic delivery, contact us at{" "}
               <button onClick={() => setIsSupportModalOpen(true)} className={linkClasses}>
-                support@flexile.com
+                Write to us
               </button>{" "}
               to arrange postal delivery.
             </li>
