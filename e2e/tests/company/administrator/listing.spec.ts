@@ -36,8 +36,7 @@ test.describe("People table sorting", () => {
       role: "Invited",
     });
 
-    await login(page, adminUser);
-    await page.getByRole("link", { name: "People" }).click();
+    await login(page, adminUser, "/people");
 
     const statusHeader = page.getByRole("columnheader", { name: "Status" });
 
