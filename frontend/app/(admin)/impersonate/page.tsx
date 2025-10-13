@@ -16,7 +16,8 @@ function ImpersonateHandler() {
     if (status === "loading") return;
 
     const impersonating = actorToken === session?.user.actorToken;
-    if (!param || impersonating || status === "unauthenticated") return router.replace("/dashboard");
+    if (!param || impersonating) return router.replace("/dashboard");
+    if (status === "unauthenticated") return router.replace("/login");
 
     void update({ actorToken });
   }, [status, actorToken, session, update]);
