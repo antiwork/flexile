@@ -1,9 +1,9 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, LogOut, MessageCircleQuestion, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut, MessageCircleQuestion, MoreHorizontal, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import React, { useMemo, useState } from "react";
 import ReactDOM from "react-dom";
@@ -108,7 +108,7 @@ const NavSheet = ({ trigger, title, open, onOpenChange, onBack, children }: NavS
 interface SheetNavItemProps {
   item: NavLinkInfo;
   image?: React.ReactNode;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
   showChevron?: boolean;
   pathname?: string;
   className?: string;
@@ -372,6 +372,21 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
                 badge: <SupportBadge />,
               }}
             />
+            {session?.user.actorToken ? (
+              <SheetNavItem
+                pathname={pathname}
+                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                  e.preventDefault();
+                  handleOpenChange(false);
+                  redirect("/impersonate?actor_token=null");
+                }}
+                item={{
+                  label: "Stop impersonating",
+                  icon: UserX,
+                }}
+                className="text-destructive"
+              />
+            ) : null}
             <button
               className="flex w-full items-center gap-3 rounded-none px-6 py-3 text-left transition-colors"
               aria-label="Log out"
