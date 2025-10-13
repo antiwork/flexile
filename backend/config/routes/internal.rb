@@ -14,10 +14,6 @@ scope path: :internal, module: :internal do
   resources :oauth, only: :create
   resource :current_user_data, only: :show
 
-  namespace :demo do
-    resources :companies, only: :show
-  end
-
   resource :settings, only: [:update]
   namespace :settings do
     resource :dividend, only: [:show, :update], controller: "dividend"
