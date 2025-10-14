@@ -62,18 +62,8 @@ Rails.application.routes.draw do
     end
   end
 
-  # Old routes for backwards compatibility. Can be removed after Jan 1, 2025
-  get "/company/settings", to: redirect { |_path, req| "/companies/_/settings/administrator#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/company/details", to: redirect("/companies/_/settings/administrator/details")
-  get "/company/billing", to: redirect("/companies/_/settings/administrator/billing")
-  get "/expenses", to: redirect("/companies/_/expenses")
-  get "/investors/:id", to: redirect { |path_params, req| "/companies/_/investors/#{path_params[:id]}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/invoices", to: redirect("/companies/_/invoices")
-  get "/invoices/new", to: redirect("/companies/_/invoices/new")
-  get "/invoices/:id/edit", to: redirect("/companies/_/invoices/%{id}/edit")
-  get "/people", to: redirect("/companies/_/people")
-  get "/people/new", to: redirect { |_path_params, req| "/companies/_/people/new#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/companies/:company_id/settings/equity", to: redirect("/settings/equity")
+  get "/internal/userid", to: "application#userid"
+  get "/internal/current_user_data", to: "application#current_user_data"
   resource :oauth_redirect, only: :show
 
   def spa_controller_action
