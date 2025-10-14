@@ -13,6 +13,19 @@ runs:
     - run: pnpm i
       shell: bash
 
+    - name: Cache Puppeteer Install
+      id: puppeteer-install-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/puppeteer
+        key: puppeteer-install-${{ runner.os }}-${{ hashFiles('backend/pnpm-lock.yaml', 'backend/package.json') }}
+        restore-keys: |
+          puppeteer-install-${{ runner.os }}-
+
+    - run: pnpm puppeteer browsers install chrome
+      if: steps.puppeteer-install-cache.outputs.cache-hit != 'true'
+      shell: bash
+
     - run: cp .env.example .env && ln -s $PWD/.env ./frontend/.env
       shell: bash
 

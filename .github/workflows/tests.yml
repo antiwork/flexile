@@ -48,8 +48,6 @@ jobs:
       - name: Build setup
         uses: ./.github/common/
 
-      - run: pnpm puppeteer browsers install chrome
-
       - name: Setup test database
         run: cd backend && bundle exec rails db:create db:schema:load
 
@@ -68,8 +66,6 @@ jobs:
 
       - name: Build setup
         uses: ./.github/common/
-
-      - run: pnpm puppeteer browsers install chrome
 
       - name: Cache Next build
         id: next-cache
