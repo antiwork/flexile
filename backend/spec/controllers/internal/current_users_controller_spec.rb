@@ -22,11 +22,7 @@ RSpec.describe Internal::CurrentUsersController do
         expect(response).to have_http_status(:ok)
         body = response.parsed_body
 
-        expect(body["id"]).to eq(user.external_id)
-        expect(body["currentCompanyId"]).to eq(company.external_id)
-        expect(body["email"]).to eq(user.display_email)
-        expect(body["roles"]).to be_a(Hash)
-        expect(body["companies"]).to be_a(Array)
+        expect(body).to eq(UserPresenter.new(current_context: controller.current_context).logged_in_user.as_json)
       end
     end
 
