@@ -23,5 +23,7 @@ RSpec.describe CreateDocumentPdfJob, type: :job do
     expect(attachment.filename.to_s).to eq("#{document.name}.pdf")
     expect(attachment.content_type).to eq("application/pdf")
     expect(attachment.blob.byte_size).to be > 0
+    attachment.blob.open { |io| expect(io.read(4)).to eq("%PDF") }
+    expect(attachment.blob.checksum).to be_present
   end
 end
