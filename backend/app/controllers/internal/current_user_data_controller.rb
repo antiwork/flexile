@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Internal::CurrentUserDataController < Internal::BaseController
+class Internal::CurrentUserController < Internal::BaseController
   before_action :authenticate_user_json!
 
   def show
