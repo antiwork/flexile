@@ -194,8 +194,7 @@ export default function Billing() {
         <InformationCircleIcon />
         <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
         <AlertDescription>
-          Want faster payments? Email us at <a href="mailto:support@flexile.com">support@flexile.com</a> to complete
-          additional verification steps.
+          Want faster payments? <Link href="/support">Write to us</Link> to complete additional verification steps.
         </AlertDescription>
       </Alert>
       {isLoading ? (

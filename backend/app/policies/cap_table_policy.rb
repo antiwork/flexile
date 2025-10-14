@@ -13,4 +13,8 @@ class CapTablePolicy < ApplicationPolicy
       company_lawyer.present? ||
       (company_investor.present? && !company_investor.deactivated_at?)
   end
+
+  def export?
+    show?
+  end
 end

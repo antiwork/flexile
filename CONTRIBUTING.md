@@ -10,6 +10,8 @@ Generally: include an AI disclosure, self-review (comment) on your code, break u
 
 - We are moving from tRPC to Rails, avoid writing new tRPC code
 - Write end-to-end tests for all new functionality; edit tests to avoid writing new tests if possible
+- Always test on mobile
+- Use the third parameter for login ("people") in end-to-end-tests
 
 ### Database Schema
 
