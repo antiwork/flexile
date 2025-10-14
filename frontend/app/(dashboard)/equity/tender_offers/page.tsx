@@ -33,6 +33,21 @@ export default function Buybacks() {
     }),
     columnHelper.simple("endsAt", "End date", formatDate),
     columnHelper.simple("minimumValuation", "Starting valuation", formatMoney),
+    columnHelper.display({
+      id: "actions",
+      header: "",
+      cell: (info) => (
+        <Button
+          variant="outline"
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/equity/tender_offers/${info.row.original.id}?openModal=true`);
+          }}
+        >
+          Place bid
+        </Button>
+      ),
+    }),
   ];
 
   const table = useTable({ columns, data });
@@ -40,7 +55,7 @@ export default function Buybacks() {
   return (
     <>
       <DashboardHeader
-        title="Buybacks"
+        breadcrumbs={[{ label: "Equity", href: "/equity" }, { label: "Buybacks" }]}
         headerActions={
           user.roles.administrator ? (
             isMobile ? (

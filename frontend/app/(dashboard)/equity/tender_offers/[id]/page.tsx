@@ -4,8 +4,8 @@ import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { isFuture, isPast } from "date-fns";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import React, { useEffect, useMemo, useState } from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import MutationButton from "@/components/MutationButton";
@@ -13,24 +13,35 @@ import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
-import { formatMoney, formatMoneyFromCents } from "@/utils/formatMoney";
-import { serverDateToLocal } from "@/utils/time";
+import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { VESTED_SHARES_CLASS } from "..";
 import PlaceBidModal from "../PlaceBidModal";
 type Bid = RouterOutput["tenderOffers"]["bids"]["list"][number];
 
 export default function BuybackView() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const [data] = trpc.tenderOffers.get.useSuspenseQuery({ companyId: company.id, id });
   const isOpen = isPast(utc(data.startsAt)) && isFuture(utc(data.endsAt));
   const investorId = user.roles.investor?.id;
+
+  const startDate = new Date(data.startsAt);
+  const quarter = Math.ceil((startDate.getMonth() + 1) / 3);
+  const year = startDate.getFullYear();
+  const buybackName = `Q${quarter} ${year} Buyback`;
+
+  const [showPlaceBidModal, setShowPlaceBidModal] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("openModal") === "true") {
+      setShowPlaceBidModal(true);
+    }
+  }, [searchParams]);
   const {
     data: bids = [],
     isLoading,
@@ -59,7 +70,6 @@ export default function BuybackView() {
     [ownShareHoldings, ownTotalVestedShares],
   );
 
-  const [showPlaceBidModal, setShowPlaceBidModal] = useState(false);
   const [cancelingBid, setCancelingBid] = useState<Bid | null>(null);
 
   const destroyMutation = trpc.tenderOffers.bids.destroy.useMutation({
@@ -99,10 +109,33 @@ export default function BuybackView() {
 
   return (
     <>
-      <DashboardHeader title={`Buyback details ("Sell Elections")`} />
+      <DashboardHeader
+        breadcrumbs={[
+          { label: "Equity", href: "/equity" },
+          { label: "Buybacks", href: "/equity/tender_offers" },
+          { label: buybackName },
+        ]}
+        headerActions={
+          <div className="flex gap-2">
+            {data.attachment ? (
+              <Button variant="outline" asChild>
+                <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
+                  <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
+                  Download documents
+                </Link>
+              </Button>
+            ) : null}
+            {(isOpen && holdings.length) || user.roles.administrator ? (
+              <Button variant="primary" onClick={() => setShowPlaceBidModal(true)}>
+                Place bid
+              </Button>
+            ) : null}
+          </div>
+        }
+      />
       <div className="px-4 pb-4">
         {user.roles.investor?.investedInAngelListRuv ? (
-          <Alert className="mx-4" variant="destructive">
+          <Alert variant="destructive">
             <ExclamationTriangleIcon />
             <AlertDescription>
               Note: As an investor through an AngelList RUV, your bids will be submitted on your behalf by the RUV
@@ -111,44 +144,12 @@ export default function BuybackView() {
           </Alert>
         ) : null}
 
-        <h2 className="text-xl font-medium">Details</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <Label>Start date</Label>
-            <p>{serverDateToLocal(data.startsAt)}</p>
-          </div>
-          <div>
-            <Label>End date</Label>
-            <p>{serverDateToLocal(data.endsAt)}</p>
-          </div>
-          <div>
-            <Label>Starting valuation</Label>
-            <p>{formatMoney(data.minimumValuation)}</p>
-          </div>
-          <div className="sm:col-span-2">
-            <div className="flex gap-2">
-              {data.attachment ? (
-                <Button asChild>
-                  <Link href={`/download/${data.attachment.key}/${data.attachment.filename}`}>
-                    <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
-                    Download buyback documents
-                  </Link>
-                </Button>
-              ) : null}
-              {(isOpen && holdings.length) || user.roles.administrator ? (
-                <Button variant="primary" onClick={() => setShowPlaceBidModal(true)}>
-                  Place Bid
-                </Button>
-              ) : null}
+        {bids.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="text-muted-foreground mb-4 text-center">
+              Place your first bid to participate in the buyback.
             </div>
           </div>
-        </div>
-
-        {bids.length > 0 ? (
-          <>
-            <Separator />
-            <h2 className="text-xl font-medium">Bids</h2>
-          </>
         ) : null}
 
         {isLoading ? <TableSkeleton columns={5} /> : bids.length > 0 ? <DataTable table={bidsTable} /> : null}
@@ -159,6 +160,11 @@ export default function BuybackView() {
           tenderOfferId={id}
           companyId={company.id}
           companyName={company.name || ""}
+          startsAt={data.startsAt}
+          endsAt={data.endsAt}
+          minimumValuation={data.minimumValuation}
+          attachmentKey={data.attachment?.key}
+          attachmentFilename={data.attachment?.filename}
           letterOfTransmittal={data.letterOfTransmittal}
           holdings={holdings}
           {...(company.fullyDilutedShares !== null && { fullyDilutedShares: company.fullyDilutedShares })}

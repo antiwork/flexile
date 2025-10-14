@@ -1,29 +1,34 @@
 "use client";
+import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import SignForm from "@/components/SignForm";
-import { StepIndicator } from "@/components/StepIndicator";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DialogStack,
+  DialogStackBody,
+  DialogStackContent,
+  DialogStackDescription,
+  DialogStackFooter,
+  DialogStackHeader,
+  DialogStackNext,
+  DialogStackPrevious,
+  DialogStackTitle,
+} from "@/components/ui/dialog-stack";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/trpc/client";
 import { formatMoney } from "@/utils/formatMoney";
+import { formatDate } from "@/utils/time";
 
 type Holding = { className: string; count: number };
-
-interface StepProps {
-  open: boolean;
-  onNext: () => void;
-  onBack: () => void;
-  onClose: () => void;
-}
 
 interface PlaceBidModalProps {
   open: boolean;
@@ -31,6 +36,11 @@ interface PlaceBidModalProps {
   tenderOfferId: string;
   companyId: string;
   companyName: string;
+  startsAt: Date | string;
+  endsAt: Date | string;
+  minimumValuation: number;
+  attachmentKey?: string;
+  attachmentFilename?: string;
   letterOfTransmittal: string;
   holdings: Holding[];
   fullyDilutedShares?: number;
@@ -43,271 +53,23 @@ const bidFormSchema = z.object({
   pricePerShare: z.number().min(0),
 });
 
-type BidFormValues = z.infer<typeof bidFormSchema>;
-
-const STEP_LABELS = ["Review & Sign", "Enter Bid", "Review & Submit"];
-const TOTAL_STEPS = STEP_LABELS.length;
-const FIRST_STEP = 0;
-const LAST_STEP = TOTAL_STEPS - 1;
-
-function ReviewAndSignStep({
-  open,
-  onNext,
-  onClose,
-  letterOfTransmittal,
-  companyName,
-  signed,
-  onSign,
-}: StepProps & { letterOfTransmittal: string; companyName: string; signed: boolean; onSign: () => void }) {
-  if (!open) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col">
-        <DialogHeader>
-          <DialogTitle>Letter of Transmittal</DialogTitle>
-          <StepIndicator currentStep={1} totalSteps={TOTAL_STEPS} stepLabels={STEP_LABELS} />
-        </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto">
-          <div className="text-sm">
-            THIS DOCUMENT AND THE INFORMATION REFERENCED HEREIN OR PROVIDED TO YOU IN CONNECTION WITH THIS OFFER TO
-            PURCHASE CONSTITUTES CONFIDENTIAL INFORMATION REGARDING {companyName.toUpperCase()} (THE "COMPANY"). BY
-            OPENING OR READING THIS DOCUMENT, YOU HEREBY AGREE TO MAINTAIN THE CONFIDENTIALITY OF SUCH INFORMATION AND
-            NOT TO DISCLOSE IT TO ANY PERSON (OTHER THAN TO YOUR LEGAL, FINANCIAL AND TAX ADVISORS, AND THEN ONLY IF
-            THEY HAVE SIMILARLY AGREED TO MAINTAIN THE CONFIDENTIALITY OF SUCH INFORMATION), AND SUCH INFORMATION SHALL
-            BE SUBJECT TO THE CONFIDENTIALITY OBLIGATIONS UNDER [THE NON-DISCLOSURE AGREEMENT INCLUDED] ON THE PLATFORM
-            (AS DEFINED BELOW) AND ANY OTHER AGREEMENT YOU HAVE WITH THE COMPANY, INCLUDING ANY "INVENTION AND
-            NON-DISCLOSURE AGREEMENT", "CONFIDENTIALITY, INVENTION AND NON-SOLICITATION AGREEMENT" OR OTHER
-            NONDISCLOSURE AGREEMENT. BY YOU ACCEPTING TO RECEIVE THIS OFFER TO PURCHASE, YOU ACKNOWLEDGE AND AGREE TO
-            THE FOREGOING RESTRICTIONS.
-          </div>
-
-          <Separator />
-
-          <article aria-label="Letter of transmittal" className="flex flex-col gap-4">
-            <SignForm content={letterOfTransmittal} signed={signed} onSign={onSign} />
-          </article>
-        </div>
-
-        <DialogFooter>
-          <Button variant="primary" onClick={onNext} disabled={!signed}>
-            Next
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function BidDetailsStep({
-  open,
-  onNext,
-  onBack,
-  onClose,
-  form,
-  holdings,
-  fullyDilutedShares,
-  maxShares,
-}: StepProps & {
-  form: UseFormReturn<BidFormValues>;
-  holdings: Holding[];
-  fullyDilutedShares?: number;
-  maxShares: number;
-}) {
-  if (!open) return null;
-
-  const pricePerShare = form.watch("pricePerShare");
-  const numberOfShares = form.watch("numberOfShares");
-
-  const handleNext = async () => {
-    const isValid = await form.trigger();
-    if (!isValid) {
-      return;
-    }
-
-    const values = form.getValues();
-    if (values.numberOfShares > maxShares) {
-      form.setError("numberOfShares", {
-        message: `Number of shares must be between 1 and ${maxShares.toLocaleString()}`,
-      });
-      return;
-    }
-
-    if (values.pricePerShare <= 0) {
-      form.setError("pricePerShare", {
-        message: "Price per share must be greater than 0",
-      });
-      return;
-    }
-
-    onNext();
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Enter Bid Details</DialogTitle>
-          <StepIndicator currentStep={2} totalSteps={TOTAL_STEPS} stepLabels={STEP_LABELS} />
-        </DialogHeader>
-
-        <Form {...form}>
-          <div className="grid gap-4">
-            <FormField
-              control={form.control}
-              name="shareClass"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Share class</FormLabel>
-                  <FormControl>
-                    <ComboBox
-                      {...field}
-                      options={holdings.map((h) => ({
-                        value: h.className,
-                        label: `${h.className} (${h.count.toLocaleString()} shares)`,
-                      }))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="numberOfShares"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Number of shares</FormLabel>
-                  <FormControl>
-                    <NumberInput {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="pricePerShare"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Price per share</FormLabel>
-                  <FormControl>
-                    <NumberInput {...field} decimal prefix="$" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {fullyDilutedShares ? (
-              <div>
-                <strong>Implied company valuation:</strong> {formatMoney(fullyDilutedShares * pricePerShare)}
-              </div>
-            ) : null}
-
-            <div>
-              <strong>Total amount:</strong> {formatMoney(numberOfShares * pricePerShare)}
-            </div>
-          </div>
-        </Form>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onBack}>
-            Back
-          </Button>
-          <Button variant="primary" onClick={() => void handleNext()}>
-            Next
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function ReviewAndSubmitStep({
-  open,
-  onBack,
-  onClose,
-  formValues,
-  fullyDilutedShares,
-  createMutation,
-  onSubmit,
-}: StepProps & {
-  formValues: BidFormValues;
-  fullyDilutedShares?: number;
-  createMutation: ReturnType<typeof trpc.tenderOffers.bids.create.useMutation>;
-  onSubmit: () => Promise<void>;
-}) {
-  if (!open) return null;
-
-  const totalAmount = formValues.numberOfShares * formValues.pricePerShare;
-
-  return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Review & Submit</DialogTitle>
-          <StepIndicator currentStep={3} totalSteps={TOTAL_STEPS} stepLabels={STEP_LABELS} />
-        </DialogHeader>
-
-        <div className="space-y-3">
-          <div>
-            <p className="text-muted-foreground text-sm">Share class</p>
-            <p className="font-medium">{formValues.shareClass}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground text-sm">Number of shares</p>
-            <p className="font-medium">{formValues.numberOfShares.toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground text-sm">Price per share</p>
-            <p className="font-medium">${formValues.pricePerShare}</p>
-          </div>
-          {fullyDilutedShares ? (
-            <div>
-              <p className="text-muted-foreground text-sm">Implied company valuation</p>
-              <p className="font-medium">{formatMoney(fullyDilutedShares * formValues.pricePerShare)}</p>
-            </div>
-          ) : null}
-          <div className="border-t pt-2">
-            <p className="text-muted-foreground text-sm">Total amount</p>
-            <p className="text-lg font-bold">{formatMoney(totalAmount)}</p>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onBack}>
-            Back
-          </Button>
-          <MutationStatusButton
-            idleVariant="primary"
-            mutation={createMutation}
-            onClick={() => void onSubmit()}
-            loadingText="Submitting..."
-          >
-            Submit bid
-          </MutationStatusButton>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 export default function PlaceBidModal({
   open,
   onOpenChange,
   tenderOfferId,
   companyId,
   companyName,
+  startsAt,
+  endsAt,
+  minimumValuation,
+  attachmentKey,
+  attachmentFilename,
   letterOfTransmittal,
   holdings,
   fullyDilutedShares,
   refetchBids,
 }: PlaceBidModalProps) {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [signed, setSigned] = useState(false);
 
   const form = useForm({
@@ -338,7 +100,7 @@ export default function PlaceBidModal({
       },
     );
     setSigned(false);
-    setCurrentStep(FIRST_STEP);
+    setActiveIndex(0);
   };
 
   const createMutation = trpc.tenderOffers.bids.create.useMutation({
@@ -352,6 +114,20 @@ export default function PlaceBidModal({
   const handleSubmit = async () => {
     const values = form.getValues();
 
+    if (values.numberOfShares > maxShares) {
+      form.setError("numberOfShares", {
+        message: `Number of shares must be between 1 and ${maxShares.toLocaleString()}`,
+      });
+      return;
+    }
+
+    if (values.pricePerShare <= 0) {
+      form.setError("pricePerShare", {
+        message: "Price per share must be greater than 0",
+      });
+      return;
+    }
+
     await createMutation.mutateAsync({
       companyId,
       tenderOfferId,
@@ -361,48 +137,205 @@ export default function PlaceBidModal({
     });
   };
 
-  const goToNext = () => setCurrentStep((s) => Math.min(s + 1, LAST_STEP));
-  const goToBack = () => setCurrentStep((s) => Math.max(s - 1, FIRST_STEP));
-
   const handleClose = () => {
     resetForm();
     onOpenChange(false);
   };
 
-  if (!open) return null;
+  const pricePerShare = form.watch("pricePerShare");
+  const numberOfShares = form.watch("numberOfShares");
 
   return (
-    <>
-      <ReviewAndSignStep
-        open={currentStep === 0}
-        onNext={goToNext}
-        onBack={goToBack}
-        onClose={handleClose}
-        letterOfTransmittal={letterOfTransmittal}
-        companyName={companyName}
-        signed={signed}
-        onSign={() => setSigned(true)}
-      />
-      <BidDetailsStep
-        open={currentStep === 1}
-        onNext={goToNext}
-        onBack={goToBack}
-        onClose={handleClose}
-        form={form}
-        holdings={holdings}
-        {...(fullyDilutedShares !== undefined && { fullyDilutedShares })}
-        maxShares={maxShares}
-      />
-      <ReviewAndSubmitStep
-        open={currentStep === 2}
-        onNext={goToNext}
-        onBack={goToBack}
-        onClose={handleClose}
-        formValues={form.getValues()}
-        {...(fullyDilutedShares !== undefined && { fullyDilutedShares })}
-        createMutation={createMutation}
-        onSubmit={handleSubmit}
-      />
-    </>
+    <DialogStack
+      open={open}
+      onOpenChange={(isOpen) => (isOpen ? undefined : handleClose())}
+      activeIndex={activeIndex}
+      setActiveIndex={setActiveIndex}
+    >
+      <DialogStackBody>
+        <DialogStackContent>
+          <DialogStackHeader>
+            <DialogStackTitle>Buyback details</DialogStackTitle>
+          </DialogStackHeader>
+          <p className="text-muted-foreground mb-2">
+            Review the buyback terms below and continue to confirm your participation.
+          </p>
+
+          <div className="grid gap-4">
+            <div className="border-muted-foreground flex items-center justify-between border-b pb-4">
+              <span className="text-base font-medium">Start date</span>
+              <span className="text-base">{formatDate(startsAt)}</span>
+            </div>
+            <div className="border-muted-foreground flex items-center justify-between border-b pb-4">
+              <span className="text-base font-medium">End date</span>
+              <span className="text-base">{formatDate(endsAt)}</span>
+            </div>
+            <div className="border-muted-foreground flex items-center justify-between border-b pb-4">
+              <span className="text-base font-medium">Starting valuation</span>
+              <span className="text-base">{formatMoney(minimumValuation)}</span>
+            </div>
+            <div className="border-muted-foreground flex items-center justify-between border-b pb-4">
+              <span className="text-base font-medium">Starting price per share</span>
+              <span className="text-base">
+                {fullyDilutedShares ? formatMoney(Number(minimumValuation) / Number(fullyDilutedShares)) : "N/A"}
+              </span>
+            </div>
+            {attachmentKey && attachmentFilename ? (
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-base font-medium">Buyback documents</span>
+                <Button variant="outline" asChild>
+                  <Link href={`/download/${attachmentKey}/${attachmentFilename}`}>
+                    <ArrowDownTrayIcon className="mr-2 h-5 w-5" />
+                    Download
+                  </Link>
+                </Button>
+              </div>
+            ) : null}
+          </div>
+
+          <DialogStackFooter>
+            <DialogStackNext>
+              <Button variant="primary" className="w-full">
+                Continue
+              </Button>
+            </DialogStackNext>
+          </DialogStackFooter>
+        </DialogStackContent>
+
+        <DialogStackContent>
+          <DialogStackHeader>
+            <DialogStackTitle>Letter of Transmittal</DialogStackTitle>
+          </DialogStackHeader>
+          {activeIndex === 1 && (
+            <div className="flex-1 overflow-y-auto">
+              <DialogStackDescription>
+                Review and sign the Letter of Transmittal to confirm your participation in this buyback.
+              </DialogStackDescription>
+              <div className="mt-6 text-sm">
+                THIS DOCUMENT AND THE INFORMATION REFERENCED HEREIN OR PROVIDED TO YOU IN CONNECTION WITH THIS OFFER TO
+                PURCHASE CONSTITUTES CONFIDENTIAL INFORMATION REGARDING {companyName.toUpperCase()} (THE "COMPANY"). BY
+                OPENING OR READING THIS DOCUMENT, YOU HEREBY AGREE TO MAINTAIN THE CONFIDENTIALITY OF SUCH INFORMATION
+                AND NOT TO DISCLOSE IT TO ANY PERSON (OTHER THAN TO YOUR LEGAL, FINANCIAL AND TAX ADVISORS, AND THEN
+                ONLY IF THEY HAVE SIMILARLY AGREED TO MAINTAIN THE CONFIDENTIALITY OF SUCH INFORMATION), AND SUCH
+                INFORMATION SHALL BE SUBJECT TO THE CONFIDENTIALITY OBLIGATIONS UNDER [THE NON-DISCLOSURE AGREEMENT
+                INCLUDED] ON THE PLATFORM (AS DEFINED BELOW) AND ANY OTHER AGREEMENT YOU HAVE WITH THE COMPANY,
+                INCLUDING ANY "INVENTION AND NON-DISCLOSURE AGREEMENT", "CONFIDENTIALITY, INVENTION AND NON-SOLICITATION
+                AGREEMENT" OR OTHER NONDISCLOSURE AGREEMENT. BY YOU ACCEPTING TO RECEIVE THIS OFFER TO PURCHASE, YOU
+                ACKNOWLEDGE AND AGREE TO THE FOREGOING RESTRICTIONS.
+              </div>
+
+              <Separator />
+
+              <article aria-label="Letter of transmittal" className="flex flex-col gap-4">
+                <SignForm content={letterOfTransmittal} signed={signed} onSign={() => setSigned(true)} />
+              </article>
+            </div>
+          )}
+          <DialogStackFooter>
+            <DialogStackPrevious>
+              <Button variant="outline">Back</Button>
+            </DialogStackPrevious>
+            <DialogStackNext>
+              <Button variant="primary" disabled={!signed}>
+                Continue
+              </Button>
+            </DialogStackNext>
+          </DialogStackFooter>
+        </DialogStackContent>
+
+        <DialogStackContent>
+          <DialogStackHeader>
+            <DialogStackTitle>Place a bid</DialogStackTitle>
+          </DialogStackHeader>
+          <p className="text-muted-foreground mb-2">Submit an offer to sell your shares in this buyback event.</p>
+
+          <Form {...form}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void handleSubmit();
+              }}
+              className="contents"
+            >
+              <FormField
+                control={form.control}
+                name="shareClass"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Share class</FormLabel>
+                    <FormControl>
+                      <ComboBox
+                        {...field}
+                        options={holdings.map((h) => ({
+                          value: h.className,
+                          label: `${h.className} (${h.count.toLocaleString()} shares)`,
+                        }))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="numberOfShares"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of shares</FormLabel>
+                      <FormControl>
+                        <NumberInput {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="pricePerShare"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Price per share</FormLabel>
+                      <FormControl>
+                        <NumberInput {...field} decimal prefix="$" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {fullyDilutedShares ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-semibold">Implied company valuation</span>
+                  <span className="text-base">{formatMoney(fullyDilutedShares * pricePerShare)}</span>
+                </div>
+              ) : null}
+
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-base font-semibold">Total amount</span>
+                <span className="text-base">{formatMoney(numberOfShares * pricePerShare)}</span>
+              </div>
+
+              <DialogStackFooter>
+                <DialogStackPrevious>
+                  <Button variant="outline">Back</Button>
+                </DialogStackPrevious>
+                <MutationStatusButton
+                  type="submit"
+                  idleVariant="primary"
+                  mutation={createMutation}
+                  loadingText="Submitting..."
+                >
+                  Submit bid
+                </MutationStatusButton>
+              </DialogStackFooter>
+            </form>
+          </Form>
+        </DialogStackContent>
+      </DialogStackBody>
+    </DialogStack>
   );
 }
