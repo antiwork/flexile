@@ -67,6 +67,15 @@ jobs:
       - name: Build setup
         uses: ./.github/common/
 
+      - name: Cache Next build
+        id: next-cache
+        uses: actions/cache@v4
+        with:
+          path: frontend/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'backend/pnpm-lock.yaml', 'frontend/pnpm-lock.yaml') }}-${{ hashFiles('frontend/**/*.{ts,tsx}') }}
+          restore-keys: |
+            next-${{ runner.os }}-
+
       - run: NODE_ENV=test pnpm run build-next --no-lint
         shell: bash
 
