@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import superjson from "superjson";
 import { useUserStore } from "@/global";
 import { request } from "@/utils/request";
-import { current_user_data_path } from "@/utils/routes";
+import { current_user_path } from "@/utils/routes";
 import { type AppRouter } from "./server";
 import { createClient } from "./shared";
 
@@ -26,7 +26,7 @@ export const UserDataProvider = ({ children }: { children: React.ReactNode }) =>
     queryFn: isSignedIn
       ? async (): Promise<unknown> => {
           const response = await request({
-            url: current_user_data_path(),
+            url: current_user_path(),
             method: "GET",
             accept: "json",
             assertOk: true,

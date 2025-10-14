@@ -1332,21 +1332,21 @@ export const company_workers_path: ((
 
 /**
  * Generates rails route to
- * /internal/current_user_data(.:format)
+ * /internal/current_user(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const current_user_data_url: ((
+export const current_user_url: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
- * /internal/current_user_data(.:format)
+ * /internal/current_user(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const current_user_data_path: ((
+export const current_user_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 

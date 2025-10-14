@@ -1,13 +1,13 @@
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
 import { currentUserSchema } from "@/models/user";
 import { assertDefined } from "@/utils/assert";
-import { current_user_data_url } from "@/utils/routes";
+import { current_user_url } from "@/utils/routes";
 
 export const getRedirectUrl = async (req: Request) => {
   const host = assertDefined(req.headers.get("Host"));
   const url = new URL(req.url);
   const protocol = url.protocol.slice(0, -1); // "http" or "https"
-  const response = await fetch(current_user_data_url({ protocol, host }), {
+  const response = await fetch(current_user_url({ protocol, host }), {
     headers: {
       cookie: req.headers.get("cookie") ?? "",
       "User-Agent": req.headers.get("User-Agent") ?? "",

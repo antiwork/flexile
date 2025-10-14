@@ -1487,19 +1487,19 @@ export const company_workers_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":tru
 
 /**
  * Generates rails route to
- * /internal/current_user_data(.:format)
+ * /internal/current_user(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const current_user_data_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"current_user_data"],[1,[2,[8,"."],[3,"format"]]]]]]], true);
+export const current_user_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"current_user"],[1,[2,[8,"."],[3,"format"]]]]]]], true);
 
 /**
  * Generates rails route to
- * /internal/current_user_data(.:format)
+ * /internal/current_user(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const current_user_data_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"current_user_data"],[1,[2,[8,"."],[3,"format"]]]]]]]);
+export const current_user_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"current_user"],[1,[2,[8,"."],[3,"format"]]]]]]]);
 
 /**
  * Generates rails route to
