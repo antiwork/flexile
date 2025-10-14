@@ -16,10 +16,10 @@ runs:
     - name: Cache Puppeteer Chrome
       uses: actions/cache@v4
       with:
-      path: ~/.cache/puppeteer
-      key: puppeteer-chrome-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      restore-keys: |
-        puppeteer-chrome-${{ runner.os }}-
+        path: ~/.cache/puppeteer
+        key: puppeteer-chrome-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          puppeteer-chrome-${{ runner.os }}-
 
     - run: pnpm puppeteer browsers install chrome
       shell: bash
