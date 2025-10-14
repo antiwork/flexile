@@ -84,6 +84,11 @@ scope path: :internal, module: :internal do
     resources :templates, only: [:index, :show, :update]
     resources :documents, only: [:create]
     resources :share_classes, only: [:index]
+    resources :cap_tables, only: [] do
+      collection do
+        get :export
+      end
+    end
   end
 
   resources :wise_account_requirements, only: :create
