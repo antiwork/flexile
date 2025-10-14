@@ -9,7 +9,6 @@ RSpec.describe Internal::CurrentUsersController do
     context "when authenticated" do
       before do
         allow(controller).to receive(:current_context) do
-          allow(controller).to receive(:authenticate_user_json!).and_return(true)
           Current.user = user
           Current.company = company
           Current.company_administrator = company_administrator
