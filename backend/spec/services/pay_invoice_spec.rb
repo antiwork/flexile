@@ -177,6 +177,27 @@ RSpec.describe PayInvoice, :vcr do
           described_class.new(invoice.id).process
         end.to raise_error(StandardError, "Not enough account balance to pay out for company #{company.id}")
       end
+
+      it "only creates one payment" do
+        promises = 2.times.map do
+          Concurrent::Promise.execute do
+            described_class.new(invoice.id).process
+          rescue StandardError => e
+            Rails.logger.info "PayInvoice execution failed as expected: #{e.message}"
+          end
+        end
+
+        promises.each(&:wait!)
+
+        invoice.reload
+        expect(invoice.payments.count).to eq(1)
+
+        payment = Payment.last
+        expect(payment.processor_uuid).to be_present
+        expect(payment.wise_quote_id).to be_present
+        expect(payment.wise_transfer_id).to be_present
+        expect(payment.wise_credential).to eq WiseCredential.flexile_credential
+      end
     end
 
     describe "errors" do
