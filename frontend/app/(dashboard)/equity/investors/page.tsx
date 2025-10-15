@@ -22,7 +22,7 @@ import {
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatOwnershipPercentage } from "@/utils/numbers";
-import { export_company_cap_tables_path } from "@/utils/routes";
+import { export_company_cap_table_path } from "@/utils/routes";
 import { useIsMobile } from "@/utils/use-mobile";
 import { type ColumnConfig, ColumnSettingsToggle, useColumnSettings } from "./ColumnSettings";
 
@@ -322,7 +322,7 @@ export default function CapTable() {
               ) : null}
             </div>
             <Button variant="outline" asChild>
-              <a href={export_company_cap_tables_path(company.id, newSchema ? { new_schema: true } : {})}>
+              <a href={export_company_cap_table_path(company.id, newSchema ? { new_schema: true } : {})}>
                 <Download className="size-4" />
                 Download CSV
               </a>

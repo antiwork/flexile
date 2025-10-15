@@ -15,7 +15,7 @@ import {
 } from "@/db/schema";
 import type { CapTableInvestor, CapTableInvestorForAdmin } from "@/models/investor";
 import { companyProcedure, createRouter } from "@/trpc";
-import { company_administrator_cap_table_url } from "@/utils/routes";
+import { company_cap_table_url } from "@/utils/routes";
 
 export const capTableRouter = createRouter({
   show: companyProcedure.input(z.object({ newSchema: z.boolean().optional() })).query(async ({ ctx, input }) => {
@@ -234,7 +234,7 @@ export const capTableRouter = createRouter({
       if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
       if (!ctx.company.equityEnabled) throw new TRPCError({ code: "FORBIDDEN", message: "Equity must be enabled" });
 
-      const response = await fetch(company_administrator_cap_table_url(ctx.company.externalId), {
+      const response = await fetch(company_cap_table_url(ctx.company.externalId), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

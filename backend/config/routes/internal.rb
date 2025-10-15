@@ -35,7 +35,6 @@ scope path: :internal, module: :internal do
       resources :stripe_microdeposit_verifications, only: :create
       resources :equity_grants, only: [:create]
       resources :option_pools, only: [:create]
-      resource :cap_table, only: [:create]
     end
 
     resource :switch, only: :create, controller: "switch"
@@ -83,10 +82,8 @@ scope path: :internal, module: :internal do
     resources :templates, only: [:index, :show, :update]
     resources :documents, only: [:create]
     resources :share_classes, only: [:index]
-    resources :cap_tables, only: [] do
-      collection do
-        get :export
-      end
+    resource :cap_table, only: [:create] do
+      get :export
     end
   end
 

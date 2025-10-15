@@ -588,30 +588,6 @@ export const balance_credit_webhooks_wise_index_path: ((
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/administrator/cap_table(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_administrator_cap_table_url: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/companies/:company_id/administrator/cap_table(.:format)
- * @param {any} company_id
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const company_administrator_cap_table_path: ((
-  company_id: RequiredRouteParameter,
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /internal/companies/:company_id/administrator/equity_grants(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -750,6 +726,30 @@ export const company_administrators_url: ((
  * @returns {string} route path
  */
 export const company_administrators_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/cap_table(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_cap_table_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/cap_table(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const company_cap_table_path: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
@@ -1552,24 +1552,24 @@ export const email_otp_index_path: ((
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/cap_tables/export(.:format)
+ * /internal/companies/:company_id/cap_table/export(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const export_company_cap_tables_url: ((
+export const export_company_cap_table_url: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
 /**
  * Generates rails route to
- * /internal/companies/:company_id/cap_tables/export(.:format)
+ * /internal/companies/:company_id/cap_table/export(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
  * @returns {string} route path
  */
-export const export_company_cap_tables_path: ((
+export const export_company_cap_table_path: ((
   company_id: RequiredRouteParameter,
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
