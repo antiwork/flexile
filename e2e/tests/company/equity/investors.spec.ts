@@ -10,6 +10,7 @@ import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { companyInvestors } from "@/db/schema";
+import { export_company_cap_table_path } from "@/utils/routes";
 
 test.describe("Investors", () => {
   test("displays correct ownership percentages for investors", async ({ page }) => {
@@ -191,7 +192,7 @@ test.describe("Investors", () => {
 
     const downloadButton = page.getByRole("link", { name: "Download CSV" });
     await expect(downloadButton).toBeVisible();
-    await expect(downloadButton).toHaveAttribute("href", `/internal/companies/${company.externalId}/cap_tables/export`);
+    await expect(downloadButton).toHaveAttribute("href", export_company_cap_table_path(company.externalId));
   });
 
   test.describe("Column Settings", () => {
