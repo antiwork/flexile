@@ -25,7 +25,7 @@ export default function CompanyDetailsLoading() {
           </div>
         ))}
       </div>
-      <Skeleton className="mt-6 h-10 w-28" />
+      <Skeleton className="mt-6 h-9 w-28" />
     </div>
   );
 }
