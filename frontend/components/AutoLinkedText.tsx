@@ -41,10 +41,11 @@ const AutoLinkedText: React.FC<AutoLinkedTextProps> = ({ text, className, preser
       attributes: {
         class: `prose prose-sm max-w-none text-inherit ${className || ""}`.trim(),
       },
-      handleClick: (_view, _pos, event) =>
+      handleClick: (_view, _pos, event) => {
         // Allow links to be clickable in read-only mode
-        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-        (event.target as HTMLElement).tagName !== "A",
+        const target = event.target;
+        return !(target instanceof HTMLElement && target.tagName === "A");
+      },
     },
   });
 
