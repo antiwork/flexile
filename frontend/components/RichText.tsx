@@ -1,6 +1,7 @@
 import type { Content } from "@tiptap/core";
+import { Link } from "@tiptap/extension-link";
 import { EditorContent, isList, useEditor } from "@tiptap/react";
-import { Bold, Heading, Italic, Link, List, Underline } from "lucide-react";
+import { Bold, Heading, Italic, Link as LinkIcon, List, Underline } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { linkClasses } from "@/components/Link";
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,30 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/utils";
-import { richTextExtensions } from "@/utils/richText";
+import { linkifyContent, richTextExtensions } from "@/utils/richText";
 
-const RichText = ({ content, className }: { content: Content; className?: string }) => {
+const RichText = ({
+  content,
+  className,
+  enableAutolink = false,
+}: {
+  content: Content | string;
+  className?: string;
+  enableAutolink?: boolean;
+}) => {
+  const extensions = enableAutolink
+    ? [
+        ...richTextExtensions,
+        Link.configure({
+          HTMLAttributes: {
+            class: linkClasses,
+          },
+        }),
+      ]
+    : richTextExtensions;
+
   const editor = useEditor({
-    extensions: richTextExtensions,
+    extensions,
     content,
     editorProps: {
       attributes: {
@@ -23,7 +43,14 @@ const RichText = ({ content, className }: { content: Content; className?: string
     immediatelyRender: false,
   });
 
-  useEffect(() => void editor?.commands.setContent(content, false), [content]);
+  useEffect(() => {
+    if (editor) {
+      editor.commands.setContent(content);
+      if (enableAutolink) {
+        linkifyContent(editor);
+      }
+    }
+  }, [content, enableAutolink, editor]);
 
   return (
     <div>
@@ -80,7 +107,7 @@ export const Editor = ({
     {
       label: "Link",
       name: "link",
-      icon: Link,
+      icon: LinkIcon,
       onClick: () => setAddingLink({ url: typeof currentLink === "string" ? currentLink : "" }),
     },
     { label: "Bullet list", name: "bulletList", icon: List },
