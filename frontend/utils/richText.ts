@@ -41,10 +41,12 @@ export function linkifyContent(editor: Editor, defaultProtocol = "https") {
         const from = pos + 1 + wordStart + t.start;
         const to = pos + 1 + wordStart + t.end;
 
-        // skip if already linked
-        if (tr.doc.rangeHasMark(from, to, linkType) || doc.rangeHasMark(from, to, linkType)) continue;
-        // skip if inside code
-        if (codeMark && (tr.doc.rangeHasMark(from, to, codeMark) || doc.rangeHasMark(from, to, codeMark))) continue;
+        const isAlreadyLinked = tr.doc.rangeHasMark(from, to, linkType) || doc.rangeHasMark(from, to, linkType);
+        if (isAlreadyLinked) continue;
+
+        const isInsideCode =
+          codeMark && (tr.doc.rangeHasMark(from, to, codeMark) || doc.rangeHasMark(from, to, codeMark));
+        if (isInsideCode) continue;
 
         const href = t.href;
         if (!href || !isAllowedUri(href)) continue;
