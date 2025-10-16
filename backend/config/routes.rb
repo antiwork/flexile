@@ -62,8 +62,6 @@ Rails.application.routes.draw do
     end
   end
 
-  get "/internal/userid", to: "application#userid"
-  get "/internal/current_user_data", to: "application#current_user_data"
   resource :oauth_redirect, only: :show
 
   def spa_controller_action
