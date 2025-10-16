@@ -12,7 +12,7 @@ export const richTextExtensions = [
   Underline,
 ];
 
-export function linkifyContent(editor: Editor, defaultProtocol = "http") {
+export function linkifyContent(editor: Editor, defaultProtocol = "https") {
   const linkType = editor.schema.marks.link;
   if (!linkType) return;
 
