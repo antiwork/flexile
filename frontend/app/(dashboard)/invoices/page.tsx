@@ -222,8 +222,10 @@ export default function InvoicesPage() {
             header: "Contractor",
             cell: (info) => (
               <>
-                <b className="truncate">{info.getValue()}</b>
-                <div className="text-muted-foreground text-xs">{info.row.original.contractor.role}</div>
+                <b className="truncate">{info.getValue() || info.row.original.contractor.user.email}</b>
+                <div className="text-muted-foreground text-xs">
+                  {info.getValue() ? info.row.original.contractor.role : info.row.original.contractor.user.email}
+                </div>
               </>
             ),
           })
@@ -286,8 +288,10 @@ export default function InvoicesPage() {
           return user.roles.administrator ? (
             <div className="flex flex-col gap-2">
               <div>
-                <div className="text-base font-medium">{invoice.billFrom}</div>
-                <div className="text-muted-foreground">{invoice.contractor.role}</div>
+                <div className="text-base font-medium">{invoice.billFrom || invoice.contractor.user.email}</div>
+                <div className="text-muted-foreground">
+                  {invoice.billFrom ? invoice.contractor.role : invoice.contractor.user.email}
+                </div>
               </div>
               <div className="text-sm">{amount}</div>
             </div>
@@ -600,7 +604,7 @@ export default function InvoicesPage() {
               {selectedApprovableInvoices.slice(0, 5).map((invoice, index, array) => (
                 <Fragment key={invoice.id}>
                   <div className="flex justify-between gap-2">
-                    <b>{invoice.billFrom}</b>
+                    <b>{invoice.billFrom || invoice.contractor.user.email}</b>
                     <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
                   </div>
                   {index !== array.length - 1 && <Separator />}
@@ -687,7 +691,9 @@ const TasksModal = ({
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="md:w-110">
         <DialogHeader>
-          <DialogTitle className="max-md:text-base max-md:leading-5 max-md:font-medium">{invoice.billFrom}</DialogTitle>
+          <DialogTitle className="max-md:text-base max-md:leading-5 max-md:font-medium">
+            {invoice.billFrom || invoice.contractor.user.email}
+          </DialogTitle>
         </DialogHeader>
         <section>
           <StatusDetails invoice={invoice} className="mb-4" />

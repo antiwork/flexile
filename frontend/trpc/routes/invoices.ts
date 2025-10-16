@@ -214,7 +214,7 @@ export const invoicesRouter = createRouter({
           contractor: {
             with: {
               user: {
-                columns: { externalId: true },
+                columns: { externalId: true, email: true },
                 with: {
                   userComplianceInfos: { ...latestUserComplianceInfo, columns: { taxInformationConfirmedAt: true } },
                 },
@@ -260,6 +260,7 @@ export const invoicesRouter = createRouter({
           role: invoice.contractor.role,
           user: {
             id: invoice.contractor.user.externalId,
+            email: invoice.contractor.user.email,
             complianceInfo: invoice.contractor.user.userComplianceInfos[0],
           },
         },
