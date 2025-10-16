@@ -1,8 +1,17 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-export const selectComboboxOption = async (page: Locator | Page, name: string, option: string) => {
-  await page.getByRole("combobox", { name }).click();
-  await page.getByRole("option", { name: option, exact: true }).first().click();
+export const selectComboboxOption = async (page: Page, name: string, option: string) => {
+  const combobox = page.getByRole("combobox", { name, exact: true });
+  await combobox.click();
+  const popover = page.getByRole("listbox", { name: /listbox options/u });
+  // Not ideal that we end up with a combobox nested inside another, but this issue exists in shadcn too so we can address it elsewhere.
+  const searchField = popover.getByRole("combobox");
+
+  await searchField.fill(option);
+  await expect(popover.getByRole("option", { name: option, exact: true })).toBeVisible();
+
+  await searchField.press("Enter");
+  await expect(popover).not.toBeVisible();
 };
 
 export const fillDatePicker = async (page: Page, name: string, value: string) => {
