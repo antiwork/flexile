@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ColorPicker from "@/components/ColorPicker";
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
@@ -22,7 +23,8 @@ const formSchema = z.object({
   brandColor: z.string().nullable(),
   publicName: z.string(),
 });
-export default function SettingsPage() {
+
+function SettingsPageContent() {
   const company = useCurrentCompany();
   const [settings, { refetch }] = trpc.companies.settings.useSuspenseQuery({ companyId: company.id });
   const queryClient = useQueryClient();
@@ -181,5 +183,55 @@ export default function SettingsPage() {
       </Form>
       <StripeMicrodepositVerification />
     </div>
+  );
+}
+
+function SettingsPageSkeleton() {
+  return (
+    <div className="grid gap-8">
+      <hgroup>
+        <h2 className="mb-1 text-3xl font-bold">Workspace settings</h2>
+        <p className="text-muted-foreground text-base">
+          Set your workspace identity with your company's branding details.
+        </p>
+      </hgroup>
+      <div className="grid gap-4">
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-2">
+            <div>Logo</div>
+            <div className="flex items-center">
+              <Skeleton className="size-12 rounded-full" />
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <div>Brand color</div>
+            <div className="flex items-center">
+              <Skeleton className="size-12 rounded-full" />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-2">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="grid gap-2">
+            <Skeleton className="h-5 w-36" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+
+        <Skeleton className="h-10 w-32" />
+      </div>
+    </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<SettingsPageSkeleton />}>
+      <SettingsPageContent />
+    </Suspense>
   );
 }
