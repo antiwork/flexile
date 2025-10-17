@@ -241,6 +241,7 @@ test.describe("One-off payments", () => {
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
       await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
+      await expect(page.getByRole("row", { name: workerUser.email })).toBeVisible();
 
       await db.update(companies).set({ requiredInvoiceApprovalCount: 1 }).where(eq(companies.id, company.id));
 
