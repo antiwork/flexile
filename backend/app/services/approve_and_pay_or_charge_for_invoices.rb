@@ -14,7 +14,7 @@ class ApproveAndPayOrChargeForInvoices
       ApproveInvoice.new(invoice:, approver: user).perform
       if invoice.reload.immediately_payable? # for example, invoice payment failed
         EnqueueInvoicePayment.new(invoice:).perform
-      elsif invoice.payable? && !invoice.company_charged?
+      elsif invoice.payable? && !invoice.company_charged? && invoice.tax_requirements_met?
         chargeable_invoice_ids << invoice.id
       end
     end
