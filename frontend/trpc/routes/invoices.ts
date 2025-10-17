@@ -106,6 +106,13 @@ export const invoicesRouter = createRouter({
   createAsAdmin: companyProcedure.input(invoiceInputSchema).mutation(async ({ ctx, input }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
+    if (!ctx.company.name) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Please add your company name in settings before issuing payments",
+      });
+    }
+
     const invoicer = await db.query.users.findFirst({
       where: eq(users.externalId, input.userExternalId),
       with: {
@@ -318,7 +325,7 @@ export const invoicesRouter = createRouter({
           contractor: {
             with: {
               user: {
-                columns: { externalId: true },
+                columns: { ...simpleUser.columns },
                 with: {
                   userComplianceInfos: { ...latestUserComplianceInfo, columns: { taxInformationConfirmedAt: true } },
                 },
@@ -363,7 +370,7 @@ export const invoicesRouter = createRouter({
         contractor: {
           role: invoice.contractor.role,
           user: {
-            id: invoice.contractor.user.externalId,
+            ...simpleUser(invoice.contractor.user),
             complianceInfo: invoice.contractor.user.userComplianceInfos[0],
           },
         },

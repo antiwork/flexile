@@ -158,16 +158,19 @@ export default function ContractorPage() {
         userExternalId: id,
         totalAmountCents: BigInt(values.amountInCents),
       });
-      await request({
-        method: "PATCH",
-        url: approve_company_invoices_path(company.id),
-        accept: "json",
-        jsonData:
-          company.requiredInvoiceApprovals > 1
-            ? { approve_ids: [invoice.externalId] }
-            : { pay_ids: [invoice.externalId] },
-        assertOk: true,
-      });
+      const invoiceCreatedByRecipient = invoice.userId === invoice.createdById;
+      if (invoiceCreatedByRecipient) {
+        await request({
+          method: "PATCH",
+          url: approve_company_invoices_path(company.id),
+          accept: "json",
+          jsonData:
+            company.requiredInvoiceApprovals > 1
+              ? { approve_ids: [invoice.externalId] }
+              : { pay_ids: [invoice.externalId] },
+          assertOk: true,
+        });
+      }
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
       await trpcUtils.invoices.get.invalidate({ companyId: company.id, id: invoice.externalId });
       closeIssuePaymentModal();

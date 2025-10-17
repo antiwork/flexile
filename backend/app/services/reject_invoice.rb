@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class RejectInvoice
-  INVOICE_STATUSES_THAT_DENY_REJECTION = Invoice::PAID_OR_PAYING_STATES + [Invoice::FAILED]
+  INVOICE_STATUSES_THAT_DENY_REJECTION = Invoice::PAID_OR_PAYING_STATES
 
   def initialize(invoice:, rejected_by:, reason: nil)
     @invoice = invoice

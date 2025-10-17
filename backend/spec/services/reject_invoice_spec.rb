@@ -47,5 +47,27 @@ RSpec.describe RejectInvoice do
         end
       end
     end
+
+    context "when the invoice is in failed status" do
+      before { invoice.update!(status: Invoice::FAILED) }
+
+      it "allows rejection of the failed invoice" do
+        expect { service.perform }.to change { invoice.reload.status }.to(Invoice::REJECTED)
+      end
+    end
+
+    context "when the invoice is pending acceptance by payee" do
+      before do
+        invoice.update!(
+          status: Invoice::RECEIVED,
+          created_by_id: create(:user).id,
+          accepted_at: nil,
+        )
+      end
+
+      it "allows rejection of invoices pending acceptance" do
+        expect { service.perform }.to change { invoice.reload.status }.to(Invoice::REJECTED)
+      end
+    end
   end
 end
