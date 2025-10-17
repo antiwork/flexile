@@ -223,7 +223,7 @@ export default function InvoicesPage() {
             cell: (info) => (
               <>
                 <b className="truncate">{info.getValue()}</b>
-                <div className="text-muted-foreground text-xs">{info.row.original.contractor.role}</div>
+                <div className="text-muted-foreground text-xs">{info.row.original.contractor.user.email}</div>
               </>
             ),
           })
@@ -287,7 +287,7 @@ export default function InvoicesPage() {
             <div className="flex flex-col gap-2">
               <div>
                 <div className="text-base font-medium">{invoice.billFrom}</div>
-                <div className="text-muted-foreground">{invoice.contractor.role}</div>
+                <div className="text-muted-foreground">{invoice.contractor.user.email}</div>
               </div>
               <div className="text-sm">{amount}</div>
             </div>
