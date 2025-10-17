@@ -166,6 +166,34 @@ test.describe("Investors", () => {
     await expect(page.locator("tbody")).toContainText("833");
   });
 
+  test("shows download CSV button with correct link", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fullyDilutedShares: BigInt(1000000),
+    });
+
+    const { user: investor } = await usersFactory.create({ legalName: "Test Investor" });
+    const { companyInvestor } = await companyInvestorsFactory.create({
+      companyId: company.id,
+      userId: investor.id,
+    });
+    await shareHoldingsFactory.create({
+      companyInvestorId: companyInvestor.id,
+      numberOfShares: 100000,
+      shareHolderName: "Test Investor",
+    });
+    await db
+      .update(companyInvestors)
+      .set({ totalShares: BigInt(100000) })
+      .where(eq(companyInvestors.id, companyInvestor.id));
+
+    await login(page, adminUser, "/equity/investors");
+
+    const downloadButton = page.getByRole("link", { name: "Download CSV" });
+    await expect(downloadButton).toBeVisible();
+    await expect(downloadButton).toHaveAttribute("href", `/internal/companies/${company.externalId}/cap_tables/export`);
+  });
+
   test.describe("Column Settings", () => {
     test("shows and hides columns properly", async ({ page }) => {
       const { company, adminUser } = await companiesFactory.createCompletedOnboarding({

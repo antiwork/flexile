@@ -2,12 +2,10 @@ import { skipToken } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { z } from "zod";
+import ComboBox from "@/components/ComboBox";
 import NumberInput from "@/components/NumberInput";
 import RadioButtons from "@/components/RadioButtons";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { useUserStore } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
 
@@ -17,7 +15,7 @@ export const schema = z.object({
   role: z.string(),
 });
 
-const defaultRoles = ["Software Engineer", "Designer", "Product Manager", "Data Analyst"];
+const defaultOnboardingRoles = ["Software Engineer", "Designer", "Product Manager", "Data Analyst"];
 
 export default function FormFields() {
   const form = useFormContext<z.infer<typeof schema>>();
@@ -25,10 +23,17 @@ export default function FormFields() {
   const companyId = useUserStore((state) => state.user?.currentCompanyId);
   const { data: workers } = trpc.contractors.list.useQuery(companyId ? { companyId, excludeAlumni: true } : skipToken);
 
-  const [rolePopoverOpen, setRolePopoverOpen] = useState(false);
-  const roleRegex = new RegExp(form.watch("role"), "iu");
-  const allRoles = workers ? [...new Set(workers.map((worker) => worker.role))].sort() : defaultRoles;
-  const filteredRoles = allRoles.filter((value) => roleRegex.test(value));
+  const [searchQuery, setSearchQuery] = useState("");
+  const trimmedQuery = searchQuery.trim();
+  const roleValue = form.getValues("role");
+
+  const roleSet = new Set(workers ? workers.map((worker) => worker.role) : defaultOnboardingRoles);
+  if (trimmedQuery) roleSet.add(trimmedQuery);
+  if (roleValue) roleSet.add(roleValue);
+
+  const availableRoles = Array.from(roleSet)
+    .sort((a, b) => new Intl.Collator(undefined, { sensitivity: "base" }).compare(a, b))
+    .map((role) => ({ label: role, value: role }));
 
   return (
     <>
@@ -38,48 +43,17 @@ export default function FormFields() {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Role</FormLabel>
-            <Command shouldFilter={false} className="overflow-visible">
-              <Popover open={!!rolePopoverOpen && filteredRoles.length > 0}>
-                <PopoverAnchor asChild>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      autoComplete="off"
-                      className="focus-visible:ring-ring focus-visible:border-border focus-visible:ring-2"
-                      onFocus={() => setRolePopoverOpen(true)}
-                      onBlur={() => setRolePopoverOpen(false)}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        setRolePopoverOpen(true);
-                      }}
-                    />
-                  </FormControl>
-                </PopoverAnchor>
-                <PopoverContent
-                  onOpenAutoFocus={(e) => e.preventDefault()}
-                  className="p-0"
-                  style={{ width: "var(--radix-popover-trigger-width)" }}
-                >
-                  <CommandList>
-                    <CommandGroup>
-                      {filteredRoles.map((option) => (
-                        <CommandItem
-                          key={option}
-                          value={option}
-                          onSelect={(e) => {
-                            field.onChange(e);
-                            setRolePopoverOpen(false);
-                          }}
-                        >
-                          {option}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </PopoverContent>
-              </Popover>
-            </Command>
+            <FormControl>
+              <ComboBox
+                {...field}
+                onChange={field.onChange}
+                onSearchChange={setSearchQuery}
+                options={availableRoles}
+                placeholder="Search or enter a role..."
+                searchPlaceholder="Search or enter a role..."
+                searchValue={searchQuery}
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
