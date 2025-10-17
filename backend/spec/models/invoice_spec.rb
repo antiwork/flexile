@@ -532,9 +532,9 @@ RSpec.describe Invoice do
       context "when it has sufficient approvals" do
         before { create_list(:invoice_approval, 2, invoice:) }
 
-        it "returns false" do
+        it "returns true" do
           allow_any_instance_of(Invoice).to receive(:tax_requirements_met?).and_return(false)
-          expect(invoice.payable?).to eq(false)
+          expect(invoice.payable?).to eq(true)
         end
       end
     end

@@ -15,6 +15,9 @@ class PayInvoice
       raise "Payout method not set up for company #{company.id}" unless company.bank_account_ready?
       raise "Not enough account balance to pay out for company #{company.id}" unless company.has_sufficient_balance?(invoice.cash_amount_in_usd)
       raise "Invoice not immediately payable for company #{company.id}" unless invoice.immediately_payable?
+      unless invoice.tax_requirements_met?
+        raise "Tax information not confirmed for user #{invoice.user.id}. User must complete tax setup before payment can be processed."
+      end
 
       if invoice.cash_amount_in_cents.zero? && invoice.equity_amount_in_options != 0
         invoice.mark_as_paid!(timestamp: Time.current)

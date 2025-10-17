@@ -5,7 +5,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { invoiceStatuses } from "@/db/enums";
+import { invoiceStatuses, PayRateType } from "@/db/enums";
 import {
   activeStorageAttachments,
   companyContractors,
@@ -85,14 +85,13 @@ export const invoicesRouter = createRouter({
     });
     if (!invoicer) throw new TRPCError({ code: "NOT_FOUND" });
 
-    const companyWorker = await db.query.companyContractors.findFirst({
+    let companyWorker = await db.query.companyContractors.findFirst({
       where: and(eq(companyContractors.companyId, ctx.company.id), eq(companyContractors.userId, invoicer.id)),
       with: {
         user: true,
         company: true,
       },
     });
-    if (!companyWorker) throw new TRPCError({ code: "NOT_FOUND" });
 
     const invoiceNumber = await getNextAdminInvoiceNumber(ctx.company.id, invoicer.id);
     const billFrom = invoicer.userComplianceInfos[0]?.businessName || invoicer.legalName || null;
@@ -103,7 +102,7 @@ export const invoicesRouter = createRouter({
     const { userExternalId, description, totalAmountCents, ...values } = input;
     const dateToday = new Date();
 
-    if (ctx.company.equityEnabled) {
+    if (ctx.company.equityEnabled && companyWorker) {
       const equityResult = await calculateInvoiceEquity({
         companyContractor: companyWorker,
         serviceAmountCents: Number(totalAmountCents),
@@ -131,6 +130,33 @@ export const invoicesRouter = createRouter({
 
     const { invoice, paymentDescriptions } = await db.transaction(async (tx) => {
       const date = formatISO(dateToday, { representation: "date" });
+
+      if (!companyWorker) {
+        const newContractor = await tx
+          .insert(companyContractors)
+          .values({
+            companyId: ctx.company.id,
+            userId: invoicer.id,
+            startedAt: dateToday,
+            role: "Pending Invitation",
+            payRateType: PayRateType.Hourly,
+            payRateInSubunits: 0,
+            equityPercentage: 0,
+            payRateCurrency: "USD",
+            contractSignedElsewhere: false,
+          })
+          .returning();
+        const createdContractor = assertDefined(newContractor[0]);
+        companyWorker = await tx.query.companyContractors.findFirst({
+          where: eq(companyContractors.id, createdContractor.id),
+          with: {
+            user: true,
+            company: true,
+          },
+        });
+        companyWorker = assertDefined(companyWorker);
+      }
+
       const invoiceResult = await tx
         .insert(invoices)
         .values({
@@ -145,7 +171,7 @@ export const invoicesRouter = createRouter({
           invoiceDate: date,
           dueOn: date,
           billFrom,
-          billTo: assertDefined(ctx.company.name),
+          billTo: ctx.company.name || "Company Name Pending",
           streetAddress: invoicer.streetAddress,
           city: invoicer.city,
           state: invoicer.state,
@@ -176,18 +202,20 @@ export const invoicesRouter = createRouter({
     });
     const bankAccountLastFour = invoicer.wiseRecipients[0]?.lastFourDigits;
 
-    await sendEmail({
-      from: `Flexile <support@${env.DOMAIN}>`,
-      to: companyWorker.user.email,
-      replyTo: companyWorker.company.email,
-      subject: `${companyWorker.company.name} has sent you money`,
-      react: OneOffInvoiceCreated({
-        companyName: companyWorker.company.name ?? companyWorker.company.email,
-        invoice,
-        bankAccountLastFour,
-        paymentDescriptions,
-      }),
-    });
+    if (companyWorker && invoicer.email) {
+      await sendEmail({
+        from: `Flexile <support@${env.DOMAIN}>`,
+        to: invoicer.email,
+        replyTo: ctx.company.email,
+        subject: `${ctx.company.name || "Your Company"} has sent you money`,
+        react: OneOffInvoiceCreated({
+          companyName: ctx.company.name ?? ctx.company.email,
+          invoice,
+          bankAccountLastFour,
+          paymentDescriptions,
+        }),
+      });
+    }
 
     return invoice;
   }),
