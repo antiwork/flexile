@@ -143,8 +143,7 @@ class Invoice < ApplicationRecord
     company.active? &&
       status.in?([APPROVED, FAILED, PAYMENT_PENDING]) &&
       (created_by_user? || accepted_at.present?) &&
-      invoice_approvals_count >= company.required_invoice_approval_count &&
-      tax_requirements_met?
+      invoice_approvals_count >= company.required_invoice_approval_count
   end
 
   def immediately_payable?

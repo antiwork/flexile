@@ -128,13 +128,22 @@ export const useApproveInvoices = (onSuccess?: () => void) => {
 
   return useMutation({
     mutationFn: async ({ approve_ids, pay_ids }: { approve_ids?: string[]; pay_ids?: string[] }) => {
-      await request({
-        method: "PATCH",
-        url: approve_company_invoices_path(company.id),
-        accept: "json",
-        jsonData: { approve_ids, pay_ids },
-        assertOk: true,
-      });
+      try {
+        await request({
+          method: "PATCH",
+          url: approve_company_invoices_path(company.id),
+          accept: "json",
+          jsonData: { approve_ids, pay_ids },
+          assertOk: true,
+        });
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("Tax information not confirmed")) {
+          throw new Error(
+            "This invoice cannot be paid until the recipient completes their tax information setup. They will need to provide their tax details before payment can be processed.",
+          );
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       setTimeout(() => {
