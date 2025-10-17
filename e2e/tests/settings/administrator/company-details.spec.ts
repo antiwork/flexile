@@ -94,6 +94,14 @@ test.describe("Company details", () => {
     await expect(page.getByText("This field is required.")).toHaveCount(5);
     await expect(page.getByText("Please check that your EIN is 9 numbers long.")).toBeVisible();
 
+    await page.getByLabel("Company's legal name").fill("   ");
+    await page.getByLabel("Residential address (street name, number, apt)").fill("   ");
+    await page.getByLabel("City or town").fill("   ");
+    await page.getByLabel("ZIP code").fill("   ");
+    await page.getByRole("button", { name: "Save changes" }).click();
+
+    await expect(page.getByText("This field is required.")).toHaveCount(5);
+
     await EINLocator.fill("111111111");
 
     await expect(page.getByText("Your EIN can't have all identical digits.")).toBeVisible();
