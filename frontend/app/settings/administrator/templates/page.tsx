@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -16,6 +17,7 @@ import { Editor as RichTextEditor } from "@/components/RichText";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormField } from "@/components/ui/form";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany } from "@/global";
 import { request } from "@/utils/request";
@@ -23,11 +25,61 @@ import { company_template_path, company_templates_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 
 export default function Templates() {
+  return (
+    <div className="grid gap-8">
+      <hgroup>
+        <h2 className="mb-2 text-3xl font-bold">Templates</h2>
+        <p className="text-muted-foreground text-base">
+          Create and edit legal document templates with rich-text editing, linked to the right events in your account.
+        </p>
+      </hgroup>
+      <Suspense fallback={<TemplatesTableSkeleton />}>
+        <TemplatesContent />
+      </Suspense>
+    </div>
+  );
+}
+
+function TemplatesTableSkeleton() {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Used for</TableHead>
+          <TableHead>Last edited</TableHead>
+          <TableHead />
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <TableRow key={i}>
+            <TableCell>
+              <Skeleton className="h-4 w-24" />
+            </TableCell>
+            <TableCell>
+              <Skeleton className="h-4 w-20" />
+            </TableCell>
+            <TableCell>
+              <Skeleton className="h-4 w-24" />
+            </TableCell>
+            <TableCell className="h-14">
+              <Skeleton className="h-7 w-12" />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+function TemplatesContent() {
   const company = useCurrentCompany();
   const [editingTemplate, setEditingTemplate] = useQueryState("edit", parseAsStringLiteral(templateTypes));
   const { data: templates } = useSuspenseQuery({
     queryKey: ["templates", company.id],
     queryFn: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10000));
       const response = await request({
         method: "GET",
         url: company_templates_path(company.id),
@@ -41,13 +93,7 @@ export default function Templates() {
   });
 
   return (
-    <div className="grid gap-8">
-      <hgroup>
-        <h2 className="mb-2 text-3xl font-bold">Templates</h2>
-        <p className="text-muted-foreground text-base">
-          Create and edit legal document templates with rich-text editing, linked to the right events in your account.
-        </p>
-      </hgroup>
+    <>
       <Table>
         <TableHeader>
           <TableRow>
@@ -83,8 +129,12 @@ export default function Templates() {
           })}
         </TableBody>
       </Table>
-      {editingTemplate ? <EditTemplate type={editingTemplate} onClose={() => void setEditingTemplate(null)} /> : null}
-    </div>
+      {editingTemplate ? (
+        <Suspense fallback={null}>
+          <EditTemplate type={editingTemplate} onClose={() => void setEditingTemplate(null)} />
+        </Suspense>
+      ) : null}
+    </>
   );
 }
 
