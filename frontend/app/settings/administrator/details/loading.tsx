@@ -1,3 +1,4 @@
+import SkeletonList from "@/components/SkeletonList";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CompanyDetailsLoading() {
@@ -18,12 +19,12 @@ export default function CompanyDetailsLoading() {
         ))}
       </div>
       <div className="my-4 grid grid-rows-1 gap-4 md:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="space-y-2">
+        <SkeletonList count={3}>
+          <div className="space-y-2">
             <Skeleton className="h-4 w-full max-w-40" />
             <Skeleton className="h-10 w-full" />
           </div>
-        ))}
+        </SkeletonList>
       </div>
       <Skeleton className="mt-6 h-9 w-28" />
     </div>
