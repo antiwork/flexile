@@ -38,6 +38,8 @@ test.describe("People table sorting", () => {
 
     await login(page, adminUser, "/people");
 
+    await expect(page.locator("tbody tr")).toContainText(["Invited"]);
+
     const statusHeader = page.getByRole("columnheader", { name: "Status" });
 
     await statusHeader.click();
