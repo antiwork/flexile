@@ -419,7 +419,7 @@ export function MobileBottomNav() {
     <nav
       role="navigation"
       aria-label="Mobile navigation"
-      className="bg-background border-border pointer-events-auto fixed right-0 bottom-0 left-0 z-60 h-15 print:hidden"
+      className="bg-background border-border pointer-events-auto fixed right-0 bottom-0 left-0 z-60 h-15 border-t print:hidden"
     >
       <ul role="list" className="flex items-center justify-around">
         {mainItems.map((item) => (
