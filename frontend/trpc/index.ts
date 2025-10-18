@@ -20,9 +20,10 @@ import { db } from "@/db";
 import { companies, users } from "@/db/schema";
 import env from "@/env";
 import { authOptions } from "@/lib/auth";
+import { currentUserSchema } from "@/models/user";
 import { assertDefined } from "@/utils/assert";
 import { richTextExtensions } from "@/utils/richText";
-import { configure as configureRoutes } from "@/utils/routes";
+import { configure as configureRoutes, current_user_url } from "@/utils/routes";
 import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 
@@ -44,6 +45,36 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
 
   let userId: number | null = null;
 
+  const resolveUserId = async (jwtUserId: number) => {
+    try {
+      const authenticatedUser = await db.query.users.findFirst({
+        where: eq(users.id, BigInt(jwtUserId)),
+        columns: { teamMember: true },
+      });
+
+      // Short-circuit to avoid additional queries for non-team members
+      // Since non-team members cannot impersonate, we can just return the authenticated user ID from the token
+      if (!authenticatedUser?.teamMember) return jwtUserId;
+
+      const response = await fetch(current_user_url(), { headers });
+      if (!response.ok) return null;
+
+      // Retrieve impersonation state stored in current user
+      const { isImpersonating, id: externalId } = currentUserSchema.parse(await response.json());
+
+      if (!isImpersonating) return jwtUserId;
+
+      const impersonatedUser = await db.query.users.findFirst({
+        where: eq(users.externalId, externalId),
+        columns: { id: true },
+      });
+
+      return impersonatedUser ? Number(impersonatedUser.id) : null;
+    } catch {
+      return null;
+    }
+  };
+
   // Get userId from NextAuth JWT session
   const session = await getServerSession(authOptions);
   if (session?.user) {
@@ -55,7 +86,9 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
         const payload = z
           .object({ user_id: z.number() })
           .safeParse(JSON.parse(Buffer.from(base64Payload, "base64").toString()));
-        if (payload.success) userId = payload.data.user_id;
+        if (payload.success) {
+          userId = await resolveUserId(payload.data.user_id);
+        }
       }
     } catch {}
   }

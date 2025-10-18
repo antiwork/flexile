@@ -2,6 +2,24 @@
 
 module Admin
   class UsersController < Admin::ApplicationController
+    def impersonate
+      user = User.find_by!(external_id: params[:id])
+      authorize user
+
+      ImpersonationService.new(Current.authenticated_user).impersonate(user)
+
+      redirect_to frontend_dashboard_path, allow_other_host: true
+    rescue ActiveRecord::RecordNotFound, Pundit::NotAuthorizedError
+      redirect_to admin_users_path, alert: "The requested resource could not be accessed."
+    end
+
+    def unimpersonate
+      ImpersonationService.new(Current.authenticated_user).unimpersonate
+      reset_current
+
+      render json: { success: true }
+    end
+
     # Overwrite any of the RESTful controller actions to implement custom behavior
     # For example, you may want to send an email after a foo is updated.
     #
@@ -44,5 +62,10 @@ module Admin
 
     # See https://administrate-prototype.herokuapp.com/customizing_controller_actions
     # for more information
+
+    private
+      def frontend_dashboard_path
+        "#{PROTOCOL}://#{DOMAIN}/dashboard"
+      end
   end
 end

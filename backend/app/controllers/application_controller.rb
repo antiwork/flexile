@@ -51,6 +51,6 @@ class ApplicationController < ActionController::Base
     end
 
     def user_for_paper_trail
-      Current.user&.id
+      Current.whodunnit
     end
 end
