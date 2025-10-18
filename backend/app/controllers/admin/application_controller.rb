@@ -9,16 +9,29 @@
 module Admin
   class ApplicationController < Administrate::ApplicationController
     include SetCurrent
+    include PunditAuthorization
 
     before_action :authenticate_user
     before_action :authenticate_admin
 
     def authenticate_user
-      raise ActionController::RoutingError, "Not Found" if Current.user.nil?
+      unless Current.authenticated_user
+        redirect_to frontend_login_path, allow_other_host: true
+      end
     end
 
     def authenticate_admin
-      raise ActionController::RoutingError, "Not Found" unless Current.user.team_member?
+      unless Current.authenticated_user.team_member?
+        redirect_to frontend_dashboard_path, allow_other_host: true
+      end
+    end
+
+    def frontend_login_path(redirect_url = request.fullpath)
+      "#{PROTOCOL}://#{DOMAIN}/login?#{URI.encode_www_form(redirect_url: redirect_url)}"
+    end
+
+    def frontend_dashboard_path
+      "#{PROTOCOL}://#{DOMAIN}/dashboard"
     end
 
     # Override this value to specify the number of elements to display at a time

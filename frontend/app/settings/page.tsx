@@ -26,7 +26,7 @@ import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { request } from "@/utils/request";
-import { settings_path } from "@/utils/routes";
+import { settings_path, unimpersonate_admin_users_path } from "@/utils/routes";
 
 export default function SettingsPage() {
   return (
@@ -120,6 +120,22 @@ const LeaveWorkspaceSection = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const unimpersonateMutation = useMutation({
+    mutationFn: async () => {
+      if (!user.isImpersonating) return;
+
+      await request({
+        method: "DELETE",
+        url: unimpersonate_admin_users_path(),
+        accept: "json",
+        assertOk: true,
+      });
+    },
+    onSuccess: () => {
+      queryClient.clear();
+    },
+  });
+
   const leaveCompanyMutation = useMutation({
     mutationFn: async () => {
       const response = await request({
@@ -146,6 +162,7 @@ const LeaveWorkspaceSection = () => {
       if (user.companies.length > 1) {
         router.push("/dashboard");
       } else {
+        await unimpersonateMutation.mutateAsync();
         await signOut({ redirect: false }).then(logout);
         router.push("/login");
       }

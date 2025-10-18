@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::OauthController < Internal::BaseController
-  include UserDataSerialization, JwtAuthenticatable, ApiTokenAuthenticatable
+  include UserDataSerialization, ApiTokenAuthenticatable
 
   skip_before_action :verify_authenticity_token
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Internal::SignupController < Internal::BaseController
-  include OtpValidation, UserDataSerialization, JwtAuthenticatable
+  include OtpValidation, UserDataSerialization
 
   def send_otp
     email = params[:email]

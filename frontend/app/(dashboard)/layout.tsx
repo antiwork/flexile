@@ -1,7 +1,8 @@
 "use client";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { ChevronDown, ChevronRight, LogOut, MessageCircleQuestion, Settings, Sparkles, X } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown, ChevronRight, LogOut, MessageCircleQuestion, Settings, Sparkles, UserX, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -38,6 +39,8 @@ import { useSwitchCompany } from "@/lib/companySwitcher";
 import { hasSubItems, type NavLinkInfo, useNavLinks } from "@/lib/useNavLinks";
 import { UserDataProvider } from "@/trpc/client";
 import { cn } from "@/utils";
+import { request } from "@/utils/request";
+import { unimpersonate_admin_users_path } from "@/utils/routes";
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = useCurrentUser();
@@ -50,6 +53,23 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useUserStore();
   const isDefaultLogo = !company.logo_url || company.logo_url.includes("default-company-logo");
   const { switchCompany } = useSwitchCompany();
+  const queryClient = useQueryClient();
+
+  const unimpersonateMutation = useMutation({
+    mutationFn: async () => {
+      if (!user.isImpersonating) return;
+
+      await request({
+        method: "DELETE",
+        url: unimpersonate_admin_users_path(),
+        accept: "json",
+        assertOk: true,
+      });
+    },
+    onSuccess: () => {
+      queryClient.clear();
+    },
+  });
 
   return (
     <SidebarProvider>
@@ -183,9 +203,32 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
                 label="Support center"
                 badge={<SupportBadge />}
               />
+              {user.isImpersonating ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => {
+                      unimpersonateMutation.mutate(undefined, {
+                        onSuccess: () => {
+                          router.push("/admin");
+                        },
+                      });
+                    }}
+                    className="!text-destructive"
+                  >
+                    <UserX className="size-6" />
+                    Unbecome
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => void signOut({ redirect: false }).then(logout)}
+                  onClick={() => {
+                    unimpersonateMutation.mutate(undefined, {
+                      onSuccess: () => {
+                        void signOut({ redirect: false }).then(logout);
+                      },
+                    });
+                  }}
                   className="cursor-pointer"
                 >
                   <LogOut className="size-6" />

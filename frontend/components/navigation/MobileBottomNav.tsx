@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, LogOut, MessageCircleQuestion, MoreHorizontal } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight, LogOut, MessageCircleQuestion, MoreHorizontal, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import React, { useMemo, useState } from "react";
 import ReactDOM from "react-dom";
@@ -15,6 +16,8 @@ import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import { useSwitchCompany } from "@/lib/companySwitcher";
 import { hasSubItems, type NavLinkInfo, useNavLinks } from "@/lib/useNavLinks";
 import { cn } from "@/utils/index";
+import { request } from "@/utils/request";
+import { unimpersonate_admin_users_path } from "@/utils/routes";
 
 // Constants
 const NAV_PRIORITIES: Record<string, number> = {
@@ -283,8 +286,28 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
   const [navState, setNavState] = useState<NavigationState>({ view: "main" });
   const { data: session } = useSession();
   const { logout } = useUserStore();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const unimpersonateMutation = useMutation({
+    mutationFn: async () => {
+      if (!user.isImpersonating) return;
+
+      await request({
+        method: "DELETE",
+        url: unimpersonate_admin_users_path(),
+        accept: "json",
+        assertOk: true,
+      });
+      router.push("/admin");
+    },
+    onSuccess: () => {
+      queryClient.clear();
+    },
+  });
 
   const handleLogout = async () => {
+    await unimpersonateMutation.mutateAsync();
     if (session?.user) await signOut({ redirect: false });
     logout();
     window.location.href = "/login";
@@ -370,6 +393,23 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
                 badge: <SupportBadge />,
               }}
             />
+            {user.isImpersonating ? (
+              <SheetNavItem
+                pathname={pathname}
+                onClick={() =>
+                  unimpersonateMutation.mutate(undefined, {
+                    onSuccess: () => {
+                      router.push("/admin");
+                    },
+                  })
+                }
+                item={{
+                  label: "Stop impersonating",
+                  icon: UserX,
+                }}
+                className="text-destructive"
+              />
+            ) : null}
             <button
               className="flex w-full items-center gap-3 rounded-none px-6 py-3 text-left transition-colors"
               aria-label="Log out"
