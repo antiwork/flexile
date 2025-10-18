@@ -334,14 +334,10 @@ const ActionPanel = ({
   setEndModalOpen: Dispatch<SetStateAction<boolean>>;
 }) => {
   const isMobile = useIsMobile();
+  const company = useCurrentCompany();
+  const canIssuePayment = !!company.name;
   const handleIssuePaymentClick = () => {
-    if (!company.name) {
-      // eslint-disable-next-line no-console
-      console.error(
-        "Company details must be added before creating invoices. Please add your company name in settings.",
-      );
-      return;
-    }
+    if (!canIssuePayment) return;
     setIssuePaymentModalOpen(true);
   };
   const handleEndContractClick = () => {
@@ -360,7 +356,9 @@ const ActionPanel = ({
         <DialogDescription className="sr-only">Manage Payment or Contract</DialogDescription>
         <div className="flex flex-col gap-3">
           <DialogClose asChild onClick={handleIssuePaymentClick}>
-            <Button variant="primary">Issue payment</Button>
+            <Button variant="primary" disabled={!canIssuePayment}>
+              Issue payment
+            </Button>
           </DialogClose>
           {contractor.endedAt && !isFuture(contractor.endedAt) ? (
             <Status className="justify-center" variant="critical">
@@ -376,7 +374,7 @@ const ActionPanel = ({
     </Dialog>
   ) : (
     <div className="flex items-center gap-3">
-      <Button variant="primary" onClick={handleIssuePaymentClick}>
+      <Button variant="primary" onClick={handleIssuePaymentClick} disabled={!canIssuePayment}>
         Issue payment
       </Button>
       {contractor.endedAt && !isFuture(contractor.endedAt) ? (
