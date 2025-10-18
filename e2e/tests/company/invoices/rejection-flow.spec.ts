@@ -126,11 +126,4 @@ test.describe("invoice rejection flow", () => {
     expect(updatedInvoice?.notes).toBe("Corrected Q1 development work with accurate hours");
     expect(updatedInvoice?.invoiceNumber).toBe("INV-REJECT-001");
   });
-
-  // TODO: Add E2E test for rejecting payment_pending invoices
-  // The backend logic is tested in spec/services/reject_invoice_spec.rb
-  test.skip("allows rejection of invoices in PAYMENT_PENDING status", async ({ page: _page }) => {
-    // This test is skipped because payment_pending invoices require complex setup
-    // The functionality is verified through unit tests
-  });
 });
