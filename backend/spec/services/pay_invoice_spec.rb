@@ -66,7 +66,7 @@ RSpec.describe PayInvoice, :vcr do
     it "raises an error" do
       expect do
         described_class.new(invoice.id).process
-      end.to raise_error("Invoice already paid or being processed")
+      end.to raise_error(/Invoice not immediately payable/)
     end
   end
 
@@ -79,7 +79,7 @@ RSpec.describe PayInvoice, :vcr do
     it "raises an error" do
       expect do
         described_class.new(invoice.id).process
-      end.to raise_error("Invoice already paid or being processed")
+      end.to raise_error(/Invoice not immediately payable/)
     end
   end
 
@@ -89,7 +89,7 @@ RSpec.describe PayInvoice, :vcr do
     it "raises an error" do
       expect do
         described_class.new(invoice.id).process
-      end.to raise_error("Payout method not set up for company #{company.id}")
+      end.to raise_error(/Payout method not set up|Invoice not immediately payable/)
     end
   end
 

@@ -641,7 +641,7 @@ class SeedDataGeneratorFromTemplate
               contractor: company_worker,
             ).process
             unless result[:success]
-              raise Error, "Error creating invoice for #{user.email}: #{error_message}"
+              raise Error, "Error creating invoice for #{user.email}: #{result[:error_message]}"
             end
             invoice = result[:invoice]
             if rand < 0.1 # 10% chance

@@ -41,18 +41,8 @@ test.describe("One-off payments", () => {
 
       await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
-      await page.getByRole("button", { name: "Issue payment" }).click();
-
-      await withinModal(
-        async (modal) => {
-          await modal.getByLabel("Amount").fill("100.00");
-          await modal.getByLabel("What is this for?").fill("Test payment");
-          await modal.getByRole("button", { name: "Issue payment" }).click();
-
-          await expect(modal.getByText(/Company details must be added/iu)).toBeVisible();
-        },
-        { page, assertClosed: false },
-      );
+      // Button should be disabled when company name is missing
+      await expect(page.getByRole("button", { name: "Issue payment" })).toBeDisabled();
 
       const invoice = await db.query.invoices.findFirst({
         where: eq(invoices.companyId, company.id),
