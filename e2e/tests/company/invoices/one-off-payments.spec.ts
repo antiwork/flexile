@@ -51,7 +51,7 @@ test.describe("One-off payments", () => {
 
           await expect(modal.getByText(/Company details must be added/iu)).toBeVisible();
         },
-        { page },
+        { page, assertClosed: false },
       );
 
       const invoice = await db.query.invoices.findFirst({

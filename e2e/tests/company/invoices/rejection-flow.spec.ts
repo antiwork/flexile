@@ -156,10 +156,9 @@ test.describe("invoice rejection flow", () => {
     await login(page, adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
 
-    // Wait for invoices table to load
-    await page.waitForSelector("tbody tr", { timeout: 10000 });
-
+    // Wait for the specific invoice row to appear
     const invoiceRow = page.locator("tbody tr").filter({ hasText: contractorUser.legalName || "never" });
+    await expect(invoiceRow).toBeVisible({ timeout: 10000 });
     await invoiceRow.getByLabel("Select row").check();
     await page.getByRole("button", { name: "Reject selected invoices" }).click();
     await withinModal(
