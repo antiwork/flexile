@@ -156,8 +156,12 @@ test.describe("invoice rejection flow", () => {
     await login(page, adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
 
-    // Wait for the specific invoice row to appear
-    const invoiceRow = page.locator("tbody tr").filter({ hasText: contractorUser.legalName || "never" });
+    // Clear filters to show payment_pending invoices
+    await page.getByRole("button", { name: "Filter" }).click();
+    await page.getByRole("menuitem", { name: "Clear all filters" }).click();
+
+    // Wait for the specific invoice row to appear using invoice number
+    const invoiceRow = page.locator("tbody tr").filter({ hasText: "INV-PENDING-001" });
     await expect(invoiceRow).toBeVisible({ timeout: 10000 });
     await invoiceRow.getByLabel("Select row").check();
     await page.getByRole("button", { name: "Reject selected invoices" }).click();

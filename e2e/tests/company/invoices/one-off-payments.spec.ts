@@ -57,7 +57,7 @@ test.describe("One-off payments", () => {
       const invoice = await db.query.invoices.findFirst({
         where: eq(invoices.companyId, company.id),
       });
-      expect(invoice).toBeNull();
+      expect(invoice).toBeUndefined();
 
       // Restore company name for subsequent tests
       await db.update(companies).set({ name: "Test Company" }).where(eq(companies.id, company.id));
