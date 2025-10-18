@@ -595,7 +595,10 @@ class SeedDataGeneratorFromTemplate
             end
             print_message("Created #{contractor.email} (#{contractor.bank_accounts.alive.any? ? "onboarded" : "not onboarded"})")
 
-            create_company_worker_invoices!(company_worker, ended_at:)
+
+            if contractor.bank_accounts.alive.any?
+              create_company_worker_invoices!(company_worker, ended_at:)
+            end
 
             if company_worker_data.key?("equity_grants")
               company_investor = company.company_investors.create!(
