@@ -19,6 +19,9 @@ module JwtAuthenticatable
       Current.authenticated_user = user
     end
 
+    def generate_jwt_token(user)
+      JwtService.generate_token(user)
+    end
 
     def render_unauthorized
       render json: { error: "Unauthorized" }, status: :unauthorized
