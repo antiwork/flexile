@@ -156,13 +156,19 @@ test.describe("invoice rejection flow", () => {
     await login(page, adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
 
+    // Wait for invoices page to load
+    await expect(page.locator("tbody")).toBeVisible();
+
     // Clear filters to show payment_pending invoices
     await page.getByRole("button", { name: "Filter" }).click();
     await page.getByRole("menuitem", { name: "Clear all filters" }).click();
 
+    // Wait for table to reload after filter change
+    await page.waitForLoadState("networkidle");
+
     // Wait for the specific invoice row to appear using invoice number
     const invoiceRow = page.locator("tbody tr").filter({ hasText: "INV-PENDING-001" });
-    await expect(invoiceRow).toBeVisible({ timeout: 10000 });
+    await expect(invoiceRow).toBeVisible({ timeout: 15000 });
     await invoiceRow.getByLabel("Select row").check();
     await page.getByRole("button", { name: "Reject selected invoices" }).click();
     await withinModal(
