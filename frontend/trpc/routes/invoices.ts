@@ -71,6 +71,13 @@ export const invoicesRouter = createRouter({
   createAsAdmin: companyProcedure.input(invoiceInputSchema).mutation(async ({ ctx, input }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
+    if (!ctx.company.name) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Company details must be added before creating invoices. Please add your company name in settings.",
+      });
+    }
+
     const invoicer = await db.query.users.findFirst({
       where: eq(users.externalId, input.userExternalId),
       with: {

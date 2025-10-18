@@ -36,6 +36,30 @@ test.describe("One-off payments", () => {
   });
 
   test.describe("admin creates a payment", () => {
+    test("prevents creating payment when company name is missing", async ({ page }) => {
+      await db.update(companies).set({ name: null }).where(eq(companies.id, company.id));
+
+      await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
+
+      await page.getByRole("button", { name: "Issue payment" }).click();
+
+      await withinModal(
+        async (modal) => {
+          await modal.getByLabel("Amount").fill("100.00");
+          await modal.getByLabel("What is this for?").fill("Test payment");
+          await modal.getByRole("button", { name: "Issue payment" }).click();
+
+          await expect(modal.getByText(/Company details must be added/i)).toBeVisible();
+        },
+        { page },
+      );
+
+      const invoice = await db.query.invoices.findFirst({
+        where: eq(invoices.companyId, company.id),
+      });
+      expect(invoice).toBeNull();
+    });
+
     test("allows admin to create a one-off payment for a contractor without equity", async ({ page, sentEmails }) => {
       await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 

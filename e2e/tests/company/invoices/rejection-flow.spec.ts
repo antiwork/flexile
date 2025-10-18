@@ -126,4 +126,45 @@ test.describe("invoice rejection flow", () => {
     expect(updatedInvoice?.notes).toBe("Corrected Q1 development work with accurate hours");
     expect(updatedInvoice?.invoiceNumber).toBe("INV-REJECT-001");
   });
+
+  test("allows rejection of invoices in PAYMENT_PENDING status", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+    await page.getByPlaceholder("Description").fill("Development work");
+    await page.getByLabel("Hours / Qty").fill("8:00");
+    await page.getByLabel("Invoice ID").fill("INV-PENDING-001");
+    await fillDatePicker(page, "Date", "12/15/2024");
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    const invoice = await db.query.invoices.findFirst({
+      where: eq(invoices.companyId, company.company.id),
+      orderBy: desc(invoices.id),
+    });
+
+    await db.update(invoices).set({ status: "payment_pending" }).where(eq(invoices.id, invoice!.id));
+
+    await logout(page);
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+
+    const invoiceRow = page.locator("tbody tr").filter({ hasText: contractorUser.legalName || "never" });
+    await invoiceRow.getByLabel("Select row").check();
+    await page.getByRole("button", { name: "Reject selected invoices" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Explain why the invoice was").fill("Contractor needs to add bank details first");
+        await modal.getByRole("button", { name: "Yes, reject" }).click();
+      },
+      { page },
+    );
+
+    await page.getByRole("button", { name: "Filter" }).click();
+    await page.getByRole("menuitem", { name: "Clear all filters" }).click();
+    await expect(invoiceRow.getByText("Rejected")).toBeVisible();
+
+    const rejectedInvoice = await db.query.invoices.findFirst({
+      where: eq(invoices.id, invoice!.id),
+    });
+    expect(rejectedInvoice?.status).toBe("rejected");
+  });
 });

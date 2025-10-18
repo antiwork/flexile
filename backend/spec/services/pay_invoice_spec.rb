@@ -57,6 +57,32 @@ RSpec.describe PayInvoice, :vcr do
     end.to raise_error(ActiveRecord::RecordNotFound)
   end
 
+  context "when invoice is already paid" do
+    before do
+      invoice.update!(status: Invoice::PAID)
+      allow_any_instance_of(Company).to receive(:bank_account_ready?).and_return(true)
+    end
+
+    it "raises an error" do
+      expect do
+        described_class.new(invoice.id).process
+      end.to raise_error("Invoice already paid or being processed")
+    end
+  end
+
+  context "when invoice is already being processed" do
+    before do
+      invoice.update!(status: Invoice::PROCESSING)
+      allow_any_instance_of(Company).to receive(:bank_account_ready?).and_return(true)
+    end
+
+    it "raises an error" do
+      expect do
+        described_class.new(invoice.id).process
+      end.to raise_error("Invoice already paid or being processed")
+    end
+  end
+
   context "when payment method setup is incomplete for the company" do
     before { allow_any_instance_of(Company).to receive(:bank_account_ready?).and_return(false) }
 
