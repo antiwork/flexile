@@ -109,4 +109,24 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
       end.to raise_error ActiveRecord::RecordNotFound
     end
   end
+
+  context "when invoice is approved but payout method is not configured" do
+    let(:invoice_without_bank) { create(:invoice, :fully_approved, company:) }
+
+    before do
+      allow_any_instance_of(Invoice).to receive(:payout_method_configured?).and_return(false)
+    end
+
+    it "sets invoice status to PAYMENT_PENDING" do
+      described_class.new(user:, company:, invoice_ids: [invoice_without_bank.external_id]).perform
+
+      expect(invoice_without_bank.reload.status).to eq(Invoice::PAYMENT_PENDING)
+    end
+
+    it "does not enqueue payment" do
+      expect do
+        described_class.new(user:, company:, invoice_ids: [invoice_without_bank.external_id]).perform
+      end.not_to change { PayInvoiceJob.jobs.size }
+    end
+  end
 end

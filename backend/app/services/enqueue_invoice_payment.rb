@@ -8,6 +8,7 @@ class EnqueueInvoicePayment
   def perform
     invoice.with_lock do
       return unless invoice.immediately_payable?
+      return if invoice.status.in?([Invoice::PAYMENT_PENDING, Invoice::PROCESSING])
 
       invoice.update!(status: Invoice::PAYMENT_PENDING)
       PayInvoiceJob.perform_async(invoice.id)

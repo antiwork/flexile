@@ -144,7 +144,8 @@ class Invoice < ApplicationRecord
       status.in?([APPROVED, FAILED, PAYMENT_PENDING]) &&
       (created_by_user? || accepted_at.present?) &&
       invoice_approvals_count >= company.required_invoice_approval_count &&
-      tax_requirements_met?
+      tax_requirements_met? &&
+      payout_method_configured?
   end
 
   def immediately_payable?
@@ -161,6 +162,11 @@ class Invoice < ApplicationRecord
 
   def tax_requirements_met?
     user.tax_information_confirmed_at.present?
+  end
+
+  def payout_method_configured?
+    return true if cash_amount_in_cents.zero?
+    user.bank_account.present?
   end
 
   def payment_expected_by

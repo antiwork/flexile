@@ -36,5 +36,37 @@ RSpec.describe EnqueueInvoicePayment do
         expect(PayInvoiceJob).not_to have_enqueued_sidekiq_job
       end
     end
+
+    context "when invoice is already in PAYMENT_PENDING status" do
+      before do
+        invoice.update!(status: Invoice::PAYMENT_PENDING)
+        allow(invoice).to receive(:immediately_payable?).and_return(true)
+      end
+
+      it "does not update the invoice status" do
+        expect { service.perform }.not_to change { invoice.reload.status }
+      end
+
+      it "does not enqueue a PayInvoiceJob" do
+        service.perform
+        expect(PayInvoiceJob).not_to have_enqueued_sidekiq_job
+      end
+    end
+
+    context "when invoice is already in PROCESSING status" do
+      before do
+        invoice.update!(status: Invoice::PROCESSING)
+        allow(invoice).to receive(:immediately_payable?).and_return(true)
+      end
+
+      it "does not update the invoice status" do
+        expect { service.perform }.not_to change { invoice.reload.status }
+      end
+
+      it "does not enqueue a PayInvoiceJob" do
+        service.perform
+        expect(PayInvoiceJob).not_to have_enqueued_sidekiq_job
+      end
+    end
   end
 end

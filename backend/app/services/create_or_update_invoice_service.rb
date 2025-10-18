@@ -12,6 +12,7 @@ class CreateOrUpdateInvoiceService
 
   def process
     error = nil
+
     ApplicationRecord.transaction do
       existing_line_items = invoice.invoice_line_items.to_a
       line_items_to_keep = []
@@ -75,6 +76,12 @@ class CreateOrUpdateInvoiceService
       invoice.equity_amount_in_cents = equity_cents
       invoice.equity_amount_in_options = equity_options
       invoice.flexile_fee_cents = invoice.calculate_flexile_fee_cents
+
+      # Validate bank account is configured if invoice has cash amount
+      if invoice.cash_amount_in_cents.positive? && !user.bank_account.present?
+        error = "Please configure your bank account before submitting an invoice."
+        raise ActiveRecord::Rollback
+      end
 
       if invoice_attachment.present?
         if invoice_attachment.is_a?(String)

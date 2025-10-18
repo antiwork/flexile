@@ -12,10 +12,13 @@ class ApproveAndPayOrChargeForInvoices
     invoice_ids.each do |external_id|
       invoice = company.invoices.alive.find_by!(external_id:)
       ApproveInvoice.new(invoice:, approver: user).perform
-      if invoice.reload.immediately_payable? # for example, invoice payment failed
+      invoice.reload
+      if invoice.immediately_payable?
         EnqueueInvoicePayment.new(invoice:).perform
       elsif invoice.payable? && !invoice.company_charged?
         chargeable_invoice_ids << invoice.id
+      elsif invoice.status == Invoice::APPROVED && !invoice.payout_method_configured?
+        invoice.update!(status: Invoice::PAYMENT_PENDING)
       end
     end
     return if chargeable_invoice_ids.empty?

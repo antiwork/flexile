@@ -538,6 +538,52 @@ RSpec.describe Invoice do
         end
       end
     end
+
+    context "when payout method is not configured" do
+      let(:status) { Invoice::APPROVED }
+
+      context "when it has sufficient approvals and tax requirements met" do
+        before do
+          create_list(:invoice_approval, 2, invoice:)
+          allow_any_instance_of(Invoice).to receive(:tax_requirements_met?).and_return(true)
+        end
+
+        it "returns false if user has no bank account" do
+          allow_any_instance_of(User).to receive(:bank_account).and_return(nil)
+          expect(invoice.payable?).to eq(false)
+        end
+
+        it "returns true if user has bank account" do
+          allow_any_instance_of(User).to receive(:bank_account).and_return(double)
+          expect(invoice.payable?).to eq(true)
+        end
+      end
+    end
+  end
+
+  describe "#payout_method_configured?" do
+    let(:invoice) { create(:invoice, cash_amount_in_cents: 100_00, total_amount_in_usd_cents: 100_00, equity_amount_in_cents: 0) }
+
+    context "when invoice has cash component" do
+      it "returns true if user has bank account" do
+        allow_any_instance_of(User).to receive(:bank_account).and_return(double)
+        expect(invoice.payout_method_configured?).to eq(true)
+      end
+
+      it "returns false if user has no bank account" do
+        allow_any_instance_of(User).to receive(:bank_account).and_return(nil)
+        expect(invoice.payout_method_configured?).to eq(false)
+      end
+    end
+
+    context "when invoice has no cash component" do
+      before { invoice.update!(cash_amount_in_cents: 0, equity_amount_in_cents: 100_00, total_amount_in_usd_cents: 100_00) }
+
+      it "returns true even without bank account" do
+        allow_any_instance_of(User).to receive(:bank_account).and_return(nil)
+        expect(invoice.payout_method_configured?).to eq(true)
+      end
+    end
   end
 
   describe "#immediately_payable?" do
