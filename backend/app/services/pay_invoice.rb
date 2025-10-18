@@ -12,10 +12,9 @@ class PayInvoice
 
   def process
     invoice.with_lock do
-      raise "Invoice already paid or being processed" if invoice.status.in?([Invoice::PAID, Invoice::PROCESSING])
+      raise "Invoice not immediately payable for company #{company.id}" unless invoice.immediately_payable?
       raise "Payout method not set up for company #{company.id}" unless company.bank_account_ready?
       raise "Not enough account balance to pay out for company #{company.id}" unless company.has_sufficient_balance?(invoice.cash_amount_in_usd)
-      raise "Invoice not immediately payable for company #{company.id}" unless invoice.immediately_payable?
 
       if invoice.cash_amount_in_cents.zero? && invoice.equity_amount_in_options != 0
         invoice.mark_as_paid!(timestamp: Time.current)
