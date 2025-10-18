@@ -335,6 +335,13 @@ const ActionPanel = ({
 }) => {
   const isMobile = useIsMobile();
   const handleIssuePaymentClick = () => {
+    if (!company.name) {
+      // eslint-disable-next-line no-console
+      console.error(
+        "Company details must be added before creating invoices. Please add your company name in settings.",
+      );
+      return;
+    }
     setIssuePaymentModalOpen(true);
   };
   const handleEndContractClick = () => {
