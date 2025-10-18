@@ -49,7 +49,7 @@ test.describe("One-off payments", () => {
           await modal.getByLabel("What is this for?").fill("Test payment");
           await modal.getByRole("button", { name: "Issue payment" }).click();
 
-          await expect(modal.getByText(/Company details must be added/i)).toBeVisible();
+          await expect(modal.getByText(/Company details must be added/iu)).toBeVisible();
         },
         { page },
       );
@@ -58,6 +58,9 @@ test.describe("One-off payments", () => {
         where: eq(invoices.companyId, company.id),
       });
       expect(invoice).toBeNull();
+
+      // Restore company name for subsequent tests
+      await db.update(companies).set({ name: "Test Company" }).where(eq(companies.id, company.id));
     });
 
     test("allows admin to create a one-off payment for a contractor without equity", async ({ page, sentEmails }) => {

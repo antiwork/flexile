@@ -9,6 +9,14 @@ import { expect, test, withinModal } from "@test/index";
 import { desc, eq } from "drizzle-orm";
 import { invoices } from "@/db/schema";
 
+// Helper to assert non-null values and satisfy linter
+function defined<T>(value: T | null | undefined, message?: string): T {
+  if (value === null || value === undefined) {
+    throw new Error(message ?? "Expected value to be defined");
+  }
+  return value;
+}
+
 test.describe("invoice rejection flow", () => {
   let company: Awaited<ReturnType<typeof companiesFactory.create>>;
   let adminUser: Awaited<ReturnType<typeof usersFactory.create>>["user"];
@@ -141,11 +149,15 @@ test.describe("invoice rejection flow", () => {
       orderBy: desc(invoices.id),
     });
 
-    await db.update(invoices).set({ status: "payment_pending" }).where(eq(invoices.id, invoice!.id));
+    const invoiceId = defined(invoice?.id, "Invoice should exist after creation");
+    await db.update(invoices).set({ status: "payment_pending" }).where(eq(invoices.id, invoiceId));
 
     await logout(page);
     await login(page, adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
+
+    // Wait for invoices table to load
+    await page.waitForSelector("tbody tr", { timeout: 10000 });
 
     const invoiceRow = page.locator("tbody tr").filter({ hasText: contractorUser.legalName || "never" });
     await invoiceRow.getByLabel("Select row").check();
@@ -163,7 +175,7 @@ test.describe("invoice rejection flow", () => {
     await expect(invoiceRow.getByText("Rejected")).toBeVisible();
 
     const rejectedInvoice = await db.query.invoices.findFirst({
-      where: eq(invoices.id, invoice!.id),
+      where: eq(invoices.id, invoiceId),
     });
     expect(rejectedInvoice?.status).toBe("rejected");
   });
