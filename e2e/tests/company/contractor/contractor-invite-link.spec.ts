@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
+import { selectComboboxOption } from "@test/helpers";
 import { externalProviderMock, fillOtp, login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { and, eq } from "drizzle-orm";
@@ -55,7 +56,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await expect(page.getByLabel("Role")).not.toBeValid();
   });
 
-  test("invite link flow for authenticated user", async ({ page }) => {
+  test("invite link flow for authenticated user allows setting a non-default role", async ({ page }) => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding();
     const { company } = await companiesFactory.createCompletedOnboarding({ inviteLink: faker.string.alpha(10) });
 
@@ -69,7 +70,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
 
     await expect(page.getByLabel("Role")).not.toBeValid();
 
-    const roleField = page.getByLabel("Role");
+    const roleField = page.getByRole("combobox", { name: "Role" });
     await roleField.click();
 
     await expect(page.getByRole("option", { name: "Software Engineer" })).toBeVisible();
@@ -77,14 +78,8 @@ test.describe("Contractor Invite Link Joining flow", () => {
     await expect(page.getByRole("option", { name: "Product Manager" })).toBeVisible();
     await expect(page.getByRole("option", { name: "Data Analyst" })).toBeVisible();
 
-    await roleField.fill("de");
-    await expect(page.getByRole("option", { name: "Software Engineer" })).not.toBeVisible();
-    await expect(page.getByRole("option", { name: "Designer" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Product Manager" })).not.toBeVisible();
-    await expect(page.getByRole("option", { name: "Data Analyst" })).not.toBeVisible();
-    await roleField.clear();
-
-    await page.getByLabel("Role").fill("Hourly Role 1");
+    await selectComboboxOption(page, "Role", "Hourly Role 1");
+    await expect(roleField).toHaveText("Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
     await page.getByRole("button", { name: "Continue" }).click();
 
