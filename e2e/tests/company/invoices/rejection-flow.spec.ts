@@ -160,7 +160,8 @@ test.describe("invoice rejection flow", () => {
     await expect(page.locator("tbody")).toBeVisible();
 
     // Filter by "Processing" status to show payment_pending invoices
-    await page.getByRole("button", { name: "Filter" }).click();
+    await page.locator("main").getByRole("button", { name: "Filter" }).click();
+    await page.getByRole("menuitem", { name: "Status" }).click();
     await page.getByRole("menuitemcheckbox", { name: "Processing" }).click();
 
     // Wait for table to reload after filter change
