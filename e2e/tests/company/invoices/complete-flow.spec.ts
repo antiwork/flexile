@@ -95,6 +95,18 @@ test.describe("Invoice submission, approval and rejection", () => {
     return invoice;
   };
 
+  const resubmitRejectedInvoice = async (page: Page) => {
+    const { invoiceNumber } = await createRejectedInvoice();
+    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: invoiceNumber });
+    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected", exact: true })).toBeVisible();
+    await openInvoiceEditById(page, invoiceNumber);
+    await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
+    await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
+    await page.getByRole("button", { name: "Resubmit" }).click();
+    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
+    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
+  };
+
   test("allows contractor to create and submit multiple invoices", async ({ page }) => {
     await login(page, workerUserA);
 
@@ -403,7 +415,6 @@ test.describe("Invoice submission, approval and rejection", () => {
   });
 
   test("allows contractor to view approved and rejected invoices", async ({ page }) => {
-    await createInitialInvoices();
     await createInitialInvoices({ "CUSTOM-1": "payment_pending", "CUSTOM-2": "rejected" });
     await login(page, workerUserA);
 
@@ -415,36 +426,13 @@ test.describe("Invoice submission, approval and rejection", () => {
   });
 
   test("allows contractor to edit and resubmit rejected invoice", async ({ page }) => {
-    await createRejectedInvoice();
-
     await login(page, workerUserA);
-
-    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "REJECTED-1" });
-    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected", exact: true })).toBeVisible();
-
-    await openInvoiceEditById(page, "REJECTED-1");
-    await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
-    await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
-    await page.getByRole("button", { name: "Resubmit" }).click();
-
-    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
-    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
+    await resubmitRejectedInvoice(page);
   });
 
   test("allows admin to reject resubmitted invoices", async ({ page }) => {
     await login(page, workerUserA);
-    await createRejectedInvoice();
-    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "REJECTED-1" });
-    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected", exact: true })).toBeVisible();
-
-    await openInvoiceEditById(page, "REJECTED-1");
-    await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
-    await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
-    await page.getByRole("button", { name: "Resubmit" }).click();
-
-    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
-    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
-
+    await resubmitRejectedInvoice(page);
     await logout(page);
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
