@@ -14,7 +14,7 @@ test.describe("Impersonation", () => {
     await expect(page.getByText(user.email)).toBeVisible();
 
     await page.getByRole("button", { name: "Unbecome" }).click();
-    await expect(page).toHaveURL(/\/admin\/users$/u);
+    await expect(page).toHaveURL(/\/admin$/u);
 
     await page.goto("/dashboard");
     await expect(page.getByText(teamMember.email)).toBeVisible();
