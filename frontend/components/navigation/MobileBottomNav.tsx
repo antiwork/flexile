@@ -396,13 +396,10 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
             {user.isImpersonating ? (
               <SheetNavItem
                 pathname={pathname}
-                onClick={() =>
-                  unimpersonateMutation.mutate(undefined, {
-                    onSuccess: () => {
-                      router.push("/admin");
-                    },
-                  })
-                }
+                onClick={async () => {
+                  await unimpersonateMutation.mutateAsync();
+                  router.push("/admin");
+                }}
                 item={{
                   label: "Stop impersonating",
                   icon: UserX,

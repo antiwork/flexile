@@ -206,12 +206,9 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
               {user.isImpersonating ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={() => {
-                      unimpersonateMutation.mutate(undefined, {
-                        onSuccess: () => {
-                          router.push("/admin");
-                        },
-                      });
+                    onClick={async () => {
+                      await unimpersonateMutation.mutateAsync();
+                      router.push("/admin");
                     }}
                     className="!text-destructive"
                   >
@@ -222,12 +219,9 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
               ) : null}
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => {
-                    unimpersonateMutation.mutate(undefined, {
-                      onSuccess: () => {
-                        void signOut({ redirect: false }).then(logout);
-                      },
-                    });
+                  onClick={async () => {
+                    await unimpersonateMutation.mutateAsync();
+                    void signOut({ redirect: false }).then(logout);
                   }}
                   className="cursor-pointer"
                 >
