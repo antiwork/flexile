@@ -3,8 +3,9 @@
 class Current < ActiveSupport::CurrentAttributes
   attribute :company, :company_administrator, :company_worker, :company_investor, :company_lawyer, :user, :whodunnit, :authenticated_user, :impersonated_user
 
-  # Current.user represents the effective user for the request.
-  # It serves as the single source of truth for the current user within the application.
+  # Current.user represents the effective user for this request.
+  # It’s the single source of truth for user identity within the app,
+  # derived from the primitives authenticated_user and impersonated_user.
 
   # The actual human initiating the request.
   def authenticated_user=(user)
