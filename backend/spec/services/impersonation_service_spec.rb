@@ -3,11 +3,11 @@
 RSpec.describe ImpersonationService do
   let(:team_member) { create(:user, team_member: true) }
   let(:user) { create(:user) }
+  let(:another_user) { create(:user) }
 
   describe "#impersonate" do
     it "sets or updates the impersonated user in Redis" do
       service = described_class.new(team_member)
-      another_user = create(:user)
 
       service.impersonate(user)
 
@@ -61,10 +61,9 @@ RSpec.describe ImpersonationService do
       expect(service.impersonated_user).to be_nil
 
       # impersonated user becomes team member
-      user_becoming_team_member = create(:user)
       service = described_class.new(team_member)
-      service.impersonate(user_becoming_team_member)
-      user_becoming_team_member.update!(team_member: true)
+      service.impersonate(another_user)
+      another_user.update!(team_member: true)
       expect(service.impersonated_user).to be_nil
     end
 
