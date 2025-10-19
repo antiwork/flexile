@@ -16,22 +16,16 @@ module Admin
 
     def authenticate_user
       unless Current.authenticated_user
-        redirect_to frontend_login_path, allow_other_host: true
+        redirect_to "#{PROTOCOL}://#{DOMAIN}/login?#{URI.encode_www_form(redirect_url: request.fullpath)}",
+                    allow_other_host: true
       end
     end
 
     def authenticate_admin
       unless Current.authenticated_user.team_member?
-        redirect_to frontend_dashboard_path, allow_other_host: true
+        redirect_to "#{PROTOCOL}://#{DOMAIN}/dashboard",
+                    allow_other_host: true
       end
-    end
-
-    def frontend_login_path(redirect_url = request.fullpath)
-      "#{PROTOCOL}://#{DOMAIN}/login?#{URI.encode_www_form(redirect_url: redirect_url)}"
-    end
-
-    def frontend_dashboard_path
-      "#{PROTOCOL}://#{DOMAIN}/dashboard"
     end
 
     # Override this value to specify the number of elements to display at a time
