@@ -1,74 +1,158 @@
+import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
-import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
+import { invoiceLineItemsFactory } from "@test/factories/invoiceLineItems";
+import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
-import { fillByLabel, fillDatePicker } from "@test/helpers";
+import { fillByLabel } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
+import { createAndSendInvoice, openInvoiceEditById } from "@test/helpers/invoices";
 import { expect, type Page, test, withinModal } from "@test/index";
+import { and, eq } from "drizzle-orm";
+import { invoices } from "@/db/schema";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
 
 test.describe("Invoice submission, approval and rejection", () => {
-  let company: Awaited<ReturnType<typeof companiesFactory.create>>;
-  let adminUser: User;
-  let workerUserA: User;
-  let workerUserB: User;
+  let company: Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["company"];
+  let adminUser: User, workerUserA: User, workerUserB: User;
 
   test.beforeEach(async () => {
-    company = await companiesFactory.create({ requiredInvoiceApprovalCount: 1, isTrusted: true });
-    adminUser = (await usersFactory.create()).user;
+    ({ company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      requiredInvoiceApprovalCount: 1,
+      isTrusted: true,
+    }));
     workerUserA = (await usersFactory.create()).user;
     workerUserB = (await usersFactory.create()).user;
-    await companyAdministratorsFactory.create({
-      companyId: company.company.id,
-      userId: adminUser.id,
-    });
     await companyContractorsFactory.create({
-      companyId: company.company.id,
+      companyId: company.id,
       userId: workerUserA.id,
+      id: workerUserA.id,
     });
     await companyContractorsFactory.create({
-      companyId: company.company.id,
+      companyId: company.id,
       userId: workerUserB.id,
+      id: workerUserB.id,
     });
   });
 
-  test("allows contractor to submit/delete invoices and admin to approve/reject them", async ({ page }) => {
+  const createInitialInvoices = async () => {
+    await invoicesFactory.create({
+      companyId: company.id,
+      companyContractorId: workerUserA.id,
+      invoiceNumber: "CUSTOM-1",
+      invoiceDate: "2024-11-01",
+      totalAmountInUsdCents: BigInt(870_00),
+      cashAmountInCents: BigInt(870_00),
+    });
+
+    await invoicesFactory.create({
+      companyId: company.id,
+      companyContractorId: workerUserA.id,
+      invoiceNumber: "CUSTOM-2",
+      invoiceDate: "2024-12-01",
+      totalAmountInUsdCents: BigInt(23_00),
+      cashAmountInCents: BigInt(23_00),
+    });
+
+    await invoicesFactory.create({
+      companyId: company.id,
+      companyContractorId: workerUserB.id,
+      invoiceNumber: "CUSTOM-3",
+      invoiceDate: "2024-11-20",
+      totalAmountInUsdCents: BigInt(623_00),
+      cashAmountInCents: BigInt(623_00),
+    });
+  };
+
+  test("allows contractor to create and submit multiple invoices", async ({ page }) => {
     await login(page, workerUserA);
 
-    await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-    await page.getByLabel("Invoice ID").fill("CUSTOM-1");
-    await fillDatePicker(page, "Date", "11/01/2024");
-    await page.getByPlaceholder("Description").fill("first item");
-    await fillByLabel(page, "Hours / Qty", "01:23", { index: 0 });
-    await page.getByRole("button", { name: "Add line item" }).click();
-    await page.getByPlaceholder("Description").nth(1).fill("second item");
-    await fillByLabel(page, "Hours / Qty", "10", { index: 1 });
-    await page.getByPlaceholder("Enter notes about your").fill("A note in the invoice");
+    await createAndSendInvoice(page, {
+      invoiceId: "CUSTOM-1",
+      date: "11/01/2024",
+      items: [
+        { description: "first item", hoursOrQty: "01:23" },
+        { description: "second item", hoursOrQty: "10" },
+      ],
+      notes: "A note in the invoice",
+      expectTotalText: "$683",
+    });
+    await expect(
+      page.getByTableRowCustom({
+        "Invoice ID": "CUSTOM-1",
+        "Sent on": "Nov 1, 2024",
+        Amount: "$683",
+        Status: "Awaiting approval",
+      }),
+    ).toBeVisible();
 
-    await expect(page.getByText("$683", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    const invoice1 = await db.query.invoices.findFirst({
+      where: and(eq(invoices.companyId, company.id), eq(invoices.invoiceNumber, "CUSTOM-1")),
+    });
+    expect(invoice1).toEqual(
+      expect.objectContaining({
+        status: "received",
+        totalAmountInUsdCents: 68300n,
+        cashAmountInCents: 68300n,
+        companyId: company.id,
+        companyContractorId: workerUserA.id,
+        userId: workerUserA.id,
+      }),
+    );
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
-    await expect(page.locator("tbody")).toContainText("$683");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    await createAndSendInvoice(page, {
+      invoiceId: "CUSTOM-2",
+      date: "12/01/2024",
+      items: [{ description: "woops too little time", hoursOrQty: "0:23" }],
+    });
+    await expect(
+      page.getByTableRowCustom({
+        "Invoice ID": "CUSTOM-2",
+        "Sent on": "Dec 1, 2024",
+        Amount: "$23",
+        Status: "Awaiting approval",
+      }),
+    ).toBeVisible();
 
-    await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-    await page.getByPlaceholder("Description").fill("woops too little time");
-    await fillByLabel(page, "Hours / Qty", "0:23", { index: 0 });
-    await page.getByLabel("Invoice ID").fill("CUSTOM-2");
-    await fillDatePicker(page, "Date", "12/01/2024");
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    const invoice2 = await db.query.invoices.findFirst({
+      where: and(eq(invoices.companyId, company.id), eq(invoices.invoiceNumber, "CUSTOM-2")),
+    });
+    expect(invoice2).toEqual(
+      expect.objectContaining({
+        status: "received",
+        totalAmountInUsdCents: 2300n,
+        cashAmountInCents: 2300n,
+        companyId: company.id,
+        companyContractorId: workerUserA.id,
+        userId: workerUserA.id,
+      }),
+    );
+  });
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
-    await expect(page.locator("tbody")).toContainText("$23");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+  test("allows contractor to edit and resubmit invoices", async ({ page }) => {
+    await login(page, workerUserA);
 
-    await page.getByRole("cell", { name: "CUSTOM-1" }).click();
-    await page.getByRole("link", { name: "Edit invoice" }).click();
-    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
+    await createAndSendInvoice(page, {
+      invoiceId: "CUSTOM-1",
+      date: "11/01/2024",
+      items: [
+        { description: "first item", hoursOrQty: "01:23" },
+        { description: "second item", hoursOrQty: "10" },
+      ],
+      notes: "A note in the invoice",
+      expectTotalText: "$683",
+    });
+    await expect(
+      page.getByTableRowCustom({
+        "Invoice ID": "CUSTOM-1",
+        "Sent on": "Nov 1, 2024",
+        Amount: "$683",
+        Status: "Awaiting approval",
+      }),
+    ).toBeVisible();
+
+    await openInvoiceEditById(page, "CUSTOM-1");
     await page.getByPlaceholder("Description").first().fill("first item updated");
     await fillByLabel(page, "Hours / Qty", "04:30", { index: 0 });
     await expect(page.getByText("$870", { exact: true })).toBeVisible();
@@ -80,18 +164,24 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await expect(page.getByRole("cell", { name: "$870" })).toBeVisible();
     await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();
+  });
 
-    await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-    await page.getByPlaceholder("Description").fill("Invoice to be deleted");
-    await fillByLabel(page, "Hours / Qty", "0:33", { index: 0 });
-    await page.getByLabel("Invoice ID").fill("CUSTOM-3");
-    await fillDatePicker(page, "Date", "12/01/2024");
-    await page.getByRole("button", { name: "Send invoice" }).click();
+  test("allows contractor to delete invoices", async ({ page }) => {
+    await login(page, workerUserA);
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-3" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
-    await expect(page.locator("tbody")).toContainText("$33");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    await createAndSendInvoice(page, {
+      invoiceId: "CUSTOM-3",
+      date: "12/01/2024",
+      items: [{ description: "Invoice to be deleted", hoursOrQty: "0:33" }],
+    });
+    await expect(
+      page.getByTableRowCustom({
+        "Invoice ID": "CUSTOM-3",
+        "Sent on": "Dec 1, 2024",
+        Amount: "$33",
+        Status: "Awaiting approval",
+      }),
+    ).toBeVisible();
 
     await page.getByRole("cell", { name: "CUSTOM-3" }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Delete" }).click();
@@ -102,45 +192,116 @@ test.describe("Invoice submission, approval and rejection", () => {
       { page },
     );
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).not.toBeVisible();
+  });
+
+  test("allows multiple contractors to submit invoices", async ({ page }) => {
+    await login(page, workerUserA);
+    await createAndSendInvoice(page, {
+      invoiceId: "CUSTOM-1",
+      date: "11/01/2024",
+      items: [{ description: "first item", hoursOrQty: "01:23" }],
+    });
+    await expect(page.getByText("Awaiting approval")).toBeVisible();
+
+    const invoice1 = await db.query.invoices.findFirst({
+      where: and(eq(invoices.companyId, company.id), eq(invoices.invoiceNumber, "CUSTOM-1")),
+    });
+    expect(invoice1).toEqual(
+      expect.objectContaining({
+        status: "received",
+        totalAmountInUsdCents: 8300n,
+        cashAmountInCents: 8300n,
+        companyId: company.id,
+        companyContractorId: workerUserA.id,
+        userId: workerUserA.id,
+      }),
+    );
 
     await logout(page);
     await login(page, workerUserB);
-
-    await page.locator("header").getByRole("link", { name: "New invoice" }).click();
-    await page.getByPlaceholder("Description").fill("line item");
-    await fillByLabel(page, "Hours / Qty", "10:23", { index: 0 });
-    await fillDatePicker(page, "Date", "11/20/2024");
-    await page.getByRole("button", { name: "Send invoice" }).click();
-
+    await createAndSendInvoice(page, {
+      invoiceId: "CUSTOM-3",
+      date: "11/20/2024",
+      items: [{ description: "line item", hoursOrQty: "10:23" }],
+    });
     await expect(page.getByText("Awaiting approval")).toBeVisible();
 
-    await logout(page);
+    const invoice2 = await db.query.invoices.findFirst({
+      where: and(eq(invoices.companyId, company.id), eq(invoices.invoiceNumber, "CUSTOM-3")),
+    });
+    expect(invoice2).toEqual(
+      expect.objectContaining({
+        status: "received",
+        totalAmountInUsdCents: 62300n,
+        cashAmountInCents: 62300n,
+        companyId: company.id,
+        companyContractorId: workerUserB.id,
+        userId: workerUserB.id,
+      }),
+    );
+  });
+
+  test("allows admin to view and manage pending invoices", async ({ page }) => {
     await login(page, adminUser);
+    await createInitialInvoices();
 
-    const firstRow = page.locator("tbody tr").first();
-    const secondRow = page.locator("tbody tr").nth(1);
-    const thirdRow = page.locator("tbody tr").nth(2);
-    const openInvoicesBadge = locateOpenInvoicesBadge(page);
+    await expect(locateOpenInvoicesBadge(page)).toContainText("3");
+    await expect(
+      page
+        .getByTableRowCustom({
+          "Sent on": "Dec 1, 2024",
+          Amount: "$23",
+          Status: "Awaiting approval",
+        })
+        .getByRole("button", { name: "Pay now" }),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByTableRowCustom({
+          "Sent on": "Nov 20, 2024",
+          Amount: "$623",
+          Status: "Awaiting approval",
+        })
+        .getByRole("button", { name: "Pay now" }),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByTableRowCustom({
+          "Sent on": "Nov 1, 2024",
+          Amount: "$870",
+          Status: "Awaiting approval",
+        })
+        .getByRole("button", { name: "Pay now" }),
+    ).toBeVisible();
+  });
 
-    await expect(openInvoicesBadge).toContainText("3");
-    await expect(firstRow).toContainText("Dec 1, 2024");
-    await expect(firstRow).toContainText("$23");
-    await expect(firstRow).toContainText("Awaiting approval");
-    await expect(firstRow.getByRole("button", { name: "Pay now" })).toBeVisible();
-    await expect(secondRow).toContainText("Nov 20, 2024");
-    await expect(secondRow).toContainText("$623");
-    await expect(secondRow).toContainText("Awaiting approval");
-    await expect(secondRow.getByRole("button", { name: "Pay now" })).toBeVisible();
-    await expect(thirdRow).toContainText("Nov 1, 2024");
-    await expect(thirdRow).toContainText("$870");
-    await expect(thirdRow).toContainText("Awaiting approval");
+  test("allows admin to approve individual invoices", async ({ page }) => {
+    await login(page, adminUser);
+    await createInitialInvoices();
+    await expect(locateOpenInvoicesBadge(page)).toContainText("3");
+    const thirdRow = page.getByTableRowCustom({
+      "Sent on": "Nov 1, 2024",
+      Amount: "$870",
+    });
+
     await thirdRow.getByRole("button", { name: "Pay now" }).click();
 
     await expect(thirdRow).not.toBeVisible();
     await page.getByRole("button", { name: "Filter" }).click();
     await page.getByRole("menuitem", { name: "Clear all filters" }).click();
     await expect(thirdRow).toContainText("Payment scheduled");
-    await expect(openInvoicesBadge).toContainText("2");
+    await expect(locateOpenInvoicesBadge(page)).toContainText("2");
+  });
+
+  test("allows admin to bulk approve and reject invoices", async ({ page }) => {
+    await login(page, adminUser);
+    await createInitialInvoices();
+    await db
+      .update(invoices)
+      .set({ status: "payment_pending" })
+      .where(and(eq(invoices.invoiceNumber, "CUSTOM-1"), eq(invoices.companyContractorId, workerUserA.id)));
+
+    await expect(locateOpenInvoicesBadge(page)).toContainText("2");
 
     await page.locator("tbody tr").first().getByLabel("Select row").check();
 
@@ -183,13 +344,31 @@ test.describe("Invoice submission, approval and rejection", () => {
       },
       { page },
     );
+
+    await page.getByRole("button", { name: "Filter" }).click();
+    await page.getByRole("menuitem", { name: "Clear all filters" }).click();
+
     const rejectedInvoiceRow0 = page
       .locator("tbody tr")
       .filter({ hasText: workerUserA.legalName ?? "never" })
       .filter({ hasText: "$23" });
     await expect(rejectedInvoiceRow0).toContainText("Rejected");
-    await expect(openInvoicesBadge).toContainText("1");
+    await expect(locateOpenInvoicesBadge(page)).toContainText("1");
+  });
 
+  test("allows admin to approve remaining invoices", async ({ page }) => {
+    await login(page, adminUser);
+    await createInitialInvoices();
+    await db
+      .update(invoices)
+      .set({ status: "payment_pending" })
+      .where(and(eq(invoices.invoiceNumber, "CUSTOM-1"), eq(invoices.companyContractorId, workerUserA.id)));
+    await db
+      .update(invoices)
+      .set({ status: "rejected" })
+      .where(and(eq(invoices.invoiceNumber, "CUSTOM-2"), eq(invoices.companyContractorId, workerUserA.id)));
+
+    await expect(locateOpenInvoicesBadge(page)).toContainText("1");
     await page.getByRole("cell", { name: workerUserB.legalName ?? "never" }).click();
     await page.getByRole("link", { name: "View invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
@@ -198,9 +377,19 @@ test.describe("Invoice submission, approval and rejection", () => {
       page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }).click(),
     ]);
 
-    await expect(openInvoicesBadge).not.toBeVisible();
+    await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();
+  });
 
-    await logout(page);
+  test("allows contractor to view approved and rejected invoices", async ({ page }) => {
+    await createInitialInvoices();
+    await db
+      .update(invoices)
+      .set({ status: "payment_pending" })
+      .where(and(eq(invoices.invoiceNumber, "CUSTOM-1"), eq(invoices.companyContractorId, workerUserA.id)));
+    await db
+      .update(invoices)
+      .set({ status: "rejected" })
+      .where(and(eq(invoices.invoiceNumber, "CUSTOM-2"), eq(invoices.companyContractorId, workerUserA.id)));
     await login(page, workerUserA);
 
     const approvedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-1" });
@@ -208,10 +397,73 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await expect(approvedInvoiceRow.getByRole("cell", { name: "Payment scheduled" })).toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).toBeVisible();
+  });
 
-    await rejectedInvoiceRow.click({ button: "right" });
-    await page.getByRole("menuitem", { name: "Edit" }).click();
-    await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
+  test("allows contractor to edit and resubmit rejected invoice", async ({ page }) => {
+    const { invoice } = await invoicesFactory.create(
+      {
+        companyId: company.id,
+        companyContractorId: workerUserA.id,
+        status: "rejected",
+        invoiceNumber: "CUSTOM-2",
+        invoiceDate: "2024-12-01",
+        totalAmountInUsdCents: BigInt(23_00),
+        cashAmountInCents: BigInt(23_00),
+        rejectedById: adminUser.id,
+        rejectionReason: "Too little time",
+        rejectedAt: new Date(),
+      },
+      { skipLineItems: true },
+    );
+
+    await invoiceLineItemsFactory.create({
+      invoiceId: invoice.id,
+      description: "woops too little time",
+      quantity: "0.383", // 0:23 hours = 0.383 hours
+    });
+
+    await login(page, workerUserA);
+
+    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-2" });
+    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).toBeVisible();
+
+    await openInvoiceEditById(page, "CUSTOM-2");
+    await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
+    await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
+    await page.getByRole("button", { name: "Resubmit" }).click();
+
+    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
+    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
+  });
+
+  test("allows admin to reject resubmitted invoices", async ({ page }) => {
+    const { invoice } = await invoicesFactory.create(
+      {
+        companyId: company.id,
+        companyContractorId: workerUserA.id,
+        status: "rejected",
+        invoiceNumber: "CUSTOM-2",
+        invoiceDate: "2024-12-01",
+        totalAmountInUsdCents: BigInt(23_00),
+        cashAmountInCents: BigInt(23_00),
+        rejectedById: adminUser.id,
+        rejectionReason: "Too little time",
+        rejectedAt: new Date(),
+      },
+      { skipLineItems: true },
+    );
+
+    await invoiceLineItemsFactory.create({
+      invoiceId: invoice.id,
+      description: "woops too little time",
+      quantity: "0.383", // 0:23 hours = 0.383 hours
+    });
+
+    await login(page, workerUserA);
+    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-2" });
+    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).toBeVisible();
+
+    await openInvoiceEditById(page, "CUSTOM-2");
     await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
     await page.getByRole("button", { name: "Resubmit" }).click();

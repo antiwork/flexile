@@ -15,7 +15,7 @@ const calculateFlexileFeeCents = (totalAmountInUsdCents: number) => {
 };
 
 export const invoicesFactory = {
-  create: async (overrides: Partial<typeof invoices.$inferInsert> = {}) => {
+  create: async (overrides: Partial<typeof invoices.$inferInsert> = {}, options: { skipLineItems?: boolean } = {}) => {
     const contractor = overrides.companyContractorId
       ? await db.query.companyContractors.findFirst({
           where: eq(companyContractors.id, overrides.companyContractorId),
@@ -81,11 +81,13 @@ export const invoicesFactory = {
       .returning();
     assert(invoice != null);
 
-    await invoiceLineItemsFactory.create({
-      invoiceId: invoice.id,
-      payRateInSubunits: Number(invoice.totalAmountInUsdCents),
-      quantity: "1",
-    });
+    if (!options.skipLineItems) {
+      await invoiceLineItemsFactory.create({
+        invoiceId: invoice.id,
+        payRateInSubunits: Number(invoice.totalAmountInUsdCents),
+        quantity: "1",
+      });
+    }
 
     return { invoice };
   },
