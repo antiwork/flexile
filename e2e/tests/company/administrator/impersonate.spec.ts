@@ -24,6 +24,7 @@ test.describe("Impersonation", () => {
   test("impersonates via direct URL", async ({ page }) => {
     const { user: teamMember } = await usersFactory.create({ teamMember: true });
     const { user } = await usersFactory.create();
+
     await login(page, teamMember, `/admin/users/${user.externalId}/impersonate`);
     await expect(page.getByText(user.email)).toBeVisible();
   });
@@ -34,11 +35,9 @@ test.describe("Impersonation", () => {
 
     await login(page, teamMember, "/admin/users");
 
-    // Prevents impersonating team member
     await page.getByText(anotherTeamMember.email).first().click();
     await expect(page.getByRole("link", { name: "Become" })).not.toBeVisible();
 
-    // Prevents impersonating non-existent user
     await page.goto("/admin/users/999999/impersonate");
     await expect(page.getByText("The requested resource could not be accessed.")).toBeVisible();
   });
