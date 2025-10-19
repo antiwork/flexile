@@ -3,35 +3,35 @@
 RSpec.describe Current do
   describe "#authenticated_user=" do
     it "sets authenticated_user, user, and whodunnit" do
-      user = create(:user)
+      authenticated_user = create(:user)
 
-      Current.authenticated_user = user
+      Current.authenticated_user = authenticated_user
 
-      expect(Current.authenticated_user).to eq(user)
-      expect(Current.user).to eq(user)
-      expect(Current.whodunnit).to eq(user.id)
+      expect(Current.authenticated_user).to eq(authenticated_user)
+      expect(Current.user).to eq(authenticated_user)
+      expect(Current.whodunnit).to eq(authenticated_user.id)
     end
   end
 
   describe "#impersonated_user=" do
-    let(:admin) { create(:user) }
-    let(:impersonated) { create(:user) }
+    let(:admin_user) { create(:user) }
+    let(:impersonated_user) { create(:user) }
 
     it "makes impersonated_user take precedence for Current.user" do
-      Current.authenticated_user = admin
-      Current.impersonated_user = impersonated
+      Current.authenticated_user = admin_user
+      Current.impersonated_user = impersonated_user
 
-      expect(Current.user).to eq(impersonated)  # impersonated_user takes precedence
-      expect(Current.whodunnit).to eq(admin.id) # keeps whodunnit as authenticated_user
+      expect(Current.user).to eq(impersonated_user)  # impersonated_user takes precedence
+      expect(Current.whodunnit).to eq(admin_user.id) # keeps whodunnit as authenticated_user
     end
 
     it "uses authenticated_user when impersonation is cleared" do
-      Current.authenticated_user = admin
-      Current.impersonated_user = impersonated
+      Current.authenticated_user = admin_user
+      Current.impersonated_user = impersonated_user
       Current.impersonated_user = nil
 
-      expect(Current.user).to eq(admin)
-      expect(Current.whodunnit).to eq(admin.id)
+      expect(Current.user).to eq(admin_user)
+      expect(Current.whodunnit).to eq(admin_user.id)
     end
   end
 
