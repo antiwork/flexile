@@ -29,6 +29,9 @@ RSpec.describe HelperUserInfoService do
 
       expect(result).to eq(
         name: user.email,
+        actions: {
+          "Impersonate" => Rails.application.routes.url_helpers.impersonate_admin_user_url(user.external_id),
+        },
         metadata: {
           "Country of residence" => user.display_country,
           "Contractor for companies" => "Gumroad",
