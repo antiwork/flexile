@@ -57,8 +57,6 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const unimpersonateMutation = useMutation({
     mutationFn: async () => {
-      if (!user.isImpersonating) return;
-
       await request({
         method: "DELETE",
         url: unimpersonate_admin_users_path(),
@@ -220,7 +218,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={async () => {
-                    await unimpersonateMutation.mutateAsync();
+                    if (user.isImpersonating) await unimpersonateMutation.mutateAsync();
                     void signOut({ redirect: false }).then(logout);
                   }}
                   className="cursor-pointer"

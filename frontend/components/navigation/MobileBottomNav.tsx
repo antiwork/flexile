@@ -291,8 +291,6 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
 
   const unimpersonateMutation = useMutation({
     mutationFn: async () => {
-      if (!user.isImpersonating) return;
-
       await request({
         method: "DELETE",
         url: unimpersonate_admin_users_path(),
@@ -307,7 +305,7 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
   });
 
   const handleLogout = async () => {
-    await unimpersonateMutation.mutateAsync();
+    if (user.isImpersonating) await unimpersonateMutation.mutateAsync();
     if (session?.user) await signOut({ redirect: false });
     logout();
     window.location.href = "/login";

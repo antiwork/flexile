@@ -122,8 +122,6 @@ const LeaveWorkspaceSection = () => {
 
   const unimpersonateMutation = useMutation({
     mutationFn: async () => {
-      if (!user.isImpersonating) return;
-
       await request({
         method: "DELETE",
         url: unimpersonate_admin_users_path(),
@@ -162,7 +160,7 @@ const LeaveWorkspaceSection = () => {
       if (user.companies.length > 1) {
         router.push("/dashboard");
       } else {
-        await unimpersonateMutation.mutateAsync();
+        if (user.isImpersonating) await unimpersonateMutation.mutateAsync();
         await signOut({ redirect: false }).then(logout);
         router.push("/login");
       }
