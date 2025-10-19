@@ -332,6 +332,11 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
     }
   };
 
+  const handleUnimpersonate = async () => {
+    await unimpersonateMutation.mutateAsync();
+    router.push("/admin");
+  };
+
   return (
     <NavSheet
       trigger={
@@ -394,10 +399,7 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
             {user.isImpersonating ? (
               <SheetNavItem
                 pathname={pathname}
-                onClick={async () => {
-                  await unimpersonateMutation.mutateAsync();
-                  router.push("/admin");
-                }}
+                onClick={() => void handleUnimpersonate()}
                 item={{
                   label: "Stop impersonating",
                   icon: UserX,

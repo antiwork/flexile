@@ -69,6 +69,17 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
     },
   });
 
+  const handleUnimpersonate = async () => {
+    await unimpersonateMutation.mutateAsync();
+    router.push("/admin");
+  };
+
+  const handleLogout = async () => {
+    if (user.isImpersonating) await unimpersonateMutation.mutateAsync();
+    await signOut({ redirect: false });
+    logout();
+  };
+
   return (
     <SidebarProvider>
       <Sidebar collapsible="offcanvas" mobileSidebar={<MobileBottomNav />}>
@@ -203,26 +214,14 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
               />
               {user.isImpersonating ? (
                 <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={async () => {
-                      await unimpersonateMutation.mutateAsync();
-                      router.push("/admin");
-                    }}
-                    className="!text-destructive"
-                  >
+                  <SidebarMenuButton onClick={() => void handleUnimpersonate()} className="!text-destructive">
                     <UserX className="size-6" />
                     Unbecome
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ) : null}
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={async () => {
-                    if (user.isImpersonating) await unimpersonateMutation.mutateAsync();
-                    void signOut({ redirect: false }).then(logout);
-                  }}
-                  className="cursor-pointer"
-                >
+                <SidebarMenuButton onClick={() => void handleLogout()} className="cursor-pointer">
                   <LogOut className="size-6" />
                   <span>Log out</span>
                 </SidebarMenuButton>
