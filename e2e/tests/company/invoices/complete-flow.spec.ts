@@ -9,6 +9,7 @@ import { login, logout } from "@test/helpers/auth";
 import { createAndSendInvoice, openInvoiceEditById } from "@test/helpers/invoices";
 import { expect, type Page, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
+import { invoiceStatuses } from "@/db/enums";
 import { invoices } from "@/db/schema";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
@@ -36,10 +37,11 @@ test.describe("Invoice submission, approval and rejection", () => {
     });
   });
 
-  const createInitialInvoices = async () => {
+  const createInitialInvoices = async (statusOverrides?: Record<string, (typeof invoiceStatuses)[number]>) => {
     await invoicesFactory.create({
       companyId: company.id,
       companyContractorId: workerUserA.id,
+      status: statusOverrides?.["CUSTOM-1"] ?? "received",
       invoiceNumber: "CUSTOM-1",
       invoiceDate: "2024-11-01",
       totalAmountInUsdCents: BigInt(870_00),
@@ -49,6 +51,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await invoicesFactory.create({
       companyId: company.id,
       companyContractorId: workerUserA.id,
+      status: statusOverrides?.["CUSTOM-2"] ?? "received",
       invoiceNumber: "CUSTOM-2",
       invoiceDate: "2024-12-01",
       totalAmountInUsdCents: BigInt(23_00),
@@ -58,11 +61,38 @@ test.describe("Invoice submission, approval and rejection", () => {
     await invoicesFactory.create({
       companyId: company.id,
       companyContractorId: workerUserB.id,
+      status: statusOverrides?.["CUSTOM-3"] ?? "received",
       invoiceNumber: "CUSTOM-3",
       invoiceDate: "2024-11-20",
       totalAmountInUsdCents: BigInt(623_00),
       cashAmountInCents: BigInt(623_00),
     });
+  };
+
+  const createRejectedInvoice = async () => {
+    const { invoice } = await invoicesFactory.create(
+      {
+        companyId: company.id,
+        companyContractorId: workerUserA.id,
+        status: "rejected",
+        invoiceNumber: "REJECTED-1",
+        invoiceDate: "2024-12-01",
+        totalAmountInUsdCents: BigInt(23_00),
+        cashAmountInCents: BigInt(23_00),
+        rejectedById: adminUser.id,
+        rejectionReason: "Too little time",
+        rejectedAt: new Date(),
+      },
+      { skipLineItems: true },
+    );
+
+    await invoiceLineItemsFactory.create({
+      invoiceId: invoice.id,
+      description: "woops too little time",
+      quantity: "0.383", // 0:23 hours = 0.383 hours
+    });
+
+    return invoice;
   };
 
   test("allows contractor to create and submit multiple invoices", async ({ page }) => {
@@ -358,15 +388,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
   test("allows admin to approve remaining invoices", async ({ page }) => {
     await login(page, adminUser);
-    await createInitialInvoices();
-    await db
-      .update(invoices)
-      .set({ status: "payment_pending" })
-      .where(and(eq(invoices.invoiceNumber, "CUSTOM-1"), eq(invoices.companyContractorId, workerUserA.id)));
-    await db
-      .update(invoices)
-      .set({ status: "rejected" })
-      .where(and(eq(invoices.invoiceNumber, "CUSTOM-2"), eq(invoices.companyContractorId, workerUserA.id)));
+    await createInitialInvoices({ "CUSTOM-1": "payment_pending", "CUSTOM-2": "rejected" });
 
     await expect(locateOpenInvoicesBadge(page)).toContainText("1");
     await page.getByRole("cell", { name: workerUserB.legalName ?? "never" }).click();
@@ -382,14 +404,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
   test("allows contractor to view approved and rejected invoices", async ({ page }) => {
     await createInitialInvoices();
-    await db
-      .update(invoices)
-      .set({ status: "payment_pending" })
-      .where(and(eq(invoices.invoiceNumber, "CUSTOM-1"), eq(invoices.companyContractorId, workerUserA.id)));
-    await db
-      .update(invoices)
-      .set({ status: "rejected" })
-      .where(and(eq(invoices.invoiceNumber, "CUSTOM-2"), eq(invoices.companyContractorId, workerUserA.id)));
+    await createInitialInvoices({ "CUSTOM-1": "payment_pending", "CUSTOM-2": "rejected" });
     await login(page, workerUserA);
 
     const approvedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-1" });
@@ -400,34 +415,14 @@ test.describe("Invoice submission, approval and rejection", () => {
   });
 
   test("allows contractor to edit and resubmit rejected invoice", async ({ page }) => {
-    const { invoice } = await invoicesFactory.create(
-      {
-        companyId: company.id,
-        companyContractorId: workerUserA.id,
-        status: "rejected",
-        invoiceNumber: "CUSTOM-2",
-        invoiceDate: "2024-12-01",
-        totalAmountInUsdCents: BigInt(23_00),
-        cashAmountInCents: BigInt(23_00),
-        rejectedById: adminUser.id,
-        rejectionReason: "Too little time",
-        rejectedAt: new Date(),
-      },
-      { skipLineItems: true },
-    );
-
-    await invoiceLineItemsFactory.create({
-      invoiceId: invoice.id,
-      description: "woops too little time",
-      quantity: "0.383", // 0:23 hours = 0.383 hours
-    });
+    await createRejectedInvoice();
 
     await login(page, workerUserA);
 
-    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-2" });
-    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).toBeVisible();
+    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "REJECTED-1" });
+    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected", exact: true })).toBeVisible();
 
-    await openInvoiceEditById(page, "CUSTOM-2");
+    await openInvoiceEditById(page, "REJECTED-1");
     await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
     await page.getByRole("button", { name: "Resubmit" }).click();
@@ -437,33 +432,12 @@ test.describe("Invoice submission, approval and rejection", () => {
   });
 
   test("allows admin to reject resubmitted invoices", async ({ page }) => {
-    const { invoice } = await invoicesFactory.create(
-      {
-        companyId: company.id,
-        companyContractorId: workerUserA.id,
-        status: "rejected",
-        invoiceNumber: "CUSTOM-2",
-        invoiceDate: "2024-12-01",
-        totalAmountInUsdCents: BigInt(23_00),
-        cashAmountInCents: BigInt(23_00),
-        rejectedById: adminUser.id,
-        rejectionReason: "Too little time",
-        rejectedAt: new Date(),
-      },
-      { skipLineItems: true },
-    );
-
-    await invoiceLineItemsFactory.create({
-      invoiceId: invoice.id,
-      description: "woops too little time",
-      quantity: "0.383", // 0:23 hours = 0.383 hours
-    });
-
     await login(page, workerUserA);
-    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-2" });
-    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).toBeVisible();
+    await createRejectedInvoice();
+    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "REJECTED-1" });
+    await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected", exact: true })).toBeVisible();
 
-    await openInvoiceEditById(page, "CUSTOM-2");
+    await openInvoiceEditById(page, "REJECTED-1");
     await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
     await page.getByRole("button", { name: "Resubmit" }).click();
