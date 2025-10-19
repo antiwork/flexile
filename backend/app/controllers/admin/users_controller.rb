@@ -2,6 +2,8 @@
 
 module Admin
   class UsersController < Admin::ApplicationController
+    after_action :reset_current, only: [:impersonate, :unimpersonate]
+
     def impersonate
       user = User.find_by!(external_id: params[:id])
       authorize user
@@ -15,7 +17,6 @@ module Admin
 
     def unimpersonate
       ImpersonationService.new(Current.authenticated_user).unimpersonate
-      reset_current
 
       render json: { success: true }
     end
