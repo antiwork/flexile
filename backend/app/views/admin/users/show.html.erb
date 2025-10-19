@@ -17,7 +17,6 @@ as well as a link to its edit page.
 %>
 
 <% content_for(:title) { t("administrate.actions.show_resource", name: page.page_title) } %>
-<% can_impersonate = policy(page.resource).impersonate? %>
 
 <header class="main-content__header">
   <h1 class="main-content__page-title">
@@ -25,6 +24,7 @@ as well as a link to its edit page.
   </h1>
 
   <div>
+    <% can_impersonate = policy(page.resource).impersonate? %>
     <% if can_impersonate %>
       <%= link_to(
             "Become",
