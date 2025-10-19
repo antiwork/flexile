@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 RSpec.describe Admin::UsersController do
-  let(:frontend_dashboard_path) { "#{PROTOCOL}://#{DOMAIN}/dashboard" }
   let(:team_member_user) { create(:user, team_member: true) }
   let(:another_team_member_user) { create(:user, team_member: true) }
   let(:user) { create(:user) }
@@ -9,8 +8,6 @@ RSpec.describe Admin::UsersController do
   before do
     allow(controller).to receive(:current_context) do
       Current.authenticated_user = team_member_user
-      Current.company = nil
-      Current.company_administrator = nil
       CurrentContext.new(user: team_member_user, company: nil)
     end
   end
@@ -22,8 +19,9 @@ RSpec.describe Admin::UsersController do
     end
 
     it "allows impersonating regular users" do
+      expect(controller).to receive(:reset_current)
       get :impersonate, params: { id: user.external_id }
-      expect(response).to redirect_to(frontend_dashboard_path)
+      expect(response).to redirect_to("#{PROTOCOL}://#{DOMAIN}/dashboard")
     end
 
     it "denies impersonating other team members" do
@@ -39,6 +37,7 @@ RSpec.describe Admin::UsersController do
 
   describe "POST #unimpersonate" do
     it "ends impersonation session" do
+      expect(controller).to receive(:reset_current)
       post :unimpersonate
       expect(response.parsed_body[:success]).to be true
     end
