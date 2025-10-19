@@ -2,8 +2,6 @@
 
 # Allows a team member to temporarily log in as another user
 class ImpersonationService
-  attr_reader :authenticated_user
-
   def initialize(authenticated_user)
     @authenticated_user = authenticated_user
   end
@@ -32,6 +30,8 @@ class ImpersonationService
   end
 
   private
+    attr_reader :authenticated_user
+
     def reset_impersonation
       $redis.del(RedisKey.impersonated_user(authenticated_user.id))
     end
