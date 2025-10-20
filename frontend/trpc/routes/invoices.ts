@@ -17,6 +17,7 @@ import {
 import env from "@/env";
 import { companyProcedure, createRouter } from "@/trpc";
 import { sendEmail } from "@/trpc/email";
+import { companyName } from "@/trpc/routes/companies";
 import { calculateInvoiceEquity } from "@/trpc/routes/equityCalculations";
 import OneOffInvoiceCreated from "@/trpc/routes/OneOffInvoiceCreated";
 import { latestUserComplianceInfo, simpleUser } from "@/trpc/routes/users";
@@ -145,7 +146,7 @@ export const invoicesRouter = createRouter({
           invoiceDate: date,
           dueOn: date,
           billFrom,
-          billTo: assertDefined(ctx.company.name),
+          billTo: companyName(ctx.company) ?? ctx.company.email, // company name stays null until onboarding completes, fallback avoids blocking payments
           streetAddress: invoicer.streetAddress,
           city: invoicer.city,
           state: invoicer.state,
@@ -176,13 +177,15 @@ export const invoicesRouter = createRouter({
     });
     const bankAccountLastFour = invoicer.wiseRecipients[0]?.lastFourDigits;
 
+    const companyDisplayName = companyName(companyWorker.company) ?? companyWorker.company.email;
+
     await sendEmail({
       from: `Flexile <support@${env.DOMAIN}>`,
       to: companyWorker.user.email,
       replyTo: companyWorker.company.email,
-      subject: `${companyWorker.company.name} has sent you money`,
+      subject: `${companyDisplayName} has sent you money`,
       react: OneOffInvoiceCreated({
-        companyName: companyWorker.company.name ?? companyWorker.company.email,
+        companyName: companyDisplayName,
         invoice,
         bankAccountLastFour,
         paymentDescriptions,
