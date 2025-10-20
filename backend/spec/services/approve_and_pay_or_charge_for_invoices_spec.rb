@@ -39,8 +39,10 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
       expect(ConsolidatedInvoiceCreation).to receive(:new).with(company_id: company.id, invoice_ids: payable_and_chargeable.map(&:id)).and_call_original
 
       expect do
-        result = described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id)).perform
-        expect(result[:deferred]).to be_empty
+        service = described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id))
+        consolidated_invoice = service.perform
+        expect(service.deferred_invoices).to be_empty
+        expect(consolidated_invoice).to be_a(ConsolidatedInvoice)
       end.to change { company.consolidated_invoices.count }.by(1)
 
       latest_consolidated_invoice = company.consolidated_invoices.order(:created_at).last
@@ -119,9 +121,10 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
       end
 
       it "returns a deferred payload with a clear message" do
-        result = described_class.new(user: admin, company:, invoice_ids: [invoice.external_id]).perform
+        service = described_class.new(user: admin, company:, invoice_ids: [invoice.external_id])
+        service.perform
 
-        expect(result[:deferred]).to contain_exactly(
+        expect(service.deferred_invoices).to contain_exactly(
           include(
             invoice_id: invoice.external_id,
             invoice_number: invoice.invoice_number,

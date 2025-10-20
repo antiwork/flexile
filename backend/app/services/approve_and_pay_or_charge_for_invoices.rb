@@ -3,17 +3,19 @@
 class ApproveAndPayOrChargeForInvoices
   class InvoiceNotPayableError < StandardError; end
 
+  attr_reader :deferred_invoices
+
   def initialize(user:, company:, invoice_ids:)
     @user = user
     @company = company
     @invoice_ids = invoice_ids
+    @deferred_invoices = []
   end
 
   def perform
     invoices = invoice_ids.map { |external_id| company.invoices.alive.find_by!(external_id:) } # Load everything up front so we can validate the batch before mutating.
 
     chargeable_invoice_ids = []
-    deferred_invoices = []
 
     invoices.each do |invoice|
       ApproveInvoice.new(invoice:, approver: user).perform
@@ -35,12 +37,13 @@ class ApproveAndPayOrChargeForInvoices
       end
     end
 
+    result = nil
     if chargeable_invoice_ids.any?
-      consolidated_invoice = ConsolidatedInvoiceCreation.new(company_id: company.id, invoice_ids: chargeable_invoice_ids).process
-      ChargeConsolidatedInvoiceJob.perform_async(consolidated_invoice.id) if consolidated_invoice.present?
+      result = ConsolidatedInvoiceCreation.new(company_id: company.id, invoice_ids: chargeable_invoice_ids).process
+      ChargeConsolidatedInvoiceJob.perform_async(result.id) if result.present?
     end
 
-    { deferred: deferred_invoices }
+    result
   end
 
   private
