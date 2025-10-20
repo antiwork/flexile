@@ -36,6 +36,38 @@ test.describe("One-off payments", () => {
   });
 
   test.describe("admin creates a payment", () => {
+    test("prevents creating payment when contractor has no bank account", async ({ page }) => {
+      const workerWithoutBank = (await usersFactory.create()).user;
+      await companyContractorsFactory.create(
+        {
+          companyId: company.id,
+          userId: workerWithoutBank.id,
+          payRateInSubunits: 5000,
+        },
+        { withoutBankAccount: true },
+      );
+
+      await login(page, adminUser, `/people/${workerWithoutBank.externalId}?tab=invoices`);
+
+      await page.getByRole("button", { name: "Issue payment" }).click();
+
+      await withinModal(
+        async (modal) => {
+          await modal.getByLabel("Amount").fill("100.00");
+          await modal.getByLabel("What is this for?").fill("Test payment");
+          await modal.getByRole("button", { name: "Issue payment" }).click();
+
+          await expect(modal.getByText(/configure your bank account/iu)).toBeVisible();
+        },
+        { page, assertClosed: false },
+      );
+
+      const invoice = await db.query.invoices.findFirst({
+        where: and(eq(invoices.companyId, company.id), eq(invoices.userId, workerWithoutBank.id)),
+      });
+      expect(invoice).toBeUndefined();
+    });
+
     test("allows admin to create a one-off payment for a contractor without equity", async ({ page, sentEmails }) => {
       await login(page, adminUser, `/people/${workerUser.externalId}?tab=invoices`);
 
