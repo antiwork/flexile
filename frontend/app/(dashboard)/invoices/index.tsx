@@ -122,7 +122,12 @@ export function useIsDeletable() {
     user.id === invoice.contractor.user.id;
 }
 
-type DeferredInvoiceNotice = { invoice_id: string; invoice_number: string; message: string };
+const deferredInvoiceNoticeSchema = z.object({
+  invoice_id: z.string(),
+  invoice_number: z.string(),
+  message: z.string(),
+});
+type DeferredInvoiceNotice = z.infer<typeof deferredInvoiceNoticeSchema>;
 type ApproveInvoicesResponse = {
   deferred: DeferredInvoiceNotice[];
 };
@@ -252,20 +257,22 @@ export const ApproveButton = ({
   );
 };
 
-const approveInvoicesResponseSchema = z.object({
-  deferred: z.array(
-    z.object({
-      invoice_id: z.string(),
-      invoice_number: z.string(),
-      message: z.string(),
-    }),
-  ),
-});
+const approveInvoicesResponseSchema = z.object({ deferred: z.array(z.unknown()) });
 
 const parseApproveInvoicesResponse = (value: unknown): ApproveInvoicesResponse => {
   const result = approveInvoicesResponseSchema.safeParse(value);
   if (!result.success) return { deferred: [] };
-  return result.data;
+
+  const deferred: DeferredInvoiceNotice[] = [];
+  // Keep valid notices even if the server slips in malformed entries so admins still see actionable blockers.
+  for (const entry of result.data.deferred) {
+    const parsed = deferredInvoiceNoticeSchema.safeParse(entry);
+    if (parsed.success) {
+      deferred.push(parsed.data);
+    }
+  }
+
+  return { deferred };
 };
 
 export const useRejectInvoices = (onSuccess?: () => void) => {
