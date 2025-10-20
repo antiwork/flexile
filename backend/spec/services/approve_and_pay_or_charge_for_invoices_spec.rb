@@ -16,12 +16,6 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
     invoices.map { _1.update(status: Invoice::FAILED) }
     invoices
   end
-  let!(:non_payable) do
-    [
-      create(:invoice, company:),
-      create(:invoice, :rejected, company:),
-    ]
-  end
   let!(:paid_or_pending_payment_not_charged) do
     Invoice::PAID_OR_PAYING_STATES.map { create(:invoice, company:, status: _1) }
   end
@@ -29,8 +23,7 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
   let(:payable_and_chargeable) { fully_approved + missing_final_approval + failed_but_not_charged }
   let(:invoices) do
     payable_and_chargeable +
-    already_charged_but_failed +
-    non_payable
+    already_charged_but_failed
   end
 
   it "approves all invoices, pays failed invoices, and generates a consolidated invoice for chargeable invoices" do
@@ -107,6 +100,30 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
       expect do
         described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id) + [create(:invoice).external_id]).perform
       end.to raise_error ActiveRecord::RecordNotFound
+    end
+  end
+
+  describe "when an invoice cannot be paid yet" do
+    let(:company) { create(:company, required_invoice_approval_count: 1) }
+    let(:admin) { create(:company_administrator, company:).user }
+    let(:worker) { create(:company_worker, company:) }
+    let(:invoice) do
+      create(
+        :invoice,
+        :approved,
+        company:,
+        company_worker: worker,
+        user: worker.user,
+        created_by: admin,
+        approvals: 0,
+        accepted_at: nil,
+      )
+    end
+
+    it "raises an invoice not payable error with a helpful message" do
+      expect do
+        described_class.new(user: admin, company:, invoice_ids: [invoice.external_id]).perform
+      end.to raise_error(ApproveAndPayOrChargeForInvoices::InvoiceNotPayableError).with_message(/accept/i)
     end
   end
 end

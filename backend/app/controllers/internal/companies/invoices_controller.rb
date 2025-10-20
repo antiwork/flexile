@@ -86,6 +86,9 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
         invoice_ids: invoice_external_ids_for_payment
       ).perform
     end
+    head :no_content
+  rescue ApproveAndPayOrChargeForInvoices::InvoiceNotPayableError => e
+    render json: { error_message: e.message }, status: :unprocessable_entity
   end
 
   def reject

@@ -2,7 +2,7 @@ import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addDays, isWeekend, nextMonday } from "date-fns";
 import { Ban, Info } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { cn } from "@/utils";
-import { request } from "@/utils/request";
+import { request, ResponseError } from "@/utils/request";
 import { approve_company_invoices_path, company_invoice_path, reject_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
 
@@ -121,10 +121,22 @@ export function useIsDeletable() {
     user.id === invoice.contractor.user.id;
 }
 
-export const useApproveInvoices = (onSuccess?: () => void) => {
+type ApproveInvoicesCallbacks =
+  | {
+      onSuccess?: () => void;
+      onError?: (error: unknown) => void;
+    }
+  | (() => void)
+  | undefined;
+
+const normalizeApproveCallbacks = (callbacks: ApproveInvoicesCallbacks) =>
+  typeof callbacks === "function" ? { onSuccess: callbacks } : (callbacks ?? {});
+
+export const useApproveInvoices = (callbacks?: ApproveInvoicesCallbacks) => {
   const utils = trpc.useUtils();
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
+  const { onSuccess, onError } = normalizeApproveCallbacks(callbacks);
 
   return useMutation({
     mutationFn: async ({ approve_ids, pay_ids }: { approve_ids?: string[]; pay_ids?: string[] }) => {
@@ -143,6 +155,9 @@ export const useApproveInvoices = (onSuccess?: () => void) => {
         onSuccess?.();
       }, 500);
     },
+    onError: (error) => {
+      onError?.(error);
+    },
   });
 };
 
@@ -158,27 +173,55 @@ export const ApproveButton = ({
   className?: string;
 }) => {
   const company = useCurrentCompany();
-  const approveInvoices = useApproveInvoices(onApprove);
   const pay = useIsPayable()(invoice);
+  const [approveError, setApproveError] = useState<string | null>(null);
+
+  const approveInvoicesMutation = useApproveInvoices({
+    onSuccess: () => {
+      setApproveError(null);
+      onApprove?.();
+    },
+    onError: (error) => {
+      const errorMessage = error instanceof ResponseError ? error.message : "Something went wrong. Please try again.";
+      setApproveError(errorMessage);
+    },
+  });
+
+  const { isError, isPending, reset } = approveInvoicesMutation;
+
+  useEffect(() => {
+    if (isError && approveError) {
+      reset();
+    }
+  }, [approveError, isError, reset]);
+
+  useEffect(() => {
+    if (isPending && approveError) {
+      setApproveError(null);
+    }
+  }, [approveError, isPending]);
 
   return (
-    <MutationButton
-      className={className}
-      mutation={approveInvoices}
-      idleVariant={variant}
-      param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
-      successText={pay ? "Payment initiated" : "Approved!"}
-      loadingText={pay ? "Sending payment..." : "Approving..."}
-      disabled={!!pay && (!company.completedPaymentMethodSetup || !company.isTrusted)}
-    >
-      {pay ? (
-        <>
-          <CurrencyDollarIcon className="size-4" /> {invoice.status === "failed" ? "Pay again" : "Pay now"}
-        </>
-      ) : (
-        "Approve"
-      )}
-    </MutationButton>
+    <div className="flex flex-col gap-2">
+      <MutationButton
+        className={className}
+        mutation={approveInvoicesMutation}
+        idleVariant={variant}
+        param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
+        successText={pay ? "Payment initiated" : "Approved!"}
+        loadingText={pay ? "Sending payment..." : "Approving..."}
+        disabled={!!pay && (!company.completedPaymentMethodSetup || !company.isTrusted)}
+      >
+        {pay ? (
+          <>
+            <CurrencyDollarIcon className="size-4" /> {invoice.status === "failed" ? "Pay again" : "Pay now"}
+          </>
+        ) : (
+          "Approve"
+        )}
+      </MutationButton>
+      {approveError ? <p className="text-destructive text-sm">{approveError}</p> : null}
+    </div>
   );
 };
 

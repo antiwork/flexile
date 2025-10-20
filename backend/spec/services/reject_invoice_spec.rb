@@ -47,5 +47,13 @@ RSpec.describe RejectInvoice do
         end
       end
     end
+
+    context "when the invoice previously failed" do
+      let(:invoice) { create(:invoice, :failed) }
+
+      it "rejects the invoice" do
+        expect { service.perform }.to change { invoice.reload.status }.to(Invoice::REJECTED)
+      end
+    end
   end
 end
