@@ -43,33 +43,60 @@ test.describe("People table sorting", () => {
     await statusHeader.click();
 
     let rows = await page.locator("tbody tr").allInnerTexts();
-    assertRelativeOrder(rows, [
-      "Alumni - ended at 2023-01-01",
-      "Active - started at 2023-05-01",
-      "Alumni - ended at 2024-01-01",
-      "Active - started at 2024-05-01",
-      "Invited",
-    ]);
+    expectRowOrder(rows, {
+      alumni: ["Alumni - ended at 2023-01-01", "Alumni - ended at 2024-01-01"],
+      active: ["Active - started at 2023-05-01", "Active - started at 2024-05-01"],
+      invited: "Invited",
+    });
 
     await statusHeader.click();
 
     rows = await page.locator("tbody tr").allInnerTexts();
-    assertRelativeOrder(rows, [
-      "Invited",
-      "Active - started at 2024-05-01",
-      "Alumni - ended at 2024-01-01",
-      "Active - started at 2023-05-01",
-      "Alumni - ended at 2023-01-01",
-    ]);
+    expectRowOrder(rows, {
+      alumni: ["Alumni - ended at 2024-01-01", "Alumni - ended at 2023-01-01"],
+      active: ["Active - started at 2024-05-01", "Active - started at 2023-05-01"],
+      invited: "Invited",
+      descending: true,
+    });
   });
 
-  const assertRelativeOrder = (rows: string[], expectedOrder: string[]) => {
-    const indices = expectedOrder.map((expected) => {
-      const index = rows.findIndex((row) => row.includes(expected));
+  const expectRowOrder = (
+    rows: string[],
+    options: {
+      alumni: [string, string];
+      active: [string, string];
+      invited: string;
+      descending?: boolean;
+    },
+  ) => {
+    const [alumniFirst, alumniSecond] = options.alumni;
+    const [activeFirst, activeSecond] = options.active;
+    const invited = options.invited;
+    const direction = options.descending ? "desc" : "asc";
+
+    const indexOf = (label: string) => {
+      const index = rows.findIndex((row) => row.includes(label));
       expect(index).not.toBe(-1);
       return index;
-    });
-    const sorted = [...indices].sort((a, b) => a - b);
-    expect(indices).toEqual(sorted);
+    };
+
+    const compare = (a: number, b: number) =>
+      direction === "asc" ? expect(a).toBeLessThan(b) : expect(a).toBeGreaterThan(b);
+
+    const alumniFirstIndex = indexOf(alumniFirst);
+    const alumniSecondIndex = indexOf(alumniSecond);
+    const activeFirstIndex = indexOf(activeFirst);
+    const activeSecondIndex = indexOf(activeSecond);
+    const invitedIndex = indexOf(invited);
+
+    compare(alumniFirstIndex, alumniSecondIndex);
+    compare(activeFirstIndex, activeSecondIndex);
+    if (direction === "asc") {
+      expect(alumniSecondIndex).toBeLessThan(invitedIndex);
+      expect(activeSecondIndex).toBeLessThan(invitedIndex);
+    } else {
+      expect(invitedIndex).toBeLessThan(activeFirstIndex);
+      expect(invitedIndex).toBeLessThan(alumniFirstIndex);
+    }
   };
 });
