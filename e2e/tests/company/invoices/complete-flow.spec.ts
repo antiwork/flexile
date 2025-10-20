@@ -117,38 +117,47 @@ test.describe("Invoice submission, approval and rejection", () => {
     await logout(page);
     await login(page, adminUser);
 
-    const firstRow = page.locator("tbody tr").first();
-    const secondRow = page.locator("tbody tr").nth(1);
-    const thirdRow = page.locator("tbody tr").nth(2);
     const openInvoicesBadge = locateOpenInvoicesBadge(page);
+    const workerASmallInvoiceRow = () =>
+      page
+        .locator("tbody tr")
+        .filter({ hasText: workerUserA.legalName ?? "never" })
+        .filter({ hasText: "$23" });
+    const workerALargeInvoiceRow = () =>
+      page
+        .locator("tbody tr")
+        .filter({ hasText: workerUserA.legalName ?? "never" })
+        .filter({ hasText: "$870" });
+    const workerBInvoiceRow = () =>
+      page
+        .locator("tbody tr")
+        .filter({ hasText: workerUserB.legalName ?? "never" })
+        .filter({ hasText: "$623" });
 
     await expect(openInvoicesBadge).toContainText("3");
-    await expect(firstRow).toContainText("Dec 1, 2024");
-    await expect(firstRow).toContainText("$23");
-    await expect(firstRow).toContainText("Awaiting approval");
-    await expect(firstRow.getByRole("button", { name: "Pay now" })).toBeVisible();
-    await expect(secondRow).toContainText("Nov 20, 2024");
-    await expect(secondRow).toContainText("$623");
-    await expect(secondRow).toContainText("Awaiting approval");
-    await expect(secondRow.getByRole("button", { name: "Pay now" })).toBeVisible();
-    await expect(thirdRow).toContainText("Nov 1, 2024");
-    await expect(thirdRow).toContainText("$870");
-    await expect(thirdRow).toContainText("Awaiting approval");
-    await thirdRow.getByRole("button", { name: "Pay now" }).click();
+    await expect(workerASmallInvoiceRow()).toContainText("Dec 1, 2024");
+    await expect(workerASmallInvoiceRow()).toContainText("Awaiting approval");
+    await expect(workerASmallInvoiceRow().getByRole("button", { name: "Pay now" })).toBeVisible();
+    await expect(workerBInvoiceRow()).toContainText("Nov 20, 2024");
+    await expect(workerBInvoiceRow()).toContainText("Awaiting approval");
+    await expect(workerBInvoiceRow().getByRole("button", { name: "Pay now" })).toBeVisible();
+    await expect(workerALargeInvoiceRow()).toContainText("Nov 1, 2024");
+    await expect(workerALargeInvoiceRow()).toContainText("Awaiting approval");
+    await workerALargeInvoiceRow().getByRole("button", { name: "Pay now" }).click();
 
-    await expect(thirdRow).not.toBeVisible();
+    await expect(workerALargeInvoiceRow()).not.toBeVisible();
     await page.getByRole("button", { name: "Filter" }).click();
     await page.getByRole("menuitem", { name: "Clear all filters" }).click();
-    await expect(thirdRow).toContainText("Payment scheduled");
+    await expect(workerALargeInvoiceRow()).toContainText("Payment scheduled");
     await expect(openInvoicesBadge).toContainText("2");
 
-    await page.locator("tbody tr").first().getByLabel("Select row").check();
+    await workerASmallInvoiceRow().getByLabel("Select row").check();
 
     await expect(page.getByText("1 selected")).toBeVisible();
     await expect(page.getByRole("button", { name: "Reject selected invoices" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Approve selected invoices" })).toBeVisible();
 
-    await page.locator("tbody tr").nth(1).getByLabel("Select row").check();
+    await workerBInvoiceRow().getByLabel("Select row").check();
     await expect(page.getByText("2 selected")).toBeVisible();
 
     await page.getByRole("button", { name: "Approve selected invoices" }).click();
