@@ -275,7 +275,7 @@ test.describe("One-off payments", () => {
         .getByRole("button", { name: "Pay again" })
         .click();
 
-      await expect(page.getByText("Payment initiated")).toBeVisible();
+      await expect(page.getByText("Payment scheduled")).toBeVisible();
     });
   });
 });
