@@ -99,7 +99,7 @@ test.describe("invoice editing", () => {
     expect(updatedInvoice.invoiceNumber).toBe("INV-EDIT-001");
   });
 
-  test("displays fresh data after editing and returning to the edit page", async ({ page }) => {
+  test("displays fresh data across list, show, and edit pages after re-submission", async ({ page }) => {
     // Create an invoice with initial data
     const existingContractor = await db.query.companyContractors.findFirst({
       where: eq(companyContractors.companyId, company.company.id),
@@ -108,7 +108,7 @@ test.describe("invoice editing", () => {
 
     const invoiceData = await invoicesFactory.create({
       companyContractorId: existingContractor.id,
-      invoiceNumber: "INV-STALE-TEST",
+      invoiceNumber: "INV-FRESH-DATA-TEST",
       notes: "Original notes.",
     });
 
@@ -121,8 +121,6 @@ test.describe("invoice editing", () => {
       .update(invoiceLineItems)
       .set({
         description: "Development work",
-        quantity: "1",
-        payRateInSubunits: 6000,
       })
       .where(eq(invoiceLineItems.id, existingLineItem.id));
 
@@ -130,33 +128,58 @@ test.describe("invoice editing", () => {
 
     await page.goto("/invoices");
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-    await expect(page.getByRole("cell", { name: "INV-STALE-TEST" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "INV-FRESH-DATA-TEST" })).toBeVisible();
 
-    await page.getByRole("cell", { name: "INV-STALE-TEST" }).click();
+    await page.getByRole("cell", { name: "INV-FRESH-DATA-TEST" }).click();
+    await expect(
+      page.getByTableRowCustom({
+        Services: "Development work",
+        "Qty / Hours": "1",
+        "Line total": "$600",
+      }),
+    ).toBeVisible();
+    await expect(page.getByText("Original Notes")).toBeVisible();
+    await expect(page.getByText("Total$600")).toBeVisible();
+
     await page.getByRole("link", { name: "Edit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
 
-    // Verify initial data is loaded correctly
     await expect(page.getByPlaceholder("Enter notes about your invoice (optional)")).toHaveValue("Original notes.");
     await expect(page.getByPlaceholder("Description").first()).toHaveValue("Development work");
 
     // Update the invoice data
     await page.getByPlaceholder("Enter notes about your invoice (optional)").fill("Updated notes after first edit.");
     await page.getByPlaceholder("Description").first().fill("Updated development work");
+    await page.getByLabel("Hours / Qty").fill("02:00");
     await page.getByRole("button", { name: "Resubmit" }).click();
 
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
 
-    // Navigate back to edit page
-    await page.getByRole("cell", { name: "INV-STALE-TEST" }).click();
+    await page
+      .getByTableRowCustom({
+        "Invoice ID": "INV-FRESH-DATA-TEST",
+        Amount: "$1,200",
+      })
+      .click();
+
+    await expect(
+      page.getByTableRowCustom({
+        Services: "Updated development work",
+        "Qty / Hours": "02:00",
+        "Line total": "$1,200",
+      }),
+    ).toBeVisible();
+    await expect(page.getByText("Total$1,200")).toBeVisible();
+    await expect(page.getByText("Updated notes after first edit.")).toBeVisible();
+
     await page.getByRole("link", { name: "Edit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
 
-    // Verify fresh data is displayed (not stale cached data)
     await expect(page.getByPlaceholder("Description").first()).toHaveValue("Updated development work");
     await expect(page.getByPlaceholder("Enter notes about your invoice (optional)")).toHaveValue(
       "Updated notes after first edit.",
     );
+    await expect(page.getByLabel("Hours / Qty")).toHaveValue("02:00");
 
     // Confirm database has the correct data
     const updatedInvoice = await db.query.invoices
@@ -171,5 +194,6 @@ test.describe("invoice editing", () => {
     expect(updatedLineItems).toHaveLength(1);
     const lineItem = updatedLineItems[0];
     expect(lineItem?.description).toBe("Updated development work");
+    expect(lineItem?.quantity).toBe("120.00");
   });
 });
