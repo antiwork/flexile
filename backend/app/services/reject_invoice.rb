@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class RejectInvoice
+  # Failed invoices can be rejected now so admins can clear stale payout attempts.
   INVOICE_STATUSES_THAT_DENY_REJECTION = Invoice::PAID_OR_PAYING_STATES
 
   def initialize(invoice:, rejected_by:, reason: nil)

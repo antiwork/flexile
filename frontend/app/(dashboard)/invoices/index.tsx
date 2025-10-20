@@ -153,7 +153,7 @@ export const useApproveInvoices = (callbacks?: ApproveInvoicesCallbacks) => {
         assertOk: true,
       });
 
-      if (response.status === 204) return { deferred: [] };
+      if (response.status === 204) return { deferred: [] }; // Preserve existing happy-path contract when nothing is deferred.
 
       try {
         const data: unknown = await response.json();
@@ -251,6 +251,7 @@ export const ApproveButton = ({
   );
 };
 
+// Backend may send partial JSON so we defensively coerce it into the new client shape.
 const parseApproveInvoicesResponse = (value: unknown): ApproveInvoicesResponse => {
   if (!value || typeof value !== "object") return { deferred: [] };
   if (!("deferred" in value)) return { deferred: [] };

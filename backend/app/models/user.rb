@@ -59,6 +59,7 @@ class User < ApplicationRecord
 
   after_update_commit :update_dividend_status,
                       if: -> { current_sign_in_at_previously_changed? && current_sign_in_at_previously_was.nil? }
+  # Accepting an invite should free any invoices waiting on this worker without manual intervention.
   after_commit :process_payable_invoices_if_invitation_accepted,
                if: -> { saved_change_to_invitation_accepted_at? && invitation_accepted_at.present? }
 
@@ -171,6 +172,7 @@ class User < ApplicationRecord
   end
 
   def enqueue_payable_invoice_refresh!
+    # We fan out per-company so consolidated invoices still run with the usual grouping.
     company_workers.select(:company_id).distinct.pluck(:company_id).each do |company_id|
       ProcessPayableInvoicesJob.perform_async(company_id, id)
     end

@@ -25,6 +25,7 @@ class UserComplianceInfo < ApplicationRecord
   after_create_commit :delete_outdated_compliance_infos!, unless: :deleted?
   after_commit :generate_tax_information_document, if: -> { alive? && tax_information_confirmed_at? }
   after_commit :generate_irs_tax_forms, if: -> { alive? && tax_information_confirmed_at? }
+  # Once compliance is confirmed we reuse the same job to release any pending payouts.
   after_commit :process_payable_invoices_for_user,
                if: -> { alive? && saved_change_to_tax_information_confirmed_at? && tax_information_confirmed_at.present? }
   before_save :update_tax_id_status

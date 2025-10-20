@@ -17,6 +17,7 @@ class CompanyStripeAccount < ApplicationRecord
   validates :setup_intent_id, presence: true
 
   after_create_commit :delete_older_records!, unless: :deleted?
+  # When Stripe flags the account as ready we immediately retry any pending payouts.
   after_commit :process_payable_invoices_for_company, if: -> { saved_change_to_status? && ready? && !deleted? }
 
   def ready? = status == READY

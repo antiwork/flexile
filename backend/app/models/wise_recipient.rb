@@ -17,6 +17,7 @@ class WiseRecipient < ApplicationRecord
   validates :used_for_dividends, uniqueness: { conditions: -> { alive.where(used_for_dividends: true) }, scope: :user_id }, if: [:used_for_dividends?, :used_for_dividends_changed?]
 
   after_commit :process_payable_invoices_for_user, on: :create, if: -> { alive? && used_for_invoices? }
+  # Switching the primary payout account should immediately wake up pending invoices.
   after_commit :process_payable_invoices_for_user,
                on: :update,
                if: -> { alive? && saved_change_to_used_for_invoices? && used_for_invoices? }

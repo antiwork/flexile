@@ -25,6 +25,7 @@ class ProcessPayableInvoices
     return if chargeable_invoice_ids.empty?
 
     consolidated_invoice = ConsolidatedInvoiceCreation.new(company_id: company.id, invoice_ids: chargeable_invoice_ids).process
+    # Using the same job keeps retry semantics consistent with manual approvals.
     ChargeConsolidatedInvoiceJob.perform_async(consolidated_invoice.id) if consolidated_invoice.present?
   end
 
@@ -34,6 +35,7 @@ class ProcessPayableInvoices
     def scope
       invoices = company.invoices.alive.for_next_consolidated_invoice
       invoices = invoices.where(user:) if user
+      # Oldest first so we don't skip invoices stuck behind newer submissions.
       invoices.order(invoice_date: :asc)
     end
 end

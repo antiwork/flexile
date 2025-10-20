@@ -90,6 +90,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     payment_service&.perform
     deferred = payment_service&.deferred_invoices || []
     if deferred.present?
+      # Returning the deferral payload lets the client show why payout cannot proceed yet.
       render json: { deferred: deferred.map { |payload| serialize_deferred(payload) } }
     else
       head :no_content

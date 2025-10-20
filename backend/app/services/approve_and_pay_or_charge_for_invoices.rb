@@ -26,6 +26,7 @@ class ApproveAndPayOrChargeForInvoices
       reason = payability_hold_reason(invoice)
 
       if reason
+        # Instead of failing the whole batch we capture why this invoice can't move forward yet.
         deferred_invoices << deferred_payload(invoice, reason)
         next
       end
@@ -50,6 +51,7 @@ class ApproveAndPayOrChargeForInvoices
     attr_reader :user, :company, :invoice_ids
 
     def payability_hold_reason(invoice)
+      # Each branch matches the prerequisites surfaced in the UI so admins get actionable feedback.
       return "Flexile needs a company payout account before you can send contractor payments." unless company.bank_account_ready?
 
       remaining = approvals_remaining(invoice)

@@ -110,6 +110,7 @@ class Company < ApplicationRecord
 
   after_create_commit :create_balance!
   after_update_commit :update_convertible_implied_shares, if: :saved_change_to_fully_diluted_shares?
+  # Once a company becomes trusted we queue payments right away so existing invoices unstick.
   after_commit :process_payable_invoices_if_trusted, if: -> { saved_change_to_is_trusted? && is_trusted? }
 
   accepts_nested_attributes_for :expense_categories

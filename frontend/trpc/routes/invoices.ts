@@ -146,7 +146,7 @@ export const invoicesRouter = createRouter({
           invoiceDate: date,
           dueOn: date,
           billFrom,
-          billTo: companyName(ctx.company) ?? ctx.company.email, // company name stays null until onboarding completes, fallback avoids blocking payments
+          billTo: companyName(ctx.company) ?? ctx.company.email, // Allow one-off invoices before onboarding finishes by falling back to email.
           streetAddress: invoicer.streetAddress,
           city: invoicer.city,
           state: invoicer.state,
@@ -177,7 +177,7 @@ export const invoicesRouter = createRouter({
     });
     const bankAccountLastFour = invoicer.wiseRecipients[0]?.lastFourDigits;
 
-    const companyDisplayName = companyName(companyWorker.company) ?? companyWorker.company.email; // Fallback keeps email/subject text stable when the company hasn’t entered a public name yet.
+    const companyDisplayName = companyName(companyWorker.company) ?? companyWorker.company.email; // Keep outgoing copy stable even when public name is missing.
 
     await sendEmail({
       from: `Flexile <support@${env.EMAIL_DOMAIN}>`,

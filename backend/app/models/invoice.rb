@@ -120,6 +120,7 @@ class Invoice < ApplicationRecord
   after_initialize :populate_bill_data
   before_validation :populate_bill_data, on: :create
   after_commit :destroy_approvals, if: -> { rejected? }, on: :update
+  # Trigger payout processing when the contractor accepts so admins don't need to click again.
   after_commit :process_payable_invoices_if_payee_accepts,
                if: -> { saved_change_to_accepted_at? && accepted_at.present? },
                on: :update
