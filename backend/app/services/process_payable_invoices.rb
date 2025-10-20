@@ -14,6 +14,8 @@ class ProcessPayableInvoices
 
     scope.each do |invoice|
       next unless invoice.payable?
+      # Skip auto-queueing until the contractor has payout details so PayInvoice doesn't raise.
+      next unless invoice.user.bank_account.present?
 
       if invoice.immediately_payable?
         EnqueueInvoicePayment.new(invoice:).perform
