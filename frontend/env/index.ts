@@ -21,6 +21,7 @@ const env = z
     SLACK_WEBHOOK_CHANNEL: z.string(),
     SLACK_TOKEN: z.string(),
     SLACK_CHANNEL_ID: z.string(),
+    EMAIL_DOMAIN: z.string(),
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     WISE_PROFILE_ID: z.string(),
     WISE_API_KEY: z.string(),

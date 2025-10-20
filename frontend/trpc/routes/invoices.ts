@@ -180,7 +180,7 @@ export const invoicesRouter = createRouter({
     const companyDisplayName = companyName(companyWorker.company) ?? companyWorker.company.email;
 
     await sendEmail({
-      from: `Flexile <support@${env.DOMAIN}>`,
+      from: `Flexile <support@${env.EMAIL_DOMAIN}>`,
       to: companyWorker.user.email,
       replyTo: companyWorker.company.email,
       subject: `${companyDisplayName} has sent you money`,
