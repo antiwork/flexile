@@ -76,6 +76,12 @@ class CreateOrUpdateInvoiceService
       invoice.equity_amount_in_options = equity_options
       invoice.flexile_fee_cents = invoice.calculate_flexile_fee_cents
 
+      # Validate bank account is configured if invoice has cash amount
+      if invoice.cash_amount_in_cents.positive? && !user.bank_account.present?
+        error = "Please configure your bank account before submitting an invoice."
+        raise ActiveRecord::Rollback
+      end
+
       if invoice_attachment.present?
         if invoice_attachment.is_a?(String)
           invoice.attachments.each do |existing_attachment|
