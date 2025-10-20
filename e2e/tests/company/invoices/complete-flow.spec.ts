@@ -16,7 +16,9 @@ type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
 
 test.describe("Invoice submission, approval and rejection", () => {
   let company: Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["company"];
-  let adminUser: User, workerUserA: User, workerUserB: User;
+  let adminUser: User;
+  let workerUserA: User;
+  let workerUserB: User;
 
   test.beforeEach(async () => {
     ({ company, adminUser } = await companiesFactory.createCompletedOnboarding({
