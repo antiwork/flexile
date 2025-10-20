@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addDays, isWeekend, nextMonday } from "date-fns";
 import { Ban, Info } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { z } from "zod";
 import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -121,7 +122,7 @@ export function useIsDeletable() {
     user.id === invoice.contractor.user.id;
 }
 
-type DeferredInvoiceNotice = { invoiceId: string; invoiceNumber: string; message: string };
+type DeferredInvoiceNotice = { invoice_id: string; invoice_number: string; message: string };
 type ApproveInvoicesResponse = {
   deferred: DeferredInvoiceNotice[];
 };
@@ -194,7 +195,7 @@ export const ApproveButton = ({
   const approveInvoicesMutation = useApproveInvoices({
     onSuccess: (result) => {
       setApproveError(null);
-      const deferredInvoice = result.deferred.find((item) => item.invoiceId === invoice.id);
+      const deferredInvoice = result.deferred.find((item) => item.invoice_id === invoice.id);
       setApproveNotice(deferredInvoice?.message ?? null);
       onApprove?.();
     },
@@ -251,53 +252,21 @@ export const ApproveButton = ({
   );
 };
 
-// Backend may send partial JSON so we defensively coerce it into the new client shape.
+const approveInvoicesResponseSchema = z.object({
+  deferred: z.array(
+    z.object({
+      invoice_id: z.string(),
+      invoice_number: z.string(),
+      message: z.string(),
+    }),
+  ),
+});
+
 const parseApproveInvoicesResponse = (value: unknown): ApproveInvoicesResponse => {
-  if (!value || typeof value !== "object") return { deferred: [] };
-  if (!("deferred" in value)) return { deferred: [] };
-  const deferred = readArray(value, "deferred");
-  if (!deferred) return { deferred: [] };
-
-  const notices = deferred
-    .map(parseDeferredNotice)
-    .filter((notice): notice is DeferredInvoiceNotice => notice !== null);
-
-  return { deferred: notices };
+  const result = approveInvoicesResponseSchema.safeParse(value);
+  if (!result.success) return { deferred: [] };
+  return result.data;
 };
-
-const readString = (source: object, keys: string[]): string | null => {
-  for (const key of keys) {
-    if (Object.prototype.hasOwnProperty.call(source, key)) {
-      const value = readUnknown(source, key);
-      if (typeof value === "string") return value;
-    }
-  }
-  return null;
-};
-
-const parseDeferredNotice = (item: unknown): DeferredInvoiceNotice | null => {
-  if (!item || typeof item !== "object") return null;
-  const invoiceId = readString(item, ["invoiceId", "invoice_id"]);
-  const invoiceNumber = readString(item, ["invoiceNumber", "invoice_number"]);
-  const message = readString(item, ["message"]);
-  if (!invoiceId || !invoiceNumber || !message) return null;
-  return { invoiceId, invoiceNumber, message };
-};
-
-const readArray = (source: unknown, key: string): unknown[] | null => {
-  if (!isRecord(source)) return null;
-  if (!Object.prototype.hasOwnProperty.call(source, key)) return null;
-  const value = readUnknown(source, key);
-  return Array.isArray(value) ? value : null;
-};
-
-const readUnknown = (source: unknown, key: string): unknown => {
-  if (!isRecord(source)) return undefined;
-  if (!Object.prototype.hasOwnProperty.call(source, key)) return undefined;
-  return source[key];
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
 export const useRejectInvoices = (onSuccess?: () => void) => {
   const utils = trpc.useUtils();
