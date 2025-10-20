@@ -36,26 +36,31 @@ test.describe("People table sorting", () => {
       role: "Invited",
     });
 
-    await login(page, adminUser, "/people");
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("contractors.list") && r.status() >= 200 && r.status() < 300),
+      login(page, adminUser, "/people"),
+    ]);
+
+    // Wait for the table to have the expected number of rows
+    await expect(page.locator("tbody tr")).toHaveCount(5);
 
     const statusHeader = page.getByRole("columnheader", { name: "Status" });
+    await statusHeader.click();
+
+    // Wait for sorting to complete and check content using playwright's expect
+    await expect(page.locator("tbody tr").nth(0)).toContainText("Alumni - ended at 2023-01-01");
+    await expect(page.locator("tbody tr").nth(1)).toContainText("Active - started at 2023-05-01");
+    await expect(page.locator("tbody tr").nth(2)).toContainText("Alumni - ended at 2024-01-01");
+    await expect(page.locator("tbody tr").nth(3)).toContainText("Active - started at 2024-05-01");
+    await expect(page.locator("tbody tr").nth(4)).toContainText("Invited");
 
     await statusHeader.click();
 
-    let rows = await page.locator("tbody tr").allInnerTexts();
-    expect(rows[0]).toContain("Alumni - ended at 2023-01-01");
-    expect(rows[1]).toContain("Active - started at 2023-05-01");
-    expect(rows[2]).toContain("Alumni - ended at 2024-01-01");
-    expect(rows[3]).toContain("Active - started at 2024-05-01");
-    expect(rows[4]).toContain("Invited");
-
-    await statusHeader.click();
-
-    rows = await page.locator("tbody tr").allInnerTexts();
-    expect(rows[0]).toContain("Invited");
-    expect(rows[1]).toContain("Active - started at 2024-05-01");
-    expect(rows[3]).toContain("Alumni - ended at 2024-01-01");
-    expect(rows[2]).toContain("Active - started at 2023-05-01");
-    expect(rows[4]).toContain("Alumni - ended at 2023-01-01");
+    // Wait for reverse sorting to complete and check content
+    await expect(page.locator("tbody tr").nth(0)).toContainText("Invited");
+    await expect(page.locator("tbody tr").nth(1)).toContainText("Active - started at 2024-05-01");
+    await expect(page.locator("tbody tr").nth(2)).toContainText("Active - started at 2023-05-01");
+    await expect(page.locator("tbody tr").nth(3)).toContainText("Alumni - ended at 2024-01-01");
+    await expect(page.locator("tbody tr").nth(4)).toContainText("Alumni - ended at 2023-01-01");
   });
 });
