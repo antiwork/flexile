@@ -10,9 +10,14 @@ class ApproveAndPayOrChargeForInvoices
   end
 
   def perform
+    invoices = invoice_ids.map { |external_id| company.invoices.alive.find_by!(external_id:) } # Load everything up front so we can validate the batch before mutating.
+
+    if (reason = preflight_payability_issue(invoices))
+      raise InvoiceNotPayableError, reason
+    end
+
     chargeable_invoice_ids = []
-    invoice_ids.each do |external_id|
-      invoice = company.invoices.alive.find_by!(external_id:)
+    invoices.each do |invoice|
       ApproveInvoice.new(invoice:, approver: user).perform
       invoice.reload
       ensure_invoice_can_be_paid!(invoice) # Abort with guidance if key billing prerequisites are still missing.
@@ -33,15 +38,23 @@ class ApproveAndPayOrChargeForInvoices
   private
     attr_reader :user, :company, :invoice_ids
 
+    def preflight_payability_issue(invoices)
+      invoices.each do |invoice|
+        reason = first_payability_issue_for(invoice, post_approval: false)
+        return "Invoice #{invoice.invoice_number}: #{reason}" if reason # Stop before any approvals/enqueues happen.
+      end
+      nil
+    end
+
     def ensure_invoice_can_be_paid!(invoice)
-      reason = first_payability_issue_for(invoice)
+      reason = first_payability_issue_for(invoice, post_approval: true)
       raise InvoiceNotPayableError, reason if reason
     end
 
-    def first_payability_issue_for(invoice)
+    def first_payability_issue_for(invoice, post_approval:)
       return "Flexile needs a company payout account before you can send contractor payments." unless company.bank_account_ready? # Company must finish payout setup.
 
-      approvals_remaining = company.required_invoice_approval_count - invoice.invoice_approvals_count
+      approvals_remaining = approvals_remaining_after_current_user(invoice, post_approval:)
       if approvals_remaining.positive?
         approver_word = approvals_remaining == 1 ? "approval" : "approvals"
         return "This invoice needs #{approvals_remaining} more #{approver_word} before it can be paid."
@@ -56,5 +69,11 @@ class ApproveAndPayOrChargeForInvoices
       return "#{invoice.user.display_name} must add payout details before this invoice can be paid." unless invoice.user.bank_account.present? # Wise recipient record required.
 
       nil
+    end
+
+    def approvals_remaining_after_current_user(invoice, post_approval:)
+      remaining = company.required_invoice_approval_count - invoice.invoice_approvals_count
+      remaining -= 1 unless post_approval || invoice.invoice_approvals.exists?(approver: user) # Acting admin’s approval is about to be recorded.
+      [remaining, 0].max
     end
 end
