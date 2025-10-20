@@ -13,7 +13,8 @@ class ApproveAndPayOrChargeForInvoices
   end
 
   def perform
-    invoices = invoice_ids.map { |external_id| company.invoices.alive.find_by!(external_id:) } # Load everything up front so we can validate the batch before mutating.
+    # Load the full invoice set up front so every validation below runs against the same persisted data.
+    invoices = invoice_ids.map { |external_id| company.invoices.alive.find_by!(external_id:) }
 
     chargeable_invoice_ids = []
 
@@ -41,6 +42,7 @@ class ApproveAndPayOrChargeForInvoices
     result = nil
     if chargeable_invoice_ids.any?
       result = ConsolidatedInvoiceCreation.new(company_id: company.id, invoice_ids: chargeable_invoice_ids).process
+      # Charging still happens asynchronously so admins see the approval succeed immediately.
       ChargeConsolidatedInvoiceJob.perform_async(result.id) if result.present?
     end
 

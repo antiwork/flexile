@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Re-evaluates invoices that should become payable once onboarding prerequisites clear (issue #1461).
 class ProcessPayableInvoices
   def initialize(company:, user: nil)
     @company = company
@@ -47,7 +48,8 @@ class ProcessPayableInvoices
 
     def handle_invoice(invoice, chargeable_invoice_ids, processed_invoice_ids)
       return if processed_invoice_ids.key?(invoice.id)
-      processed_invoice_ids[invoice.id] = true # REVIEW: Prevent duplicate handling when scopes overlap.
+      # Both scopes may include the same invoice, so guard against enqueueing the same work twice.
+      processed_invoice_ids[invoice.id] = true
 
       return unless invoice.payable?
       # Skip auto-queueing until the contractor has payout details so PayInvoice doesn't raise.
