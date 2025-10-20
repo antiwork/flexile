@@ -152,22 +152,6 @@ const invoiceSchema = z
         fatal: true,
       });
     }
-    data.lineItems.forEach((lineItem, index) => {
-      if (lineItem.description && !lineItem.billingDetails) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Quantity is required",
-          path: ["lineItems", index, "billingDetails"],
-        });
-      }
-      if (lineItem.pay_rate_in_subunits <= 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Pay rate must be greater than $0.00",
-          path: ["lineItems", index, "pay_rate_in_subunits"],
-        });
-      }
-    });
   });
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
