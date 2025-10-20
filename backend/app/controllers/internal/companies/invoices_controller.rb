@@ -79,14 +79,19 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
         invoice_ids: invoice_external_ids_for_approval,
       ).perform
     end
-    if invoice_external_ids_for_payment.present?
-      ApproveAndPayOrChargeForInvoices.new(
-        user: Current.user,
-        company: Current.company,
-        invoice_ids: invoice_external_ids_for_payment
-      ).perform
+    payment_result =
+      if invoice_external_ids_for_payment.present?
+        ApproveAndPayOrChargeForInvoices.new(
+          user: Current.user,
+          company: Current.company,
+          invoice_ids: invoice_external_ids_for_payment
+        ).perform
+      end
+    if payment_result.present?
+      render json: payment_result
+    else
+      head :no_content
     end
-    head :no_content
   rescue ApproveAndPayOrChargeForInvoices::InvoiceNotPayableError => e
     # Surface unmet payout prerequisites back to the UI instead of silently failing.
     render json: { error_message: e.message }, status: :unprocessable_entity

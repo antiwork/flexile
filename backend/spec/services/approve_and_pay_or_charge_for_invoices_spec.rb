@@ -23,36 +23,35 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
   let(:payable_and_chargeable) { fully_approved + missing_final_approval + failed_but_not_charged }
   let(:invoices) do
     payable_and_chargeable +
-    already_charged_but_failed
+      already_charged_but_failed
   end
 
-  it "approves all invoices, pays failed invoices, and generates a consolidated invoice for chargeable invoices" do
-    # approves all invoices
-    invoices.each do |invoice|
-      expect(ApproveInvoice).to receive(:new).with(invoice:, approver: user).and_call_original
+  describe "#perform" do
+    it "approves invoices, enqueues payments, creates a consolidated invoice, and returns no deferrals when everything is ready" do
+      invoices.each do |invoice|
+        expect(ApproveInvoice).to receive(:new).with(invoice:, approver: user).and_call_original
+      end
+
+      already_charged_but_failed.each do |invoice|
+        expect(EnqueueInvoicePayment).to receive(:new).with(invoice:).and_call_original
+      end
+
+      expect(ConsolidatedInvoiceCreation).to receive(:new).with(company_id: company.id, invoice_ids: payable_and_chargeable.map(&:id)).and_call_original
+
+      expect do
+        result = described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id)).perform
+        expect(result[:deferred]).to be_empty
+      end.to change { company.consolidated_invoices.count }.by(1)
+
+      latest_consolidated_invoice = company.consolidated_invoices.order(:created_at).last
+      expect(ChargeConsolidatedInvoiceJob).to have_enqueued_sidekiq_job(latest_consolidated_invoice.id)
     end
 
-    # pays for failed but payable invoices
-    already_charged_but_failed.each do |invoice|
-      expect(EnqueueInvoicePayment).to receive(:new).with(invoice:).and_call_original
-    end
-
-    # creates a consolidated invoice for the chargeable invoices
-    expect(ConsolidatedInvoiceCreation).to receive(:new).with(company_id: company.id, invoice_ids: payable_and_chargeable.map(&:id)).and_call_original
-
-    consolidated_invoice = described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id)).perform
-
-    # charges for the consolidated invoice
-    expect(ChargeConsolidatedInvoiceJob).to have_enqueued_sidekiq_job(consolidated_invoice.id)
-  end
-
-  describe "paying failed invoices" do
-    context "when company is trusted" do
+    context "when the company is trusted" do
       before { company.update!(is_trusted: true) }
 
-      it "pays the invoices immediately even if the consolidated invoice has not yet been paid" do
+      it "retries failed invoices immediately even if the consolidated invoice has not yet been paid" do
         consolidated_invoice.update!(status: ConsolidatedInvoice::SENT)
-        expect(ConsolidatedInvoiceCreation).to receive(:new).with(company_id: company.id, invoice_ids: payable_and_chargeable.map(&:id)).and_call_original
 
         described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id)).perform
 
@@ -62,8 +61,8 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
       end
     end
 
-    context "when company is not trusted" do
-      it "pays the invoices immediately if the consolidated invoice has been paid" do
+    context "when the company is not trusted" do
+      it "enqueues payments for failed invoices only after a consolidated invoice is paid" do
         expect(ConsolidatedInvoiceCreation).to receive(:new).with(company_id: company.id, invoice_ids: payable_and_chargeable.map(&:id)).and_call_original
 
         described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id)).perform
@@ -73,7 +72,7 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
         end
       end
 
-      it "does not pay the invoice immediately if the consolidated invoice has not yet been paid" do
+      it "does not enqueue immediate payments if the consolidated invoice is still pending" do
         consolidated_invoice.update!(status: ConsolidatedInvoice::SENT)
 
         expect do
@@ -86,46 +85,50 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
       end
     end
 
-    context "when no invoices are chargeable" do
-      it "does not create a consolidated invoice" do
+    context "when there are no chargeable invoices" do
+      it "skips consolidated invoice creation" do
         expect(ConsolidatedInvoiceCreation).not_to receive(:new)
 
         described_class.new(user:, company:, invoice_ids: already_charged_but_failed.map(&:external_id)).perform
       end
     end
-  end
 
-  context "when some invoices do not belong to the company" do
-    it "raises a not found error" do
-      expect do
-        described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id) + [create(:invoice).external_id]).perform
-      end.to raise_error ActiveRecord::RecordNotFound
-    end
-  end
-
-  describe "when an invoice cannot be paid yet" do
-    let(:company) { create(:company, required_invoice_approval_count: 1) }
-    let(:admin) { create(:company_administrator, company:).user }
-    let(:worker) { create(:company_worker, company:) }
-    let(:invoice) do
-      create(
-        :invoice,
-        :approved,
-        company:,
-        company_worker: worker,
-        user: worker.user,
-        created_by: admin,
-        approvals: 0,
-        accepted_at: nil,
-      )
+    context "when an invoice does not belong to the company" do
+      it "raises an ActiveRecord::RecordNotFound error" do
+        expect do
+          described_class.new(user:, company:, invoice_ids: invoices.map(&:external_id) + [create(:invoice).external_id]).perform
+        end.to raise_error ActiveRecord::RecordNotFound
+      end
     end
 
-    it "raises an invoice not payable error with a helpful message" do
-      # Guard rails should block payment until the worker accepts their invite.
-      expect(ApproveInvoice).not_to receive(:new) # Preflight should fail before we mutate approvals.
-      expect do
-        described_class.new(user: admin, company:, invoice_ids: [invoice.external_id]).perform
-      end.to raise_error(ApproveAndPayOrChargeForInvoices::InvoiceNotPayableError).with_message(/accept/i)
+    context "when the contractor has not finished onboarding" do
+      let(:company) { create(:company, required_invoice_approval_count: 1) }
+      let(:admin) { create(:company_administrator, company:).user }
+      let(:worker) { create(:company_worker, company:) }
+      let(:invoice) do
+        create(
+          :invoice,
+          :approved,
+          company:,
+          company_worker: worker,
+          user: worker.user,
+          created_by: admin,
+          approvals: 0,
+          accepted_at: nil,
+        )
+      end
+
+      it "returns a deferred payload with a clear message" do
+        result = described_class.new(user: admin, company:, invoice_ids: [invoice.external_id]).perform
+
+        expect(result[:deferred]).to contain_exactly(
+          include(
+            invoice_id: invoice.external_id,
+            invoice_number: invoice.invoice_number,
+            message: a_string_matching(/accept/i),
+          ),
+        )
+      end
     end
   end
 end

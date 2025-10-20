@@ -120,6 +120,9 @@ class Invoice < ApplicationRecord
   after_initialize :populate_bill_data
   before_validation :populate_bill_data, on: :create
   after_commit :destroy_approvals, if: -> { rejected? }, on: :update
+  after_commit :process_payable_invoices_if_payee_accepts,
+               if: -> { saved_change_to_accepted_at? && accepted_at.present? },
+               on: :update
 
   def attachment = attachments.last
 
@@ -209,6 +212,10 @@ class Invoice < ApplicationRecord
 
     def destroy_approvals
       invoice_approvals.destroy_all
+    end
+
+    def process_payable_invoices_if_payee_accepts
+      ProcessPayableInvoicesJob.perform_async(company_id, user_id)
     end
 
 

@@ -110,6 +110,7 @@ class Company < ApplicationRecord
 
   after_create_commit :create_balance!
   after_update_commit :update_convertible_implied_shares, if: :saved_change_to_fully_diluted_shares?
+  after_commit :process_payable_invoices_if_trusted, if: -> { saved_change_to_is_trusted? && is_trusted? }
 
   accepts_nested_attributes_for :expense_categories
 
@@ -234,6 +235,10 @@ class Company < ApplicationRecord
         conversion_price = (investment.company_valuation_in_dollars.to_d / fully_diluted_shares.to_d).round(4)
         investment.update!(implied_shares: ((investment.amount_in_cents.to_d / 100.to_d) / conversion_price).floor)
       end
+    end
+
+    def process_payable_invoices_if_trusted
+      ProcessPayableInvoicesJob.perform_async(id)
     end
 
     def fetch_or_create_stripe_customer_id!

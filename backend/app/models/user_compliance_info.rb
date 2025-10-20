@@ -25,6 +25,8 @@ class UserComplianceInfo < ApplicationRecord
   after_create_commit :delete_outdated_compliance_infos!, unless: :deleted?
   after_commit :generate_tax_information_document, if: -> { alive? && tax_information_confirmed_at? }
   after_commit :generate_irs_tax_forms, if: -> { alive? && tax_information_confirmed_at? }
+  after_commit :process_payable_invoices_for_user,
+               if: -> { alive? && saved_change_to_tax_information_confirmed_at? && tax_information_confirmed_at.present? }
   before_save :update_tax_id_status
 
   delegate :worker?, to: :user
@@ -77,6 +79,10 @@ class UserComplianceInfo < ApplicationRecord
 
     def generate_irs_tax_forms
       GenerateIrsTaxFormsJob.perform_async(id)
+    end
+
+    def process_payable_invoices_for_user
+      user.enqueue_payable_invoice_refresh!
     end
 
 

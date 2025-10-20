@@ -121,12 +121,17 @@ export function useIsDeletable() {
     user.id === invoice.contractor.user.id;
 }
 
+type DeferredInvoiceNotice = { invoiceId: string; invoiceNumber: string; message: string };
+type ApproveInvoicesResponse = {
+  deferred: DeferredInvoiceNotice[];
+};
+
 type ApproveInvoicesCallbacks =
   | {
-      onSuccess?: () => void;
+      onSuccess?: (result: ApproveInvoicesResponse) => void;
       onError?: (error: unknown) => void;
     }
-  | (() => void)
+  | ((result: ApproveInvoicesResponse) => void)
   | undefined;
 
 const normalizeApproveCallbacks = (callbacks: ApproveInvoicesCallbacks) =>
@@ -138,21 +143,30 @@ export const useApproveInvoices = (callbacks?: ApproveInvoicesCallbacks) => {
   const queryClient = useQueryClient();
   const { onSuccess, onError } = normalizeApproveCallbacks(callbacks);
 
-  return useMutation({
+  return useMutation<ApproveInvoicesResponse, unknown, { approve_ids?: string[]; pay_ids?: string[] }>({
     mutationFn: async ({ approve_ids, pay_ids }: { approve_ids?: string[]; pay_ids?: string[] }) => {
-      await request({
+      const response = await request({
         method: "PATCH",
         url: approve_company_invoices_path(company.id),
         accept: "json",
         jsonData: { approve_ids, pay_ids },
         assertOk: true,
       });
+
+      if (response.status === 204) return { deferred: [] };
+
+      try {
+        const data: unknown = await response.json();
+        return parseApproveInvoicesResponse(data);
+      } catch {
+        return { deferred: [] };
+      }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       setTimeout(() => {
         void utils.invoices.list.invalidate({ companyId: company.id });
         void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-        onSuccess?.();
+        onSuccess?.(result);
       }, 500);
     },
     onError: (error) => {
@@ -175,15 +189,19 @@ export const ApproveButton = ({
   const company = useCurrentCompany();
   const pay = useIsPayable()(invoice);
   const [approveError, setApproveError] = useState<string | null>(null);
+  const [approveNotice, setApproveNotice] = useState<string | null>(null);
 
   const approveInvoicesMutation = useApproveInvoices({
-    onSuccess: () => {
+    onSuccess: (result) => {
       setApproveError(null);
+      const deferredInvoice = result.deferred.find((item) => item.invoiceId === invoice.id);
+      setApproveNotice(deferredInvoice?.message ?? null);
       onApprove?.();
     },
     onError: (error) => {
       const errorMessage = error instanceof ResponseError ? error.message : "Something went wrong. Please try again.";
       setApproveError(errorMessage); // Keep admins informed when the backend blocks payout attempts.
+      setApproveNotice(null);
     },
   });
 
@@ -199,7 +217,14 @@ export const ApproveButton = ({
     if (isPending && approveError) {
       setApproveError(null);
     }
+    if (isPending) {
+      setApproveNotice(null);
+    }
   }, [approveError, isPending]);
+
+  useEffect(() => {
+    setApproveNotice(null);
+  }, [invoice.id]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -208,7 +233,7 @@ export const ApproveButton = ({
         mutation={approveInvoicesMutation}
         idleVariant={variant}
         param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
-        successText={pay ? "Payment initiated" : "Approved!"}
+        successText={pay ? "Payment scheduled" : "Approved!"}
         loadingText={pay ? "Sending payment..." : "Approving..."}
         disabled={!!pay && (!company.completedPaymentMethodSetup || !company.isTrusted)}
       >
@@ -221,9 +246,57 @@ export const ApproveButton = ({
         )}
       </MutationButton>
       {approveError ? <p className="text-destructive text-sm">{approveError}</p> : null}
+      {!approveError && approveNotice ? <p className="text-muted-foreground text-sm">{approveNotice}</p> : null}
     </div>
   );
 };
+
+const parseApproveInvoicesResponse = (value: unknown): ApproveInvoicesResponse => {
+  if (!value || typeof value !== "object") return { deferred: [] };
+  if (!("deferred" in value)) return { deferred: [] };
+  const deferred = readArray(value, "deferred");
+  if (!deferred) return { deferred: [] };
+
+  const notices = deferred
+    .map(parseDeferredNotice)
+    .filter((notice): notice is DeferredInvoiceNotice => notice !== null);
+
+  return { deferred: notices };
+};
+
+const readString = (source: object, keys: string[]): string | null => {
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      const value = readUnknown(source, key);
+      if (typeof value === "string") return value;
+    }
+  }
+  return null;
+};
+
+const parseDeferredNotice = (item: unknown): DeferredInvoiceNotice | null => {
+  if (!item || typeof item !== "object") return null;
+  const invoiceId = readString(item, ["invoiceId", "invoice_id"]);
+  const invoiceNumber = readString(item, ["invoiceNumber", "invoice_number"]);
+  const message = readString(item, ["message"]);
+  if (!invoiceId || !invoiceNumber || !message) return null;
+  return { invoiceId, invoiceNumber, message };
+};
+
+const readArray = (source: unknown, key: string): unknown[] | null => {
+  if (!isRecord(source)) return null;
+  if (!Object.prototype.hasOwnProperty.call(source, key)) return null;
+  const value = readUnknown(source, key);
+  return Array.isArray(value) ? value : null;
+};
+
+const readUnknown = (source: unknown, key: string): unknown => {
+  if (!isRecord(source)) return undefined;
+  if (!Object.prototype.hasOwnProperty.call(source, key)) return undefined;
+  return source[key];
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
 export const useRejectInvoices = (onSuccess?: () => void) => {
   const utils = trpc.useUtils();

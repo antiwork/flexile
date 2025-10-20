@@ -59,6 +59,8 @@ class User < ApplicationRecord
 
   after_update_commit :update_dividend_status,
                       if: -> { current_sign_in_at_previously_changed? && current_sign_in_at_previously_was.nil? }
+  after_commit :process_payable_invoices_if_invitation_accepted,
+               if: -> { saved_change_to_invitation_accepted_at? && invitation_accepted_at.present? }
 
   delegate(*TAX_ATTRIBUTES, to: :compliance_info, allow_nil: true)
 
@@ -168,6 +170,12 @@ class User < ApplicationRecord
     company_lawyers.exists?
   end
 
+  def enqueue_payable_invoice_refresh!
+    company_workers.select(:company_id).distinct.pluck(:company_id).each do |company_id|
+      ProcessPayableInvoicesJob.perform_async(company_id, id)
+    end
+  end
+
 
 
   def password_required?
@@ -185,6 +193,10 @@ class User < ApplicationRecord
   end
 
   private
+    def process_payable_invoices_if_invitation_accepted
+      enqueue_payable_invoice_refresh!
+    end
+
     def update_dividend_status
       dividends.pending_signup.each do |dividend|
         dividend.update!(status: Dividend::ISSUED)
