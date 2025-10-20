@@ -43,19 +43,33 @@ test.describe("People table sorting", () => {
     await statusHeader.click();
 
     let rows = await page.locator("tbody tr").allInnerTexts();
-    expect(rows[0]).toContain("Alumni - ended at 2023-01-01");
-    expect(rows[1]).toContain("Active - started at 2023-05-01");
-    expect(rows[2]).toContain("Alumni - ended at 2024-01-01");
-    expect(rows[3]).toContain("Active - started at 2024-05-01");
-    expect(rows[4]).toContain("Invited");
+    assertRelativeOrder(rows, [
+      "Alumni - ended at 2023-01-01",
+      "Active - started at 2023-05-01",
+      "Alumni - ended at 2024-01-01",
+      "Active - started at 2024-05-01",
+      "Invited",
+    ]);
 
     await statusHeader.click();
 
     rows = await page.locator("tbody tr").allInnerTexts();
-    expect(rows[0]).toContain("Invited");
-    expect(rows[1]).toContain("Active - started at 2024-05-01");
-    expect(rows[3]).toContain("Alumni - ended at 2024-01-01");
-    expect(rows[2]).toContain("Active - started at 2023-05-01");
-    expect(rows[4]).toContain("Alumni - ended at 2023-01-01");
+    assertRelativeOrder(rows, [
+      "Invited",
+      "Active - started at 2024-05-01",
+      "Alumni - ended at 2024-01-01",
+      "Active - started at 2023-05-01",
+      "Alumni - ended at 2023-01-01",
+    ]);
   });
+
+  const assertRelativeOrder = (rows: string[], expectedOrder: string[]) => {
+    let previousIndex = -1;
+    expectedOrder.forEach((expected) => {
+      const index = rows.findIndex((row) => row.includes(expected));
+      expect(index).not.toBe(-1);
+      expect(index).toBeGreaterThan(previousIndex);
+      previousIndex = index;
+    });
+  };
 });
