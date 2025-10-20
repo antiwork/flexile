@@ -229,10 +229,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
 
     await logout(page);
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
-      login(page, adminUser),
-    ]);
+    await login(page, adminUser);
 
     await expect(locateOpenInvoicesBadge(page)).toContainText("1");
     await expect(page.locator("tbody tr")).toHaveCount(1);
@@ -242,9 +239,8 @@ test.describe("Invoice submission, approval and rejection", () => {
       .filter({ hasText: "$150" });
 
     await expect(fixedInvoiceRow).toBeVisible();
-    await fixedInvoiceRow.click();
-
-    await page.getByRole("button", { name: "Reject" }).click();
+    await fixedInvoiceRow.click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Reject" }).click();
     await page.getByLabel("Explain why the invoice was").fill("sorry still wrong");
     await page.getByRole("button", { name: "Yes, reject" }).click();
 
