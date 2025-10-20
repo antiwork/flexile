@@ -212,9 +212,10 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await logout(page);
     await login(page, workerUserA);
+    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-2" });
+    await page.waitForTimeout(500);
 
     const approvedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-1" });
-    const rejectedInvoiceRow = page.locator("tbody tr").filter({ hasText: "CUSTOM-2" });
 
     await expect(approvedInvoiceRow.getByRole("cell", { name: "Payment scheduled" })).toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).toBeVisible();

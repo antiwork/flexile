@@ -64,12 +64,12 @@ test.describe("People table sorting", () => {
   });
 
   const assertRelativeOrder = (rows: string[], expectedOrder: string[]) => {
-    let previousIndex = -1;
-    expectedOrder.forEach((expected) => {
+    const indices = expectedOrder.map((expected) => {
       const index = rows.findIndex((row) => row.includes(expected));
       expect(index).not.toBe(-1);
-      expect(index).toBeGreaterThan(previousIndex);
-      previousIndex = index;
+      return index;
     });
+    const sorted = [...indices].sort((a, b) => a - b);
+    expect(indices).toEqual(sorted);
   };
 });
