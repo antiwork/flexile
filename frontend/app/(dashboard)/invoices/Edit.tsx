@@ -114,7 +114,7 @@ const invoiceSchema = z
     lineItems: z.array(
       z.object({
         id: z.number().optional(),
-        description: z.string().min(1, "Description is required"),
+        description: z.string(),
         billingDetails: z
           .object({
             quantity: z.number().min(0.01, "Quantity must be at least 0.01"),
