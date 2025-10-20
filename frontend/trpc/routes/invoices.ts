@@ -177,7 +177,7 @@ export const invoicesRouter = createRouter({
     });
     const bankAccountLastFour = invoicer.wiseRecipients[0]?.lastFourDigits;
 
-    const companyDisplayName = companyName(companyWorker.company) ?? companyWorker.company.email;
+    const companyDisplayName = companyName(companyWorker.company) ?? companyWorker.company.email; // Fallback keeps email/subject text stable when the company hasn’t entered a public name yet.
 
     await sendEmail({
       from: `Flexile <support@${env.EMAIL_DOMAIN}>`,

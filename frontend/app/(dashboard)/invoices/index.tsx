@@ -183,7 +183,7 @@ export const ApproveButton = ({
     },
     onError: (error) => {
       const errorMessage = error instanceof ResponseError ? error.message : "Something went wrong. Please try again.";
-      setApproveError(errorMessage);
+      setApproveError(errorMessage); // Keep admins informed when the backend blocks payout attempts.
     },
   });
 

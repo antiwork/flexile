@@ -15,7 +15,7 @@ class ApproveAndPayOrChargeForInvoices
       invoice = company.invoices.alive.find_by!(external_id:)
       ApproveInvoice.new(invoice:, approver: user).perform
       invoice.reload
-      ensure_invoice_can_be_paid!(invoice)
+      ensure_invoice_can_be_paid!(invoice) # Abort with guidance if key billing prerequisites are still missing.
 
       if invoice.immediately_payable? # for example, invoice payment failed
         EnqueueInvoicePayment.new(invoice:).perform
@@ -39,7 +39,7 @@ class ApproveAndPayOrChargeForInvoices
     end
 
     def first_payability_issue_for(invoice)
-      return "Flexile needs a company payout account before you can send contractor payments." unless company.bank_account_ready?
+      return "Flexile needs a company payout account before you can send contractor payments." unless company.bank_account_ready? # Company must finish payout setup.
 
       approvals_remaining = company.required_invoice_approval_count - invoice.invoice_approvals_count
       if approvals_remaining.positive?
@@ -48,12 +48,12 @@ class ApproveAndPayOrChargeForInvoices
       end
 
       unless invoice.created_by_user? || invoice.accepted_at.present?
-        return "#{invoice.user.display_name} must accept their Flexile invite before this invoice can be paid."
+        return "#{invoice.user.display_name} must accept their Flexile invite before this invoice can be paid." # Prevent payments to unaccepted invites.
       end
 
-      return "#{invoice.user.display_name} must complete tax information before this invoice can be paid." unless invoice.tax_requirements_met?
+      return "#{invoice.user.display_name} must complete tax information before this invoice can be paid." unless invoice.tax_requirements_met? # IRS compliance before payouts.
 
-      return "#{invoice.user.display_name} must add payout details before this invoice can be paid." unless invoice.user.bank_account.present?
+      return "#{invoice.user.display_name} must add payout details before this invoice can be paid." unless invoice.user.bank_account.present? # Wise recipient record required.
 
       nil
     end

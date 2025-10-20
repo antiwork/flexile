@@ -52,6 +52,7 @@ RSpec.describe RejectInvoice do
       let(:invoice) { create(:invoice, :failed) }
 
       it "rejects the invoice" do
+        # Previously failed payouts should be cleanable by admins.
         expect { service.perform }.to change { invoice.reload.status }.to(Invoice::REJECTED)
       end
     end

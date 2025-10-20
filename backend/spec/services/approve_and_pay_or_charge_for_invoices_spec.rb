@@ -121,6 +121,7 @@ RSpec.describe ApproveAndPayOrChargeForInvoices do
     end
 
     it "raises an invoice not payable error with a helpful message" do
+      # Guard rails should block payment until the worker accepts their invite.
       expect do
         described_class.new(user: admin, company:, invoice_ids: [invoice.external_id]).perform
       end.to raise_error(ApproveAndPayOrChargeForInvoices::InvoiceNotPayableError).with_message(/accept/i)

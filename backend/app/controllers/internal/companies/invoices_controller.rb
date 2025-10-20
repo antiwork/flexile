@@ -88,6 +88,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     end
     head :no_content
   rescue ApproveAndPayOrChargeForInvoices::InvoiceNotPayableError => e
+    # Surface unmet payout prerequisites back to the UI instead of silently failing.
     render json: { error_message: e.message }, status: :unprocessable_entity
   end
 
