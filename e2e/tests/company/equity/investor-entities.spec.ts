@@ -23,6 +23,7 @@ test.describe("Investor Entities", () => {
   test("displays investor entity details with grants and shares", async ({ page }) => {
     const { user: investorUser } = await usersFactory.create({
       legalName: "Test Investor",
+      email: "test-investor@example.com",
     });
     const { companyInvestor } = await companyInvestorsFactory.create({
       id: investorUser.id,
@@ -118,7 +119,9 @@ test.describe("Investor Entities", () => {
   });
 
   test("is accessible by company lawyers", async ({ page }) => {
-    const { user: lawyerUser } = await usersFactory.create();
+    const { user: lawyerUser } = await usersFactory.create({
+      email: "test-lawyer@example.com",
+    });
     await companyLawyersFactory.create({
       companyId: company.id,
       userId: lawyerUser.id,
@@ -136,7 +139,9 @@ test.describe("Investor Entities", () => {
   });
 
   test("is not accessible by regular users", async ({ page }) => {
-    const { user: regularUser } = await usersFactory.create();
+    const { user: regularUser } = await usersFactory.create({
+      email: "test-regular-user@example.com",
+    });
     const { companyInvestorEntity } = await companyInvestorEntitiesFactory.create({
       companyId: company.id,
       name: "Forbidden Test",
