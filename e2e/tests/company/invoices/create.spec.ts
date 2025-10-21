@@ -78,9 +78,14 @@ test.describe("invoice creation", () => {
 
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
-    await expect(page.locator("tbody").filter({ hasText: "Aug 8, 2021" })).toContainText(
-      ["Invoice ID", "1", "Sent on", "Aug 8, 2021", "Amount", "$6,000", "Status", "Awaiting approval (0/2)"].join(""),
-    );
+    await expect(
+      page.getByTableRowCustom({
+        "Invoice ID": "1",
+        "Sent on": "Aug 8, 2021",
+        Amount: "$6,000",
+        Status: "Awaiting approval (0/2)",
+      }),
+    ).toBeVisible();
 
     const invoice = await db.query.invoices
       .findFirst({ where: eq(invoices.companyId, company.id), orderBy: desc(invoices.id) })
@@ -442,5 +447,17 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Merchant").fill("Office Supplies Store");
     await page.getByLabel("Amount").fill("42.99");
     await expect(page.getByText("Total expenses$42.99")).toBeVisible();
+  });
+
+  test("shows validation modal when submitting invoice without line items or expenses", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+    await page.getByRole("button", { name: "Remove" }).click();
+    await page.getByRole("button", { name: "Send invoice" }).click();
+
+    const alertModal = page.getByRole("alertdialog", { name: "Add items to your invoice" });
+    await expect(alertModal).toBeVisible();
+    await expect(alertModal.getByText("At least one line item or expense is required")).toBeVisible();
+    await alertModal.getByRole("button", { name: "OK" }).click();
+    await expect(alertModal).not.toBeVisible();
   });
 });

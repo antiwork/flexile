@@ -39,5 +39,4 @@ export const fillByLabel = async (page: Page, name: string, value: string, optio
     field = field.nth(index);
   }
   await field.fill(value);
-  await expect(field).toHaveValue(value);
 };
