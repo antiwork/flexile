@@ -385,10 +385,10 @@ const Edit = () => {
     });
   };
 
-  const lineItemTotal = (lineItem: InvoiceFormData["lineItems"][number]) => {
-    const quantity = lineItem.billingDetails?.quantity ?? 0;
-    const divisor = lineItem.billingDetails?.hourly ? 60 : 1;
-    const result = Math.ceil((quantity / divisor) * lineItem.pay_rate_in_subunits);
+  const lineItemTotal = (lineItem: InvoiceFormData["lineItems"][number] | undefined) => {
+    const quantity = lineItem?.billingDetails?.quantity ?? 0;
+    const divisor = lineItem?.billingDetails?.hourly ? 60 : 1;
+    const result = Math.ceil((quantity / divisor) * (lineItem?.pay_rate_in_subunits ?? 0));
     return result;
   };
   const totalExpensesAmountInCents = expenses.reduce((acc: number, expense) => acc + expense.total_amount_in_cents, 0);
@@ -413,7 +413,7 @@ const Edit = () => {
   return (
     <Form {...form}>
       <form
-        className="flex flex-col gap-2 md:gap-4"
+        className="contents"
         onSubmit={(e) => {
           e.preventDefault();
           void onSubmit(e);
@@ -569,17 +569,7 @@ const Edit = () => {
                         )}
                       />
                     </TableCell>
-                    <TableCell>
-                      {formatMoneyFromCents(
-                        lineItemTotal(
-                          lineItems[rowIndex] ?? {
-                            pay_rate_in_subunits: 0,
-                            billingDetails: { quantity: 0, hourly: false },
-                            description: "",
-                          },
-                        ),
-                      )}
-                    </TableCell>
+                    <TableCell>{formatMoneyFromCents(lineItemTotal(lineItems[rowIndex]))}</TableCell>
                     <TableCell className={actionColumnClass}>
                       <Button variant="link" aria-label="Remove" onClick={() => removeLineItem(rowIndex)}>
                         <TrashIcon className="size-4" />
