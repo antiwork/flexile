@@ -37,7 +37,8 @@ import {
   RejectModal,
   StatusDetails,
   taxRequirementsMet,
-  useIsActionable,
+  useCanApprove,
+  useCanReject,
   useIsDeletable,
 } from "..";
 
@@ -113,7 +114,8 @@ export default function InvoicePage() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
-  const isActionable = useIsActionable();
+  const canApprove = useCanApprove();
+  const canReject = useCanReject();
   const isDeletable = useIsDeletable();
   const isMobile = useIsMobile();
 
@@ -135,7 +137,7 @@ export default function InvoicePage() {
                 <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="print:hidden">
-                {user.roles.administrator && isActionable(invoice) ? (
+                {canReject(invoice) ? (
                   <>
                     <DropdownMenuItem
                       onSelect={(e) => {
@@ -148,31 +150,19 @@ export default function InvoicePage() {
                       Reject
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        window.print();
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <Printer className="size-4" />
-                      Print
-                    </DropdownMenuItem>
                   </>
                 ) : null}
 
-                {user.roles.administrator && !isActionable(invoice) ? (
-                  <DropdownMenuItem
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      window.print();
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <Printer className="size-4" />
-                    Print
-                  </DropdownMenuItem>
-                ) : null}
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    window.print();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Printer className="size-4" />
+                  Print
+                </DropdownMenuItem>
 
                 {user.id === invoice.userId && (
                   <>
@@ -185,30 +175,20 @@ export default function InvoicePage() {
                       </DropdownMenuItem>
                     )}
 
-                    <DropdownMenuItem
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        window.print();
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <Printer className="size-4" />
-                      Print
-                    </DropdownMenuItem>
-
-                    {isDeletable(invoice) && <DropdownMenuSeparator />}
-
                     {isDeletable(invoice) && (
-                      <DropdownMenuItem
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          setDeleteModalOpen(true);
-                        }}
-                        className="focus:text-destructive flex items-center gap-2"
-                      >
-                        <Trash2 className="size-4" />
-                        Delete
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setDeleteModalOpen(true);
+                          }}
+                          className="focus:text-destructive flex items-center gap-2"
+                        >
+                          <Trash2 className="size-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </>
                     )}
                   </>
                 )}
@@ -220,15 +200,14 @@ export default function InvoicePage() {
                 <Printer className="size-4" />
                 Print
               </Button>
-              {user.roles.administrator && isActionable(invoice) ? (
-                <>
-                  <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
-                    <Ban className="size-4" />
-                    Reject
-                  </Button>
-
-                  <ApproveButton variant="primary" invoice={invoice} onApprove={() => router.push(`/invoices`)} />
-                </>
+              {canReject(invoice) ? (
+                <Button variant="outline" onClick={() => setRejectModalOpen(true)}>
+                  <Ban className="size-4" />
+                  Reject
+                </Button>
+              ) : null}
+              {canApprove(invoice) ? (
+                <ApproveButton variant="primary" invoice={invoice} onApprove={() => router.push(`/invoices`)} />
               ) : null}
               {user.id === invoice.userId ? (
                 <>
@@ -242,7 +221,7 @@ export default function InvoicePage() {
                   ) : null}
 
                   {isDeletable(invoice) ? (
-                    <Button variant="destructive" onClick={() => setDeleteModalOpen(true)} className="">
+                    <Button variant="destructive" onClick={() => setDeleteModalOpen(true)}>
                       <Trash2 className="size-4" />
                       <span>Delete</span>
                     </Button>
@@ -452,7 +431,7 @@ export default function InvoicePage() {
           </form>
         </section>
       </div>
-      {isMobile && user.roles.administrator && isActionable(invoice) ? (
+      {isMobile && canApprove(invoice) ? (
         <div className="bg-background fixed bottom-15 left-0 z-10 w-full px-4 py-4" style={{ width: "100%" }}>
           <ApproveButton
             className="w-full border-0 bg-blue-500 text-white shadow-lg"

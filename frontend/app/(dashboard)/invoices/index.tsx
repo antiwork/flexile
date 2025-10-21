@@ -93,12 +93,25 @@ const useIsApprovedByCurrentUser = () => {
   return (invoice: Invoice) => invoice.approvals.some((approval) => approval.approver.id === user.id);
 };
 
-export function useIsActionable() {
+export function useCanApprove() {
+  const user = useCurrentUser();
   const isPayable = useIsPayable();
   const isApprovedByCurrentUser = useIsApprovedByCurrentUser();
 
   return (invoice: Invoice) =>
-    isPayable(invoice) || (!isApprovedByCurrentUser(invoice) && ["received", "approved"].includes(invoice.status));
+    !!user.roles.administrator &&
+    (isPayable(invoice) ||
+      (!invoice.requiresAcceptanceByPayee &&
+        !isApprovedByCurrentUser(invoice) &&
+        ["received", "approved"].includes(invoice.status)));
+}
+
+export function useCanReject() {
+  const user = useCurrentUser();
+  return (invoice: Invoice) =>
+    !!user.roles.administrator &&
+    !invoice.requiresAcceptanceByPayee &&
+    ["received", "approved"].includes(invoice.status);
 }
 
 export function useIsPayable() {
@@ -108,6 +121,9 @@ export function useIsPayable() {
   return (invoice: Invoice) =>
     invoice.status === "failed" ||
     (["received", "approved"].includes(invoice.status) &&
+      company.completedPaymentMethodSetup &&
+      company.isTrusted &&
+      taxRequirementsMet(invoice) &&
       !invoice.requiresAcceptanceByPayee &&
       company.requiredInvoiceApprovals - invoice.approvals.length <= (isApprovedByCurrentUser(invoice) ? 0 : 1));
 }

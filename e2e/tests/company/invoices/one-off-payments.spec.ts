@@ -1,4 +1,4 @@
-import { db, takeOrThrow } from "@test/db";
+import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
@@ -9,6 +9,7 @@ import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
 import { companies, companyContractors, equityGrants, invoices } from "@/db/schema";
+import { assert } from "@/utils/assert";
 
 type User = Awaited<ReturnType<typeof usersFactory.create>>["user"];
 type Company = Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["company"];
@@ -92,10 +93,27 @@ test.describe("One-off payments", () => {
         { page },
       );
 
-      const invoice = await db.query.invoices
-        .findFirst({ where: eq(invoices.companyId, company.id) })
-        .then(takeOrThrow);
+      await page.waitForLoadState("networkidle");
+      await expect(page.getByRole("row")).not.toBeVisible();
+
+      const [invoice] = await db
+        .update(invoices)
+        .set({ billFrom: null })
+        .where(eq(invoices.companyId, company.id))
+        .returning();
+      assert(invoice != null);
       expect(invoice.billFrom).toBeNull();
+      await page.reload();
+      await expect(page.getByRole("row").getByText("$1000.00")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Pay now" })).not.toBeVisible();
+      await page.getByRole("row").getByText("$1000.00").click();
+      await expect(
+        page.getByRole("alert", { name: "Invoice is not payable until contractor provides tax information." }),
+      ).toBeVisible();
+      await expect(page.getByRole("button", { name: "Pay now" })).not.toBeVisible();
+      await page.getByRole("button", { name: "Reject" }).click();
+      await withinModal((modal) => modal.getByRole("button", { name: "Reject invoice" }).click(), { page });
+      await expect(page.getByRole("row")).not.toBeVisible();
 
       await logout(page);
       await login(page, preOnboardingUser, `/invoices/${invoice.externalId}`);
