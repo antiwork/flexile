@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import ColorPicker from "@/components/ColorPicker";
 import { MutationStatusButton } from "@/components/MutationButton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,7 +121,6 @@ function SettingsPageContent() {
                     alt="Company logo"
                     className={`rounded ${isDefaultLogo ? "size-6" : "size-12"}`}
                   />
-                  <AvatarFallback>Logo</AvatarFallback>
                 </Avatar>
               </Label>
             </div>
