@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import AttachmentListCard from "@/components/AttachmentsList";
+import AutoLinkedText from "@/components/AutoLinkedText";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -353,7 +354,7 @@ export default function InvoicePage() {
                         <TableRow key={index}>
                           <PrintTableCell className="w-[50%] align-top md:w-[60%] print:align-top">
                             <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">
-                              {lineItem.description}
+                              <AutoLinkedText text={lineItem.description} />
                             </div>
                           </PrintTableCell>
                           <PrintTableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%] print:text-right print:align-top">
