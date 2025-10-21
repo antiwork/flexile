@@ -7,7 +7,7 @@ import { List } from "immutable";
 import { CircleAlert, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -165,6 +165,18 @@ const Edit = () => {
   const [document, setDocument] = useState<InvoiceFormDocument | null>(data.invoice.attachment);
   const showExpensesTable = showExpenses || expenses.size > 0;
   const actionColumnClass = "w-12";
+
+  // Auto-resizing notes textarea (prevents manual drag-resize and grows with content)
+  const notesRef = useRef<HTMLTextAreaElement>(null);
+  const autoResizeTextArea = (el: HTMLTextAreaElement) => {
+    el.style.height = "0px"; // reset to shrink when deleting text
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  useEffect(() => {
+    if (notesRef.current) {
+      autoResizeTextArea(notesRef.current);
+    }
+  }, [notes]);
 
   const validate = () => {
     setErrorField(null);
@@ -649,10 +661,13 @@ const Edit = () => {
 
           <footer className="mx-4 flex flex-col gap-3 lg:flex-row lg:justify-between">
             <Textarea
+              ref={notesRef}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
+              onInput={(e) => autoResizeTextArea(e.currentTarget)}
               placeholder="Enter notes about your invoice (optional)"
-              className="w-full whitespace-pre-wrap lg:w-96"
+              rows={3}
+              className="max-h-[50vh] min-h-[96px] w-full resize-none overflow-hidden whitespace-pre-wrap lg:w-96"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
               {showExpensesTable || company.equityEnabled ? (
