@@ -10,6 +10,7 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-secondary text-foreground border-muted hover:bg-black hover:border-black hover:text-white dark:bg-white/5 dark:hover:bg-white/85 dark:hover:text-black",
+        auth: "bg-secondary text-foreground border-muted hover:bg-black hover:border-black dark:bg-white/5 dark:hover:bg-white/85",
         primary:
           "bg-foreground border-foreground hover:bg-foreground/80 hover:border-foreground/80 dark:bg-blue-600 dark:border-transparent text-white dark:hover:bg-blue-500 ",
         accent: "bg-blue-600 text-white border-blue-600 hover:bg-blue-500 hover:border-blue-500",
