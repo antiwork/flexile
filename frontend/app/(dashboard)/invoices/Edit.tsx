@@ -7,7 +7,7 @@ import { List } from "immutable";
 import { CircleAlert, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -165,6 +165,35 @@ const Edit = () => {
   const [document, setDocument] = useState<InvoiceFormDocument | null>(data.invoice.attachment);
   const showExpensesTable = showExpenses || expenses.size > 0;
   const actionColumnClass = "w-12";
+
+  // Auto-resizing notes textarea: grows up to a max height, then scrolls (mobile + desktop)
+  const notesRef = useRef<HTMLTextAreaElement>(null);
+  const getMaxAutoHeight = () => {
+    const vh = typeof window !== "undefined" ? window.innerHeight : 0;
+    // Cap at ~50% of viewport height, but never below 160px
+    return Math.max(160, Math.round(vh * 0.5));
+  };
+  const autoResizeTextArea = (el: HTMLTextAreaElement) => {
+    const maxHeight = getMaxAutoHeight();
+    // Reset to auto to measure true scroll height (also shrinks when deleting)
+    el.style.height = "auto";
+    const newHeight = Math.min(el.scrollHeight, maxHeight);
+    el.style.height = `${newHeight}px`;
+    el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
+  };
+  useEffect(() => {
+    if (notesRef.current) {
+      autoResizeTextArea(notesRef.current);
+    }
+  }, [notes]);
+  // Re-evaluate height on viewport resize to keep the 50vh cap accurate
+  useEffect(() => {
+    const handler = () => {
+      if (notesRef.current) autoResizeTextArea(notesRef.current);
+    };
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   const validate = () => {
     setErrorField(null);
@@ -649,10 +678,13 @@ const Edit = () => {
 
           <footer className="mx-4 flex flex-col gap-3 lg:flex-row lg:justify-between">
             <Textarea
+              ref={notesRef}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
+              onInput={(e) => autoResizeTextArea(e.currentTarget)}
               placeholder="Enter notes about your invoice (optional)"
-              className="w-full whitespace-pre-wrap lg:w-96"
+              rows={3}
+              className="min-h-[96px] w-full flex-1 resize-none whitespace-pre-wrap lg:max-w-[48rem]"
             />
             <div className="flex flex-col gap-2 md:self-start lg:items-end">
               {showExpensesTable || company.equityEnabled ? (
