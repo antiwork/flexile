@@ -6,7 +6,7 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
 import { fillByLabel, fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { expect, test, withinModal } from "@test/index";
+import { expect, test } from "@test/index";
 import { subDays } from "date-fns";
 import { and, desc, eq } from "drizzle-orm";
 import {
@@ -451,9 +451,6 @@ test.describe("invoice creation", () => {
 
   test("shows validation modal when submitting invoice without line items or expenses", async ({ page }) => {
     await login(page, contractorUser, "/invoices/new");
-
-    // await page.getByLabel("Invoice ID").fill("TEST-001");
-    // await fillDatePicker(page, "Date", "12/15/2024");
     await page.getByRole("button", { name: "Remove" }).click();
     await page.getByRole("button", { name: "Send invoice" }).click();
 
