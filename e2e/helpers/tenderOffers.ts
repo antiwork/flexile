@@ -10,3 +10,8 @@ export const openTenderOfferDetails = async (page: Page, tenderOfferId: string) 
   await page.locator(`a[href="/equity/tender_offers/${tenderOfferId}"]`).click();
   await page.waitForURL(/\/equity\/tender_offers\/[a-zA-Z0-9]+/u);
 };
+
+export const openPlaceBidModal = async (page: Page) => {
+  await page.getByRole("button", { name: "Place Bid" }).click();
+  await page.getByText("Step 1 of 3").waitFor();
+};
