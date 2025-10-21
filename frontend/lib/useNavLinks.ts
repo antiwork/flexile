@@ -5,7 +5,7 @@ import { ChartPie, Files, type LucideIcon, ReceiptIcon, Rss, Settings, Users } f
 import { usePathname } from "next/navigation";
 import React from "react";
 import { navLinks as equityNavLinks } from "@/app/(dashboard)/equity";
-import { useIsActionable } from "@/app/(dashboard)/invoices";
+import { useCanApprove } from "@/app/(dashboard)/invoices";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { getVisibleSettingsLinks } from "@/lib/settingsNavLinks";
 import { storageKeys } from "@/models/constants";
@@ -59,7 +59,7 @@ export const useNavLinks = (): NavLinkInfo[] => {
       : skipToken,
     { refetchInterval: 30_000 },
   );
-  const isInvoiceActionable = useIsActionable();
+  const isInvoiceActionable = useCanApprove();
 
   const { data: documentsData } = trpc.documents.list.useQuery(
     user.currentCompanyId && user.id

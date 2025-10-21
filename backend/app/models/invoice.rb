@@ -117,7 +117,6 @@ class Invoice < ApplicationRecord
   }
   scope :unique_contractors_count, -> { alive.select(:user_id).distinct.count }
 
-  after_initialize :populate_bill_data
   before_validation :populate_bill_data, on: :create
   after_commit :destroy_approvals, if: -> { rejected? }, on: :update
 
