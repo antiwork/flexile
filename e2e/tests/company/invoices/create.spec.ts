@@ -6,7 +6,7 @@ import { equityGrantsFactory } from "@test/factories/equityGrants";
 import { usersFactory } from "@test/factories/users";
 import { fillByLabel, fillDatePicker } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { subDays } from "date-fns";
 import { and, desc, eq } from "drizzle-orm";
 import {
@@ -447,5 +447,20 @@ test.describe("invoice creation", () => {
     await page.getByLabel("Merchant").fill("Office Supplies Store");
     await page.getByLabel("Amount").fill("42.99");
     await expect(page.getByText("Total expenses$42.99")).toBeVisible();
+  });
+
+  test("shows validation modal when submitting invoice without line items or expenses", async ({ page }) => {
+    await login(page, contractorUser, "/invoices/new");
+
+    // await page.getByLabel("Invoice ID").fill("TEST-001");
+    // await fillDatePicker(page, "Date", "12/15/2024");
+    await page.getByRole("button", { name: "Remove" }).click();
+    await page.getByRole("button", { name: "Send invoice" }).click();
+
+    const alertModal = page.getByRole("alertdialog", { name: "Add items to your invoice" });
+    await expect(alertModal).toBeVisible();
+    await expect(alertModal.getByText("At least one line item or expense is required")).toBeVisible();
+    await alertModal.getByRole("button", { name: "OK" }).click();
+    await expect(alertModal).not.toBeVisible();
   });
 });
