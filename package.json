@@ -111,6 +111,7 @@
     "input-otp": "^1.4.2",
     "iso-3166": "^4.3.0",
     "jsonwebtoken": "^9.0.2",
+    "linkifyjs": "^4.3.2",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.487.0",
     "nanoid": "^5.0.8",
