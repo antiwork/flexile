@@ -38,6 +38,21 @@ export const fillByLabel = async (page: Page, name: string, value: string, optio
   if (typeof index === "number") {
     field = field.nth(index);
   }
-  await field.fill(value);
-  await expect(field).toHaveValue(value);
+
+  if (value.includes(":")) {
+    await field.focus();
+    await field.evaluate((el: HTMLInputElement, val: string) => {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+      if (nativeInputValueSetter) {
+        nativeInputValueSetter.call(el, val);
+      }
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }, value);
+    await page.waitForTimeout(100);
+    await expect(field).toHaveValue(value);
+  } else {
+    await field.fill(value);
+    await expect(field).toHaveValue(value);
+  }
 };
