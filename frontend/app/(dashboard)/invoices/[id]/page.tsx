@@ -26,6 +26,7 @@ import { PayRateType, trpc } from "@/trpc/client";
 import { cn } from "@/utils";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { linkifyLineItemText } from "@/utils/richText";
 import { formatDate, formatDuration } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 import {
@@ -353,7 +354,7 @@ export default function InvoicePage() {
                         <TableRow key={index}>
                           <PrintTableCell className="w-[50%] align-top md:w-[60%] print:align-top">
                             <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">
-                              {lineItem.description}
+                              {linkifyLineItemText(lineItem.description)}
                             </div>
                           </PrintTableCell>
                           <PrintTableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%] print:text-right print:align-top">

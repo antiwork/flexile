@@ -146,6 +146,37 @@ test.describe("invoice creation", () => {
     expect(expense.totalAmountInCents).toBe(4599n);
   });
 
+  test("renders line item links while ignoring emails", async ({ page }) => {
+    const url = "https://slavingia.example/path";
+    const email = "support@example.com";
+
+    await login(page, contractorUser, "/invoices/new");
+
+    await fillByLabel(page, "Invoice ID", "INV-LINK-001");
+    await page.getByPlaceholder("Description").first().fill(`  ${url}  `);
+    await fillByLabel(page, "Hours / Qty", "01:00", { index: 0 });
+
+    await page.getByRole("button", { name: "Add line item" }).click();
+    await page.getByPlaceholder("Description").nth(1).fill(`Contact ${email}`);
+    await fillByLabel(page, "Hours / Qty", "02:00", { index: 1 });
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    await page.getByRole("cell", { name: "INV-LINK-001" }).first().click();
+    await expect(page.getByRole("link", { name: "Edit invoice" })).toBeVisible();
+
+    const servicesTable = page.locator("table").filter({ hasText: "Qty / Hours" }).first();
+
+    const linkLocator = servicesTable.getByRole("link", { name: url });
+    await expect(linkLocator).toHaveAttribute("href", url);
+    await expect(linkLocator).toHaveText(url);
+
+    const emailRow = servicesTable.locator("tbody tr").nth(1);
+    await expect(emailRow).toContainText(email);
+    await expect(emailRow.locator("a", { hasText: email })).toHaveCount(0);
+  });
+
   test("allows adding multiple expense rows", async ({ page }) => {
     await db.insert(expenseCategories).values([
       { companyId: company.id, name: "Office Supplies" },
