@@ -102,7 +102,7 @@ const PrintTotalRow = ({ children, className }: { children: React.ReactNode; cla
   </div>
 );
 
-function InvoiceSkeleton() {
+function InvoiceLoadingSkeleton() {
   return (
     <div>
       <DashboardHeader
@@ -574,7 +574,7 @@ function InvoicePageContent() {
 
 export default function InvoicePage() {
   return (
-    <Suspense fallback={<InvoiceSkeleton />}>
+    <Suspense fallback={<InvoiceLoadingSkeleton />}>
       <InvoicePageContent />
     </Suspense>
   );
