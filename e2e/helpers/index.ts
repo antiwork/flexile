@@ -42,9 +42,10 @@ export const fillByLabel = async (page: Page, name: string, value: string, optio
   if (value.includes(":")) {
     await field.focus();
     await field.evaluate((el: HTMLInputElement, val: string) => {
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-      if (nativeInputValueSetter) {
-        nativeInputValueSetter.call(el, val);
+      const descriptor = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value");
+      if (descriptor?.set) {
+        const valueSetter = descriptor.set.bind(el);
+        valueSetter(val);
       }
       el.dispatchEvent(new Event("input", { bubbles: true }));
       el.dispatchEvent(new Event("change", { bubbles: true }));
