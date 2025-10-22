@@ -69,4 +69,6 @@ Rails.application.routes.draw do
   def spa_controller_action
     "application#main_vue"
   end
+
+  get "up", to: "rails/health#show"
 end
