@@ -50,7 +50,6 @@ export const fillByLabel = async (page: Page, name: string, value: string, optio
       el.dispatchEvent(new Event("input", { bubbles: true }));
       el.dispatchEvent(new Event("change", { bubbles: true }));
     }, value);
-    await page.waitForTimeout(100);
     await expect(field).toHaveValue(value);
   } else {
     await field.fill(value);

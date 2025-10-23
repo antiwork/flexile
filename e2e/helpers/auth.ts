@@ -18,8 +18,6 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
 
   await page.getByLabel("Work email").fill(user.email);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
-  // Small delay to let backend start processing before we look for OTP
-  await page.waitForTimeout(500);
   await fillOtp(page);
 
   await page.waitForURL(/^(?!.*\/login$).*/u);

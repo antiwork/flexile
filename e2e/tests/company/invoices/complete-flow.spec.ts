@@ -212,7 +212,6 @@ test.describe("Invoice submission, approval and rejection", () => {
     await rejectedInvoiceRow.click({ button: "right" });
     const editMenuItem = page.getByRole("menuitem", { name: "Edit" });
     await expect(editMenuItem).toBeVisible();
-    await page.waitForTimeout(100);
     await editMenuItem.click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
