@@ -214,7 +214,11 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
-    await page.getByRole("button", { name: "Resubmit" }).click();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 204),
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
+      page.getByRole("button", { name: "Resubmit" }).click(),
+    ]);
 
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
