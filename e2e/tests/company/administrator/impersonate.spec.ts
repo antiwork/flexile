@@ -38,7 +38,7 @@ test.describe("Impersonation", () => {
     await page.getByText(anotherTeamMember.email).first().click();
     await expect(page.getByRole("link", { name: "Become" })).not.toBeVisible();
 
-    // await page.goto("/admin/users/999999/impersonate");
+    await page.goto("/admin/users/999999/impersonate");
     await expect(page.getByText("The requested resource could not be accessed.")).toBeVisible();
   });
 });
