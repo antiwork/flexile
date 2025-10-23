@@ -42,8 +42,8 @@ test.describe("People table sorting", () => {
     const statusHeader = page.getByRole("columnheader", { name: "Status" });
 
     await statusHeader.click();
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(500);
+    // Wait for the expected first row to appear (confirms sort completed)
+    await expect(page.getByRole("row").nth(1)).toContainText("Alumni - ended at 2023-01-01");
 
     const allRows = await page.getByRole("row").allInnerTexts();
     let rows = allRows.slice(1); // Skip header row
@@ -54,8 +54,8 @@ test.describe("People table sorting", () => {
     expect(rows[4]).toContain("Invited");
 
     await statusHeader.click();
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(500);
+    // Wait for the expected first row after reverse sort
+    await expect(page.getByRole("row").nth(1)).toContainText("Invited");
 
     rows = (await page.getByRole("row").allInnerTexts()).slice(1); // Skip header row
     expect(rows[0]).toContain("Invited");
