@@ -28,14 +28,12 @@ function DialogOverlay({ className, ...props }: React.ComponentProps<typeof Dial
     />
   );
 }
-function DialogContent({
-  className,
-  children,
-  showCloseButton = true,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & {
-  showCloseButton?: boolean;
-}) {
+const DialogContent = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentProps<typeof DialogPrimitive.Content> & {
+    showCloseButton?: boolean;
+  }
+>(({ className, children, showCloseButton = true, ...props }, ref) => {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const hideCloseButton = isMobile && pathname === "/invoices";
@@ -52,6 +50,7 @@ function DialogContent({
             : "top-[50%] left-[50%] max-h-[95vh] min-h-0 w-full max-w-[calc(100%-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] rounded-lg shadow-lg",
           className,
         )}
+        ref={ref}
         {...props}
       >
         {children}
@@ -67,7 +66,9 @@ function DialogContent({
       </DialogPrimitive.Content>
     </DialogPortal>
   );
-}
+});
+
+DialogContent.displayName = "DialogContent";
 
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="dialog-header" className={cn("flex flex-col gap-2 text-left", className)} {...props} />;
