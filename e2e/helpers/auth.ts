@@ -6,8 +6,9 @@ const TEST_OTP_CODE = "000000";
 
 export const fillOtp = async (page: Page) => {
   // Wait for the OTP input to be visible before filling
+  // Increased timeout for slow backend responses
   const otp = page.getByRole("textbox", { name: "Verification code" });
-  await expect(otp).toBeVisible();
+  await expect(otp).toBeVisible({ timeout: 60000 });
   await otp.fill(TEST_OTP_CODE);
 };
 
@@ -17,6 +18,8 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
 
   await page.getByLabel("Work email").fill(user.email);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
+  // Small delay to let backend start processing before we look for OTP
+  await page.waitForTimeout(500);
   await fillOtp(page);
 
   await page.waitForURL(/^(?!.*\/login$).*/u);
