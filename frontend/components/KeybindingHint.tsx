@@ -7,9 +7,6 @@ type Props = {
   className?: string;
 };
 
-/**
- * Keybinding hint for the primary action: Cmd/Ctrl + Enter.
- */
 export function PrimarySubmitHint({ className }: Props) {
   const isApple = React.useMemo(() => detectPlatform() === "apple", []);
   const modGlyph = isApple ? "⌘" : "⌃";
