@@ -37,12 +37,16 @@ test.describe("People table sorting", () => {
     });
 
     await login(page, adminUser, "/people");
+    await expect(page.getByRole("row")).toHaveCount(6);
 
     const statusHeader = page.getByRole("columnheader", { name: "Status" });
 
     await statusHeader.click();
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(500);
 
-    let rows = await page.locator("tbody tr").allInnerTexts();
+    const allRows = await page.getByRole("row").allInnerTexts();
+    let rows = allRows.slice(1); // Skip header row
     expect(rows[0]).toContain("Alumni - ended at 2023-01-01");
     expect(rows[1]).toContain("Active - started at 2023-05-01");
     expect(rows[2]).toContain("Alumni - ended at 2024-01-01");
@@ -50,8 +54,10 @@ test.describe("People table sorting", () => {
     expect(rows[4]).toContain("Invited");
 
     await statusHeader.click();
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(500);
 
-    rows = await page.locator("tbody tr").allInnerTexts();
+    rows = (await page.getByRole("row").allInnerTexts()).slice(1); // Skip header row
     expect(rows[0]).toContain("Invited");
     expect(rows[1]).toContain("Active - started at 2024-05-01");
     expect(rows[3]).toContain("Alumni - ended at 2024-01-01");
