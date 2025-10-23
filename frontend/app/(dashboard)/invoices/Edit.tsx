@@ -219,6 +219,7 @@ const Edit = () => {
         assertOk: true,
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
+      await trpcUtils.invoices.get.invalidate({ companyId: company.id, id });
       await trpcUtils.documents.list.invalidate();
       if (id) {
         await refetch();
