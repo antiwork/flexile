@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addDays, isWeekend, nextMonday } from "date-fns";
 import { Ban, Info } from "lucide-react";
 import React, { useState } from "react";
+import PrimarySubmitHint from "@/components/KeybindingHint";
 import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { cn } from "@/utils";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_invoice_path, reject_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
+import { usePrimaryActionShortcut } from "@/utils/use-primary-action-shortcut";
 
 type Invoice = RouterOutput["invoices"]["list"][number] | RouterOutput["invoices"]["get"];
 export const EDITABLE_INVOICE_STATES: Invoice["status"][] = ["received", "rejected"];
@@ -216,10 +218,20 @@ export const RejectModal = ({
     onClose();
   });
   const [reason, setReason] = useState("");
+  const contentRef = React.useRef<HTMLDivElement>(null);
+
+  usePrimaryActionShortcut(
+    contentRef,
+    () => {
+      const root = contentRef.current;
+      root?.querySelector<HTMLElement>("[data-dialog-primary]")?.click();
+    },
+    open,
+  );
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent ref={contentRef}>
         <DialogHeader>
           <DialogTitle>Reject {ids.length > 1 ? `${ids.length} invoices` : "invoice"}?</DialogTitle>
         </DialogHeader>
@@ -243,8 +255,11 @@ export const RejectModal = ({
             mutation={rejectInvoices}
             param={{ ids, reason }}
             loadingText="Rejecting..."
+            data-dialog-primary
+            aria-keyshortcuts="Control+Enter Meta+Enter"
           >
             Yes, reject
+            <PrimarySubmitHint className="hidden sm:inline" />
           </MutationButton>
         </DialogFooter>
       </DialogContent>
