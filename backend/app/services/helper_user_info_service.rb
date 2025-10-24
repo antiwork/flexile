@@ -11,6 +11,9 @@ class HelperUserInfoService
 
     {
       name: user.email,
+      actions: {
+        "Impersonate" => Rails.application.routes.url_helpers.impersonate_admin_user_url(user.external_id),
+      },
       metadata: {
         "Country of residence" => user.display_country,
         "Contractor for companies" => user.clients.map(&:display_name).to_sentence.presence,

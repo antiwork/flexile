@@ -117,6 +117,7 @@ class UserPresenter
       email: user.display_email,
       onboardingPath: worker && worker.role.nil? ? "/documents" : nil,
       taxInformationConfirmedAt: tax_information_confirmed_at&.iso8601,
+      isImpersonating: Current.impersonated_user.present?,
     }
   end
 

@@ -2,6 +2,25 @@
 
 module Admin
   class UsersController < Admin::ApplicationController
+    after_action :reset_current, only: [:impersonate, :unimpersonate]
+
+    def impersonate
+      user = User.find_by!(external_id: params[:id])
+      authorize user
+
+      ImpersonationService.new(Current.authenticated_user).impersonate(user)
+
+      redirect_to "#{PROTOCOL}://#{DOMAIN}/dashboard", allow_other_host: true
+    rescue ActiveRecord::RecordNotFound, Pundit::NotAuthorizedError
+      redirect_to admin_users_path, alert: "The requested resource could not be accessed."
+    end
+
+    def unimpersonate
+      ImpersonationService.new(Current.authenticated_user).unimpersonate
+
+      render json: { success: true }
+    end
+
     # Overwrite any of the RESTful controller actions to implement custom behavior
     # For example, you may want to send an email after a foo is updated.
     #

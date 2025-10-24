@@ -14,29 +14,29 @@ module SetCurrent
   end
 
   def set_current
-    user = nil
-
     # Try JWT authentication
     if JwtService.token_present_in_request?(request)
-      user = JwtService.user_from_request(request)
+      Current.authenticated_user = JwtService.user_from_request(request)
     end
 
-    Current.user = user
+    if Current.authenticated_user.present?
+      Current.impersonated_user = ImpersonationService.new(Current.authenticated_user).impersonated_user
+    end
 
     if Current.user.present?
       company = company_from_param || company_from_user
       if company.nil? && !cookies["invitation_token"].present?
         ApplicationRecord.transaction do
-          company = user.all_companies.first
+          company = Current.user.all_companies.first
           if company.nil?
             company = Company.create!(
-              email: user.email,
-              country_code: user.country_code || "US",
+              email: Current.user.email,
+              country_code: Current.user.country_code || "US",
               default_currency: "USD"
             )
-            user.company_administrators.create!(company: company)
-            user.company_administrators.reload
-            user.companies.reload
+            Current.user.company_administrators.create!(company: company)
+            Current.user.company_administrators.reload
+            Current.user.companies.reload
           end
         end
       end
