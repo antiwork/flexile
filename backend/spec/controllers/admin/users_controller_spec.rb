@@ -12,7 +12,7 @@ RSpec.describe Admin::UsersController do
     end
   end
 
-  describe "POST #impersonate" do
+  describe "GET #impersonate" do
     def expect_access_denied
       expect(response).to redirect_to(admin_users_path)
       expect(flash[:alert]).to eq("The requested resource could not be accessed.")
@@ -35,10 +35,10 @@ RSpec.describe Admin::UsersController do
     end
   end
 
-  describe "POST #unimpersonate" do
+  describe "DELETE #unimpersonate" do
     it "ends impersonation session" do
       expect(controller).to receive(:reset_current)
-      post :unimpersonate
+      delete :unimpersonate
       expect(response.parsed_body[:success]).to be true
     end
   end
