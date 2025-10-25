@@ -73,8 +73,8 @@ test.describe("Invoice submission, approval and rejection", () => {
     await fillByLabel(page, "Hours / Qty", "04:30", { index: 0 });
     await expect(page.getByText("$870", { exact: true })).toBeVisible();
     await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 204),
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
+      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.ok()),
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.ok()),
       page.getByRole("button", { name: "Resubmit" }).click(),
     ]);
 
@@ -194,7 +194,8 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByRole("link", { name: "View invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
     await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/invoices/approve") && r.status() === 204),
+      page.waitForResponse((r) => r.url().includes("/invoices/approve") && r.ok()),
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.ok()),
       page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }).click(),
     ]);
 
@@ -216,14 +217,18 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
-    await page.getByRole("button", { name: "Resubmit" }).click();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.ok()),
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.ok()),
+      page.getByRole("button", { name: "Resubmit" }).click(),
+    ]);
 
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
 
     await logout(page);
     await Promise.all([
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
+      page.waitForResponse((r) => r.url().includes("invoices.list") && r.ok()),
       login(page, adminUser),
     ]);
 
