@@ -219,6 +219,7 @@ const Edit = () => {
         assertOk: true,
       });
       await trpcUtils.invoices.list.invalidate({ companyId: company.id });
+      await trpcUtils.invoices.get.invalidate({ companyId: company.id, id });
       await trpcUtils.documents.list.invalidate();
       if (id) {
         await refetch();
@@ -371,16 +372,11 @@ const Edit = () => {
             {data.invoice.id && data.invoice.status === "rejected" ? (
               <div className="inline-flex items-center">Action required</div>
             ) : (
-              <Button size="small" variant="outline" asChild>
+              <Button variant="outline" asChild>
                 <Link href="/invoices">Cancel</Link>
               </Button>
             )}
-            <Button
-              size="small"
-              variant="primary"
-              onClick={() => validate() && submit.mutate()}
-              disabled={submit.isPending}
-            >
+            <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
               {submit.isPending ? "Sending..." : data.invoice.id ? "Resubmit" : "Send invoice"}
             </Button>
           </>

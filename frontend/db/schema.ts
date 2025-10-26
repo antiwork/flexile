@@ -497,7 +497,7 @@ export const documents = pgTable(
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     userComplianceInfoId: bigint("user_compliance_info_id", { mode: "bigint" }),
     equityGrantId: bigint("equity_grant_id", { mode: "bigint" }),
-    name: varchar().notNull(),
+    shareHoldingId: bigint("share_holding_id", { mode: "bigint" }),
     type: integer("document_type").$type<DocumentType>().notNull(),
     year: integer().notNull(),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
@@ -512,6 +512,7 @@ export const documents = pgTable(
   (table) => [
     index("index_documents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
     index("index_documents_on_equity_grant_id").using("btree", table.equityGrantId.asc().nullsLast().op("int8_ops")),
+    index("index_documents_on_share_holding_id").using("btree", table.shareHoldingId.asc().nullsLast().op("int8_ops")),
     index("index_documents_on_user_compliance_info_id").using(
       "btree",
       table.userComplianceInfoId.asc().nullsLast().op("int8_ops"),
@@ -770,7 +771,7 @@ export const invoices = pgTable(
     description: varchar(),
     paidAt: timestamp("paid_at", { precision: 6, mode: "date" }),
     dueOn: date("due_on", { mode: "string" }).notNull(),
-    billFrom: varchar("bill_from").notNull(),
+    billFrom: varchar("bill_from"),
     billTo: varchar("bill_to").notNull(),
     notes: text(),
     invoiceApprovalsCount: integer("invoice_approvals_count").default(0).notNull(),
@@ -1194,6 +1195,7 @@ export const companyInvestors = pgTable(
     ),
 
     investedInAngelListRuv: boolean("invested_in_angel_list_ruv").notNull().default(false),
+    deactivatedAt: timestamp("deactivated_at", { precision: 6, mode: "date" }),
   },
   (table) => [
     index("index_company_investors_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),

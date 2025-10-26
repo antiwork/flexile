@@ -1,7 +1,11 @@
+import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
+import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { usersFactory } from "@test/factories/users";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
+import { eq } from "drizzle-orm";
+import { companyInvestors } from "@/db/schema";
 
 test.describe("Mobile navigation", () => {
   const mobileViewport = { width: 640, height: 800 };
@@ -30,6 +34,69 @@ test.describe("Mobile navigation", () => {
     await bottomNav.getByRole("button", { name: "Settings menu" }).click();
     await expect(page.getByRole("link", { name: "Profile" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Tax information" })).toBeVisible();
+
+    // Click on More button to open overflow menu
+    await bottomNav.getByRole("button", { name: "More" }).click();
+
+    // Check that overflow menu items are visible
+    await expect(page.getByRole("link", { name: "Support center" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
+  });
+
+  test("investor can navigate via mobile nav menu", async ({ page }) => {
+    const { company } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+    });
+    const { user } = await usersFactory.create();
+    const { companyInvestor } = await companyInvestorsFactory.create({
+      companyId: company.id,
+      userId: user.id,
+      investmentAmountInCents: 100000n,
+    });
+
+    await page.setViewportSize(mobileViewport);
+    await login(page, user);
+
+    // Check that bottom nav items are visible
+    let bottomNav = page.getByRole("navigation", { name: "Mobile navigation" });
+    await expect(bottomNav).toBeVisible();
+
+    // Main nav items should be visible in bottom nav
+    await expect(bottomNav.getByRole("listitem", { name: "Documents" })).toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "Equity" })).toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "Updates" })).toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "More" })).toBeVisible();
+
+    // Test Equity submenu
+    await bottomNav.getByRole("button", { name: "Equity menu" }).click();
+
+    // Check that Equity submenu items are visible
+    await expect(page.getByRole("link", { name: "Investors" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Dividends" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Buybacks" })).toBeVisible();
+
+    // Deactivate investor and refresh page
+    await db
+      .update(companyInvestors)
+      .set({ deactivatedAt: new Date() })
+      .where(eq(companyInvestors.id, companyInvestor.id));
+    await page.reload();
+    bottomNav = page.getByRole("navigation", { name: "Mobile navigation" });
+    await expect(bottomNav).toBeVisible();
+
+    // Main nav items should be visible in bottom nav (Updates is not visible)
+    await expect(bottomNav.getByRole("listitem", { name: "Documents" })).toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "Equity" })).toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "Updates" })).not.toBeVisible();
+    await expect(bottomNav.getByRole("listitem", { name: "More" })).toBeVisible();
+
+    // Test Equity submenu
+    await bottomNav.getByRole("button", { name: "Equity menu" }).click();
+
+    // Check that Equity submenu items are visible (Investors and Buybacks are not visible)
+    await expect(page.getByRole("link", { name: "Investors" })).not.toBeVisible();
+    await expect(page.getByRole("link", { name: "Dividends" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Buybacks" })).not.toBeVisible();
 
     // Click on More button to open overflow menu
     await bottomNav.getByRole("button", { name: "More" }).click();

@@ -67,6 +67,8 @@ export default function PeoplePage() {
   const company = useCurrentCompany();
   const { data: workers = [], isLoading } = trpc.contractors.list.useQuery({ companyId: company.id });
   const isMobile = useIsMobile();
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
 
   const columnHelper = createColumnHelper<(typeof workers)[number]>();
   const desktopColumns = useMemo(
@@ -94,6 +96,11 @@ export default function PeoplePage() {
         header: "Status",
         meta: { filterOptions: ["Active", "Onboarding", "Alumni"] },
         cell: (info) => getStatusLabel(info.row.original),
+        sortingFn: (rowA, rowB) => {
+          const dateA = rowA.original.endedAt || rowA.original.startedAt;
+          const dateB = rowB.original.endedAt || rowB.original.startedAt;
+          return dateB.getTime() - dateA.getTime();
+        },
       }),
     ],
     [workers],
@@ -184,7 +191,12 @@ export default function PeoplePage() {
                 {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
               </button>
             ) : null}
-            {workers.length === 0 && !isLoading ? <ActionPanel /> : null}
+            {workers.length === 0 && !isLoading ? (
+              <ActionPanel
+                openInvite={() => setShowInviteModal(true)}
+                openInviteLink={() => setShowInviteLinkModal(true)}
+              />
+            ) : null}
           </>
         }
       />
@@ -194,7 +206,12 @@ export default function PeoplePage() {
           table={table}
           searchColumn="userName"
           tabsColumn="status"
-          actions={<ActionPanel />}
+          actions={
+            <ActionPanel
+              openInvite={() => setShowInviteModal(true)}
+              openInviteLink={() => setShowInviteLinkModal(true)}
+            />
+          }
           isLoading={isLoading}
         />
       ) : (
@@ -202,21 +219,64 @@ export default function PeoplePage() {
           <Placeholder icon={Users}>Contractors will show up here.</Placeholder>
         </div>
       )}
+
+      <InviteLinkModal open={showInviteLinkModal} onOpenChange={setShowInviteLinkModal} />
+      <InviteModal open={showInviteModal} onOpenChange={setShowInviteModal} />
     </>
   );
 }
+
+const ActionPanel = ({ openInvite, openInviteLink }: { openInvite: () => void; openInviteLink: () => void }) => {
+  const isMobile = useIsMobile();
+
+  return isMobile ? (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="floating-action">
+          <Plus />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>Invite people to your workspace</DialogTitle>
+        <DialogDescription className="sr-only">Invite people to your workspace</DialogDescription>
+        <div className="flex flex-col gap-3">
+          <DialogClose asChild onClick={openInviteLink}>
+            <Button variant="outline">
+              <LinkIcon className="size-4" />
+              Invite link
+            </Button>
+          </DialogClose>
+          <DialogClose asChild onClick={openInvite}>
+            <Button variant="primary">
+              <Plus className="size-4" />
+              Add contractor
+            </Button>
+          </DialogClose>
+        </div>
+      </DialogContent>
+    </Dialog>
+  ) : (
+    <div className="flex flex-row gap-2">
+      <Button variant="outline" onClick={openInviteLink}>
+        <LinkIcon className="size-4" />
+        Invite link
+      </Button>
+      <Button variant="primary" onClick={openInvite}>
+        <Plus className="size-4" />
+        Add contractor
+      </Button>
+    </div>
+  );
+};
 
 const inviteSchema = formSchema.merge(documentSchema).extend({
   email: z.string().email(),
   startDate: z.instanceof(CalendarDate),
   contractSignedElsewhere: z.boolean().default(false),
 });
-const ActionPanel = () => {
+const InviteModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
   const company = useCurrentCompany();
   const queryClient = useQueryClient();
-  const isMobile = useIsMobile();
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [showInviteLinkModal, setShowInviteLinkModal] = useState(false);
 
   const { data: workers = [], refetch } = trpc.contractors.list.useQuery({ companyId: company.id });
   const lastContractor = workers[0];
@@ -261,7 +321,7 @@ const ActionPanel = () => {
     },
     onSuccess: async () => {
       await refetch();
-      setShowInviteModal(false);
+      onOpenChange(false);
       inviteForm.reset();
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
@@ -269,128 +329,87 @@ const ActionPanel = () => {
   const submit = inviteForm.handleSubmit((values) => inviteMutation.mutate(values));
 
   return (
-    <>
-      {isMobile ? (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="floating-action">
-              <Plus />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogTitle>Invite people to your workspace</DialogTitle>
-            <DialogDescription className="sr-only">Invite people to your workspace</DialogDescription>
-            <div className="flex flex-col gap-3">
-              <DialogClose asChild onClick={() => setShowInviteLinkModal(true)}>
-                <Button size="small" variant="outline">
-                  <LinkIcon className="size-4" />
-                  Invite link
-                </Button>
-              </DialogClose>
-              <DialogClose asChild onClick={() => setShowInviteModal(true)}>
-                <Button size="small">
-                  <Plus className="size-4" />
-                  Add contractor
-                </Button>
-              </DialogClose>
-            </div>
-          </DialogContent>
-        </Dialog>
-      ) : (
-        <div className="flex flex-row gap-2">
-          <Button size="small" variant="outline" onClick={() => setShowInviteLinkModal(true)}>
-            <LinkIcon className="size-4" />
-            Invite link
-          </Button>
-          <Button size="small" onClick={() => setShowInviteModal(true)}>
-            <Plus className="size-4" />
-            Add contractor
-          </Button>
-        </div>
-      )}
-      <DialogStack open={showInviteModal} onOpenChange={setShowInviteModal}>
-        <Form {...inviteForm}>
-          <DialogStackBody>
-            <DialogStackContent>
-              <DialogStackHeader>
-                <DialogStackTitle>Who's joining?</DialogStackTitle>
-              </DialogStackHeader>
+    <DialogStack open={open} onOpenChange={onOpenChange}>
+      <Form {...inviteForm}>
+        <DialogStackBody>
+          <DialogStackContent>
+            <DialogStackHeader>
+              <DialogStackTitle>Who's joining?</DialogStackTitle>
+            </DialogStackHeader>
+            <FormField
+              control={inviteForm.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="Contractor's email"
+                      onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={inviteForm.control}
+              name="startDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <DatePicker {...field} label="Start date" granularity="day" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormFields />
+            <DialogStackFooter>
+              <DialogStackNext>
+                <Button variant="primary">Continue</Button>
+              </DialogStackNext>
+            </DialogStackFooter>
+          </DialogStackContent>
+          <DialogStackContent>
+            <DialogStackHeader>
+              <DialogStackTitle>Add a contract</DialogStackTitle>
+            </DialogStackHeader>
+            <form onSubmit={(e) => void submit(e)} className="contents">
+              {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField type="consulting_contract" />}
+
               <FormField
                 control={inviteForm.control}
-                name="email"
+                name="contractSignedElsewhere"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="Contractor's email"
-                        onChange={(e) => field.onChange(removeMailtoPrefix(e.target.value))}
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        label="Already signed contract elsewhere"
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={inviteForm.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <DatePicker {...field} label="Start date" granularity="day" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormFields />
+              {inviteMutation.isError ? <div className="text-red text-sm">{inviteMutation.error.message}</div> : null}
               <DialogStackFooter>
-                <DialogStackNext>
-                  <Button>Continue</Button>
-                </DialogStackNext>
+                <DialogStackPrevious>
+                  <Button variant="outline">Back</Button>
+                </DialogStackPrevious>
+                <MutationStatusButton idleVariant="primary" mutation={inviteMutation} type="submit">
+                  Send invite
+                </MutationStatusButton>
               </DialogStackFooter>
-            </DialogStackContent>
-            <DialogStackContent>
-              <DialogStackHeader>
-                <DialogStackTitle>Add a contract</DialogStackTitle>
-              </DialogStackHeader>
-              <form onSubmit={(e) => void submit(e)} className="contents">
-                {!inviteForm.watch("contractSignedElsewhere") && <NewDocumentField type="consulting_contract" />}
-
-                <FormField
-                  control={inviteForm.control}
-                  name="contractSignedElsewhere"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          label="Already signed contract elsewhere"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                {inviteMutation.isError ? <div className="text-red text-sm">{inviteMutation.error.message}</div> : null}
-                <DialogStackFooter>
-                  <DialogStackPrevious>
-                    <Button variant="outline">Back</Button>
-                  </DialogStackPrevious>
-                  <MutationStatusButton mutation={inviteMutation} type="submit">
-                    Send invite
-                  </MutationStatusButton>
-                </DialogStackFooter>
-              </form>
-            </DialogStackContent>
-          </DialogStackBody>
-        </Form>
-      </DialogStack>
-      <InviteLinkModal open={showInviteLinkModal} onOpenChange={setShowInviteLinkModal} />
-    </>
+            </form>
+          </DialogStackContent>
+        </DialogStackBody>
+      </Form>
+    </DialogStack>
   );
 };

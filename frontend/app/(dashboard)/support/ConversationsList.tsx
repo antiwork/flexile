@@ -90,7 +90,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
               <Plus />
             </Button>
           ) : (
-            <Button onClick={handleContactSupportClick} size="small">
+            <Button variant="primary" onClick={handleContactSupportClick}>
               Contact support
             </Button>
           )
@@ -120,7 +120,7 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
               {conversations.map((conversation) => (
                 <TableRow
                   key={conversation.slug}
-                  className="cursor-pointer hover:bg-gray-50"
+                  className="cursor-pointer"
                   onClick={() => onSelectConversation(conversation.slug)}
                 >
                   {isMobile ? (
@@ -188,7 +188,6 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
                 <Button
                   type="button"
                   variant="ghost"
-                  size="small"
                   onClick={() => fileInputRef.current?.click()}
                   className="h-8 w-8 p-0"
                 >
@@ -227,11 +226,11 @@ export const ConversationsList = ({ onSelectConversation }: ConversationsListPro
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" size="small" onClick={() => setIsModalOpen(false)}>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
             <MutationStatusButton
-              size="small"
+              idleVariant="primary"
               mutation={createConversation}
               disabled={!message.trim() && attachments.length === 0}
               onClick={() => void handleSubmit()}

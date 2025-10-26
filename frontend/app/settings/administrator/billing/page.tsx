@@ -162,7 +162,7 @@ export default function Billing() {
                 <CardTitle>USD bank account</CardTitle>
                 <CardDescription>Ending in {stripeData.bank_account_last4}</CardDescription>
                 <CardAction>
-                  <Button variant="outline" size="small" onClick={() => setAddingBankAccount(true)}>
+                  <Button variant="outline" onClick={() => setAddingBankAccount(true)}>
                     Edit
                   </Button>
                 </CardAction>
@@ -171,7 +171,7 @@ export default function Billing() {
           ) : (
             <Placeholder icon={CircleDollarSign}>
               <p>We'll use this account to debit contractor payments and our monthly fee.</p>
-              <Button onClick={() => setAddingBankAccount(true)} size="small" disabled={requiresCompanyName}>
+              <Button onClick={() => setAddingBankAccount(true)} disabled={requiresCompanyName}>
                 <Plus className="size-4" />
                 Link your bank account
               </Button>
@@ -194,8 +194,7 @@ export default function Billing() {
         <InformationCircleIcon />
         <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
         <AlertDescription>
-          Want faster payments? Email us at <a href="mailto:support@flexile.com">support@flexile.com</a> to complete
-          additional verification steps.
+          Want faster payments? <Link href="/support">Write to us</Link> to complete additional verification steps.
         </AlertDescription>
       </Alert>
       {isLoading ? (
@@ -238,7 +237,7 @@ const BillingHistoryTable = ({ data }: { data: ConsolidatedInvoicesList }) => {
         cell: (info) => {
           const attachment = info.getValue();
           return attachment ? (
-            <Button asChild variant="outline" size="small">
+            <Button asChild variant="outline">
               <Link href={`/download/${attachment.key}/${attachment.filename}`} download>
                 <Download className="size-4" /> Download
               </Link>

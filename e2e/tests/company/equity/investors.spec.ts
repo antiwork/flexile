@@ -111,12 +111,13 @@ test.describe("Investors", () => {
 
     await login(page, adminUser, "/equity/investors");
 
-    await expect(page.getByText("Major Investor")).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("15.00%");
-    await expect(page.locator("tbody")).toContainText("300,000");
-
-    await expect(page.getByRole("cell", { name: "Outstanding ownership" })).toBeVisible();
-    await expect(page.getByRole("cell", { name: "Fully diluted ownership" })).toBeVisible();
+    await expect(
+      page.getByTableRowCustom({
+        Name: /Major Investor/u,
+        "Fully diluted ownership": "15.00%",
+        "Outstanding shares": "300,000",
+      }),
+    ).toBeVisible();
   });
 
   test("shows investors with equity grants even when total_options field is zero", async ({ page }) => {
@@ -163,6 +164,34 @@ test.describe("Investors", () => {
     await page.getByRole("menuitem", { name: "Option strikes" }).hover();
     await page.getByRole("menuitemcheckbox", { name: "Common options $4.64 strike" }).click();
     await expect(page.locator("tbody")).toContainText("833");
+  });
+
+  test("shows download CSV button with correct link", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fullyDilutedShares: BigInt(1000000),
+    });
+
+    const { user: investor } = await usersFactory.create({ legalName: "Test Investor" });
+    const { companyInvestor } = await companyInvestorsFactory.create({
+      companyId: company.id,
+      userId: investor.id,
+    });
+    await shareHoldingsFactory.create({
+      companyInvestorId: companyInvestor.id,
+      numberOfShares: 100000,
+      shareHolderName: "Test Investor",
+    });
+    await db
+      .update(companyInvestors)
+      .set({ totalShares: BigInt(100000) })
+      .where(eq(companyInvestors.id, companyInvestor.id));
+
+    await login(page, adminUser, "/equity/investors");
+
+    const downloadButton = page.getByRole("link", { name: "Download CSV" });
+    await expect(downloadButton).toBeVisible();
+    await expect(downloadButton).toHaveAttribute("href", `/internal/companies/${company.externalId}/cap_tables/export`);
   });
 
   test.describe("Column Settings", () => {

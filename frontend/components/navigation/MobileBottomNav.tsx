@@ -23,9 +23,7 @@ const NAV_PRIORITIES: Record<string, number> = {
   Equity: 3,
   Updates: 4,
   People: 5,
-  Expenses: 6,
-  Roles: 7,
-  Settings: 8,
+  Settings: 6,
 };
 
 const DEFAULT_PRIORITY = 99;
@@ -421,7 +419,7 @@ export function MobileBottomNav() {
     <nav
       role="navigation"
       aria-label="Mobile navigation"
-      className="bg-background border-border pointer-events-auto fixed right-0 bottom-0 left-0 z-60 h-15 border-t"
+      className="bg-background border-border pointer-events-auto fixed right-0 bottom-0 left-0 z-60 h-15 border-t print:hidden"
     >
       <ul role="list" className="flex items-center justify-around">
         {mainItems.map((item) => (

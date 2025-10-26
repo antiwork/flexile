@@ -2,7 +2,6 @@ import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
-import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -58,7 +57,8 @@ test.describe("Company details", () => {
     await phoneNumberLocator.fill(companyFillData.phoneNumber);
     await streetAddressLocator.fill(companyFillData.streetAddress);
     await cityLocator.fill(companyFillData.city);
-    await selectComboboxOption(page, "State", companyFillData.state);
+    await page.getByRole("combobox", { name: "State" }).click();
+    await page.getByRole("option", { name: companyFillData.state, exact: true }).click();
     await zipCodeLocator.fill(companyFillData.zipCode);
 
     await page.getByRole("button", { name: "Save changes" }).click();
@@ -93,6 +93,14 @@ test.describe("Company details", () => {
 
     await expect(page.getByText("This field is required.")).toHaveCount(5);
     await expect(page.getByText("Please check that your EIN is 9 numbers long.")).toBeVisible();
+
+    await page.getByLabel("Company's legal name").fill("   ");
+    await page.getByLabel("Residential address (street name, number, apt)").fill("   ");
+    await page.getByLabel("City or town").fill("   ");
+    await page.getByLabel("ZIP code").fill("   ");
+    await page.getByRole("button", { name: "Save changes" }).click();
+
+    await expect(page.getByText("This field is required.")).toHaveCount(5);
 
     await EINLocator.fill("111111111");
 
