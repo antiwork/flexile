@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 RSpec.describe Admin::UsersController do
+  let(:dashboard_path) { "#{PROTOCOL}://#{DOMAIN}/dashboard" }
+
   let(:team_member_user) { create(:user, team_member: true) }
   let(:another_team_member_user) { create(:user, team_member: true) }
+  let(:non_team_member) { create(:user) }
   let(:user) { create(:user) }
 
   before do
@@ -21,7 +24,7 @@ RSpec.describe Admin::UsersController do
     it "allows impersonating regular users" do
       expect(controller).to receive(:reset_current)
       get :impersonate, params: { id: user.external_id }
-      expect(response).to redirect_to("#{PROTOCOL}://#{DOMAIN}/dashboard")
+      expect(response).to redirect_to(dashboard_path)
     end
 
     it "denies impersonating other team members" do
@@ -32,6 +35,21 @@ RSpec.describe Admin::UsersController do
     it "denies impersonating non-existent users" do
       get :impersonate, params: { id: "non-existent-external-id" }
       expect_access_denied
+    end
+
+    context "when current user is not a team member" do
+      before do
+        allow(controller).to receive(:current_context) do
+          Current.authenticated_user = non_team_member
+          CurrentContext.new(user: non_team_member, company: nil)
+        end
+      end
+
+      it "denies impersonating regular users" do
+        get :impersonate, params: { id: user.external_id }
+        # Redirects non-team members to dashboard when they try to access admin actions
+        expect(response).to redirect_to(dashboard_path)
+      end
     end
   end
 
