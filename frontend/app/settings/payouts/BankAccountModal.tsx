@@ -1,4 +1,4 @@
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Map as ImmutableMap } from "immutable";
 import { set } from "lodash-es";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   CURRENCIES,
@@ -185,7 +186,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     data: forms,
     refetch,
     isPending,
-  } = useSuspenseQuery({
+  } = useQuery({
     queryKey: ["wise-account-requirements", currency],
     queryFn: async ({ signal }) => {
       const response = await request({
@@ -217,11 +218,12 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
         );
     },
   });
-  previousForms.current = forms;
+  previousForms.current = forms ?? [];
 
   const userCountry = details.get(KEY_ADDRESS_COUNTRY) || billingDetails.country_code || "US";
 
   const defaultFormIndex = useMemo(() => {
+    if (!forms) return 0;
     const index = forms.findIndex((form) => {
       if (currency === "USD" && userCountry === "US") {
         return form.title === LOCAL_BANK_ACCOUNT_TITLE;
@@ -234,7 +236,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
   }, [forms, currency, userCountry]);
 
   const formSwitch = useMemo(() => {
-    if (forms.length !== 2) return undefined;
+    if (!forms || forms.length !== 2) return undefined;
     const otherForm = forms[(defaultFormIndex + 1) % 2];
     if (!otherForm) return undefined;
 
@@ -246,7 +248,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     return { label, defaultOn: currency === "USD" && userCountry === "US" };
   }, [forms, defaultFormIndex, currency, userCountry]);
 
-  const form = forms[selectedFormIndex];
+  const form = forms?.[selectedFormIndex];
   const allFields = form?.fields.flatMap((field) => field.group);
 
   const visibleFields = useMemo(
@@ -499,7 +501,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             ) : null}
           </div>
 
-          {forms.length > 2 ? (
+          {forms && forms.length > 2 ? (
             <div className="grid gap-2">
               <Label htmlFor={`form-${uid}`}>Transfer method</Label>
               <Tabs
@@ -515,6 +517,37 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
                 </TabsList>
               </Tabs>
             </div>
+          ) : null}
+
+          {!forms ? (
+            <>
+              <div className="grid gap-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+              <div className="grid gap-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+              <div className="grid gap-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+              <div className="grid gap-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-9 w-full" />
+                </div>
+                <div className="grid gap-2">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-9 w-full" />
+                </div>
+              </div>
+            </>
           ) : null}
 
           {Object.values(groupedFields).map((fieldGroup, index) => {
