@@ -166,8 +166,6 @@ const DividendSection = () => {
   const { data } = useSuspenseQuery({
     queryKey: ["settings", "dividend"],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 4000));
-
       const response = await request({
         method: "GET",
         accept: "json",
@@ -263,7 +261,6 @@ const BankAccountsSection = () => {
   const { data } = useSuspenseQuery({
     queryKey: ["settings", "bank_accounts"],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 4000));
       const response = await request({
         method: "GET",
         accept: "json",
