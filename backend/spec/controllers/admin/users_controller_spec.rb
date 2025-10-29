@@ -46,8 +46,8 @@ RSpec.describe Admin::UsersController do
       end
 
       it "denies impersonating regular users" do
+        expect(ImpersonationService).not_to receive(:new)
         get :impersonate, params: { id: user.external_id }
-        # Redirects non-team members to dashboard when they try to access admin actions
         expect(response).to redirect_to(dashboard_path)
       end
     end
