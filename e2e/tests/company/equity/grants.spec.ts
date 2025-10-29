@@ -225,6 +225,7 @@ test.describe("Equity Grants", () => {
       async (modal) => {
         await expect(modal.getByText("Total options granted100")).toBeVisible();
         await expect(modal.getByRole("button", { name: "Exercise options" })).not.toBeVisible();
+        await modal.getByRole("button", { name: "Close" }).click();
       },
       { page, title: "2024 Stock option grant" },
     );
