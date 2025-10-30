@@ -46,9 +46,9 @@ RSpec.describe Admin::UsersController do
       end
 
       it "denies impersonating regular users" do
-        expect(ImpersonationService).not_to receive(:new)
         get :impersonate, params: { id: user.external_id }
         expect(response).to redirect_to(dashboard_path)
+        expect($redis.get(RedisKey.impersonated_user(non_team_member.id))).to be_nil
       end
     end
   end
