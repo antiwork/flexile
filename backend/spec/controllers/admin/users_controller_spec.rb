@@ -16,25 +16,26 @@ RSpec.describe Admin::UsersController do
   end
 
   describe "GET #impersonate" do
-    def expect_access_denied
-      expect(response).to redirect_to(admin_users_path)
-      expect(flash[:alert]).to eq("The requested resource could not be accessed.")
-    end
-
     it "allows impersonating regular users" do
       expect(controller).to receive(:reset_current)
       get :impersonate, params: { id: user.external_id }
+
       expect(response).to redirect_to(dashboard_path)
+      expect($redis.get(RedisKey.impersonated_user(team_member_user.id))).to eq(user.id.to_s)
     end
 
     it "denies impersonating other team members" do
       get :impersonate, params: { id: another_team_member_user.external_id }
-      expect_access_denied
+
+      expect(response).to redirect_to(admin_users_path)
+      expect(flash[:alert]).to eq("The requested resource could not be accessed.")
     end
 
     it "denies impersonating non-existent users" do
       get :impersonate, params: { id: "non-existent-external-id" }
-      expect_access_denied
+
+      expect(response).to redirect_to(admin_users_path)
+      expect(flash[:alert]).to eq("The requested resource could not be accessed.")
     end
 
     context "when current user is not a team member" do
@@ -47,6 +48,7 @@ RSpec.describe Admin::UsersController do
 
       it "denies impersonating regular users" do
         get :impersonate, params: { id: user.external_id }
+
         expect(response).to redirect_to(dashboard_path)
         expect($redis.get(RedisKey.impersonated_user(non_team_member.id))).to be_nil
       end
@@ -57,6 +59,7 @@ RSpec.describe Admin::UsersController do
     it "ends impersonation session" do
       expect(controller).to receive(:reset_current)
       delete :unimpersonate
+
       expect(response.parsed_body[:success]).to be true
     end
   end
