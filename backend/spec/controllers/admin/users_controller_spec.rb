@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
 RSpec.describe Admin::UsersController do
-  let(:dashboard_path) { "#{PROTOCOL}://#{DOMAIN}/dashboard" }
-
   let(:team_member_user) { create(:user, team_member: true) }
   let(:another_team_member_user) { create(:user, team_member: true) }
   let(:non_team_member) { create(:user) }
   let(:user) { create(:user) }
+  let(:dashboard_path) { "#{PROTOCOL}://#{DOMAIN}/dashboard" }
 
   before do
     allow(controller).to receive(:current_context) do
@@ -17,7 +16,6 @@ RSpec.describe Admin::UsersController do
 
   describe "GET #impersonate" do
     it "allows impersonating regular users" do
-      expect(controller).to receive(:reset_current)
       get :impersonate, params: { id: user.external_id }
 
       expect(response).to redirect_to(dashboard_path)
@@ -28,14 +26,14 @@ RSpec.describe Admin::UsersController do
       get :impersonate, params: { id: another_team_member_user.external_id }
 
       expect(response).to redirect_to(admin_users_path)
-      expect(flash[:alert]).to eq("The requested resource could not be accessed.")
+      expect($redis.get(RedisKey.impersonated_user(team_member_user.id))).to be_nil
     end
 
     it "denies impersonating non-existent users" do
       get :impersonate, params: { id: "non-existent-external-id" }
 
       expect(response).to redirect_to(admin_users_path)
-      expect(flash[:alert]).to eq("The requested resource could not be accessed.")
+      expect($redis.get(RedisKey.impersonated_user(team_member_user.id))).to be_nil
     end
 
     context "when current user is not a team member" do
@@ -46,7 +44,7 @@ RSpec.describe Admin::UsersController do
         end
       end
 
-      it "denies impersonating regular users" do
+      it "denies impersonation of any user" do
         get :impersonate, params: { id: user.external_id }
 
         expect(response).to redirect_to(dashboard_path)
@@ -56,11 +54,13 @@ RSpec.describe Admin::UsersController do
   end
 
   describe "DELETE #unimpersonate" do
+    before { get :impersonate, params: { id: user.external_id } }
+
     it "ends impersonation session" do
-      expect(controller).to receive(:reset_current)
       delete :unimpersonate
 
       expect(response.parsed_body[:success]).to be true
+      expect($redis.get(RedisKey.impersonated_user(team_member_user.id))).to be_nil
     end
   end
 end
