@@ -103,6 +103,8 @@ export default function OptionsPage() {
     onSuccess: () => setTimeout(() => resendPaymentInstructions.reset(), 5000),
   });
 
+  const hasExerciseNotice = company.flags.includes("option_exercising") && exerciseNotice?.text;
+
   return (
     <>
       <DashboardHeader title="Options" />
@@ -114,45 +116,39 @@ export default function OptionsPage() {
         </div>
       ) : (
         <>
-          {company.flags.includes("option_exercising") && exerciseNotice?.text ? (
-            <>
-              {totalUnexercisedVestedShares > 0 && !exerciseInProgress && (
-                <Alert className="mx-4 mb-4">
-                  <Info />
-                  <AlertDescription>
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold">
-                        You have {totalUnexercisedVestedShares.toLocaleString()} vested options available for exercise.
-                      </span>
-                      <Button variant="primary" onClick={openExerciseModal}>
-                        Exercise Options
-                      </Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {exerciseInProgress ? (
-                <Alert className="mx-4 mb-4">
-                  <Info />
-                  <AlertDescription>
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold">
-                        We're awaiting a payment of {formatMoneyFromCents(exerciseInProgress.totalCostCents)} to
-                        exercise {exerciseInProgress.numberOfOptions.toLocaleString()} options.
-                      </span>
-                      <MutationButton
-                        mutation={resendPaymentInstructions}
-                        param={exerciseInProgress.id}
-                        successText="Payment instructions sent!"
-                      >
-                        Resend payment instructions
-                      </MutationButton>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-            </>
+          {exerciseInProgress ? (
+            <Alert className="mx-4 mb-4">
+              <Info />
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold">
+                    We're awaiting a payment of {formatMoneyFromCents(exerciseInProgress.totalCostCents)} to exercise{" "}
+                    {exerciseInProgress.numberOfOptions.toLocaleString()} options.
+                  </span>
+                  <MutationButton
+                    mutation={resendPaymentInstructions}
+                    param={exerciseInProgress.id}
+                    successText="Payment instructions sent!"
+                  >
+                    Resend payment instructions
+                  </MutationButton>
+                </div>
+              </AlertDescription>
+            </Alert>
+          ) : hasExerciseNotice && totalUnexercisedVestedShares > 0 ? (
+            <Alert className="mx-4 mb-4">
+              <Info />
+              <AlertDescription>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold">
+                    You have {totalUnexercisedVestedShares.toLocaleString()} vested options available for exercise.
+                  </span>
+                  <Button variant="primary" onClick={openExerciseModal}>
+                    Exercise Options
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
           ) : null}
 
           <DataTable table={table} onRowClicked={setSelectedEquityGrant} />
@@ -161,7 +157,7 @@ export default function OptionsPage() {
             <DetailsModal
               equityGrant={selectedEquityGrant}
               userId={selectedEquityGrant.user.id}
-              canExercise={!exerciseInProgress}
+              canExercise={!!hasExerciseNotice && !exerciseInProgress}
               onClose={() => setSelectedEquityGrant(null)}
               onUpdateExercise={exerciseGrant}
             />
