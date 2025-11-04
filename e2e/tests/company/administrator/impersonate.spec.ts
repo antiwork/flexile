@@ -9,7 +9,10 @@ test.describe("Impersonation", () => {
 
     await login(page, teamMember, "/admin/users");
 
+    await page.getByRole("searchbox").fill(user.email);
+    await page.getByRole("searchbox").press("Enter");
     await page.getByText(user.email).click();
+
     await page.getByRole("link", { name: "Become" }).click();
     await expect(page.getByText(user.email)).toBeVisible();
 
@@ -35,7 +38,10 @@ test.describe("Impersonation", () => {
 
     await login(page, teamMember, "/admin/users");
 
+    await page.getByRole("searchbox").fill(anotherTeamMember.email);
+    await page.getByRole("searchbox").press("Enter");
     await page.getByText(anotherTeamMember.email).click();
+
     await expect(page.getByRole("link", { name: "Become" })).not.toBeVisible();
 
     await page.goto("/admin/users/999999/impersonate");
