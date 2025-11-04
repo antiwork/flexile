@@ -9,7 +9,7 @@ test.describe("Impersonation", () => {
 
     await login(page, teamMember, "/admin/users");
 
-    await page.getByText(user.email).first().click();
+    await page.getByText(user.email).click();
     await page.getByRole("link", { name: "Become" }).click();
     await expect(page.getByText(user.email)).toBeVisible();
 
@@ -35,7 +35,7 @@ test.describe("Impersonation", () => {
 
     await login(page, teamMember, "/admin/users");
 
-    await page.getByText(anotherTeamMember.email).first().click();
+    await page.getByText(anotherTeamMember.email).click();
     await expect(page.getByRole("link", { name: "Become" })).not.toBeVisible();
 
     await page.goto("/admin/users/999999/impersonate");
