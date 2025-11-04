@@ -29,7 +29,7 @@ test.describe("Impersonation", () => {
     await expect(page.getByText(user.email)).toBeVisible();
   });
 
-  test("does not impersonate team members or non-existent users ", async ({ page }) => {
+  test("does not impersonate team members or non-existent users", async ({ page }) => {
     const { user: teamMember } = await usersFactory.create({ teamMember: true });
     const { user: anotherTeamMember } = await usersFactory.create({ teamMember: true });
 
