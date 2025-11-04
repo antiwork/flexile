@@ -70,9 +70,9 @@ RSpec.describe Admin::UsersController do
       it "denies impersonation of any user" do
         expect_no_service_call
 
-        get :impersonate, params: { id: user.external_id }
-
-        expect(response).to redirect_to(dashboard_path)
+        expect do
+          get :impersonate, params: { id: user.external_id }
+        end.to raise_error(ActionController::RoutingError, "Not Found")
       end
     end
   end

@@ -21,10 +21,7 @@ module Admin
     end
 
     def authenticate_admin
-      unless Current.authenticated_user.team_member?
-        redirect_to "#{PROTOCOL}://#{DOMAIN}/dashboard",
-                    allow_other_host: true
-      end
+      raise ActionController::RoutingError, "Not Found" unless Current.authenticated_user.team_member?
     end
 
     # Override this value to specify the number of elements to display at a time
