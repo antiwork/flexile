@@ -247,7 +247,7 @@ test.describe("One-off payments", () => {
       await page.reload();
       await expect(page.getByRole("row", { name: "$123.45" })).toBeVisible();
 
-      await page.getByRole("button", { name: "Pay now" }).click();
+      await page.getByRole("button", { name: "Approve" }).click();
       await page.getByRole("button", { name: "Filter" }).click();
       await page.getByRole("menuitem", { name: "Clear all filters" }).click();
 
