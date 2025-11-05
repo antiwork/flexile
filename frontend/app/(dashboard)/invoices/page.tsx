@@ -58,6 +58,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
@@ -378,6 +379,13 @@ export default function InvoicesPage() {
     }
   };
 
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>(() => {
+    const storedRowSelection = z
+      .array(z.string())
+      .safeParse(JSON.parse(localStorage.getItem(storageKeys.INVOICES_ROW_SELECTION) ?? "[]"));
+    return Object.fromEntries(storedRowSelection.data?.map((id) => [id, true]) ?? []);
+  });
+
   const table = useTable({
     columns,
     data,
@@ -386,10 +394,18 @@ export default function InvoicesPage() {
       sorting: [{ id: user.roles.administrator ? "status" : "invoiceDate", desc: !user.roles.administrator }],
       columnFilters: user.roles.administrator ? [{ id: "status", value: ["Awaiting approval", "Failed"] }] : [],
     },
+    state: { rowSelection },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     enableRowSelection: true,
     enableGlobalFilter: !!user.roles.administrator,
+    onRowSelectionChange: (rowSelection) => {
+      setRowSelection((old) => {
+        const value = typeof rowSelection === "function" ? rowSelection(old) : rowSelection;
+        localStorage.setItem(storageKeys.INVOICES_ROW_SELECTION, JSON.stringify(Object.keys(value)));
+        return value;
+      });
+    },
   });
 
   const selectedRows = table.getSelectedRowModel().rows;
