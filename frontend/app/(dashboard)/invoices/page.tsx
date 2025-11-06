@@ -12,7 +12,6 @@ import {
   CircleCheckBig,
   Download,
   Edit,
-  Eye,
   Info,
   MoreHorizontal,
   Plus,
@@ -132,7 +131,7 @@ export default function InvoicesPage() {
   const actionConfig = useMemo(
     (): ActionConfig<Invoice> => ({
       entityName: "invoices",
-      contextMenuGroups: ["navigation", "approval", "destructive", "view"],
+      contextMenuGroups: ["navigation", "approval", "destructive"],
       actions: {
         edit: {
           id: "edit",
@@ -169,17 +168,6 @@ export default function InvoicesPage() {
           action: "approve",
           group: "approval",
           showIn: ["selection", "contextMenu"],
-        },
-        view: {
-          id: "view",
-          label: "View invoice",
-          icon: Eye,
-          contexts: ["single"],
-          permissions: ["administrator"],
-          conditions: () => true,
-          href: (invoice: Invoice) => `/invoices/${invoice.id}`,
-          group: "view",
-          showIn: ["contextMenu"],
         },
         delete: {
           id: "delete",
@@ -283,10 +271,10 @@ export default function InvoicesPage() {
 
           return user.roles.administrator ? (
             <div className="flex flex-col gap-2">
-              <div>
+              <Link href={`/invoices/${info.row.original.id}`} className="no-underline after:absolute after:inset-0">
                 <div className="text-base font-medium">{invoice.billFrom}</div>
                 <div className="text-muted-foreground">{invoice.contractor.role}</div>
-              </div>
+              </Link>
               <div className="text-sm">{amount}</div>
             </div>
           ) : (
