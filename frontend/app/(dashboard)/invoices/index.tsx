@@ -1,4 +1,3 @@
-import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addDays, isWeekend, nextMonday } from "date-fns";
 import { Ban, Info } from "lucide-react";
@@ -171,13 +170,7 @@ export const ApproveButton = ({
       loadingText={pay ? "Sending payment..." : "Approving..."}
       disabled={!!pay && (!company.completedPaymentMethodSetup || !company.isTrusted)}
     >
-      {pay ? (
-        <>
-          <CurrencyDollarIcon className="size-4" /> {invoice.status === "failed" ? "Pay again" : "Pay now"}
-        </>
-      ) : (
-        "Approve"
-      )}
+      Approve
     </MutationButton>
   );
 };
