@@ -28,7 +28,7 @@ import {
   settings_equity_path,
 } from "@/utils/routes";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
-import { BankAccountsSectionLoading, DividendSectionLoading } from "./LoadingSkeletons";
+import { PayoutsPageLoading } from "./LoadingSkeletons";
 
 const getPayRateDisplayText = (payRateType: "hourly" | "project_based"): string =>
   payRateType === "project_based" ? "project" : "hourly";
@@ -41,19 +41,11 @@ export default function PayoutsPage() {
     <>
       <h2 className="mb-8 text-3xl font-bold">Payouts</h2>
       <div className="grid gap-16">
-        <Suspense fallback={<BankAccountsSectionLoading />}>
+        <Suspense fallback={<PayoutsPageLoading />}>
           <BankAccountsSection />
+          {user.roles.worker && company.equityEnabled ? <EquitySection /> : null}
+          {user.roles.investor ? <DividendSection /> : null}
         </Suspense>
-        {user.roles.worker && company.equityEnabled ? (
-          <Suspense fallback={<h1> maybe jhoifh</h1>}>
-            <EquitySection />
-          </Suspense>
-        ) : null}
-        {user.roles.investor ? (
-          <Suspense fallback={<DividendSectionLoading />}>
-            <DividendSection />
-          </Suspense>
-        ) : null}
       </div>
     </>
   );

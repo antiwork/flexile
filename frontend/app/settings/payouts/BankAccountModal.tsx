@@ -3,6 +3,7 @@ import { Map as ImmutableMap } from "immutable";
 import { set } from "lodash-es";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { z } from "zod";
+import { ModalLoading } from "@/app/settings/payouts/LoadingSkeletons";
 import ComboBox from "@/components/ComboBox";
 import MutationButton from "@/components/MutationButton";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -482,14 +483,23 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
 
         <div className="-mx-1 flex-1 space-y-4 overflow-y-auto px-1 py-1">
           <div className="grid gap-2">
-            <Label htmlFor={`currency-${uid}`}>Currency</Label>
-            <ComboBox
-              id={`currency-${uid}`}
-              value={currency}
-              modal
-              onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
-              options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
-            />
+            {!forms ? (
+              <div className="grid gap-2">
+                <Skeleton className="my-1 h-4 w-20" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+            ) : (
+              <>
+                <Label htmlFor={`currency-${uid}`}>Currency</Label>
+                <ComboBox
+                  id={`currency-${uid}`}
+                  value={currency}
+                  modal
+                  onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
+                  options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
+                />
+              </>
+            )}
             {formSwitch ? (
               <Checkbox
                 checked={(selectedFormIndex !== defaultFormIndex) !== formSwitch.defaultOn}
@@ -519,36 +529,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             </div>
           ) : null}
 
-          {!forms ? (
-            <>
-              <div className="grid gap-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-9 w-full" />
-              </div>
-              <div className="grid gap-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-9 w-full" />
-              </div>
-              <div className="grid gap-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-9 w-full" />
-              </div>
-              <div className="grid gap-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-9 w-full" />
-              </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="grid gap-2">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-9 w-full" />
-                </div>
-                <div className="grid gap-2">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-9 w-full" />
-                </div>
-              </div>
-            </>
-          ) : null}
+          {!forms ? <ModalLoading /> : null}
 
           {Object.values(groupedFields).map((fieldGroup, index) => {
             if (!fieldGroup) return;
