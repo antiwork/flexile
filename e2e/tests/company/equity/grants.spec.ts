@@ -212,7 +212,7 @@ test.describe("Equity Grants", () => {
     const { user } = await usersFactory.create();
     await companyContractorsFactory.create({ companyId: company.id, userId: user.id });
     const { companyInvestor } = await companyInvestorsFactory.create({ companyId: company.id, userId: user.id });
-    await equityGrantsFactory.create({ companyInvestorId: companyInvestor.id, vestedShares: 100 });
+    await equityGrantsFactory.create({ companyInvestorId: companyInvestor.id, vestedShares: 100 }, { year: 2024 });
 
     await login(page, user);
     await page.getByRole("button", { name: "Equity" }).click();
@@ -220,6 +220,15 @@ test.describe("Equity Grants", () => {
     await expect(page.getByRole("heading", { name: "Options" })).toBeVisible();
     await page.waitForLoadState("networkidle");
     await expect(page.getByRole("button", { name: "Exercise Options" })).not.toBeVisible();
+    await page.getByRole("row", { name: "2024" }).click();
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByText("Total options granted100")).toBeVisible();
+        await expect(modal.getByRole("button", { name: "Exercise options" })).not.toBeVisible();
+        await modal.getByRole("button", { name: "Close" }).click();
+      },
+      { page, title: "2024 Stock option grant" },
+    );
     await db
       .insert(documentTemplates)
       .values({ companyId: company.id, documentType: DocumentTemplateType.ExerciseNotice, text: "I am exercising" });

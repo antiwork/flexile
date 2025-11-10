@@ -126,15 +126,15 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(firstRow).toContainText("Dec 1, 2024");
     await expect(firstRow).toContainText("$23");
     await expect(firstRow).toContainText("Awaiting approval");
-    await expect(firstRow.getByRole("button", { name: "Pay now" })).toBeVisible();
+    await expect(firstRow.getByRole("button", { name: "Approve" })).toBeVisible();
     await expect(secondRow).toContainText("Nov 20, 2024");
     await expect(secondRow).toContainText("$623");
     await expect(secondRow).toContainText("Awaiting approval");
-    await expect(secondRow.getByRole("button", { name: "Pay now" })).toBeVisible();
+    await expect(secondRow.getByRole("button", { name: "Approve" })).toBeVisible();
     await expect(thirdRow).toContainText("Nov 1, 2024");
     await expect(thirdRow).toContainText("$870");
     await expect(thirdRow).toContainText("Awaiting approval");
-    await thirdRow.getByRole("button", { name: "Pay now" }).click();
+    await thirdRow.getByRole("button", { name: "Approve" }).click();
 
     await expect(thirdRow).not.toBeVisible();
     await page.getByRole("button", { name: "Filter" }).click();
@@ -195,7 +195,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("/invoices/approve") && r.status() === 204),
-      page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }).click(),
+      page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Approve" }).click(),
     ]);
 
     await expect(openInvoicesBadge).not.toBeVisible();

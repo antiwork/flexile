@@ -94,7 +94,7 @@ test.describe("Onboarding checklist", () => {
     await invoicesFactory.create({ companyId: company.id });
 
     await page.getByRole("link", { name: "Invoices" }).click();
-    await page.getByRole("row").getByText("Pay now").click();
+    await page.getByRole("row").getByText("Approve").click();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
     await expect(page.getByText("Everything is in place. Time to flex.")).toBeVisible();
