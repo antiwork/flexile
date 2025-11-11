@@ -7,6 +7,11 @@ else
 end
 require "sidekiq/cron/web"
 
+admin_constraint = lambda do |request|
+  user = JwtService.user_from_request(request)
+  user&.team_member?
+end
+
 Rails.application.routes.draw do
   namespace :admin do
     resources :company_workers
@@ -35,8 +40,10 @@ Rails.application.routes.draw do
       end
     end
 
-    mount Sidekiq::Web, at: "/sidekiq"
-    mount Flipper::UI.app(Flipper) => "/flipper"
+    constraints(admin_constraint) do
+      mount Sidekiq::Web, at: "/sidekiq"
+      mount Flipper::UI.app(Flipper) => "/flipper"
+    end
 
     root to: "users#index"
   end
