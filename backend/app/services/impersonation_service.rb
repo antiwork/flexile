@@ -10,6 +10,12 @@ class ImpersonationService
 
   def impersonate(user)
     $redis.set(RedisKey.impersonated_user(authenticated_user.id), user.id, ex: 7.days.to_i)
+
+    Rails.logger.info(
+      "Impersonation started: " \
+      "team_member_id=#{authenticated_user.id} " \
+      "impersonated_user_id=#{user.id}"
+    )
   end
 
   def unimpersonate
