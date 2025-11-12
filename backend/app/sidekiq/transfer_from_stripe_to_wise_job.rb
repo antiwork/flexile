@@ -5,6 +5,8 @@ class TransferFromStripeToWiseJob
   sidekiq_options retry: 5
 
   def perform
+    return unless Flipper.enabled?(:transfer_from_stripe_to_wise)
+
     eligible_records.find_each do |consolidated_payment|
       create_payout_for_consolidated_payment_if_possible(consolidated_payment)
     end
