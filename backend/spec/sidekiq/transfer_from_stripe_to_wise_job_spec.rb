@@ -12,15 +12,27 @@ RSpec.describe TransferFromStripeToWiseJob do
         Flipper.enable(:transfer_from_stripe_to_wise)
       end
 
+      after do
+        Flipper.disable(:transfer_from_stripe_to_wise)
+      end
+
       it "processes eligible consolidated payments" do
-        expect(CreatePayoutForConsolidatedPayment).to receive(:new).with(eligible_payment1).and_call_original
-        expect(CreatePayoutForConsolidatedPayment).to receive(:new).with(eligible_payment2).and_call_original
-        expect_any_instance_of(CreatePayoutForConsolidatedPayment).to receive(:perform!).twice
+        service1 = instance_double(CreatePayoutForConsolidatedPayment)
+        service2 = instance_double(CreatePayoutForConsolidatedPayment)
+
+        expect(CreatePayoutForConsolidatedPayment).to receive(:new).with(eligible_payment1).and_return(service1)
+        expect(CreatePayoutForConsolidatedPayment).to receive(:new).with(eligible_payment2).and_return(service2)
+
+        expect(service1).to receive(:perform!)
+        expect(service2).to receive(:perform!)
 
         described_class.new.perform
       end
 
       it "does not process ineligible consolidated payments" do
+        allow(CreatePayoutForConsolidatedPayment).to receive(:new).with(eligible_payment1).and_return(instance_double(CreatePayoutForConsolidatedPayment, perform!: true))
+        allow(CreatePayoutForConsolidatedPayment).to receive(:new).with(eligible_payment2).and_return(instance_double(CreatePayoutForConsolidatedPayment, perform!: true))
+
         expect(CreatePayoutForConsolidatedPayment).not_to receive(:new).with(ineligible_payment_has_payout)
         expect(CreatePayoutForConsolidatedPayment).not_to receive(:new).with(ineligible_payment_future)
 
@@ -28,8 +40,14 @@ RSpec.describe TransferFromStripeToWiseJob do
       end
 
       it "continues processing even if one payment fails" do
-        allow_any_instance_of(CreatePayoutForConsolidatedPayment).to receive(:perform!)
-          .and_raise(CreatePayoutForConsolidatedPayment::Error.new("Test error"))
+        service1 = instance_double(CreatePayoutForConsolidatedPayment)
+        service2 = instance_double(CreatePayoutForConsolidatedPayment)
+
+        allow(CreatePayoutForConsolidatedPayment).to receive(:new).with(eligible_payment1).and_return(service1)
+        allow(CreatePayoutForConsolidatedPayment).to receive(:new).with(eligible_payment2).and_return(service2)
+
+        allow(service1).to receive(:perform!).and_raise(CreatePayoutForConsolidatedPayment::Error.new("Test error"))
+        expect(service2).to receive(:perform!).and_return(true)
 
         expect { described_class.new.perform }.not_to raise_error
       end
@@ -46,10 +64,10 @@ RSpec.describe TransferFromStripeToWiseJob do
         described_class.new.perform
       end
 
-      it "does not query for eligible records" do
-        expect(ConsolidatedPayment).not_to receive(:where)
-
-        described_class.new.perform
+      it "returns early without querying for eligible records" do
+        job = described_class.new
+        expect(job).not_to receive(:eligible_records)
+        job.perform
       end
     end
   end
