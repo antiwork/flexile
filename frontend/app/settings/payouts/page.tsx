@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { AlertTriangle, Check, CircleDollarSign, Plus } from "lucide-react";
-import React, { Fragment, useState } from "react";
+import React, { Fragment, Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
@@ -28,6 +28,7 @@ import {
   settings_equity_path,
 } from "@/utils/routes";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
+import { PayoutsPageLoading } from "./LoadingSkeletons";
 
 const getPayRateDisplayText = (payRateType: "hourly" | "project_based"): string =>
   payRateType === "project_based" ? "project" : "hourly";
@@ -40,9 +41,11 @@ export default function PayoutsPage() {
     <>
       <h2 className="mb-8 text-3xl font-bold">Payouts</h2>
       <div className="grid gap-16">
-        <BankAccountsSection />
-        {user.roles.worker && company.equityEnabled ? <EquitySection /> : null}
-        {user.roles.investor ? <DividendSection /> : null}
+        <Suspense fallback={<PayoutsPageLoading />}>
+          <BankAccountsSection />
+          {user.roles.worker && company.equityEnabled ? <EquitySection /> : null}
+          {user.roles.investor ? <DividendSection /> : null}
+        </Suspense>
       </div>
     </>
   );

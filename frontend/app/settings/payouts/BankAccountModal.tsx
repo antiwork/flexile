@@ -1,14 +1,16 @@
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Map as ImmutableMap } from "immutable";
 import { set } from "lodash-es";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { z } from "zod";
+import { ModalLoading } from "@/app/settings/payouts/LoadingSkeletons";
 import ComboBox from "@/components/ComboBox";
 import MutationButton from "@/components/MutationButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   CURRENCIES,
@@ -185,7 +187,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     data: forms,
     refetch,
     isPending,
-  } = useSuspenseQuery({
+  } = useQuery({
     queryKey: ["wise-account-requirements", currency],
     queryFn: async ({ signal }) => {
       const response = await request({
@@ -217,11 +219,12 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
         );
     },
   });
-  previousForms.current = forms;
+  previousForms.current = forms ?? [];
 
   const userCountry = details.get(KEY_ADDRESS_COUNTRY) || billingDetails.country_code || "US";
 
   const defaultFormIndex = useMemo(() => {
+    if (!forms) return 0;
     const index = forms.findIndex((form) => {
       if (currency === "USD" && userCountry === "US") {
         return form.title === LOCAL_BANK_ACCOUNT_TITLE;
@@ -234,7 +237,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
   }, [forms, currency, userCountry]);
 
   const formSwitch = useMemo(() => {
-    if (forms.length !== 2) return undefined;
+    if (!forms || forms.length !== 2) return undefined;
     const otherForm = forms[(defaultFormIndex + 1) % 2];
     if (!otherForm) return undefined;
 
@@ -246,7 +249,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
     return { label, defaultOn: currency === "USD" && userCountry === "US" };
   }, [forms, defaultFormIndex, currency, userCountry]);
 
-  const form = forms[selectedFormIndex];
+  const form = forms?.[selectedFormIndex];
   const allFields = form?.fields.flatMap((field) => field.group);
 
   const visibleFields = useMemo(
@@ -480,14 +483,23 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
 
         <div className="-mx-1 flex-1 space-y-4 overflow-y-auto px-1 py-1">
           <div className="grid gap-2">
-            <Label htmlFor={`currency-${uid}`}>Currency</Label>
-            <ComboBox
-              id={`currency-${uid}`}
-              value={currency}
-              modal
-              onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
-              options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
-            />
+            {!forms ? (
+              <div className="grid gap-2">
+                <Skeleton className="my-1 h-4 w-20" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+            ) : (
+              <>
+                <Label htmlFor={`currency-${uid}`}>Currency</Label>
+                <ComboBox
+                  id={`currency-${uid}`}
+                  value={currency}
+                  modal
+                  onChange={(value) => setCurrency(z.enum(currencyCodes).parse(value))}
+                  options={CURRENCIES.map(({ value, name }) => ({ value, label: name }))}
+                />
+              </>
+            )}
             {formSwitch ? (
               <Checkbox
                 checked={(selectedFormIndex !== defaultFormIndex) !== formSwitch.defaultOn}
@@ -499,7 +511,7 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
             ) : null}
           </div>
 
-          {forms.length > 2 ? (
+          {forms && forms.length > 2 ? (
             <div className="grid gap-2">
               <Label htmlFor={`form-${uid}`}>Transfer method</Label>
               <Tabs
@@ -516,6 +528,8 @@ const BankAccountModal = ({ open, billingDetails, bankAccount, onComplete, onClo
               </Tabs>
             </div>
           ) : null}
+
+          {!forms ? <ModalLoading /> : null}
 
           {Object.values(groupedFields).map((fieldGroup, index) => {
             if (!fieldGroup) return;
