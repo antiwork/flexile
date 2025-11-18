@@ -13,11 +13,18 @@ admin_constraint = lambda do |request|
 end
 
 Rails.application.routes.draw do
-  namespace :admin, constraints: admin_constraint do
+  namespace :admin do
     resources :company_workers
     resources :company_administrators
     resources :companies
-    resources :users
+    resources :users do
+      member do
+        get :impersonate
+      end
+      collection do
+        delete :unimpersonate
+      end
+    end
     resources :payments do
       member do
         patch :wise_paid
@@ -33,8 +40,10 @@ Rails.application.routes.draw do
       end
     end
 
-    mount Sidekiq::Web, at: "/sidekiq"
-    mount Flipper::UI.app(Flipper) => "/flipper"
+    constraints(admin_constraint) do
+      mount Sidekiq::Web, at: "/sidekiq"
+      mount Flipper::UI.app(Flipper) => "/flipper"
+    end
 
     root to: "users#index"
   end

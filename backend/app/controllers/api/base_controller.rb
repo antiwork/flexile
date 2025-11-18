@@ -9,8 +9,8 @@ class Api::BaseController < ActionController::Base
   include ApiTokenAuthenticatable
 
   private
-    def set_paper_trail_whodunnit
-      PaperTrail.request.whodunnit = Current.user&.id
+    def user_for_paper_trail
+      Current.whodunnit
     end
 
     def e404
