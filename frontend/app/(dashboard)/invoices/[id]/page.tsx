@@ -1,6 +1,6 @@
 "use client";
 
-import { ExclamationTriangleIcon } from "@heroicons/react/20/solid";
+import { ArrowLeftIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Ban, CircleAlert, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -126,7 +126,14 @@ export default function InvoicePage() {
   return (
     <div className="print:bg-white print:font-sans print:text-sm print:leading-tight print:text-black print:*:invisible">
       <DashboardHeader
-        title={`Invoice ${invoice.invoiceNumber}`}
+        title={
+          <div className="flex items-center gap-2">
+            <Link href="/invoices" aria-label="Back to invoices">
+              <ArrowLeftIcon className="size-6" />
+            </Link>{" "}
+            <span>Invoice {invoice.invoiceNumber}</span>
+          </div>
+        }
         className="pb-4 print:visible print:mb-4 print:px-0 print:pt-0"
         headerActions={
           isMobile ? (

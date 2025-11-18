@@ -8,12 +8,10 @@ import {
   AlertTriangle,
   Ban,
   CheckCircle,
-  CircleAlert,
   CircleCheck,
   CircleCheckBig,
   Download,
   Edit,
-  Eye,
   Info,
   MoreHorizontal,
   Plus,
@@ -30,7 +28,6 @@ import {
   DeleteModal,
   EDITABLE_INVOICE_STATES,
   RejectModal,
-  StatusDetails,
   useApproveInvoices,
   useIsActionable,
   useIsDeletable,
@@ -60,8 +57,9 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
-import { PayRateType, trpc } from "@/trpc/client";
+import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
@@ -113,7 +111,6 @@ export default function InvoicesPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
-  const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const isDeletable = useIsDeletable();
@@ -134,7 +131,7 @@ export default function InvoicesPage() {
   const actionConfig = useMemo(
     (): ActionConfig<Invoice> => ({
       entityName: "invoices",
-      contextMenuGroups: ["navigation", "approval", "destructive", "view"],
+      contextMenuGroups: ["navigation", "approval", "destructive"],
       actions: {
         edit: {
           id: "edit",
@@ -171,17 +168,6 @@ export default function InvoicesPage() {
           action: "approve",
           group: "approval",
           showIn: ["selection", "contextMenu"],
-        },
-        view: {
-          id: "view",
-          label: "View invoice",
-          icon: Eye,
-          contexts: ["single"],
-          permissions: ["administrator"],
-          conditions: () => true,
-          href: (invoice: Invoice) => `/invoices/${invoice.id}`,
-          group: "view",
-          showIn: ["contextMenu"],
         },
         delete: {
           id: "delete",
@@ -221,10 +207,10 @@ export default function InvoicesPage() {
         ? columnHelper.accessor("billFrom", {
             header: "Contractor",
             cell: (info) => (
-              <>
+              <Link href={`/invoices/${info.row.original.id}`} className="no-underline after:absolute after:inset-0">
                 <b className="truncate">{info.getValue()}</b>
                 <div className="text-muted-foreground text-xs">{info.row.original.contractor.role}</div>
-              </>
+              </Link>
             ),
           })
         : columnHelper.accessor("invoiceNumber", {
@@ -285,10 +271,10 @@ export default function InvoicesPage() {
 
           return user.roles.administrator ? (
             <div className="flex flex-col gap-2">
-              <div>
+              <Link href={`/invoices/${info.row.original.id}`} className="no-underline after:absolute after:inset-0">
                 <div className="text-base font-medium">{invoice.billFrom}</div>
                 <div className="text-muted-foreground">{invoice.contractor.role}</div>
-              </div>
+              </Link>
               <div className="text-sm">{amount}</div>
             </div>
           ) : (
@@ -356,13 +342,11 @@ export default function InvoicesPage() {
 
     switch (actionId) {
       case "approve":
-        if (isSingleAction && singleInvoice) {
-          setDetailInvoice(singleInvoice);
-        } else {
-          setOpenModal("approve");
-        }
+        if (isSingleAction && singleInvoice) table.getRow(singleInvoice.id).toggleSelected(true);
+        setOpenModal("approve");
         break;
       case "reject":
+        if (isSingleAction && singleInvoice) table.getRow(singleInvoice.id).toggleSelected(true);
         setOpenModal("reject");
         break;
       case "delete": {
@@ -383,6 +367,13 @@ export default function InvoicesPage() {
     }
   };
 
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>(() => {
+    const storedRowSelection = z
+      .array(z.string())
+      .safeParse(JSON.parse(localStorage.getItem(storageKeys.INVOICES_ROW_SELECTION) ?? "[]"));
+    return Object.fromEntries(storedRowSelection.data?.map((id) => [id, true]) ?? []);
+  });
+
   const table = useTable({
     columns,
     data,
@@ -391,10 +382,18 @@ export default function InvoicesPage() {
       sorting: [{ id: user.roles.administrator ? "status" : "invoiceDate", desc: !user.roles.administrator }],
       columnFilters: user.roles.administrator ? [{ id: "status", value: ["Awaiting approval", "Failed"] }] : [],
     },
+    state: { rowSelection },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     enableRowSelection: true,
     enableGlobalFilter: !!user.roles.administrator,
+    onRowSelectionChange: (rowSelection) => {
+      setRowSelection((old) => {
+        const value = typeof rowSelection === "function" ? rowSelection(old) : rowSelection;
+        localStorage.setItem(storageKeys.INVOICES_ROW_SELECTION, JSON.stringify(Object.keys(value)));
+        return value;
+      });
+    },
   });
 
   const selectedRows = table.getSelectedRowModel().rows;
@@ -542,7 +541,6 @@ export default function InvoicesPage() {
       {data.length > 0 || isLoading ? (
         <DataTable
           table={table}
-          onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
           searchColumn={user.roles.administrator ? "billFrom" : undefined}
           tabsColumn="status"
           actions={
@@ -627,24 +625,13 @@ export default function InvoicesPage() {
         </DialogContent>
       </Dialog>
 
-      {detailInvoice ? (
-        <TasksModal
-          invoice={detailInvoice}
-          onClose={() => setDetailInvoice(null)}
-          onReject={() => setOpenModal("reject")}
-        />
-      ) : null}
-
       <RejectModal
         open={openModal === "reject"}
         onClose={() => setOpenModal(null)}
         onReject={() => {
-          if (detailInvoice) {
-            setDetailInvoice(null);
-          }
           table.resetRowSelection();
         }}
-        ids={detailInvoice ? [detailInvoice.id] : selectedInvoices.filter(isActionable).map((invoice) => invoice.id)}
+        ids={selectedInvoices.filter(isActionable).map((invoice) => invoice.id)}
       />
       <DeleteModal
         open={openModal === "delete"}
@@ -668,84 +655,6 @@ export default function InvoicesPage() {
     </>
   );
 }
-
-const TasksModal = ({
-  invoice,
-  onClose,
-  onReject,
-}: {
-  invoice: Invoice;
-  onClose: () => void;
-  onReject: () => void;
-}) => {
-  const company = useCurrentCompany();
-  const [invoiceData] = trpc.invoices.get.useSuspenseQuery({ companyId: company.id, id: invoice.id });
-  const payRateInSubunits = invoiceData.contractor.payRateInSubunits;
-  const isActionable = useIsActionable();
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="md:w-110">
-        <DialogHeader>
-          <DialogTitle className="max-md:text-base max-md:leading-5 max-md:font-medium">{invoice.billFrom}</DialogTitle>
-        </DialogHeader>
-        <section>
-          <StatusDetails invoice={invoice} className="mb-4" />
-          {payRateInSubunits &&
-          invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-            <Alert className="mb-4" variant="warning">
-              <CircleAlert />
-              <AlertDescription>
-                This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
-                {invoiceData.contractor.payRateType === PayRateType.Custom ? "project" : "hour"}.
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          <header className="flex items-center justify-between gap-4">
-            <h3 className="text-base max-md:leading-5">Invoice details</h3>
-            <Button variant="outline" asChild className="max-md:font-regular max-md:h-7.5 max-md:text-sm">
-              <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
-            </Button>
-          </header>
-          <Separator />
-          <div className="flex justify-between gap-2 max-md:leading-5">
-            <div>Status</div>
-            <div>{getInvoiceStatusText(invoice, company)}</div>
-          </div>
-          <Separator />
-          <div>
-            <div className="flex justify-between gap-2 max-md:leading-5">
-              <div>Net amount in cash</div>
-              <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
-            </div>
-            <Separator />
-            {invoice.equityAmountInCents ? (
-              <>
-                <div className="flex justify-between gap-2 max-md:leading-5">
-                  <div>Swapped for equity ({invoice.equityPercentage}%)</div>
-                  <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
-                </div>
-                <Separator />
-              </>
-            ) : null}
-            <div className="flex justify-between gap-2 pb-4 font-medium">
-              <div>Payout total</div>
-              <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-            </div>
-          </div>
-        </section>
-        {isActionable(invoice) ? (
-          <DialogFooter>
-            <Button variant="outline" onClick={onReject}>
-              Reject
-            </Button>
-            <ApproveButton variant="primary" invoice={invoice} onApprove={onClose} />
-          </DialogFooter>
-        ) : null}
-      </DialogContent>
-    </Dialog>
-  );
-};
 
 const InvoiceBulkActionsBar = ({
   selectedInvoices,

@@ -191,7 +191,6 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(openInvoicesBadge).toContainText("1");
 
     await page.getByRole("cell", { name: workerUserB.legalName ?? "never" }).click();
-    await page.getByRole("link", { name: "View invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("/invoices/approve") && r.status() === 204),

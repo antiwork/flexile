@@ -204,6 +204,7 @@ export const sanctionedCountries = new Map<string, string>(
 export { c as countryInfos };
 
 export const storageKeys = {
+  INVOICES_ROW_SELECTION: "invoicesRowSelection",
   DOCUMENTS_COLUMN_FILTERS: "documentsColumnFilters",
   INVESTORS_COLUMN_SETTINGS: "investorsColumnSettings",
   EQUITY_MENU_STATE: "equity-menu-state",
