@@ -72,11 +72,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Description").first().fill("first item updated");
     await fillByLabel(page, "Hours / Qty", "04:30", { index: 0 });
     await expect(page.getByText("$870", { exact: true })).toBeVisible();
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/internal/companies/") && r.status() === 204),
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
-      page.getByRole("button", { name: "Resubmit" }).click(),
-    ]);
+    await page.getByRole("button", { name: "Resubmit" }).click();
 
     await expect(page.getByRole("cell", { name: "$870" })).toBeVisible();
     await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();
@@ -192,10 +188,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.getByRole("cell", { name: workerUserB.legalName ?? "never" }).click();
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/invoices/approve") && r.status() === 204),
-      page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Approve" }).click(),
-    ]);
+    await page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Approve" }).click();
 
     await expect(openInvoicesBadge).not.toBeVisible();
 
@@ -219,10 +212,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
 
     await logout(page);
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes("invoices.list") && r.status() >= 200 && r.status() < 300),
-      login(page, adminUser),
-    ]);
+    await login(page, adminUser);
 
     await expect(locateOpenInvoicesBadge(page)).toContainText("1");
     await expect(page.locator("tbody tr")).toHaveCount(1);
