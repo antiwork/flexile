@@ -272,7 +272,7 @@ test.describe("One-off payments", () => {
           Amount: "$500",
           Status: "Failed",
         })
-        .getByRole("button", { name: "Pay again" })
+        .getByRole("button", { name: "Approve" })
         .click();
 
       await expect(page.getByText("Payment initiated")).toBeVisible();
