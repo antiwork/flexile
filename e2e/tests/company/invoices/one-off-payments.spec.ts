@@ -254,7 +254,7 @@ test.describe("One-off payments", () => {
       await expect(page.getByRole("row", { name: "$123.45 Payment scheduled" })).toBeVisible();
     });
 
-    test("shows 'Pay again' button for failed payments", async ({ page }) => {
+    test("shows 'Approve' button for failed payments", async ({ page }) => {
       const { invoice } = await invoicesFactory.create({
         companyId: company.id,
         companyContractorId: companyContractor.id,
@@ -272,7 +272,7 @@ test.describe("One-off payments", () => {
           Amount: "$500",
           Status: "Failed",
         })
-        .getByRole("button", { name: "Pay again" })
+        .getByRole("button", { name: "Approve" })
         .click();
 
       await expect(page.getByText("Payment initiated")).toBeVisible();
