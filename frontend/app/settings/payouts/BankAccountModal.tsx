@@ -37,7 +37,6 @@ const KEY_SWIFT_CODE = "swiftCode";
 const SWIFT_BANK_ACCOUNT_TYPE = "swift_code";
 const LOCAL_BANK_ACCOUNT_TITLE = "Local bank account";
 
-
 const inputFieldSchema = z.object({
   type: z.enum(["text", "date"]),
   name: z.string(),
