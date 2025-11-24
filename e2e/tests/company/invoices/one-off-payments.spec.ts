@@ -264,7 +264,6 @@ test.describe("One-off payments", () => {
       });
 
       await db.update(invoices).set({ status: "failed" }).where(eq(invoices.id, invoice.id));
-
       await login(page, adminUser, "/invoices");
 
       await page
