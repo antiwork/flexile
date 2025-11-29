@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowLeftIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Ban, CircleAlert, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -270,17 +269,6 @@ export default function InvoicePage() {
             <AlertDescription>
               This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
               {invoice.contractor.payRateType === PayRateType.Custom ? "project" : "hour"}.
-            </AlertDescription>
-          </Alert>
-        ) : null}
-
-        {invoice.equityAmountInCents > 0 ? (
-          <Alert className="mx-4 print:hidden">
-            <InformationCircleIcon />
-            <AlertDescription>
-              When this invoice is paid, you'll receive an additional{" "}
-              {formatMoneyFromCents(invoice.equityAmountInCents)} in equity. This amount is separate from the total
-              shown below.
             </AlertDescription>
           </Alert>
         ) : null}
