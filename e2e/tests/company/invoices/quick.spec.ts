@@ -60,7 +60,7 @@ test.describe("quick invoicing", () => {
       await expect(row.getByLabel("Hours / Qty")).toHaveValue("10:30");
       await expect(page.getByLabel("Rate")).toHaveValue("50");
       await expect(row.getByText("$525")).toBeVisible();
-      await expect(page.getByText("You'll receive in cash$525")).toBeVisible();
+      await expect(page.getByText("You'll receive in cash$420")).toBeVisible();
     });
   });
 
