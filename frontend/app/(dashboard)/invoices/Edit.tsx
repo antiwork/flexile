@@ -25,7 +25,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -42,7 +41,7 @@ import {
   new_company_invoice_path,
 } from "@/utils/routes";
 import QuantityInput from "./QuantityInput";
-import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
+import { LegacyAddress as Address, Totals, useCanSubmitInvoices } from ".";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -323,7 +322,6 @@ const Edit = () => {
     Math.ceil((parseQuantity(lineItem.quantity) / (lineItem.hourly ? 60 : 1)) * lineItem.pay_rate_in_subunits);
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
   const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
-  const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
   const [equityCalculation] = trpc.equityCalculations.calculate.useSuspenseQuery({
     companyId: company.id,
     servicesInCents: totalServicesAmountInCents,
@@ -654,50 +652,21 @@ const Edit = () => {
               placeholder="Enter notes about your invoice (optional)"
               className="w-full whitespace-pre-wrap lg:w-96"
             />
-            <Card className="min-w-80 self-start print:min-w-36 print:border-none print:bg-transparent print:p-2">
-              {showExpensesTable || company.equityEnabled ? (
-                <CardContent className="border-border grid gap-4 border-b">
-                  <div className="flex justify-between gap-2">
-                    <span>Total services</span>
-                    <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
-                  </div>
-                  {showExpensesTable ? (
-                    <div className="flex justify-between gap-2">
-                      <span>Total expenses</span>
-                      <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
-                    </div>
-                  ) : null}
-                </CardContent>
-              ) : null}
-              {company.equityEnabled ? (
-                <CardContent className="border-border grid gap-4 border-b">
-                  <h4 className="text-sm font-bold">Payment split</h4>
-                  <div className="flex justify-between gap-2">
-                    <span>Cash</span>
-                    <span>{formatMoneyFromCents(totalServicesAmountInCents - equityCalculation.equityCents)}</span>
-                  </div>
-                  <div>
-                    <div className="flex justify-between gap-2">
-                      <span>Equity</span>
-                      <span>{formatMoneyFromCents(equityCalculation.equityCents)}</span>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Swapping {(equityCalculation.equityPercentage / 100).toLocaleString([], { style: "percent" })} for
-                      company equity.{" "}
-                      <Link href="/settings/payouts" className={linkClasses}>
-                        Edit
-                      </Link>
-                    </div>
-                  </div>
-                </CardContent>
-              ) : null}
-              <CardContent className="rounded-b-md bg-gray-50 first:rounded-t-md">
-                <div className="flex justify-between gap-2 print:my-1 print:mt-1.5 print:flex print:items-center print:justify-between print:border-t-2 print:border-gray-300 print:pt-1.5 print:text-sm print:font-bold">
-                  <span>You'll receive in cash</span>
-                  <span>{formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <Totals
+              servicesTotal={totalServicesAmountInCents}
+              expensesTotal={totalExpensesAmountInCents}
+              equityAmountInCents={equityCalculation.equityCents}
+              equityNotice={
+                <>
+                  Swapping ${(equityCalculation.equityPercentage / 100).toLocaleString([], { style: "percent" })} for
+                  company equity.{" "}
+                  <Link href="/settings/payouts" className={linkClasses}>
+                    Edit
+                  </Link>
+                </>
+              }
+              isOwnUser
+            />
           </footer>
         </div>
       </section>

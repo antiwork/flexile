@@ -11,7 +11,6 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +35,7 @@ import {
   RejectModal,
   StatusDetails,
   taxRequirementsMet,
+  Totals,
   useIsActionable,
   useIsDeletable,
 } from "..";
@@ -87,17 +87,6 @@ const PrintTableCell = ({ children, className }: { children: React.ReactNode; cl
   <TableCell className={cn("print:border print:border-gray-300 print:p-1.5 print:text-xs", className)}>
     {children}
   </TableCell>
-);
-
-const PrintTotalRow = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <div
-    className={cn(
-      "flex justify-between gap-2 print:my-1 print:flex print:items-center print:justify-between print:text-xs",
-      className,
-    )}
-  >
-    {children}
-  </div>
 );
 
 export default function InvoicePage() {
@@ -430,50 +419,17 @@ export default function InvoicePage() {
                     </div>
                   ) : null}
                 </div>
-                <Card className="min-w-80 self-start print:min-w-36 print:border-none print:bg-transparent print:p-2">
-                  {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
-                    <CardContent className="border-border grid gap-4 border-b">
-                      <PrintTotalRow>
-                        <span>Total services</span>
-                        <span className="print:hidden">{formatMoneyFromCents(servicesTotal)}</span>
-                        <span className="hidden print:inline">{formatMoneyFromCents(servicesTotal * cashFactor)}</span>
-                      </PrintTotalRow>
-                      <PrintTotalRow>
-                        <span>Total expenses</span>
-                        <span>
-                          {formatMoneyFromCents(
-                            invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0)),
-                          )}
-                        </span>
-                      </PrintTotalRow>
-                    </CardContent>
-                  )}
-                  {cashFactor < 1 && (
-                    <CardContent className="border-border grid gap-4 border-b print:hidden">
-                      <h4 className="text-sm font-bold">Payment split</h4>
-                      <PrintTotalRow>
-                        <span>Cash</span>
-                        <span>{formatMoneyFromCents(servicesTotal * cashFactor)}</span>
-                      </PrintTotalRow>
-                      <div>
-                        <PrintTotalRow>
-                          <span>Equity</span>
-                          <span>{formatMoneyFromCents(invoice.equityAmountInCents)}</span>
-                        </PrintTotalRow>
-                        <div className="text-sm text-gray-500">
-                          Swapping {(invoice.equityPercentage / 100).toLocaleString([], { style: "percent" })} for
-                          company equity
-                        </div>
-                      </div>
-                    </CardContent>
-                  )}
-                  <CardContent className="rounded-b-md bg-gray-50 first:rounded-t-md">
-                    <div className="flex justify-between gap-2 print:my-1 print:mt-1.5 print:flex print:items-center print:justify-between print:border-t-2 print:border-gray-300 print:pt-1.5 print:text-sm print:font-bold">
-                      <span>{user.id === invoice.userId ? "You'll" : "They'll"} receive in cash</span>
-                      <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                <Totals
+                  servicesTotal={servicesTotal}
+                  expensesTotal={invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0))}
+                  equityAmountInCents={invoice.equityAmountInCents}
+                  equityNotice={`Swapping ${(invoice.equityPercentage / 100).toLocaleString([], { style: "percent" })} for company equity`}
+                  isOwnUser={user.id === invoice.userId}
+                  className="print:hidden"
+                />
+                <div className="ml-auto hidden bg-gray-50 p-2 print:block">
+                  <strong>Total {formatMoneyFromCents(invoice.cashAmountInCents)}</strong>
+                </div>
               </footer>
             </div>
           </form>
