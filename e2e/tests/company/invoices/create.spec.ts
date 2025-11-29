@@ -65,7 +65,7 @@ test.describe("invoice creation", () => {
     await page.getByPlaceholder("Description").fill("I worked on invoices");
     await fillByLabel(page, "Hours / Qty", "01:00", { index: 0 });
     await expect(page.getByText("Equity$0")).toBeVisible();
-    await expect(page.getByText("Cash$60")).toBeVisible();
+    await expect(page.getByText("Cash$60", { exact: true })).toBeVisible();
 
     await fillDatePicker(page, "Date", "08/08/2021");
     await fillByLabel(page, "Hours / Qty", "100:00", { index: 0 });

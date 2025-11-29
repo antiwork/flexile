@@ -373,7 +373,7 @@ export function Totals({
   servicesTotal: number | bigint;
   expensesTotal: number | bigint;
   equityAmountInCents: number | bigint;
-  equityNotice: React.ReactNode;
+  equityNotice: React.ReactNode | null;
   isOwnUser: boolean;
   className?: string;
 }) {
@@ -391,7 +391,7 @@ export function Totals({
           </div>
         </CardContent>
       )}
-      {equityAmountInCents > 0 && (
+      {equityNotice ? (
         <CardContent className="border-border grid gap-4 border-b">
           <h4 className="text-sm font-bold">Payment split</h4>
           <div className="flex justify-between gap-2">
@@ -406,7 +406,7 @@ export function Totals({
             <div className="text-sm text-gray-500">{equityNotice}</div>
           </div>
         </CardContent>
-      )}
+      ) : null}
       <CardContent className="rounded-b-md bg-gray-50 first:rounded-t-md">
         <div className="flex justify-between gap-2">
           <span>{isOwnUser ? "You'll" : "They'll"} receive in cash</span>

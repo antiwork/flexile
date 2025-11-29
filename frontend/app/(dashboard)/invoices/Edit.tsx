@@ -657,13 +657,15 @@ const Edit = () => {
               expensesTotal={totalExpensesAmountInCents}
               equityAmountInCents={equityCalculation.equityCents}
               equityNotice={
-                <>
-                  Swapping ${(equityCalculation.equityPercentage / 100).toLocaleString([], { style: "percent" })} for
-                  company equity.{" "}
-                  <Link href="/settings/payouts" className={linkClasses}>
-                    Edit
-                  </Link>
-                </>
+                company.equityEnabled ? (
+                  <>
+                    Swapping ${(equityCalculation.equityPercentage / 100).toLocaleString([], { style: "percent" })} for
+                    company equity.{" "}
+                    <Link href="/settings/payouts" className={linkClasses}>
+                      Edit
+                    </Link>
+                  </>
+                ) : null
               }
               isOwnUser
             />

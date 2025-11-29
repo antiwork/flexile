@@ -411,7 +411,11 @@ export default function InvoicePage() {
                   servicesTotal={servicesTotal}
                   expensesTotal={invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0))}
                   equityAmountInCents={invoice.equityAmountInCents}
-                  equityNotice={`Swapping ${(invoice.equityPercentage / 100).toLocaleString([], { style: "percent" })} for company equity`}
+                  equityNotice={
+                    invoice.equityAmountInCents > 0
+                      ? `Swapping ${(invoice.equityPercentage / 100).toLocaleString([], { style: "percent" })} for company equity`
+                      : null
+                  }
                   isOwnUser={user.id === invoice.userId}
                   className="print:hidden"
                 />
