@@ -25,9 +25,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -654,44 +654,50 @@ const Edit = () => {
               placeholder="Enter notes about your invoice (optional)"
               className="w-full whitespace-pre-wrap lg:w-96"
             />
-            <div className="flex flex-col gap-2 md:self-start lg:items-end">
+            <Card className="min-w-80 self-start print:min-w-36 print:border-none print:bg-transparent print:p-2">
               {showExpensesTable || company.equityEnabled ? (
-                <div className="flex flex-col items-end">
-                  <span>Total services</span>
-                  <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
-                </div>
-              ) : null}
-              {showExpensesTable ? (
-                <div className="flex flex-col items-end">
-                  <span>Total expenses</span>
-                  <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
-                </div>
+                <CardContent className="border-border grid gap-4 border-b">
+                  <div className="flex justify-between gap-2">
+                    <span>Total services</span>
+                    <span>{formatMoneyFromCents(totalServicesAmountInCents)}</span>
+                  </div>
+                  {showExpensesTable ? (
+                    <div className="flex justify-between gap-2">
+                      <span>Total expenses</span>
+                      <span>{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
+                    </div>
+                  ) : null}
+                </CardContent>
               ) : null}
               {company.equityEnabled ? (
-                <>
-                  <div className="flex flex-col items-end">
-                    <span>
+                <CardContent className="border-border grid gap-4 border-b">
+                  <h4 className="text-sm font-bold">Payment split</h4>
+                  <div className="flex justify-between gap-2">
+                    <span>Cash</span>
+                    <span>{formatMoneyFromCents(totalServicesAmountInCents - equityCalculation.equityCents)}</span>
+                  </div>
+                  <div>
+                    <div className="flex justify-between gap-2">
+                      <span>Equity</span>
+                      <span>{formatMoneyFromCents(equityCalculation.equityCents)}</span>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Swapping {(equityCalculation.equityPercentage / 100).toLocaleString([], { style: "percent" })} for
+                      company equity.{" "}
                       <Link href="/settings/payouts" className={linkClasses}>
-                        Swapped for equity (not paid in cash)
+                        Edit
                       </Link>
-                    </span>
-                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
+                    </div>
                   </div>
-                  <Separator />
-                  <div className="flex flex-col items-end">
-                    <span>Net amount in cash</span>
-                    <span className="numeric text-3xl">
-                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col gap-1 lg:items-end">
-                  <span>Total</span>
-                  <span className="numeric text-3xl">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
+                </CardContent>
+              ) : null}
+              <CardContent className="rounded-b-md bg-gray-50 first:rounded-t-md">
+                <div className="flex justify-between gap-2 print:my-1 print:mt-1.5 print:flex print:items-center print:justify-between print:border-t-2 print:border-gray-300 print:pt-1.5 print:text-sm print:font-bold">
+                  <span>You'll receive in cash</span>
+                  <span>{formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}</span>
                 </div>
-              )}
-            </div>
+              </CardContent>
+            </Card>
           </footer>
         </div>
       </section>

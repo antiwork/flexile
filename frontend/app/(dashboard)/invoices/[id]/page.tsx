@@ -19,7 +19,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { PayRateType, trpc } from "@/trpc/client";
@@ -119,6 +118,7 @@ export default function InvoicePage() {
 
   const lineItemTotal = (lineItem: (typeof invoice.lineItems)[number]) =>
     Math.ceil((Number(lineItem.quantity) / (lineItem.hourly ? 60 : 1)) * lineItem.payRateInSubunits);
+  const servicesTotal = invoice.lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
   const cashFactor = 1 - invoice.equityPercentage / 100;
 
   assert(!!invoice.invoiceDate); // must be defined due to model checks in rails
@@ -350,7 +350,7 @@ export default function InvoicePage() {
                           Qty / Hours
                         </PrintTableHeader>
                         <PrintTableHeader className="w-[20%] text-right md:w-[15%] print:text-right">
-                          Cash rate
+                          Rate
                         </PrintTableHeader>
                         <PrintTableHeader className="w-[20%] text-right print:text-right">Line total</PrintTableHeader>
                       </TableRow>
@@ -367,12 +367,21 @@ export default function InvoicePage() {
                             {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
                           </PrintTableCell>
                           <PrintTableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%] print:text-right print:align-top">
-                            {lineItem.payRateInSubunits
-                              ? `${formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}${lineItem.hourly ? " / hour" : ""}`
-                              : ""}
+                            {lineItem.payRateInSubunits ? (
+                              <>
+                                <div className="hidden print:inline">
+                                  {formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}
+                                </div>
+                                <span className="print:hidden">{formatMoneyFromCents(lineItem.payRateInSubunits)}</span>
+                                <span>{lineItem.hourly ? " / hour" : ""}</span>
+                              </>
+                            ) : null}
                           </PrintTableCell>
                           <PrintTableCell className="w-[10%] text-right align-top tabular-nums print:text-right print:align-top">
-                            {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
+                            <span className="hidden print:inline">
+                              {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
+                            </span>
+                            <span className="print:hidden">{formatMoneyFromCents(lineItemTotal(lineItem))}</span>
                           </PrintTableCell>
                         </TableRow>
                       ))}
@@ -421,35 +430,46 @@ export default function InvoicePage() {
                     </div>
                   ) : null}
                 </div>
-                <Card className="self-start print:min-w-36 print:border-none print:bg-transparent print:p-2">
-                  <CardContent>
-                    {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
-                      <>
+                <Card className="min-w-80 self-start print:min-w-36 print:border-none print:bg-transparent print:p-2">
+                  {invoice.lineItems.length > 0 && invoice.expenses.length > 0 && (
+                    <CardContent className="border-border grid gap-4 border-b">
+                      <PrintTotalRow>
+                        <span>Total services</span>
+                        <span className="print:hidden">{formatMoneyFromCents(servicesTotal)}</span>
+                        <span className="hidden print:inline">{formatMoneyFromCents(servicesTotal * cashFactor)}</span>
+                      </PrintTotalRow>
+                      <PrintTotalRow>
+                        <span>Total expenses</span>
+                        <span>
+                          {formatMoneyFromCents(
+                            invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0)),
+                          )}
+                        </span>
+                      </PrintTotalRow>
+                    </CardContent>
+                  )}
+                  {cashFactor < 1 && (
+                    <CardContent className="border-border grid gap-4 border-b print:hidden">
+                      <h4 className="text-sm font-bold">Payment split</h4>
+                      <PrintTotalRow>
+                        <span>Cash</span>
+                        <span>{formatMoneyFromCents(servicesTotal * cashFactor)}</span>
+                      </PrintTotalRow>
+                      <div>
                         <PrintTotalRow>
-                          <strong>Total services</strong>
-                          <span>
-                            {formatMoneyFromCents(
-                              invoice.lineItems.reduce(
-                                (acc, lineItem) => acc + lineItemTotal(lineItem) * cashFactor,
-                                0,
-                              ),
-                            )}
-                          </span>
+                          <span>Equity</span>
+                          <span>{formatMoneyFromCents(invoice.equityAmountInCents)}</span>
                         </PrintTotalRow>
-                        <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
-                        <PrintTotalRow>
-                          <strong>Total expenses</strong>
-                          <span>
-                            {formatMoneyFromCents(
-                              invoice.expenses.reduce((acc, expense) => acc + expense.totalAmountInCents, BigInt(0)),
-                            )}
-                          </span>
-                        </PrintTotalRow>
-                        <Separator className="print:my-1.5 print:border-t print:border-gray-200" />
-                      </>
-                    )}
+                        <div className="text-sm text-gray-500">
+                          Swapping {(invoice.equityPercentage / 100).toLocaleString([], { style: "percent" })} for
+                          company equity
+                        </div>
+                      </div>
+                    </CardContent>
+                  )}
+                  <CardContent className="rounded-b-md bg-gray-50 first:rounded-t-md">
                     <div className="flex justify-between gap-2 print:my-1 print:mt-1.5 print:flex print:items-center print:justify-between print:border-t-2 print:border-gray-300 print:pt-1.5 print:text-sm print:font-bold">
-                      <strong>Total</strong>
+                      <span>{user.id === invoice.userId ? "You'll" : "They'll"} receive in cash</span>
                       <span>{formatMoneyFromCents(invoice.cashAmountInCents)}</span>
                     </div>
                   </CardContent>
