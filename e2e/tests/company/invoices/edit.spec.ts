@@ -139,7 +139,7 @@ test.describe("invoice editing", () => {
       }),
     ).toBeVisible();
     await expect(page.getByText("Original Notes")).toBeVisible();
-    await expect(page.getByText("Total$600")).toBeVisible();
+    await expect(page.getByText("You'll receive in cash$600")).toBeVisible();
 
     await page.getByRole("link", { name: "Edit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
@@ -169,7 +169,7 @@ test.describe("invoice editing", () => {
         "Line total": "$1,200",
       }),
     ).toBeVisible();
-    await expect(page.getByText("Total$1,200")).toBeVisible();
+    await expect(page.getByText("You'll receive in cash$1,200")).toBeVisible();
     await expect(page.getByText("Updated notes after first edit.")).toBeVisible();
 
     await page.getByRole("link", { name: "Edit invoice" }).click();
