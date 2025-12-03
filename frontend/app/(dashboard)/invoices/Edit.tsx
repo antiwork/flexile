@@ -659,8 +659,10 @@ const Edit = () => {
               equityNotice={
                 company.equityEnabled ? (
                   <>
-                    Swapping ${(equityCalculation.equityPercentage / 100).toLocaleString([], { style: "percent" })} for
-                    company equity.{" "}
+                    <span className="text-muted-foreground">
+                      Swapping ${(equityCalculation.equityPercentage / 100).toLocaleString([], { style: "percent" })}{" "}
+                      for company equity.
+                    </span>{" "}
                     <Link href="/settings/payouts" className={linkClasses}>
                       Edit
                     </Link>
