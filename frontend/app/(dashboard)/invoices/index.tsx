@@ -378,7 +378,7 @@ export function Totals({
   className?: string;
 }) {
   return (
-    <Card className={cn("min-w-80 self-start", className)}>
+    <Card className={cn("w-full self-start lg:w-auto lg:min-w-90", className)}>
       {servicesTotal > 0 && expensesTotal > 0 && (
         <CardContent className="border-border grid gap-4 border-b">
           <div className="flex justify-between gap-2">
@@ -393,7 +393,7 @@ export function Totals({
       )}
       {equityNotice ? (
         <CardContent className="border-border grid gap-4 border-b">
-          <h4 className="text-sm font-bold">Payment split</h4>
+          <h4 className="font-medium">Payment split</h4>
           <div className="flex justify-between gap-2">
             <span>Cash</span>
             <span>{formatMoneyFromCents(BigInt(servicesTotal) - BigInt(equityAmountInCents))}</span>
@@ -407,7 +407,7 @@ export function Totals({
           </div>
         </CardContent>
       ) : null}
-      <CardContent className="rounded-b-md bg-gray-50 first:rounded-t-md">
+      <CardContent className="bg-muted/20 rounded-b-md py-3 font-medium first:rounded-t-md">
         <div className="flex justify-between gap-2">
           <span>{isOwnUser ? "You'll" : "They'll"} receive in cash</span>
           <span>
