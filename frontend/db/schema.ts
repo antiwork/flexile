@@ -687,6 +687,34 @@ export const integrations = pgTable(
   ],
 );
 
+export const githubIntegrationStatus = pgEnum("github_integration_status", ["active", "disconnected"]);
+
+export const githubIntegrations = pgTable(
+  "github_integrations",
+  {
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
+    organizationName: varchar("organization_name").notNull(),
+    organizationId: bigint("organization_id", { mode: "bigint" }).notNull(),
+    installationId: bigint("installation_id", { mode: "bigint" }),
+    accessToken: encryptedString("access_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", { precision: 6, mode: "date" }),
+    refreshToken: encryptedString("refresh_token"),
+    status: varchar().default("active").notNull(),
+    deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
+    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("index_github_integrations_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
+    uniqueIndex("index_github_integrations_unique_active_company")
+      .using("btree", table.companyId.asc().nullsLast().op("int8_ops"))
+      .where(sql`(deleted_at IS NULL)`),
+  ],
+);
+
 export const invoiceApprovals = pgTable(
   "invoice_approvals",
   {
@@ -746,9 +774,11 @@ export const invoiceLineItems = pgTable(
       .$onUpdate(() => new Date()),
     payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
+    githubPrUrl: varchar("github_pr_url"),
   },
   (table) => [
     index("index_invoice_line_items_on_invoice_id").using("btree", table.invoiceId.asc().nullsLast().op("int8_ops")),
+    index("index_invoice_line_items_on_github_pr_url").using("btree", table.githubPrUrl.asc().nullsLast()),
   ],
 );
 
@@ -1757,6 +1787,7 @@ export const companiesRelations = relations(companies, ({ many }) => ({
   documents: many(documents),
   invoices: many(invoices),
   integrations: many(integrations),
+  githubIntegrations: many(githubIntegrations),
   optionPools: many(optionPools),
 }));
 
@@ -2267,6 +2298,13 @@ export const integrationsRelations = relations(integrations, ({ one, many }) => 
   records: many(integrationRecords),
   company: one(companies, {
     fields: [integrations.companyId],
+    references: [companies.id],
+  }),
+}));
+
+export const githubIntegrationsRelations = relations(githubIntegrations, ({ one }) => ({
+  company: one(companies, {
+    fields: [githubIntegrations.companyId],
     references: [companies.id],
   }),
 }));
