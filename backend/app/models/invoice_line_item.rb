@@ -8,6 +8,7 @@ class InvoiceLineItem < ApplicationRecord
   validates :description, presence: true
   validates :pay_rate_in_subunits, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :quantity, presence: true, numericality: { greater_than_or_equal_to: 0.01 }
+  validates :github_pr_url, format: { with: %r{\Ahttps://github\.com/.+/pull/\d+}, message: "must be a valid GitHub PR URL" }, allow_blank: true
 
   def normalized_quantity
     quantity / (hourly? ? 60.0 : 1.0)
@@ -27,4 +28,17 @@ class InvoiceLineItem < ApplicationRecord
   def cash_amount_in_usd
     cash_amount_in_cents / 100.0
   end
+
+  def has_github_pr?
+    github_pr_url.present?
+  end
+
+  def github_pr_previously_paid?
+    return false unless has_github_pr?
+
+    Github::PrPaymentLookupService
+      .new(company: invoice.company)
+      .pr_previously_paid?(github_pr_url, exclude_invoice_id: invoice.id)
+  end
 end
+

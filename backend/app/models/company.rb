@@ -85,6 +85,8 @@ class Company < ApplicationRecord
   has_one_attached :logo, service: public_bucket
   has_one_attached :full_logo
   has_many :document_templates
+  has_many :github_integrations
+  has_one :github_integration, -> { alive.where(status: GithubIntegration::ACTIVE).order(created_at: :desc) }
 
   validates :name, presence: true, on: :update, if: :name_changed?
   validates :email, presence: true
