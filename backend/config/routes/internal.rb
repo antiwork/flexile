@@ -37,6 +37,12 @@ scope path: :internal, module: :internal do
       resources :equity_grants, only: [:create]
       resources :option_pools, only: [:create]
       resource :cap_table, only: [:create]
+
+      resource :github_integration, only: [:show, :create, :destroy] do
+        post :connect, on: :collection
+        post :callback, on: :collection
+        get :pr_payment_status, on: :collection
+      end
     end
 
     resource :switch, only: :create, controller: "switch"
