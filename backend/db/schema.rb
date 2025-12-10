@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_10_184720) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -581,6 +581,22 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
     t.index ["company_id"], name: "index_expense_categories_on_company_id"
   end
 
+  create_table "github_integrations", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.string "organization_name", null: false
+    t.bigint "organization_id", null: false
+    t.bigint "installation_id"
+    t.string "access_token"
+    t.datetime "access_token_expires_at"
+    t.string "refresh_token"
+    t.string "status", default: "active", null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["company_id"], name: "index_github_integrations_on_company_id"
+    t.index ["company_id"], name: "index_github_integrations_unique_active_company", unique: true, where: "(deleted_at IS NULL)"
+  end
+
   create_table "investor_dividend_rounds", force: :cascade do |t|
     t.bigint "company_investor_id", null: false
     t.bigint "dividend_round_id", null: false
@@ -625,6 +641,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
     t.boolean "hourly", default: false, null: false
+    t.string "github_pr_url"
+    t.index ["github_pr_url"], name: "index_invoice_line_items_on_github_pr_url"
     t.index ["invoice_id"], name: "index_invoice_line_items_on_invoice_id"
   end
 
@@ -941,4 +959,5 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "github_integrations", "companies"
 end
