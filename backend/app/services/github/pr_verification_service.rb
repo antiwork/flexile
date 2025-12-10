@@ -45,8 +45,8 @@ module Github
           author_id: pr_details[:user][:id],
           author_avatar_url: pr_details[:user][:avatar_url],
           repository: pr_details[:head][:repo][:full_name],
-          branch: pr_details[:head][:ref]
-        }
+          branch: pr_details[:head][:ref],
+        },
       }
     end
 
@@ -57,12 +57,11 @@ module Github
       {
         owner: match[:owner],
         repo: match[:repo],
-        number: match[:number].to_i
+        number: match[:number].to_i,
       }
     end
 
     private
-
       def error_result(message)
         { success: false, error: message }
       end

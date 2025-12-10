@@ -19,7 +19,7 @@ module Github
         redirect_uri: redirect_uri,
         scope: REQUIRED_SCOPES.join(" "),
         state: generate_state,
-        allow_signup: "false"
+        allow_signup: "false",
       }
 
       "#{GITHUB_OAUTH_URL}/authorize?#{params.to_query}"
@@ -32,10 +32,10 @@ module Github
           client_id: client_id,
           client_secret: client_secret,
           code: code,
-          redirect_uri: redirect_uri
+          redirect_uri: redirect_uri,
         },
         headers: {
-          "Accept" => "application/json"
+          "Accept" => "application/json",
         }
       )
 
@@ -54,7 +54,7 @@ module Github
       {
         access_token: parsed["access_token"],
         token_type: parsed["token_type"],
-        scope: parsed["scope"]
+        scope: parsed["scope"],
       }
     end
 
@@ -74,7 +74,7 @@ module Github
           id: org["id"],
           login: org["login"],
           avatar_url: org["avatar_url"],
-          description: org["description"]
+          description: org["description"],
         }
       end
     end
@@ -96,7 +96,7 @@ module Github
         login: org["login"],
         name: org["name"],
         avatar_url: org["avatar_url"],
-        description: org["description"]
+        description: org["description"],
       }
     end
 
@@ -122,17 +122,17 @@ module Github
         user: {
           login: pr["user"]["login"],
           id: pr["user"]["id"],
-          avatar_url: pr["user"]["avatar_url"]
+          avatar_url: pr["user"]["avatar_url"],
         },
         head: {
           ref: pr["head"]["ref"],
           repo: {
-            full_name: pr["head"]["repo"]["full_name"]
-          }
+            full_name: pr["head"]["repo"]["full_name"],
+          },
         },
         base: {
-          ref: pr["base"]["ref"]
-        }
+          ref: pr["base"]["ref"],
+        },
       }
     end
 
@@ -145,7 +145,7 @@ module Github
         return false unless parts.length == 2
 
         company_external_id = parts[0]
-        timestamp = Time.parse(parts[1])
+        timestamp = Time.zone.parse(parts[1])
 
         company_external_id == company.external_id && timestamp > 10.minutes.ago
       rescue ArgumentError, TypeError
@@ -157,7 +157,6 @@ module Github
     class ApiError < StandardError; end
 
     private
-
       def client_id
         ENV.fetch("GITHUB_CLIENT_ID")
       end
@@ -179,7 +178,7 @@ module Github
         {
           "Accept" => "application/vnd.github+json",
           "Authorization" => "Bearer #{access_token}",
-          "X-GitHub-Api-Version" => "2022-11-28"
+          "X-GitHub-Api-Version" => "2022-11-28",
         }
       end
   end

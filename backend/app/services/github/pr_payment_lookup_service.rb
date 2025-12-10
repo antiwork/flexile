@@ -24,7 +24,7 @@ module Github
             invoice_date: line_item.invoice.invoice_date,
             invoice_status: line_item.invoice.status,
             contractor_name: line_item.invoice.user.legal_name || line_item.invoice.user.email,
-            amount_cents: line_item.total_amount_cents
+            amount_cents: line_item.total_amount_cents,
           }
         end
     end
@@ -59,7 +59,7 @@ module Github
             invoice_status: line_item.invoice.status,
             contractor_name: line_item.invoice.user.legal_name || line_item.invoice.user.email,
             amount_cents: line_item.total_amount_cents,
-            is_paid: Invoice::PAID_OR_PAYING_STATES.include?(line_item.invoice.status)
+            is_paid: Invoice::PAID_OR_PAYING_STATES.include?(line_item.invoice.status),
           }
         end
     end

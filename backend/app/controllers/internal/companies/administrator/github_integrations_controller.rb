@@ -11,7 +11,7 @@ class Internal::Companies::Administrator::GithubIntegrationsController < Interna
         connected: true,
         organization_name: integration.organization_name,
         organization_id: integration.organization_id,
-        status: integration.status
+        status: integration.status,
       }
     else
       render json: { connected: false }
@@ -60,7 +60,7 @@ class Internal::Companies::Administrator::GithubIntegrationsController < Interna
 
     render json: {
       access_token: access_token,
-      organizations: organizations
+      organizations: organizations,
     }
   end
 
@@ -98,7 +98,7 @@ class Internal::Companies::Administrator::GithubIntegrationsController < Interna
       connected: true,
       organization_name: integration.organization_name,
       organization_id: integration.organization_id,
-      status: integration.status
+      status: integration.status,
     }, status: :created
   end
 
@@ -138,8 +138,7 @@ class Internal::Companies::Administrator::GithubIntegrationsController < Interna
       previously_paid: paid_invoices.any?,
       paid_invoices: paid_invoices,
       pending_invoices: pending_invoices,
-      total_paid_amount_cents: paid_invoices.sum { |i| i[:amount_cents] }
+      total_paid_amount_cents: paid_invoices.sum { |i| i[:amount_cents] },
     }
   end
 end
-
