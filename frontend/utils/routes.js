@@ -2005,6 +2005,24 @@ export const oauth_redirect_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/administrator/github_integration/pr_payment_status(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const pr_payment_status_company_administrator_github_integration_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"github_integration"],[2,[7,"/"],[2,[6,"pr_payment_status"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/administrator/github_integration/pr_payment_status(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const pr_payment_status_company_administrator_github_integration_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"administrator"],[2,[7,"/"],[2,[6,"github_integration"],[2,[7,"/"],[2,[6,"pr_payment_status"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /admin/consolidated_payments/:id/refund(.:format)
  * @param {any} id
  * @param {object | undefined} options

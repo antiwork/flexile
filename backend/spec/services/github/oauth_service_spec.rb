@@ -70,7 +70,7 @@ RSpec.describe Github::OauthService do
             body: {
               access_token: "gho_test_token",
               token_type: "bearer",
-              scope: "read:org"
+              scope: "read:org",
             }.to_json,
             headers: { "Content-Type" => "application/json" }
           )
@@ -92,7 +92,7 @@ RSpec.describe Github::OauthService do
             status: 200,
             body: {
               error: "bad_verification_code",
-              error_description: "The code passed is incorrect or expired."
+              error_description: "The code passed is incorrect or expired.",
             }.to_json,
             headers: { "Content-Type" => "application/json" }
           )
@@ -136,13 +136,13 @@ RSpec.describe Github::OauthService do
                 id: 12345,
                 login: "Antiwork",
                 avatar_url: "https://avatars.githubusercontent.com/u/12345",
-                description: "Building the future"
+                description: "Building the future",
               },
               {
                 id: 67890,
                 login: "Gumroad",
                 avatar_url: "https://avatars.githubusercontent.com/u/67890",
-                description: "Selling things"
+                description: "Selling things",
               }
             ].to_json,
             headers: { "Content-Type" => "application/json" }
@@ -190,7 +190,7 @@ RSpec.describe Github::OauthService do
               login: "Antiwork",
               name: "Antiwork Inc.",
               avatar_url: "https://avatars.githubusercontent.com/u/12345",
-              description: "Building the future"
+              description: "Building the future",
             }.to_json,
             headers: { "Content-Type" => "application/json" }
           )
@@ -228,13 +228,13 @@ RSpec.describe Github::OauthService do
               user: {
                 login: "laugardie",
                 id: 123,
-                avatar_url: "https://avatars.githubusercontent.com/u/123"
+                avatar_url: "https://avatars.githubusercontent.com/u/123",
               },
               head: {
                 ref: "feat/date-picker",
-                repo: { full_name: "antiwork/flexile" }
+                repo: { full_name: "antiwork/flexile" },
               },
-              base: { ref: "main" }
+              base: { ref: "main" },
             }.to_json,
             headers: { "Content-Type" => "application/json" }
           )

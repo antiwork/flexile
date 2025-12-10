@@ -75,13 +75,13 @@ RSpec.describe Github::PrVerificationService do
               user: {
                 login: "laugardie",
                 id: 123,
-                avatar_url: "https://avatars.githubusercontent.com/u/123"
+                avatar_url: "https://avatars.githubusercontent.com/u/123",
               },
               head: {
                 ref: "feat/date-picker",
-                repo: { full_name: "antiwork/flexile" }
+                repo: { full_name: "antiwork/flexile" },
               },
-              base: { ref: "main" }
+              base: { ref: "main" },
             }.to_json,
             headers: { "Content-Type" => "application/json" }
           )

@@ -41,4 +41,3 @@ class InvoiceLineItem < ApplicationRecord
       .pr_previously_paid?(github_pr_url, exclude_invoice_id: invoice.id)
   end
 end
-
