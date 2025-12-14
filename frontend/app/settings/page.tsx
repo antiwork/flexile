@@ -111,7 +111,7 @@ const DetailsSection = () => {
   );
 };
 
-const LeaveWorkspaceSection = () => {
+export const LeaveWorkspaceSection = () => {
   const user = useCurrentUser();
   const { logout } = useUserStore();
   const company = useCurrentCompany();

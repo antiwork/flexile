@@ -2,6 +2,7 @@ import Bugsnag from "@bugsnag/js";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import GithubProvider from "next-auth/providers/github";
 import type { Provider } from "next-auth/providers/index";
 import { z } from "zod";
 import env from "@/env";
@@ -104,6 +105,12 @@ export const authOptions = {
       GoogleProvider({
         clientId: env.GOOGLE_CLIENT_ID,
         clientSecret: env.GOOGLE_CLIENT_SECRET,
+      }),
+    ),
+    ExternalProvider(
+      GithubProvider({
+        clientId: env.GH_CLIENT_ID,
+        clientSecret: env.GH_CLIENT_SECRET,
       }),
     ),
   ],

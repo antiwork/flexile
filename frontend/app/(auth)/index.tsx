@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { SignInMethod } from "@/db/enums";
 import googleLogoLight from "@/images/google-light.svg";
+import githubLogoLight from "@/images/github-light.svg";
 import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
 
@@ -206,13 +207,24 @@ export function AuthPage({
                   ) : null}
                   <Button
                     type="button"
-                    variant="primary"
+                    variant="accent"
                     className="font-base flex h-11 w-full items-center justify-center gap-2"
                     onClick={() => providerSignIn(SignInMethod.Google)}
                   >
                     <Image src={googleLogoLight} alt="Google" width={20} height={20} />
                     {sendOtpText} with Google
                   </Button>
+
+                  <Button
+                    type="button"
+                    variant={null}
+                    className="font-base my-4 flex h-11 w-full items-center justify-center gap-2 border-transparent bg-neutral-900 text-white hover:bg-neutral-800"
+                    onClick={() => providerSignIn(SignInMethod.Github)}
+                  >
+                    <Image src={githubLogoLight} alt="Github" width={20} height={20} />
+                    {sendOtpText} with Github
+                  </Button>
+
                   <div className="my-3 flex w-full items-center gap-2">
                     <div className="bg-muted h-px flex-1" />
                     <span className="text-muted-foreground text-sm">or</span>

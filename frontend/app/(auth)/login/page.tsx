@@ -8,6 +8,7 @@ import { AuthPage } from "..";
 const signInMethodLabels: Record<SignInMethod, string> = {
   [SignInMethod.Email]: "your work email",
   [SignInMethod.Google]: "Google",
+  [SignInMethod.Github]: "Github",
 };
 
 export default function LoginPage() {

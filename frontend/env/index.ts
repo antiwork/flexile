@@ -30,6 +30,8 @@ const env = z
     GOOGLE_CLIENT_ID: z.string(),
     GOOGLE_CLIENT_SECRET: z.string(),
     PROTOCOL: z.string(),
+    GH_CLIENT_ID: z.string(),
+    GH_CLIENT_SECRET: z.string(),
   })
   .parse(process.env);
 
