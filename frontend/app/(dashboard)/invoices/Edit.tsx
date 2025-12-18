@@ -12,7 +12,6 @@ import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
-import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -656,19 +655,7 @@ const Edit = () => {
               servicesTotal={totalServicesAmountInCents}
               expensesTotal={totalExpensesAmountInCents}
               equityAmountInCents={equityCalculation.equityCents}
-              equityNotice={
-                company.equityEnabled ? (
-                  <>
-                    <span className="text-muted-foreground">
-                      Swapping ${(equityCalculation.equityPercentage / 100).toLocaleString([], { style: "percent" })}{" "}
-                      for company equity.
-                    </span>{" "}
-                    <Link href="/settings/payouts" className={linkClasses}>
-                      Edit
-                    </Link>
-                  </>
-                ) : null
-              }
+              equityPercentage={equityCalculation.equityPercentage}
               isOwnUser
             />
           </footer>

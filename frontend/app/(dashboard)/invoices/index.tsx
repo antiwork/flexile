@@ -366,17 +366,18 @@ export function Totals({
   servicesTotal,
   expensesTotal,
   equityAmountInCents,
-  equityNotice,
+  equityPercentage,
   isOwnUser,
   className,
 }: {
   servicesTotal: number | bigint;
   expensesTotal: number | bigint;
   equityAmountInCents: number | bigint;
-  equityNotice: React.ReactNode | null;
+  equityPercentage: number;
   isOwnUser: boolean;
   className?: string;
 }) {
+  const company = useCurrentCompany();
   return (
     <Card className={cn("w-full self-start lg:w-auto lg:min-w-90", className)}>
       {servicesTotal > 0 && expensesTotal > 0 && (
@@ -391,7 +392,7 @@ export function Totals({
           </div>
         </CardContent>
       )}
-      {equityNotice ? (
+      {company.equityEnabled || equityPercentage > 0 ? (
         <CardContent className="border-border grid gap-4 border-b">
           <h4 className="font-medium">Payment split</h4>
           <div className="flex justify-between gap-2">
@@ -403,7 +404,9 @@ export function Totals({
               <span>Equity</span>
               <span>{formatMoneyFromCents(equityAmountInCents)}</span>
             </div>
-            <div className="text-sm text-gray-500">{equityNotice}</div>
+            <div className="text-muted-foreground text-sm">
+              Swapping {(equityPercentage / 100).toLocaleString([], { style: "percent" })} for company equity.
+            </div>
           </div>
         </CardContent>
       ) : null}
