@@ -251,7 +251,7 @@
   "NZ": { "countryName": "New Zealand", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": true },
   "NI": { "countryName": "Nicaragua", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": false },
   "NE": { "countryName": "Niger", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": false },
-  "NG": { "countryName": "Nigeria", "supportsWisePayout": false, "sanctioned": false, "hasTaxTreaty": false },
+  "NG": { "countryName": "Nigeria", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": false },
   "NU": { "countryName": "Niue", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": false },
   "NF": { "countryName": "Norfolk Island", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": false },
   "MP": {
@@ -262,7 +262,7 @@
   },
   "NO": { "countryName": "Norway", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": true },
   "OM": { "countryName": "Oman", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": false },
-  "PK": { "countryName": "Pakistan", "supportsWisePayout": false, "sanctioned": false, "hasTaxTreaty": true },
+  "PK": { "countryName": "Pakistan", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": true },
   "PW": { "countryName": "Palau", "supportsWisePayout": true, "sanctioned": false, "hasTaxTreaty": false },
   "PS": {
     "countryName": "Palestine, State of",
