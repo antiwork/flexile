@@ -46,7 +46,7 @@ class Company < ApplicationRecord
   has_many :administrators, through: :company_administrators, source: :user
   has_many :company_lawyers
   has_many :lawyers, through: :company_lawyers, source: :user
-  has_one :primary_admin, -> { order(id: :asc) }, class_name: "CompanyAdministrator"
+  belongs_to :primary_admin, class_name: "CompanyAdministrator", optional: true
   has_many :company_workers
   has_many :company_investor_entities
   has_many :contracts
@@ -119,6 +119,8 @@ class Company < ApplicationRecord
   def deactivate! = update!(deactivated_at: Time.current)
 
   def active? = deactivated_at.nil?
+
+  def primary_admin = super || company_administrators.first
 
   def logo_url
     return logo.url if logo.attached?

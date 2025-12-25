@@ -470,6 +470,18 @@ RSpec.describe Company do
     end
   end
 
+  describe "#primary_admin" do
+    it "returns the primary admin" do
+      company = create(:company)
+      admin = create(:company_administrator, company:)
+      expect(company.primary_admin).to eq admin
+      admin2 = create(:company_administrator, company:)
+      expect(company.primary_admin).to eq admin
+      company.update!(primary_admin: admin2)
+      expect(company.primary_admin).to eq admin2
+    end
+  end
+
   describe "#active?" do
     it "returns true if deactivated_at is not set, false otherwise" do
       company = build(:company)

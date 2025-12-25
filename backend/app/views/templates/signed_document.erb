@@ -23,6 +23,7 @@
 
   .signature {
     font-size: 1.25rem;
+    font-style: italic;
     border: solid 1px #1D1E172E;
     padding: 1rem;
     font-family: "Caveat", cursive;
@@ -36,7 +37,7 @@
 <%
   company_representative = document.company.primary_admin.user
   signature = document.signatures.first
-  signatory = signature.user
+  signatory = signature&.user
 %>
 <div style="display: grid; grid-template-columns: 1fr 1fr; margin-top: 1.25rem; gap: 2rem">
   <div class="column">
@@ -77,32 +78,32 @@
     <div class="item" style="border-bottom: none;">
       <div class="label">Signature</div>
       <div class="signature">
-        <%= signatory.legal_name %>
+        <%= signatory&.legal_name %>
       </div>
     </div>
     <div class="item">
       <div class="label">Name</div>
-      <%= signatory.legal_name %>
+      <%= signatory&.legal_name %>
     </div>
     <div class="item">
       <div class="label">Legal Entity</div>
-      <%= signatory.billing_entity_name %>
+      <%= signatory&.billing_entity_name %>
     </div>
     <div class="item">
       <div class="label">Country</div>
-      <%= signatory.display_country %>
+      <%= signatory&.display_country %>
     </div>
     <div class="item">
       <div class="label">Address</div>
-      <%= signatory.street_address %>
+      <%= signatory&.street_address %>
     </div>
     <div class="item">
       <div class="label">Email</div>
-      <%= signatory.display_email %>
+      <%= signatory&.display_email %>
     </div>
     <div class="item">
       <div class="label">Date signed</div>
-      <%= signature.signed_at&.strftime("%B %d, %Y") %>
+      <%= signature&.signed_at&.strftime("%B %d, %Y") %>
     </div>
   </div>
 </div>
