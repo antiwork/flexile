@@ -5,7 +5,7 @@ RSpec.describe Company do
 
   describe "associations" do
     it { is_expected.to have_many(:company_administrators) }
-    it { is_expected.to have_one(:primary_admin).class_name("CompanyAdministrator") }
+    it { is_expected.to belong_to(:primary_admin).class_name("CompanyAdministrator") }
     it { is_expected.to have_many(:administrators).through(:company_administrators).source(:user) }
     it { is_expected.to have_many(:company_lawyers) }
     it { is_expected.to have_many(:lawyers).through(:company_lawyers).source(:user) }
