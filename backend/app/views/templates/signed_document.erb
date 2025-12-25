@@ -62,7 +62,7 @@
     </div>
     <div class="item">
       <div class="label">Address</div>
-      <%= company_representative.street_address %>
+      <%= "#{company_representative.street_address}, #{company_representative.city}, #{company_representative.state}" %>
     </div>
     <div class="item">
       <div class="label">Email</div>
@@ -95,7 +95,9 @@
     </div>
     <div class="item">
       <div class="label">Address</div>
-      <%= signatory&.street_address %>
+      <% if signatory.present? %>
+        <%= "#{signatory.street_address}, #{signatory.city}, #{signatory.state}" %>
+      <% end %>
     </div>
     <div class="item">
       <div class="label">Email</div>
