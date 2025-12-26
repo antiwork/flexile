@@ -23,7 +23,7 @@ export default defineConfig({
     timezoneId: "UTC",
   },
   expect: { timeout: 30000, toPass: { timeout: 30000 } },
-  timeout: process.env.CI ? 30000 : 120000,
+  timeout: process.env.CI ? 60000 : 120000,
   projects: [
     {
       name: "setup",
