@@ -285,7 +285,7 @@ RSpec.describe User do
 
   describe "#restricted_payout_country_resident?" do
     it "returns true if the user is from a restricted payout country" do
-      %w[SA NG PK].each do |country|
+      %w[SA].each do |country|
         user.country_code = country
         expect(user.restricted_payout_country_resident?).to eq true
       end

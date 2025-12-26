@@ -39,6 +39,14 @@ RSpec.describe RejectInvoice do
       service.perform
     end
 
+    context "when the invoice has failed status" do
+      before { invoice.update!(status: Invoice::FAILED) }
+
+      it "rejects the invoice" do
+        expect { service.perform }.to change { invoice.reload.status }.to(Invoice::REJECTED)
+      end
+    end
+
     context "when the invoice has a status that denies rejection" do
       it "does not update the status" do
         RejectInvoice::INVOICE_STATUSES_THAT_DENY_REJECTION.each do |status|
