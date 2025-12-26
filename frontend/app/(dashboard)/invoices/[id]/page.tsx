@@ -327,7 +327,8 @@ export default function InvoicePage() {
                           Qty / Hours
                         </PrintTableHeader>
                         <PrintTableHeader className="w-[20%] text-right md:w-[15%] print:text-right">
-                          Rate
+                          <div className="hidden print:inline">Cash rate</div>
+                          <div className="print:hidden">Rate</div>
                         </PrintTableHeader>
                         <PrintTableHeader className="w-[20%] text-right print:text-right">Line total</PrintTableHeader>
                       </TableRow>
