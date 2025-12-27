@@ -81,9 +81,13 @@ export function AuthPage({
 
       const redirectUrl = searchParams.get("redirect_url");
       setRedirectInProgress(true);
-      router.replace(
-        redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard",
-      );
+      // Use window.location for dynamic redirect URLs (typed routes can't validate runtime strings)
+      // Use router.replace only for static routes like /dashboard
+      if (redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//")) {
+        window.location.replace(redirectUrl);
+      } else {
+        router.replace("/dashboard");
+      }
     },
   });
   const emailForm = useForm({
