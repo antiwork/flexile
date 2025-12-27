@@ -119,7 +119,7 @@ export const githubRouter = createRouter({
     }),
   ),
 
-  getCompanyConnection: companyProcedure.query(async ({ ctx }): Promise<GitHubOrganization> => {
+  getCompanyConnection: companyProcedure.query(({ ctx }): GitHubOrganization => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     const githubOrg = ctx.company.jsonData.githubOrganization;
