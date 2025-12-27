@@ -1636,7 +1636,10 @@ export const companies = pgTable(
     defaultCurrency: varchar("default_currency").default("usd").notNull(),
 
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
-    jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
+    jsonData: jsonb("json_data")
+      .notNull()
+      .$type<{ flags: string[]; githubOrganization?: string }>()
+      .default({ flags: [] }),
     inviteLink: varchar("invite_link"),
   },
   (table) => [
