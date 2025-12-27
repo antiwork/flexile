@@ -1,0 +1,111 @@
+<style>
+  body {
+      font-family: "ABC Whyte", sans-serif;
+  }
+
+  .column {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .item {
+    display: grid;
+    gap: 0.5rem;
+    border-bottom: 1px solid #1D1E172E;
+  }
+
+  .label {
+    text-transform: uppercase;
+    color: #1D1E17A1;
+    font-weight: 500;
+    font-size: 0.75rem;
+  }
+
+  .signature {
+    font-size: 1.25rem;
+    font-style: italic;
+    border: solid 1px #1D1E172E;
+    padding: 1rem;
+    font-family: "Caveat", cursive;
+    text-align: center;
+  }
+</style>
+
+<%= body_html %>
+<br /><br /><br />
+<b>IN WITNESS WHEREOF</b>, the parties have executed this Agreement as of the Effective Date.
+<%
+  company_representative = document.company.primary_admin.user
+  signature = document.signatures.first
+  signatory = signature&.user
+%>
+<div style="display: grid; grid-template-columns: 1fr 1fr; margin-top: 1.25rem; gap: 2rem">
+  <div class="column">
+    <b>CLIENT</b>
+    <div class="item" style="border-bottom: none;">
+      <div class="label">Signature</div>
+      <div class="signature">
+        <%= company_representative.legal_name %>
+      </div>
+    </div>
+    <div class="item">
+      <div class="label">Name</div>
+      <%= company_representative.legal_name %>
+    </div>
+    <div class="item">
+      <div class="label">Title</div>
+      Chief Executive Officer
+    </div>
+    <div class="item">
+      <div class="label">Country</div>
+      <%= company_representative.display_country %>
+    </div>
+    <div class="item">
+      <div class="label">Address</div>
+      <%= "#{company_representative.street_address}, #{company_representative.city}, #{company_representative.state}" %>
+    </div>
+    <div class="item">
+      <div class="label">Email</div>
+      <%= company_representative.display_email %>
+    </div>
+    <div class="item">
+      <div class="label">Date signed</div>
+      <%= company_representative.created_at.strftime("%B %d, %Y") %>
+    </div>
+  </div>
+  <div class="column">
+    <b>CONTRACTOR</b>
+    <div class="item" style="border-bottom: none;">
+      <div class="label">Signature</div>
+      <div class="signature">
+        <%= signatory&.legal_name %>
+      </div>
+    </div>
+    <div class="item">
+      <div class="label">Name</div>
+      <%= signatory&.legal_name %>
+    </div>
+    <div class="item">
+      <div class="label">Legal Entity</div>
+      <%= signatory&.billing_entity_name %>
+    </div>
+    <div class="item">
+      <div class="label">Country</div>
+      <%= signatory&.display_country %>
+    </div>
+    <div class="item">
+      <div class="label">Address</div>
+      <% if signatory.present? %>
+        <%= "#{signatory.street_address}, #{signatory.city}, #{signatory.state}" %>
+      <% end %>
+    </div>
+    <div class="item">
+      <div class="label">Email</div>
+      <%= signatory&.display_email %>
+    </div>
+    <div class="item">
+      <div class="label">Date signed</div>
+      <%= signature&.signed_at&.strftime("%B %d, %Y") %>
+    </div>
+  </div>
+</div>

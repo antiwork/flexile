@@ -11,6 +11,14 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
     head :created
   end
 
+  def signed
+    document = Document.find(params[:id])
+    authorize document
+
+    CreateDocumentPdfJob.perform_sync(document.id, document.text)
+    head :no_content
+  end
+
   private
     def document_params
       params.require(:document).permit(:name, :document_type, :text)

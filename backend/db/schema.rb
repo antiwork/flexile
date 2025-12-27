@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_25_151433) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -105,8 +105,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
     t.string "invite_link"
+    t.bigint "primary_admin_id"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
     t.index ["invite_link"], name: "index_companies_on_invite_link", unique: true
+    t.index ["primary_admin_id"], name: "index_companies_on_primary_admin_id"
   end
 
   create_table "company_administrators", force: :cascade do |t|

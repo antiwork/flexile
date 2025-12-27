@@ -15,6 +15,7 @@ import {
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
+import { signed_company_document_url } from "@/utils/routes";
 
 const visibleDocuments = (companyId: bigint, userId: bigint | SQLWrapper | undefined) =>
   and(
@@ -57,7 +58,7 @@ export const documentsRouter = createRouter({
         )
         .leftJoin(activeStorageBlobs, eq(activeStorageAttachments.blobId, activeStorageBlobs.id))
         .where(where)
-        .orderBy(desc(documents.id));
+        .orderBy(desc(documents.id), desc(activeStorageAttachments.id));
 
       const signatories = await db.query.documentSignatures.findMany({
         columns: { documentId: true, title: true, signedAt: true },
@@ -133,11 +134,18 @@ export const documentsRouter = createRouter({
         .where(eq(documentSignatures.documentId, input.id));
       const allSigned = allSignatures.every((signature) => signature.signedAt !== null);
 
-      if (allSigned && document.documents.equityGrantId) {
-        await tx
-          .update(equityGrants)
-          .set({ acceptedAt: new Date() })
-          .where(eq(equityGrants.id, document.documents.equityGrantId));
+      if (allSigned) {
+        if (document.documents.equityGrantId) {
+          await tx
+            .update(equityGrants)
+            .set({ acceptedAt: new Date() })
+            .where(eq(equityGrants.id, document.documents.equityGrantId));
+        }
+        const response = await fetch(signed_company_document_url(ctx.company.externalId, document.documents.id), {
+          method: "POST",
+          headers: ctx.headers,
+        });
+        if (!response.ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: await response.text() });
       }
 
       return { documentId: input.id, complete: allSigned };

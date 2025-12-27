@@ -2231,6 +2231,26 @@ export const sign_company_dividend_path = /*#__PURE__*/ __jsr.r({"company_id":{"
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/documents/:id/signed(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const signed_company_document_url = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"documents"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"signed"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/documents/:id/signed(.:format)
+ * @param {any} company_id
+ * @param {any} id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const signed_company_document_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"documents"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"signed"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /webhooks/wise/transfer_state_change(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
