@@ -174,15 +174,8 @@ export const githubRouter = createRouter({
   disconnectCompany: companyProcedure.mutation(async ({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    await db
-      .update(companies)
-      .set({
-        jsonData: {
-          flags: ctx.company.jsonData.flags,
-          githubOrganization: undefined,
-        },
-      })
-      .where(eq(companies.id, ctx.company.id));
+    const { githubOrganization: _githubOrganization, ...jsonData } = ctx.company.jsonData;
+    await db.update(companies).set({ jsonData }).where(eq(companies.id, ctx.company.id));
 
     return { success: true };
   }),
