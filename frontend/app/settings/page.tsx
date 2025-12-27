@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import React, { useState } from "react";
@@ -19,12 +20,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
+import githubLogo from "@/images/github.svg";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
+import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
 import { settings_path, unimpersonate_admin_users_path } from "@/utils/routes";
 
@@ -32,10 +35,120 @@ export default function SettingsPage() {
   return (
     <div className="grid gap-8">
       <DetailsSection />
+      <GitHubConnectionSection />
       <LeaveWorkspaceSection />
     </div>
   );
 }
+
+const GitHubConnectionSection = () => {
+  const queryClient = useQueryClient();
+  const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false);
+
+  const { data: githubConnection, isLoading } = trpc.github.getUserConnection.useQuery();
+
+  const connectMutation = useMutation({
+    mutationFn: () =>
+      // TODO: Implement OAuth flow - this will open a popup window for GitHub OAuth
+      // For now, we'll show a message that this feature is coming soon
+      Promise.reject(new Error("GitHub integration is coming soon")),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["github", "getUserConnection"] });
+    },
+  });
+
+  const disconnectMutation = trpc.github.disconnectUser.useMutation({
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["github", "getUserConnection"] });
+      setDisconnectDialogOpen(false);
+    },
+  });
+
+  const isConnected = githubConnection?.connected ?? false;
+  const username = githubConnection?.username;
+  const avatarUrl = githubConnection?.avatarUrl;
+
+  return (
+    <>
+      <div className="grid gap-4">
+        <h3 className="text mt-4 font-medium">Connected accounts</h3>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="flex items-center gap-3">
+              <div className="bg-muted flex size-10 items-center justify-center rounded-lg">
+                <Image src={githubLogo} alt="GitHub" width={20} height={20} className="dark:invert" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-medium">GitHub</CardTitle>
+                <CardDescription>
+                  {isConnected && username
+                    ? `Connected as @${username}`
+                    : "Connect your GitHub account to verify pull requests"}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-muted-foreground text-sm">Loading...</div>
+            ) : isConnected ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {avatarUrl ? (
+                    <Image src={avatarUrl} alt={username ?? "User"} width={24} height={24} className="rounded-full" />
+                  ) : null}
+                  <span className="text-sm font-medium">@{username}</span>
+                </div>
+                <Button variant="outline" onClick={() => setDisconnectDialogOpen(true)}>
+                  Disconnect
+                </Button>
+              </div>
+            ) : (
+              <MutationStatusButton
+                mutation={connectMutation}
+                onClick={() => connectMutation.mutate()}
+                idleVariant="outline"
+                loadingText="Connecting..."
+                successText="Connected!"
+              >
+                Connect GitHub
+              </MutationStatusButton>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <AlertDialog open={disconnectDialogOpen} onOpenChange={setDisconnectDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disconnect GitHub?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the connection to your GitHub account. Pull request verification will no longer be
+              available for your invoices.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <MutationStatusButton
+                mutation={disconnectMutation}
+                onClick={(e) => {
+                  e.preventDefault();
+                  disconnectMutation.mutate();
+                }}
+                idleVariant="critical"
+                loadingText="Disconnecting..."
+                successText="Disconnected!"
+              >
+                Disconnect
+              </MutationStatusButton>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
 
 const DetailsSection = () => {
   const user = useCurrentUser();
