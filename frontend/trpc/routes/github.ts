@@ -1,5 +1,8 @@
 import { TRPCError } from "@trpc/server";
+import { and, eq, isNull, like } from "drizzle-orm";
 import { z } from "zod";
+import { db } from "@/db";
+import { integrations, invoiceLineItems, invoices } from "@/db/schema";
 import { companyProcedure, createRouter, protectedProcedure } from "@/trpc";
 
 export interface GitHubPullRequest {
@@ -31,125 +34,249 @@ interface GitHubOrganization {
   organizationAvatarUrl: string | null;
 }
 
+const GITHUB_API_BASE = "https://api.github.com";
+
+const parseBountyFromLabels = (labels: { name: string }[]): number | null => {
+  for (const label of labels) {
+    const match = /\$(\d+(?:,\d{3})*(?:\.\d{2})?)/u.exec(label.name);
+    if (match?.[1]) {
+      return Math.round(parseFloat(match[1].replace(/,/gu, "")) * 100);
+    }
+  }
+  return null;
+};
+
+const parseGitHubPrUrl = (url: string): { owner: string; repo: string; prNumber: number } | null => {
+  const prUrlPattern = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/u;
+  const match = prUrlPattern.exec(url);
+  if (!match) return null;
+  const [, owner, repo, prNumber] = match;
+  if (!owner || !repo || !prNumber) return null;
+  return { owner, repo, prNumber: parseInt(prNumber, 10) };
+};
+
+const gitHubPrResponseSchema = z.object({
+  id: z.number(),
+  number: z.number(),
+  title: z.string(),
+  state: z.string(),
+  merged: z.boolean(),
+  html_url: z.string(),
+  user: z.object({ login: z.string(), avatar_url: z.string() }).nullable(),
+  created_at: z.string(),
+  merged_at: z.string().nullable(),
+  labels: z.array(z.object({ name: z.string() })),
+});
+
+const fetchGitHubPR = async (owner: string, repo: string, prNumber: number): Promise<GitHubPullRequest | null> => {
+  try {
+    const response = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/pulls/${prNumber}`, {
+      headers: {
+        Accept: "application/vnd.github.v3+json",
+        "User-Agent": "Flexile-App",
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const parseResult = gitHubPrResponseSchema.safeParse(await response.json());
+    if (!parseResult.success) {
+      return null;
+    }
+
+    const data = parseResult.data;
+    const prState = data.merged ? "merged" : data.state === "open" ? "open" : "closed";
+
+    return {
+      id: data.id,
+      number: data.number,
+      title: data.title,
+      state: prState,
+      merged: data.merged,
+      htmlUrl: data.html_url,
+      repoOwner: owner,
+      repoName: repo,
+      authorLogin: data.user?.login ?? null,
+      authorAvatarUrl: data.user?.avatar_url ?? null,
+      createdAt: data.created_at,
+      mergedAt: data.merged_at,
+      bountyAmount: parseBountyFromLabels(data.labels),
+      isPaid: false,
+    };
+  } catch {
+    return null;
+  }
+};
+
 export const githubRouter = createRouter({
   getUserConnection: protectedProcedure.query(
-    (): GitHubConnection =>
-      // TODO: This will need to be implemented with actual database queries
-      // once the backend schema is set up. For now, return a mock response.
-      ({
-        connected: false,
-        username: null,
-        avatarUrl: null,
-      }),
+    (): GitHubConnection => ({
+      connected: false,
+      username: null,
+      avatarUrl: null,
+    }),
   ),
 
-  getCompanyConnection: companyProcedure.query(({ ctx }): GitHubOrganization => {
+  getCompanyConnection: companyProcedure.query(async ({ ctx }): Promise<GitHubOrganization> => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    // TODO: This will need to be implemented with actual database queries
-    // once the backend schema is set up. For now, return a mock response.
+    const integration = await db.query.integrations.findFirst({
+      where: and(
+        eq(integrations.companyId, ctx.company.id),
+        eq(integrations.type, "github"),
+        isNull(integrations.deletedAt),
+      ),
+    });
+
+    if (!integration) {
+      return {
+        connected: false,
+        organizationName: null,
+        organizationAvatarUrl: null,
+      };
+    }
+
     return {
-      connected: false,
-      organizationName: null,
-      organizationAvatarUrl: null,
+      connected: integration.status === "active",
+      organizationName: integration.accountId,
+      organizationAvatarUrl: `https://github.com/${integration.accountId}.png`,
     };
   }),
 
-  connectUser: protectedProcedure.input(z.object({ code: z.string() })).mutation(() => {
-    // TODO: This will need to be implemented with actual OAuth flow
-    // once the backend is set up. For now, throw an error.
-    throw new TRPCError({
-      code: "NOT_IMPLEMENTED",
-      message: "GitHub user connection is not yet implemented",
-    });
-  }),
+  connectCompany: companyProcedure
+    .input(z.object({ organizationName: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-  disconnectUser: protectedProcedure.mutation(() => {
-    // TODO: This will need to be implemented with actual database operations
-    // once the backend schema is set up. For now, throw an error.
-    throw new TRPCError({
-      code: "NOT_IMPLEMENTED",
-      message: "GitHub user disconnection is not yet implemented",
-    });
-  }),
+      const response = await fetch(`${GITHUB_API_BASE}/orgs/${input.organizationName}`, {
+        headers: {
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "Flexile-App",
+        },
+      });
 
-  connectCompany: companyProcedure.input(z.object({ code: z.string() })).mutation(({ ctx }) => {
+      if (!response.ok) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "GitHub organization not found. Please check the organization name.",
+        });
+      }
+
+      const existingIntegration = await db.query.integrations.findFirst({
+        where: and(
+          eq(integrations.companyId, ctx.company.id),
+          eq(integrations.type, "github"),
+          isNull(integrations.deletedAt),
+        ),
+      });
+
+      if (existingIntegration) {
+        await db
+          .update(integrations)
+          .set({
+            accountId: input.organizationName,
+            status: "active",
+          })
+          .where(eq(integrations.id, existingIntegration.id));
+      } else {
+        await db.insert(integrations).values({
+          companyId: ctx.company.id,
+          type: "github",
+          status: "active",
+          accountId: input.organizationName,
+        });
+      }
+
+      return { success: true };
+    }),
+
+  disconnectCompany: companyProcedure.mutation(async ({ ctx }) => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    // TODO: This will need to be implemented with actual OAuth flow
-    // once the backend is set up. For now, throw an error.
-    throw new TRPCError({
-      code: "NOT_IMPLEMENTED",
-      message: "GitHub company connection is not yet implemented",
-    });
-  }),
+    await db
+      .update(integrations)
+      .set({ deletedAt: new Date() })
+      .where(
+        and(
+          eq(integrations.companyId, ctx.company.id),
+          eq(integrations.type, "github"),
+          isNull(integrations.deletedAt),
+        ),
+      );
 
-  disconnectCompany: companyProcedure.mutation(({ ctx }) => {
-    if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
-
-    // TODO: This will need to be implemented with actual database operations
-    // once the backend schema is set up. For now, throw an error.
-    throw new TRPCError({
-      code: "NOT_IMPLEMENTED",
-      message: "GitHub company disconnection is not yet implemented",
-    });
+    return { success: true };
   }),
 
   getPullRequest: protectedProcedure
-    .input(
-      z.object({
-        url: z.string().url(),
-      }),
-    )
-    .query(({ input }): GitHubPullRequest => {
-      // Parse the GitHub PR URL to extract owner, repo, and PR number
-      const prUrlPattern = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/u;
-      const match = prUrlPattern.exec(input.url);
-
-      if (!match) {
+    .input(z.object({ url: z.string().url() }))
+    .query(async ({ input }): Promise<GitHubPullRequest | null> => {
+      const parsed = parseGitHubPrUrl(input.url);
+      if (!parsed) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Invalid GitHub pull request URL",
         });
       }
 
-      const [, owner, repo, prNumber] = match;
-
-      // TODO: This will need to be implemented with actual GitHub API calls
-      // once the backend is set up. For now, return a mock response.
-      return {
-        id: parseInt(prNumber ?? "0", 10),
-        number: parseInt(prNumber ?? "0", 10),
-        title: "Example Pull Request",
-        state: "merged",
-        merged: true,
-        htmlUrl: input.url,
-        repoOwner: owner ?? "",
-        repoName: repo ?? "",
-        authorLogin: null,
-        authorAvatarUrl: null,
-        createdAt: new Date().toISOString(),
-        mergedAt: new Date().toISOString(),
-        bountyAmount: null,
-        isPaid: false,
-      };
+      const pr = await fetchGitHubPR(parsed.owner, parsed.repo, parsed.prNumber);
+      return pr;
     }),
 
-  checkPrPaidStatus: companyProcedure
-    .input(
-      z.object({
-        prUrl: z.string().url(),
-      }),
-    )
-    .query(({ ctx }) => {
-      if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
+  checkPrPaidStatus: companyProcedure.input(z.object({ prUrl: z.string().url() })).query(async ({ ctx, input }) => {
+    const parsed = parseGitHubPrUrl(input.prUrl);
+    if (!parsed) {
+      return { isPaid: false, paidInvoiceId: null };
+    }
 
-      // TODO: This will need to check if the PR has been paid in a previous invoice
-      // once the backend schema is set up. For now, return false.
-      const result: { isPaid: boolean; paidInvoiceId: string | null } = {
-        isPaid: false,
-        paidInvoiceId: null,
+    const normalizedUrl = `github.com/${parsed.owner}/${parsed.repo}/pull/${parsed.prNumber}`;
+
+    const paidInvoice = await db.query.invoices.findFirst({
+      where: and(eq(invoices.companyId, ctx.company.id), eq(invoices.status, "paid")),
+      with: {
+        lineItems: {
+          where: like(invoiceLineItems.description, `%${normalizedUrl}%`),
+        },
+      },
+    });
+
+    if (paidInvoice && paidInvoice.lineItems.length > 0) {
+      return {
+        isPaid: true,
+        paidInvoiceId: paidInvoice.externalId,
       };
-      return result;
+    }
+
+    return { isPaid: false, paidInvoiceId: null };
+  }),
+
+  verifyPrOwnership: companyProcedure
+    .input(z.object({ prUrl: z.string().url(), githubUsername: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const parsed = parseGitHubPrUrl(input.prUrl);
+      if (!parsed) {
+        return { isOwner: false, belongsToOrg: false };
+      }
+
+      const pr = await fetchGitHubPR(parsed.owner, parsed.repo, parsed.prNumber);
+      if (!pr) {
+        return { isOwner: false, belongsToOrg: false };
+      }
+
+      const isOwner = pr.authorLogin?.toLowerCase() === input.githubUsername.toLowerCase();
+
+      const integration = await db.query.integrations.findFirst({
+        where: and(
+          eq(integrations.companyId, ctx.company.id),
+          eq(integrations.type, "github"),
+          isNull(integrations.deletedAt),
+          eq(integrations.status, "active"),
+        ),
+      });
+
+      const belongsToOrg = integration?.accountId.toLowerCase() === parsed.owner.toLowerCase();
+
+      return { isOwner, belongsToOrg };
     }),
 });

@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useState } from "react";
 import { MutationStatusButton } from "@/components/MutationButton";
@@ -16,32 +15,42 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useCurrentCompany } from "@/global";
 import githubLogo from "@/images/github.svg";
 import { trpc } from "@/trpc/client";
 
 export default function IntegrationsPage() {
   const company = useCurrentCompany();
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false);
+  const [connectDialogOpen, setConnectDialogOpen] = useState(false);
+  const [organizationInput, setOrganizationInput] = useState("");
 
   const { data: githubConnection, isLoading } = trpc.github.getCompanyConnection.useQuery({
     companyId: company.id,
   });
 
-  const connectMutation = useMutation({
-    mutationFn: () =>
-      // TODO: Implement OAuth flow - this will open a popup window for GitHub OAuth
-      // For now, we'll show a message that this feature is coming soon
-      Promise.reject(new Error("GitHub integration is coming soon")),
+  const connectMutation = trpc.github.connectCompany.useMutation({
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["github", "getCompanyConnection"] });
+      void utils.github.getCompanyConnection.invalidate();
+      setConnectDialogOpen(false);
+      setOrganizationInput("");
     },
   });
 
   const disconnectMutation = trpc.github.disconnectCompany.useMutation({
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["github", "getCompanyConnection"] });
+      void utils.github.getCompanyConnection.invalidate();
       setDisconnectDialogOpen(false);
     },
   });
@@ -49,6 +58,15 @@ export default function IntegrationsPage() {
   const isConnected = githubConnection?.connected ?? false;
   const organizationName = githubConnection?.organizationName;
   const organizationAvatarUrl = githubConnection?.organizationAvatarUrl;
+
+  const handleConnect = () => {
+    if (organizationInput.trim()) {
+      connectMutation.mutate({
+        companyId: company.id,
+        organizationName: organizationInput.trim(),
+      });
+    }
+  };
 
   return (
     <div className="grid gap-8">
@@ -95,18 +113,58 @@ export default function IntegrationsPage() {
               </Button>
             </div>
           ) : (
-            <MutationStatusButton
-              mutation={connectMutation}
-              onClick={() => connectMutation.mutate()}
-              idleVariant="outline"
-              loadingText="Connecting..."
-              successText="Connected!"
-            >
+            <Button variant="outline" onClick={() => setConnectDialogOpen(true)}>
               Connect GitHub
-            </MutationStatusButton>
+            </Button>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Connect GitHub organization</DialogTitle>
+            <DialogDescription>
+              Enter your GitHub organization name to enable pull request verification for invoices.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="organization">Organization name</Label>
+              <Input
+                id="organization"
+                placeholder="e.g., antiwork"
+                value={organizationInput}
+                onChange={(e) => setOrganizationInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleConnect();
+                  }
+                }}
+              />
+              <p className="text-muted-foreground text-sm">
+                This is the organization name from your GitHub URL: github.com/
+                <strong>{organizationInput || "organization"}</strong>
+              </p>
+            </div>
+            {connectMutation.error ? <p className="text-destructive text-sm">{connectMutation.error.message}</p> : null}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConnectDialogOpen(false)}>
+              Cancel
+            </Button>
+            <MutationStatusButton
+              mutation={connectMutation}
+              onClick={handleConnect}
+              disabled={!organizationInput.trim()}
+              loadingText="Connecting..."
+              successText="Connected!"
+            >
+              Connect
+            </MutationStatusButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={disconnectDialogOpen} onOpenChange={setDisconnectDialogOpen}>
         <AlertDialogContent>
