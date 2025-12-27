@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, isNull, like } from "drizzle-orm";
+import { and, eq, like } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { integrations, invoiceLineItems, invoices } from "@/db/schema";
+import { companies, invoiceLineItems, invoices } from "@/db/schema";
 import { companyProcedure, createRouter, protectedProcedure } from "@/trpc";
 
 export interface GitHubPullRequest {
@@ -122,15 +122,9 @@ export const githubRouter = createRouter({
   getCompanyConnection: companyProcedure.query(async ({ ctx }): Promise<GitHubOrganization> => {
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
-    const integration = await db.query.integrations.findFirst({
-      where: and(
-        eq(integrations.companyId, ctx.company.id),
-        eq(integrations.type, "github"),
-        isNull(integrations.deletedAt),
-      ),
-    });
+    const githubOrg = ctx.company.jsonData.githubOrganization;
 
-    if (!integration) {
+    if (!githubOrg) {
       return {
         connected: false,
         organizationName: null,
@@ -139,9 +133,9 @@ export const githubRouter = createRouter({
     }
 
     return {
-      connected: integration.status === "active",
-      organizationName: integration.accountId,
-      organizationAvatarUrl: `https://github.com/${integration.accountId}.png`,
+      connected: true,
+      organizationName: githubOrg,
+      organizationAvatarUrl: `https://github.com/${githubOrg}.png`,
     };
   }),
 
@@ -164,30 +158,15 @@ export const githubRouter = createRouter({
         });
       }
 
-      const existingIntegration = await db.query.integrations.findFirst({
-        where: and(
-          eq(integrations.companyId, ctx.company.id),
-          eq(integrations.type, "github"),
-          isNull(integrations.deletedAt),
-        ),
-      });
-
-      if (existingIntegration) {
-        await db
-          .update(integrations)
-          .set({
-            accountId: input.organizationName,
-            status: "active",
-          })
-          .where(eq(integrations.id, existingIntegration.id));
-      } else {
-        await db.insert(integrations).values({
-          companyId: ctx.company.id,
-          type: "github",
-          status: "active",
-          accountId: input.organizationName,
-        });
-      }
+      await db
+        .update(companies)
+        .set({
+          jsonData: {
+            ...ctx.company.jsonData,
+            githubOrganization: input.organizationName,
+          },
+        })
+        .where(eq(companies.id, ctx.company.id));
 
       return { success: true };
     }),
@@ -196,15 +175,14 @@ export const githubRouter = createRouter({
     if (!ctx.companyAdministrator) throw new TRPCError({ code: "FORBIDDEN" });
 
     await db
-      .update(integrations)
-      .set({ deletedAt: new Date() })
-      .where(
-        and(
-          eq(integrations.companyId, ctx.company.id),
-          eq(integrations.type, "github"),
-          isNull(integrations.deletedAt),
-        ),
-      );
+      .update(companies)
+      .set({
+        jsonData: {
+          flags: ctx.company.jsonData.flags,
+          githubOrganization: undefined,
+        },
+      })
+      .where(eq(companies.id, ctx.company.id));
 
     return { success: true };
   }),
@@ -266,16 +244,8 @@ export const githubRouter = createRouter({
 
       const isOwner = pr.authorLogin?.toLowerCase() === input.githubUsername.toLowerCase();
 
-      const integration = await db.query.integrations.findFirst({
-        where: and(
-          eq(integrations.companyId, ctx.company.id),
-          eq(integrations.type, "github"),
-          isNull(integrations.deletedAt),
-          eq(integrations.status, "active"),
-        ),
-      });
-
-      const belongsToOrg = integration?.accountId.toLowerCase() === parsed.owner.toLowerCase();
+      const githubOrg = ctx.company.jsonData.githubOrganization;
+      const belongsToOrg = githubOrg?.toLowerCase() === parsed.owner.toLowerCase();
 
       return { isOwner, belongsToOrg };
     }),
