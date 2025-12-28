@@ -47,7 +47,7 @@ class Internal::GithubController < Internal::BaseController
     Current.user.update!(
       github_uid: user_info["id"].to_s,
       github_username: user_info["login"],
-      github_access_token: token_data["access_token"]
+      github_access_token: token_data["access_token"],
     )
 
     # Clear state after use
@@ -55,7 +55,7 @@ class Internal::GithubController < Internal::BaseController
 
     render json: {
       success: true,
-      github_username: user_info["login"]
+      github_username: user_info["login"],
     }
   end
 
@@ -64,7 +64,7 @@ class Internal::GithubController < Internal::BaseController
     Current.user.update!(
       github_uid: nil,
       github_username: nil,
-      github_access_token: nil
+      github_access_token: nil,
     )
 
     render json: { success: true }
@@ -135,7 +135,7 @@ class Internal::GithubController < Internal::BaseController
       client_id: client_id,
       redirect_uri: redirect_uri,
       scope: scope,
-      state: state
+      state: state,
     }
 
     "https://github.com/login/oauth/authorize?#{URI.encode_www_form(query_params)}"

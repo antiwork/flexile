@@ -15,7 +15,7 @@ class GithubService
   # Fetch PR details from GitHub API
   def fetch_pr(owner:, repo:, number:)
     response = get("/repos/#{owner}/#{repo}/pulls/#{number}")
-    return nil unless response&.is_a?(Hash)
+    return nil unless response.is_a?(Hash)
 
     {
       number: response["number"],
@@ -25,17 +25,17 @@ class GithubService
       state: response["state"],
       url: response["html_url"],
       repo: "#{owner}/#{repo}",
-      bounty_cents: extract_bounty_from_labels(response["labels"])
+      bounty_cents: extract_bounty_from_labels(response["labels"]),
     }
   end
 
   # Fetch issue details to get bounty from issue labels if not on PR
   def fetch_issue(owner:, repo:, number:)
     response = get("/repos/#{owner}/#{repo}/issues/#{number}")
-    return nil unless response&.is_a?(Hash)
+    return nil unless response.is_a?(Hash)
 
     {
-      bounty_cents: extract_bounty_from_labels(response["labels"])
+      bounty_cents: extract_bounty_from_labels(response["labels"]),
     }
   end
 
@@ -69,7 +69,7 @@ class GithubService
       owner: match[1],
       repo: match[2],
       type: match[3] == "pull" ? :pr : :issue,
-      number: match[4].to_i
+      number: match[4].to_i,
     }
   end
 
@@ -100,7 +100,7 @@ class GithubService
     return nil unless labels.is_a?(Array)
 
     labels.each do |label|
-      name = label["name"]&.to_s || ""
+      name = label["name"].to_s
 
       # Match patterns like "$100", "$1,000", "$1000"
       if (match = name.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/))
