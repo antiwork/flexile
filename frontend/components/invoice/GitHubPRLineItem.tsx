@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import {
   HoverCard,

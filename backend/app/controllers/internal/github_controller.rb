@@ -4,6 +4,10 @@ require "net/http"
 require "json"
 
 class Internal::GithubController < Internal::BaseController
+  # Skip auth for fetch_pr - allows public PR fetching without login
+  skip_before_action :authenticate_user!, only: [:fetch_pr]
+  before_action :require_user!, only: [:connect, :callback, :disconnect]
+
   # Initiate GitHub OAuth connection - return OAuth URL for popup flow
   def connect
     oauth_url = build_oauth_url
@@ -16,6 +20,12 @@ class Internal::GithubController < Internal::BaseController
 
     unless code.present?
       render json: { error: "Authorization code required" }, status: :bad_request
+      return
+    end
+
+    # Verify state for CSRF protection
+    if params[:state].present? && session[:github_oauth_state] != params[:state]
+      render json: { error: "Invalid OAuth state" }, status: :bad_request
       return
     end
 
@@ -41,6 +51,9 @@ class Internal::GithubController < Internal::BaseController
       github_username: user_info["login"],
       github_access_token: token_data["access_token"]
     )
+
+    # Clear state after use
+    session.delete(:github_oauth_state)
 
     render json: {
       success: true,
@@ -68,7 +81,9 @@ class Internal::GithubController < Internal::BaseController
       return
     end
 
-    service = GithubService.new(access_token: Current.user&.github_access_token)
+    # Use user's token if available, otherwise fetch as public
+    access_token = Current.user&.github_access_token
+    service = GithubService.new(access_token: access_token)
     pr_data = service.fetch_pr(owner: parsed[:owner], repo: parsed[:repo], number: parsed[:number])
 
     unless pr_data
@@ -76,24 +91,18 @@ class Internal::GithubController < Internal::BaseController
       return
     end
 
-    # If PR has no bounty, try to get from linked issue
-    if pr_data[:bounty_cents].nil? && parsed[:type] == :pr
-      issue_data = service.fetch_issue(owner: parsed[:owner], repo: parsed[:repo], number: parsed[:number])
-      pr_data[:bounty_cents] = issue_data[:bounty_cents] if issue_data
-    end
-
     # Check if PR has already been paid
     pr_data[:already_paid] = service.pr_already_paid?(params[:url])
 
-    # Check if PR belongs to a connected company org
-    pr_data[:belongs_to_company_org] = belongs_to_company_org?(parsed[:owner])
+    # Check if PR belongs to a connected company org (only if user logged in)
+    pr_data[:belongs_to_company_org] = Current.user ? belongs_to_company_org?(parsed[:owner]) : false
 
     # Check if user needs to connect GitHub
     pr_data[:user_github_connected] = Current.user&.github_uid.present?
 
     # Verify if current user authored the PR
-    if Current.user&.github_username.present?
-      pr_data[:verified] = pr_data[:author]&.downcase == Current.user.github_username.downcase
+    if Current.user&.github_username.present? && pr_data[:author].present?
+      pr_data[:verified] = pr_data[:author].downcase == Current.user.github_username.downcase
     else
       pr_data[:verified] = false
     end
@@ -103,24 +112,42 @@ class Internal::GithubController < Internal::BaseController
 
   private
 
+  def require_user!
+    unless Current.user
+      render json: { error: "Authentication required" }, status: :unauthorized
+    end
+  end
+
   def belongs_to_company_org?(owner)
     return false unless Current.user
 
     # Check if any of the user's companies have this org connected
-    Current.user.clients.where(github_org_login: owner).exists? ||
-      Current.user.companies.where(github_org_login: owner).exists?
+    # Wrap in rescue to handle case where github_org_login column doesn't exist yet
+    begin
+      Current.user.clients.exists?(github_org_login: owner) ||
+        Current.user.companies.exists?(github_org_login: owner)
+    rescue ActiveRecord::StatementInvalid
+      false
+    end
   end
 
   def build_oauth_url
     client_id = ENV.fetch("GITHUB_CLIENT_ID", nil)
     redirect_uri = "#{ENV.fetch('FRONTEND_URL', 'http://localhost:3000')}/settings/github/callback"
-    scope = "read:user,repo"
+    scope = "read:user repo"
     state = SecureRandom.hex(16)
 
     # Store state in session for CSRF protection
     session[:github_oauth_state] = state
 
-    "https://github.com/login/oauth/authorize?client_id=#{client_id}&redirect_uri=#{CGI.escape(redirect_uri)}&scope=#{scope}&state=#{state}"
+    query_params = {
+      client_id: client_id,
+      redirect_uri: redirect_uri,
+      scope: scope,
+      state: state
+    }
+
+    "https://github.com/login/oauth/authorize?#{URI.encode_www_form(query_params)}"
   end
 
   def exchange_code_for_token(code)

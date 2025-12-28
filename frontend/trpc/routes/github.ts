@@ -1,140 +1,90 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { companyProcedure, createRouter, userProcedure } from "@/trpc/init";
+import { createRouter, userProcedure } from "@/trpc/init";
+import { request } from "@/utils/request";
 
-const GITHUB_API_BASE = "https://api.github.com";
-
-// Parse GitHub PR URL to extract owner, repo, and PR number
-function parseGitHubPrUrl(url: string): { owner: string; repo: string; number: number } | null {
-  const match = url.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
-  if (!match) return null;
-  return { owner: match[1]!, repo: match[2]!, number: parseInt(match[3]!, 10) };
-}
-
-// Extract bounty amount from labels (e.g., "$100", "bounty:100")
-function extractBountyFromLabels(labels: Array<{ name: string }>): number | null {
-  for (const label of labels) {
-    const name = label.name || "";
-    // Match patterns like "$100", "$1,000"
-    const dollarMatch = name.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/);
-    if (dollarMatch) {
-      return Math.round(parseFloat(dollarMatch[1]!.replace(/,/g, "")) * 100);
-    }
-    // Match patterns like "bounty:100"
-    const bountyMatch = name.match(/bounty[:\s]*(\d+)/i);
-    if (bountyMatch) {
-      return parseInt(bountyMatch[1]!, 10) * 100;
-    }
-  }
-  return null;
+// GitHub PR data returned from backend
+export interface GitHubPRData {
+  number: number;
+  title: string;
+  author: string;
+  merged_at: string | null;
+  state: string;
+  url: string;
+  repo: string;
+  bounty_cents: number | null;
+  already_paid: boolean;
+  belongs_to_company_org: boolean;
+  user_github_connected: boolean;
+  verified: boolean;
 }
 
 export const githubRouter = createRouter({
   // Get GitHub OAuth URL for connecting
-  getOAuthUrl: userProcedure.query(async ({ ctx }) => {
-    const clientId = process.env.GITHUB_CLIENT_ID;
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/settings/github/callback`;
-    const scope = "read:user,repo";
-    const state = crypto.randomUUID();
-
-    // Store state in a cookie or session for CSRF protection
-    return {
-      url: `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`,
-      state,
-    };
+  getOAuthUrl: userProcedure.query(async () => {
+    const response = await request("/internal/github/connect", { method: "POST" });
+    if (!response.ok) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to get OAuth URL" });
+    }
+    const data = await response.json();
+    return { url: data.oauth_url };
   }),
 
-  // Exchange OAuth code for access token and save user info
+  // Exchange OAuth code for access token
   exchangeCode: userProcedure
     .input(z.object({ code: z.string(), state: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      // Exchange code for access token
-      const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
+    .mutation(async ({ input }) => {
+      const response = await request("/internal/github/callback", {
         method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          client_id: process.env.GITHUB_CLIENT_ID,
-          client_secret: process.env.GITHUB_CLIENT_SECRET,
-          code: input.code,
-        }),
-      });
-
-      const tokenData = await tokenResponse.json();
-      if (!tokenData.access_token) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Failed to exchange authorization code" });
-      }
-
-      // Fetch user info from GitHub
-      const userResponse = await fetch(`${GITHUB_API_BASE}/user`, {
-        headers: {
-          Authorization: `Bearer ${tokenData.access_token}`,
-          Accept: "application/vnd.github+json",
-          "User-Agent": "Flexile-App",
-        },
-      });
-
-      if (!userResponse.ok) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Failed to fetch GitHub user info" });
-      }
-
-      const userData = await userResponse.json();
-
-      // TODO: Save to database via Rails API or directly
-      // For now, return the data to be handled by the frontend
-      return {
-        success: true,
-        githubUsername: userData.login,
-        githubUid: userData.id.toString(),
-      };
-    }),
-
-  // Disconnect GitHub account
-  disconnect: userProcedure.mutation(async ({ ctx }) => {
-    // TODO: Call Rails API to disconnect
-    return { success: true };
-  }),
-
-  // Fetch PR details from GitHub
-  fetchPr: userProcedure.input(z.object({ url: z.string() })).query(async ({ ctx, input }) => {
-    const parsed = parseGitHubPrUrl(input.url);
-    if (!parsed) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid GitHub PR URL" });
-    }
-
-    try {
-      const response = await fetch(`${GITHUB_API_BASE}/repos/${parsed.owner}/${parsed.repo}/pulls/${parsed.number}`, {
-        headers: {
-          Accept: "application/vnd.github+json",
-          "User-Agent": "Flexile-App",
-          // Add auth header if user has GitHub connected
-          // Authorization: `Bearer ${ctx.user.githubAccessToken}`,
-        },
+        body: JSON.stringify({ code: input.code, state: input.state }),
+        headers: { "Content-Type": "application/json" },
       });
 
       if (!response.ok) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Could not fetch PR details" });
+        const error = await response.json();
+        throw new TRPCError({ code: "BAD_REQUEST", message: error.error || "OAuth failed" });
       }
 
-      const pr = await response.json();
-      const bountyCents = extractBountyFromLabels(pr.labels || []);
+      return response.json();
+    }),
 
-      return {
-        number: pr.number,
-        title: pr.title,
-        author: pr.user?.login,
-        mergedAt: pr.merged_at,
-        state: pr.state,
-        url: pr.html_url,
-        repo: `${parsed.owner}/${parsed.repo}`,
-        bountyCents,
-        alreadyPaid: false, // TODO: Check database for paid PRs
-        verified: false, // TODO: Check if current user authored the PR
-      };
-    } catch (error) {
-      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to fetch PR" });
+  // Disconnect GitHub account
+  disconnect: userProcedure.mutation(async () => {
+    const response = await request("/internal/github/disconnect", { method: "DELETE" });
+    if (!response.ok) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to disconnect" });
     }
+    return { success: true };
+  }),
+
+  // Fetch PR details from backend (which calls GitHub API)
+  fetchPr: userProcedure.input(z.object({ url: z.string() })).query(async ({ input }) => {
+    const response = await request(`/internal/github/fetch_pr?url=${encodeURIComponent(input.url)}`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new TRPCError({
+        code: response.status === 404 ? "NOT_FOUND" : "BAD_REQUEST",
+        message: error.error || "Could not fetch PR",
+      });
+    }
+
+    const data: GitHubPRData = await response.json();
+
+    // Transform snake_case to camelCase for frontend
+    return {
+      number: data.number,
+      title: data.title,
+      author: data.author,
+      mergedAt: data.merged_at,
+      state: data.state,
+      url: data.url,
+      repo: data.repo,
+      bountyCents: data.bounty_cents,
+      alreadyPaid: data.already_paid,
+      belongsToCompanyOrg: data.belongs_to_company_org,
+      userGithubConnected: data.user_github_connected,
+      verified: data.verified,
+    };
   }),
 });
