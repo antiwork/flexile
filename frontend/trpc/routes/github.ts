@@ -98,10 +98,9 @@ export const githubRouter = createRouter({
 
   // Fetch PR details from backend (which calls GitHub API)
   fetchPr: protectedProcedure.input(z.object({ url: z.string() })).query(async ({ ctx, input }) => {
-    const response = await fetch(
-      `${getApiBaseUrl()}/internal/github/fetch_pr?url=${encodeURIComponent(input.url)}`,
-      { headers: ctx.headers },
-    );
+    const response = await fetch(`${getApiBaseUrl()}/internal/github/fetch_pr?url=${encodeURIComponent(input.url)}`, {
+      headers: ctx.headers,
+    });
 
     if (!response.ok) {
       const error = errorResponseSchema.parse(await response.json());
