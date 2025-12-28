@@ -1703,6 +1703,70 @@ export const export_company_invoices_path = /*#__PURE__*/ __jsr.r({"company_id":
 
 /**
  * Generates rails route to
+ * /internal/github/callback(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_callback_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github"],[2,[7,"/"],[2,[6,"callback"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github/callback(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_callback_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github"],[2,[7,"/"],[2,[6,"callback"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/github/connect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_connect_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github"],[2,[7,"/"],[2,[6,"connect"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github/connect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_connect_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github"],[2,[7,"/"],[2,[6,"connect"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/github/disconnect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_disconnect_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github"],[2,[7,"/"],[2,[6,"disconnect"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github/disconnect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_disconnect_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github"],[2,[7,"/"],[2,[6,"disconnect"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/github/fetch_pr(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_fetch_pr_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github"],[2,[7,"/"],[2,[6,"fetch_pr"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github/fetch_pr(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_fetch_pr_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github"],[2,[7,"/"],[2,[6,"fetch_pr"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /admin/users/:id/impersonate(.:format)
  * @param {any} id
  * @param {object | undefined} options

@@ -1620,6 +1620,86 @@ export const export_company_invoices_path: ((
 
 /**
  * Generates rails route to
+ * /internal/github/callback(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_callback_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/callback(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_callback_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/connect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_connect_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/connect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_connect_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/disconnect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_disconnect_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/disconnect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_disconnect_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/fetch_pr(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_fetch_pr_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/fetch_pr(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_fetch_pr_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /admin/users/:id/impersonate(.:format)
  * @param {any} id
  * @param {object | undefined} options

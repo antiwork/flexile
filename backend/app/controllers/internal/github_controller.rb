@@ -109,74 +109,73 @@ class Internal::GithubController < Internal::BaseController
   end
 
   private
+    def belongs_to_company_org?(owner)
+      return false unless Current.user
 
-  def belongs_to_company_org?(owner)
-    return false unless Current.user
-
-    # Check if any of the user's companies have this org connected
-    begin
-      Current.user.clients.exists?(github_org_login: owner) ||
-        Current.user.companies.exists?(github_org_login: owner)
-    rescue ActiveRecord::StatementInvalid
-      false
-    end
-  end
-
-  def build_oauth_url
-    client_id = ENV.fetch("GITHUB_CLIENT_ID", nil)
-    redirect_uri = "#{ENV.fetch('FRONTEND_URL', 'http://localhost:3000')}/settings/github/callback"
-    scope = "read:user repo"
-    state = SecureRandom.hex(16)
-
-    # Store state in session for CSRF protection
-    session[:github_oauth_state] = state
-
-    query_params = {
-      client_id: client_id,
-      redirect_uri: redirect_uri,
-      scope: scope,
-      state: state,
-    }
-
-    "https://github.com/login/oauth/authorize?#{URI.encode_www_form(query_params)}"
-  end
-
-  def exchange_code_for_token(code)
-    uri = URI("https://github.com/login/oauth/access_token")
-    request = Net::HTTP::Post.new(uri)
-    request["Accept"] = "application/json"
-    request.set_form_data(
-      "client_id" => ENV.fetch("GITHUB_CLIENT_ID", nil),
-      "client_secret" => ENV.fetch("GITHUB_CLIENT_SECRET", nil),
-      "code" => code
-    )
-
-    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
-      http.request(request)
+      # Check if any of the user's companies have this org connected
+      begin
+        Current.user.clients.exists?(github_org_login: owner) ||
+          Current.user.companies.exists?(github_org_login: owner)
+      rescue ActiveRecord::StatementInvalid
+        false
+      end
     end
 
-    JSON.parse(response.body)
-  rescue JSON::ParserError, Net::HTTPError => e
-    Rails.logger.error("GitHub token exchange error: #{e.message}")
-    nil
-  end
+    def build_oauth_url
+      client_id = ENV.fetch("GITHUB_CLIENT_ID", nil)
+      redirect_uri = "#{ENV.fetch('FRONTEND_URL', 'http://localhost:3000')}/settings/github/callback"
+      scope = "read:user repo"
+      state = SecureRandom.hex(16)
 
-  def fetch_github_user(access_token)
-    uri = URI("https://api.github.com/user")
-    request = Net::HTTP::Get.new(uri)
-    request["Accept"] = "application/vnd.github+json"
-    request["Authorization"] = "Bearer #{access_token}"
-    request["User-Agent"] = "Flexile-App"
+      # Store state in session for CSRF protection
+      session[:github_oauth_state] = state
 
-    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
-      http.request(request)
+      query_params = {
+        client_id: client_id,
+        redirect_uri: redirect_uri,
+        scope: scope,
+        state: state,
+      }
+
+      "https://github.com/login/oauth/authorize?#{URI.encode_www_form(query_params)}"
     end
 
-    return nil unless response.is_a?(Net::HTTPSuccess)
+    def exchange_code_for_token(code)
+      uri = URI("https://github.com/login/oauth/access_token")
+      request = Net::HTTP::Post.new(uri)
+      request["Accept"] = "application/json"
+      request.set_form_data(
+        "client_id" => ENV.fetch("GITHUB_CLIENT_ID", nil),
+        "client_secret" => ENV.fetch("GITHUB_CLIENT_SECRET", nil),
+        "code" => code
+      )
 
-    JSON.parse(response.body)
-  rescue JSON::ParserError, Net::HTTPError => e
-    Rails.logger.error("GitHub user fetch error: #{e.message}")
-    nil
-  end
+      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+        http.request(request)
+      end
+
+      JSON.parse(response.body)
+    rescue JSON::ParserError, Net::HTTPError => e
+      Rails.logger.error("GitHub token exchange error: #{e.message}")
+      nil
+    end
+
+    def fetch_github_user(access_token)
+      uri = URI("https://api.github.com/user")
+      request = Net::HTTP::Get.new(uri)
+      request["Accept"] = "application/vnd.github+json"
+      request["Authorization"] = "Bearer #{access_token}"
+      request["User-Agent"] = "Flexile-App"
+
+      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+        http.request(request)
+      end
+
+      return nil unless response.is_a?(Net::HTTPSuccess)
+
+      JSON.parse(response.body)
+    rescue JSON::ParserError, Net::HTTPError => e
+      Rails.logger.error("GitHub user fetch error: #{e.message}")
+      nil
+    end
 end

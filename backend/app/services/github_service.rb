@@ -74,45 +74,44 @@ class GithubService
   end
 
   private
+    def get(path)
+      uri = URI("#{GITHUB_API_BASE}#{path}")
+      request = Net::HTTP::Get.new(uri)
+      request["Accept"] = "application/vnd.github+json"
+      request["User-Agent"] = "Flexile-App"
+      request["Authorization"] = "Bearer #{access_token}" if access_token.present?
 
-  def get(path)
-    uri = URI("#{GITHUB_API_BASE}#{path}")
-    request = Net::HTTP::Get.new(uri)
-    request["Accept"] = "application/vnd.github+json"
-    request["User-Agent"] = "Flexile-App"
-    request["Authorization"] = "Bearer #{access_token}" if access_token.present?
-
-    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
-      http.request(request)
-    end
-
-    return nil unless response.is_a?(Net::HTTPSuccess)
-
-    JSON.parse(response.body)
-  rescue JSON::ParserError, Net::HTTPError, Timeout::Error => e
-    Rails.logger.error("GitHub API error: #{e.message}")
-    nil
-  end
-
-  # Extract bounty amount from PR/issue labels
-  # Looks for patterns like: "$100", "bounty:100", "bounty: $100", "💎 Bounty $100"
-  def extract_bounty_from_labels(labels)
-    return nil unless labels.is_a?(Array)
-
-    labels.each do |label|
-      name = label["name"].to_s
-
-      # Match patterns like "$100", "$1,000", "$1000"
-      if (match = name.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/))
-        return (match[1].delete(",").to_f * 100).to_i
+      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+        http.request(request)
       end
 
-      # Match patterns like "bounty:100" or "bounty: 100"
-      if (match = name.match(/bounty[:\s]*(\d+)/i))
-        return match[1].to_i * 100
-      end
+      return nil unless response.is_a?(Net::HTTPSuccess)
+
+      JSON.parse(response.body)
+    rescue JSON::ParserError, Net::HTTPError, Timeout::Error => e
+      Rails.logger.error("GitHub API error: #{e.message}")
+      nil
     end
 
-    nil
-  end
+    # Extract bounty amount from PR/issue labels
+    # Looks for patterns like: "$100", "bounty:100", "bounty: $100", "💎 Bounty $100"
+    def extract_bounty_from_labels(labels)
+      return nil unless labels.is_a?(Array)
+
+      labels.each do |label|
+        name = label["name"].to_s
+
+        # Match patterns like "$100", "$1,000", "$1000"
+        if (match = name.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/))
+          return (match[1].delete(",").to_f * 100).to_i
+        end
+
+        # Match patterns like "bounty:100" or "bounty: 100"
+        if (match = name.match(/bounty[:\s]*(\d+)/i))
+          return match[1].to_i * 100
+        end
+      end
+
+      nil
+    end
 end
