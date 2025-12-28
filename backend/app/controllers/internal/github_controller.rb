@@ -4,9 +4,7 @@ require "net/http"
 require "json"
 
 class Internal::GithubController < Internal::BaseController
-  # Skip auth for fetch_pr - allows public PR fetching without login
-  skip_before_action :authenticate_user!, only: [:fetch_pr]
-  before_action :require_user!, only: [:connect, :callback, :disconnect]
+  before_action :authenticate_user_json!, only: [:connect, :callback, :disconnect]
 
   # Initiate GitHub OAuth connection - return OAuth URL for popup flow
   def connect
@@ -72,7 +70,7 @@ class Internal::GithubController < Internal::BaseController
     render json: { success: true }
   end
 
-  # Fetch PR details for a given URL
+  # Fetch PR details for a given URL (public endpoint, no auth required)
   def fetch_pr
     parsed = GithubService.parse_pr_url(params[:url])
 
@@ -112,17 +110,10 @@ class Internal::GithubController < Internal::BaseController
 
   private
 
-  def require_user!
-    unless Current.user
-      render json: { error: "Authentication required" }, status: :unauthorized
-    end
-  end
-
   def belongs_to_company_org?(owner)
     return false unless Current.user
 
     # Check if any of the user's companies have this org connected
-    # Wrap in rescue to handle case where github_org_login column doesn't exist yet
     begin
       Current.user.clients.exists?(github_org_login: owner) ||
         Current.user.companies.exists?(github_org_login: owner)
