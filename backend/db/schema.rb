@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_28_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -105,6 +105,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
     t.string "invite_link"
+    t.string "github_org_id"
+    t.string "github_org_login"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
     t.index ["invite_link"], name: "index_companies_on_invite_link", unique: true
   end
@@ -625,6 +627,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
     t.boolean "hourly", default: false, null: false
+    t.string "github_pr_url"
+    t.integer "github_pr_number"
+    t.string "github_pr_title"
+    t.datetime "github_pr_merged_at"
+    t.string "github_pr_author"
+    t.integer "github_pr_bounty_cents"
+    t.string "github_pr_repo"
+    t.boolean "github_pr_verified", default: false
+    t.datetime "github_pr_paid_at"
     t.index ["invoice_id"], name: "index_invoice_line_items_on_invoice_id"
   end
 
@@ -862,6 +873,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_213957) do
     t.string "otp_secret_key"
     t.integer "otp_failed_attempts_count", default: 0, null: false
     t.datetime "otp_first_failed_at"
+    t.string "github_uid"
+    t.string "github_username"
+    t.string "github_access_token"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
