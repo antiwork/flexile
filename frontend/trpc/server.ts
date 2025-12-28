@@ -17,6 +17,7 @@ import { documentsRouter } from "./routes/documents";
 import { equityGrantExercisesRouter } from "./routes/equityGrantExercises";
 import { equityGrantsRouter } from "./routes/equityGrants";
 import { expenseCategoriesRouter } from "./routes/expenseCategories";
+import { githubRouter } from "./routes/github";
 import { investorsRouter } from "./routes/investors";
 import { invoicesRouter } from "./routes/invoices";
 import { lawyersRouter } from "./routes/lawyers";
@@ -58,6 +59,7 @@ export const appRouter = createRouter({
   administrators: administratorsRouter,
   companyInviteLinks: companyInviteLinksRouter,
   support: supportRouter,
+  github: githubRouter,
 });
 export type AppRouter = typeof appRouter;
 
