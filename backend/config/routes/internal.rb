@@ -22,6 +22,14 @@ scope path: :internal, module: :internal do
     resource :equity, only: [:update], controller: "equity"
   end
 
+  # GitHub integration routes
+  namespace :github do
+    post :connect
+    post :callback
+    delete :disconnect
+    get :fetch_pr
+  end
+
   resources :roles, only: [:index, :show]
 
   # Company portal routes
