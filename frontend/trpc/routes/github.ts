@@ -2,21 +2,34 @@ import { z } from "zod";
 import env from "@/env";
 import { createRouter, protectedProcedure } from "@/trpc";
 
-// GitHub PR data returned from backend
-export interface GitHubPRData {
-  number: number;
-  title: string;
-  author: string;
-  merged_at: string | null;
-  state: string;
-  url: string;
-  repo: string;
-  bounty_cents: number | null;
-  already_paid: boolean;
-  belongs_to_company_org: boolean;
-  user_github_connected: boolean;
-  verified: boolean;
-}
+// Response schemas for validation
+const oauthUrlResponseSchema = z.object({
+  oauth_url: z.string(),
+});
+
+const exchangeCodeResponseSchema = z.object({
+  success: z.boolean(),
+  github_username: z.string(),
+});
+
+const errorResponseSchema = z.object({
+  error: z.string().optional(),
+});
+
+const githubPRDataSchema = z.object({
+  number: z.number(),
+  title: z.string(),
+  author: z.string(),
+  merged_at: z.string().nullable(),
+  state: z.string(),
+  url: z.string(),
+  repo: z.string(),
+  bounty_cents: z.number().nullable(),
+  already_paid: z.boolean(),
+  belongs_to_company_org: z.boolean(),
+  user_github_connected: z.boolean(),
+  verified: z.boolean(),
+});
 
 // Transformed frontend-friendly version
 export interface GitHubPRInfo {
@@ -46,7 +59,7 @@ export const githubRouter = createRouter({
     if (!response.ok) {
       throw new Error("Failed to get OAuth URL");
     }
-    const data = (await response.json()) as { oauth_url: string };
+    const data = oauthUrlResponseSchema.parse(await response.json());
     return { url: data.oauth_url };
   }),
 
@@ -64,11 +77,11 @@ export const githubRouter = createRouter({
       });
 
       if (!response.ok) {
-        const error = (await response.json()) as { error?: string };
+        const error = errorResponseSchema.parse(await response.json());
         throw new Error(error.error ?? "OAuth failed");
       }
 
-      return (await response.json()) as { success: boolean; github_username: string };
+      return exchangeCodeResponseSchema.parse(await response.json());
     }),
 
   // Disconnect GitHub account
@@ -91,11 +104,11 @@ export const githubRouter = createRouter({
     );
 
     if (!response.ok) {
-      const error = (await response.json()) as { error?: string };
+      const error = errorResponseSchema.parse(await response.json());
       throw new Error(error.error ?? "Could not fetch PR");
     }
 
-    const data = (await response.json()) as GitHubPRData;
+    const data = githubPRDataSchema.parse(await response.json());
 
     // Transform snake_case to camelCase for frontend
     return {
