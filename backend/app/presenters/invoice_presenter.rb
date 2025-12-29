@@ -84,12 +84,24 @@ class InvoicePresenter
         is_trusted: company.is_trusted?,
         completed_payment_method_setup: company.bank_account_ready?,
         expense_categories: company.expense_categories.map { |category| { id: category.id, name: category.name } }.sort_by { _1[:name] },
+        github_organization: company.github_organization,
       }
     end
 
     def line_items
       invoice_line_items.map do |line_item|
-        line_item.attributes.symbolize_keys!.slice(:id, :description, :hourly, :quantity, :pay_rate_in_subunits)
+        pr_service = line_item.github_pr_service
+        base_data = line_item.attributes.symbolize_keys!.slice(:id, :description, :hourly, :quantity, :pay_rate_in_subunits, :github_pr_url)
+
+        if line_item.github_pr_url.present?
+          base_data.merge(
+            pr_data: pr_service.pr_data,
+            pr_merged: pr_service.merged?,
+            pr_bounty_amount: pr_service.bounty_amount
+          )
+        else
+          base_data
+        end
       end
     end
 

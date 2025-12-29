@@ -27,11 +27,13 @@ import defaultLogo from "@/images/default-company-logo.svg";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { request } from "@/utils/request";
 import { settings_path, unimpersonate_admin_users_path } from "@/utils/routes";
+import UserGithubSettings from "./UserGithubSettings";
 
 export default function SettingsPage() {
   return (
     <div className="grid gap-8">
       <DetailsSection />
+      <UserGithubSettings />
       <LeaveWorkspaceSection />
     </div>
   );

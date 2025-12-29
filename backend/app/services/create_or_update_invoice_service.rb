@@ -121,7 +121,7 @@ class CreateOrUpdateInvoiceService
     end
 
     def invoice_line_items_params
-      permitted_params = [:id, :description, :quantity, :pay_rate_in_subunits, :hourly]
+      permitted_params = [:id, :description, :quantity, :pay_rate_in_subunits, :hourly, :github_pr_url]
 
       params.permit(invoice_line_items: permitted_params).fetch(:invoice_line_items, [])
     end

@@ -64,6 +64,7 @@ const dataSchema = z.object({
     name: z.string(),
     address: addressSchema,
     expense_categories: z.array(z.object({ id: z.number(), name: z.string() })),
+    github_organization: z.string().nullable(),
   }),
   invoice: z.object({
     id: z.string().optional(),
@@ -80,6 +81,7 @@ const dataSchema = z.object({
         quantity: z.string().nullable(),
         hourly: z.boolean(),
         pay_rate_in_subunits: z.number(),
+        github_pr_url: z.string().nullable(),
       }),
     ),
     expenses: z.array(
@@ -189,6 +191,9 @@ const Edit = () => {
         formData.append("invoice_line_items[][quantity]", lineItem.quantity.toString());
         formData.append("invoice_line_items[][hourly]", lineItem.hourly.toString());
         formData.append("invoice_line_items[][pay_rate_in_subunits]", lineItem.pay_rate_in_subunits.toString());
+        if (lineItem.github_pr_url) {
+          formData.append("invoice_line_items[][github_pr_url]", lineItem.github_pr_url);
+        }
       }
       for (const expense of expenses) {
         if (expense.id) {
@@ -233,6 +238,7 @@ const Edit = () => {
         quantity: (data.user.project_based ? 1 : 60).toString(),
         hourly: !data.user.project_based,
         pay_rate_in_subunits: payRateInSubunits ?? 0,
+        github_pr_url: null,
       }),
     );
 
@@ -312,9 +318,18 @@ const Edit = () => {
     });
   };
 
-  const parseQuantity = (value: string | null | undefined) => {
-    const parsed = value ? Number.parseFloat(value) : NaN;
-    return Number.isNaN(parsed) ? 0 : parsed;
+const GITHUB_PR_URL_REGEX = /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+)$/i;
+
+const parseGithubPrUrl = (url: string | null) => {
+  if (!url) return null;
+  const match = url.match(GITHUB_PR_URL_REGEX);
+  return match ? { owner: match[1], repo: match[2], number: match[3] } : null;
+};
+
+const githubPrBelongsToCompanyOrg = (url: string | null, companyGithubOrg: string | null) => {
+  if (!url || !companyGithubOrg) return false;
+  const parsed = parseGithubPrUrl(url);
+  return parsed ? parsed.owner === companyGithubOrg : false;
   };
 
   const lineItemTotal = (lineItem: InvoiceFormLineItem) =>
@@ -333,6 +348,19 @@ const Edit = () => {
         updated.errors = [];
         if (updated.description.length === 0) updated.errors.push("description");
         if (!updated.quantity || parseQuantity(updated.quantity) < 0.01) updated.errors.push("quantity");
+
+        // Validate GitHub PR URL
+        if (updated.github_pr_url) {
+          const parsed = parseGithubPrUrl(updated.github_pr_url);
+          if (!parsed) {
+            updated.errors.push("github_pr_url");
+          } else if (githubPrBelongsToCompanyOrg(updated.github_pr_url, data.company.github_organization)) {
+            // This is a company org PR but we can't validate the connection on frontend
+            // The backend will handle this, but we can show a warning
+            updated.errors.push("github_pr_url_company_org");
+          }
+        }
+
         return updated;
       }),
     );
@@ -432,7 +460,8 @@ const Edit = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[50%]">Line item</TableHead>
+                <TableHead className="w-[30%]">Line item</TableHead>
+                <TableHead className="w-[20%]">PR Link</TableHead>
                 <TableHead>Hours / Qty</TableHead>
                 <TableHead>Rate</TableHead>
                 <TableHead>Amount</TableHead>
@@ -448,6 +477,14 @@ const Edit = () => {
                       placeholder="Description"
                       aria-invalid={item.errors?.includes("description")}
                       onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      value={item.github_pr_url || ""}
+                      placeholder="https://github.com/..."
+                      aria-invalid={item.errors?.includes("github_pr_url") || item.errors?.includes("github_pr_url_company_org")}
+                      onChange={(e) => updateLineItem(rowIndex, { github_pr_url: e.target.value || null })}
                     />
                   </TableCell>
                   <TableCell>
@@ -532,6 +569,50 @@ const Edit = () => {
               </TableRow>
             </TableFooter>
           </Table>
+
+          {/* Line item validation errors */}
+          {lineItems.some((item) => item.errors?.length) && (
+            <div className="mt-2 space-y-1">
+              {lineItems.toArray().map((item, index) =>
+                item.errors?.map((error) => {
+                  if (error === "description") {
+                    return (
+                      <p key={`${index}-${error}`} className="text-sm text-red-600">
+                        Line item {index + 1}: Description is required
+                      </p>
+                    );
+                  }
+                  if (error === "quantity") {
+                    return (
+                      <p key={`${index}-${error}`} className="text-sm text-red-600">
+                        Line item {index + 1}: Quantity must be greater than 0
+                      </p>
+                    );
+                  }
+                  if (error === "github_pr_url") {
+                    return (
+                      <p key={`${index}-${error}`} className="text-sm text-red-600">
+                        Line item {index + 1}: Invalid GitHub PR URL format
+                      </p>
+                    );
+                  }
+                  if (error === "github_pr_url_company_org") {
+                    return (
+                      <Alert key={`${index}-${error}`} className="mt-2" variant="warning">
+                        <CircleAlert />
+                        <AlertDescription>
+                          Line item {index + 1}: This PR belongs to your company's GitHub organization.
+                          Please ensure your company has a GitHub connection configured in settings.
+                        </AlertDescription>
+                      </Alert>
+                    );
+                  }
+                  return null;
+                })
+              )}
+            </div>
+          )}
+
           {showExpensesTable ? (
             <Table>
               <TableHeader>

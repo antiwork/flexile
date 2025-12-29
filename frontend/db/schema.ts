@@ -746,9 +746,13 @@ export const invoiceLineItems = pgTable(
       .$onUpdate(() => new Date()),
     payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
+    githubPrUrl: varchar("github_pr_url"),
+    prData: jsonb("pr_data"),
+    prBountyAmount: numeric("pr_bounty_amount", { precision: 10, scale: 2 }),
   },
   (table) => [
     index("index_invoice_line_items_on_invoice_id").using("btree", table.invoiceId.asc().nullsLast().op("int8_ops")),
+    index("index_invoice_line_items_on_github_pr_url").using("btree", table.githubPrUrl.asc().nullsLast()),
   ],
 );
 
