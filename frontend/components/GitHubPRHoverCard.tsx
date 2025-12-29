@@ -85,7 +85,7 @@ export function GitHubPRHoverCard({
       <HoverCardPrimitive.Portal>
         <HoverCardPrimitive.Content
           className={cn(
-            "bg-popover text-popover-foreground z-50 w-[360px] rounded-lg border p-4 shadow-md",
+            "bg-popover text-popover-foreground z-50 w-[360px] rounded-lg border border-black/[0.18] p-4 shadow-sm",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -101,12 +101,12 @@ export function GitHubPRHoverCard({
               {pr.repo} · {pr.author}
             </div>
 
-            {/* Title and PR number */}
+            {/* Title and PR number - clickable link */}
             <div>
-              <a href={pr.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+              <a href={pr.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                 <span className="line-clamp-2 font-semibold">{pr.title}</span>
-                <span className="text-muted-foreground ml-1">#{pr.number}</span>
               </a>
+              <span className="text-muted-foreground ml-1">#{pr.number}</span>
             </div>
 
             {/* Status badge */}
@@ -123,6 +123,26 @@ export function GitHubPRHoverCard({
                 </Badge>
               )}
             </div>
+
+            {/* Verification status */}
+            {isVerified !== null ? (
+              <div className="flex items-center gap-1.5 text-sm">
+                {isVerified ? (
+                  <>
+                    <CheckCircle2 className="size-4 text-green-600" />
+                    <span>
+                      <span className="font-medium text-green-600">Verified author</span>
+                      <span className="text-muted-foreground"> of this pull request.</span>
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <CircleAlert className="text-muted-foreground size-4" />
+                    <span className="text-muted-foreground">Unverified author of this pull request.</span>
+                  </>
+                )}
+              </div>
+            ) : null}
 
             {/* Paid status */}
             {paidInvoices.length > 0 ? (
@@ -144,33 +164,7 @@ export function GitHubPRHoverCard({
                 </span>
               </div>
             ) : null}
-
-            {/* Verification status */}
-            {isVerified !== null ? (
-              <div
-                className={cn(
-                  "flex items-center gap-1.5 text-sm",
-                  isVerified ? "text-green-600" : "text-muted-foreground",
-                )}
-              >
-                {isVerified ? (
-                  <>
-                    <CheckCircle2 className="size-4" />
-                    <span>
-                      <span className="font-medium">Verified</span> author of this pull request.
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <CircleAlert className="size-4" />
-                    <span>Unverified author of this pull request.</span>
-                  </>
-                )}
-              </div>
-            ) : null}
           </div>
-
-          <HoverCardPrimitive.Arrow className="fill-popover" />
         </HoverCardPrimitive.Content>
       </HoverCardPrimitive.Portal>
     </HoverCardPrimitive.Root>

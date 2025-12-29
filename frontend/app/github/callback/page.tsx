@@ -46,9 +46,10 @@ function GitHubCallbackContent() {
         setStatus("success");
 
         // Notify opener window and close if this was opened as a popup
-        if (window.opener && typeof window.opener.postMessage === "function") {
+        if (window.opener) {
           try {
-            window.opener.postMessage({ type: "github-oauth-success" }, window.location.origin);
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- window.opener is not typed correctly
+            (window.opener as Window).postMessage({ type: "github-oauth-success" }, window.location.origin);
           } catch {
             // Cross-origin access may fail, but that's ok
           }
