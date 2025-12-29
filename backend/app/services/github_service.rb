@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 class GithubService
+  include HTTParty
+  base_uri "https://api.github.com"
+
   GITHUB_OAUTH_URL = "https://github.com/login/oauth/authorize"
   GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
-  GITHUB_API_URL = "https://api.github.com"
 
   # Scopes needed for user authentication and PR access
   USER_SCOPES = "read:user user:email"
@@ -33,20 +35,20 @@ class GithubService
     end
 
     def exchange_code_for_token(code:, redirect_uri:)
-      response = HTTP.accept(:json).post(GITHUB_TOKEN_URL, form: {
-        client_id: client_id,
-        client_secret: client_secret,
-        code: code,
-        redirect_uri: redirect_uri,
-      })
+      response = HTTParty.post(GITHUB_TOKEN_URL,
+                               headers: { "Accept" => "application/json" },
+                               body: {
+                                 client_id: client_id,
+                                 client_secret: client_secret,
+                                 code: code,
+                                 redirect_uri: redirect_uri,
+                               })
 
-      body = response.parse
-
-      if body["error"]
-        raise OAuthError, body["error_description"] || body["error"]
+      if response["error"]
+        raise OAuthError, response["error_description"] || response["error"]
       end
 
-      body["access_token"]
+      response["access_token"]
     end
 
     def fetch_user_info(access_token:)
@@ -167,23 +169,20 @@ class GithubService
           "X-GitHub-Api-Version" => "2022-11-28",
         }
 
-        request = HTTP.headers(headers)
-
         response = case method
                    when :get
-                     request.get("#{GITHUB_API_URL}#{path}")
+                     GithubService.get(path, headers: headers)
                    when :post
-                     request.post("#{GITHUB_API_URL}#{path}", json: body)
+                     GithubService.post(path, headers: headers.merge("Content-Type" => "application/json"), body: body.to_json)
                    else
                      raise ArgumentError, "Unsupported HTTP method: #{method}"
         end
 
-        unless response.status.success?
-          error_body = response.parse rescue { "message" => response.to_s }
-          raise ApiError, error_body["message"] || "GitHub API error: #{response.status}"
+        unless response.success?
+          raise ApiError, response["message"] || "GitHub API error: #{response.code}"
         end
 
-        response.parse
+        response.parsed_response
       end
 
       def pr_state(pr_response)
