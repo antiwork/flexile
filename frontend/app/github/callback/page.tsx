@@ -45,11 +45,15 @@ function GitHubCallbackContent() {
 
         setStatus("success");
 
-        // Notify opener window and close
-        const opener: unknown = window.opener;
-        if (opener instanceof Window) {
-          opener.postMessage({ type: "github-oauth-success" }, window.location.origin);
-          window.close();
+        // Notify opener window and close if this was opened as a popup
+        if (window.opener && typeof window.opener.postMessage === "function") {
+          try {
+            window.opener.postMessage({ type: "github-oauth-success" }, window.location.origin);
+          } catch {
+            // Cross-origin access may fail, but that's ok
+          }
+          // Small delay before closing to ensure message is sent
+          setTimeout(() => window.close(), 100);
         }
       } catch (err) {
         setStatus("error");
@@ -70,11 +74,12 @@ function GitHubCallbackContent() {
         </CardTitle>
         <CardDescription>
           {status === "loading" && "Please wait while we connect your GitHub account."}
-          {status === "success" && "Your GitHub account has been connected. This window will close automatically."}
+          {status === "success" &&
+            "Your GitHub account has been connected. This window will close automatically, or you may close it manually."}
           {status === "error" && errorMessage}
         </CardDescription>
       </CardHeader>
-      {status === "error" && (
+      {(status === "error" || status === "success") && (
         <CardContent>
           <button onClick={() => window.close()} className="text-primary text-sm underline hover:no-underline">
             Close this window

@@ -50,6 +50,7 @@ const GitHubIntegrationSection = () => {
   const user = useCurrentUser();
   const queryClient = useQueryClient();
   const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const disconnectMutation = useMutation({
     mutationFn: async () => {
@@ -64,11 +65,18 @@ const GitHubIntegrationSection = () => {
         throw new Error(errorData.data?.error ?? "Failed to disconnect GitHub");
       }
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    onSuccess: () => {
       setIsDisconnectModalOpen(false);
+      void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });
+
+  const handleDisconnectModalOpenChange = (open: boolean) => {
+    if (!open) {
+      disconnectMutation.reset();
+    }
+    setIsDisconnectModalOpen(open);
+  };
 
   const handleConnect = useCallback(async () => {
     // Get the OAuth URL from the backend
@@ -140,7 +148,7 @@ const GitHubIntegrationSection = () => {
               </div>
             </div>
             {user.githubUsername ? (
-              <DropdownMenu>
+              <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full gap-2 sm:w-auto">
                     <span className="size-2 rounded-full bg-green-500" />
@@ -151,7 +159,10 @@ const GitHubIntegrationSection = () => {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
-                    onClick={() => setIsDisconnectModalOpen(true)}
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      setIsDisconnectModalOpen(true);
+                    }}
                   >
                     Disconnect
                   </DropdownMenuItem>
@@ -166,7 +177,7 @@ const GitHubIntegrationSection = () => {
         </Card>
       </div>
 
-      <AlertDialog open={isDisconnectModalOpen} onOpenChange={setIsDisconnectModalOpen}>
+      <AlertDialog open={isDisconnectModalOpen} onOpenChange={handleDisconnectModalOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect Github account?</AlertDialogTitle>
