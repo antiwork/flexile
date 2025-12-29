@@ -82,7 +82,6 @@ export function AuthPage({
       const redirectUrl = searchParams.get("redirect_url");
       setRedirectInProgress(true);
       router.replace(
-        // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
         redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard",
       );
     },

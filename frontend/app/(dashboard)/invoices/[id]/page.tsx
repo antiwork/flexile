@@ -359,9 +359,18 @@ export default function InvoicePage() {
                             ? prDetails?.author.toLowerCase() === contractorGithubUsername.toLowerCase()
                             : null;
 
-                        // Show status dot if unverified (only for admins, and not on paid invoices)
+                        // Get paid invoices for this PR
+                        const paidInvoices = lineItem.paidInvoices.map((inv) => ({
+                          invoiceId: inv.invoiceId,
+                          invoiceNumber: inv.invoiceNumber,
+                        }));
+
+                        // Show status dot if unverified OR paid before (only for admins, and not on paid invoices)
                         const showStatusDot =
-                          user.roles.administrator && hasPR && isVerified === false && invoice.status !== "paid";
+                          user.roles.administrator &&
+                          hasPR &&
+                          (isVerified === false || paidInvoices.length > 0) &&
+                          invoice.status !== "paid";
 
                         const isMerged = prDetails?.state === "merged";
 
@@ -369,7 +378,11 @@ export default function InvoicePage() {
                           <TableRow key={index}>
                             <PrintTableCell className="w-[50%] align-top md:w-[60%] print:align-top">
                               {hasPR && prDetails ? (
-                                <GitHubPRHoverCard pr={prDetails} currentUserGitHubUsername={contractorGithubUsername}>
+                                <GitHubPRHoverCard
+                                  pr={prDetails}
+                                  currentUserGitHubUsername={contractorGithubUsername}
+                                  paidInvoices={paidInvoices}
+                                >
                                   <a
                                     href={prDetails.url}
                                     target="_blank"

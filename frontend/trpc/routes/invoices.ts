@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { formatISO } from "date-fns";
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, ne } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { pick } from "lodash-es";
 import { z } from "zod";
@@ -316,6 +316,44 @@ export const invoicesRouter = createRouter({
 
     if (!invoice) throw new TRPCError({ code: "NOT_FOUND" });
 
+    // Find which PR URLs have been paid in other invoices
+    const prUrls = invoice.lineItems.map((item) => item.githubPrUrl).filter((url): url is string => url !== null);
+
+    const paidPrInvoices = new Map<string, { invoiceId: string; invoiceNumber: string }[]>();
+
+    if (prUrls.length > 0) {
+      // Find all paid invoices that contain these PR URLs (excluding current invoice)
+      const paidLineItems = await db
+        .select({
+          githubPrUrl: invoiceLineItems.githubPrUrl,
+          invoiceId: invoices.externalId,
+          invoiceNumber: invoices.invoiceNumber,
+        })
+        .from(invoiceLineItems)
+        .innerJoin(invoices, eq(invoiceLineItems.invoiceId, invoices.id))
+        .where(
+          and(
+            inArray(invoiceLineItems.githubPrUrl, prUrls),
+            eq(invoices.status, "paid"),
+            eq(invoices.companyId, ctx.company.id),
+            isNull(invoices.deletedAt),
+            // Exclude current invoice
+            ne(invoices.externalId, invoice.externalId),
+          ),
+        );
+
+      // Group by PR URL
+      for (const item of paidLineItems) {
+        if (!item.githubPrUrl) continue;
+        const existing = paidPrInvoices.get(item.githubPrUrl) ?? [];
+        // Avoid duplicates (same invoice)
+        if (!existing.some((e) => e.invoiceId === item.invoiceId)) {
+          existing.push({ invoiceId: item.invoiceId, invoiceNumber: item.invoiceNumber });
+        }
+        paidPrInvoices.set(item.githubPrUrl, existing);
+      }
+    }
+
     const expenseAttachmentRows = await db.query.activeStorageAttachments.findMany({
       where: and(
         eq(activeStorageAttachments.recordType, "InvoiceExpense"),
@@ -374,7 +412,10 @@ export const invoicesRouter = createRouter({
         return { ...expense, attachment: attachment?.blob };
       }),
       attachment: documentAttachmentRow ? documentAttachmentRow.blob : null,
-      lineItems: invoice.lineItems,
+      lineItems: invoice.lineItems.map((lineItem) => ({
+        ...lineItem,
+        paidInvoices: lineItem.githubPrUrl ? (paidPrInvoices.get(lineItem.githubPrUrl) ?? []) : [],
+      })),
       id: invoice.externalId,
       approvals: invoice.approvals.map((approval) => ({
         approvedAt: approval.approvedAt,
