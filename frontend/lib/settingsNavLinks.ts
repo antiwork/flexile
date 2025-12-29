@@ -1,4 +1,5 @@
 import {
+  Blocks,
   Briefcase,
   Building,
   CreditCard,
@@ -82,6 +83,13 @@ export const settingsNavLinks = [
     label: "Templates",
     route: "/settings/administrator/templates" as const,
     icon: FolderClosed,
+    isVisible: (user: CurrentUser) => !!user.roles.administrator,
+    category: "company",
+  },
+  {
+    label: "Integrations",
+    route: "/settings/administrator/integrations" as const,
+    icon: Blocks,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
     category: "company",
   },

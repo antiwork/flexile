@@ -40,6 +40,7 @@ const companySchema = z.object({
     }),
   ),
   checklistCompletionPercentage: z.number(),
+  githubOrgName: z.string().nullable(),
 });
 
 export const currentUserSchema = z.object({

@@ -95,6 +95,7 @@ class UserPresenter
           checklistItems: company.checklist_items(user),
           checklistCompletionPercentage: company.checklist_completion_percentage(user),
           externalId: company.external_id,
+          githubOrgName: company.github_org_name,
         }
       end,
       id: user.external_id,
