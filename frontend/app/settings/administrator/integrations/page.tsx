@@ -62,6 +62,7 @@ const GitHubIntegrationSection = () => {
   const queryClient = useQueryClient();
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const form = useForm<z.infer<typeof connectFormSchema>>({
     resolver: zodResolver(connectFormSchema),
@@ -104,18 +105,27 @@ const GitHubIntegrationSection = () => {
         throw new Error(errorData.data?.error ?? "Failed to disconnect GitHub organization");
       }
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    onSuccess: () => {
       setIsDisconnectModalOpen(false);
+      void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });
+
+  const handleDisconnectModalOpenChange = (open: boolean) => {
+    if (!open) {
+      disconnectMutation.reset();
+    }
+    setIsDisconnectModalOpen(open);
+  };
 
   const handleConnectSubmit = form.handleSubmit((values) => {
     connectMutation.mutate(values);
   });
 
   const handleConnectModalOpenChange = (open: boolean) => {
-    if (!open) {
+    if (open) {
+      connectMutation.reset();
+    } else {
       form.reset();
       connectMutation.reset();
     }
@@ -136,7 +146,7 @@ const GitHubIntegrationSection = () => {
             </div>
           </div>
           {company.githubOrgName ? (
-            <DropdownMenu>
+            <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full gap-2 sm:w-auto">
                   <span className="size-2 rounded-full bg-green-500" />
@@ -147,14 +157,17 @@ const GitHubIntegrationSection = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
-                  onClick={() => setIsDisconnectModalOpen(true)}
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    setIsDisconnectModalOpen(true);
+                  }}
                 >
                   Disconnect
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setIsConnectModalOpen(true)}>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleConnectModalOpenChange(true)}>
               Connect
             </Button>
           )}
@@ -205,7 +218,7 @@ const GitHubIntegrationSection = () => {
       </Dialog>
 
       {/* Disconnect Modal */}
-      <AlertDialog open={isDisconnectModalOpen} onOpenChange={setIsDisconnectModalOpen}>
+      <AlertDialog open={isDisconnectModalOpen} onOpenChange={handleDisconnectModalOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect Github organization?</AlertDialogTitle>
