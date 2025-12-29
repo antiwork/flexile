@@ -652,6 +652,8 @@ const Edit = () => {
                           error={item.prError ?? null}
                           onRetry={() => void fetchPRDetails(item.description, rowIndex)}
                           onClick={() => setEditingLineItemIndex(rowIndex)}
+                          currentUserGitHubUsername={user.githubUsername}
+                          hoverCardEnabled={!isEditing}
                         />
                       ) : (
                         <Input

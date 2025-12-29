@@ -2,6 +2,7 @@
 
 import { GitMerge, GitPullRequest, Loader2, RotateCcw } from "lucide-react";
 import React from "react";
+import { GitHubPRHoverCard, type PaidInvoiceInfo } from "@/components/GitHubPRHoverCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils";
@@ -15,13 +16,32 @@ interface GitHubPRLineItemProps {
   onRetry?: () => void;
   onClick?: () => void;
   className?: string;
+  /** Current user's GitHub username for verification display */
+  currentUserGitHubUsername?: string | null;
+  /** List of invoices where this PR was previously paid */
+  paidInvoices?: PaidInvoiceInfo[];
+  /** Show amber status dot for items needing attention */
+  showStatusDot?: boolean;
+  /** Whether hover card is enabled (default true) */
+  hoverCardEnabled?: boolean;
 }
 
 /**
  * Renders a prettified GitHub PR line item
- * Shows: [Icon] Title... #123 [Bounty Badge]
+ * Shows: [Icon] repo Title... #123 [Bounty Badge] [Status Dot]
  */
-export function GitHubPRLineItem({ pr, isLoading, error, onRetry, onClick, className }: GitHubPRLineItemProps) {
+export function GitHubPRLineItem({
+  pr,
+  isLoading,
+  error,
+  onRetry,
+  onClick,
+  className,
+  currentUserGitHubUsername,
+  paidInvoices = [],
+  showStatusDot = false,
+  hoverCardEnabled = true,
+}: GitHubPRLineItemProps) {
   if (isLoading) {
     return (
       <div className={cn("flex items-center gap-2 text-sm", className)}>
@@ -57,7 +77,7 @@ export function GitHubPRLineItem({ pr, isLoading, error, onRetry, onClick, class
   const truncatedTitle =
     pr.title.length > maxTitleLength ? `${pr.title.substring(0, maxTitleLength).trim()}...` : pr.title;
 
-  return (
+  const content = (
     <button
       type="button"
       onClick={onClick}
@@ -84,7 +104,21 @@ export function GitHubPRLineItem({ pr, isLoading, error, onRetry, onClick, class
           {formatMoneyFromCents(pr.bounty_cents)}
         </Badge>
       ) : null}
+      {showStatusDot ? (
+        <span className="size-2 shrink-0 rounded-full bg-amber-500" aria-label="Needs attention" />
+      ) : null}
     </button>
+  );
+
+  return (
+    <GitHubPRHoverCard
+      pr={pr}
+      currentUserGitHubUsername={currentUserGitHubUsername}
+      paidInvoices={paidInvoices}
+      enabled={hoverCardEnabled}
+    >
+      {content}
+    </GitHubPRHoverCard>
   );
 }
 
