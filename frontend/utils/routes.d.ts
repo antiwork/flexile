@@ -588,6 +588,26 @@ export const balance_credit_webhooks_wise_index_path: ((
 
 /**
  * Generates rails route to
+ * /internal/github/callback(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const callback_github_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/callback(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const callback_github_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/administrator/cap_table(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -1332,6 +1352,30 @@ export const company_workers_path: ((
 
 /**
  * Generates rails route to
+ * /internal/companies/:company_id/github/connect(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const connect_company_github_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/github/connect(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const connect_company_github_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
  * /internal/current_user(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
@@ -1347,6 +1391,50 @@ export const current_user_url: ((
  * @returns {string} route path
  */
 export const current_user_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/github/disconnect(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const disconnect_company_github_url: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/companies/:company_id/github/disconnect(.:format)
+ * @param {any} company_id
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const disconnect_company_github_path: ((
+  company_id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/disconnect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const disconnect_github_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/disconnect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const disconnect_github_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
@@ -1931,6 +2019,46 @@ export const oauth_redirect_url: ((
  * @returns {string} route path
  */
 export const oauth_redirect_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/oauth_url(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const oauth_url_github_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/oauth_url(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const oauth_url_github_path: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/pr(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const pr_github_url: ((
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github/pr(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const pr_github_path: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
-import "./globals.css";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Toaster } from "sonner";
+import "./globals.css";
 import { TRPCProvider } from "@/trpc/client";
 
 const abcWhyte = localFont({
@@ -44,6 +45,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <TRPCProvider>
             <NuqsAdapter>{children}</NuqsAdapter>
           </TRPCProvider>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              classNames: {
+                toast: "bg-background border-border shadow-lg",
+                title: "text-foreground text-sm font-normal",
+                success: "!bg-green-50 !border-green-100 [&_[data-icon]]:text-green-600",
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

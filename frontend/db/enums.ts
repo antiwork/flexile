@@ -40,6 +40,7 @@ export enum TaxClassification {
 export enum SignInMethod {
   Email = "email",
   Google = "google",
+  GitHub = "github",
 }
 
 export const invoiceStatuses = [

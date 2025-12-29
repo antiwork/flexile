@@ -40,6 +40,7 @@ const companySchema = z.object({
     }),
   ),
   checklistCompletionPercentage: z.number(),
+  githubOrgName: z.string().nullable(),
 });
 
 export const currentUserSchema = z.object({
@@ -57,6 +58,7 @@ export const currentUserSchema = z.object({
   hasPayoutMethodForDividends: z.boolean(),
   taxInformationConfirmedAt: z.string().nullable(),
   isImpersonating: z.boolean(),
+  githubUsername: z.string().nullable(),
   roles: z.object({
     administrator: z.object({ id: z.string(), isInvited: z.boolean() }).optional(),
     lawyer: z.object({ id: z.string() }).optional(),

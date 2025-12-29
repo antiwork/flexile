@@ -29,6 +29,8 @@ const env = z
     NEXTAUTH_SECRET: z.string(),
     GOOGLE_CLIENT_ID: z.string(),
     GOOGLE_CLIENT_SECRET: z.string(),
+    GH_CLIENT_ID: z.string(),
+    GH_CLIENT_SECRET: z.string(),
     PROTOCOL: z.string(),
   })
   .parse(process.env);
