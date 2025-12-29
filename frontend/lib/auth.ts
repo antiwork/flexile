@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import type { Provider } from "next-auth/providers/index";
 import { z } from "zod";
@@ -105,6 +106,12 @@ export const authOptions = {
         clientSecret: env.GOOGLE_CLIENT_SECRET,
       }),
     ),
+    ExternalProvider(
+      GitHubProvider({
+        clientId: env.GH_CLIENT_ID,
+        clientSecret: env.GH_CLIENT_SECRET,
+      }),
+    ),
   ],
   session: {
     strategy: "jwt",
@@ -125,16 +132,32 @@ export const authOptions = {
     session({ session, token }) {
       return { ...session, user: { ...session.user, ...token, id: token.sub } };
     },
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (!account) return false;
 
       if (account.type !== "oauth" && !isTestEnv) return true;
 
       try {
+        // Build request body with email and optional GitHub info
+        const requestBody: Record<string, string | undefined> = {
+          email: user.email,
+          token: env.API_SECRET_TOKEN,
+        };
+
+        // If signing in with GitHub, include GitHub-specific info
+        if (account.provider === "github" && profile) {
+          const githubProfile = z.object({ id: z.number(), login: z.string() }).safeParse(profile);
+          if (githubProfile.success) {
+            requestBody.github_uid = githubProfile.data.id.toString();
+            requestBody.github_username = githubProfile.data.login;
+            requestBody.github_access_token = account.access_token;
+          }
+        }
+
         const response = await fetch(`${process.env.NEXTAUTH_URL}/internal/oauth`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: user.email, token: env.API_SECRET_TOKEN }),
+          body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {

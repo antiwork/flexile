@@ -12,7 +12,6 @@ RSpec.describe Internal::GithubController do
   end
 
   describe "GET #oauth_url" do
-
     it "returns a GitHub OAuth URL" do
       get :oauth_url, params: { redirect_uri: "https://example.com/callback" }
 
@@ -66,7 +65,7 @@ RSpec.describe Internal::GithubController do
             login: "testuser",
             email: "test@github.com",
             avatar_url: "https://avatars.githubusercontent.com/u/12345",
-            name: "Test User"
+            name: "Test User",
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
@@ -74,7 +73,7 @@ RSpec.describe Internal::GithubController do
       post :callback, params: {
         code: "test_code",
         state: oauth_state,
-        redirect_uri: "https://example.com/callback"
+        redirect_uri: "https://example.com/callback",
       }
 
       expect(response).to have_http_status(:ok)
@@ -128,7 +127,7 @@ RSpec.describe Internal::GithubController do
     end
 
     it "returns conflict when GitHub account is already connected to another user" do
-      other_user = create(:user, github_uid: "12345", github_username: "testuser")
+      create(:user, github_uid: "12345", github_username: "testuser")
 
       stub_request(:post, "https://github.com/login/oauth/access_token")
         .to_return(
@@ -220,7 +219,7 @@ RSpec.describe Internal::GithubController do
             labels: [{ name: "$100" }],
             created_at: "2024-01-15T10:00:00Z",
             merged_at: nil,
-            closed_at: nil
+            closed_at: nil,
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )

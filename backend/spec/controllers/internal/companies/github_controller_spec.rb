@@ -22,7 +22,7 @@ RSpec.describe Internal::Companies::GithubController do
         post :connect, params: {
           company_id: company.external_id,
           github_org_name: "antiwork",
-          github_org_id: 12345
+          github_org_id: 12345,
         }
 
         expect(response).to have_http_status(:ok)
@@ -39,7 +39,7 @@ RSpec.describe Internal::Companies::GithubController do
       it "returns error when github_org_name is missing" do
         post :connect, params: {
           company_id: company.external_id,
-          github_org_id: 12345
+          github_org_id: 12345,
         }
 
         expect(response).to have_http_status(:bad_request)
@@ -52,7 +52,7 @@ RSpec.describe Internal::Companies::GithubController do
         post :connect, params: {
           company_id: company.external_id,
           github_org_name: "",
-          github_org_id: 12345
+          github_org_id: 12345,
         }
 
         expect(response).to have_http_status(:bad_request)
@@ -64,7 +64,7 @@ RSpec.describe Internal::Companies::GithubController do
       it "allows connecting without github_org_id" do
         post :connect, params: {
           company_id: company.external_id,
-          github_org_name: "antiwork"
+          github_org_name: "antiwork",
         }
 
         expect(response).to have_http_status(:ok)
@@ -81,7 +81,7 @@ RSpec.describe Internal::Companies::GithubController do
       it "disallows access" do
         post :connect, params: {
           company_id: company.external_id,
-          github_org_name: "antiwork"
+          github_org_name: "antiwork",
         }
 
         expect(response).to have_http_status(:forbidden)

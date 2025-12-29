@@ -18,7 +18,7 @@ class Internal::GithubController < Internal::BaseController
       render json: {
         url: GithubService.oauth_url(state: state, redirect_uri: redirect_uri),
       }
-    rescue GithubService::ConfigurationError => e
+    rescue GithubService::ConfigurationError
       render json: { error: "GitHub integration is not configured" }, status: :service_unavailable
     end
   end

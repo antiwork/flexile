@@ -40,7 +40,7 @@ RSpec.describe GithubService do
             "client_id" => "test_client_id",
             "client_secret" => "test_client_secret",
             "code" => "test_code",
-            "redirect_uri" => "https://example.com/callback"
+            "redirect_uri" => "https://example.com/callback",
           }
         )
         .to_return(
@@ -91,7 +91,7 @@ RSpec.describe GithubService do
             login: "testuser",
             email: "test@example.com",
             avatar_url: "https://avatars.githubusercontent.com/u/12345",
-            name: "Test User"
+            name: "Test User",
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
@@ -128,12 +128,12 @@ RSpec.describe GithubService do
         state: "open",
         user: {
           login: "contributor",
-          avatar_url: "https://avatars.githubusercontent.com/u/999"
+          avatar_url: "https://avatars.githubusercontent.com/u/999",
         },
         labels: [],
         created_at: "2024-01-15T10:00:00Z",
         merged_at: nil,
-        closed_at: nil
+        closed_at: nil,
       }
     end
 
@@ -318,7 +318,7 @@ RSpec.describe GithubService do
           status: 200,
           body: {
             number: 42,
-            labels: [{ "name" => "$500" }, { "name" => "bug" }]
+            labels: [{ "name" => "$500" }, { "name" => "bug" }],
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
@@ -368,7 +368,7 @@ RSpec.describe GithubService do
             labels: [{ "name" => "bug" }],
             created_at: "2024-01-15T10:00:00Z",
             merged_at: nil,
-            closed_at: nil
+            closed_at: nil,
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
@@ -379,7 +379,7 @@ RSpec.describe GithubService do
           status: 200,
           body: {
             number: 42,
-            labels: [{ "name" => "$500" }]
+            labels: [{ "name" => "$500" }],
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
@@ -409,7 +409,7 @@ RSpec.describe GithubService do
             labels: [{ "name" => "$100" }],
             created_at: "2024-01-15T10:00:00Z",
             merged_at: nil,
-            closed_at: nil
+            closed_at: nil,
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
@@ -439,7 +439,7 @@ RSpec.describe GithubService do
             labels: [],
             created_at: "2024-01-15T10:00:00Z",
             merged_at: nil,
-            closed_at: nil
+            closed_at: nil,
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
@@ -475,7 +475,7 @@ RSpec.describe GithubService do
             labels: [],
             created_at: "2024-01-15T10:00:00Z",
             merged_at: nil,
-            closed_at: nil
+            closed_at: nil,
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
@@ -511,7 +511,7 @@ RSpec.describe GithubService do
             labels: [{ "name" => "bug" }],
             created_at: "2024-01-15T10:00:00Z",
             merged_at: nil,
-            closed_at: nil
+            closed_at: nil,
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
@@ -547,7 +547,7 @@ RSpec.describe GithubService do
             labels: [],
             created_at: "2024-01-15T10:00:00Z",
             merged_at: nil,
-            closed_at: nil
+            closed_at: nil,
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
@@ -576,7 +576,7 @@ RSpec.describe GithubService do
             labels: [],
             created_at: "2024-01-15T10:00:00Z",
             merged_at: nil,
-            closed_at: nil
+            closed_at: nil,
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
@@ -606,7 +606,7 @@ RSpec.describe GithubService do
             labels: [{ name: "$3000" }],
             created_at: "2024-01-15T10:00:00Z",
             merged_at: nil,
-            closed_at: nil
+            closed_at: nil,
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )

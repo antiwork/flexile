@@ -138,7 +138,7 @@ class GithubService
           match = label_name.match(pattern)
           if match
             # Remove commas and convert to cents
-            amount = match[1].gsub(",", "").to_f
+            amount = match[1].delete(",").to_f
             return (amount * 100).to_i
           end
         end
@@ -170,12 +170,12 @@ class GithubService
         request = HTTP.headers(headers)
 
         response = case method
-        when :get
-          request.get("#{GITHUB_API_URL}#{path}")
-        when :post
-          request.post("#{GITHUB_API_URL}#{path}", json: body)
-        else
-          raise ArgumentError, "Unsupported HTTP method: #{method}"
+                   when :get
+                     request.get("#{GITHUB_API_URL}#{path}")
+                   when :post
+                     request.post("#{GITHUB_API_URL}#{path}", json: body)
+                   else
+                     raise ArgumentError, "Unsupported HTTP method: #{method}"
         end
 
         unless response.status.success?
