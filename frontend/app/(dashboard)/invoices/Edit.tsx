@@ -4,7 +4,8 @@ import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
-import { CircleAlert, Github, Plus, Upload } from "lucide-react";
+import { CircleAlert, Plus, Upload } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useRef, useState } from "react";
@@ -31,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import githubMark from "@/images/github-mark.svg";
 import { trpc } from "@/trpc/client";
 import { assert, assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
@@ -556,7 +558,7 @@ const Edit = () => {
 
       {showGitHubConnectAlert ? (
         <Alert className="mx-4" variant="warning">
-          <Github className="size-4" />
+          <Image src={githubMark} alt="" className="size-4" />
           <AlertDescription className="flex flex-1 items-center justify-between gap-2">
             <span>Connect your GitHub account to verify your PRs</span>
             <Button variant="outline" size="small" onClick={() => void handleConnectGitHub()}>
