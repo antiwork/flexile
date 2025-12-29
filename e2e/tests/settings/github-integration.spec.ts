@@ -191,7 +191,9 @@ test.describe("GitHub integration", () => {
       await page.getByPlaceholder("Description").first().blur();
 
       // Alert message and Connect GitHub button when user has no GitHub connected
-      await expect(page.getByText("Connect your GitHub account to verify your PRs")).toBeVisible();
+      await expect(
+        page.getByText("You linked a Pull Request from antiwork. Connect GitHub to verify your ownership."),
+      ).toBeVisible();
       await expect(page.getByRole("button", { name: "Connect GitHub" })).toBeVisible();
     });
 
