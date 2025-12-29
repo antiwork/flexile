@@ -2,9 +2,9 @@
 
 import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
-import { CircleAlert, Plus, Upload } from "lucide-react";
+import { CircleAlert, Loader2, Plus, Upload } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
@@ -98,7 +98,7 @@ const dataSchema = z.object({
         quantity: z.string().nullable(),
         hourly: z.boolean(),
         pay_rate_in_subunits: z.number(),
-        // GitHub PR fields
+        // GitHub PR fields (returned from backend for saved invoices)
         github_pr_url: z.string().nullable().optional(),
         github_pr_number: z.number().nullable().optional(),
         github_pr_title: z.string().nullable().optional(),
@@ -131,13 +131,119 @@ type Data = z.infer<typeof dataSchema>;
 
 type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & {
   errors?: string[] | null;
-  // Local state for PR fetching
-  prLoading?: boolean;
-  prError?: string | null;
-  prDetails?: PRDetails | null;
 };
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
 type InvoiceFormDocument = Data["invoice"]["attachment"] & { errors?: string[] | null; blob?: File | null };
+
+// Fetches and displays PR details for a line item (display only - backend handles storage)
+const PRLineItemCell = ({
+  description,
+  storedPRData,
+  githubUsername,
+  companyGithubOrg,
+  isEditing,
+  onEdit,
+  onChange,
+  onBlur,
+  hasError,
+}: {
+  description: string;
+  storedPRData: {
+    url: string | null;
+    number: number | null;
+    title: string | null;
+    state: string | null;
+    author: string | null;
+    repo: string | null;
+    bounty_cents: number | null;
+  };
+  githubUsername: string | null;
+  companyGithubOrg: string | null;
+  isEditing: boolean;
+  onEdit: () => void;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+  hasError: boolean;
+}) => {
+  const hasPRUrl = isGitHubPRUrl(description);
+  const parsedPR = hasPRUrl ? parseGitHubPRUrl(description) : null;
+  const isCompanyOrgPR =
+    parsedPR && companyGithubOrg && parsedPR.owner.toLowerCase() === companyGithubOrg.toLowerCase();
+
+  // Only fetch PR details for company org PRs when user is connected
+  const shouldFetch = Boolean(hasPRUrl && isCompanyOrgPR && githubUsername && !storedPRData.url);
+
+  const {
+    data: prDetails,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["pr-details", description],
+    queryFn: async () => {
+      const response = await request({
+        method: "GET",
+        url: `${pr_github_path()}?url=${encodeURIComponent(description)}`,
+        accept: "json",
+      });
+
+      if (!response.ok) {
+        const errorData = z.object({ error: z.string().optional() }).safeParse(await response.json());
+        throw new Error(errorData.data?.error ?? "Failed to fetch PR details");
+      }
+
+      const data = z.object({ pr: prDetailsSchema }).parse(await response.json());
+      return data.pr;
+    },
+    enabled: shouldFetch,
+    staleTime: Infinity,
+  });
+
+  // Use fetched data, or fall back to stored data from backend
+  const displayPR: PRDetails | null =
+    prDetails ??
+    (storedPRData.url
+      ? {
+          url: storedPRData.url,
+          number: storedPRData.number ?? 0,
+          title: storedPRData.title ?? "",
+          state: parsePRState(storedPRData.state),
+          author: storedPRData.author ?? "",
+          repo: storedPRData.repo ?? "",
+          bounty_cents: storedPRData.bounty_cents,
+        }
+      : null);
+
+  // Show prettified view ONLY when we have PR data to display and not editing
+  if (!isEditing && displayPR) {
+    return (
+      <GitHubPRLineItem
+        pr={displayPR}
+        error={error?.message ?? null}
+        onRetry={() => void refetch()}
+        onClick={onEdit}
+        currentUserGitHubUsername={githubUsername}
+        hoverCardEnabled
+      />
+    );
+  }
+
+  // Default: show input field with optional loading spinner
+  return (
+    <div className="relative flex items-center">
+      <Input
+        value={description}
+        placeholder="Description or GitHub PR link..."
+        aria-invalid={hasError}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={onEdit}
+        onBlur={onBlur}
+        className={isLoading ? "pr-8" : ""}
+      />
+      {isLoading ? <Loader2 className="text-muted-foreground absolute right-2 size-4 animate-spin" /> : null}
+    </div>
+  );
+};
 
 const Edit = () => {
   const user = useCurrentUser();
@@ -204,63 +310,12 @@ const Edit = () => {
   const hasCompanyOrgPRUrls = company.githubOrgName
     ? lineItems.some((item) => {
         const parsed = parseGitHubPRUrl(item.description);
-        return parsed && parsed.owner.toLowerCase() === company.githubOrgName?.toLowerCase();
+        return Boolean(parsed && parsed.owner.toLowerCase() === company.githubOrgName?.toLowerCase());
       })
     : false;
 
   // Only show connect alert if user has PR URLs from company's org but no GitHub connection
   const showGitHubConnectAlert = hasCompanyOrgPRUrls && !user.githubUsername;
-
-  // Fetch PR details when a GitHub URL is detected
-  const fetchPRDetails = useCallback(
-    async (url: string, rowIndex: number) => {
-      if (!user.githubUsername) return;
-
-      setLineItems((items) =>
-        items.update(rowIndex, (item) => ({ ...assertDefined(item), prLoading: true, prError: null })),
-      );
-
-      try {
-        const response = await request({
-          method: "GET",
-          url: `${pr_github_path()}?url=${encodeURIComponent(url)}`,
-          accept: "json",
-        });
-
-        if (!response.ok) {
-          const errorData = z.object({ error: z.string().optional() }).safeParse(await response.json());
-          throw new Error(errorData.data?.error ?? "Failed to fetch PR details");
-        }
-
-        const data = z.object({ pr: prDetailsSchema }).parse(await response.json());
-
-        setLineItems((items) =>
-          items.update(rowIndex, (item) => ({
-            ...assertDefined(item),
-            prLoading: false,
-            prDetails: data.pr,
-            // Store PR data in the line item for persistence
-            github_pr_url: data.pr.url,
-            github_pr_number: data.pr.number,
-            github_pr_title: data.pr.title,
-            github_pr_state: data.pr.state,
-            github_pr_author: data.pr.author,
-            github_pr_repo: data.pr.repo,
-            github_pr_bounty_cents: data.pr.bounty_cents,
-          })),
-        );
-      } catch (err) {
-        setLineItems((items) =>
-          items.update(rowIndex, (item) => ({
-            ...assertDefined(item),
-            prLoading: false,
-            prError: err instanceof Error ? err.message : "Failed to fetch PR details",
-          })),
-        );
-      }
-    },
-    [user.githubUsername],
-  );
 
   // Handle GitHub OAuth connection via popup
   const handleConnectGitHub = useCallback(async () => {
@@ -293,17 +348,12 @@ const Edit = () => {
         "type" in messageData &&
         messageData.type === "github-oauth-success"
       ) {
-        void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
         popup?.close();
         window.removeEventListener("message", handleMessage);
         toast.success("GitHub successfully connected.");
-
-        // Fetch PR details for any existing GitHub URLs
-        lineItems.forEach((item, index) => {
-          if (isGitHubPRUrl(item.description) && !item.prDetails) {
-            void fetchPRDetails(item.description, index);
-          }
-        });
+        // Invalidate queries to refetch user data and trigger PR detail fetching
+        void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+        void queryClient.invalidateQueries({ queryKey: ["pr-details"] });
       }
     };
 
@@ -315,7 +365,7 @@ const Edit = () => {
         window.removeEventListener("message", handleMessage);
       }
     }, 500);
-  }, [queryClient, lineItems, fetchPRDetails]);
+  }, [queryClient]);
 
   const validate = () => {
     setErrorField(null);
@@ -342,28 +392,7 @@ const Edit = () => {
         formData.append("invoice_line_items[][quantity]", lineItem.quantity.toString());
         formData.append("invoice_line_items[][hourly]", lineItem.hourly.toString());
         formData.append("invoice_line_items[][pay_rate_in_subunits]", lineItem.pay_rate_in_subunits.toString());
-        // GitHub PR fields
-        if (lineItem.github_pr_url) {
-          formData.append("invoice_line_items[][github_pr_url]", lineItem.github_pr_url);
-        }
-        if (lineItem.github_pr_number != null) {
-          formData.append("invoice_line_items[][github_pr_number]", lineItem.github_pr_number.toString());
-        }
-        if (lineItem.github_pr_title) {
-          formData.append("invoice_line_items[][github_pr_title]", lineItem.github_pr_title);
-        }
-        if (lineItem.github_pr_state) {
-          formData.append("invoice_line_items[][github_pr_state]", lineItem.github_pr_state);
-        }
-        if (lineItem.github_pr_author) {
-          formData.append("invoice_line_items[][github_pr_author]", lineItem.github_pr_author);
-        }
-        if (lineItem.github_pr_repo) {
-          formData.append("invoice_line_items[][github_pr_repo]", lineItem.github_pr_repo);
-        }
-        if (lineItem.github_pr_bounty_cents != null) {
-          formData.append("invoice_line_items[][github_pr_bounty_cents]", lineItem.github_pr_bounty_cents.toString());
-        }
+        // Note: github_pr_* fields are NOT submitted - backend fetches them
       }
       for (const expense of expenses) {
         if (expense.id) {
@@ -509,21 +538,6 @@ const Edit = () => {
         updated.errors = [];
         if (updated.description.length === 0) updated.errors.push("description");
         if (!updated.quantity || parseQuantity(updated.quantity) < 0.01) updated.errors.push("quantity");
-
-        // If description changed and it's a different URL, clear old PR data
-        if (update.description !== undefined && update.description !== current.description) {
-          updated.prDetails = null;
-          updated.prLoading = false;
-          updated.prError = null;
-          updated.github_pr_url = null;
-          updated.github_pr_number = null;
-          updated.github_pr_title = null;
-          updated.github_pr_state = null;
-          updated.github_pr_author = null;
-          updated.github_pr_repo = null;
-          updated.github_pr_bounty_cents = null;
-        }
-
         return updated;
       }),
     );
@@ -582,11 +596,14 @@ const Edit = () => {
       ) : null}
 
       {showGitHubConnectAlert ? (
-        <Alert className="mx-4" variant="warning">
-          <Image src={githubMark} alt="" className="size-4" />
+        <Alert className="mx-4">
+          <CircleAlert className="size-4" />
           <AlertDescription className="flex flex-1 items-center justify-between gap-2">
-            <span>Connect your GitHub account to verify your PRs</span>
+            <span>
+              You linked a Pull Request from {company.githubOrgName}. Connect GitHub to verify your ownership.
+            </span>
             <Button variant="outline" size="small" onClick={() => void handleConnectGitHub()}>
+              <Image src={githubMark} alt="" className="size-4 dark:invert" />
               Connect GitHub
             </Button>
           </AlertDescription>
@@ -644,54 +661,30 @@ const Edit = () => {
             </TableHeader>
             <TableBody>
               {lineItems.toArray().map((item, rowIndex) => {
-                const hasPRUrl = isGitHubPRUrl(item.description);
                 const isEditing = editingLineItemIndex === rowIndex;
-                const showPrettified = hasPRUrl && !isEditing && (item.prDetails ?? item.github_pr_url);
-
-                // Build PR details from stored data or fetched data
-                const prDetails: PRDetails | null =
-                  item.prDetails ??
-                  (item.github_pr_url
-                    ? {
-                        url: item.github_pr_url,
-                        number: item.github_pr_number ?? 0,
-                        title: item.github_pr_title ?? "",
-                        state: parsePRState(item.github_pr_state),
-                        author: item.github_pr_author ?? "",
-                        repo: item.github_pr_repo ?? "",
-                        bounty_cents: item.github_pr_bounty_cents ?? null,
-                      }
-                    : null);
 
                 return (
                   <TableRow key={rowIndex}>
                     <TableCell>
-                      {showPrettified ? (
-                        <GitHubPRLineItem
-                          pr={prDetails}
-                          isLoading={item.prLoading ?? false}
-                          error={item.prError ?? null}
-                          onRetry={() => void fetchPRDetails(item.description, rowIndex)}
-                          onClick={() => setEditingLineItemIndex(rowIndex)}
-                          currentUserGitHubUsername={user.githubUsername}
-                          hoverCardEnabled={!isEditing}
-                        />
-                      ) : (
-                        <Input
-                          value={item.description}
-                          placeholder="Description or GitHub PR link..."
-                          aria-invalid={item.errors?.includes("description")}
-                          onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
-                          onFocus={() => setEditingLineItemIndex(rowIndex)}
-                          onBlur={() => {
-                            setEditingLineItemIndex(null);
-                            // If this is a GitHub PR URL and user is connected, fetch details
-                            if (isGitHubPRUrl(item.description) && user.githubUsername && !item.prDetails) {
-                              void fetchPRDetails(item.description, rowIndex);
-                            }
-                          }}
-                        />
-                      )}
+                      <PRLineItemCell
+                        description={item.description}
+                        storedPRData={{
+                          url: item.github_pr_url ?? null,
+                          number: item.github_pr_number ?? null,
+                          title: item.github_pr_title ?? null,
+                          state: item.github_pr_state ?? null,
+                          author: item.github_pr_author ?? null,
+                          repo: item.github_pr_repo ?? null,
+                          bounty_cents: item.github_pr_bounty_cents ?? null,
+                        }}
+                        githubUsername={user.githubUsername}
+                        companyGithubOrg={company.githubOrgName}
+                        isEditing={isEditing}
+                        onEdit={() => setEditingLineItemIndex(rowIndex)}
+                        onChange={(value) => updateLineItem(rowIndex, { description: value })}
+                        onBlur={() => setEditingLineItemIndex(null)}
+                        hasError={item.errors?.includes("description") ?? false}
+                      />
                     </TableCell>
                     <TableCell>
                       <QuantityInput

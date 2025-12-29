@@ -1,6 +1,6 @@
 "use client";
 
-import { GitMerge, GitPullRequest, Loader2, RotateCcw } from "lucide-react";
+import { GitMerge, GitPullRequest, RotateCcw } from "lucide-react";
 import React from "react";
 import { GitHubPRHoverCard, type PaidInvoiceInfo } from "@/components/GitHubPRHoverCard";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +10,7 @@ import { formatMoneyFromCents } from "@/utils/formatMoney";
 import type { PRDetails } from "@/utils/github";
 
 interface GitHubPRLineItemProps {
-  pr: PRDetails | null;
-  isLoading?: boolean;
+  pr: PRDetails;
   error?: string | null;
   onRetry?: () => void;
   onClick?: () => void;
@@ -32,7 +31,6 @@ interface GitHubPRLineItemProps {
  */
 export function GitHubPRLineItem({
   pr,
-  isLoading,
   error,
   onRetry,
   onClick,
@@ -42,15 +40,6 @@ export function GitHubPRLineItem({
   showStatusDot = false,
   hoverCardEnabled = true,
 }: GitHubPRLineItemProps) {
-  if (isLoading) {
-    return (
-      <div className={cn("flex items-center gap-2 text-sm", className)}>
-        <Loader2 className="text-muted-foreground size-4 animate-spin" />
-        <span className="text-muted-foreground">Loading PR details...</span>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className={cn("flex items-center gap-2 text-sm", className)}>
@@ -63,10 +52,6 @@ export function GitHubPRLineItem({
         ) : null}
       </div>
     );
-  }
-
-  if (!pr) {
-    return null;
   }
 
   const isMerged = pr.state === "merged";
