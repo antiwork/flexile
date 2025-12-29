@@ -1,13 +1,13 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { request } from "@/utils/request";
 import { callback_github_path } from "@/utils/routes";
 
-export default function GitHubCallbackPage() {
+function GitHubCallbackContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -61,28 +61,47 @@ export default function GitHubCallbackPage() {
   }, [searchParams]);
 
   return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle>
+          {status === "loading" && "Connecting GitHub..."}
+          {status === "success" && "GitHub Connected!"}
+          {status === "error" && "Connection Failed"}
+        </CardTitle>
+        <CardDescription>
+          {status === "loading" && "Please wait while we connect your GitHub account."}
+          {status === "success" && "Your GitHub account has been connected. This window will close automatically."}
+          {status === "error" && errorMessage}
+        </CardDescription>
+      </CardHeader>
+      {status === "error" && (
+        <CardContent>
+          <button onClick={() => window.close()} className="text-primary text-sm underline hover:no-underline">
+            Close this window
+          </button>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+function GitHubCallbackLoading() {
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle>Connecting GitHub...</CardTitle>
+        <CardDescription>Please wait while we connect your GitHub account.</CardDescription>
+      </CardHeader>
+    </Card>
+  );
+}
+
+export default function GitHubCallbackPage() {
+  return (
     <div className="flex min-h-screen items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>
-            {status === "loading" && "Connecting GitHub..."}
-            {status === "success" && "GitHub Connected!"}
-            {status === "error" && "Connection Failed"}
-          </CardTitle>
-          <CardDescription>
-            {status === "loading" && "Please wait while we connect your GitHub account."}
-            {status === "success" && "Your GitHub account has been connected. This window will close automatically."}
-            {status === "error" && errorMessage}
-          </CardDescription>
-        </CardHeader>
-        {status === "error" && (
-          <CardContent>
-            <button onClick={() => window.close()} className="text-primary text-sm underline hover:no-underline">
-              Close this window
-            </button>
-          </CardContent>
-        )}
-      </Card>
+      <Suspense fallback={<GitHubCallbackLoading />}>
+        <GitHubCallbackContent />
+      </Suspense>
     </div>
   );
 }
