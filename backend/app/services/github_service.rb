@@ -11,7 +11,10 @@ class GithubService
   USER_SCOPES = "read:user user:email"
 
   # Patterns for extracting bounty amounts from labels
+  # Note: These patterns capture the raw value; conversion to cents happens in extract_bounty_from_labels
   BOUNTY_PATTERNS = [
+    /\$(\d+(?:\.\d+)?)\s*k/i,                  # $3K, $3.5K, $3k
+    /\$(\d+(?:\.\d+)?)\s*m/i,                  # $1M, $1.5M, $1m
     /\$(\d+(?:,\d{3})*(?:\.\d{2})?)/,          # $100, $1,000, $100.00
     /bounty[:\-_\s]*(\d+(?:,\d{3})*)/i,        # bounty:100, bounty-100, bounty_100, bounty 100
     /(\d+(?:,\d{3})*)\s*(?:usd|dollars?)/i,    # 100 USD, 100 dollars
@@ -136,6 +139,19 @@ class GithubService
       labels.each do |label|
         label_name = label["name"].to_s
 
+        # Check for K suffix (thousands)
+        if (match = label_name.match(/\$(\d+(?:\.\d+)?)\s*k/i))
+          amount = match[1].to_f * 1000
+          return (amount * 100).to_i
+        end
+
+        # Check for M suffix (millions)
+        if (match = label_name.match(/\$(\d+(?:\.\d+)?)\s*m/i))
+          amount = match[1].to_f * 1_000_000
+          return (amount * 100).to_i
+        end
+
+        # Check other patterns
         BOUNTY_PATTERNS.each do |pattern|
           match = label_name.match(pattern)
           if match

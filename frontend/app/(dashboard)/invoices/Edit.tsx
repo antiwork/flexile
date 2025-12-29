@@ -495,10 +495,26 @@ const Edit = () => {
   const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
     setLineItems((lineItems) =>
       lineItems.update(index, (lineItem) => {
-        const updated = { ...assertDefined(lineItem), ...update };
+        const current = assertDefined(lineItem);
+        const updated = { ...current, ...update };
         updated.errors = [];
         if (updated.description.length === 0) updated.errors.push("description");
         if (!updated.quantity || parseQuantity(updated.quantity) < 0.01) updated.errors.push("quantity");
+
+        // If description changed and it's a different URL, clear old PR data
+        if (update.description !== undefined && update.description !== current.description) {
+          updated.prDetails = null;
+          updated.prLoading = false;
+          updated.prError = null;
+          updated.github_pr_url = null;
+          updated.github_pr_number = null;
+          updated.github_pr_title = null;
+          updated.github_pr_state = null;
+          updated.github_pr_author = null;
+          updated.github_pr_repo = null;
+          updated.github_pr_bounty_cents = null;
+        }
+
         return updated;
       }),
     );
