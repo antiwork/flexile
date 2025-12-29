@@ -118,6 +118,7 @@ class UserPresenter
       onboardingPath: worker && worker.role.nil? ? "/documents" : nil,
       taxInformationConfirmedAt: tax_information_confirmed_at&.iso8601,
       isImpersonating: Current.impersonated_user.present?,
+      githubUsername: user.github_username,
     }
   end
 
