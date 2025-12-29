@@ -85,7 +85,7 @@ export function GitHubPRHoverCard({
       <HoverCardPrimitive.Portal>
         <HoverCardPrimitive.Content
           className={cn(
-            "bg-popover text-popover-foreground z-50 w-[360px] rounded-lg border border-black/[0.18] p-4 shadow-sm",
+            "bg-popover text-popover-foreground z-50 w-[360px] rounded-lg border border-black/[0.18] p-4 shadow-sm dark:border-white/10",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
