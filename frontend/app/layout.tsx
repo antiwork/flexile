@@ -51,7 +51,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               classNames: {
                 toast: "bg-background border-border shadow-lg",
                 title: "text-foreground text-sm font-normal",
-                success: "text-green-600",
+                success: "!bg-green-50 !border-green-100 [&_[data-icon]]:text-green-600",
               },
             }}
           />

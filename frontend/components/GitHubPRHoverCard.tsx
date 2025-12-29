@@ -1,7 +1,7 @@
 "use client";
 
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
-import { CheckCircle2, CircleAlert, GitMerge, GitPullRequest } from "lucide-react";
+import { BadgeDollarSign, CheckCircle2, CircleAlert, GitMerge, GitPullRequest } from "lucide-react";
 import Link from "next/link";
 import React, { useCallback, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -103,7 +103,7 @@ export function GitHubPRHoverCard({
 
             {/* Title and PR number - clickable link */}
             <div>
-              <a href={pr.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              <a href={pr.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                 <span className="line-clamp-2 font-semibold">{pr.title}</span>
               </a>
               <span className="text-muted-foreground ml-1">#{pr.number}</span>
@@ -146,12 +146,11 @@ export function GitHubPRHoverCard({
 
             {/* Paid status */}
             {paidInvoices.length > 0 ? (
-              <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
-                <span className="flex size-4 items-center justify-center rounded-full bg-blue-500 text-white">
-                  <span className="text-[10px] font-bold">$</span>
-                </span>
+              <div className="flex items-center gap-1.5 text-sm">
+                <BadgeDollarSign className="size-4 text-blue-600" />
                 <span>
-                  Paid on invoice{" "}
+                  <span className="font-medium text-blue-600">Paid</span>
+                  <span className="text-muted-foreground"> on invoice </span>
                   {paidInvoices.map((invoice, index) => (
                     <React.Fragment key={invoice.invoiceId}>
                       {index > 0 && (index === paidInvoices.length - 1 ? " and " : ", ")}
