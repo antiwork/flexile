@@ -36,7 +36,7 @@ import githubMark from "@/images/github-mark.svg";
 import { trpc } from "@/trpc/client";
 import { assert, assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { isGitHubPRUrl, parsePRState, type PRDetails } from "@/utils/github";
+import { isGitHubPRUrl, parseGitHubPRUrl, parsePRState, type PRDetails } from "@/utils/github";
 import { request } from "@/utils/request";
 import {
   company_invoice_path,
@@ -199,8 +199,17 @@ const Edit = () => {
 
   // GitHub PR integration state
   const [editingLineItemIndex, setEditingLineItemIndex] = useState<number | null>(null);
-  const hasGitHubPRUrls = lineItems.some((item) => isGitHubPRUrl(item.description));
-  const showGitHubConnectAlert = hasGitHubPRUrls && !user.githubUsername;
+
+  // Check if any PR URLs belong to the company's configured GitHub org
+  const hasCompanyOrgPRUrls = company.githubOrgName
+    ? lineItems.some((item) => {
+        const parsed = parseGitHubPRUrl(item.description);
+        return parsed && parsed.owner.toLowerCase() === company.githubOrgName?.toLowerCase();
+      })
+    : false;
+
+  // Only show connect alert if user has PR URLs from company's org but no GitHub connection
+  const showGitHubConnectAlert = hasCompanyOrgPRUrls && !user.githubUsername;
 
   // Fetch PR details when a GitHub URL is detected
   const fetchPRDetails = useCallback(
