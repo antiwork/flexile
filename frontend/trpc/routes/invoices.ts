@@ -280,12 +280,26 @@ export const invoicesRouter = createRouter({
           : undefined,
       ),
       with: {
-        lineItems: { columns: { description: true, quantity: true, hourly: true, payRateInSubunits: true } },
+        lineItems: {
+          columns: {
+            description: true,
+            quantity: true,
+            hourly: true,
+            payRateInSubunits: true,
+            githubPrUrl: true,
+            githubPrNumber: true,
+            githubPrTitle: true,
+            githubPrState: true,
+            githubPrAuthor: true,
+            githubPrRepo: true,
+            githubPrBountyCents: true,
+          },
+        },
         expenses: { columns: { id: true, totalAmountInCents: true, description: true, expenseCategoryId: true } },
         contractor: {
           with: {
             user: {
-              columns: { externalId: true },
+              columns: { externalId: true, githubUsername: true },
               with: {
                 userComplianceInfos: {
                   ...latestUserComplianceInfo,
@@ -371,6 +385,7 @@ export const invoicesRouter = createRouter({
         ...pick(invoice.contractor, "payRateInSubunits", "payRateType"),
         user: {
           id: invoice.contractor.user.externalId,
+          githubUsername: invoice.contractor.user.githubUsername,
           complianceInfo: invoice.contractor.user.userComplianceInfos[0],
         },
       },

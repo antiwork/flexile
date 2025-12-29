@@ -34,7 +34,7 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 import { assert, assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { isGitHubPRUrl, type PRDetails } from "@/utils/github";
+import { isGitHubPRUrl, parsePRState, type PRDetails } from "@/utils/github";
 import { request } from "@/utils/request";
 import {
   company_invoice_path,
@@ -622,12 +622,6 @@ const Edit = () => {
                 const showPrettified = hasPRUrl && !isEditing && (item.prDetails ?? item.github_pr_url);
 
                 // Build PR details from stored data or fetched data
-                // Helper to safely convert stored state to PRDetails state
-                const getPRState = (state: string | null | undefined): PRDetails["state"] => {
-                  if (state === "open" || state === "merged" || state === "closed") return state;
-                  return "open";
-                };
-
                 const prDetails: PRDetails | null =
                   item.prDetails ??
                   (item.github_pr_url
@@ -635,7 +629,7 @@ const Edit = () => {
                         url: item.github_pr_url,
                         number: item.github_pr_number ?? 0,
                         title: item.github_pr_title ?? "",
-                        state: getPRState(item.github_pr_state),
+                        state: parsePRState(item.github_pr_state),
                         author: item.github_pr_author ?? "",
                         repo: item.github_pr_repo ?? "",
                         bounty_cents: item.github_pr_bounty_cents ?? null,

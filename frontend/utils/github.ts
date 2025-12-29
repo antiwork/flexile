@@ -70,6 +70,15 @@ export interface PRDetails {
 }
 
 /**
+ * Safely convert a stored PR state string to a valid PRDetails state
+ * Returns "open" as default if the state is invalid
+ */
+export function parsePRState(state: string | null | undefined): PRDetails["state"] {
+  if (state === "open" || state === "merged" || state === "closed") return state;
+  return "open";
+}
+
+/**
  * Format a PR for display in a line item
  * Shows: "Title... #123" with the title truncated if needed
  */
