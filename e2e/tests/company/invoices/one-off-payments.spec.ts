@@ -100,7 +100,7 @@ test.describe("One-off payments", () => {
       await logout(page);
       await login(page, preOnboardingUser, `/invoices/${invoice.externalId}`);
       await expect(page.getByText("Missing tax information.")).toBeVisible();
-      await page.getByRole("link", { name: "Invoices" }).click();
+      await page.getByRole("link", { name: "Invoices", exact: true }).click();
       await expect(page.getByRole("link").getByText("provide your legal details")).toBeVisible();
     });
 
@@ -272,7 +272,7 @@ test.describe("One-off payments", () => {
           Amount: "$500",
           Status: "Failed",
         })
-        .getByRole("button", { name: "Pay again" })
+        .getByRole("button", { name: "Approve" })
         .click();
 
       await expect(page.getByText("Payment initiated")).toBeVisible();

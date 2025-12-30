@@ -347,8 +347,9 @@ test.describe("Invoices admin flow", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
-    await page.getByRole("row").getByText("Awaiting approval").first().click();
+    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
 
+    await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).toBeVisible();
 
     await db
@@ -356,26 +357,20 @@ test.describe("Invoices admin flow", () => {
       .set({ payRateInSubunits: null })
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
-    await page.getByRole("row").getByText("Awaiting approval").first().click();
-    await withinModal(
-      async (modal) => {
-        await expect(modal.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
-      },
-      { page, assertClosed: false },
-    );
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
+    await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
+    await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
 
     await db
       .update(companyContractors)
       .set({ payRateInSubunits: 60000 })
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
-    await page.getByRole("row").getByText("Awaiting approval").first().click();
-    await withinModal(
-      async (modal) => {
-        await expect(modal.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
-      },
-      { page, assertClosed: false },
-    );
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
+    await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
+    await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
   });
 
   test("shows attached document when viewing an invoice as an admin", async ({ page }) => {
@@ -411,18 +406,9 @@ test.describe("Invoices admin flow", () => {
     await login(page, adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
 
-    const invoiceRow = page.getByRole("row").filter({ hasText: "Awaiting approval" }).first();
-    await expect(invoiceRow).toBeVisible();
-    await invoiceRow.click();
+    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
 
-    await expect(page.getByRole("dialog")).toBeVisible();
-
-    await page.getByRole("link", { name: "View Invoice" }).click();
-
-    await expect(page.getByText("admin-review-document.pdf")).toBeVisible();
-
-    const documentLink = page.getByRole("link", { name: "admin-review-document.pdf" });
-    await expect(documentLink).toBeVisible();
+    await expect(page.getByRole("link", { name: "admin-review-document.pdf" })).toBeVisible();
   });
 
   test("shows expense attachments when viewing an invoice as an admin", async ({ page }) => {
@@ -466,13 +452,7 @@ test.describe("Invoices admin flow", () => {
     await login(page, adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
 
-    const invoiceRow = page.getByRole("row").filter({ hasText: "Awaiting approval" }).first();
-    await expect(invoiceRow).toBeVisible();
-    await invoiceRow.click();
-
-    await expect(page.getByRole("dialog")).toBeVisible();
-
-    await page.getByRole("link", { name: "View Invoice" }).click();
+    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
 
     await expect(page.getByRole("table").filter({ hasText: "Expense" })).toBeVisible();
     await expect(page.getByText("Office Depot")).toBeVisible();

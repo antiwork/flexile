@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import MutationButton from "@/components/MutationButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +13,7 @@ import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
 import { cn } from "@/utils";
+import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_invoice_path, reject_company_invoices_path } from "@/utils/routes";
 import { formatDate } from "@/utils/time";
@@ -358,4 +360,64 @@ export function StatusDetails({ invoice, className }: { invoice: Invoice; classN
       <AlertDescription>{statusDetails}</AlertDescription>
     </Alert>
   ) : null;
+}
+
+export function Totals({
+  servicesTotal,
+  expensesTotal,
+  equityAmountInCents,
+  equityPercentage,
+  isOwnUser,
+  className,
+}: {
+  servicesTotal: number | bigint;
+  expensesTotal: number | bigint;
+  equityAmountInCents: number | bigint;
+  equityPercentage: number;
+  isOwnUser: boolean;
+  className?: string;
+}) {
+  const company = useCurrentCompany();
+  return (
+    <Card className={cn("w-full self-start lg:w-auto lg:min-w-90", className)}>
+      {servicesTotal > 0 && expensesTotal > 0 && (
+        <CardContent className="border-border grid gap-4 border-b">
+          <div className="flex justify-between gap-2">
+            <span>Total services</span>
+            {formatMoneyFromCents(servicesTotal)}
+          </div>
+          <div className="flex justify-between gap-2">
+            <span>Total expenses</span>
+            <span>{formatMoneyFromCents(expensesTotal)}</span>
+          </div>
+        </CardContent>
+      )}
+      {company.equityEnabled || equityPercentage > 0 ? (
+        <CardContent className="border-border grid gap-4 border-b">
+          <h4 className="font-medium">Payment split</h4>
+          <div className="flex justify-between gap-2">
+            <span>Cash</span>
+            <span>{formatMoneyFromCents(BigInt(servicesTotal) - BigInt(equityAmountInCents))}</span>
+          </div>
+          <div>
+            <div className="flex justify-between gap-2">
+              <span>Equity</span>
+              <span>{formatMoneyFromCents(equityAmountInCents)}</span>
+            </div>
+            <div className="text-muted-foreground text-sm">
+              Swapping {(equityPercentage / 100).toLocaleString([], { style: "percent" })} for company equity.
+            </div>
+          </div>
+        </CardContent>
+      ) : null}
+      <CardContent className="bg-muted/20 rounded-b-md py-3 font-medium first:rounded-t-md">
+        <div className="flex justify-between gap-2">
+          <span>{isOwnUser ? "You'll" : "They'll"} receive in cash</span>
+          <span>
+            {formatMoneyFromCents(BigInt(servicesTotal) - BigInt(equityAmountInCents) + BigInt(expensesTotal))}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

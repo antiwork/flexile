@@ -64,17 +64,15 @@ test.describe("invoice creation", () => {
 
     await page.getByPlaceholder("Description").fill("I worked on invoices");
     await fillByLabel(page, "Hours / Qty", "01:00", { index: 0 });
-    await expect(page.getByText("Total services$60")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)$0")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$60")).toBeVisible();
+    await expect(page.getByText("Equity$0")).toBeVisible();
+    await expect(page.getByText("Cash$60", { exact: true })).toBeVisible();
 
     await fillDatePicker(page, "Date", "08/08/2021");
     await fillByLabel(page, "Hours / Qty", "100:00", { index: 0 });
     await page.getByPlaceholder("Description").fill("I worked on invoices");
 
-    await expect(page.getByText("Total services$6,000")).toBeVisible();
-    await expect(page.getByText("Swapped for equity (not paid in cash)$1,200")).toBeVisible();
-    await expect(page.getByText("Net amount in cash$4,800")).toBeVisible();
+    await expect(page.getByText("Equity$1,200")).toBeVisible();
+    await expect(page.getByText("Cash$4,800", { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
@@ -110,8 +108,8 @@ test.describe("invoice creation", () => {
     await db.update(companies).set({ equityEnabled: false }).where(eq(companies.id, company.id));
 
     await login(page, contractorUser, "/invoices/new");
-    await expect(page.getByText("Total")).toBeVisible();
-    await expect(page.getByText("Swapped for equity")).not.toBeVisible();
+    await expect(page.getByText("You'll receive in cash")).toBeVisible();
+    await expect(page.getByText("Equity")).not.toBeVisible();
   });
 
   test("creates an invoice with only expenses, no line items", async ({ page }) => {
@@ -277,9 +275,7 @@ test.describe("invoice creation", () => {
     await page.getByPlaceholder("Description").fill("Development work with decimal quantities");
     await fillDatePicker(page, "Date", "12/15/2023");
 
-    await expect(page.getByText("Total services$150")).toBeVisible();
-
-    await expect(page.getByText("Net amount in cash$120")).toBeVisible();
+    await expect(page.getByText("Cash$120", { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "Send invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();

@@ -12,7 +12,6 @@ import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
-import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -27,7 +26,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
@@ -42,7 +40,7 @@ import {
   new_company_invoice_path,
 } from "@/utils/routes";
 import QuantityInput from "./QuantityInput";
-import { LegacyAddress as Address, useCanSubmitInvoices } from ".";
+import { LegacyAddress as Address, Totals, useCanSubmitInvoices } from ".";
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -323,7 +321,6 @@ const Edit = () => {
     Math.ceil((parseQuantity(lineItem.quantity) / (lineItem.hourly ? 60 : 1)) * lineItem.pay_rate_in_subunits);
   const totalExpensesAmountInCents = expenses.reduce((acc, expense) => acc + expense.total_amount_in_cents, 0);
   const totalServicesAmountInCents = lineItems.reduce((acc, lineItem) => acc + lineItemTotal(lineItem), 0);
-  const totalInvoiceAmountInCents = totalServicesAmountInCents + totalExpensesAmountInCents;
   const [equityCalculation] = trpc.equityCalculations.calculate.useSuspenseQuery({
     companyId: company.id,
     servicesInCents: totalServicesAmountInCents,
@@ -654,44 +651,13 @@ const Edit = () => {
               placeholder="Enter notes about your invoice (optional)"
               className="w-full whitespace-pre-wrap lg:w-96"
             />
-            <div className="flex flex-col gap-2 md:self-start lg:items-end">
-              {showExpensesTable || company.equityEnabled ? (
-                <div className="flex flex-col items-end">
-                  <span>Total services</span>
-                  <span className="numeric text-xl">{formatMoneyFromCents(totalServicesAmountInCents)}</span>
-                </div>
-              ) : null}
-              {showExpensesTable ? (
-                <div className="flex flex-col items-end">
-                  <span>Total expenses</span>
-                  <span className="numeric text-xl">{formatMoneyFromCents(totalExpensesAmountInCents)}</span>
-                </div>
-              ) : null}
-              {company.equityEnabled ? (
-                <>
-                  <div className="flex flex-col items-end">
-                    <span>
-                      <Link href="/settings/payouts" className={linkClasses}>
-                        Swapped for equity (not paid in cash)
-                      </Link>
-                    </span>
-                    <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex flex-col items-end">
-                    <span>Net amount in cash</span>
-                    <span className="numeric text-3xl">
-                      {formatMoneyFromCents(totalInvoiceAmountInCents - equityCalculation.equityCents)}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col gap-1 lg:items-end">
-                  <span>Total</span>
-                  <span className="numeric text-3xl">{formatMoneyFromCents(totalInvoiceAmountInCents)}</span>
-                </div>
-              )}
-            </div>
+            <Totals
+              servicesTotal={totalServicesAmountInCents}
+              expensesTotal={totalExpensesAmountInCents}
+              equityAmountInCents={equityCalculation.equityCents}
+              equityPercentage={equityCalculation.equityPercentage}
+              isOwnUser
+            />
           </footer>
         </div>
       </section>
