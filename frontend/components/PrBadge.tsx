@@ -4,17 +4,22 @@ import { CheckCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/24/ou
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+interface PrData {
+  merged: boolean;
+  title: string;
+  number: number;
+}
 
 interface PrBadgeProps {
   prUrl: string;
-  prData?: any;
+  prData?: PrData;
   bountyAmount?: number;
   isPaid?: boolean;
 }
 
 export default function PrBadge({ prUrl, prData, bountyAmount, isPaid }: PrBadgeProps) {
-  const [isHovered, setIsHovered] = useState(false);
 
   if (!prData) {
     return (
@@ -30,13 +35,11 @@ export default function PrBadge({ prUrl, prData, bountyAmount, isPaid }: PrBadge
   const bountyText = bountyAmount ? `$${bountyAmount}` : null;
 
   return (
-    <HoverCard>
-      <HoverCardTrigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <Badge
           variant={isMerged ? "default" : "destructive"}
           className="ml-2 cursor-pointer"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
           {isMerged ? (
             <CheckCircleIcon className="w-3 h-3 mr-1" />
@@ -47,8 +50,8 @@ export default function PrBadge({ prUrl, prData, bountyAmount, isPaid }: PrBadge
           {bountyText && <span className="ml-1 font-bold">{bountyText}</span>}
           {isPaid && <span className="ml-1">(Paid)</span>}
         </Badge>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-80">
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Pull Request #{number}</CardTitle>
@@ -72,7 +75,7 @@ export default function PrBadge({ prUrl, prData, bountyAmount, isPaid }: PrBadge
             </div>
           </CardContent>
         </Card>
-      </HoverCardContent>
-    </HoverCard>
+      </PopoverContent>
+    </Popover>
   );
 }

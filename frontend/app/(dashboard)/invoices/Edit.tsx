@@ -105,7 +105,7 @@ const dataSchema = z.object({
 });
 type Data = z.infer<typeof dataSchema>;
 
-type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: string[] | null };
+type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: string[] };
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
 type InvoiceFormDocument = Data["invoice"]["attachment"] & { errors?: string[] | null; blob?: File | null };
 
@@ -318,7 +318,7 @@ const Edit = () => {
     });
   };
 
-const GITHUB_PR_URL_REGEX = /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+)$/i;
+const GITHUB_PR_URL_REGEX = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)$/iu;
 
 const parseGithubPrUrl = (url: string | null) => {
   if (!url) return null;

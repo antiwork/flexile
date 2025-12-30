@@ -13,12 +13,12 @@ export default function UserGithubSettings() {
   const queryClient = useQueryClient();
 
   const connectMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<string> => {
       const response = await request({
         url: "/internal/oauth/github/authorize?scope=user",
         method: "GET",
       });
-      const data = await response.json();
+      const data: { url: string } = await response.json();
       return data.url;
     },
     onSuccess: (url) => {
