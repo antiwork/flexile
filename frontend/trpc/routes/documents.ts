@@ -15,6 +15,7 @@ import {
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
+import { signed_company_document_url } from "@/utils/routes";
 
 const visibleDocuments = (companyId: bigint, userId: bigint | SQLWrapper | undefined) =>
   and(
@@ -57,7 +58,7 @@ export const documentsRouter = createRouter({
         )
         .leftJoin(activeStorageBlobs, eq(activeStorageAttachments.blobId, activeStorageBlobs.id))
         .where(where)
-        .orderBy(desc(documents.id));
+        .orderBy(desc(documents.id), desc(activeStorageAttachments.id));
 
       const signatories = await db.query.documentSignatures.findMany({
         columns: { documentId: true, title: true, signedAt: true },
@@ -114,7 +115,7 @@ export const documentsRouter = createRouter({
       .limit(1);
     if (!document) throw new TRPCError({ code: "NOT_FOUND" });
 
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       await tx
         .update(documentSignatures)
         .set({ signedAt: new Date() })
@@ -142,5 +143,16 @@ export const documentsRouter = createRouter({
 
       return { documentId: input.id, complete: allSigned };
     });
+
+    // Generate PDF outside the transaction so signedAt is committed
+    if (result.complete) {
+      const response = await fetch(signed_company_document_url(ctx.company.externalId, document.documents.id), {
+        method: "POST",
+        headers: ctx.headers,
+      });
+      if (!response.ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: await response.text() });
+    }
+
+    return result;
   }),
 });

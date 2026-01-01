@@ -6,7 +6,11 @@ class CreateDocumentPdfJob
 
   def perform(document_id, document_text)
     document = Document.find(document_id)
-    pdf = CreatePdf.new(body_html: ActionController::Base.helpers.sanitize(document_text)).perform
+    body_html = ApplicationController.render template: "templates/signed_document",
+                                             locals: { body_html: ActionController::Base.helpers.sanitize(document_text), document: },
+                                             layout: false,
+                                             formats: [:html]
+    pdf = CreatePdf.new(body_html:).perform
     document.attachments.attach(
       io: StringIO.new(pdf),
       filename: "#{document.name}.pdf",

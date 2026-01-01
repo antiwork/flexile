@@ -89,7 +89,7 @@ test.describe("Documents", () => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
     await documentsFactory.create({ companyId: company.id, text: "Test document text" });
     const { user: recipient } = await usersFactory.create({ legalName: "Recipient 1" });
-    await companyContractorsFactory.create({ companyId: company.id, userId: recipient.id });
+    await companyContractorsFactory.create({ companyId: company.id, userId: recipient.id }, { withoutContract: true });
     await login(page, adminUser, "/documents");
     await logout(page);
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
@@ -110,6 +110,16 @@ test.describe("Documents", () => {
     await expect(page.getByText("Some other text")).toBeVisible();
     await page.getByRole("button", { name: "Add your signature" }).click();
     await page.getByRole("button", { name: "Agree & Submit" }).click();
+
+    await expect(page.getByText("No results.")).toBeVisible();
+    await page.locator("main").getByRole("button", { name: "Filter" }).click();
+    await page.getByRole("menuitem", { name: "Status" }).click();
+    await page.getByRole("menuitemcheckbox", { name: "All" }).click();
+    await expect(page.getByRole("menuitem")).toHaveCount(0);
+    await expect(page.locator("tbody tr")).toHaveCount(1);
+    await expect(page.getByText("Signed")).toBeVisible();
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await expect(page.getByRole("menuitem", { name: "Download" })).toBeVisible();
   });
 
   test("shows the correct names for documents", async ({ page }) => {
