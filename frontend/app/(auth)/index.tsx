@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { SignInMethod } from "@/db/enums";
+import githubLogo from "@/images/github.svg";
 import googleLogoLight from "@/images/google-light.svg";
 import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
@@ -80,10 +81,13 @@ export function AuthPage({
 
       const redirectUrl = searchParams.get("redirect_url");
       setRedirectInProgress(true);
-      router.replace(
-        // @ts-expect-error - Next currently does not allow checking this at runtime - the leading / ensures this is safe
-        redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/dashboard",
-      );
+      // Use window.location for dynamic redirect URLs (typed routes can't validate runtime strings)
+      // Use router.replace only for static routes like /dashboard
+      if (redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//")) {
+        window.location.replace(redirectUrl);
+      } else {
+        router.replace("/dashboard");
+      }
     },
   });
   const emailForm = useForm({
@@ -212,6 +216,15 @@ export function AuthPage({
                   >
                     <Image src={googleLogoLight} alt="Google" width={20} height={20} />
                     {sendOtpText} with Google
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="font-base mt-2 flex h-11 w-full items-center justify-center gap-2"
+                    onClick={() => providerSignIn(SignInMethod.GitHub)}
+                  >
+                    <Image src={githubLogo} alt="GitHub" width={20} height={20} className="dark:invert" />
+                    {sendOtpText} with GitHub
                   </Button>
                   <div className="my-3 flex w-full items-center gap-2">
                     <div className="bg-muted h-px flex-1" />

@@ -32,10 +32,13 @@ export default function SettingsPage() {
   return (
     <div className="grid gap-8">
       <DetailsSection />
+      <GitHubConnectionSection />
       <LeaveWorkspaceSection />
     </div>
   );
 }
+
+const GitHubConnectionSection = () => null;
 
 const DetailsSection = () => {
   const user = useCurrentUser();
