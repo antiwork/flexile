@@ -12,7 +12,7 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
   end
 
   def signed
-    document = Document.find(params[:id])
+    document = Current.company.documents.find(params[:id])
     authorize document
 
     CreateDocumentPdfJob.perform_sync(document.id, document.text)

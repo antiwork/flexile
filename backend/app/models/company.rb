@@ -120,7 +120,7 @@ class Company < ApplicationRecord
 
   def active? = deactivated_at.nil?
 
-  def primary_admin = super || company_administrators.first
+  def primary_admin = super || company_administrators.order(:id).first
 
   def logo_url
     return logo.url if logo.attached?

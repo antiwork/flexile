@@ -115,7 +115,7 @@ export const documentsRouter = createRouter({
       .limit(1);
     if (!document) throw new TRPCError({ code: "NOT_FOUND" });
 
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       await tx
         .update(documentSignatures)
         .set({ signedAt: new Date() })
@@ -134,21 +134,25 @@ export const documentsRouter = createRouter({
         .where(eq(documentSignatures.documentId, input.id));
       const allSigned = allSignatures.every((signature) => signature.signedAt !== null);
 
-      if (allSigned) {
-        if (document.documents.equityGrantId) {
-          await tx
-            .update(equityGrants)
-            .set({ acceptedAt: new Date() })
-            .where(eq(equityGrants.id, document.documents.equityGrantId));
-        }
-        const response = await fetch(signed_company_document_url(ctx.company.externalId, document.documents.id), {
-          method: "POST",
-          headers: ctx.headers,
-        });
-        if (!response.ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: await response.text() });
+      if (allSigned && document.documents.equityGrantId) {
+        await tx
+          .update(equityGrants)
+          .set({ acceptedAt: new Date() })
+          .where(eq(equityGrants.id, document.documents.equityGrantId));
       }
 
       return { documentId: input.id, complete: allSigned };
     });
+
+    // Generate PDF outside the transaction so signedAt is committed
+    if (result.complete) {
+      const response = await fetch(signed_company_document_url(ctx.company.externalId, document.documents.id), {
+        method: "POST",
+        headers: ctx.headers,
+      });
+      if (!response.ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: await response.text() });
+    }
+
+    return result;
   }),
 });
