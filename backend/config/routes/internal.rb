@@ -12,6 +12,13 @@ scope path: :internal, module: :internal do
   end
 
   resources :oauth, only: :create
+  namespace :oauth do
+    namespace :github do
+      get :authorize
+      get :callback
+      delete :disconnect
+    end
+  end
   resource :current_user, only: :show
 
   resource :settings, only: [:update]

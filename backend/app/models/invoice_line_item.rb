@@ -9,6 +9,28 @@ class InvoiceLineItem < ApplicationRecord
   validates :pay_rate_in_subunits, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :quantity, presence: true, numericality: { greater_than_or_equal_to: 0.01 }
 
+  after_save :process_github_pr, if: :github_pr_url_changed?
+
+  def github_pr_service
+    @github_pr_service ||= GithubPrService.new(self)
+  end
+
+  def process_github_pr
+    github_pr_service.process_pr_link
+  end
+
+  def pr_merged?
+    github_pr_service.merged?
+  end
+
+  def pr_bounty_amount
+    github_pr_service.bounty_amount
+  end
+
+  def pr_belongs_to_company_org?(company)
+    github_pr_service.belongs_to_company_org?(company)
+  end
+
   def normalized_quantity
     quantity / (hourly? ? 60.0 : 1.0)
   end

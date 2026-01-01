@@ -16,6 +16,7 @@ import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
+import GithubSettings from "./GithubSettings";
 
 const formSchema = z.object({
   website: z.string().url().nullish().or(z.literal("")),
@@ -179,6 +180,7 @@ export default function SettingsPage() {
           </MutationStatusButton>
         </form>
       </Form>
+      <GithubSettings />
       <StripeMicrodepositVerification />
     </div>
   );

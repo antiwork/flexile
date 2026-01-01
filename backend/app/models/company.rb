@@ -104,6 +104,7 @@ class Company < ApplicationRecord
   validates :share_price_in_usd, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :fmv_per_share_in_usd, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :brand_color, hex_color: true, if: :brand_color_changed?
+  validates :github_organization, uniqueness: true, allow_nil: true
 
   scope :active, -> { where(deactivated_at: nil) }
   scope :is_trusted, -> { where(is_trusted: true) }

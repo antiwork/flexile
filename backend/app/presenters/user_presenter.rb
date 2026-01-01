@@ -95,6 +95,7 @@ class UserPresenter
           checklistItems: company.checklist_items(user),
           checklistCompletionPercentage: company.checklist_completion_percentage(user),
           externalId: company.external_id,
+          githubOrganization: company.github_organization,
         }
       end,
       id: user.external_id,
@@ -118,6 +119,7 @@ class UserPresenter
       onboardingPath: worker && worker.role.nil? ? "/documents" : nil,
       taxInformationConfirmedAt: tax_information_confirmed_at&.iso8601,
       isImpersonating: Current.impersonated_user.present?,
+      githubConnection: user.github_connection&.slice(:id, :github_username),
     }
   end
 

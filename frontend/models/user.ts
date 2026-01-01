@@ -32,6 +32,7 @@ const companySchema = z.object({
   primaryAdminName: z.string().nullable(),
   isTrusted: z.boolean(),
   externalId: z.string(),
+  githubOrganization: z.string().nullable(),
   checklistItems: z.array(
     z.object({
       key: z.string(),
@@ -57,6 +58,10 @@ export const currentUserSchema = z.object({
   hasPayoutMethodForDividends: z.boolean(),
   taxInformationConfirmedAt: z.string().nullable(),
   isImpersonating: z.boolean(),
+  githubConnection: z.object({
+    githubUsername: z.string(),
+    id: z.string(),
+  }).nullable(),
   roles: z.object({
     administrator: z.object({ id: z.string(), isInvited: z.boolean() }).optional(),
     lawyer: z.object({ id: z.string() }).optional(),
