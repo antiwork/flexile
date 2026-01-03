@@ -169,7 +169,7 @@ export const authOptions = {
         // OAuth failures may indicate configuration issues - log for debugging
         Bugsnag.leaveBreadcrumb("Auth: OAuth sign-in failed", {
           email: user.email,
-          provider: account?.provider,
+          provider: account.provider,
           error: error instanceof Error ? error.message : String(error),
         });
         return false;
