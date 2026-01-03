@@ -1,3 +1,4 @@
+import Bugsnag from "@bugsnag/js";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -94,7 +95,12 @@ export const authOptions = {
             preferredName: data.user.preferred_name ?? "",
             jwt: data.jwt,
           };
-        } catch {
+        } catch (error) {
+          // Auth failures are expected (wrong OTP, network issues) - log as breadcrumb for context
+          Bugsnag.leaveBreadcrumb("Auth: OTP authorization failed", {
+            email: validation.data.email,
+            error: error instanceof Error ? error.message : String(error),
+          });
           return null;
         }
       },
@@ -159,7 +165,13 @@ export const authOptions = {
         user.preferredName = data.user.preferred_name ?? "";
 
         return true;
-      } catch {
+      } catch (error) {
+        // OAuth failures may indicate configuration issues - log for debugging
+        Bugsnag.leaveBreadcrumb("Auth: OAuth sign-in failed", {
+          email: user.email,
+          provider: account?.provider,
+          error: error instanceof Error ? error.message : String(error),
+        });
         return false;
       }
     },

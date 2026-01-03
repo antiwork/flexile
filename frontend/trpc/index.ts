@@ -1,5 +1,6 @@
 import "server-only";
 import { S3Client } from "@aws-sdk/client-s3";
+import Bugsnag from "@bugsnag/js";
 import { getSchema } from "@tiptap/core";
 import { generateHTML, generateJSON } from "@tiptap/html";
 import { Node } from "@tiptap/pm/model";
@@ -70,7 +71,11 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
       });
 
       return impersonatedUser ? Number(impersonatedUser.id) : null;
-    } catch {
+    } catch (error) {
+      Bugsnag.leaveBreadcrumb("Auth: Failed to resolve user ID", {
+        jwtUserId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return null;
     }
   };
@@ -90,7 +95,11 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
           userId = await resolveUserId(payload.data.user_id);
         }
       }
-    } catch {}
+    } catch (error) {
+      Bugsnag.leaveBreadcrumb("Auth: Failed to parse JWT payload", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   return {
