@@ -12,10 +12,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { trpc } from "@/trpc/client";
 import { md5Checksum } from "@/utils";
+import GithubIntegration from "./GithubIntegration";
 import QuickbooksIntegration from "./QuickbooksIntegration";
 import StripeMicrodepositVerification from "./StripeMicrodepositVerification";
 
@@ -185,8 +187,10 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Integrations</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="grid gap-6">
           <QuickbooksIntegration />
+          <Separator />
+          <GithubIntegration />
         </CardContent>
       </Card>
     </div>

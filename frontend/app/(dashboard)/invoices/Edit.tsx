@@ -6,16 +6,18 @@ import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert } from "lucide-react";
-import Link from "next/link";
+import { Link as RouterLink } from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
+import { GithubPRLink } from "@/components/GithubPRLink";
 import { linkClasses } from "@/components/Link";
 import NumberInput from "@/components/NumberInput";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -258,6 +260,43 @@ const Edit = () => {
       }),
     );
 
+  const [editingCell, setEditingCell] = useState<{ row: number; field: string } | null>(null);
+
+  const { data: githubIntegration } = trpc.github.get.useQuery({ companyId: company.id });
+  const { update: updateSession } = useSession();
+  const showGithubWarning =
+    githubIntegration?.organization &&
+    !user.githubUsername &&
+    lineItems.some((item) => item.description.includes(`github.com/${githubIntegration.organization}`));
+
+  const handleConnectGithub = () => {
+    const url = `/api/auth/signin/github?callbackUrl=${encodeURIComponent(`${window.location.origin}/oauth_redirect`)}`;
+    const popup = window.open(url, "github-oauth", "width=600,height=600");
+
+    if (popup) {
+      const onMessage = async (event: MessageEvent) => {
+        if (event.data === "oauth-complete") {
+          popup.close();
+          await updateSession();
+          await trpcUtils.users.me.invalidate();
+          await trpcUtils.github.get.invalidate();
+          window.removeEventListener("message", onMessage);
+        }
+      };
+      window.addEventListener("message", onMessage);
+
+      const interval = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(interval);
+          window.removeEventListener("message", onMessage);
+          void updateSession();
+          void trpcUtils.users.me.invalidate();
+          void trpcUtils.github.get.invalidate();
+        }
+      }, 1000);
+    }
+  };
+
   return (
     <>
       <DashboardHeader
@@ -268,7 +307,7 @@ const Edit = () => {
               <div className="inline-flex items-center">Action required</div>
             ) : (
               <Button variant="outline" asChild>
-                <Link href="/invoices">Cancel</Link>
+                <RouterLink href="/invoices">Cancel</RouterLink>
               </Button>
             )}
             <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
@@ -278,6 +317,20 @@ const Edit = () => {
           </>
         }
       />
+
+      {showGithubWarning ? (
+        <Alert className="mx-4 mb-4" variant="warning">
+          <CircleAlert className="size-4" />
+          <AlertTitle>Connect GitHub Account</AlertTitle>
+          <AlertDescription>
+            You are submitting a Pull Request from <strong>{githubIntegration.organization}</strong>. Please{" "}
+            <button onClick={handleConnectGithub} className="font-medium underline hover:text-amber-800">
+              connect your GitHub account
+            </button>{" "}
+            to verify this work.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
         <Alert className="mx-4" variant="warning">
@@ -342,12 +395,23 @@ const Edit = () => {
               {lineItems.toArray().map((item, rowIndex) => (
                 <TableRow key={rowIndex}>
                   <TableCell>
-                    <Input
-                      value={item.description}
-                      placeholder="Description"
-                      aria-invalid={item.errors?.includes("description")}
-                      onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
-                    />
+                    {item.description.match(/^https:\/\/github\.com\/[^/]+\/[^/]+\/(pull|issues)\/\d+$/u) &&
+                    editingCell?.row !== rowIndex ? (
+                      <GithubPRLink
+                        url={item.description}
+                        invoiceId={id}
+                        onEdit={() => setEditingCell({ row: rowIndex, field: "description" })}
+                      />
+                    ) : (
+                      <Input
+                        value={item.description}
+                        placeholder="Description"
+                        aria-invalid={item.errors?.includes("description")}
+                        onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
+                        onBlur={() => setEditingCell(null)}
+                        autoFocus={editingCell?.row === rowIndex && editingCell?.field === "description"}
+                      />
+                    )}
                   </TableCell>
                   <TableCell>
                     <QuantityInput
@@ -518,9 +582,9 @@ const Edit = () => {
                 <>
                   <div className="flex flex-col items-end">
                     <span>
-                      <Link href="/settings/payouts" className={linkClasses}>
+                      <RouterLink href="/settings/payouts" className={linkClasses}>
                         Swapped for equity (not paid in cash)
-                      </Link>
+                      </RouterLink>
                     </span>
                     <span className="numeric text-xl">{formatMoneyFromCents(equityCalculation.equityCents)}</span>
                   </div>

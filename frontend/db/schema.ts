@@ -31,7 +31,7 @@ import {
   PayRateType,
   TaxClassification,
 } from "./enums";
-import type { QuickbooksIntegrationConfiguration } from "./json";
+import type { GithubIntegrationConfiguration, QuickbooksIntegrationConfiguration } from "./json";
 
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 13);
 
@@ -645,9 +645,9 @@ export const integrations = pgTable(
   {
     id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
-    type: varchar().notNull().$type<"QuickbooksIntegration">(),
+    type: varchar().notNull(),
     status: integrationStatus().default("initialized").notNull(),
-    configuration: encryptedJson().$type<QuickbooksIntegrationConfiguration>(),
+    configuration: encryptedJson().$type<QuickbooksIntegrationConfiguration | GithubIntegrationConfiguration>(),
     syncError: text("sync_error"),
     lastSyncAt: timestamp("last_sync_at", { precision: 6, mode: "date" }),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
@@ -1672,6 +1672,8 @@ export const users = pgTable(
     sentInvalidTaxIdEmail: boolean("sent_invalid_tax_id_email").notNull().default(false),
     clerkId: varchar("clerk_id"),
     otpSecretKey: varchar("otp_secret_key"),
+    githubUsername: varchar("github_username"),
+    githubExternalId: varchar("github_external_id"),
   },
   (table) => [
     index("index_users_on_confirmation_token").using("btree", table.confirmationToken.asc().nullsLast().op("text_ops")),

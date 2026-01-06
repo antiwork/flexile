@@ -42,6 +42,7 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
   };
 
   let userId: number | null = null;
+  let githubAccessToken: string | undefined = undefined;
 
   // Get userId from NextAuth JWT session
   const session = await getServerSession(authOptions);
@@ -56,11 +57,14 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
           .safeParse(JSON.parse(Buffer.from(base64Payload, "base64").toString()));
         if (payload.success) userId = payload.data.user_id;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
+      githubAccessToken = (session.user as any).githubAccessToken;
     } catch {}
   }
 
   return {
     userId,
+    githubAccessToken,
     host,
     ipAddress,
     userAgent,

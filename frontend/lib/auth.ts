@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import type { Provider } from "next-auth/providers/index";
 import { z } from "zod";
@@ -105,6 +106,22 @@ export const authOptions = {
         clientSecret: env.GOOGLE_CLIENT_SECRET,
       }),
     ),
+    ExternalProvider(
+      GitHubProvider({
+        clientId: env.GITHUB_CLIENT_ID,
+        clientSecret: env.GITHUB_CLIENT_SECRET,
+        profile(profile) {
+          return {
+            id: profile.id.toString(),
+            name: profile.name ?? profile.login,
+            email: profile.email,
+            image: profile.avatar_url,
+            username: profile.login,
+            jwt: "", // Placeholder, will be populated by signIn callback
+          };
+        },
+      }),
+    ),
   ],
   session: {
     strategy: "jwt",
@@ -114,8 +131,11 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, account }) {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
+      if (account && account.provider === "github") {
+        token.githubAccessToken = account.access_token;
+      }
       if (!user) return token;
       token.jwt = user.jwt;
       token.legalName = user.legalName ?? "";
@@ -134,7 +154,14 @@ export const authOptions = {
         const response = await fetch(`${process.env.NEXTAUTH_URL}/internal/oauth`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: user.email, token: env.API_SECRET_TOKEN }),
+          body: JSON.stringify({
+            email: user.email,
+            token: env.API_SECRET_TOKEN,
+            provider: account.provider,
+            provider_id: account.providerAccountId,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
+            github_username: account.provider === "github" ? (user as any).username : undefined,
+          }),
         });
 
         if (!response.ok) {

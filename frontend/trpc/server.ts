@@ -17,6 +17,7 @@ import { documentsRouter } from "./routes/documents";
 import { equityGrantExercisesRouter } from "./routes/equityGrantExercises";
 import { equityGrantsRouter } from "./routes/equityGrants";
 import { expenseCategoriesRouter } from "./routes/expenseCategories";
+import { githubRouter } from "./routes/github";
 import { investorsRouter } from "./routes/investors";
 import { invoicesRouter } from "./routes/invoices";
 import { lawyersRouter } from "./routes/lawyers";
@@ -33,6 +34,7 @@ export const appRouter = createRouter({
   users: usersRouter,
   contractors: contractorsRouter,
   quickbooks: quickbooksRouter,
+  github: githubRouter,
   invoices: invoicesRouter,
   consolidatedInvoices: consolidatedInvoicesRouter,
   documents: documentsRouter,
@@ -63,7 +65,14 @@ export type AppRouter = typeof appRouter;
 
 export const getQueryClient = cache(createClient);
 const createCaller = createCallerFactory(appRouter);
-const caller = createCaller({ userId: null, host: "", ipAddress: "", userAgent: "", headers: {} });
+const caller = createCaller({
+  userId: null,
+  host: "",
+  ipAddress: "",
+  userAgent: "",
+  headers: {},
+  githubAccessToken: undefined,
+});
 export const { trpc, HydrateClient } = createHydrationHelpers<typeof appRouter>(caller, getQueryClient);
 export const createServerCaller = ({ userId }: { userId: number }) =>
-  createCaller({ userId, host: "", ipAddress: "", userAgent: "", headers: {} });
+  createCaller({ userId, host: "", ipAddress: "", userAgent: "", headers: {}, githubAccessToken: undefined });

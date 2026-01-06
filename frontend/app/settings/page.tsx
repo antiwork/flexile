@@ -26,11 +26,13 @@ import defaultLogo from "@/images/default-company-logo.svg";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { request } from "@/utils/request";
 import { settings_path } from "@/utils/routes";
+import GithubUserConnection from "./GithubUserConnection";
 
 export default function SettingsPage() {
   return (
     <div className="grid gap-8">
       <DetailsSection />
+      <GithubUserConnection />
       <LeaveWorkspaceSection />
     </div>
   );

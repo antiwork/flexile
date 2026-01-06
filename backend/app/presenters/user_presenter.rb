@@ -101,6 +101,8 @@ class UserPresenter
       name: user.display_name,
       legalName: legal_name,
       preferredName: preferred_name,
+      githubUsername: user.github_username,
+      githubExternalId: user.github_external_id,
       billingEntityName: billing_entity_name,
       roles:,
       hasPayoutMethodForInvoices: user.bank_account.present?,
