@@ -2,16 +2,18 @@
 
 import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert, Plus, Upload } from "lucide-react";
-import Link from "next/link";
+import { Link as RouterLink } from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
+import { GithubPRLink } from "@/components/GithubPRLink";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -163,6 +165,48 @@ const Edit = () => {
   const [document, setDocument] = useState<InvoiceFormDocument | null>(data.invoice.attachment);
   const showExpensesTable = showExpenses || expenses.size > 0;
   const actionColumnClass = "w-12";
+
+  const [editingCell, setEditingCell] = useState<{ row: number; field: string } | null>(null);
+
+  const { data: githubIntegration } = trpc.github.get.useQuery({ companyId: company.id });
+  const { update: updateSession } = useSession();
+  const queryClient = useQueryClient();
+  const showGithubWarning =
+    githubIntegration?.organization &&
+    !user.githubUsername &&
+    lineItems.some((item) => item.description.includes(`github.com/${githubIntegration.organization}`));
+
+  const isGithubUrl = (url: string) => /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/(pull|issues)\/(\d+)$/u.test(url);
+
+  const handleConnectGithub = () => {
+    const url = `/api/auth/signin/github?callbackUrl=${encodeURIComponent(`${window.location.origin}/oauth_redirect`)}`;
+    const popup = window.open(url, "github-oauth", "width=600,height=600");
+
+    if (popup) {
+      const onMessage = async (event: MessageEvent) => {
+        if (event.data === "oauth-complete") {
+          popup.close();
+          await updateSession();
+          await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+          await trpcUtils.github.get.invalidate();
+          await trpcUtils.github.getPullRequest.invalidate();
+          window.removeEventListener("message", onMessage);
+        }
+      };
+      window.addEventListener("message", onMessage);
+
+      const interval = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(interval);
+          window.removeEventListener("message", onMessage);
+          void updateSession();
+          void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+          void trpcUtils.github.get.invalidate();
+          void trpcUtils.github.getPullRequest.invalidate();
+        }
+      }, 1000);
+    }
+  };
 
   const validate = () => {
     setErrorField(null);
@@ -370,7 +414,7 @@ const Edit = () => {
               <div className="inline-flex items-center">Action required</div>
             ) : (
               <Button variant="outline" asChild>
-                <Link href="/invoices">Cancel</Link>
+                <RouterLink href="/invoices">Cancel</RouterLink>
               </Button>
             )}
             <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>
@@ -386,6 +430,19 @@ const Edit = () => {
           <AlertDescription>
             This invoice includes rates above your default of {formatMoneyFromCents(payRateInSubunits)}/
             {data.user.project_based ? "project" : "hour"}. Please check before submitting.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {showGithubWarning ? (
+        <Alert className="mx-4" variant="warning">
+          <CircleAlert />
+          <AlertDescription>
+            You are billing a company that uses GitHub, but you haven&apos;t connected your GitHub account.{" "}
+            <Button variant="link" className="h-auto p-0" onClick={handleConnectGithub}>
+              Connect GitHub
+            </Button>{" "}
+            to verify your work.
           </AlertDescription>
         </Alert>
       ) : null}
@@ -443,12 +500,29 @@ const Edit = () => {
               {lineItems.toArray().map((item, rowIndex) => (
                 <TableRow key={rowIndex}>
                   <TableCell>
-                    <Input
-                      value={item.description}
-                      placeholder="Description"
-                      aria-invalid={item.errors?.includes("description")}
-                      onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
-                    />
+                    {isGithubUrl(item.description) &&
+                    !(editingCell?.row === rowIndex && editingCell?.field === "description") ? (
+                      <GithubPRLink
+                        url={item.description}
+                        invoiceId={data.invoice.id}
+                        onEdit={() => setEditingCell({ row: rowIndex, field: "description" })}
+                        onBountyResolved={(amount) => {
+                          if (item.pay_rate_in_subunits === 0 && amount > 0) {
+                            updateLineItem(rowIndex, { pay_rate_in_subunits: amount * 100 });
+                          }
+                        }}
+                      />
+                    ) : (
+                      <Input
+                        value={item.description}
+                        placeholder="Description"
+                        aria-invalid={item.errors?.includes("description")}
+                        autoFocus={editingCell?.row === rowIndex && editingCell?.field === "description"}
+                        onFocus={() => setEditingCell({ row: rowIndex, field: "description" })}
+                        onBlur={() => setEditingCell(null)}
+                        onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
+                      />
+                    )}
                   </TableCell>
                   <TableCell>
                     <QuantityInput

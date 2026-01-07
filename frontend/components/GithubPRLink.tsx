@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleDot, ExternalLink, GitMerge, GitPullRequest, XCircle } from "lucide-react";
+import React from "react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { trpc } from "@/trpc/client";
 import { cn } from "@/utils";
@@ -10,9 +11,10 @@ interface GithubPRLinkProps {
   url: string;
   invoiceId?: string;
   onEdit?: () => void;
+  onBountyResolved?: (amount: number) => void;
 }
 
-export function GithubPRLink({ url, invoiceId, onEdit }: GithubPRLinkProps) {
+export function GithubPRLink({ url, invoiceId, onEdit, onBountyResolved }: GithubPRLinkProps) {
   const {
     data: pr,
     isLoading,
@@ -24,6 +26,12 @@ export function GithubPRLink({ url, invoiceId, onEdit }: GithubPRLinkProps) {
       staleTime: 1000 * 60 * 5, // 5 minutes
     },
   );
+
+  React.useEffect(() => {
+    if (pr && "bountyAmount" in pr && pr.bountyAmount && onBountyResolved) {
+      onBountyResolved(pr.bountyAmount);
+    }
+  }, [pr, onBountyResolved]);
 
   if (isLoading) {
     return <div className="text-muted-foreground animate-pulse text-sm">Loading details...</div>;
