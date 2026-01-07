@@ -82,6 +82,14 @@ const dataSchema = z.object({
         quantity: z.string().nullable(),
         hourly: z.boolean(),
         pay_rate_in_subunits: z.number(),
+        github_pr_url: z.string().nullable().optional(),
+        github_pr_number: z.number().nullable().optional(),
+        github_pr_title: z.string().nullable().optional(),
+        github_pr_state: z.string().nullable().optional(),
+        github_pr_author: z.string().nullable().optional(),
+        github_pr_repo: z.string().nullable().optional(),
+        github_pr_type: z.string().nullable().optional(),
+        github_pr_bounty_cents: z.number().nullable().optional(),
       }),
     ),
     expenses: z.array(
@@ -233,6 +241,28 @@ const Edit = () => {
         formData.append("invoice_line_items[][quantity]", lineItem.quantity.toString());
         formData.append("invoice_line_items[][hourly]", lineItem.hourly.toString());
         formData.append("invoice_line_items[][pay_rate_in_subunits]", lineItem.pay_rate_in_subunits.toString());
+        if (lineItem.github_pr_url) formData.append("invoice_line_items[][github_pr_url]", lineItem.github_pr_url);
+        if (lineItem.github_pr_number) {
+          formData.append("invoice_line_items[][github_pr_number]", lineItem.github_pr_number.toString());
+        }
+        if (lineItem.github_pr_title) {
+          formData.append("invoice_line_items[][github_pr_title]", lineItem.github_pr_title);
+        }
+        if (lineItem.github_pr_state) {
+          formData.append("invoice_line_items[][github_pr_state]", lineItem.github_pr_state);
+        }
+        if (lineItem.github_pr_author) {
+          formData.append("invoice_line_items[][github_pr_author]", lineItem.github_pr_author);
+        }
+        if (lineItem.github_pr_repo) {
+          formData.append("invoice_line_items[][github_pr_repo]", lineItem.github_pr_repo);
+        }
+        if (lineItem.github_pr_type) {
+          formData.append("invoice_line_items[][github_pr_type]", lineItem.github_pr_type);
+        }
+        if (lineItem.github_pr_bounty_cents) {
+          formData.append("invoice_line_items[][github_pr_bounty_cents]", lineItem.github_pr_bounty_cents.toString());
+        }
       }
       for (const expense of expenses) {
         if (expense.id) {
@@ -506,10 +536,23 @@ const Edit = () => {
                         url={item.description}
                         invoiceId={data.invoice.id}
                         onEdit={() => setEditingCell({ row: rowIndex, field: "description" })}
-                        onBountyResolved={(amount) => {
-                          if (item.pay_rate_in_subunits === 0 && amount > 0) {
-                            updateLineItem(rowIndex, { pay_rate_in_subunits: amount * 100 });
+                        onResolved={(pr) => {
+                          const updates: Partial<InvoiceFormLineItem> = {
+                            github_pr_url: item.description,
+                            github_pr_number: pr.number,
+                            github_pr_title: pr.title,
+                            github_pr_state: pr.merged ? "merged" : pr.state,
+                            github_pr_author: pr.author,
+                            github_pr_repo: `${pr.owner}/${pr.repo}`,
+                            github_pr_type: pr.type,
+                            github_pr_bounty_cents: pr.bountyAmount ? pr.bountyAmount * 100 : null,
+                          };
+
+                          if (item.pay_rate_in_subunits === 0 && pr.bountyAmount) {
+                            updates.pay_rate_in_subunits = pr.bountyAmount * 100;
                           }
+
+                          updateLineItem(rowIndex, updates);
                         }}
                       />
                     ) : (

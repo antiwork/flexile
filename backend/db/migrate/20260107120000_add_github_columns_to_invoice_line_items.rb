@@ -6,6 +6,7 @@ class AddGithubColumnsToInvoiceLineItems < ActiveRecord::Migration[7.1]
     add_column :invoice_line_items, :github_pr_state, :string
     add_column :invoice_line_items, :github_pr_author, :string
     add_column :invoice_line_items, :github_pr_repo, :string
+    add_column :invoice_line_items, :github_pr_type, :string
     add_column :invoice_line_items, :github_pr_bounty_cents, :integer
   end
 end

@@ -7,15 +7,34 @@ import { trpc } from "@/trpc/client";
 import { cn } from "@/utils";
 import { Badge } from "./ui/badge";
 
+interface PullRequest {
+  title: string;
+  state: string;
+  merged: boolean;
+  number: number;
+  owner: string;
+  repo: string;
+  bountyAmount: number | null;
+  author: string;
+  isPaid: boolean;
+  isVerified: boolean | null;
+  type: "pull" | "issues";
+}
+
 interface GithubPRLinkProps {
   url: string;
   invoiceId?: string;
   onEdit?: () => void;
-  onBountyResolved?: (amount: number) => void;
+  onResolved?: (pr: PullRequest) => void;
   hidePaidBadge?: boolean;
+  initialData?: PullRequest | null;
 }
 
-export function GithubPRLink({ url, invoiceId, onEdit, onBountyResolved, hidePaidBadge }: GithubPRLinkProps) {
+function isPullRequest(pr: unknown): pr is PullRequest {
+  return typeof pr === "object" && pr !== null && "number" in pr && !("error" in pr);
+}
+
+export function GithubPRLink({ url, invoiceId, onEdit, onResolved, hidePaidBadge, initialData }: GithubPRLinkProps) {
   const {
     data: pr,
     isLoading,
@@ -25,14 +44,15 @@ export function GithubPRLink({ url, invoiceId, onEdit, onBountyResolved, hidePai
     {
       retry: false,
       staleTime: 1000 * 60 * 5, // 5 minutes
+      initialData: initialData ?? undefined,
     },
   );
 
   React.useEffect(() => {
-    if (pr && "bountyAmount" in pr && pr.bountyAmount && onBountyResolved) {
-      onBountyResolved(pr.bountyAmount);
+    if (isPullRequest(pr) && onResolved) {
+      onResolved(pr);
     }
-  }, [pr, onBountyResolved]);
+  }, [pr, onResolved]);
 
   if (isLoading) {
     return <div className="text-muted-foreground animate-pulse text-sm">Loading details...</div>;

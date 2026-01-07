@@ -346,6 +346,25 @@ export default function InvoicePage() {
                                   url={lineItem.description}
                                   invoiceId={invoice.id}
                                   hidePaidBadge={invoice.status === "paid"}
+                                  initialData={
+                                    lineItem.githubPrUrl
+                                      ? {
+                                          title: lineItem.githubPrTitle ?? "",
+                                          state: lineItem.githubPrState ?? "open",
+                                          merged: lineItem.githubPrState === "merged",
+                                          number: lineItem.githubPrNumber ?? 0,
+                                          owner: lineItem.githubPrRepo?.split("/")[0] ?? "",
+                                          repo: lineItem.githubPrRepo?.split("/")[1] ?? "",
+                                          bountyAmount: lineItem.githubPrBountyCents
+                                            ? lineItem.githubPrBountyCents / 100
+                                            : null,
+                                          author: lineItem.githubPrAuthor ?? "",
+                                          isPaid: invoice.status === "paid",
+                                          isVerified: true,
+                                          type: lineItem.githubPrType === "issues" ? "issues" : "pull",
+                                        }
+                                      : null
+                                  }
                                 />
                               ) : (
                                 lineItem.description
