@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import AttachmentListCard from "@/components/AttachmentsList";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import { GithubPRLink } from "@/components/GithubPRLink";
 import { linkClasses } from "@/components/Link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,8 @@ const PrintTableCell = ({ children, className }: { children: React.ReactNode; cl
     {children}
   </TableCell>
 );
+
+const isGithubUrl = (url: string) => /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/(pull|issues)\/(\d+)$/u.test(url);
 
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>();
@@ -338,7 +341,15 @@ export default function InvoicePage() {
                         <TableRow key={index}>
                           <PrintTableCell className="w-[50%] align-top md:w-[60%] print:align-top">
                             <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">
-                              {lineItem.description}
+                              {isGithubUrl(lineItem.description) ? (
+                                <GithubPRLink
+                                  url={lineItem.description}
+                                  invoiceId={invoice.id}
+                                  hidePaidBadge={invoice.status === "paid"}
+                                />
+                              ) : (
+                                lineItem.description
+                              )}
                             </div>
                           </PrintTableCell>
                           <PrintTableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%] print:text-right print:align-top">

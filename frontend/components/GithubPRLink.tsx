@@ -12,9 +12,10 @@ interface GithubPRLinkProps {
   invoiceId?: string;
   onEdit?: () => void;
   onBountyResolved?: (amount: number) => void;
+  hidePaidBadge?: boolean;
 }
 
-export function GithubPRLink({ url, invoiceId, onEdit, onBountyResolved }: GithubPRLinkProps) {
+export function GithubPRLink({ url, invoiceId, onEdit, onBountyResolved, hidePaidBadge }: GithubPRLinkProps) {
   const {
     data: pr,
     isLoading,
@@ -39,7 +40,7 @@ export function GithubPRLink({ url, invoiceId, onEdit, onBountyResolved }: Githu
 
   if (error || !pr || "error" in pr) {
     const isPrivateError = pr && "error" in pr && pr.error === "not_found_or_private";
-    const isPaid = pr && "error" in pr && pr.isPaid;
+    const isPaid = !hidePaidBadge && pr && "error" in pr && pr.isPaid;
     return (
       <div className="flex items-center gap-2">
         <span className="truncate text-sm text-red-500">{url}</span>
@@ -71,6 +72,8 @@ export function GithubPRLink({ url, invoiceId, onEdit, onBountyResolved }: Githu
   const isClosed = state === "closed" && !merged;
   const isOpenState = state === "open";
   const isPR = type === "pull";
+
+  const showPaidBadge = !hidePaidBadge && isPaid;
 
   const Icon = isPR ? (
     isMerged ? (
@@ -124,7 +127,7 @@ export function GithubPRLink({ url, invoiceId, onEdit, onBountyResolved }: Githu
               >
                 {title}
               </a>
-              {isPaid ? (
+              {showPaidBadge ? (
                 <Badge variant="secondary" className="shrink-0 bg-blue-100 text-blue-800 hover:bg-blue-100">
                   Paid
                 </Badge>
@@ -179,7 +182,7 @@ export function GithubPRLink({ url, invoiceId, onEdit, onBountyResolved }: Githu
         </HoverCardContent>
       </HoverCard>
 
-      {isPaid ? (
+      {showPaidBadge ? (
         <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
           Paid
         </Badge>
