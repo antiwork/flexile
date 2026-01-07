@@ -1,11 +1,11 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import { CircleAlert, CircleCheck, Info, Pencil, Plus } from "lucide-react";
+import { CircleAlert, CircleCheck, Info, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useDocumentTemplateQuery } from "@/app/(dashboard)/documents";
 import NewEquityGrantModal from "@/app/(dashboard)/equity/grants/NewEquityGrantModal";
-import { useExerciseDataConfig } from "@/app/(dashboard)/equity/options";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DataTable, { createColumnHelper, useTable } from "@/components/DataTable";
 import { linkClasses } from "@/components/Link";
@@ -46,10 +46,10 @@ export default function GrantsPage() {
     },
   });
 
-  const exerciseDataConfig = useExerciseDataConfig();
+  const exerciseNoticeConfig = useDocumentTemplateQuery("exercise_notice");
   const { data: exerciseData } = useQuery({
-    ...exerciseDataConfig,
-    enabled: exerciseDataConfig.enabled || !!user.roles.administrator,
+    ...exerciseNoticeConfig,
+    enabled: company.flags.includes("option_exercising") && !!user.roles.administrator,
   });
   const columnHelper = createColumnHelper<EquityGrant>();
   const columns = useMemo(
@@ -94,20 +94,19 @@ export default function GrantsPage() {
               <Plus />
             </Button>
           ) : (
-            <Button onClick={() => setShowNewGrantModal(true)}>
-              <Pencil className="size-4" />
-              New option grant
+            <Button variant="primary" onClick={() => setShowNewGrantModal(true)}>
+              New grant
             </Button>
           )
         }
       />
 
-      {exerciseData && !exerciseData.exercise_notice ? (
+      {exerciseData && !exerciseData.text ? (
         <Alert className="mx-4">
           <Info />
           <AlertDescription>
             Please{" "}
-            <Link href="/settings/administrator/equity" className={linkClasses}>
+            <Link href="/settings/administrator/templates?edit=exercise_notice" className={linkClasses}>
               add an exercise notice
             </Link>{" "}
             so investors can exercise their options.
@@ -137,7 +136,7 @@ export default function GrantsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-muted-foreground text-sm">Total options</h3>
-                  <p>{cancellingGrant.numberOfShares.toLocaleString()}</p>
+                  <p className="text-sm">{cancellingGrant.numberOfShares.toLocaleString()}</p>
                 </div>
                 <div>
                   <h3 className="text-muted-foreground text-sm">Vested Options</h3>
@@ -149,10 +148,10 @@ export default function GrantsPage() {
                 </div>
                 <div>
                   <h3 className="text-muted-foreground text-sm">Options to be forfeited</h3>
-                  <p className="text-sm text-red-500">{cancellingGrant.unvestedShares.toLocaleString()}</p>
+                  <p className="text-destructive text-sm">{cancellingGrant.unvestedShares.toLocaleString()}</p>
                 </div>
               </div>
-              <Alert className="mx-4" variant="destructive">
+              <Alert variant="destructive">
                 <CircleAlert className="size-4" />
                 <AlertTitle>Important note</AlertTitle>
                 <AlertDescription>

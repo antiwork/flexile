@@ -60,9 +60,9 @@ const MessageRow = ({
   return (
     <div
       className={cn(
-        "border-muted hover:bg-muted/10 cursor-pointer px-4 py-4",
+        "border-muted hover:bg-accent cursor-pointer px-4 py-4",
         !isLastMessage ? "border-b" : "",
-        message.role === "user" ? "" : "bg-muted/15",
+        message.role === "user" ? "" : "bg-accent/20",
       )}
       onClick={toggleExpansion}
     >
@@ -81,7 +81,7 @@ const MessageRow = ({
         </div>
         <div className="flex-1">
           <div className="mb-1 flex items-center justify-between">
-            <span className="text-sm font-medium text-black">
+            <span className="text-foreground text-sm font-medium">
               {message.role === "user" ? userName : message.staffName || "Flexile support"}
             </span>
             <span className="text-muted-foreground text-sm">
@@ -129,6 +129,7 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
       content,
       attachments,
       tools: helperTools({ companyId: company.id, contractorId: user.roles.worker?.id }),
+      customerInfoUrl: `${window.location.origin}/helper/users`,
     });
 
     setContent("");
@@ -203,13 +204,7 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
             autoFocus
           />
           <div className="absolute right-2 bottom-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="small"
-              onClick={() => fileInputRef.current?.click()}
-              className="h-8 w-8 p-0"
-            >
+            <Button type="button" variant="ghost" onClick={() => fileInputRef.current?.click()} className="h-8 w-8 p-0">
               <Paperclip className="size-4" />
             </Button>
           </div>
@@ -218,7 +213,7 @@ export const HelperChat = ({ conversation }: HelperChatProps) => {
           <MutationStatusButton
             mutation={createMessage}
             disabled={!content.trim() && attachments.length === 0}
-            size="small"
+            idleVariant="primary"
             type="submit"
           >
             <Send className="size-4" />

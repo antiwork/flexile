@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -18,21 +19,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useCurrentCompany, useCurrentUser } from "@/global";
+import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
 import { MAX_PREFERRED_NAME_LENGTH, MIN_EMAIL_LENGTH } from "@/models";
 import { request } from "@/utils/request";
-import { settings_path } from "@/utils/routes";
-import GithubUserConnection from "./GithubUserConnection";
+import { settings_path, unimpersonate_admin_users_path } from "@/utils/routes";
 
 export default function SettingsPage() {
   return (
     <div className="grid gap-8">
       <DetailsSection />
-      <GithubUserConnection />
       <LeaveWorkspaceSection />
     </div>
   );
@@ -49,12 +48,15 @@ const DetailsSection = () => {
 
   const saveMutation = useMutation({
     mutationFn: async (values: { email: string; preferredName: string }) => {
+      const payload = { settings: { email: values.email, preferred_name: values.preferredName } };
+
       const response = await request({
         url: settings_path(),
         method: "PATCH",
         accept: "json",
-        jsonData: { settings: { email: values.email, preferred_name: values.preferredName } },
+        jsonData: payload,
       });
+
       if (!response.ok)
         throw new Error(z.object({ error_message: z.string() }).parse(await response.json()).error_message);
     },
@@ -93,9 +95,10 @@ const DetailsSection = () => {
             </FormItem>
           )}
         />
-        {saveMutation.isError ? <p className="text-red-500">{saveMutation.error.message}</p> : null}
+        {saveMutation.isError ? <p className="text-destructive">{saveMutation.error.message}</p> : null}
         <MutationStatusButton
           className="w-fit"
+          idleVariant="primary"
           type="submit"
           mutation={saveMutation}
           loadingText="Saving..."
@@ -110,11 +113,26 @@ const DetailsSection = () => {
 
 const LeaveWorkspaceSection = () => {
   const user = useCurrentUser();
+  const { logout } = useUserStore();
   const company = useCurrentCompany();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const unimpersonateMutation = useMutation({
+    mutationFn: async () => {
+      await request({
+        method: "DELETE",
+        url: unimpersonate_admin_users_path(),
+        accept: "json",
+        assertOk: true,
+      });
+    },
+    onSuccess: () => {
+      queryClient.clear();
+    },
+  });
 
   const leaveCompanyMutation = useMutation({
     mutationFn: async () => {
@@ -138,10 +156,14 @@ const LeaveWorkspaceSection = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      setTimeout(() => {
-        setIsModalOpen(false);
+
+      if (user.companies.length > 1) {
         router.push("/dashboard");
-      }, 1000);
+      } else {
+        if (user.isImpersonating) await unimpersonateMutation.mutateAsync();
+        await signOut({ redirect: false }).then(logout);
+        router.push("/login");
+      }
     },
     onError: (error: Error) => {
       setErrorMessage(error.message);
@@ -154,7 +176,7 @@ const LeaveWorkspaceSection = () => {
   }
 
   // Don't show leave option if user has no leavable roles
-  if (!user.roles.worker && !user.roles.investor && !user.roles.lawyer) {
+  if (!user.roles.worker && !user.roles.lawyer) {
     return null;
   }
 
@@ -176,7 +198,7 @@ const LeaveWorkspaceSection = () => {
       <div className="grid gap-4">
         <h3 className="text mt-4 font-medium">Workspace access</h3>
         <Card>
-          <CardHeader className="flex items-center justify-between">
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="size-8 rounded-md">
                 <AvatarImage src={company.logo_url ?? defaultLogo.src} alt="Company logo" />
@@ -184,15 +206,9 @@ const LeaveWorkspaceSection = () => {
               </Avatar>
               <span className="font-medium">{company.name}</span>
             </div>
-            <CardAction>
-              <Button
-                variant="outline"
-                className="text-destructive hover:text-destructive"
-                onClick={() => setIsModalOpen(true)}
-              >
-                Leave workspace
-              </Button>
-            </CardAction>
+            <Button variant="destructive" className="w-full sm:w-auto" onClick={() => setIsModalOpen(true)}>
+              Leave workspace
+            </Button>
           </CardHeader>
         </Card>
       </div>

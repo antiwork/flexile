@@ -131,6 +131,12 @@ export default function Dividends() {
         value ? "Return of capital" : "Dividend",
       ),
       columnHelper.simple("numberOfShares", "Shares held", (value) => value?.toLocaleString() ?? "N/A", "numeric"),
+      columnHelper.simple(
+        "investmentAmountCents",
+        "Investment amount",
+        (value) => (value ? formatMoneyFromCents(value) : "N/A"),
+        "numeric",
+      ),
       columnHelper.simple("totalAmountInCents", "Gross amount", (value) => formatMoneyFromCents(value), "numeric"),
       columnHelper.simple("withheldTaxCents", "Withheld taxes", (value) => formatMoneyFromCents(value ?? 0), "numeric"),
       columnHelper.simple("netAmountInCents", "Net amount", (value) => formatMoneyFromCents(value ?? 0), "numeric"),
@@ -144,7 +150,10 @@ export default function Dividends() {
             user.hasPayoutMethodForDividends &&
             info.row.original.dividendRound.releaseDocument &&
             !info.row.original.signedReleaseAt ? (
-              <Button size="small" onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}>
+              <Button
+                variant="primary"
+                onClick={() => setSigningDividend({ id: info.row.original.id, state: "initial" })}
+              >
                 Sign
               </Button>
             ) : null}
@@ -260,7 +269,10 @@ export default function Dividends() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={() => setSigningDividend({ id: signingDividend.id, state: "signing" })}>
+                  <Button
+                    variant="primary"
+                    onClick={() => setSigningDividend({ id: signingDividend.id, state: "signing" })}
+                  >
                     Review and sign agreement
                   </Button>
                 </DialogFooter>

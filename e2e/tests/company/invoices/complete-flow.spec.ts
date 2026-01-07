@@ -2,7 +2,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
-import { fillDatePicker } from "@test/helpers";
+import { fillByLabel, fillDatePicker } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
 import { expect, type Page, test, withinModal } from "@test/index";
 
@@ -15,7 +15,7 @@ test.describe("Invoice submission, approval and rejection", () => {
   let workerUserB: User;
 
   test.beforeEach(async () => {
-    company = await companiesFactory.create({ requiredInvoiceApprovalCount: 1 });
+    company = await companiesFactory.create({ requiredInvoiceApprovalCount: 1, isTrusted: true });
     adminUser = (await usersFactory.create()).user;
     workerUserA = (await usersFactory.create()).user;
     workerUserB = (await usersFactory.create()).user;
@@ -40,12 +40,13 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "11/01/2024");
     await page.getByPlaceholder("Description").fill("first item");
-    await page.getByLabel("Hours / Qty").first().fill("01:23");
+    await fillByLabel(page, "Hours / Qty", "01:23", { index: 0 });
     await page.getByRole("button", { name: "Add line item" }).click();
     await page.getByPlaceholder("Description").nth(1).fill("second item");
-    await page.getByLabel("Hours / Qty").nth(1).fill("10");
+    await fillByLabel(page, "Hours / Qty", "10", { index: 1 });
     await page.getByPlaceholder("Enter notes about your").fill("A note in the invoice");
-    await page.waitForTimeout(200); // TODO (dani) avoid this
+
+    await expect(page.getByText("$683", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
@@ -55,7 +56,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("woops too little time");
-    await page.getByLabel("Hours / Qty").fill("0:23");
+    await fillByLabel(page, "Hours / Qty", "0:23", { index: 0 });
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
@@ -69,19 +70,16 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByRole("link", { name: "Edit invoice" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
     await page.getByPlaceholder("Description").first().fill("first item updated");
-    const timeField = page.getByLabel("Hours / Qty").first();
-    await timeField.fill("04:30");
-    await timeField.blur(); // work around a test-specific issue; this works fine in a real browser
-    await page.waitForTimeout(1000); // TODO (dani) avoid this
-    await page.getByRole("button", { name: "Re-submit invoice" }).click();
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    await fillByLabel(page, "Hours / Qty", "04:30", { index: 0 });
+    await expect(page.getByText("$870", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Resubmit" }).click();
 
     await expect(page.getByRole("cell", { name: "$870" })).toBeVisible();
     await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("Invoice to be deleted");
-    await page.getByLabel("Hours / Qty").fill("0:33");
+    await fillByLabel(page, "Hours / Qty", "0:33", { index: 0 });
     await page.getByLabel("Invoice ID").fill("CUSTOM-3");
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
@@ -93,8 +91,12 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.getByRole("cell", { name: "CUSTOM-3" }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Delete" }).click();
-    await page.getByRole("dialog").waitFor({ state: "visible" });
-    await page.getByRole("button", { name: "Delete" }).click();
+    await withinModal(
+      async (modal) => {
+        await modal.getByRole("button", { name: "Delete" }).click();
+      },
+      { page },
+    );
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).not.toBeVisible();
 
     await logout(page);
@@ -102,9 +104,10 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("line item");
-    await page.getByLabel("Hours / Qty").fill("10:23");
+    await fillByLabel(page, "Hours / Qty", "10:23", { index: 0 });
     await fillDatePicker(page, "Date", "11/20/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
+
     await expect(page.getByText("Awaiting approval")).toBeVisible();
 
     await logout(page);
@@ -119,15 +122,15 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(firstRow).toContainText("Dec 1, 2024");
     await expect(firstRow).toContainText("$23");
     await expect(firstRow).toContainText("Awaiting approval");
-    await expect(firstRow.getByRole("button", { name: "Pay now" })).toBeVisible();
+    await expect(firstRow.getByRole("button", { name: "Approve" })).toBeVisible();
     await expect(secondRow).toContainText("Nov 20, 2024");
     await expect(secondRow).toContainText("$623");
     await expect(secondRow).toContainText("Awaiting approval");
-    await expect(secondRow.getByRole("button", { name: "Pay now" })).toBeVisible();
+    await expect(secondRow.getByRole("button", { name: "Approve" })).toBeVisible();
     await expect(thirdRow).toContainText("Nov 1, 2024");
     await expect(thirdRow).toContainText("$870");
     await expect(thirdRow).toContainText("Awaiting approval");
-    await thirdRow.getByRole("button", { name: "Pay now" }).click();
+    await thirdRow.getByRole("button", { name: "Approve" }).click();
 
     await expect(thirdRow).not.toBeVisible();
     await page.getByRole("button", { name: "Filter" }).click();
@@ -159,7 +162,6 @@ test.describe("Invoice submission, approval and rejection", () => {
       },
       { page, title: "Approve these invoices?" },
     );
-    await expect(page.getByRole("dialog")).not.toBeVisible();
 
     await page.getByRole("checkbox", { name: "Select all" }).check();
     await page.getByRole("checkbox", { name: "Select all" }).uncheck();
@@ -170,10 +172,13 @@ test.describe("Invoice submission, approval and rejection", () => {
       .getByLabel("Select row")
       .check();
     await page.getByRole("button", { name: "Reject selected invoices" }).click();
-    await page.getByLabel("Explain why the invoice was").fill("Too little time");
-
-    await page.getByRole("button", { name: "Yes, reject" }).click();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await modal.getByLabel("Explain why the invoice was").fill("Too little time");
+        await modal.getByRole("button", { name: "Yes, reject" }).click();
+      },
+      { page },
+    );
     const rejectedInvoiceRow0 = page
       .locator("tbody tr")
       .filter({ hasText: workerUserA.legalName ?? "never" })
@@ -182,9 +187,8 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(openInvoicesBadge).toContainText("1");
 
     await page.getByRole("cell", { name: workerUserB.legalName ?? "never" }).click();
-    await page.getByRole("link", { name: "View invoice" }).click();
     await expect(page.getByRole("heading", { name: "Invoice" })).toBeVisible();
-    await page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Pay now" }).click();
+    await page.locator("header").filter({ hasText: "Invoice" }).getByRole("button", { name: "Approve" }).click();
 
     await expect(openInvoicesBadge).not.toBeVisible();
 
@@ -200,10 +204,9 @@ test.describe("Invoice submission, approval and rejection", () => {
     await rejectedInvoiceRow.click({ button: "right" });
     await page.getByRole("menuitem", { name: "Edit" }).click();
     await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
-    await page.getByLabel("Hours / Qty").fill("02:30");
+    await fillByLabel(page, "Hours / Qty", "02:30", { index: 0 });
     await page.getByPlaceholder("Enter notes about your").fill("fixed hours");
-    await page.getByRole("button", { name: "Re-submit invoice" }).click();
-    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    await page.getByRole("button", { name: "Resubmit" }).click();
 
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Rejected" })).not.toBeVisible();
     await expect(rejectedInvoiceRow.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();

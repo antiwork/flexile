@@ -37,7 +37,7 @@ function SettingsLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link href="/dashboard" className="flex items-center gap-2 text-sm">
+                  <Link href="/dashboard" className="flex items-center gap-2 text-sm dark:text-white">
                     <ChevronLeft className="h-4 w-4" />
                     <span className="font-medium">Back to app</span>
                   </Link>
@@ -87,12 +87,12 @@ function SettingsLayout({ children }: { children: React.ReactNode }) {
         <SidebarInset>
           <div className="flex items-center gap-2 p-2 md:hidden">
             <SidebarTrigger />
-            <Link href="/dashboard" className="flex items-center gap-2 text-sm">
+            <Link href="/dashboard" className="flex items-center gap-2 text-sm dark:text-white">
               <ChevronLeft className="h-4 w-4" />
               <span className="font-medium">Back to app</span>
             </Link>
           </div>
-          <main className="mx-auto w-full max-w-3xl flex-1 p-6 md:p-16">{children}</main>
+          <main className="mx-auto w-full max-w-3xl flex-1 p-6 pb-6 md:p-16">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>

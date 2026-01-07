@@ -3,18 +3,9 @@
 class ApplicationController < ActionController::Base
   include PunditAuthorization, SetCurrent
   before_action :set_paper_trail_whodunnit
-  before_action :authenticate_user_json!, only: [:userid]
 
   after_action :set_csrf_cookie
 
-  def userid
-    render json: { id: Current.user.id }
-  end
-
-  def current_user_data
-    return e401_json if Current.user.nil?
-    render json: UserPresenter.new(current_context:).logged_in_user
-  end
 
   private
     def authenticate_user_json!
@@ -42,15 +33,24 @@ class ApplicationController < ActionController::Base
     end
 
     def set_csrf_cookie
-      cookies["X-CSRF-Token"] = {
+      cookie_options = {
         value: form_authenticity_token,
-        secure: true,
-        same_site: :strict,
-        domain: DOMAIN,
       }
+
+      # Only apply strict cookie options in staging and production environments.
+      # In development, omitting domain and secure options avoids issues with local cookies being rejected by the browser.
+      if Rails.env.staging? || Rails.env.production?
+        cookie_options.merge!(
+          same_site: :strict,
+          secure: true,
+          domain: DOMAIN
+        )
+      end
+
+      cookies["X-CSRF-Token"] = cookie_options
     end
 
     def user_for_paper_trail
-      Current.user&.id
+      Current.whodunnit
     end
 end

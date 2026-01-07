@@ -1,5 +1,6 @@
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
+import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { equityGrantsFactory } from "@test/factories/equityGrants";
@@ -9,8 +10,9 @@ import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/
 import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, desc, eq } from "drizzle-orm";
-import { companies, companyInvestors, equityGrants } from "@/db/schema";
-import { assertDefined } from "@/utils/assert";
+import { DocumentTemplateType } from "@/db/enums";
+import { companies, companyInvestors, documentTemplates, equityGrants } from "@/db/schema";
+import { assert, assertDefined } from "@/utils/assert";
 
 test.describe("Equity Grants", () => {
   test("allows issuing equity grants", async ({ page }) => {
@@ -32,11 +34,9 @@ test.describe("Equity Grants", () => {
       userId: projectBasedUser.id,
     });
     await optionPoolsFactory.create({ companyId: company.id });
-    await login(page, adminUser);
-    await page.getByRole("button", { name: "Equity" }).click();
-    await page.getByRole("link", { name: "Equity grants" }).click();
+    await login(page, adminUser, "/equity/grants");
 
-    await page.getByRole("button", { name: "New option grant" }).click();
+    await page.getByRole("button", { name: "New grant" }).click();
     await expect(page.getByLabel("Number of options")).toHaveValue("10000");
     await selectComboboxOption(page, "Recipient", `${contractorUser.preferredName} (${contractorUser.email})`);
 
@@ -53,9 +53,8 @@ test.describe("Equity Grants", () => {
     await selectComboboxOption(page, "Relationship to company", "Consultant");
 
     await selectComboboxOption(page, "Grant type", "NSO");
-    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
-    await page.getByRole("button", { name: "Customize post-termination exercise period" }).click();
+    await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
 
     // Use more precise selectors focusing on the input fields directly
     await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
@@ -65,7 +64,11 @@ test.describe("Equity Grants", () => {
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
 
-    await page.getByLabel("Contract").setInputFiles({
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
+    await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByLabel("Contract", { exact: true }).setInputFiles({
       name: "contract.pdf",
       mimeType: "application/pdf",
       buffer: Buffer.from("very signed contract"),
@@ -88,30 +91,17 @@ test.describe("Equity Grants", () => {
       }),
     );
 
-    await page.getByRole("button", { name: "New option grant" }).click();
+    await page.getByRole("button", { name: "New grant" }).click();
 
-    // Fill in recipient (required)
     await selectComboboxOption(page, "Recipient", `${projectBasedUser.preferredName} (${projectBasedUser.email})`);
 
-    // Fill in number of options (required)
     await page.getByLabel("Number of options").fill("20");
-
-    // Fill in relationship to company (required)
     await selectComboboxOption(page, "Relationship to company", "Consultant");
-
-    // Fill in required grant type
     await selectComboboxOption(page, "Grant type", "NSO");
 
-    // Fill in required vesting details
-    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
-
-    // Fill in required board approval date (using today's date)
     await fillDatePicker(page, "Board approval date", new Date().toLocaleDateString("en-US"));
 
-    // Fill in required exercise period fields
-    await page.getByRole("button", { name: "Customize post-termination exercise period" }).click();
-
-    // Use more precise selectors focusing on the input fields directly
+    await page.getByRole("button", { name: "Customize post-termination exercise periods" }).click();
     await page.locator('input[name="voluntaryTerminationExerciseMonths"]').fill("3");
     await page.locator('input[name="involuntaryTerminationExerciseMonths"]').fill("3");
     await page.locator('input[name="terminationWithCauseExerciseMonths"]').fill("3");
@@ -119,6 +109,10 @@ test.describe("Equity Grants", () => {
     await page.locator('input[name="disabilityExerciseMonths"]').fill("12");
     await page.locator('input[name="retirementExerciseMonths"]').fill("12");
 
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await selectComboboxOption(page, "Shares will vest", "As invoices are paid");
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
 
@@ -133,22 +127,22 @@ test.describe("Equity Grants", () => {
     const projectBasedCompanyInvestor = await db.query.companyInvestors.findFirst({
       where: and(eq(companyInvestors.companyId, company.id), eq(companyInvestors.userId, projectBasedUser.id)),
     });
-    assertDefined(
-      await db.query.equityGrants.findFirst({
-        where: eq(equityGrants.companyInvestorId, assertDefined(projectBasedCompanyInvestor).id),
-        orderBy: desc(equityGrants.createdAt),
-      }),
-    );
+    const grant = await db.query.equityGrants.findFirst({
+      where: eq(equityGrants.companyInvestorId, assertDefined(projectBasedCompanyInvestor).id),
+      orderBy: desc(equityGrants.createdAt),
+    });
+    assert(grant != null);
 
     await logout(page);
     await login(page, contractorUser, "/invoices");
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "10/15/2024");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Software development work");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
+      page.getByRole("button", { name: "Send invoice" }).click(),
+    ]);
 
     await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Oct 15, 2024");
@@ -166,15 +160,18 @@ test.describe("Equity Grants", () => {
     await page.getByRole("link", { name: "New invoice" }).first().click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await fillDatePicker(page, "Date", "11/01/2024");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
     await page.getByPlaceholder("Description").fill("Promotional video production work");
-    await page.waitForTimeout(500); // TODO (techdebt): avoid this
-    await page.getByRole("button", { name: "Send invoice" }).click();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/trpc/invoices.list") && r.status() === 200),
+      page.getByRole("button", { name: "Send invoice" }).click(),
+    ]);
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
     await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
     await expect(page.locator("tbody")).toContainText("1,000");
     await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    const updatedGrant = await db.query.equityGrants.findFirst({ where: eq(equityGrants.id, grant.id) });
+    expect(updatedGrant?.acceptedAt).not.toBeNull();
   });
 
   test("allows cancelling a grant", async ({ page }) => {
@@ -199,8 +196,6 @@ test.describe("Equity Grants", () => {
       },
       { page },
     );
-
-    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Cancel" })).not.toBeVisible();
     expect(
       (await db.query.equityGrants.findFirst({ where: eq(equityGrants.id, equityGrant.id) }).then(takeOrThrow))
@@ -217,7 +212,7 @@ test.describe("Equity Grants", () => {
     const { user } = await usersFactory.create();
     await companyContractorsFactory.create({ companyId: company.id, userId: user.id });
     const { companyInvestor } = await companyInvestorsFactory.create({ companyId: company.id, userId: user.id });
-    await equityGrantsFactory.create({ companyInvestorId: companyInvestor.id, vestedShares: 100 });
+    await equityGrantsFactory.create({ companyInvestorId: companyInvestor.id, vestedShares: 100 }, { year: 2024 });
 
     await login(page, user);
     await page.getByRole("button", { name: "Equity" }).click();
@@ -225,7 +220,18 @@ test.describe("Equity Grants", () => {
     await expect(page.getByRole("heading", { name: "Options" })).toBeVisible();
     await page.waitForLoadState("networkidle");
     await expect(page.getByRole("button", { name: "Exercise Options" })).not.toBeVisible();
-    await db.update(companies).set({ exerciseNotice: "I am exercising" }).where(eq(companies.id, company.id));
+    await page.getByRole("row", { name: "2024" }).click();
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByText("Total options granted100")).toBeVisible();
+        await expect(modal.getByRole("button", { name: "Exercise options" })).not.toBeVisible();
+        await modal.getByRole("button", { name: "Close" }).click();
+      },
+      { page, title: "2024 Stock option grant" },
+    );
+    await db
+      .insert(documentTemplates)
+      .values({ companyId: company.id, documentType: DocumentTemplateType.ExerciseNotice, text: "I am exercising" });
     await page.reload();
     await expect(page.getByText("You have 100 vested options available for exercise.")).toBeVisible();
     await page.getByRole("button", { name: "Exercise Options" }).click();
@@ -270,68 +276,16 @@ test.describe("Equity Grants", () => {
     await page.getByRole("link", { name: "Equity grants" }).click();
 
     // Open the modal
-    await page.getByRole("button", { name: "New option grant" }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.getByRole("button", { name: "New grant" }).click();
 
-    // Test that estimated value is not shown when FMV share price is missing
-    await page.getByLabel("Number of options").fill("1000");
-    await expect(page.getByText("Estimated value:")).not.toBeVisible();
-  });
-
-  test("displays recipients with email addresses and enables email search", async ({ page }) => {
-    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
-      equityEnabled: true,
-      fmvPerShareInUsd: "1",
-      conversionSharePriceUsd: "1.00",
-      sharePriceInUsd: "1.00",
-    });
-
-    const { user: cooleyContractor } = await usersFactory.create({
-      email: "john.doe@cooley.com",
-      legalName: "John Doe",
-      preferredName: "John Doe",
-    });
-    const { user: regularContractor } = await usersFactory.create({
-      email: "jane.smith@company.com",
-      legalName: "Jane Smith",
-      preferredName: "Jane Smith",
-    });
-
-    await companyContractorsFactory.create({
-      companyId: company.id,
-      userId: cooleyContractor.id,
-    });
-    await companyContractorsFactory.create({
-      companyId: company.id,
-      userId: regularContractor.id,
-    });
-
-    await login(page, adminUser);
-    await page.getByRole("button", { name: "Equity" }).click();
-    await page.getByRole("link", { name: "Equity grants" }).click();
-    await page.getByRole("button", { name: "New option grant" }).click();
-
-    await page.getByRole("combobox", { name: "Recipient" }).click();
-    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
-
-    await page.getByPlaceholder("Search...").fill("cooley");
-    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).not.toBeVisible();
-
-    await page.getByPlaceholder("Search...").clear();
-    await page.getByPlaceholder("Search...").fill("Jane");
-    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).not.toBeVisible();
-
-    await page.getByPlaceholder("Search...").clear();
-    await page.getByPlaceholder("Search...").fill("company.com");
-    await expect(page.getByRole("option", { name: "Jane Smith (jane.smith@company.com)" })).toBeVisible();
-    await expect(page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" })).not.toBeVisible();
-
-    await page.getByPlaceholder("Search...").clear();
-    await page.getByRole("option", { name: "John Doe (john.doe@cooley.com)" }).click();
-    await expect(page.getByRole("combobox", { name: "Recipient" })).toHaveText("John Doe (john.doe@cooley.com)");
+    await withinModal(
+      async () => {
+        await page.getByLabel("Number of options").fill("1000");
+        // Test that estimated value is not shown when FMV share price is missing
+        await expect(page.getByText("Estimated value:")).not.toBeVisible();
+      },
+      { page, assertClosed: false },
+    );
   });
 
   test("shows exercise notice alert when no exercise notice is present", async ({ page }) => {
@@ -351,7 +305,7 @@ test.describe("Equity Grants", () => {
       page.getByRole("alert", { name: "Please add an exercise notice so investors can exercise their options." }),
     ).not.toBeVisible();
     await page.getByRole("link", { name: "add an exercise notice" }).click();
-    await findRichTextEditor(page, "Exercise notice").fill("This is an exercise notice");
+    await page.locator("[contenteditable=true]").fill("This is an exercise notice");
     await page.getByRole("button", { name: "Save changes" }).click();
     await page.goBack();
     await expect(page.getByRole("heading", { name: "Equity grants" })).toBeVisible();
@@ -359,5 +313,42 @@ test.describe("Equity Grants", () => {
     await expect(
       page.getByRole("alert", { name: "Please add an exercise notice so investors can exercise their options." }),
     ).not.toBeVisible();
+  });
+
+  test("allows issuing equity grants to administrators", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fmvPerShareInUsd: "1",
+      conversionSharePriceUsd: "1.00",
+      sharePriceInUsd: "1.00",
+    });
+    await optionPoolsFactory.create({ companyId: company.id });
+
+    await companyContractorsFactory.create({ companyId: company.id });
+
+    const { user: otherAdminUser } = await usersFactory.create();
+    await companyAdministratorsFactory.create({ companyId: company.id, userId: otherAdminUser.id });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Equity grants" }).click();
+    await page.getByRole("button", { name: "New grant" }).click();
+
+    await page.getByLabel("Number of options").fill("100");
+    await selectComboboxOption(page, "Relationship to company", "Consultant");
+    await selectComboboxOption(page, "Recipient", `${otherAdminUser.preferredName} (${otherAdminUser.email})`);
+
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page.getByLabel("Shares will vest")).not.toBeVisible();
+    await selectComboboxOption(page, "Vesting schedule", "4-year with 1-year cliff (1/48th monthly after cliff)");
+    await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("tab", { name: "Write" }).click();
+    await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
+
+    await page.getByRole("button", { name: "Create grant" }).click();
+
+    const row = page.locator("tbody tr").first();
+    await expect(row).toContainText(otherAdminUser.legalName ?? "");
+    await expect(row).toContainText("100");
   });
 });

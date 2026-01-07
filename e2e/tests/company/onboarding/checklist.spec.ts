@@ -7,6 +7,7 @@ import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccou
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
 import { wiseRecipientsFactory } from "@test/factories/wiseRecipients";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 
@@ -14,7 +15,8 @@ test.describe("Onboarding checklist", () => {
   test("completes admin onboarding checklist by adding company details, bank account, and inviting contractor", async ({
     page,
   }) => {
-    const company = (await companiesFactory.createPreOnboarding({ requiredInvoiceApprovalCount: 1 })).company;
+    const company = (await companiesFactory.createPreOnboarding({ requiredInvoiceApprovalCount: 1, isTrusted: true }))
+      .company;
     const adminUser = (await usersFactory.create()).user;
     await companyAdministratorsFactory.create({
       companyId: company.id,
@@ -59,16 +61,21 @@ test.describe("Onboarding checklist", () => {
 
     await withinModal(
       async (modal) => {
-        await expect(modal.getByText("Who's joining?")).toBeVisible();
         await modal.getByLabel("Email").fill(faker.internet.email());
-        await modal.getByLabel("Role").fill("Software Engineer");
+        await selectComboboxOption(page, "Role", "Software Engineer");
         await modal.getByLabel("Hourly").check();
         await modal.getByLabel("Rate").fill("100");
-        await modal.getByLabel("Already signed contract elsewhere").check({ force: true });
-        await modal.getByRole("button", { name: "Send invite" }).click();
-        await modal.waitFor({ state: "detached" });
+        await modal.getByRole("button", { name: "Continue" }).click();
       },
       { page, title: "Who's joining?" },
+    );
+
+    await withinModal(
+      async (modal) => {
+        await page.getByRole("switch", { name: "Already signed contract elsewhere" }).click({ force: true });
+        await modal.getByRole("button", { name: "Send invite" }).click();
+      },
+      { page, title: "Add a contract" },
     );
 
     const checkProgress = async () => {
@@ -87,7 +94,7 @@ test.describe("Onboarding checklist", () => {
     await invoicesFactory.create({ companyId: company.id });
 
     await page.getByRole("link", { name: "Invoices" }).click();
-    await page.getByRole("row").getByText("Pay now").click();
+    await page.getByRole("row").getByText("Approve").click();
 
     await expect(page.getByText("You are all set!")).toBeVisible();
     await expect(page.getByText("Everything is in place. Time to flex.")).toBeVisible();
@@ -98,7 +105,7 @@ test.describe("Onboarding checklist", () => {
     page,
   }) => {
     const { user: contractorUser } = await usersFactory.create(undefined, { withoutComplianceInfo: true });
-    await companyContractorsFactory.create({ userId: contractorUser.id });
+    await companyContractorsFactory.create({ userId: contractorUser.id }, { withoutBankAccount: true });
     await login(page, contractorUser);
 
     await expect(page.getByText("Fill tax information")).toBeVisible();
@@ -180,7 +187,10 @@ test.describe("Onboarding checklist", () => {
     page,
   }) => {
     const { user: contractorUser } = await usersFactory.create(undefined, { withoutComplianceInfo: true });
-    const { companyContractor } = await companyContractorsFactory.create({ userId: contractorUser.id });
+    const { companyContractor } = await companyContractorsFactory.create(
+      { userId: contractorUser.id },
+      { withoutBankAccount: true },
+    );
     await companyInvestorsFactory.create({ userId: contractorUser.id, companyId: companyContractor.companyId });
     await login(page, contractorUser);
 

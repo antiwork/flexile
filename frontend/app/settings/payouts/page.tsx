@@ -29,6 +29,9 @@ import {
 } from "@/utils/routes";
 import BankAccountModal, { type BankAccount, bankAccountSchema } from "./BankAccountModal";
 
+const getPayRateDisplayText = (payRateType: "hourly" | "project_based"): string =>
+  payRateType === "project_based" ? "project" : "hourly";
+
 export default function PayoutsPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
@@ -105,7 +108,7 @@ const EquitySection = () => {
                 <div>Cash amount</div>
                 <div>
                   {formatMoneyFromCents(((100 - equityPercentage) * payRateInSubunits) / 100)}{" "}
-                  <span className="text-gray-500">/ {worker.payRateType}</span>
+                  <span className="text-muted-foreground">/ {getPayRateDisplayText(worker.payRateType)}</span>
                 </div>
               </div>
               <Separator />
@@ -113,7 +116,7 @@ const EquitySection = () => {
                 <div>Equity value</div>
                 <div>
                   {formatMoneyFromCents((equityPercentage * payRateInSubunits) / 100)}{" "}
-                  <span className="text-gray-500">/ {worker.payRateType}</span>
+                  <span className="text-muted-foreground">/ {getPayRateDisplayText(worker.payRateType)}</span>
                 </div>
               </div>
               <Separator />
@@ -121,7 +124,7 @@ const EquitySection = () => {
                 <div>Total amount</div>
                 <div>
                   {formatMoneyFromCents(payRateInSubunits)}{" "}
-                  <span className="text-gray-500">/ {worker.payRateType}</span>
+                  <span className="text-muted-foreground">/ {getPayRateDisplayText(worker.payRateType)}</span>
                 </div>
               </div>
             </div>
@@ -129,6 +132,7 @@ const EquitySection = () => {
           <div className="justify-start p-0">
             <MutationStatusButton
               type="submit"
+              idleVariant="primary"
               mutation={saveMutation}
               loadingText="Saving..."
               successText="Saved!"
@@ -224,6 +228,7 @@ const DividendSection = () => {
           <div className="justify-start p-0">
             <MutationStatusButton
               type="submit"
+              idleVariant="primary"
               mutation={saveMutation}
               loadingText="Saving..."
               successText="Saved!"
@@ -260,7 +265,7 @@ const BankAccountsSection = () => {
           city: z.string().nullable(),
           zip_code: z.string().nullable(),
           street_address: z.string().nullable(),
-          billing_entity_name: z.string(),
+          billing_entity_name: z.string().nullable(),
           legal_type: z.enum(["BUSINESS", "PRIVATE"]),
           bank_account_currency: z.enum(currencyCodes).nullable(),
           bank_accounts: z.array(bankAccountSchema),
@@ -338,8 +343,7 @@ const BankAccountsSection = () => {
       ) : bankAccounts.length === 0 && (user.roles.investor || user.roles.worker) ? (
         <Placeholder icon={CircleDollarSign}>
           <p>Set up your bank account to receive payouts.</p>
-          <Button onClick={() => setAddingBankAccount(true)}>
-            <Plus className="size-4" />
+          <Button onClick={() => setAddingBankAccount(true)} variant="outline">
             Add bank account
           </Button>
         </Placeholder>
@@ -360,7 +364,6 @@ const BankAccountsSection = () => {
                         <>
                           {bankAccount.id !== bankAccountForInvoices && (
                             <MutationButton
-                              size="small"
                               idleVariant="outline"
                               mutation={useBankAccountMutation}
                               param={{ bankAccountId: bankAccount.id, useFor: "invoices" as const }}
@@ -384,7 +387,6 @@ const BankAccountsSection = () => {
                                   ? "Updating..."
                                   : undefined
                               }
-                              size="small"
                             >
                               Use for dividends
                             </MutationButton>
@@ -419,7 +421,7 @@ const BankAccountsSection = () => {
           </Card>
           {user.roles.investor || user.roles.worker ? (
             <div>
-              <Button onClick={() => setAddingBankAccount(true)} variant="default">
+              <Button variant="outline" onClick={() => setAddingBankAccount(true)}>
                 <Plus className="size-4" />
                 Add bank account
               </Button>

@@ -1,32 +1,31 @@
 import { Container, Heading, Link, Preview } from "@react-email/components";
 import React from "react";
 import { invoices } from "@/db/schema";
+import env from "@/env";
 import { LinkButton } from "@/trpc/email";
 import EmailLayout from "@/trpc/EmailLayout";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 
 type Invoice = typeof invoices.$inferSelect;
-
+const host = `${env.PROTOCOL}://${env.DOMAIN}`;
 const OneOffInvoiceCreated = ({
-  host,
   companyName,
   invoice,
   bankAccountLastFour,
   paymentDescriptions,
 }: {
-  host: string;
   companyName: string;
   invoice: Invoice;
   bankAccountLastFour: string | undefined | null;
   paymentDescriptions: string[];
 }) => (
   <EmailLayout>
-    <Preview>{companyName} would like to send you money</Preview>
+    <Preview>{companyName} has sent you money</Preview>
 
     <Container className="mb-8">
-      <Heading as="h1">{companyName} would like to send you money.</Heading>
+      <Heading as="h1">{companyName} has sent you money.</Heading>
       <Heading as="h2">
-        Please review the information below and click the link to accept.
+        Please review the information below.
         {!bankAccountLastFour ? " You'll also need to connect your bank account to receive payment." : null}
       </Heading>
 
@@ -39,7 +38,7 @@ const OneOffInvoiceCreated = ({
         <div className="mb-4">
           <div className="mb-1 text-gray-500">Invoice ID</div>
           <div className="font-bold">
-            <Link href={`https://${host}/invoices/${invoice.externalId}`} className="text-black">
+            <Link href={`${host}/invoices/${invoice.externalId}`} className="text-black">
               {invoice.invoiceNumber}
             </Link>
           </div>
@@ -94,13 +93,11 @@ const OneOffInvoiceCreated = ({
             {bankAccountLastFour ? (
               <>****{bankAccountLastFour}</>
             ) : (
-              <LinkButton href={`https://${host}/settings/payouts`}>Connect bank account</LinkButton>
+              <LinkButton href={`${host}/settings/payouts`}>Connect bank account</LinkButton>
             )}
           </div>
         </div>
       </div>
-
-      <LinkButton href={`https://${host}/invoices/${invoice.externalId}?accept=true`}>Accept payment</LinkButton>
     </Container>
   </EmailLayout>
 );

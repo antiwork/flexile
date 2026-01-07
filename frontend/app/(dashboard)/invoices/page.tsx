@@ -8,11 +8,10 @@ import {
   AlertTriangle,
   Ban,
   CheckCircle,
-  CircleAlert,
   CircleCheck,
   CircleCheckBig,
   Download,
-  Eye,
+  Edit,
   Info,
   MoreHorizontal,
   Plus,
@@ -34,7 +33,6 @@ import {
   useIsDeletable,
   useIsPayable,
 } from "@/app/(dashboard)/invoices/index";
-import Status, { StatusDetails } from "@/app/(dashboard)/invoices/Status";
 import StripeMicrodepositVerification from "@/app/settings/administrator/StripeMicrodepositVerification";
 import { ContextMenuActions } from "@/components/actions/ContextMenuActions";
 import { getAvailableActions, SelectionActions } from "@/components/actions/SelectionActions";
@@ -46,7 +44,6 @@ import { linkClasses } from "@/components/Link";
 import MutationButton, { MutationStatusButton } from "@/components/MutationButton";
 import NumberInput from "@/components/NumberInput";
 import Placeholder from "@/components/Placeholder";
-import TableSkeleton from "@/components/TableSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -60,8 +57,9 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
-import { PayRateType, trpc } from "@/trpc/client";
+import { trpc } from "@/trpc/client";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { company_invoices_path, export_company_invoices_path } from "@/utils/routes";
@@ -80,6 +78,32 @@ const statusNames = {
   failed: "Failed",
 };
 
+const statusFilterOptions = [...new Set(Object.values(statusNames))];
+const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
+  switch (invoice.status) {
+    case "received":
+    case "approved":
+      if (invoice.approvals.length < company.requiredInvoiceApprovals) {
+        let label = "Awaiting approval";
+        if (company.requiredInvoiceApprovals > 1)
+          label += ` (${invoice.approvals.length}/${company.requiredInvoiceApprovals})`;
+        return label;
+      }
+      return "Approved";
+
+    case "processing":
+      return "Payment in progress";
+    case "payment_pending":
+      return "Payment scheduled";
+    case "paid":
+      return invoice.paidAt ? `Paid on ${formatDate(invoice.paidAt)}` : "Paid";
+    case "rejected":
+      return "Rejected";
+    case "failed":
+      return "Failed";
+  }
+};
+
 type Invoice = RouterOutput["invoices"]["list"][number];
 
 export default function InvoicesPage() {
@@ -87,7 +111,6 @@ export default function InvoicesPage() {
   const user = useCurrentUser();
   const company = useCurrentCompany();
   const [openModal, setOpenModal] = useState<"approve" | "reject" | "delete" | null>(null);
-  const [detailInvoice, setDetailInvoice] = useState<Invoice | null>(null);
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const isDeletable = useIsDeletable();
@@ -101,14 +124,14 @@ export default function InvoicesPage() {
   const isPayNowDisabled = useCallback(
     (invoice: Invoice) => {
       const payable = isPayable(invoice);
-      return payable && !company.completedPaymentMethodSetup;
+      return payable && (!company.completedPaymentMethodSetup || !company.isTrusted);
     },
-    [isPayable, company.completedPaymentMethodSetup],
+    [isPayable, company.completedPaymentMethodSetup, company.isTrusted],
   );
   const actionConfig = useMemo(
     (): ActionConfig<Invoice> => ({
       entityName: "invoices",
-      contextMenuGroups: ["navigation", "approval", "destructive", "view"],
+      contextMenuGroups: ["navigation", "approval", "destructive"],
       actions: {
         edit: {
           id: "edit",
@@ -117,6 +140,7 @@ export default function InvoicesPage() {
           contexts: ["single"],
           permissions: ["worker"],
           conditions: (invoice: Invoice, _context: ActionContext) => EDITABLE_INVOICE_STATES.includes(invoice.status),
+          action: "edit",
           href: (invoice: Invoice) => `/invoices/${invoice.id}/edit`,
           group: "navigation",
           showIn: ["selection", "contextMenu"],
@@ -136,7 +160,7 @@ export default function InvoicesPage() {
           id: "approve",
           label: "Approve",
           icon: CheckCircle,
-          variant: "primary",
+          variant: "accent",
           contexts: ["single", "bulk"],
           permissions: ["administrator"],
           conditions: (invoice: Invoice, _context: ActionContext) =>
@@ -144,17 +168,6 @@ export default function InvoicesPage() {
           action: "approve",
           group: "approval",
           showIn: ["selection", "contextMenu"],
-        },
-        view: {
-          id: "view",
-          label: "View invoice",
-          icon: Eye,
-          contexts: ["single"],
-          permissions: ["administrator"],
-          conditions: () => true,
-          href: (invoice: Invoice) => `/invoices/${invoice.id}`,
-          group: "view",
-          showIn: ["contextMenu"],
         },
         delete: {
           id: "delete",
@@ -194,10 +207,10 @@ export default function InvoicesPage() {
         ? columnHelper.accessor("billFrom", {
             header: "Contractor",
             cell: (info) => (
-              <>
+              <Link href={`/invoices/${info.row.original.id}`} className="no-underline after:absolute after:inset-0">
                 <b className="truncate">{info.getValue()}</b>
-                <div className="text-xs text-gray-500">{info.row.original.contractor.role}</div>
-              </>
+                <div className="text-muted-foreground text-xs">{info.row.original.contractor.role}</div>
+              </Link>
             ),
           })
         : columnHelper.accessor("invoiceNumber", {
@@ -218,13 +231,9 @@ export default function InvoicesPage() {
       columnHelper.accessor((row) => statusNames[row.status], {
         id: "status",
         header: "Status",
-        cell: (info) => (
-          <div className="relative z-1">
-            <Status invoice={info.row.original} />
-          </div>
-        ),
+        cell: (info) => <div className="relative z-1">{getInvoiceStatusText(info.row.original, company)}</div>,
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          filterOptions: statusFilterOptions,
         },
       }),
       columnHelper.accessor(isActionable, {
@@ -239,7 +248,7 @@ export default function InvoicesPage() {
 
           if (invoice.requiresAcceptanceByPayee && user.id === invoice.contractor.user.id) {
             return (
-              <Button size="small" asChild>
+              <Button variant="primary" asChild>
                 <Link href={`/invoices/${invoice.id}?accept=true`}>Accept payment</Link>
               </Button>
             );
@@ -262,10 +271,10 @@ export default function InvoicesPage() {
 
           return user.roles.administrator ? (
             <div className="flex flex-col gap-2">
-              <div>
+              <Link href={`/invoices/${info.row.original.id}`} className="no-underline after:absolute after:inset-0">
                 <div className="text-base font-medium">{invoice.billFrom}</div>
-                <div className="text-gray-600">{invoice.contractor.role}</div>
-              </div>
+                <div className="text-muted-foreground">{invoice.contractor.role}</div>
+              </Link>
               <div className="text-sm">{amount}</div>
             </div>
           ) : (
@@ -292,10 +301,8 @@ export default function InvoicesPage() {
 
           return (
             <div className="flex h-full flex-col items-end justify-between">
-              <div className="flex h-5 w-4 items-center justify-center">
-                <Status invoice={invoice} iconOnly />
-              </div>
-              <div className="text-gray-600">{formatDate(invoice.invoiceDate)}</div>
+              <div className="flex h-5 items-center justify-center">{getInvoiceStatusText(invoice, company)}</div>
+              <div className="text-muted-foreground">{formatDate(invoice.invoiceDate)}</div>
             </div>
           );
         },
@@ -304,7 +311,7 @@ export default function InvoicesPage() {
       columnHelper.accessor((row) => statusNames[row.status], {
         id: "status",
         meta: {
-          filterOptions: [...new Set(data.map((invoice) => statusNames[invoice.status]))],
+          filterOptions: statusFilterOptions,
           hidden: true,
         },
       }),
@@ -335,13 +342,11 @@ export default function InvoicesPage() {
 
     switch (actionId) {
       case "approve":
-        if (isSingleAction && singleInvoice) {
-          setDetailInvoice(singleInvoice);
-        } else {
-          setOpenModal("approve");
-        }
+        if (isSingleAction && singleInvoice) table.getRow(singleInvoice.id).toggleSelected(true);
+        setOpenModal("approve");
         break;
       case "reject":
+        if (isSingleAction && singleInvoice) table.getRow(singleInvoice.id).toggleSelected(true);
         setOpenModal("reject");
         break;
       case "delete": {
@@ -354,8 +359,20 @@ export default function InvoicesPage() {
         setOpenModal("delete");
         break;
       }
+      case "edit":
+        if (isSingleAction && singleInvoice) {
+          window.location.href = `/invoices/${singleInvoice.id}/edit`;
+        }
+        break;
     }
   };
+
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>(() => {
+    const storedRowSelection = z
+      .array(z.string())
+      .safeParse(JSON.parse(localStorage.getItem(storageKeys.INVOICES_ROW_SELECTION) ?? "[]"));
+    return Object.fromEntries(storedRowSelection.data?.map((id) => [id, true]) ?? []);
+  });
 
   const table = useTable({
     columns,
@@ -365,10 +382,18 @@ export default function InvoicesPage() {
       sorting: [{ id: user.roles.administrator ? "status" : "invoiceDate", desc: !user.roles.administrator }],
       columnFilters: user.roles.administrator ? [{ id: "status", value: ["Awaiting approval", "Failed"] }] : [],
     },
+    state: { rowSelection },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     enableRowSelection: true,
     enableGlobalFilter: !!user.roles.administrator,
+    onRowSelectionChange: (rowSelection) => {
+      setRowSelection((old) => {
+        const value = typeof rowSelection === "function" ? rowSelection(old) : rowSelection;
+        localStorage.setItem(storageKeys.INVOICES_ROW_SELECTION, JSON.stringify(Object.keys(value)));
+        return value;
+      });
+    },
   });
 
   const selectedRows = table.getSelectedRowModel().rows;
@@ -406,33 +431,33 @@ export default function InvoicesPage() {
         title="Invoices"
         headerActions={
           isMobile ? (
-            <div className="flex items-center">
-              {data.length > 0 ? (
+            data.length > 0 ? (
+              <div className="flex items-center">
                 <button
-                  className="p-2 text-blue-600"
+                  className="text-link p-2"
                   onClick={() => table.toggleAllRowsSelected(!table.getIsAllRowsSelected())}
                 >
                   {table.getIsAllRowsSelected() ? "Unselect all" : "Select all"}
                 </button>
-              ) : null}
-              {user.roles.administrator ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="p-2">
-                    <MoreHorizontal className="size-5 text-blue-600" strokeWidth={1.75} />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <a href={export_company_invoices_path(company.id)} className="flex h-11 items-center gap-2">
-                        <Download className="size-4" />
-                        Download CSV
-                      </a>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : null}
-            </div>
+                {user.roles.administrator ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="p-2">
+                      <MoreHorizontal className="text-link size-5" strokeWidth={1.75} />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <a href={export_company_invoices_path(company.id)} className="flex h-11 items-center gap-2">
+                          <Download className="size-4" />
+                          Download CSV
+                        </a>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
+              </div>
+            ) : null
           ) : user.roles.worker ? (
-            <Button asChild variant="outline" size="small" disabled={!canSubmitInvoices}>
+            <Button asChild variant="primary" disabled={!canSubmitInvoices}>
               <Link href="/invoices/new" inert={!canSubmitInvoices}>
                 <Plus className="size-4" />
                 New invoice
@@ -489,7 +514,7 @@ export default function InvoicesPage() {
 
           {!company.completedPaymentMethodSetup && (
             <Alert className="mx-4" variant="destructive">
-              <AlertTriangle className="size-4" />
+              <AlertTriangle className="my-auto max-h-4 max-w-4" />
               <AlertTitle>Bank account setup incomplete.</AlertTitle>
               <AlertDescription>
                 We're waiting for your bank details to be confirmed. Once done, you'll be able to start approving
@@ -500,11 +525,11 @@ export default function InvoicesPage() {
 
           {company.completedPaymentMethodSetup && !company.isTrusted ? (
             <Alert className="mx-4" variant="destructive">
-              <AlertTriangle className="size-4" />
-              <AlertTitle>Payments to contractors may take up to 10 business days to process.</AlertTitle>
+              <AlertTriangle className="my-auto max-h-4 max-w-4" />
+              <AlertTitle>Account verification required to initiate payments.</AlertTitle>
               <AlertDescription>
-                Email us at <Link href="mailto:support@flexile.com">support@flexile.com</Link> to complete additional
-                verification steps.
+                You can approve invoices, but cannot initiate immediate payments until your account is verified. Email
+                us at <Link href="/support">Write to us</Link> to complete verification.
               </AlertDescription>
             </Alert>
           ) : null}
@@ -513,17 +538,14 @@ export default function InvoicesPage() {
 
       <QuickInvoicesSection />
 
-      {isLoading ? (
-        <TableSkeleton columns={6} />
-      ) : data.length > 0 ? (
+      {data.length > 0 || isLoading ? (
         <DataTable
           table={table}
-          onRowClicked={user.roles.administrator ? setDetailInvoice : undefined}
           searchColumn={user.roles.administrator ? "billFrom" : undefined}
           tabsColumn="status"
           actions={
             user.roles.administrator && !isMobile ? (
-              <Button variant="outline" size="small" asChild>
+              <Button variant="outline" asChild>
                 <a href={export_company_invoices_path(company.id)}>
                   <Download className="size-4" />
                   Download CSV
@@ -549,6 +571,7 @@ export default function InvoicesPage() {
               onClearSelection={onClearSelection}
             />
           )}
+          isLoading={isLoading}
         />
       ) : (
         <div className="mx-4">
@@ -589,6 +612,7 @@ export default function InvoicesPage() {
               No, cancel
             </Button>
             <MutationButton
+              idleVariant="primary"
               mutation={approveInvoices}
               param={{
                 approve_ids: selectedApprovableInvoices.map((invoice) => invoice.id),
@@ -601,24 +625,13 @@ export default function InvoicesPage() {
         </DialogContent>
       </Dialog>
 
-      {detailInvoice ? (
-        <TasksModal
-          invoice={detailInvoice}
-          onClose={() => setDetailInvoice(null)}
-          onReject={() => setOpenModal("reject")}
-        />
-      ) : null}
-
       <RejectModal
         open={openModal === "reject"}
         onClose={() => setOpenModal(null)}
         onReject={() => {
-          if (detailInvoice) {
-            setDetailInvoice(null);
-          }
           table.resetRowSelection();
         }}
-        ids={detailInvoice ? [detailInvoice.id] : selectedInvoices.filter(isActionable).map((invoice) => invoice.id)}
+        ids={selectedInvoices.filter(isActionable).map((invoice) => invoice.id)}
       />
       <DeleteModal
         open={openModal === "delete"}
@@ -642,83 +655,6 @@ export default function InvoicesPage() {
     </>
   );
 }
-
-const TasksModal = ({
-  invoice,
-  onClose,
-  onReject,
-}: {
-  invoice: Invoice;
-  onClose: () => void;
-  onReject: () => void;
-}) => {
-  const company = useCurrentCompany();
-  const [invoiceData] = trpc.invoices.get.useSuspenseQuery({ companyId: company.id, id: invoice.id });
-  const payRateInSubunits = invoiceData.contractor.payRateInSubunits;
-  const isActionable = useIsActionable();
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="md:w-110">
-        <DialogHeader>
-          <DialogTitle className="max-md:pb-4 max-md:text-base max-md:leading-5 max-md:font-medium">
-            {invoice.billFrom}
-          </DialogTitle>
-        </DialogHeader>
-        <section>
-          <StatusDetails invoice={invoice} />
-          {payRateInSubunits &&
-          invoiceData.lineItems.some((lineItem) => lineItem.payRateInSubunits > payRateInSubunits) ? (
-            <Alert className="max-md:mb-4" variant="warning">
-              <CircleAlert />
-              <AlertDescription>
-                This invoice includes rates above the default of {formatMoneyFromCents(payRateInSubunits)}/
-                {invoiceData.contractor.payRateType === PayRateType.Custom ? "project" : "hour"}.
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          <header className="flex items-center justify-between gap-4 md:pt-4">
-            <h3 className="text-base max-md:leading-5">Invoice details</h3>
-            <Button variant="outline" size="small" asChild className="max-md:font-regular max-md:h-7.5 max-md:text-sm">
-              <Link href={`/invoices/${invoice.id}`}>View invoice</Link>
-            </Button>
-          </header>
-          <Separator />
-          <div>
-            <div className="flex justify-between gap-2 max-md:leading-5">
-              <div>Net amount in cash</div>
-              <div>{formatMoneyFromCents(invoice.cashAmountInCents)}</div>
-            </div>
-            <Separator />
-            {invoice.equityAmountInCents ? (
-              <>
-                <div className="flex justify-between gap-2 max-md:leading-5">
-                  <div>Swapped for equity ({invoice.equityPercentage}%)</div>
-                  <div>{formatMoneyFromCents(invoice.equityAmountInCents)}</div>
-                </div>
-                <Separator />
-              </>
-            ) : null}
-            <div className="flex justify-between gap-2 pb-4 font-medium">
-              <div>Payout total</div>
-              <div>{formatMoneyFromCents(invoice.totalAmountInUsdCents)}</div>
-            </div>
-          </div>
-        </section>
-        {isActionable(invoice) ? (
-          <DialogFooter>
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" onClick={onReject} className="max-md:h-9 max-md:text-sm">
-                Reject
-              </Button>
-              <ApproveButton invoice={invoice} onApprove={onClose} className="max-md:h-9 max-md:text-sm" />
-            </div>
-          </DialogFooter>
-        ) : null}
-      </DialogContent>
-    </Dialog>
-  );
-};
 
 const InvoiceBulkActionsBar = ({
   selectedInvoices,
@@ -746,10 +682,14 @@ const InvoiceBulkActionsBar = ({
   const rejectAction = visibleActions.find((action) => action.key === "reject");
   const approveAction = visibleActions.find((action) => action.key === "approve");
   const deleteAction = visibleActions.find((action) => action.key === "delete");
+  const editAction = visibleActions.find((action) => action.key === "edit");
 
   return (
     <Dialog open={selectedInvoices.length > 0} modal={false}>
-      <DialogContent className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0">
+      <DialogContent
+        showCloseButton={false}
+        className="border-border fixed right-auto bottom-16 left-1/2 w-auto -translate-x-1/2 transform rounded-xl border p-0"
+      >
         <DialogHeader className="sr-only">
           <DialogTitle>Selected invoices</DialogTitle>
         </DialogHeader>
@@ -774,7 +714,7 @@ const InvoiceBulkActionsBar = ({
           ) : null}
           {approveAction ? (
             <Button
-              variant="primary"
+              variant="accent"
               className="flex h-9 items-center gap-2 border-none text-sm"
               onClick={() => approveAction.action && onAction(approveAction.action, selectedInvoices)}
             >
@@ -789,6 +729,15 @@ const InvoiceBulkActionsBar = ({
               onClick={() => deleteAction.action && onAction(deleteAction.action, selectedInvoices)}
             >
               <Trash2 className="size-3.5" strokeWidth={2.5} />
+            </Button>
+          ) : null}
+          {editAction ? (
+            <Button
+              variant="outline"
+              className="flex h-9 items-center gap-2 text-sm"
+              onClick={() => editAction.action && onAction(editAction.action, selectedInvoices)}
+            >
+              <Edit className="size-3.5" strokeWidth={2.5} />
             </Button>
           ) : null}
         </div>
@@ -931,10 +880,10 @@ const QuickInvoicesSectionContent = () => {
 
               <div className="grid gap-2">
                 <div className="mt-2 mb-2 pt-2 text-right lg:mt-16 lg:mb-3 lg:pt-0">
-                  <span className="text-sm text-gray-500">Total amount</span>
+                  <span className="text-muted-foreground text-sm">Total amount</span>
                   <div className="text-3xl font-bold">{formatMoneyFromCents(totalAmountInCents)}</div>
                   {company.equityEnabled ? (
-                    <div className="mt-1 text-sm text-gray-500">
+                    <div className="text-muted-foreground mt-1 text-sm">
                       ({formatMoneyFromCents(cashAmountCents)} cash +{" "}
                       <Link href="/settings/payouts" className={linkClasses}>
                         {formatMoneyFromCents(equityAmountCents)} equity

@@ -29,4 +29,38 @@ RSpec.describe DividendRound do
       end
     end
   end
+
+  describe "#remind_dividend_investors" do
+    let(:company) { create(:company) }
+    let(:dividend_round) { create(:dividend_round, company:) }
+    let(:company_investor_1) { create(:company_investor, company:) }
+    let(:company_investor_2) { create(:company_investor, company:) }
+    let(:company_investor_3) { create(:company_investor, company:) }
+    let(:company_investor_4) { create(:company_investor, company:) }
+
+    before do
+      # A dividend that we've emailed about already
+      create(:dividend, dividend_round:, company_investor: company_investor_1,
+                        status: Dividend::PENDING_SIGNUP)
+      company_investor_1.investor_dividend_rounds.create!(dividend_round:, dividend_issued_email_sent: true)
+
+      create(:dividend, dividend_round:, company_investor: company_investor_2, status: Dividend::ISSUED)
+
+      create(:dividend, dividend_round:, company_investor: company_investor_3, status: Dividend::PENDING_SIGNUP)
+      company_investor_3.investor_dividend_rounds.create!(dividend_round:)
+
+      create(:dividend, dividend_round:, company_investor: company_investor_4, status: Dividend::PENDING_SIGNUP)
+    end
+
+    it "only sends emails to investors with dividends in the pending signup state" do
+      company_investors = [company_investor_1, company_investor_3, company_investor_4]
+      dividend_rounds = InvestorDividendRound.where(dividend_round:)
+
+      expect do
+        dividend_round.remind_dividend_investors
+      end.to have_enqueued_mail(CompanyInvestorMailer, :dividend_issued).exactly(company_investors.size).with do |args|
+        expect(args[:investor_dividend_round_id]).to eq(dividend_rounds.where(company_investor: company_investors.pop).sole.id)
+      end
+    end
+  end
 end

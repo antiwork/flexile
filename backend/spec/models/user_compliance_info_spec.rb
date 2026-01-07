@@ -246,108 +246,6 @@ RSpec.describe UserComplianceInfo do
       end
     end
 
-    describe "#sync_with_quickbooks" do
-      let(:user) { create(:user, :without_compliance_info) }
-      let(:tax_id) { "111-22-3333" }
-      let(:business_name) { "Acme, Inc." }
-      let!(:inactive_company_worker) { create(:company_worker, :inactive, user:) }
-      let!(:contractor_without_a_contract) { create(:company_worker, user:, without_contract: true) }
-      let!(:contractor_without_a_signed_contract) { create(:company_worker, user:, with_unsigned_contract: true) }
-
-      context "for an active contractor" do
-        let!(:company_worker_1) { create(:company_worker, user:) }
-        let!(:company_worker_2) { create(:company_worker, user:) }
-
-        context "for a new record" do
-          context "when no other compliance infos exist" do
-            it "schedules a QuickBooks data sync job" do
-              expect do
-                create(:user_compliance_info, user:)
-              end.to change { QuickbooksDataSyncJob.jobs.size }.by(2)
-
-              expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_1.company_id, "CompanyWorker", company_worker_1.id)
-              expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_2.company_id, "CompanyWorker", company_worker_2.id)
-            end
-          end
-
-          context "when other compliance infos exist" do
-            before { create(:user_compliance_info, user:, tax_id:, business_name:) }
-
-            context "but tax_id and business_name are the same as the prior compliance info" do
-              it "does not schedule a QuickBooks data sync job" do
-                expect do
-                  create(:user_compliance_info, user:, tax_id:, business_name:)
-                end.not_to change { QuickbooksDataSyncJob.jobs.size }
-              end
-            end
-
-            context "and tax_id differs from the the prior compliance info" do
-              it "schedules a QuickBooks data sync job" do
-                expect do
-                  create(:user_compliance_info, user:, tax_id: "44-55-6666", business_name:)
-                end.to change { QuickbooksDataSyncJob.jobs.size }.by(2)
-
-                expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_1.company_id, "CompanyWorker", company_worker_1.id)
-                expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_2.company_id, "CompanyWorker", company_worker_2.id)
-              end
-            end
-
-            context "and business_name differs from the the prior compliance info" do
-              it "schedules a QuickBooks data sync job" do
-                expect do
-                  create(:user_compliance_info, user:, tax_id:, business_name: "Acme Consulting, Inc.")
-                end.to change { QuickbooksDataSyncJob.jobs.size }.by(2)
-
-                expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_1.company_id, "CompanyWorker", company_worker_1.id)
-                expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_2.company_id, "CompanyWorker", company_worker_2.id)
-              end
-            end
-          end
-        end
-
-        context "for an updated record" do
-          let!(:user_compliance_info) { create(:user_compliance_info, user:, tax_id:, business_name:) }
-
-          it "does not schedule a QuickBooks data sync job if neither tax_id nor business_name have changed" do
-            expect do
-              user_compliance_info.update!(legal_name: "Elmer Fudd")
-            end.not_to change { QuickbooksDataSyncJob.jobs.size }
-          end
-
-          it "schedules a QuickBooks data sync job if tax_id has changed" do
-            expect do
-              user_compliance_info.update!(tax_id: "44-55-6666")
-            end.to change { QuickbooksDataSyncJob.jobs.size }.by(2)
-
-            expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_1.company_id, "CompanyWorker", company_worker_1.id)
-            expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_2.company_id, "CompanyWorker", company_worker_2.id)
-          end
-
-          it "schedules a QuickBooks data sync job if business_name has changed" do
-            expect do
-              user_compliance_info.update!(business_name: "Acme Consulting, Inc.")
-            end.to change { QuickbooksDataSyncJob.jobs.size }.by(2)
-
-            expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_1.company_id, "CompanyWorker", company_worker_1.id)
-            expect(QuickbooksDataSyncJob).to have_enqueued_sidekiq_job(company_worker_2.company_id, "CompanyWorker", company_worker_2.id)
-          end
-
-          it "does not schedule a QuickBooks data sync job if tax_id or business_name has changed but the record is deleted" do
-            expect do
-              user_compliance_info.update!(tax_id: "44-55-6666", business_name: "Acme Consulting, Inc.", deleted_at: Time.current)
-            end.not_to change { QuickbooksDataSyncJob.jobs.size }
-          end
-        end
-      end
-
-      context "for a user who is not an active contractor" do
-        it "does not schedule a QuickBooks data sync job" do
-          expect do
-            create(:user_compliance_info, user:)
-          end.not_to change { QuickbooksDataSyncJob.jobs.size }
-        end
-      end
-    end
 
     describe "#update_tax_id_status" do
       let(:user) { create(:user, :without_compliance_info) }
@@ -409,7 +307,7 @@ RSpec.describe UserComplianceInfo do
     end
   end
 
-  describe "#tax_information_document_name" do
+  describe "#tax_information_document_type" do
     let(:user_compliance_info) { build(:user_compliance_info, user:, business_entity:) }
 
     context "when user is a US resident" do
@@ -418,16 +316,16 @@ RSpec.describe UserComplianceInfo do
       context "and is an individual" do
         let(:business_entity) { false }
 
-        it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
+        it "returns the W-9 form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
 
       context "and is a business entity" do
         let(:business_entity) { true }
 
-        it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
+        it "returns the W-9 form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
     end
@@ -438,16 +336,16 @@ RSpec.describe UserComplianceInfo do
       context "and is an individual" do
         let(:business_entity) { false }
 
-        it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
+        it "returns the W-9 form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
 
       context "and is a business entity" do
         let(:business_entity) { true }
 
-        it "returns the W-9 form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_9)
+        it "returns the W-9 form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w9)
         end
       end
     end
@@ -458,37 +356,37 @@ RSpec.describe UserComplianceInfo do
       context "and is an individual" do
         let(:business_entity) { false }
 
-        it "returns the W-8BEN form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_8BEN)
+        it "returns the W-8BEN form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w8ben)
         end
       end
 
       context "and is a business entity" do
         let(:business_entity) { true }
 
-        it "returns the W-8BEN-E form name" do
-          expect(user_compliance_info.tax_information_document_name).to eq(Document::FORM_W_8BEN_E)
+        it "returns the W-8BEN-E form type" do
+          expect(user_compliance_info.tax_information_document_type).to eq(:form_w8bene)
         end
       end
     end
   end
 
-  describe "#investor_tax_document_name" do
+  describe "#investor_tax_document_type" do
     let(:user_compliance_info) { build(:user_compliance_info, user:) }
 
     context "when user is a US resident" do
       let(:user) { create(:user, country_code: "US", citizenship_country_code: "RO") }
 
-      it "returns the 1099-DIV form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1099_DIV)
+      it "returns the 1099-DIV form type" do
+        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1099div)
       end
     end
 
     context "when user is a US citizen" do
       let(:user) { create(:user, country_code: "RO", citizenship_country_code: "US") }
 
-      it "returns the 1099-DIV form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1099_DIV)
+      it "returns the 1099-DIV form type" do
+        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1099div)
       end
     end
 
@@ -497,8 +395,8 @@ RSpec.describe UserComplianceInfo do
         create(:user, country_code: "RO", citizenship_country_code: "RO")
       end
 
-      it "returns the 1042-S form name" do
-        expect(user_compliance_info.investor_tax_document_name).to eq(Document::FORM_1042_S)
+      it "returns the 1042-S form type" do
+        expect(user_compliance_info.investor_tax_document_type).to eq(:form_1042s)
       end
     end
   end
@@ -518,7 +416,7 @@ RSpec.describe UserComplianceInfo do
 
 
       context "when there are paid dividends attached to the user compliance info" do
-        let!(:form_1099_div) { create(:tax_doc, :form_1099div, user_compliance_info:) }
+        let!(:form_1099_div) { create(:document, document_type: :form_1099div, user_compliance_info:) }
 
         before { create(:dividend, :paid, user_compliance_info:) }
 
@@ -532,7 +430,7 @@ RSpec.describe UserComplianceInfo do
         end
 
         context "with 1042-S forms" do
-          let!(:form_1042_s) { create(:tax_doc, :form_1042s, user_compliance_info:) }
+          let!(:form_1042_s) { create(:document, document_type: :form_1042s, user_compliance_info:) }
 
           it "preserves dividend-related tax documents" do
             user_compliance_info.mark_deleted!
@@ -542,9 +440,9 @@ RSpec.describe UserComplianceInfo do
       end
     end
 
-    let!(:tax_document) { create(:tax_doc, :form_w9, user_compliance_info:) }
-    let!(:form_1099_nec) { create(:tax_doc, :form_1099nec, year: 2023, user_compliance_info:, signed: false) }
-    let!(:submitted_1099_nec) { create(:tax_doc, :form_1099nec, year: 2022, user_compliance_info:, signed: true) }
+    let!(:tax_document) { create(:document, document_type: :form_w9, user_compliance_info:) }
+    let!(:form_1099_nec) { create(:document, document_type: :form_1099nec, year: 2023, user_compliance_info:, signed: false) }
+    let!(:submitted_1099_nec) { create(:document, document_type: :form_1099nec, year: 2022, user_compliance_info:, signed: true) }
 
     include_examples "common assertions"
   end

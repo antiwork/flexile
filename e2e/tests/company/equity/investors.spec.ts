@@ -49,7 +49,7 @@ test.describe("Investors", () => {
       .where(eq(companyInvestors.id, companyInvestor2.id));
 
     await login(page, adminUser, "/equity/investors");
-    await expect(page.getByText("Investors")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Investors" })).toBeVisible();
     await expect(page.getByText("Alice Investor")).toBeVisible();
     await expect(page.getByText("Bob Investor")).toBeVisible();
 
@@ -111,12 +111,87 @@ test.describe("Investors", () => {
 
     await login(page, adminUser, "/equity/investors");
 
-    await expect(page.getByText("Major Investor")).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("15.00%");
-    await expect(page.locator("tbody")).toContainText("300,000");
+    await expect(
+      page.getByTableRowCustom({
+        Name: /Major Investor/u,
+        "Fully diluted ownership": "15.00%",
+        "Outstanding shares": "300,000",
+      }),
+    ).toBeVisible();
+  });
 
-    await expect(page.getByRole("cell", { name: "Outstanding ownership" })).toBeVisible();
-    await expect(page.getByRole("cell", { name: "Fully diluted ownership" })).toBeVisible();
+  test("shows investors with equity grants even when total_options field is zero", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fullyDilutedShares: BigInt(1000000),
+    });
+
+    const { shareClass: commonClass } = await shareClassesFactory.create({
+      companyId: company.id,
+      name: "Common",
+    });
+    const { optionPool } = await optionPoolsFactory.create({
+      companyId: company.id,
+      shareClassId: commonClass.id,
+    });
+
+    const { user: investor } = await usersFactory.create({ legalName: "Acme Inc" });
+    const { companyInvestor } = await companyInvestorsFactory.create({
+      companyId: company.id,
+      userId: investor.id,
+    });
+
+    await equityGrantsFactory.create({
+      companyInvestorId: companyInvestor.id,
+      optionPoolId: optionPool.id,
+      exercisePriceUsd: "4.64",
+      vestedShares: 833,
+      unvestedShares: 9167,
+      optionHolderName: "Acme Inc",
+    });
+
+    // Data discrepancy case: Despite having an equity grant with vested shares, total_options is 0
+    await db
+      .update(companyInvestors)
+      .set({ totalOptions: BigInt(0), totalShares: BigInt(0) })
+      .where(eq(companyInvestors.id, companyInvestor.id));
+
+    await login(page, adminUser, "/equity/investors");
+
+    await expect(page.getByText("Acme Inc")).toBeVisible();
+    await expect(page.locator("tbody")).toContainText("10,000");
+    await page.getByRole("button", { name: /Columns/u }).click();
+    await page.getByRole("menuitem", { name: "Option strikes" }).hover();
+    await page.getByRole("menuitemcheckbox", { name: "Common options $4.64 strike" }).click();
+    await expect(page.locator("tbody")).toContainText("833");
+  });
+
+  test("shows download CSV button with correct link", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      fullyDilutedShares: BigInt(1000000),
+    });
+
+    const { user: investor } = await usersFactory.create({ legalName: "Test Investor" });
+    const { companyInvestor } = await companyInvestorsFactory.create({
+      companyId: company.id,
+      userId: investor.id,
+    });
+    await shareHoldingsFactory.create({
+      companyInvestorId: companyInvestor.id,
+      numberOfShares: 100000,
+      shareHolderName: "Test Investor",
+    });
+    await db
+      .update(companyInvestors)
+      .set({ totalShares: BigInt(100000) })
+      .where(eq(companyInvestors.id, companyInvestor.id));
+
+    await login(page, adminUser, "/equity/investors");
+
+    const downloadButton = page.getByRole("link", { name: "Download CSV" });
+    await expect(downloadButton).toBeVisible();
+    await expect(downloadButton).toHaveAttribute("href", `/internal/companies/${company.externalId}/cap_tables/export`);
   });
 
   test.describe("Column Settings", () => {
@@ -198,7 +273,7 @@ test.describe("Investors", () => {
       await page.getByRole("menuitem", { name: "Option strikes" }).hover();
       await page.getByRole("menuitemcheckbox", { name: "Common options $1.00 strike" }).click();
       await expect(page.locator("tbody")).toContainText("60,000"); // Common shares
-      await expect(page.locator("tbody")).toContainText("5,000"); // $1.00 options
+      await expect(page.locator("tbody")).toContainText("3,000"); // $1.00 vested options
     });
 
     test("hides column settings button when no data", async ({ page }) => {

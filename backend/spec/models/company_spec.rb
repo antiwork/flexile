@@ -5,7 +5,7 @@ RSpec.describe Company do
 
   describe "associations" do
     it { is_expected.to have_many(:company_administrators) }
-    it { is_expected.to have_one(:primary_admin).class_name("CompanyAdministrator") }
+    it { is_expected.to belong_to(:primary_admin).class_name("CompanyAdministrator").optional(true) }
     it { is_expected.to have_many(:administrators).through(:company_administrators).source(:user) }
     it { is_expected.to have_many(:company_lawyers) }
     it { is_expected.to have_many(:lawyers).through(:company_lawyers).source(:user) }
@@ -36,7 +36,6 @@ RSpec.describe Company do
     it { is_expected.to have_many(:share_holdings).through(:company_investors) }
     it { is_expected.to have_many(:option_pools) }
     it { is_expected.to have_many(:tender_offers) }
-    it { is_expected.to have_one(:quickbooks_integration).conditions(deleted_at: nil) }
     it { is_expected.to have_one_attached(:logo) }
     it { is_expected.to have_one_attached(:full_logo) }
     it { is_expected.to have_many(:company_stripe_accounts) }
@@ -411,6 +410,35 @@ RSpec.describe Company do
     end
   end
 
+  describe "#cap_table_empty?" do
+    let(:company) { create(:company) }
+
+    it "returns true when no cap table-related records exist" do
+      expect(company.cap_table_empty?).to eq(true)
+    end
+
+    it "returns false when an option_pool exists" do
+      create(:option_pool, company: company)
+      expect(company.reload.cap_table_empty?).to eq(false)
+    end
+
+    it "returns false when a share_class exists" do
+      create(:share_class, company: company)
+      expect(company.reload.cap_table_empty?).to eq(false)
+    end
+
+    it "returns false when a company_investor exists" do
+      create(:company_investor, company: company)
+      expect(company.reload.cap_table_empty?).to eq(false)
+    end
+
+    it "returns false when a share_holding exists" do
+      investor = create(:company_investor, company: company)
+      create(:share_holding, company_investor: investor, share_class: create(:share_class, company: company))
+      expect(company.reload.cap_table_empty?).to eq(false)
+    end
+  end
+
   it { is_expected.to accept_nested_attributes_for(:expense_categories) }
 
   describe "lifecycle hooks" do
@@ -439,6 +467,18 @@ RSpec.describe Company do
         end.to change { investment1.reload.implied_shares }.to(expected_implied_shares1)
          .and change { investment2.reload.implied_shares }.to(expected_implied_shares2)
       end
+    end
+  end
+
+  describe "#primary_admin" do
+    it "returns the primary admin" do
+      company = create(:company)
+      admin = create(:company_administrator, company:)
+      expect(company.primary_admin).to eq admin
+      admin2 = create(:company_administrator, company:)
+      expect(company.primary_admin).to eq admin
+      company.update!(primary_admin: admin2)
+      expect(company.primary_admin).to eq admin2
     end
   end
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, LogOut, MessageCircleQuestion, MoreHorizontal } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight, LogOut, MessageCircleQuestion, MoreHorizontal, UserX } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import React, { useMemo, useState } from "react";
 import ReactDOM from "react-dom";
@@ -15,6 +16,8 @@ import defaultCompanyLogo from "@/images/default-company-logo.svg";
 import { useSwitchCompany } from "@/lib/companySwitcher";
 import { hasSubItems, type NavLinkInfo, useNavLinks } from "@/lib/useNavLinks";
 import { cn } from "@/utils/index";
+import { request } from "@/utils/request";
+import { unimpersonate_admin_users_path } from "@/utils/routes";
 
 // Constants
 const NAV_PRIORITIES: Record<string, number> = {
@@ -23,9 +26,7 @@ const NAV_PRIORITIES: Record<string, number> = {
   Equity: 3,
   Updates: 4,
   People: 5,
-  Expenses: 6,
-  Roles: 7,
-  Settings: 8,
+  Settings: 6,
 };
 
 const DEFAULT_PRIORITY = 99;
@@ -55,7 +56,7 @@ const NavIcon = ({ icon: Icon, label, badge, isActive, className }: NavIconProps
     {Icon ? <Icon className="mb-1 h-5 w-5" /> : null}
     <span className="text-xs font-normal">{label}</span>
     {badge ? (
-      <span className="absolute top-2 right-1/2 flex h-3.5 w-3.5 translate-x-4 -translate-y-1 rounded-full border-3 border-white bg-blue-500" />
+      <span className="border-background absolute top-2 right-1/2 flex h-3.5 w-3.5 translate-x-4 -translate-y-1 rounded-full border-3 bg-blue-500" />
     ) : null}
   </div>
 );
@@ -74,7 +75,7 @@ const SheetOverlay = ({ open }: { open: boolean }) =>
   ReactDOM.createPortal(
     <div
       className={cn(
-        "pointer-events-none fixed inset-0 z-35 bg-black/50 transition-opacity duration-200",
+        "bg-overlay pointer-events-none fixed inset-0 z-35 transition-opacity duration-200",
         open ? "pointer-events-auto opacity-100" : "opacity-0",
       )}
       aria-hidden="true"
@@ -87,7 +88,7 @@ const NavSheet = ({ trigger, title, open, onOpenChange, onBack, children }: NavS
     <SheetOverlay open={!!open} />
     <Sheet modal={false} open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent side="bottom" className="bottom-14 z-50 rounded-t-2xl pb-4 not-print:border-t-0">
+      <SheetContent side="bottom" className="bg-background bottom-14 z-50 rounded-t-2xl pb-4 not-print:border-t-0">
         <SheetHeader className="pb-0">
           <SheetTitle className="flex h-5 items-center gap-2">
             {onBack ? (
@@ -121,7 +122,7 @@ const SheetNavItem = ({ item, image, onClick, showChevron, pathname, className }
     {...(!item.route && { role: "button" })}
     className={cn(
       "flex items-center gap-3 rounded-none px-6 py-3 transition-colors",
-      (pathname === item.route || item.isActive) && "bg-accent text-accent-foreground font-medium",
+      (pathname === item.route || item.isActive) && "bg-accent text-foreground font-medium",
       "w-full text-left",
       className,
     )}
@@ -238,13 +239,13 @@ const CompanySwitcher = ({ onSelect }: CompanySwitcherProps) => {
       onClick={() => void handleCompanySwitch(company.id)}
       className={cn(
         "flex w-full items-center gap-3 px-6 py-3 text-left transition-colors",
-        company.id === user.currentCompanyId && "bg-accent text-accent-foreground font-medium",
+        company.id === user.currentCompanyId && "bg-accent text-foreground font-medium",
       )}
       aria-label={`Switch to ${company.name}`}
       aria-current={company.id === user.currentCompanyId ? "true" : undefined}
     >
       <Image src={company.logo_url ?? defaultCompanyLogo.src} width={20} height={20} className="rounded-xs" alt="" />
-      <span className="line-clamp-1 flex-1 text-left font-normal">{company.name}</span>
+      <span className="line-clamp-1 flex-1 text-left font-normal">{company.name ?? "Personal"}</span>
     </button>
   ));
 };
@@ -285,8 +286,26 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
   const [navState, setNavState] = useState<NavigationState>({ view: "main" });
   const { data: session } = useSession();
   const { logout } = useUserStore();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const unimpersonateMutation = useMutation({
+    mutationFn: async () => {
+      await request({
+        method: "DELETE",
+        url: unimpersonate_admin_users_path(),
+        accept: "json",
+        assertOk: true,
+      });
+      router.push("/admin");
+    },
+    onSuccess: () => {
+      queryClient.clear();
+    },
+  });
 
   const handleLogout = async () => {
+    if (user.isImpersonating) await unimpersonateMutation.mutateAsync();
     if (session?.user) await signOut({ redirect: false });
     logout();
     window.location.href = "/login";
@@ -311,6 +330,11 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
       default:
         return "More";
     }
+  };
+
+  const handleUnimpersonate = async () => {
+    await unimpersonateMutation.mutateAsync();
+    router.push("/admin");
   };
 
   return (
@@ -372,6 +396,17 @@ const OverflowMenu = ({ items, onOpenChange, open }: OverflowMenuProps) => {
                 badge: <SupportBadge />,
               }}
             />
+            {user.isImpersonating ? (
+              <SheetNavItem
+                pathname={pathname}
+                onClick={() => void handleUnimpersonate()}
+                item={{
+                  label: "Stop impersonating",
+                  icon: UserX,
+                }}
+                className="text-destructive"
+              />
+            ) : null}
             <button
               className="flex w-full items-center gap-3 rounded-none px-6 py-3 text-left transition-colors"
               aria-label="Log out"
@@ -421,7 +456,7 @@ export function MobileBottomNav() {
     <nav
       role="navigation"
       aria-label="Mobile navigation"
-      className="bg-background border-border pointer-events-auto fixed right-0 bottom-0 left-0 z-60 h-15 border-t"
+      className="bg-background border-border pointer-events-auto fixed right-0 bottom-0 left-0 z-60 h-15 border-t print:hidden"
     >
       <ul role="list" className="flex items-center justify-around">
         {mainItems.map((item) => (

@@ -23,6 +23,7 @@ import { customAlphabet } from "nanoid";
 import { deterministicEncryptedString, encryptedJson, encryptedString } from "@/lib/encryptedField";
 import {
   BusinessType,
+  DocumentTemplateType,
   DocumentType,
   invoiceStatuses,
   optionGrantIssueDateRelationships,
@@ -31,7 +32,6 @@ import {
   PayRateType,
   TaxClassification,
 } from "./enums";
-import type { GithubIntegrationConfiguration, QuickbooksIntegrationConfiguration } from "./json";
 
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 13);
 
@@ -497,7 +497,7 @@ export const documents = pgTable(
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     userComplianceInfoId: bigint("user_compliance_info_id", { mode: "bigint" }),
     equityGrantId: bigint("equity_grant_id", { mode: "bigint" }),
-    name: varchar().notNull(),
+    shareHoldingId: bigint("share_holding_id", { mode: "bigint" }),
     type: integer("document_type").$type<DocumentType>().notNull(),
     year: integer().notNull(),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
@@ -512,9 +512,32 @@ export const documents = pgTable(
   (table) => [
     index("index_documents_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
     index("index_documents_on_equity_grant_id").using("btree", table.equityGrantId.asc().nullsLast().op("int8_ops")),
+    index("index_documents_on_share_holding_id").using("btree", table.shareHoldingId.asc().nullsLast().op("int8_ops")),
     index("index_documents_on_user_compliance_info_id").using(
       "btree",
       table.userComplianceInfoId.asc().nullsLast().op("int8_ops"),
+    ),
+  ],
+);
+
+export const documentTemplates = pgTable(
+  "document_templates",
+  {
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
+    documentType: integer("document_type").notNull().$type<DocumentTemplateType>(),
+    text: text().notNull(),
+    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("index_document_templates_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
+    uniqueIndex("index_document_templates_on_company_id_and_document_type").using(
+      "btree",
+      table.companyId.asc().nullsLast().op("int8_ops"),
+      table.documentType.asc().nullsLast().op("text_ops"),
     ),
   ],
 );
@@ -608,7 +631,6 @@ export const integrationRecords = pgTable(
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
 
     jsonData: jsonb("json_data"),
-    quickbooksJournalEntry: boolean("quickbooks_journal_entry").notNull().default(false),
   },
   (table) => [
     index("index_integration_records_on_integratable").using(
@@ -647,7 +669,7 @@ export const integrations = pgTable(
     companyId: bigint("company_id", { mode: "bigint" }).notNull(),
     type: varchar().notNull(),
     status: integrationStatus().default("initialized").notNull(),
-    configuration: encryptedJson().$type<QuickbooksIntegrationConfiguration | GithubIntegrationConfiguration>(),
+    configuration: encryptedJson(),
     syncError: text("sync_error"),
     lastSyncAt: timestamp("last_sync_at", { precision: 6, mode: "date" }),
     deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
@@ -749,7 +771,7 @@ export const invoices = pgTable(
     description: varchar(),
     paidAt: timestamp("paid_at", { precision: 6, mode: "date" }),
     dueOn: date("due_on", { mode: "string" }).notNull(),
-    billFrom: varchar("bill_from").notNull(),
+    billFrom: varchar("bill_from"),
     billTo: varchar("bill_to").notNull(),
     notes: text(),
     invoiceApprovalsCount: integer("invoice_approvals_count").default(0).notNull(),
@@ -1173,6 +1195,7 @@ export const companyInvestors = pgTable(
     ),
 
     investedInAngelListRuv: boolean("invested_in_angel_list_ruv").notNull().default(false),
+    deactivatedAt: timestamp("deactivated_at", { precision: 6, mode: "date" }),
   },
   (table) => [
     index("index_company_investors_on_company_id").using("btree", table.companyId.asc().nullsLast().op("int8_ops")),
@@ -1615,7 +1638,7 @@ export const companies = pgTable(
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
     jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
     inviteLink: varchar("invite_link"),
-    exerciseNotice: text("exercise_notice"),
+    primaryAdminId: bigint("primary_admin_id", { mode: "bigint" }),
   },
   (table) => [
     index("index_companies_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
@@ -1672,8 +1695,6 @@ export const users = pgTable(
     sentInvalidTaxIdEmail: boolean("sent_invalid_tax_id_email").notNull().default(false),
     clerkId: varchar("clerk_id"),
     otpSecretKey: varchar("otp_secret_key"),
-    githubUsername: varchar("github_username"),
-    githubExternalId: varchar("github_external_id"),
   },
   (table) => [
     index("index_users_on_confirmation_token").using("btree", table.confirmationToken.asc().nullsLast().op("text_ops")),

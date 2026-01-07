@@ -5,10 +5,18 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyStripeAccountsFactory } from "@test/factories/companyStripeAccounts";
 import { invoiceApprovalsFactory } from "@test/factories/invoiceApprovals";
 import { invoicesFactory } from "@test/factories/invoices";
-import { login } from "@test/helpers/auth";
+import { login, logout } from "@test/helpers/auth";
 import { expect, test, withinModal } from "@test/index";
 import { and, eq, exists, isNull, not } from "drizzle-orm";
-import { companies, companyContractors, consolidatedInvoices, invoiceApprovals, invoices, users } from "@/db/schema";
+import {
+  companies,
+  companyContractors,
+  consolidatedInvoices,
+  expenseCategories,
+  invoiceApprovals,
+  invoices,
+  users,
+} from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 const setupCompany = async ({
@@ -77,7 +85,7 @@ test.describe("Invoices admin flow", () => {
       await login(page, user);
 
       await page.getByRole("link", { name: "Invoices" }).click();
-      await expect(page.getByText("Payments to contractors may take up to 10 business days to process.")).toBeVisible();
+      await expect(page.getByText("Account verification required to initiate payments.")).toBeVisible();
     });
 
     test("when payment method setup is complete but company is not trusted and has no invoices, does not show the status message", async ({
@@ -88,9 +96,7 @@ test.describe("Invoices admin flow", () => {
 
       await page.getByRole("link", { name: "Invoices" }).click();
       await expect(page.getByText("Bank account setup incomplete.")).not.toBeVisible();
-      await expect(
-        page.getByText("Payments to contractors may take up to 10 business days to process."),
-      ).not.toBeVisible();
+      await expect(page.getByText("Account verification required to initiate payments.")).not.toBeVisible();
     });
 
     test("when payment method setup is complete and company is trusted, does not show the status message", async ({
@@ -104,9 +110,7 @@ test.describe("Invoices admin flow", () => {
 
       await page.getByRole("link", { name: "Invoices" }).click();
       await expect(page.getByText("Bank account setup incomplete.")).not.toBeVisible();
-      await expect(
-        page.getByText("Payments to contractors may take up to 10 business days to process."),
-      ).not.toBeVisible();
+      await expect(page.getByText("Account verification required to initiate payments.")).not.toBeVisible();
     });
 
     test("loads successfully for alumni", async ({ page }) => {
@@ -172,10 +176,10 @@ test.describe("Invoices admin flow", () => {
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await expect(page.getByText("2 selected")).toBeVisible();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await page.getByRole("button", { name: "Approve selected" }).click();
 
       // TODO missing check - need to verify ChargeConsolidatedInvoiceJob not enqueued
@@ -187,8 +191,6 @@ test.describe("Invoices admin flow", () => {
         },
         { page },
       );
-
-      await expect(page.getByRole("dialog")).not.toBeVisible();
       expect(await countInvoiceApprovals(company.id)).toBe(2);
 
       const pendingInvoices = await db.$count(
@@ -220,7 +222,6 @@ test.describe("Invoices admin flow", () => {
       });
       expect(updatedInvoice?.status).toBe("approved");
 
-      await page.waitForTimeout(1000);
       await expect(invoiceRow).toContainText("Awaiting approval (2/3)");
     });
 
@@ -246,7 +247,7 @@ test.describe("Invoices admin flow", () => {
         await login(page, adminUser);
         await page.getByRole("link", { name: "Invoices" }).click();
 
-        await page.locator("th").getByLabel("Select all").check();
+        await page.getByRole("checkbox", { name: "Select all" }).check();
         await expect(page.getByText("4 selected")).toBeVisible();
         await page.getByRole("button", { name: "Approve selected" }).click();
 
@@ -265,7 +266,6 @@ test.describe("Invoices admin flow", () => {
           },
           { page },
         );
-        await expect(page.getByRole("dialog")).not.toBeVisible();
 
         const consolidatedInvoicesCountAfter = await db.$count(
           consolidatedInvoices,
@@ -293,7 +293,7 @@ test.describe("Invoices admin flow", () => {
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await expect(page.getByText("2 selected")).toBeVisible();
       await page.getByRole("button", { name: "Reject selected" }).click();
 
@@ -316,7 +316,7 @@ test.describe("Invoices admin flow", () => {
       await login(page, adminUser);
       await page.getByRole("link", { name: "Invoices" }).click();
 
-      await page.locator("th").getByLabel("Select all").check();
+      await page.getByRole("checkbox", { name: "Select all" }).check();
       await expect(page.getByText("2 selected")).toBeVisible();
       await page.getByRole("button", { name: "Reject selected" }).click();
 
@@ -347,8 +347,9 @@ test.describe("Invoices admin flow", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
-    await page.getByRole("row").getByText("Awaiting approval").first().click();
+    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
 
+    await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).toBeVisible();
 
     await db
@@ -356,8 +357,9 @@ test.describe("Invoices admin flow", () => {
       .set({ payRateInSubunits: null })
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
-    await page.getByRole("row").getByText("Awaiting approval").first().click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
+    await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
 
     await db
@@ -365,9 +367,95 @@ test.describe("Invoices admin flow", () => {
       .set({ payRateInSubunits: 60000 })
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
-    await page.getByRole("row").getByText("Awaiting approval").first().click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
+    await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
+  });
+
+  test("shows attached document when viewing an invoice as an admin", async ({ page }) => {
+    const { company, user: adminUser } = await setupCompany();
+
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+
+    const contractorUser = await db.query.users.findFirst({
+      where: eq(users.id, companyContractor.userId),
+    });
+    assert(contractorUser !== undefined);
+
+    await login(page, contractorUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("link", { name: "New invoice" }).click();
+
+    await page.getByPlaceholder("Description").fill("Invoice with document for admin review");
+    await page.getByLabel("Hours").fill("10:00");
+
+    await page.getByLabel("Add document").setInputFiles({
+      name: "admin-review-document.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("document content for admin review"),
+    });
+    await page.waitForTimeout(300);
+    await expect(page.getByText("admin-review-document.pdf")).toBeVisible();
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    await logout(page);
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+
+    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
+
+    await expect(page.getByRole("link", { name: "admin-review-document.pdf" })).toBeVisible();
+  });
+
+  test("shows expense attachments when viewing an invoice as an admin", async ({ page }) => {
+    const { company, user: adminUser } = await setupCompany();
+
+    const { companyContractor } = await companyContractorsFactory.create({ companyId: company.id });
+
+    const contractorUser = await db.query.users.findFirst({
+      where: eq(users.id, companyContractor.userId),
+    });
+    assert(contractorUser !== undefined);
+
+    await db.insert(expenseCategories).values({
+      companyId: company.id,
+      name: "Office Supplies",
+    });
+
+    await login(page, contractorUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+    await page.getByRole("link", { name: "New invoice" }).click();
+
+    await page.getByPlaceholder("Description").fill("Invoice with expense attachment");
+    await page.getByLabel("Hours").fill("5:00");
+
+    await page.getByLabel("Add expense").setInputFiles({
+      name: "expense-receipt.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("expense receipt content"),
+    });
+
+    await page.getByLabel("Merchant").fill("Office Depot");
+    await page.getByLabel("Amount").fill("200");
+
+    await expect(page.getByText("expense-receipt.pdf")).toBeVisible();
+
+    await page.getByRole("button", { name: "Send invoice" }).click();
+    await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+
+    await logout(page);
+
+    await login(page, adminUser);
+    await page.getByRole("link", { name: "Invoices" }).click();
+
+    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
+
+    await expect(page.getByRole("table").filter({ hasText: "Expense" })).toBeVisible();
+    await expect(page.getByText("Office Depot")).toBeVisible();
   });
 });
 
@@ -436,9 +524,12 @@ test.describe("Invoices contractor flow", () => {
       await deletableInvoiceRow.click({ button: "right" });
       await expect(page.getByRole("menuitem", { name: "Delete" })).toBeVisible();
       await page.getByRole("menuitem", { name: "Delete" }).click();
-      await page.getByRole("dialog").waitFor();
-      await page.getByRole("button", { name: "Delete" }).click();
-
+      await withinModal(
+        async (modal) => {
+          await modal.getByRole("button", { name: "Delete" }).click();
+        },
+        { page },
+      );
       await expect(page.locator("tbody tr")).toHaveCount(2);
 
       const remainingInvoices = await db.query.invoices.findMany({

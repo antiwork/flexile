@@ -20,16 +20,18 @@ import { db } from "@/db";
 import { companies, users } from "@/db/schema";
 import env from "@/env";
 import { authOptions } from "@/lib/auth";
+import { currentUserSchema } from "@/models/user";
 import { assertDefined } from "@/utils/assert";
 import { richTextExtensions } from "@/utils/richText";
+import { configure as configureRoutes, current_user_url } from "@/utils/routes";
 import { latestUserComplianceInfo, withRoles } from "./routes/users/helpers";
 import { type AppRouter } from "./server";
 
+configureRoutes({ default_url_options: { host: env.DOMAIN, protocol: env.PROTOCOL } });
+
 export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) => {
-  const host = assertDefined(req.headers.get("Host"));
   const cookie = req.headers.get("cookie") ?? "";
   const userAgent = req.headers.get("user-agent") ?? "";
-  const ipAddress = req.headers.get("x-real-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0] ?? "";
   const csrfToken = cookie
     .split("; ")
     .find((row) => row.startsWith("X-CSRF-Token="))
@@ -42,7 +44,36 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
   };
 
   let userId: number | null = null;
-  let githubAccessToken: string | undefined = undefined;
+
+  const resolveUserId = async (jwtUserId: number) => {
+    try {
+      const authenticatedUser = await db.query.users.findFirst({
+        where: eq(users.id, BigInt(jwtUserId)),
+        columns: { teamMember: true },
+      });
+
+      // Short-circuit to avoid additional queries for non-team members
+      // Since non-team members cannot impersonate, we can just return the authenticated user ID from the token
+      if (!authenticatedUser?.teamMember) return jwtUserId;
+
+      const response = await fetch(current_user_url(), { headers });
+      if (!response.ok) return null;
+
+      // Retrieve impersonation state stored in current user
+      const { isImpersonating, id: externalId } = currentUserSchema.parse(await response.json());
+
+      if (!isImpersonating) return jwtUserId;
+
+      const impersonatedUser = await db.query.users.findFirst({
+        where: eq(users.externalId, externalId),
+        columns: { id: true },
+      });
+
+      return impersonatedUser ? Number(impersonatedUser.id) : null;
+    } catch {
+      return null;
+    }
+  };
 
   // Get userId from NextAuth JWT session
   const session = await getServerSession(authOptions);
@@ -55,19 +86,15 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
         const payload = z
           .object({ user_id: z.number() })
           .safeParse(JSON.parse(Buffer.from(base64Payload, "base64").toString()));
-        if (payload.success) userId = payload.data.user_id;
+        if (payload.success) {
+          userId = await resolveUserId(payload.data.user_id);
+        }
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
-      githubAccessToken = (session.user as any).githubAccessToken;
     } catch {}
   }
 
   return {
     userId,
-    githubAccessToken,
-    host,
-    ipAddress,
-    userAgent,
     headers,
   };
 });

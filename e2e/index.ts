@@ -1,4 +1,5 @@
 import { expect as baseExpect, type Locator, type Page } from "@playwright/test";
+import { createTableRowEngine, serializeColumnValues } from "@test/selectors/tableRowEngine";
 import { test as baseTest } from "next/experimental/testmode/playwright.js";
 import type { CreateEmailOptions } from "resend";
 import { parseHTML } from "zeed-dom";
@@ -6,11 +7,35 @@ import { assertDefined } from "@/utils/assert";
 
 export * from "@playwright/test";
 
+type ExtendedPage = Page & {
+  getByTableRowCustom: (columnValues: Record<string, string | RegExp>) => Locator;
+};
+
 type SentEmail = Omit<CreateEmailOptions, "html" | "text" | "react"> & { html: string; text: string };
-export const test = baseTest.extend<{
-  sentEmails: SentEmail[];
-  setup: undefined;
-}>({
+export const test = baseTest.extend<
+  {
+    page: ExtendedPage;
+    sentEmails: SentEmail[];
+  },
+  {
+    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+    selectorRegistration: void;
+  }
+>({
+  selectorRegistration: [
+    async ({ playwright }, use) => {
+      await playwright.selectors.register("tableRow", createTableRowEngine);
+      await use();
+    },
+    { scope: "worker", auto: true },
+  ],
+  page: async ({ page }, use) => {
+    const extendedPage: ExtendedPage = Object.assign(page, {
+      getByTableRowCustom: (columnValues: Record<string, string | RegExp>) =>
+        page.locator(`tableRow=${serializeColumnValues(columnValues)}`),
+    });
+    await use(extendedPage);
+  },
   sentEmails: async ({ next }, use) => {
     const emails: SentEmail[] = [];
     next.onFetch(async (request) => {
@@ -24,12 +49,6 @@ export const test = baseTest.extend<{
     });
     await use(emails);
   },
-  setup: [
-    async ({}, use) => {
-      await use(undefined);
-    },
-    { auto: true },
-  ],
 });
 
 export const expect = baseExpect.extend({
@@ -56,9 +75,10 @@ export const expect = baseExpect.extend({
 
 export const withinModal = async (
   callback: (modal: Locator) => Promise<void>,
-  { page, title }: { page: Page; title?: string },
+  { page, title, assertClosed = true }: { page: Page; title?: string | RegExp; assertClosed?: boolean },
 ) => {
   const modal = title ? page.getByRole("dialog", { name: title }) : page.getByRole("dialog");
-  await modal.waitFor({ state: "visible" });
+  await expect(modal).toBeVisible();
   await callback(modal);
+  if (assertClosed) await expect(modal).not.toBeVisible();
 };

@@ -1,16 +1,22 @@
-import { CurrencyDollarIcon } from "@heroicons/react/20/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { addDays, isWeekend, nextMonday } from "date-fns";
+import { Ban, Info } from "lucide-react";
 import React, { useState } from "react";
 import MutationButton from "@/components/MutationButton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import type { RouterOutput } from "@/trpc";
 import { trpc } from "@/trpc/client";
+import { cn } from "@/utils";
+import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import { approve_company_invoices_path, company_invoice_path, reject_company_invoices_path } from "@/utils/routes";
+import { formatDate } from "@/utils/time";
 
 type Invoice = RouterOutput["invoices"]["list"][number] | RouterOutput["invoices"]["get"];
 export const EDITABLE_INVOICE_STATES: Invoice["status"][] = ["received", "rejected"];
@@ -33,11 +39,12 @@ export const useCanSubmitInvoices = () => {
   const unsignedContractId = documents?.[0]?.id;
   const hasLegalDetails = user.address.street_address && !!user.taxInformationConfirmedAt;
   const contractSignedElsewhere = contractorInfo?.contractSignedElsewhere ?? false;
+  const hasPayoutInfo = user.hasPayoutMethodForInvoices;
 
   return {
     unsignedContractId: contractSignedElsewhere ? null : unsignedContractId,
     hasLegalDetails,
-    canSubmitInvoices: (contractSignedElsewhere || !unsignedContractId) && hasLegalDetails,
+    canSubmitInvoices: (contractSignedElsewhere || !unsignedContractId) && hasLegalDetails && hasPayoutInfo,
   };
 };
 
@@ -141,11 +148,13 @@ export const useApproveInvoices = (onSuccess?: () => void) => {
 };
 
 export const ApproveButton = ({
+  variant,
   invoice,
   onApprove,
   className,
 }: {
   invoice: Invoice;
+  variant?: React.ComponentProps<typeof Button>["variant"];
   onApprove?: () => void;
   className?: string;
 }) => {
@@ -157,18 +166,13 @@ export const ApproveButton = ({
     <MutationButton
       className={className}
       mutation={approveInvoices}
+      idleVariant={variant}
       param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
       successText={pay ? "Payment initiated" : "Approved!"}
       loadingText={pay ? "Sending payment..." : "Approving..."}
-      disabled={!!pay && !company.completedPaymentMethodSetup}
+      disabled={!!pay && (!company.completedPaymentMethodSetup || !company.isTrusted)}
     >
-      {pay ? (
-        <>
-          <CurrencyDollarIcon className="size-4" /> {invoice.status === "failed" ? "Pay again" : "Pay now"}
-        </>
-      ) : (
-        "Approve"
-      )}
+      Approve
     </MutationButton>
   );
 };
@@ -225,11 +229,16 @@ export const RejectModal = ({
             className="min-h-32"
           />
         </div>
-        <DialogFooter className="max-md:grid max-md:grid-cols-2">
+        <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             No, cancel
           </Button>
-          <MutationButton mutation={rejectInvoices} param={{ ids, reason }} loadingText="Rejecting...">
+          <MutationButton
+            idleVariant="primary"
+            mutation={rejectInvoices}
+            param={{ ids, reason }}
+            loadingText="Rejecting..."
+          >
             Yes, reject
           </MutationButton>
         </DialogFooter>
@@ -300,3 +309,115 @@ export const DeleteModal = ({
     </Dialog>
   );
 };
+
+export function StatusDetails({ invoice, className }: { invoice: Invoice; className?: string }) {
+  const user = useCurrentUser();
+  const company = useCurrentCompany();
+  const [{ invoice: consolidatedInvoice }] = trpc.consolidatedInvoices.last.useSuspenseQuery({ companyId: company.id });
+
+  const getDetails = () => {
+    let details = null;
+    switch (invoice.status) {
+      case "approved":
+        if (invoice.approvals.length > 0) {
+          details = (
+            <ul className="list-disc pl-5">
+              {invoice.approvals.map((approval, index) => (
+                <li key={index}>
+                  Approved by {approval.approver.id === user.id ? "you" : approval.approver.name} on{" "}
+                  {formatDate(approval.approvedAt, { time: true })}
+                </li>
+              ))}
+            </ul>
+          );
+        }
+        break;
+      case "rejected":
+        details = "Rejected";
+        if (invoice.rejector) details += ` by ${invoice.rejector.name}`;
+        if (invoice.rejectedAt) details += ` on ${formatDate(invoice.rejectedAt)}`;
+        if (invoice.rejectionReason) details += `: "${invoice.rejectionReason}"`;
+        break;
+      case "payment_pending":
+      case "processing":
+        if (consolidatedInvoice) {
+          let paymentExpectedBy = addDays(consolidatedInvoice.createdAt, company.paymentProcessingDays);
+          if (isWeekend(paymentExpectedBy)) paymentExpectedBy = nextMonday(paymentExpectedBy);
+          details = `Your payment should arrive by ${formatDate(paymentExpectedBy)}`;
+        }
+        break;
+      default:
+        break;
+    }
+    return details;
+  };
+
+  const statusDetails = getDetails();
+
+  return statusDetails ? (
+    <Alert className={cn(className)} {...(invoice.status === "rejected" && { variant: "destructive" })}>
+      {invoice.status === "rejected" ? <Ban /> : <Info />}
+      <AlertDescription>{statusDetails}</AlertDescription>
+    </Alert>
+  ) : null;
+}
+
+export function Totals({
+  servicesTotal,
+  expensesTotal,
+  equityAmountInCents,
+  equityPercentage,
+  isOwnUser,
+  className,
+}: {
+  servicesTotal: number | bigint;
+  expensesTotal: number | bigint;
+  equityAmountInCents: number | bigint;
+  equityPercentage: number;
+  isOwnUser: boolean;
+  className?: string;
+}) {
+  const company = useCurrentCompany();
+  return (
+    <Card className={cn("w-full self-start lg:w-auto lg:min-w-90", className)}>
+      {servicesTotal > 0 && expensesTotal > 0 && (
+        <CardContent className="border-border grid gap-4 border-b">
+          <div className="flex justify-between gap-2">
+            <span>Total services</span>
+            {formatMoneyFromCents(servicesTotal)}
+          </div>
+          <div className="flex justify-between gap-2">
+            <span>Total expenses</span>
+            <span>{formatMoneyFromCents(expensesTotal)}</span>
+          </div>
+        </CardContent>
+      )}
+      {company.equityEnabled || equityPercentage > 0 ? (
+        <CardContent className="border-border grid gap-4 border-b">
+          <h4 className="font-medium">Payment split</h4>
+          <div className="flex justify-between gap-2">
+            <span>Cash</span>
+            <span>{formatMoneyFromCents(BigInt(servicesTotal) - BigInt(equityAmountInCents))}</span>
+          </div>
+          <div>
+            <div className="flex justify-between gap-2">
+              <span>Equity</span>
+              <span>{formatMoneyFromCents(equityAmountInCents)}</span>
+            </div>
+            <div className="text-muted-foreground text-sm">
+              Swapping {(equityPercentage / 100).toLocaleString([], { style: "percent" })} for company equity.
+            </div>
+          </div>
+        </CardContent>
+      ) : null}
+      <CardContent className="bg-muted/20 rounded-b-md py-3 font-medium first:rounded-t-md">
+        <div className="flex justify-between gap-2">
+          <span>{isOwnUser ? "You'll" : "They'll"} receive in cash</span>
+          <span>
+            {formatMoneyFromCents(BigInt(servicesTotal) - BigInt(equityAmountInCents) + BigInt(expensesTotal))}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

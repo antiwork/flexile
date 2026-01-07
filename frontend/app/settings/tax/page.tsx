@@ -5,6 +5,7 @@ import { CalendarDate, parseDate } from "@internationalized/date";
 import { useMutation, type UseMutationResult, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { iso31662 } from "iso-3166";
 import { AlertTriangle, ArrowUpRightFromSquare, Eye, EyeOff, Info } from "lucide-react";
+import Link from "next/link";
 import React, { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -56,7 +57,7 @@ const formValuesSchema = z.object({
   business_name: z.string().nullable(),
   business_type: z.nativeEnum(BusinessType).nullable(),
   tax_classification: z.nativeEnum(TaxClassification).nullable(),
-  country_code: z.string(),
+  country_code: z.string().min(1, "Please select your country of residence."),
   tax_id: z.string().min(1, "This field is required."),
   birth_date: z.instanceof(CalendarDate).nullable(),
   street_address: z.string().min(1, "Please add your residential address."),
@@ -69,6 +70,10 @@ const getIsForeign = (values: z.infer<typeof formValuesSchema>) =>
   values.citizenship_country_code !== "US" && values.country_code !== "US";
 
 const formSchema = formValuesSchema
+  .refine((data) => data.citizenship_country_code.length > 0, {
+    path: ["citizenship_country_code"],
+    message: "Please select your country of citizenship.",
+  })
   .refine((data) => !data.business_entity || data.business_name, {
     path: ["business_name"],
     message: "Please add your business legal name.",
@@ -181,6 +186,9 @@ export default function TaxPage() {
 
     if (values.country_code === "US" && !/(^\d{5}|\d{9}|\d{5}[- ]\d{4})$/u.test(values.zip_code))
       return form.setError("zip_code", { message: "Please add a valid ZIP code (5 or 9 digits)." });
+
+    if (countrySubdivisions.length > 0 && values.state.length === 0)
+      return form.setError("state", { message: `Please select your ${stateLabel}.` });
     setShowCertificationModal(true);
   });
 
@@ -254,7 +262,13 @@ export default function TaxPage() {
                   <FormControl>
                     <RadioButtons
                       value={field.value ? "business" : "individual"}
-                      onChange={(value) => field.onChange(value === "business")}
+                      onChange={(value) => {
+                        const isBusiness = value === "business";
+                        field.onChange(isBusiness);
+                        if (!isBusiness) {
+                          form.setValue("business_name", null);
+                        }
+                      }}
                       options={[
                         { label: "Individual", value: "individual" },
                         { label: "Business", value: "business" },
@@ -353,7 +367,7 @@ export default function TaxPage() {
               )}
             />
 
-            <div className="grid items-start gap-3 md:grid-cols-2">
+            <div className="grid items-start gap-3 lg:grid-cols-2">
               <FormField
                 control={form.control}
                 name="tax_id"
@@ -367,9 +381,21 @@ export default function TaxPage() {
                       </FormLabel>
                       {!isForeign && field.value && !form.getFieldState("tax_id").isDirty ? (
                         <>
-                          {taxIdStatus === "verified" && <Status variant="success">VERIFIED</Status>}
-                          {taxIdStatus === "invalid" && <Status variant="critical">INVALID</Status>}
-                          {!taxIdStatus && <Status variant="primary">VERIFYING</Status>}
+                          {taxIdStatus === "verified" && (
+                            <Status variant="success" className="text-xs">
+                              VERIFIED
+                            </Status>
+                          )}
+                          {taxIdStatus === "invalid" && (
+                            <Status variant="critical" className="text-xs">
+                              INVALID
+                            </Status>
+                          )}
+                          {!taxIdStatus && (
+                            <Status variant="primary" className="text-xs">
+                              VERIFYING
+                            </Status>
+                          )}
                         </>
                       ) : null}
                     </div>
@@ -388,7 +414,7 @@ export default function TaxPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="rounded-l-none"
+                        className="focus-visible:ring-ring focus-visible:border-border border-input rounded-l-none outline-none focus-visible:ring-2"
                         onPointerDown={() => setMaskTaxId(false)}
                         onPointerUp={() => setMaskTaxId(true)}
                         onPointerLeave={() => setMaskTaxId(true)}
@@ -488,14 +514,15 @@ export default function TaxPage() {
           <div className="flex flex-wrap gap-8">
             <MutationStatusButton
               type="submit"
+              idleVariant="primary"
               disabled={!!isTaxInfoConfirmed && !form.formState.isDirty}
               mutation={saveMutation}
             >
               Save changes
             </MutationStatusButton>
 
-            {user.roles.worker ? (
-              <div className="flex items-center text-sm">
+            {user.roles.worker && data.contractor_for_companies.length > 0 ? (
+              <div className="text-muted-foreground flex items-center text-sm">
                 Changes to your tax information may trigger{" "}
                 {data.contractor_for_companies.length === 1 ? "a new contract" : "new contracts"} with{" "}
                 {data.contractor_for_companies.join(", ")}.
@@ -595,7 +622,7 @@ const LegalCertificationModal = ({
           </>
         )}
 
-        <div className="prose border-muted min-h-0 grow overflow-y-auto rounded-md border p-4 text-black">
+        <div className="prose border-muted text-foreground min-h-0 grow overflow-y-auto rounded-md border p-4">
           <b>{certificateType} Certification</b>
           <br />
           <br />
@@ -675,9 +702,9 @@ const LegalCertificationModal = ({
             <li>Your consent applies to all tax documents during your time using Flexile services.</li>
             <li>
               You can withdraw this consent or request paper copies anytime by contacting{" "}
-              <a href="mailto:support@flexile.com" className={linkClasses}>
-                support@flexile.com
-              </a>
+              <Link href="/support" className={linkClasses}>
+                Write to us
+              </Link>
               .
             </li>
             <li>
@@ -687,9 +714,9 @@ const LegalCertificationModal = ({
             <li>Your tax forms will be available for download for at least one year.</li>
             <li>
               If you don't consent to electronic delivery, contact us at{" "}
-              <a href="mailto:support@flexile.com" className={linkClasses}>
-                support@flexile.com
-              </a>{" "}
+              <Link href="/support" className={linkClasses}>
+                Write to us
+              </Link>{" "}
               to arrange postal delivery.
             </li>
           </ol>
@@ -711,7 +738,7 @@ const LegalCertificationModal = ({
         </div>
 
         <DialogFooter>
-          <MutationButton mutation={signMutation} loadingText="Saving..." disabled={!signature}>
+          <MutationButton idleVariant="primary" mutation={signMutation} loadingText="Saving..." disabled={!signature}>
             Save
           </MutationButton>
         </DialogFooter>

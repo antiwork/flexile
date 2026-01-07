@@ -3,6 +3,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
+import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
 import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
@@ -67,11 +68,10 @@ test.describe("Edit contractor", () => {
     await page.getByRole("link", { name: contractor.preferredName }).click();
 
     await page.getByRole("heading", { name: contractor.preferredName }).click();
-    await expect(page.getByLabel("Role")).toHaveValue(assertDefined(companyContractor.role));
+    await expect(page.getByRole("combobox", { name: "Role" })).toHaveText(assertDefined(companyContractor.role));
     await expect(page.getByLabel("Legal name")).toHaveValue(contractor.legalName);
     await expect(page.getByLabel("Legal name")).toBeDisabled();
-
-    await page.getByLabel("Role").fill("Stuff-doer");
+    await selectComboboxOption(page, "Role", "Stuff-doer");
     await page.getByLabel("Rate").fill("107");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Save changes" })).not.toBeDisabled();
@@ -104,8 +104,13 @@ test.describe("Edit contractor", () => {
     await page.getByRole("link", { name: user.preferredName }).click();
     await page.getByRole("heading", { name: user.preferredName }).click();
 
-    await page.getByLabel("Role").fill("Stuff-doer");
-    await page.getByRole("radio", { name: "Custom" }).click({ force: true });
+    await selectComboboxOption(page, "Role", "Stuff-doer");
+
+    // Wait for the radio button to be available and click its label instead
+    const customRadioLabel = page.locator("label", { hasText: "Custom" });
+    await expect(customRadioLabel).toBeVisible();
+    await customRadioLabel.click();
+
     await page.getByLabel("Rate").fill("2000");
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByRole("button", { name: "Save changes" })).not.toBeDisabled();

@@ -75,7 +75,6 @@ test.describe("Dividends", () => {
       },
       { page },
     );
-    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Sign" })).not.toBeVisible();
 
     const updatedDividend = await db.query.dividends
@@ -119,5 +118,23 @@ test.describe("Dividends", () => {
     await page.getByRole("link", { name: "Dividends" }).first().click();
     await expect(page.getByRole("button", { name: "Sign" })).not.toBeVisible();
     await expect(page.getByText("Please provide a payout method for your dividends.")).toBeVisible();
+  });
+
+  test("displays dividend table data correctly", async ({ page }) => {
+    const { investorUser } = await setup();
+
+    await login(page, investorUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Dividends" }).first().click();
+
+    const row = page
+      .getByRole("row")
+      .filter({ has: page.getByRole("cell", { name: "$1,000" }) }) // Investment amount
+      .filter({ has: page.getByRole("cell", { name: "$500" }) }) // Gross amount
+      .filter({ has: page.getByRole("cell", { name: "500", exact: true }) }) // Number of shares
+      .filter({ has: page.getByRole("cell", { name: "$50", exact: true }) }) // Withheld taxes
+      .filter({ has: page.getByRole("cell", { name: "$100" }) }); // Net amount
+
+    await expect(row).toBeVisible();
   });
 });

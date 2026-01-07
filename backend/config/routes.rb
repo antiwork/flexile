@@ -12,16 +12,19 @@ admin_constraint = lambda do |request|
   user&.team_member?
 end
 
-api_domain_constraint = lambda do |request|
-  Rails.env.test? || API_DOMAIN == request.host
-end
-
 Rails.application.routes.draw do
-  namespace :admin, constraints: admin_constraint do
+  namespace :admin do
     resources :company_workers
     resources :company_administrators
     resources :companies
-    resources :users
+    resources :users do
+      member do
+        get :impersonate
+      end
+      collection do
+        delete :unimpersonate
+      end
+    end
     resources :payments do
       member do
         patch :wise_paid
@@ -37,8 +40,10 @@ Rails.application.routes.draw do
       end
     end
 
-    mount Sidekiq::Web, at: "/sidekiq"
-    mount Flipper::UI.app(Flipper) => "/flipper"
+    constraints(admin_constraint) do
+      mount Sidekiq::Web, at: "/sidekiq"
+      mount Flipper::UI.app(Flipper) => "/flipper"
+    end
 
     root to: "users#index"
   end
@@ -58,36 +63,19 @@ Rails.application.routes.draw do
     end
 
     resources :stripe, controller: :stripe, only: [:create]
-    resources :quickbooks, controller: :quickbooks, only: [:create]
   end
 
   scope module: :api, as: :api do
-    constraints api_domain_constraint do
-      namespace :v1 do
-      end
-      namespace :helper do
-        resource :users, only: :show
-      end
+    namespace :helper do
+      resource :users, only: :show
     end
   end
 
-  # Old routes for backwards compatibility. Can be removed after Jan 1, 2025
-  get "/company/settings", to: redirect { |_path, req| "/companies/_/settings/administrator#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/company/details", to: redirect("/companies/_/settings/administrator/details")
-  get "/company/billing", to: redirect("/companies/_/settings/administrator/billing")
-  get "/expenses", to: redirect("/companies/_/expenses")
-  get "/investors/:id", to: redirect { |path_params, req| "/companies/_/investors/#{path_params[:id]}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/invoices", to: redirect("/companies/_/invoices")
-  get "/invoices/new", to: redirect("/companies/_/invoices/new")
-  get "/invoices/:id/edit", to: redirect("/companies/_/invoices/%{id}/edit")
-  get "/people", to: redirect("/companies/_/people")
-  get "/people/new", to: redirect { |_path_params, req| "/companies/_/people/new#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/internal/userid", to: "application#userid"
-  get "/internal/current_user_data", to: "application#current_user_data"
-  get "/companies/:company_id/settings/equity", to: redirect("/settings/equity")
   resource :oauth_redirect, only: :show
 
   def spa_controller_action
     "application#main_vue"
   end
+
+  get "up", to: "rails/health#show"
 end

@@ -3,10 +3,19 @@ import { and, desc, eq, inArray, isNotNull, isNull, not, type SQLWrapper } from 
 import { pick } from "lodash-es";
 import { z } from "zod";
 import { byExternalId, db } from "@/db";
-import { activeStorageAttachments, activeStorageBlobs, documents, documentSignatures, users } from "@/db/schema";
+import {
+  activeStorageAttachments,
+  activeStorageBlobs,
+  documents,
+  documentSignatures,
+  equityGrants,
+  shareHoldings,
+  users,
+} from "@/db/schema";
 import { companyProcedure, createRouter } from "@/trpc";
 import { simpleUser } from "@/trpc/routes/users";
 import { assertDefined } from "@/utils/assert";
+import { signed_company_document_url } from "@/utils/routes";
 
 const visibleDocuments = (companyId: bigint, userId: bigint | SQLWrapper | undefined) =>
   and(
@@ -34,20 +43,22 @@ export const documentsRouter = createRouter({
       );
       const rows = await db
         .selectDistinctOn([documents.id], {
-          ...pick(documents, "id", "name", "createdAt", "type"),
+          ...pick(documents, "id", "createdAt", "type", "year"),
+          shareHolding: pick(shareHoldings, "name"),
           attachment: pick(activeStorageBlobs, "key", "filename"),
           hasText: isNotNull(documents.text),
         })
         .from(documents)
         .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
         .innerJoin(users, eq(documentSignatures.userId, users.id))
+        .leftJoin(shareHoldings, eq(documents.shareHoldingId, shareHoldings.id))
         .leftJoin(
           activeStorageAttachments,
           and(eq(activeStorageAttachments.recordType, "Document"), eq(documents.id, activeStorageAttachments.recordId)),
         )
         .leftJoin(activeStorageBlobs, eq(activeStorageAttachments.blobId, activeStorageBlobs.id))
         .where(where)
-        .orderBy(desc(documents.id));
+        .orderBy(desc(documents.id), desc(activeStorageAttachments.id));
 
       const signatories = await db.query.documentSignatures.findMany({
         columns: { documentId: true, title: true, signedAt: true },
@@ -77,7 +88,12 @@ export const documentsRouter = createRouter({
       .select(pick(documents, "text"))
       .from(documents)
       .innerJoin(documentSignatures, eq(documents.id, documentSignatures.documentId))
-      .where(and(eq(documents.id, input.id), visibleDocuments(ctx.company.id, ctx.user.id)));
+      .where(
+        and(
+          eq(documents.id, input.id),
+          visibleDocuments(ctx.company.id, ctx.companyAdministrator ? undefined : ctx.user.id),
+        ),
+      );
     if (!document) throw new TRPCError({ code: "NOT_FOUND" });
     return document;
   }),
@@ -99,21 +115,44 @@ export const documentsRouter = createRouter({
       .limit(1);
     if (!document) throw new TRPCError({ code: "NOT_FOUND" });
 
-    await db
-      .update(documentSignatures)
-      .set({ signedAt: new Date() })
-      .where(
-        and(
-          eq(documentSignatures.documentId, input.id),
-          isNull(documentSignatures.signedAt),
-          eq(documentSignatures.title, input.role),
-        ),
-      );
+    const result = await db.transaction(async (tx) => {
+      await tx
+        .update(documentSignatures)
+        .set({ signedAt: new Date() })
+        .where(
+          and(
+            eq(documentSignatures.documentId, input.id),
+            isNull(documentSignatures.signedAt),
+            eq(documentSignatures.title, input.role),
+          ),
+        );
 
-    // Check if all signatures for this document have been signed
-    const allSignatures = await db.select().from(documentSignatures).where(eq(documentSignatures.documentId, input.id));
-    const allSigned = allSignatures.every((signature) => signature.signedAt !== null);
+      // Check if all signatures for this document have been signed
+      const allSignatures = await tx
+        .select()
+        .from(documentSignatures)
+        .where(eq(documentSignatures.documentId, input.id));
+      const allSigned = allSignatures.every((signature) => signature.signedAt !== null);
 
-    return { documentId: input.id, complete: allSigned };
+      if (allSigned && document.documents.equityGrantId) {
+        await tx
+          .update(equityGrants)
+          .set({ acceptedAt: new Date() })
+          .where(eq(equityGrants.id, document.documents.equityGrantId));
+      }
+
+      return { documentId: input.id, complete: allSigned };
+    });
+
+    // Generate PDF outside the transaction so signedAt is committed
+    if (result.complete) {
+      const response = await fetch(signed_company_document_url(ctx.company.externalId, document.documents.id), {
+        method: "POST",
+        headers: ctx.headers,
+      });
+      if (!response.ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: await response.text() });
+    }
+
+    return result;
   }),
 });

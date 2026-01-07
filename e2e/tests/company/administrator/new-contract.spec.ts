@@ -4,7 +4,7 @@ import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { usersFactory } from "@test/factories/users";
-import { fillDatePicker, findRichTextEditor } from "@test/helpers";
+import { fillDatePicker, findRichTextEditor, selectComboboxOption } from "@test/helpers";
 import { login, logout } from "@test/helpers/auth";
 import { expect, type Page, test } from "@test/index";
 import { addMonths, format } from "date-fns";
@@ -51,8 +51,9 @@ test.describe("New Contractor", () => {
 
   test("allows inviting a contractor", async ({ page }) => {
     const { email } = await fillForm(page);
-    await page.getByLabel("Role").fill("Hourly Role 1");
+    await selectComboboxOption(page, "Role", "Hourly Role 1");
     await page.getByLabel("Rate").fill("99");
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("tab", { name: "Write" }).click();
     await findRichTextEditor(page, "Contract").fill("This is a contract you must sign");
     await page.getByRole("button", { name: "Send invite" }).click();
@@ -76,9 +77,10 @@ test.describe("New Contractor", () => {
 
   test("allows inviting a project-based contractor", async ({ page }) => {
     const { email } = await fillForm(page);
-    await page.getByLabel("Role").fill("Project-based Role");
+    await selectComboboxOption(page, "Role", "Project-based Role");
     await page.getByRole("radio", { name: "Custom" }).click({ force: true });
     await page.getByLabel("Rate").fill("1000");
+    await page.getByRole("button", { name: "Continue" }).click();
     await page.getByLabel("Contract", { exact: true }).setInputFiles({
       name: "contract.pdf",
       mimeType: "application/pdf",
@@ -110,8 +112,9 @@ test.describe("New Contractor", () => {
     });
     await login(page, user, "/people");
     await page.getByRole("button", { name: "Add contractor" }).click();
-    await expect(page.getByLabel("Role")).toHaveValue("Hourly Role 1");
+    await expect(page.getByRole("combobox", { name: "Role", exact: true })).toHaveText("Hourly Role 1");
     await expect(page.getByLabel("Rate")).toHaveValue("100");
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.getByLabel("Already signed contract elsewhere")).toBeChecked();
     await expect(page.getByLabel("Custom")).toBeChecked();
   });

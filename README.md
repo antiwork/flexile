@@ -27,13 +27,13 @@ Finally, set up your environment: `cp .env.example .env`. If you're an Antiwork 
 
 You can start the local app using the [`bin/dev` script](bin/dev) - or feel free to run the commands contained in it yourself.
 
-Once the local services are up and running, the application will be available at `https://flexile.dev`
+Once the local services are up and running, the application will be available at http://localhost:3000, with the backend (Rails API) running at http://localhost:3001.
 
 **Development shortcuts**:
 
 - If `ENABLE_DEFAULT_OTP=true` is set in your `.env`, you can use `000000` as the OTP for logging in or signing up.
 - Use these pre-seeded accounts (password: `password` for all):
-  - **Admin**: `hi+sahil@example.com` (Primary Administrator)
+  - **Admin**: `hi@example.com` (Primary Administrator)
   - **Contractor**: `hi+sharang@example.com` (Software Engineer)
   - **Investor**: `hi+chris@example.com` (Investor)
   - **More accounts**: See [the seed data](backend/config/data/seed_templates/gumroad.json) for additional test users (emails are always hi+firstname@example.com)
@@ -81,7 +81,7 @@ stripe customers create \
 
 ```shell
 # Run Rails specs
-bundle exec rspec --tag '~skip' --tag '~type:system'
+bundle exec rspec
 
 # Run a single spec
 bundle exec rspec spec/system/roles/show_spec.rb:7

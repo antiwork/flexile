@@ -1,3 +1,4 @@
+import { type Page } from "@playwright/test";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
@@ -5,11 +6,15 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
 import { companyLawyersFactory } from "@test/factories/companyLawyers";
 import { usersFactory } from "@test/factories/users";
-import { selectComboboxOption } from "@test/helpers";
 import { login } from "@test/helpers/auth";
-import { expect, test } from "@test/index";
+import { expect, test, withinModal } from "@test/index";
 import { and, eq } from "drizzle-orm";
-import { companies, companyAdministrators, companyLawyers, users } from "@/db/schema";
+import { companies, companyAdministrators, companyContractors, companyLawyers, users } from "@/db/schema";
+
+export const clickComboboxOption = async (page: Page, name: string, option: string) => {
+  await page.getByRole("combobox", { name }).click();
+  await page.getByRole("option", { name: option, exact: true }).first().click();
+};
 
 test.describe("Manage roles access", () => {
   let company: typeof companies.$inferSelect;
@@ -58,14 +63,10 @@ test.describe("Manage roles access", () => {
 
   test.describe("Roles List Display", () => {
     test("displays both admins and lawyers in combined table", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/roles");
-
-      // Wait for the page to be fully loaded
-      await page.waitForLoadState("networkidle");
-
-      // Add a more specific wait for the table to appear
-      await page.waitForSelector("table", { timeout: 10000 });
+      await Promise.all([
+        page.waitForResponse((r) => r.url().includes("listCompanyUsers") && r.status() >= 200 && r.status() < 300),
+        login(page, primaryAdmin, "/settings/administrator/roles"),
+      ]);
 
       // Check page title and description
       await expect(page.getByRole("heading", { name: "Roles" })).toBeVisible();
@@ -89,16 +90,16 @@ test.describe("Manage roles access", () => {
       await expect(page.getByText(lawyerUser.legalName || "")).toBeVisible();
       await expect(page.getByText("Lawyer").nth(1)).toBeVisible();
 
-      // Check that multi-role user shows as Admin
+      // Check that multi-role user shows all their roles
       await expect(page.getByText(multiRoleUser.legalName || "")).toBeVisible();
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });
-      await expect(multiRoleRow.getByRole("cell", { name: "Admin" })).toBeVisible();
+      await expect(multiRoleRow.getByRole("cell", { name: "Admin, Lawyer, Investor" })).toBeVisible();
 
       // Verify users with roles other than admin or lawyer are NOT displayed
       await expect(page.getByText(contractorUser.legalName || "")).not.toBeVisible();
       await expect(page.getByText("Senior Developer")).not.toBeVisible();
       await expect(page.getByText(investorUser.legalName || "")).not.toBeVisible();
-      await expect(page.getByText("Investor")).not.toBeVisible();
+      await expect(page.getByRole("cell", { name: "Investor", exact: true })).not.toBeVisible();
     });
 
     test("displays admin names correctly (legal_name over preferred_name)", async ({ page }) => {
@@ -137,11 +138,10 @@ test.describe("Manage roles access", () => {
     });
 
     test("search functionality works for names", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/roles");
-
-      // Wait for page to load
-      await page.waitForLoadState("networkidle");
+      await Promise.all([
+        page.waitForResponse((r) => r.url().includes("listCompanyUsers") && r.status() >= 200 && r.status() < 300),
+        login(page, primaryAdmin, "/settings/administrator/roles"),
+      ]);
 
       // Find search input
       const searchInput = page.getByPlaceholder("Search by name...");
@@ -177,23 +177,22 @@ test.describe("Manage roles access", () => {
       // Click "Remove admin" in dropdown
       await page.getByRole("menuitem", { name: "Remove admin" }).click();
 
-      // Confirm in modal
-      await expect(page.getByRole("dialog")).toBeVisible();
-      await expect(page.getByText(/Remove admin access for/u)).toBeVisible();
-
-      // Set up promise to wait for the tRPC mutation response
-      const responsePromise = page.waitForResponse(
-        (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+      await withinModal(
+        async (modal) => {
+          await expect(modal.getByText(/Remove admin access for/u)).toBeVisible();
+          await Promise.all([
+            // Set up promise to wait for the tRPC mutation response
+            page.waitForResponse(
+              (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+            ),
+            page.getByRole("button", { name: "Remove admin" }).click(),
+          ]);
+        },
+        { page },
       );
-
-      // Click the button
-      await page.getByRole("button", { name: "Remove admin" }).click();
 
       // Wait for the row in the table to be removed, not just any text
       await expect(page.getByRole("row", { name: new RegExp(secondAdmin.legalName || "", "u") })).not.toBeVisible();
-
-      // Wait for the actual backend response
-      await responsePromise;
 
       // Verify in database
       const adminRecord = await db.query.companyAdministrators.findFirst({
@@ -272,24 +271,22 @@ test.describe("Manage roles access", () => {
 
       // Click "Remove lawyer" in dropdown
       await page.getByRole("menuitem", { name: "Remove lawyer" }).click();
-
-      // Confirm in modal
-      await expect(page.getByRole("dialog")).toBeVisible();
-      await expect(page.getByText(/Remove lawyer access for/u)).toBeVisible();
-
-      // Set up promise to wait for the tRPC mutation response
-      const responsePromise = page.waitForResponse(
-        (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+      await withinModal(
+        async (modal) => {
+          await expect(modal.getByText(/Remove lawyer access for/u)).toBeVisible();
+          await Promise.all([
+            // Set up promise to wait for the tRPC mutation response
+            page.waitForResponse(
+              (response) => response.url().includes("trpc/companies.removeRole") && response.status() === 200,
+            ),
+            page.getByRole("button", { name: "Remove lawyer" }).click(),
+          ]);
+        },
+        { page },
       );
-
-      // Click the button
-      await page.getByRole("button", { name: "Remove lawyer" }).click();
 
       // Wait for row to be removed (optimistic update)
       await expect(page.getByRole("row", { name: new RegExp(lawyerUser.legalName || "", "u") })).not.toBeVisible();
-
-      // Wait for the actual backend response
-      await responsePromise;
     });
 
     test("shows remove admin option for multi-role user when they have admin role", async ({ page }) => {
@@ -374,15 +371,16 @@ test.describe("Roles page invite functionality", () => {
     await page.goto("/settings/administrator/roles");
 
     await page.getByRole("button", { name: "Add member" }).click();
-
     const invitedEmail = "testadmin@example.com";
-    await page.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
 
-    await selectComboboxOption(page, "Role", "Admin");
-
-    await page.getByRole("button", { name: "Add member" }).click();
-
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await modal.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
+        await clickComboboxOption(page, "Role", "Admin");
+        await modal.getByRole("button", { name: "Add member" }).click();
+      },
+      { page },
+    );
 
     // Check that the invited user appears in the table with the correct role
     const invitedRow = page.getByRole("row", { name: new RegExp(invitedEmail, "u") });
@@ -407,13 +405,15 @@ test.describe("Roles page invite functionality", () => {
     await page.getByRole("button", { name: "Add member" }).click();
 
     const invitedEmail = "testlawyer@example.com";
-    await page.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
 
-    await selectComboboxOption(page, "Role", "Lawyer");
-
-    await page.getByRole("button", { name: "Add member" }).click();
-
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await withinModal(
+      async (modal) => {
+        await modal.getByPlaceholder("Search by name or enter email...").fill(invitedEmail);
+        await clickComboboxOption(page, "Role", "Lawyer");
+        await modal.getByRole("button", { name: "Add member" }).click();
+      },
+      { page },
+    );
 
     // Check that the invited user appears in the table with the correct role
     const invitedRow = page.getByRole("row", { name: new RegExp(invitedEmail, "u") });
@@ -442,5 +442,54 @@ test.describe("Roles page invite functionality", () => {
     await page.getByPlaceholder("Search by name or enter email...").fill("invalid_name");
 
     await expect(page.getByRole("button", { name: "Add member" })).toBeDisabled();
+  });
+
+  test("should be able to invite existing user from another company as lawyer", async ({ page }) => {
+    const { company: otherCompany } = await companiesFactory.createCompletedOnboarding();
+    const { user: existingUser } = await usersFactory.create({
+      legalName: "Existing User",
+      email: "existinguser@example.com",
+    });
+    await companyContractorsFactory.create({
+      userId: existingUser.id,
+      companyId: otherCompany.id,
+      role: "Developer",
+    });
+
+    // Now try to invite this existing user as a lawyer to our current company
+    const { adminUser, company } = await companiesFactory.createCompletedOnboarding();
+    await login(page, adminUser);
+
+    await page.goto("/settings/administrator/roles");
+
+    await page.getByRole("button", { name: "Add member" }).click();
+
+    await withinModal(
+      async (modal) => {
+        // Use the email of the user who already exists in another company
+        await modal.getByPlaceholder("Search by name or enter email...").fill(existingUser.email);
+        await clickComboboxOption(page, "Role", "Lawyer");
+        await modal.getByRole("button", { name: "Add member" }).click();
+      },
+      { page },
+    );
+
+    // Check that the invited user appears in the table with the correct role
+    const invitedRow = page.getByRole("row", { name: new RegExp(existingUser.email, "u") });
+    await expect(invitedRow).toBeVisible();
+    await expect(invitedRow.getByRole("cell", { name: "Lawyer", exact: true })).toBeVisible();
+
+    // Verify the user is now a lawyer in our company
+    const lawyerRecord = await db.query.companyLawyers.findFirst({
+      where: and(eq(companyLawyers.userId, existingUser.id), eq(companyLawyers.companyId, company.id)),
+    });
+    expect(lawyerRecord).toBeTruthy();
+
+    // Verify the user still has their original role in the other company
+    const contractorRecord = await db.query.companyContractors.findFirst({
+      where: and(eq(companyContractors.userId, existingUser.id), eq(companyContractors.companyId, otherCompany.id)),
+    });
+    expect(contractorRecord).toBeTruthy();
+    expect(contractorRecord?.role).toBe("Developer");
   });
 });

@@ -25,4 +25,14 @@ class DividendRound < ApplicationRecord
         investor_dividend_round.send_dividend_issued_email
       end
   end
+
+  def remind_dividend_investors
+    company.company_investors.joins(:dividends)
+      .where(dividends: { dividend_round_id: id, status: Dividend::PENDING_SIGNUP })
+      .group(:id)
+      .each do |investor|
+        investor_dividend_round = investor.investor_dividend_rounds.find_or_create_by!(dividend_round_id: id)
+        CompanyInvestorMailer.dividend_issued(investor_dividend_round_id: investor_dividend_round.id).deliver_later
+      end
+  end
 end

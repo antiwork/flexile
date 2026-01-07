@@ -98,6 +98,7 @@ function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
   return (
     <Slot
       data-slot="form-control"
+      className="focus-visible:ring-ring focus-visible:border-border outline-none focus-visible:ring-2 dark:bg-transparent"
       id={formItemId}
       aria-describedby={!error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`}
       aria-invalid={!!error}
@@ -131,7 +132,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn("text-sm", { "text-destructive": error }, className)}
+      className={cn("text-foreground text-sm", { "text-destructive": error }, className)}
       {...props}
     >
       {body}

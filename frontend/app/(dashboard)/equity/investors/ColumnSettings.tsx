@@ -1,4 +1,4 @@
-import { ListFilterIcon } from "lucide-react";
+import { Columns2 } from "lucide-react";
 import React, { useState } from "react";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
@@ -123,9 +123,9 @@ export const ColumnSettingsToggle = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="small">
+        <Button variant="outline">
           <div className="flex items-center gap-1">
-            <ListFilterIcon className="size-4" />
+            <Columns2 className="size-4" />
             Columns
             <Badge variant="secondary" className="rounded-sm px-1 font-normal">
               {visibleCount}
@@ -164,9 +164,7 @@ export const ColumnSettingsToggle = ({
         {!isDefaultState && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onSelect={onResetToDefaults}>
-              Reset to defaults
-            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onResetToDefaults}>Reset to defaults</DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>
