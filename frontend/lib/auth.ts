@@ -165,7 +165,7 @@ export const authOptions = {
         return true;
       } catch (error) {
         Bugsnag.notify(
-          `OAuth login failed: user ${user.id}, account_provider: ${account?.provider}, error: ${error instanceof Error ? error.message : String(error)}`,
+          `OAuth login failed: user ${user.id}, account_provider: ${account.provider}, error: ${error instanceof Error ? error.message : String(error)}`,
         );
         return false;
       }
