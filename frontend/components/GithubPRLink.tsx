@@ -23,7 +23,7 @@ interface PullRequest {
 
 interface GithubPRLinkProps {
   url: string;
-  invoiceId?: string;
+  invoiceId?: string | undefined;
   onEdit?: () => void;
   onResolved?: (pr: PullRequest) => void;
   hidePaidBadge?: boolean;

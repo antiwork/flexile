@@ -5,7 +5,7 @@ import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert, Plus, Upload } from "lucide-react";
-import { Link as RouterLink } from "next/link";
+import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import React, { useRef, useState } from "react";
@@ -444,7 +444,7 @@ const Edit = () => {
               <div className="inline-flex items-center">Action required</div>
             ) : (
               <Button variant="outline" asChild>
-                <RouterLink href="/invoices">Cancel</RouterLink>
+                <Link href="/invoices">Cancel</Link>
               </Button>
             )}
             <Button variant="primary" onClick={() => validate() && submit.mutate()} disabled={submit.isPending}>

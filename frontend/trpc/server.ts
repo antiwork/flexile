@@ -4,6 +4,7 @@ import { capTableRouter } from "@/trpc/routes/capTable";
 import { companiesRouter } from "@/trpc/routes/companies";
 import { equityCalculationsRouter } from "@/trpc/routes/equityCalculations";
 import { filesRouter } from "@/trpc/routes/files";
+import { githubRouter } from "@/trpc/routes/github";
 import { investorEntitiesRouter } from "@/trpc/routes/investorEntities";
 import { administratorsRouter } from "./routes/administrators";
 import { companyInviteLinksRouter } from "./routes/companyInviteLinks";
@@ -58,6 +59,7 @@ export const appRouter = createRouter({
   administrators: administratorsRouter,
   companyInviteLinks: companyInviteLinksRouter,
   support: supportRouter,
+  github: githubRouter,
 });
 export type AppRouter = typeof appRouter;
 

@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, isNull, neq } from "drizzle-orm";
+import { and, eq, isNull, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { type GithubIntegrationConfiguration } from "@/db/json";
@@ -115,7 +115,7 @@ export const githubRouter = createRouter({
       const paidLineItem = await db.query.invoiceLineItems.findFirst({
         where: and(
           eq(invoiceLineItems.description, input.url),
-          input.invoiceId ? neq(invoiceLineItems.invoiceId, BigInt(input.invoiceId)) : undefined,
+          input.invoiceId ? ne(invoiceLineItems.invoiceId, BigInt(input.invoiceId)) : undefined,
         ),
         with: {
           invoice: true,
