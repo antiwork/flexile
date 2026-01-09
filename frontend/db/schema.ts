@@ -746,6 +746,14 @@ export const invoiceLineItems = pgTable(
       .$onUpdate(() => new Date()),
     payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
+    githubPrUrl: varchar("github_pr_url"),
+    githubPrNumber: integer("github_pr_number"),
+    githubPrTitle: varchar("github_pr_title"),
+    githubPrState: varchar("github_pr_state"),
+    githubPrAuthor: varchar("github_pr_author"),
+    githubPrRepo: varchar("github_pr_repo"),
+    githubPrType: varchar("github_pr_type"),
+    githubPrBountyCents: integer("github_pr_bounty_cents"),
   },
   (table) => [
     index("index_invoice_line_items_on_invoice_id").using("btree", table.invoiceId.asc().nullsLast().op("int8_ops")),
@@ -1695,6 +1703,8 @@ export const users = pgTable(
     sentInvalidTaxIdEmail: boolean("sent_invalid_tax_id_email").notNull().default(false),
     clerkId: varchar("clerk_id"),
     otpSecretKey: varchar("otp_secret_key"),
+    githubUsername: varchar("github_username"),
+    githubExternalId: varchar("github_external_id"),
   },
   (table) => [
     index("index_users_on_confirmation_token").using("btree", table.confirmationToken.asc().nullsLast().op("text_ops")),
@@ -1712,6 +1722,9 @@ export const users = pgTable(
       table.resetPasswordToken.asc().nullsLast().op("text_ops"),
     ),
     index("index_users_on_clerk_id").using("btree", table.clerkId.asc().nullsLast().op("text_ops")),
+    uniqueIndex("index_users_on_github_external_id")
+      .using("btree", table.githubExternalId.asc().nullsLast().op("text_ops"))
+      .where(sql`(github_external_id IS NOT NULL)`),
   ],
 );
 

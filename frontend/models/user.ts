@@ -52,6 +52,8 @@ export const currentUserSchema = z.object({
   email: z.string(),
   preferredName: z.string().nullable(),
   legalName: z.string().nullable(),
+  githubUsername: z.string().nullable(),
+  githubExternalId: z.string().nullable(),
   billingEntityName: z.string().nullable(),
   hasPayoutMethodForInvoices: z.boolean(),
   hasPayoutMethodForDividends: z.boolean(),

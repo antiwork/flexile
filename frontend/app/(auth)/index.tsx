@@ -1,6 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { GithubIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSession, signIn } from "next-auth/react";
@@ -196,7 +197,7 @@ export function AuthPage({
           {!sendOtp.isSuccess ? (
             <Form {...emailForm}>
               <form onSubmit={(e) => void submitEmailForm(e)} className="space-y-4">
-                <div className="mb-4 flex flex-col items-center">
+                <div className="mb-4 flex flex-col items-center gap-2">
                   {oauthError ? (
                     <p className="text-destructive mb-2">
                       {Object.prototype.hasOwnProperty.call(OAUTH_ERROR_MESSAGES, oauthError)
@@ -212,6 +213,15 @@ export function AuthPage({
                   >
                     <Image src={googleLogoLight} alt="Google" width={20} height={20} />
                     {sendOtpText} with Google
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="font-base flex h-11 w-full items-center justify-center gap-2"
+                    onClick={() => providerSignIn(SignInMethod.Github)}
+                  >
+                    <GithubIcon className="size-5" />
+                    {sendOtpText} with GitHub
                   </Button>
                   <div className="my-3 flex w-full items-center gap-2">
                     <div className="bg-muted h-px flex-1" />

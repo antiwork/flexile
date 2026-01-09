@@ -33,6 +33,10 @@ scope path: :internal, module: :internal do
         resource :bank_accounts, only: [:show, :create], controller: "bank_accounts"
       end
 
+      namespace :integrations do
+        resource :github, only: [:show, :create, :destroy], controller: "github"
+      end
+
       resources :stripe_microdeposit_verifications, only: :create
       resources :equity_grants, only: [:create]
       resources :option_pools, only: [:create]
