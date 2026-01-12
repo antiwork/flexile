@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-namespace :data do
-  desc "Find and remove duplicate user emails (case-insensitive), keeping only the oldest account"
-  task cleanup_duplicate_emails: :environment do
-    dry_run = ENV["DRY_RUN"] != "false"
-
+class Onetime::CleanupDuplicateEmails
+  def self.perform(dry_run: true)
     if dry_run
       puts "DRY RUN MODE - No changes will be made"
       puts ""
@@ -20,7 +17,7 @@ namespace :data do
 
     if duplicates.empty?
       puts "No duplicate emails found!"
-      exit 0
+      return
     end
 
     puts "\nFound #{duplicates.size} email(s) with duplicates:"
@@ -57,7 +54,7 @@ namespace :data do
     if dry_run
       puts "  Duplicate users that would be removed: #{total_removed}"
       puts "\n✓ Dry run complete! No changes were made."
-      puts "   To actually delete duplicates, run: DRY_RUN=false rails data:cleanup_duplicate_emails"
+      puts "   To actually delete duplicates, run with dry_run: false"
     else
       puts "  Duplicate users removed: #{total_removed}"
       puts "\n✓ Cleanup complete!"
