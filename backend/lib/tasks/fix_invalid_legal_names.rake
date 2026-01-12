@@ -16,7 +16,7 @@ namespace :data do
     puts "Searching for users with invalid single-word legal names..."
 
     invalid_users = User.where.not(legal_name: nil)
-                        .where.not("legal_name ~ ?", '\S+\s+\S+')
+                        .where.not("legal_name ~ ?", User::LEGAL_NAME_FORMAT.source)
                         .order(:id)
 
     if invalid_users.empty?
