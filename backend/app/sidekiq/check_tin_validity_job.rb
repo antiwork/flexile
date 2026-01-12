@@ -18,9 +18,9 @@ class CheckTinValidityJob
     checked_names = Set.new
     # The TINM API has a limit of 9,999 requests/24 hours.
     # Since we also run this job every 24 hours, we only use about half that limit (4,500) to ensure we don't run into trouble if their limit hasn't reset yet.
-    User.joins(:company_investors)
+    User.alive.joins(:company_investors)
       .includes(:compliance_info)
-      .where(country_code: "US").or(User.where(citizenship_country_code: "US"))
+      .where(country_code: "US").or(User.alive.where(citizenship_country_code: "US"))
       .where.not(compliance_info: { tax_id: nil })
       .where(compliance_info: { tax_id_status: nil })
       .order(:id)

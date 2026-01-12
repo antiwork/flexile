@@ -15,7 +15,7 @@ class JwtService
       begin
         decoded_token = JWT.decode(token, jwt_secret, true, { algorithm: "HS256" })
         payload = decoded_token[0]
-        User.find_by(id: payload["user_id"])
+        User.alive.find_by(id: payload["user_id"])
       rescue JWT::DecodeError, JWT::ExpiredSignature, ActiveRecord::RecordNotFound
         nil
       end

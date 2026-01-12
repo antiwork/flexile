@@ -25,6 +25,11 @@ module OtpValidation
         return nil
       end
 
+      if user.deleted?
+        render json: { error: "This account has been deactivated." }, status: :forbidden
+        return nil
+      end
+
       user
     end
 

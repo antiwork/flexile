@@ -88,4 +88,39 @@ RSpec.describe Admin::UsersController do
       expect(response.parsed_body[:success]).to be true
     end
   end
+
+  describe "DELETE #destroy" do
+    it "soft-deletes a regular user" do
+      expect(user.deleted?).to be false
+
+      delete :destroy, params: { id: user.id }
+
+      expect(response).to redirect_to(admin_users_path)
+      expect(flash[:notice]).to eq("User account has been deactivated.")
+      expect(user.reload.deleted?).to be true
+    end
+
+    it "does not allow deleting team members" do
+      delete :destroy, params: { id: another_team_member_user.id }
+
+      expect(response).to redirect_to(admin_users_path)
+      expect(flash[:alert]).to eq("You are not authorized to delete this user.")
+      expect(another_team_member_user.reload.deleted?).to be false
+    end
+
+    context "when current user is not a team member" do
+      before do
+        allow(controller).to receive(:current_context) do
+          Current.authenticated_user = non_team_member
+          CurrentContext.new(user: non_team_member, company: nil)
+        end
+      end
+
+      it "denies access to the admin panel" do
+        expect do
+          delete :destroy, params: { id: user.id }
+        end.to raise_error(ActionController::RoutingError, "Not Found")
+      end
+    end
+  end
 end

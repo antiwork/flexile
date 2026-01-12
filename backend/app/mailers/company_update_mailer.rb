@@ -4,7 +4,7 @@ class CompanyUpdateMailer < ApplicationMailer
   helper :application
 
   def update_published(company_update_id:, user_id:)
-    user = User.find(user_id)
+    user = User.alive.find(user_id)
     update = CompanyUpdate.find(company_update_id)
     @company = update.company
     @props = CompanyUpdatePresenter.new(update).props

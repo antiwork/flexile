@@ -32,6 +32,7 @@ class UserDashboard < Administrate::BaseDashboard
     unconfirmed_email: Field::String,
     created_at: Field::DateTime,
     updated_at: Field::DateTime,
+    deleted_at: Field::DateTime,
   }.freeze
 
   # COLLECTION_ATTRIBUTES
@@ -44,6 +45,7 @@ class UserDashboard < Administrate::BaseDashboard
     email
     clients
     companies
+    deleted_at
   ].freeze
 
   # SHOW_PAGE_ATTRIBUTES
@@ -66,6 +68,7 @@ class UserDashboard < Administrate::BaseDashboard
     unconfirmed_email
     created_at
     updated_at
+    deleted_at
   ].freeze
 
   # FORM_ATTRIBUTES
@@ -98,7 +101,10 @@ class UserDashboard < Administrate::BaseDashboard
   #   COLLECTION_FILTERS = {
   #     open: ->(resources) { resources.where(open: true) }
   #   }.freeze
-  COLLECTION_FILTERS = {}.freeze
+  COLLECTION_FILTERS = {
+    alive: ->(resources) { resources.alive },
+    deleted: ->(resources) { resources.deleted },
+  }.freeze
 
   # Overwrite this method to customize how users are displayed
   # across all pages of the admin dashboard.

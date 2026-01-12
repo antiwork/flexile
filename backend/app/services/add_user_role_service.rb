@@ -13,7 +13,7 @@ class AddUserRoleService
   end
 
   def perform
-    user = User.find_by(external_id: @user_external_id)
+    user = User.alive.find_by(external_id: @user_external_id)
     return { success: false, error: "User not found" } unless user
 
     handler = ALLOWED_ROLES[@role.to_s.downcase]

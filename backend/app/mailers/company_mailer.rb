@@ -25,10 +25,10 @@ class CompanyMailer < ApplicationMailer
 
 
   def consolidated_invoice_receipt(user_id:, consolidated_payment_id:, processed_date:)
-    user = User.find(user_id)
+    user = User.alive.find(user_id)
     consolidated_payment = ConsolidatedPayment.find(consolidated_payment_id)
     @consolidated_invoice = consolidated_payment.consolidated_invoice
-    contractors = User.where(id: @consolidated_invoice.invoices.alive.pluck(:user_id))
+    contractors = User.alive.where(id: @consolidated_invoice.invoices.alive.pluck(:user_id))
     @contractor_count = contractors.count
     @country_count = contractors.pluck(:country_code).uniq.count
     @bank_account_last_four = consolidated_payment.bank_account_last_four

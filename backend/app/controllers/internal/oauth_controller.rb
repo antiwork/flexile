@@ -15,6 +15,10 @@ class Internal::OauthController < Internal::BaseController
 
     user = User.find_by(email: email)
     if user
+      if user.deleted?
+        render json: { error: "This account has been deactivated." }, status: :forbidden
+        return
+      end
       user.update!(current_sign_in_at: Time.current)
       return success_response_with_jwt(user)
     end

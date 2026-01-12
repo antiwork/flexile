@@ -7,21 +7,21 @@ class UserMailer < ApplicationMailer
   after_deliver :mark_tax_documents_as_emailed, if: -> { action_name == "tax_form_review_reminder" }
 
   def otp_code(user_id)
-    @user = User.find(user_id)
+    @user = User.alive.find(user_id)
     @otp_code = @user.otp_code
 
     mail(to: @user.email, subject: "Your verification code for Flexile")
   end
 
   def tax_id_validation_failure(user_id)
-    @user = User.find(user_id)
+    @user = User.alive.find(user_id)
     @settings_url = "#{PROTOCOL}://#{DOMAIN}/settings/tax"
 
     mail(to: @user.email, subject: "Important information about tax reporting")
   end
 
   def tax_id_validation_success(user_id)
-    @user = User.find(user_id)
+    @user = User.alive.find(user_id)
 
     mail(to: @user.email, subject: "✅ Thanks for updating your tax information")
   end

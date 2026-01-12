@@ -5,7 +5,7 @@ module Admin
     after_action :reset_current, only: [:impersonate, :unimpersonate]
 
     def impersonate
-      user = User.find_by!(external_id: params[:id])
+      user = User.alive.find_by!(external_id: params[:id])
       authorize user
 
       ImpersonationService.new(Current.authenticated_user).impersonate(user)
@@ -19,6 +19,16 @@ module Admin
       ImpersonationService.new(Current.authenticated_user).unimpersonate
 
       render json: { success: true }
+    end
+
+    def destroy
+      user = requested_resource
+      authorize user
+
+      user.mark_deleted!
+      redirect_to admin_users_path, notice: "User account has been deactivated."
+    rescue Pundit::NotAuthorizedError
+      redirect_to admin_users_path, alert: "You are not authorized to delete this user."
     end
 
     # Overwrite any of the RESTful controller actions to implement custom behavior

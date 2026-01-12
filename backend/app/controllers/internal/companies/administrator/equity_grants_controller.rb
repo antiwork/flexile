@@ -4,7 +4,7 @@ class Internal::Companies::Administrator::EquityGrantsController < Internal::Com
   def create
     authorize EquityGrant
 
-    user = User.find_by(external_id: params[:equity_grant][:user_id])
+    user = User.alive.find_by(external_id: params[:equity_grant][:user_id])
 
     option_pool = Current.company.option_pools.find_by(external_id: params[:equity_grant][:option_pool_id])
 

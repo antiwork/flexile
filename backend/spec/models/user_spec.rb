@@ -3,6 +3,47 @@
 RSpec.describe User do
   let(:user) { create(:user) }
 
+  describe "Deletable" do
+    it "includes the Deletable concern" do
+      expect(User.ancestors).to include(Deletable)
+    end
+
+    describe "scopes" do
+      let!(:alive_user) { create(:user) }
+      let!(:deleted_user) { create(:user).tap(&:mark_deleted!) }
+
+      it "returns only alive users with .alive scope" do
+        expect(User.alive).to include(alive_user)
+        expect(User.alive).not_to include(deleted_user)
+      end
+
+      it "returns only deleted users with .deleted scope" do
+        expect(User.deleted).to include(deleted_user)
+        expect(User.deleted).not_to include(alive_user)
+      end
+    end
+
+    describe "#mark_deleted!" do
+      it "sets deleted_at timestamp" do
+        user = create(:user)
+        expect { user.mark_deleted! }.to change { user.deleted_at }.from(nil)
+        expect(user.deleted_at).to be_within(1.second).of(Time.current)
+      end
+    end
+
+    describe "#alive? and #deleted?" do
+      it "returns correct status" do
+        user = create(:user)
+        expect(user.alive?).to be true
+        expect(user.deleted?).to be false
+
+        user.mark_deleted!
+        expect(user.alive?).to be false
+        expect(user.deleted?).to be true
+      end
+    end
+  end
+
   describe "associations" do
     it { is_expected.to have_many(:company_administrators) }
     it { is_expected.to have_many(:companies).through(:company_administrators) }

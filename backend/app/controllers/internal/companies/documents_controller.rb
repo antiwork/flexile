@@ -4,7 +4,7 @@ class Internal::Companies::DocumentsController < Internal::Companies::BaseContro
   def create
     authorize Document
     document = Current.company.documents.build(**document_params, year: Time.current.year)
-    document.signatures.build(user: User.find_by(external_id: params[:recipient]), title: "Signer")
+    document.signatures.build(user: User.alive.find_by(external_id: params[:recipient]), title: "Signer")
     document.save!
 
     CreateDocumentPdfJob.perform_async(document.id, document.text)

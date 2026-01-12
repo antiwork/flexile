@@ -63,6 +63,13 @@ RSpec.describe OtpValidation do
       expect(response).to have_http_status(:not_found)
       expect(response.parsed_body["error"]).to eq("User not found")
     end
+
+    it "renders error when user is deleted" do
+      user.mark_deleted!
+      post :test_find_user_by_email, params: { email: user.email }
+      expect(response).to have_http_status(:forbidden)
+      expect(response.parsed_body["error"]).to eq("This account has been deactivated.")
+    end
   end
 
   describe "#check_otp_rate_limit" do

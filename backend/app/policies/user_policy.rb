@@ -16,4 +16,8 @@ class UserPolicy < ApplicationPolicy
   def impersonate?
     !record.team_member?
   end
+
+  def destroy?
+    user.team_member? && !record.team_member?
+  end
 end

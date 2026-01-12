@@ -14,7 +14,7 @@ class RemoveUserRoleService
   end
 
   def perform
-    user = User.find_by(external_id: @user_id)
+    user = User.alive.find_by(external_id: @user_id)
     return { success: false, error: "User not found" } unless user
 
     handler = ALLOWED_ROLES[@role.to_s.downcase]

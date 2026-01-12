@@ -36,6 +36,17 @@ RSpec.describe Internal::OauthController, type: :controller do
         user.reload
         expect(user.current_sign_in_at).to be_within(5.seconds).of(Time.current)
       end
+
+      it "returns error for deleted user" do
+        user = User.create!(email: email)
+        user.mark_deleted!
+
+        post :create, params: { email: email, token: api_token }
+
+        expect(response).to have_http_status(:forbidden)
+        json_response = JSON.parse(response.body)
+        expect(json_response["error"]).to eq("This account has been deactivated.")
+      end
     end
 
     context "with missing parameters" do

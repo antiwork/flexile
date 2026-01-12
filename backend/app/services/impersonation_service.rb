@@ -28,7 +28,7 @@ class ImpersonationService
     # the Redis key will persist until expiration.
     return unless authenticated_user.team_member?
 
-    user = User.find($redis.get(RedisKey.impersonated_user(authenticated_user.id)))
+    user = User.alive.find($redis.get(RedisKey.impersonated_user(authenticated_user.id)))
 
     # Stop impersonation if the impersonated user becomes a team member during impersonation
     user unless user.team_member?
