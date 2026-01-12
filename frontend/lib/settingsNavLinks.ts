@@ -1,4 +1,5 @@
 import {
+  Blocks,
   Briefcase,
   Building,
   CreditCard,
@@ -34,6 +35,13 @@ export const settingsNavLinks = [
     isVisible: (user: CurrentUser) => !!user.roles.worker || !!user.roles.investor,
     category: "personal",
   },
+  {
+    label: "Integrations",
+    route: "/settings/integrations" as const,
+    icon: Blocks,
+    isVisible: (user: CurrentUser) => !!user.roles.worker,
+    category: "personal",
+  },
   // Company links
   {
     label: "Workspace settings",
@@ -67,6 +75,13 @@ export const settingsNavLinks = [
     label: "Equity",
     route: "/settings/administrator/equity" as const,
     icon: PieChart,
+    isVisible: (user: CurrentUser) => !!user.roles.administrator,
+    category: "company",
+  },
+  {
+    label: "Integrations",
+    route: "/settings/administrator/integrations" as const,
+    icon: Blocks,
     isVisible: (user: CurrentUser) => !!user.roles.administrator,
     category: "company",
   },

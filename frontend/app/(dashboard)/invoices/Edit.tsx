@@ -4,7 +4,7 @@ import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
-import { CircleAlert, Plus, Upload } from "lucide-react";
+import { CircleAlert, GithubIcon, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -36,6 +36,7 @@ import { assert, assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
 import { request } from "@/utils/request";
 import {
+  company_administrator_integrations_github_path,
   company_invoice_path,
   company_invoices_path,
   edit_company_invoice_path,
@@ -175,10 +176,24 @@ const Edit = () => {
   const actionColumnClass = "w-12";
 
   const [editingCell, setEditingCell] = useState<{ row: number; field: string } | null>(null);
-
-  const { data: githubIntegration } = trpc.github.get.useQuery({ companyId: company.id });
-  const { update: updateSession } = useSession();
+  const [showGithubSuccess, setShowGithubSuccess] = useState(false);
   const queryClient = useQueryClient();
+
+  const { data: githubIntegration } = useSuspenseQuery({
+    queryKey: ["githubIntegration", company.id],
+    queryFn: async () => {
+      try {
+        const res = await fetch(
+          company_administrator_integrations_github_path({ company_id: company.id, format: "json" }),
+        );
+        return res.ok ? await res.json() : null;
+      } catch {
+        return null;
+      }
+    },
+  });
+
+  const { update: updateSession } = useSession();
   const showGithubWarning =
     githubIntegration?.organization &&
     !user.githubUsername &&
@@ -196,9 +211,11 @@ const Edit = () => {
           popup.close();
           await updateSession();
           await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-          await trpcUtils.github.get.invalidate();
-          await trpcUtils.github.getPullRequest.invalidate();
+          await queryClient.invalidateQueries({ queryKey: ["githubIntegration", company.id] });
+          await queryClient.invalidateQueries({ queryKey: ["githubPR"] });
           window.removeEventListener("message", onMessage);
+          setShowGithubSuccess(true);
+          setTimeout(() => setShowGithubSuccess(false), 5000);
         }
       };
       window.addEventListener("message", onMessage);
@@ -209,8 +226,8 @@ const Edit = () => {
           window.removeEventListener("message", onMessage);
           void updateSession();
           void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-          void trpcUtils.github.get.invalidate();
-          void trpcUtils.github.getPullRequest.invalidate();
+          void queryClient.invalidateQueries({ queryKey: ["githubIntegration", company.id] });
+          void queryClient.invalidateQueries({ queryKey: ["githubPR"] });
         }
       }, 1000);
     }
@@ -464,16 +481,29 @@ const Edit = () => {
         </Alert>
       ) : null}
 
-      {showGithubWarning ? (
-        <Alert className="mx-4" variant="warning">
-          <CircleAlert />
+      {showGithubSuccess ? (
+        <Alert className="mx-4" variant="success">
           <AlertDescription>
-            You are billing a company that uses GitHub, but you haven&apos;t connected your GitHub account.{" "}
-            <Button variant="link" className="h-auto p-0" onClick={handleConnectGithub}>
-              Connect GitHub
-            </Button>{" "}
-            to verify your work.
+            GitHub account connected successfully! Your Pull Requests will now be verified.
           </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {showGithubWarning ? (
+        <Alert className="mx-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <CircleAlert className="size-4" />
+              <AlertDescription className="mb-0">
+                You linked a Pull Request from {githubIntegration.organization}. Connect GitHub to verify your
+                ownership.
+              </AlertDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleConnectGithub} className="shrink-0">
+              <GithubIcon className="mr-2 size-4" />
+              Connect GitHub
+            </Button>
+          </div>
         </Alert>
       ) : null}
 
@@ -535,6 +565,7 @@ const Edit = () => {
                       <GithubPRLink
                         url={item.description}
                         invoiceId={data.invoice.id}
+                        companyId={company.id}
                         onEdit={() => setEditingCell({ row: rowIndex, field: "description" })}
                         onResolved={(pr) => {
                           const updates: Partial<InvoiceFormLineItem> = {

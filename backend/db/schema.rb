@@ -19,6 +19,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_07_120000) do
   create_enum "equity_grants_issue_date_relationship", ["employee", "consultant", "investor", "founder", "officer", "executive", "board_member"]
   create_enum "equity_grants_option_grant_type", ["iso", "nso"]
   create_enum "equity_grants_vesting_trigger", ["scheduled", "invoice_paid"]
+  create_enum "integration_status", ["initialized", "active", "out_of_sync", "deleted"]
   create_enum "invoices_invoice_type", ["services", "other"]
 
   create_table "active_storage_attachments", force: :cascade do |t|
@@ -581,6 +582,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_07_120000) do
     t.datetime "updated_at", null: false
     t.string "expense_account_id"
     t.index ["company_id"], name: "index_expense_categories_on_company_id"
+  end
+
+  create_table "integrations", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.string "type", null: false
+    t.enum "status", default: "initialized", null: false, enum_type: "integration_status"
+    t.jsonb "configuration"
+    t.text "sync_error"
+    t.datetime "last_sync_at"
+    t.datetime "deleted_at"
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "updated_at", null: false
+    t.string "account_id", null: false
+    t.index ["company_id", "type"], name: "unique_active_integration_types", unique: true, where: "(deleted_at IS NULL)"
+    t.index ["company_id"], name: "index_integrations_on_company_id"
   end
 
   create_table "investor_dividend_rounds", force: :cascade do |t|

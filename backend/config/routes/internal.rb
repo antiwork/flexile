@@ -14,12 +14,17 @@ scope path: :internal, module: :internal do
   resources :oauth, only: :create
   resource :current_user, only: :show
 
+  resource :github, only: [], controller: "github" do
+    get :pull_request, on: :collection
+  end
+
   resource :settings, only: [:update]
   namespace :settings do
     resource :dividend, only: [:show, :update], controller: "dividend"
     resource :tax, only: [:show, :update], controller: "tax"
     resources :bank_accounts, only: [:index, :create, :update]
     resource :equity, only: [:update], controller: "equity"
+    resource :github_connection, only: [:destroy], controller: "github_connections"
   end
 
   resources :roles, only: [:index, :show]

@@ -345,6 +345,7 @@ export default function InvoicePage() {
                                 <GithubPRLink
                                   url={lineItem.description}
                                   invoiceId={invoice.id}
+                                  companyId={String(invoice.companyId)}
                                   hidePaidBadge={invoice.status === "paid"}
                                   initialData={
                                     lineItem.githubPrUrl

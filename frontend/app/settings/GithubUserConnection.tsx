@@ -1,19 +1,32 @@
 "use client";
 
-import { GithubIcon } from "lucide-react";
+import { ChevronDown, GithubIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { useState } from "react";
 import MutationButton from "@/components/MutationButton";
-import Status from "@/components/Status";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrentUser } from "@/global";
 import { trpc } from "@/trpc/client";
 
 export default function GithubUserConnection() {
   const user = useCurrentUser();
+  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
   const utils = trpc.useUtils();
   const disconnectGithub = trpc.github.disconnectUser.useMutation({
     onSuccess: () => {
       void utils.users.me.invalidate();
+      setShowDisconnectDialog(false);
     },
   });
 
@@ -31,37 +44,55 @@ export default function GithubUserConnection() {
         <div className="flex items-center justify-between">
           <div>
             {isConnected ? (
-              <div className="flex items-center gap-2">
-                <span className="font-medium">@{user.githubUsername}</span>
-                <Status variant="success">Connected</Status>
-              </div>
+              <p className="text-muted-foreground text-sm">
+                Your account is linked for verifying pull requests and bounties.
+              </p>
             ) : (
               <p className="text-muted-foreground text-sm">
-                Connect your GitHub account to link Pull Requests to your invoices.
+                Link your GitHub account to verify ownership of your work.
               </p>
             )}
           </div>
           <div>
             {isConnected ? (
+              <button
+                onClick={() => setShowDisconnectDialog(true)}
+                className="hover:bg-accent flex items-center gap-2 rounded-md border px-3 py-1.5 transition-colors"
+              >
+                <div className="size-2 rounded-full bg-green-500"></div>
+                <span className="font-medium">{user.githubUsername}</span>
+                <ChevronDown className="text-muted-foreground ml-1 size-4" />
+              </button>
+            ) : (
+              <Button variant="outline" onClick={() => signIn("github")}>
+                Connect
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+
+      <AlertDialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disconnect Github account?</AlertDialogTitle>
+            <AlertDialogDescription>Disconnecting stops us from verifying your GitHub work.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
               <MutationButton
                 mutation={disconnectGithub}
-                idleVariant="outline"
+                idleVariant="destructive"
                 loadingText="Disconnecting..."
                 successText="Disconnected!"
               >
                 Disconnect
               </MutationButton>
-            ) : (
-              <button
-                onClick={() => signIn("github")}
-                className="inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-black/90 focus:ring-2 focus:ring-black focus:ring-offset-2 focus:outline-none"
-              >
-                Connect GitHub
-              </button>
-            )}
-          </div>
-        </div>
-      </CardContent>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

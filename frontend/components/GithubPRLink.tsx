@@ -1,9 +1,10 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { CircleDot, ExternalLink, GitMerge, GitPullRequest, XCircle } from "lucide-react";
+import { useSession } from "next-auth/react";
 import React from "react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { trpc } from "@/trpc/client";
 import { cn } from "@/utils";
 import { Badge } from "./ui/badge";
 
@@ -24,6 +25,7 @@ interface PullRequest {
 interface GithubPRLinkProps {
   url: string;
   invoiceId?: string | undefined;
+  companyId?: string | undefined;
   onEdit?: () => void;
   onResolved?: (pr: PullRequest) => void;
   hidePaidBadge?: boolean;
@@ -34,19 +36,58 @@ function isPullRequest(pr: unknown): pr is PullRequest {
   return typeof pr === "object" && pr !== null && "number" in pr && !("error" in pr);
 }
 
-export function GithubPRLink({ url, invoiceId, onEdit, onResolved, hidePaidBadge, initialData }: GithubPRLinkProps) {
+export function GithubPRLink({
+  url,
+  invoiceId,
+  companyId,
+  onEdit,
+  onResolved,
+  hidePaidBadge,
+  initialData,
+}: GithubPRLinkProps) {
+  const { data: session } = useSession();
+  const [showLoading, setShowLoading] = React.useState(false);
+
   const {
     data: pr,
     isLoading,
     error,
-  } = trpc.github.getPullRequest.useQuery(
-    { url, invoiceId },
-    {
-      retry: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      initialData: initialData ?? undefined,
+    refetch,
+  } = useQuery<PullRequest | { error: string; expectedOrg?: string; isPaid?: boolean }>({
+    queryKey: ["githubPR", url, invoiceId, companyId],
+    queryFn: async () => {
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      // @ts-expect-error next-auth types are wrong
+      const token = session?.user?.githubAccessToken;
+      if (token) {
+        headers["X-Github-Access-Token"] = token;
+      }
+
+      const queryParams = new URLSearchParams({ url });
+      if (invoiceId) queryParams.append("invoice_id", invoiceId);
+      if (companyId) queryParams.append("company_id", companyId);
+
+      const res = await fetch(`/internal/github/pull_request?${queryParams.toString()}`, {
+        headers,
+      });
+
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      return data;
     },
-  );
+    retry: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    initialData: initialData ?? undefined,
+  });
+
+  // Only show loading spinner after 500ms delay
+  React.useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => setShowLoading(true), 500);
+      return () => clearTimeout(timer);
+    }
+    setShowLoading(false);
+  }, [isLoading]);
 
   React.useEffect(() => {
     if (isPullRequest(pr) && onResolved) {
@@ -54,13 +95,15 @@ export function GithubPRLink({ url, invoiceId, onEdit, onResolved, hidePaidBadge
     }
   }, [pr, onResolved]);
 
-  if (isLoading) {
+  if (showLoading) {
     return <div className="text-muted-foreground animate-pulse text-sm">Loading details...</div>;
   }
 
   if (error || !pr || "error" in pr) {
     const isPrivateError = pr && "error" in pr && pr.error === "not_found_or_private";
+    const isWrongOrgError = pr && "error" in pr && pr.error === "wrong_organization";
     const isPaid = !hidePaidBadge && pr && "error" in pr && pr.isPaid;
+
     return (
       <div className="flex items-center gap-2">
         <span className="truncate text-sm text-red-500">{url}</span>
@@ -69,15 +112,22 @@ export function GithubPRLink({ url, invoiceId, onEdit, onResolved, hidePaidBadge
             Paid
           </Badge>
         ) : null}
-        {isPrivateError ? (
+        {isWrongOrgError ? (
+          <Badge variant="destructive" className="text-[10px]">
+            Wrong Organization (expected: {pr && "expectedOrg" in pr ? pr.expectedOrg : "N/A"})
+          </Badge>
+        ) : isPrivateError ? (
           <Badge variant="destructive" className="text-[10px]">
             Private / No Access
           </Badge>
         ) : (
           <Badge variant="outline" className="text-[10px]">
-            Invalid
+            Failed to load
           </Badge>
         )}
+        <button onClick={() => void refetch()} className="text-muted-foreground text-xs hover:underline">
+          Retry
+        </button>
         {onEdit ? (
           <button onClick={onEdit} className="text-muted-foreground text-xs hover:underline">
             Edit
@@ -97,14 +147,14 @@ export function GithubPRLink({ url, invoiceId, onEdit, onResolved, hidePaidBadge
 
   const Icon = isPR ? (
     isMerged ? (
-      <GitMerge className="size-4 text-purple-600" />
+      <GitMerge className="size-4 text-[#8250df]" />
     ) : isClosed ? (
-      <XCircle className="size-4 text-red-600" />
+      <XCircle className="size-4 text-[#d1242f]" />
     ) : (
-      <GitPullRequest className="size-4 text-green-600" />
+      <GitPullRequest className="size-4 text-[#1a7f37]" />
     )
   ) : (
-    <CircleDot className={cn("size-4", isOpenState ? "text-green-600" : "text-purple-600")} />
+    <CircleDot className={cn("size-4", isOpenState ? "text-[#1a7f37]" : "text-[#8250df]")} />
   );
 
   return (
@@ -115,7 +165,7 @@ export function GithubPRLink({ url, invoiceId, onEdit, onResolved, hidePaidBadge
             href={pr.html_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-card hover:bg-accent/50 flex max-w-[360px] items-center gap-2 rounded-md border p-2 text-sm transition-colors"
+            className="bg-card hover:bg-accent/50 flex w-full max-w-[360px] items-center gap-2 rounded-md border p-2 text-sm transition-colors"
             onClick={(e) => {
               if (!onEdit || e.metaKey || e.ctrlKey) return; // Allow opening in new tab
               e.preventDefault();
@@ -123,11 +173,11 @@ export function GithubPRLink({ url, invoiceId, onEdit, onResolved, hidePaidBadge
             }}
           >
             {Icon}
-            <div className="flex flex-col overflow-hidden">
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
               <span className="truncate font-medium">
                 {owner}/{repo}#{number}
               </span>
-              <span className="text-muted-foreground line-clamp-2 text-xs">{title}</span>
+              <span className="text-muted-foreground line-clamp-2 text-xs break-words">{title}</span>
             </div>
             {bountyAmount ? (
               <Badge variant="secondary" className="ml-auto shrink-0 bg-green-100 text-green-800 hover:bg-green-100">
@@ -136,7 +186,7 @@ export function GithubPRLink({ url, invoiceId, onEdit, onResolved, hidePaidBadge
             ) : null}
           </a>
         </HoverCardTrigger>
-        <HoverCardContent className="w-80">
+        <HoverCardContent className="w-[360px]">
           <div className="space-y-2">
             <div className="flex items-start justify-between gap-2">
               <a
@@ -163,7 +213,7 @@ export function GithubPRLink({ url, invoiceId, onEdit, onResolved, hidePaidBadge
               <span
                 className={cn(
                   "font-medium capitalize",
-                  isMerged ? "text-purple-600" : isOpenState ? "text-green-600" : "text-red-600",
+                  isMerged ? "text-[#8250df]" : isOpenState ? "text-[#1a7f37]" : "text-[#d1242f]",
                 )}
               >
                 {isMerged ? "Merged" : state}

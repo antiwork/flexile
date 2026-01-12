@@ -7,6 +7,6 @@ const env = {
 
 export default z
   .object({
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string(),
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   })
   .parse(env);
