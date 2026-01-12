@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-namespace :data do
-  desc "Find and reset invalid single-word legal names to NULL"
-  task cleanup_invalid_legal_names: :environment do
-    dry_run = ENV["DRY_RUN"] != "false"
-
+class Onetime::FixInvalidLegalNames
+  def self.perform(dry_run: true)
     if dry_run
       puts "DRY RUN MODE - No changes will be made"
       puts ""
@@ -21,7 +18,7 @@ namespace :data do
 
     if invalid_users.empty?
       puts "No users with invalid legal names found!"
-      exit 0
+      return
     end
 
     puts "\nFound #{invalid_users.count} user(s) with invalid legal names:"
