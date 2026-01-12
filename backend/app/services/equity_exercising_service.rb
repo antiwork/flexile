@@ -65,8 +65,8 @@ class EquityExercisingService
       document.save!
 
       CreateDocumentPdfJob.perform_async(document.id, exercise_notice.text)
-      CompanyInvestorMailer.stock_exercise_payment_instructions(company_investor.id, exercise_id: exercise.id).deliver_later
-      company.company_administrators.ids.each do
+      CompanyInvestorMailer.stock_exercise_payment_instructions(company_investor.id, exercise_id: exercise.id).deliver_later if company_investor.user.alive?
+      company.company_administrators.joins(:user).merge(User.alive).ids.each do
         CompanyMailer.confirm_option_exercise_payment(admin_id: _1, exercise_id: exercise.id).deliver_later
       end
     rescue ActiveRecord::RecordInvalid => e
@@ -98,8 +98,10 @@ class EquityExercisingService
         end
         company_investor.increment!(:investment_amount_in_cents, exercise.total_cost_cents)
         exercise.update!(status: EquityGrantExercise::COMPLETED)
-        exercise.equity_grant_exercise_requests.pluck(:share_holding_id).each do |share_holding_id|
-          CompanyInvestorMailer.stock_exercise_success(company_investor.id, share_holding_id:).deliver_later
+        if company_investor.user.alive?
+          exercise.equity_grant_exercise_requests.pluck(:share_holding_id).each do |share_holding_id|
+            CompanyInvestorMailer.stock_exercise_success(company_investor.id, share_holding_id:).deliver_later
+          end
         end
       end
     rescue => e

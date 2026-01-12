@@ -9,7 +9,7 @@ class CompanyAdministratorTaxFormReviewEmailService
   def process
     return unless company.active?
 
-    company.company_administrators.ids.each do
+    company.company_administrators.joins(:user).merge(User.alive).ids.each do
       CompanyMailer.tax_form_review_reminder(company_administrator_id: _1, tax_year:).deliver_later
     end
   end

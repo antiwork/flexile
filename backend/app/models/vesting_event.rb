@@ -24,7 +24,8 @@ class VestingEvent < ApplicationRecord
   def mark_as_processed!
     update!(processed_at: Time.current)
 
-    CompanyWorkerMailer.vesting_event_processed(id).deliver_later
+    user = equity_grant.company_investor.user
+    CompanyWorkerMailer.vesting_event_processed(id).deliver_later unless user.deleted?
   end
 
   def mark_cancelled!(reason: nil)

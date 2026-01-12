@@ -6,7 +6,7 @@ class EmailBlastJob
   def perform
     return unless Rails.env.production?
 
-    CompanyAdministrator.find_each do |admin|
+    CompanyAdministrator.joins(:user).merge(User.alive).find_each do |admin|
       CompanyMailer.email_blast(admin_id: admin.id).deliver_later
     end
   end

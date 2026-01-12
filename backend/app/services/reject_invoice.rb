@@ -14,7 +14,7 @@ class RejectInvoice
       return unless can_reject?
 
       invoice.reload.update!(status: Invoice::REJECTED, rejected_by:, rejection_reason: reason, rejected_at: Time.current)
-      CompanyWorkerMailer.invoice_rejected(invoice_id: invoice.id, reason:).deliver_later
+      CompanyWorkerMailer.invoice_rejected(invoice_id: invoice.id, reason:).deliver_later if invoice.user.alive?
     end
   end
 

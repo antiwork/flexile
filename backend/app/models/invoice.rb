@@ -187,7 +187,7 @@ class Invoice < ApplicationRecord
 
   def mark_as_paid!(timestamp:, payment_id: nil)
     update!(status: PAID, paid_at: timestamp)
-    CompanyWorkerMailer.payment_sent(payment_id).deliver_later if payment_id
+    CompanyWorkerMailer.payment_sent(payment_id).deliver_later if payment_id && user.alive?
     VestStockOptionsJob.perform_async(id) if equity_amount_in_options > 0
     company_worker.send_equity_percent_selection_email if company.equity_enabled? && !company_worker.alumni?
   end

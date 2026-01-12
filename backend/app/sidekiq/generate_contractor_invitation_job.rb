@@ -5,7 +5,9 @@ class GenerateContractorInvitationJob
   sidekiq_options retry: 5
 
   def perform(company_worker_id, is_existing_user = false)
-    company_worker = CompanyWorker.find(company_worker_id)
+    company_worker = CompanyWorker.joins(:user).merge(User.alive).find_by(id: company_worker_id)
+    return if company_worker.nil?
+
     company = company_worker.company
     user = company_worker.user
 

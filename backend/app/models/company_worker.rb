@@ -113,6 +113,7 @@ class CompanyWorker < ApplicationRecord
 
   def send_equity_percent_selection_email
     return if equity_percentage? || sent_equity_percent_selection_email?
+    return if user.deleted?
 
     CompanyWorkerMailer.equity_percent_selection(id).deliver_later
     update!(sent_equity_percent_selection_email: true)

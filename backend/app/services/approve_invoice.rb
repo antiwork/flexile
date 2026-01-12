@@ -16,7 +16,7 @@ class ApproveInvoice
       invoice.update!(status: Invoice::APPROVED)
       return unless invoice.company.active? && invoice.fully_approved?
 
-      CompanyWorkerMailer.invoice_approved(invoice_id: invoice.id).deliver_later if invoice.created_by_user?
+      CompanyWorkerMailer.invoice_approved(invoice_id: invoice.id).deliver_later if invoice.created_by_user? && invoice.user.alive?
     end
   end
 

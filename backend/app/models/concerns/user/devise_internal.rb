@@ -8,6 +8,8 @@ module User::DeviseInternal
 
   protected
     def send_devise_notification(notification, *args)
+      return if deleted?
+
       message = devise_mailer.send(notification, self, *args)
       message.deliver_later(queue: "mailers", wait: 3.seconds)
     end

@@ -17,7 +17,8 @@ class DividendRound < ApplicationRecord
   scope :ready_for_payment, -> { where(ready_for_payment: true) }
 
   def send_dividend_emails
-    company.company_investors.joins(:dividends)
+    company.company_investors.joins(:dividends, :user)
+      .merge(User.alive)
       .where(dividends: { dividend_round_id: id })
       .group(:id)
       .each do |investor|
@@ -27,7 +28,8 @@ class DividendRound < ApplicationRecord
   end
 
   def remind_dividend_investors
-    company.company_investors.joins(:dividends)
+    company.company_investors.joins(:dividends, :user)
+      .merge(User.alive)
       .where(dividends: { dividend_round_id: id, status: Dividend::PENDING_SIGNUP })
       .group(:id)
       .each do |investor|

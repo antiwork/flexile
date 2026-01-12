@@ -29,7 +29,7 @@ class Stripe::EventHandler
       if error = stripe_event.data.object.last_setup_error
         stripe_account.mark_deleted!
         if error[:code] == "setup_intent_setup_attempt_expired"
-          company.company_administrators.ids.each do
+          company.company_administrators.joins(:user).merge(User.alive).ids.each do
             CompanyMailer.stripe_microdeposit_verification_expired(admin_id: _1).deliver_later
           end
         end
@@ -46,7 +46,7 @@ class Stripe::EventHandler
       next_action = stripe_event.data.object.respond_to?(:next_action) ? stripe_event.data.object.next_action : nil
       company = stripe_account.company.reload
       if next_action.present? && next_action.type == "verify_with_microdeposits"
-        company.company_administrators.ids.each do
+        company.company_administrators.joins(:user).merge(User.alive).ids.each do
           CompanyMailer.verify_stripe_microdeposits(admin_id: _1).deliver_later
         end
       end

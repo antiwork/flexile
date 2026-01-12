@@ -26,7 +26,8 @@ class EquityBuybackPaymentTransferUpdate
       equity_buybacks.each do |equity_buyback|
         equity_buyback.update!(status: EquityBuyback::PAID, paid_at: Time.zone.parse(transfer_params.dig("data", "occurred_at")))
       end
-      CompanyInvestorMailer.equity_buyback_payment(equity_buyback_payment_id: equity_buyback_payment.id).deliver_later
+      user = equity_buybacks.first&.company_investor&.user
+      CompanyInvestorMailer.equity_buyback_payment(equity_buyback_payment_id: equity_buyback_payment.id).deliver_later if user&.alive?
     end
   end
 

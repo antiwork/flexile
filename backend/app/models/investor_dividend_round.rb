@@ -8,6 +8,7 @@ class InvestorDividendRound < ApplicationRecord
 
   def send_sanctioned_country_email
     return if sanctioned_country_email_sent?
+    return if company_investor.user.deleted?
 
     dividend_amount_in_cents = dividend_round.dividends.where(company_investor_id:).sum(:total_amount_in_cents)
     CompanyInvestorMailer.sanctioned_dividends(company_investor_id, dividend_amount_in_cents:).deliver_later
@@ -16,6 +17,7 @@ class InvestorDividendRound < ApplicationRecord
 
   def send_payout_below_threshold_email
     return if payout_below_threshold_email_sent?
+    return if company_investor.user.deleted?
 
     eligible_dividends = dividend_round.dividends.where(company_investor_id:)
     total_cents = eligible_dividends.sum(:total_amount_in_cents)
@@ -28,6 +30,7 @@ class InvestorDividendRound < ApplicationRecord
 
   def send_dividend_issued_email
     return if dividend_issued_email_sent?
+    return if company_investor.user.deleted?
 
     CompanyInvestorMailer.dividend_issued(investor_dividend_round_id: id).deliver_later
 

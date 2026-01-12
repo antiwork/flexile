@@ -19,7 +19,7 @@ class DividendPaymentTransferUpdate
       dividends.update!(status: Dividend::ISSUED, paid_at: nil)
       user = dividends.first&.company_investor&.user
       user.bank_account_for_dividends&.mark_deleted!
-      CompanyInvestorMailer.dividend_payment_failed(user, dividend_payment).deliver_later
+      CompanyInvestorMailer.dividend_payment_failed(user, dividend_payment).deliver_later if user&.alive?
     elsif dividend_payment.in_failed_state?
       dividend_payment.update!(status: Payment::FAILED) unless dividend_payment.marked_failed?
     elsif dividend_payment.in_processing_state?
@@ -33,7 +33,8 @@ class DividendPaymentTransferUpdate
       dividends.each do |dividend|
         dividend.update!(status: Dividend::PAID, paid_at: Time.zone.parse(transfer_params.dig("data", "occurred_at")))
       end
-      CompanyInvestorMailer.dividend_payment(dividend_payment.id).deliver_later
+      user = dividends.first&.company_investor&.user
+      CompanyInvestorMailer.dividend_payment(dividend_payment.id).deliver_later if user&.alive?
     end
   end
 

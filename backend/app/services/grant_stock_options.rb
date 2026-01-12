@@ -80,7 +80,7 @@ class GrantStockOptions
         end
         document.signatures.build(user:, title: "Signer", signed_at: contract.is_a?(String) ? nil : Time.current)
         document.save!
-        CompanyWorkerMailer.equity_grant_issued(equity_grant.id).deliver_later
+        CompanyWorkerMailer.equity_grant_issued(equity_grant.id).deliver_later if user.alive?
         { success: true }
       else
         { success: false, error: equity_grant_creation_result.error }

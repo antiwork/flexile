@@ -70,10 +70,12 @@ class PayInvoice
   rescue WiseError => e
     payment.update!(status: Payment::FAILED)
     invoice.update!(status: Invoice::FAILED)
-    if e.message.start_with?("Bank account is no longer active for payment")
-      CompanyWorkerMailer.payment_failed_reenter_bank_details(payment.id, amount, target_currency).deliver_later
-    else
-      CompanyWorkerMailer.payment_failed_generic(payment.id, amount, target_currency).deliver_later
+    if invoice.user.alive?
+      if e.message.start_with?("Bank account is no longer active for payment")
+        CompanyWorkerMailer.payment_failed_reenter_bank_details(payment.id, amount, target_currency).deliver_later
+      else
+        CompanyWorkerMailer.payment_failed_generic(payment.id, amount, target_currency).deliver_later
+      end
     end
     raise e
   end
