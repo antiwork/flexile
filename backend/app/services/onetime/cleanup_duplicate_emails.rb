@@ -36,7 +36,7 @@ class Onetime::CleanupDuplicateEmails
 
       duplicate_users.each do |dup_user|
         original_email = dup_user.email
-        deduped_email = "#{dup_user.email}.deduped.example.com"
+        deduped_email = "#{dup_user.email}.#{dup_user.id}.deduped.example.com"
 
         puts "  Archiving duplicate user ID #{dup_user.id} (created #{dup_user.created_at})"
         puts "    - Original email: #{original_email}"
@@ -62,7 +62,7 @@ class Onetime::CleanupDuplicateEmails
     else
       puts "  Duplicate users archived: #{total_removed}"
       puts "\n✓ Cleanup complete!"
-      puts "   Archived user emails have been renamed to *.deduped.example.com"
+      puts "   Archived user emails have been renamed to *.<user_id>.deduped.example.com"
     end
   end
 end
