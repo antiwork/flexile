@@ -1647,6 +1647,7 @@ export const companies = pgTable(
     inviteLink: varchar("invite_link"),
     githubOrgName: varchar("github_org_name"),
     githubOrgId: bigint("github_org_id", { mode: "bigint" }),
+    primaryAdminId: bigint("primary_admin_id", { mode: "bigint" }),
   },
   (table) => [
     index("index_companies_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),

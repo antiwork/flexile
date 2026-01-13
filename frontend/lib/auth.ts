@@ -1,3 +1,4 @@
+import Bugsnag from "@bugsnag/js";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
@@ -161,7 +162,10 @@ export const authOptions = {
         });
 
         if (!response.ok) {
-          return false;
+          throw new Error(
+            z.object({ error: z.string() }).safeParse(await response.json()).data?.error ||
+              "Oauth failed, please try again.",
+          );
         }
 
         const data = z
@@ -182,7 +186,10 @@ export const authOptions = {
         user.preferredName = data.user.preferred_name ?? "";
 
         return true;
-      } catch {
+      } catch (error) {
+        Bugsnag.notify(
+          `OAuth login failed: user ${user.id}, account_provider: ${account.provider}, error: ${error instanceof Error ? error.message : String(error)}`,
+        );
         return false;
       }
     },

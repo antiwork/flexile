@@ -96,7 +96,11 @@ scope path: :internal, module: :internal do
     resources :dividend_computations, only: [:index, :create, :show]
     resources :dividend_rounds, only: [:create]
     resources :templates, only: [:index, :show, :update]
-    resources :documents, only: [:create]
+    resources :documents, only: [:create] do
+      member do
+        post :signed
+      end
+    end
     resources :share_classes, only: [:index]
     resources :cap_tables, only: [] do
       collection do

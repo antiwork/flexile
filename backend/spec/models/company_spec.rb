@@ -5,7 +5,7 @@ RSpec.describe Company do
 
   describe "associations" do
     it { is_expected.to have_many(:company_administrators) }
-    it { is_expected.to have_one(:primary_admin).class_name("CompanyAdministrator") }
+    it { is_expected.to belong_to(:primary_admin).class_name("CompanyAdministrator").optional(true) }
     it { is_expected.to have_many(:administrators).through(:company_administrators).source(:user) }
     it { is_expected.to have_many(:company_lawyers) }
     it { is_expected.to have_many(:lawyers).through(:company_lawyers).source(:user) }
@@ -467,6 +467,18 @@ RSpec.describe Company do
         end.to change { investment1.reload.implied_shares }.to(expected_implied_shares1)
          .and change { investment2.reload.implied_shares }.to(expected_implied_shares2)
       end
+    end
+  end
+
+  describe "#primary_admin" do
+    it "returns the primary admin" do
+      company = create(:company)
+      admin = create(:company_administrator, company:)
+      expect(company.primary_admin).to eq admin
+      admin2 = create(:company_administrator, company:)
+      expect(company.primary_admin).to eq admin
+      company.update!(primary_admin: admin2)
+      expect(company.primary_admin).to eq admin2
     end
   end
 
