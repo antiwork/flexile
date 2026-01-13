@@ -38,7 +38,7 @@ test.describe("Company administrator settings - payment details", () => {
     const stripeBankFrame = page.frameLocator("[src^='https://js.stripe.com/v3/linked-accounts-inner']");
 
     // Track if instant verification is available for the Edit test
-    let hasInstantVerification = false;
+    const state = { hasInstantVerification: false };
 
     await withinModal(
       async () => {
@@ -49,7 +49,7 @@ test.describe("Company administrator settings - payment details", () => {
 
         // Handle both instant verification (Test Institution) and manual entry flows
         if (await testInstitution.isVisible()) {
-          hasInstantVerification = true;
+          state.hasInstantVerification = true;
           await testInstitution.click();
           await stripeBankFrame.getByTestId("agree-button").click();
           await stripeBankFrame.getByTestId("success").click();
@@ -81,7 +81,7 @@ test.describe("Company administrator settings - payment details", () => {
 
     // Only test Edit flow when instant verification is available
     // (manual entry for Edit has a different Stripe UI that requires additional handling)
-    if (!hasInstantVerification) {
+    if (!state.hasInstantVerification) {
       return;
     }
 
