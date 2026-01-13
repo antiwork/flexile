@@ -57,6 +57,8 @@ class User < ApplicationRecord
   validate :minimum_dividend_payment_in_cents_is_within_range
   validates :preferred_name, length: { maximum: MAX_PREFERRED_NAME_LENGTH }, allow_nil: true
 
+  before_save :normalize_email
+
   after_update_commit :update_dividend_status,
                       if: -> { current_sign_in_at_previously_changed? && current_sign_in_at_previously_was.nil? }
 
@@ -185,6 +187,10 @@ class User < ApplicationRecord
   end
 
   private
+    def normalize_email
+      self.email = email&.downcase&.strip
+    end
+
     def update_dividend_status
       dividends.pending_signup.each do |dividend|
         dividend.update!(status: Dividend::ISSUED)

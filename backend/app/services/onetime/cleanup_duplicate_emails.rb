@@ -6,7 +6,7 @@ class Onetime::CleanupDuplicateEmails
       puts "DRY RUN MODE - No changes will be made"
       puts ""
     else
-      puts "LIVE MODE - Duplicates will be deleted!"
+      puts "LIVE MODE - Duplicates will be archived!"
       puts ""
     end
 
@@ -35,14 +35,18 @@ class Onetime::CleanupDuplicateEmails
       puts "    - Email: #{primary_user.email}"
 
       duplicate_users.each do |dup_user|
-        puts "  Removing duplicate user ID #{dup_user.id} (created #{dup_user.created_at})"
-        puts "    - Email: #{dup_user.email}"
+        original_email = dup_user.email
+        deduped_email = "#{dup_user.email}.deduped.example.com"
+
+        puts "  Archiving duplicate user ID #{dup_user.id} (created #{dup_user.created_at})"
+        puts "    - Original email: #{original_email}"
+        puts "    - New email: #{deduped_email}"
 
         if dry_run
-          puts "    [DRY RUN] Would delete this user"
+          puts "    [DRY RUN] Would update email to #{deduped_email}"
         else
-          dup_user.destroy
-          puts "    ✓ Deleted"
+          dup_user.update!(email: deduped_email)
+          puts "    ✓ Email updated"
         end
         total_removed += 1
       end
@@ -52,12 +56,13 @@ class Onetime::CleanupDuplicateEmails
     puts "Summary:"
     puts "  Duplicate email groups found: #{duplicates.size}"
     if dry_run
-      puts "  Duplicate users that would be removed: #{total_removed}"
+      puts "  Duplicate users that would be archived: #{total_removed}"
       puts "\n✓ Dry run complete! No changes were made."
-      puts "   To actually delete duplicates, run with dry_run: false"
+      puts "   To actually archive duplicates, run with dry_run: false"
     else
-      puts "  Duplicate users removed: #{total_removed}"
+      puts "  Duplicate users archived: #{total_removed}"
       puts "\n✓ Cleanup complete!"
+      puts "   Archived user emails have been renamed to *.deduped.example.com"
     end
   end
 end
