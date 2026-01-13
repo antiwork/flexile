@@ -155,3 +155,102 @@ test("OTP input validation and auto-submit behavior", async ({ page }) => {
   // Wait for redirect
   await page.waitForURL(/.*\/invoices.*/u);
 });
+
+test("OTP login handles network errors gracefully", async ({ page, next }) => {
+  const { user } = await usersFactory.create();
+  const email = user.email;
+
+  // Intercept server-side fetch to /internal/login and simulate network failure
+  // Using Response.error() to create a network error response
+  next.onFetch((request) => {
+    if (request.url.includes("/internal/login") && request.method === "POST") {
+      return Response.error();
+    }
+  });
+
+  await page.goto("/login");
+
+  await page.getByLabel("Work email").fill(email);
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+
+  const otpField = page.getByLabel("Verification code");
+  await expect(otpField).toBeVisible();
+
+  await otpField.fill("000000");
+
+  await expect(page.getByText("Invalid verification code")).toBeVisible();
+  await expect(page).toHaveURL(/.*\/login.*/u);
+});
+
+test("OTP login handles server errors gracefully", async ({ page, next }) => {
+  const { user } = await usersFactory.create();
+  const email = user.email;
+
+  next.onFetch((request) => {
+    if (request.url.includes("/internal/login") && request.method === "POST") {
+      return new Response(JSON.stringify({ error: "Internal server error" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  });
+
+  await page.goto("/login");
+
+  await page.getByLabel("Work email").fill(email);
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+
+  const otpField = page.getByLabel("Verification code");
+  await expect(otpField).toBeVisible();
+
+  await otpField.fill("000000");
+  await expect(page.getByText("Invalid verification code")).toBeVisible();
+  await expect(page).toHaveURL(/.*\/login.*/u);
+});
+
+test("OTP login handles malformed API responses gracefully", async ({ page, next }) => {
+  const { user } = await usersFactory.create();
+  const email = user.email;
+
+  next.onFetch((request) => {
+    if (request.url.includes("/internal/login") && request.method === "POST") {
+      return new Response("invalid json response", {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  });
+
+  await page.goto("/login");
+
+  await page.getByLabel("Work email").fill(email);
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+
+  const otpField = page.getByLabel("Verification code");
+  await expect(otpField).toBeVisible();
+  await otpField.fill("000000");
+
+  await expect(page.getByText("Invalid verification code")).toBeVisible();
+  await expect(page).toHaveURL(/.*\/login.*/u);
+});
+
+test("OTP login handles invalid OTP without crashing", async ({ page }) => {
+  const { user } = await usersFactory.create();
+  const email = user.email;
+
+  await page.goto("/login");
+
+  await page.getByLabel("Work email").fill(email);
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+
+  const otpField = page.getByLabel("Verification code");
+
+  for (const invalidOtp of ["111111", "222222", "999999"]) {
+    await otpField.fill(invalidOtp);
+    await expect(otpField).not.toBeValid();
+    await expect(page.getByText("Invalid verification code")).toBeVisible();
+  }
+
+  await expect(page).toHaveURL(/.*\/login.*/u);
+  await expect(otpField).toBeVisible();
+});

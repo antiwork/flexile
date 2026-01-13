@@ -95,7 +95,17 @@ export const authOptions = {
             preferredName: data.user.preferred_name ?? "",
             jwt: data.jwt,
           };
-        } catch {
+        } catch (error) {
+          const err = error instanceof Error ? error.message : String(error);
+
+          Bugsnag.notify(err, (event) => {
+            event.addMetadata("auth", {
+              stage: "otp-login",
+              email: validation.data.email,
+              reason: "invalid-otp-or-network",
+              severity: "user-or-network",
+            });
+          });
           return null;
         }
       },
