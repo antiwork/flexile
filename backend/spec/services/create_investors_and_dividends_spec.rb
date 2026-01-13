@@ -219,5 +219,24 @@ RSpec.describe CreateInvestorsAndDividends do
         expect(DividendRound.count).to eq(0) # No dividend round created due to no valid data
       end
     end
+
+    it "rejects entire import when any legal name is invalid" do
+      invalid_csv = <<~CSV
+        name,full_legal_name,investment_address_1,investment_address_2,investment_address_city,investment_address_region,investment_address_postal_code,investment_address_country,email,investment_date,investment_amount,tax_id,entity_name,dividend_amount
+        John Doe,John,123 Main St,,San Francisco,CA,94102,US,john@example.com,2024-01-15,10000.00,123-45-6789,,500.00
+        Jane Smith,Jane Elizabeth Smith,456 Oak Ave,Apt 2B,New York,NY,10001,US,jane@example.com,2024-02-20,25000.00,987-65-4321,,1250.00
+      CSV
+
+      service = described_class.new(
+        company_id: company.id,
+        csv_data: invalid_csv,
+        dividend_date: dividend_date,
+        is_first_round: true
+      )
+
+      expect { service.process }.not_to change { User.count }
+      expect(service.errors.first[:email]).to eq("john@example.com")
+      expect(service.errors.first[:error_message]).to eq("Legal name requires at least two parts.")
+    end
   end
 end
