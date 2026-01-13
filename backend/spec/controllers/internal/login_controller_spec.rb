@@ -22,6 +22,17 @@ RSpec.describe Internal::LoginController do
         expect(json_response["user"]["legal_name"]).to eq(user.legal_name)
         expect(json_response["user"]["preferred_name"]).to eq(user.preferred_name)
       end
+
+      it "allows login with uppercase email (case-insensitive)" do
+        post :create, params: { email: user.email.upcase, otp_code: valid_otp, token: api_token }
+
+        expect(response).to have_http_status(:ok)
+
+        json_response = response.parsed_body
+        expect(json_response["jwt"]).to be_present
+        expect(json_response["user"]["id"]).to eq(user.id)
+        expect(json_response["user"]["email"]).to eq(user.email)
+      end
     end
 
     context "with invalid OTP code" do
