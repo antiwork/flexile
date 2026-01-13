@@ -16,6 +16,7 @@ class User < ApplicationRecord
   MIN_MINIMUM_DIVIDEND_PAYMENT_IN_CENTS = 0
   MIN_EMAIL_LENGTH = 5 # Must match constant MIN_EMAIL_LENGTH in TS
   MAX_PREFERRED_NAME_LENGTH = 50 # Must match constant MAX_PREFERRED_NAME_LENGTH in TS
+  LEGAL_NAME_FORMAT = /\S+\s+\S+/
 
   attr_accessor :signature
 
@@ -52,7 +53,7 @@ class User < ApplicationRecord
 
   validates :email, presence: true, length: { minimum: MIN_EMAIL_LENGTH }
   validates :legal_name,
-            format: { with: /\S+\s+\S+/, message: "requires at least two parts", allow_nil: true }
+            format: { with: LEGAL_NAME_FORMAT, message: "requires at least two parts", allow_nil: true }
   validates :minimum_dividend_payment_in_cents, presence: true
   validate :minimum_dividend_payment_in_cents_is_within_range
   validates :preferred_name, length: { maximum: MAX_PREFERRED_NAME_LENGTH }, allow_nil: true
