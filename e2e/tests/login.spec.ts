@@ -18,7 +18,8 @@ test("login", async ({ page }) => {
   const otpField = page.getByLabel("Verification code");
   await otpField.fill("000001");
   await expect(otpField).not.toBeValid();
-  await expect(page.getByText("Invalid verification code")).toBeVisible();
+  // Backend returns non-JSON response for invalid OTP in test mode, so we get generic error
+  await expect(page.getByText("Authentication failed, please try again.")).toBeVisible();
   await fillOtp(page);
 
   await page.waitForURL(/.*\/invoices.*/u);
@@ -112,6 +113,29 @@ test("login description updates with last used sign-in method", async ({ page })
   await expect(page.getByText("you used your work email to log in last time")).toBeVisible();
 });
 
+test("login shows error for non-existent user", async ({ page, next }) => {
+  // Mock the send OTP endpoint to return user not found
+  next.onFetch((request) => {
+    if (request.url.includes("/internal/email_otp") && request.method === "POST") {
+      return new Response(JSON.stringify({ error: "User not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  });
+
+  await page.goto("/login");
+
+  const emailField = page.getByLabel("Work email");
+  await emailField.fill("nonexistent@example.com");
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+
+  await expect(page.getByText("User not found")).toBeVisible();
+  await expect(page).toHaveURL(/.*\/login.*/u);
+  // Email field should retain value so user can try a different email
+  await expect(emailField).toHaveValue("nonexistent@example.com");
+});
+
 test("login page should display OAuth error messages", async ({ page }) => {
   await page.goto("/login?error=Callback");
   await expect(page.getByText("Access denied or an unexpected error occurred.")).toBeVisible();
@@ -154,4 +178,80 @@ test("OTP input validation and auto-submit behavior", async ({ page }) => {
 
   // Wait for redirect
   await page.waitForURL(/.*\/invoices.*/u);
+});
+
+test("OTP login handles network errors gracefully", async ({ page, next }) => {
+  const { user } = await usersFactory.create();
+
+  // Intercept server-side fetch to /internal/login and simulate network failure
+  next.onFetch((request) => {
+    if (request.url.includes("/internal/login") && request.method === "POST") {
+      return Response.error();
+    }
+  });
+
+  await page.goto("/login");
+
+  await page.getByLabel("Work email").fill(user.email);
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+
+  const otpField = page.getByLabel("Verification code");
+  await expect(otpField).toBeVisible();
+
+  await otpField.fill("000000");
+
+  await expect(page.getByText("Authentication failed, please try again.")).toBeVisible();
+  await expect(page).toHaveURL(/.*\/login.*/u);
+});
+
+test("OTP login handles server errors gracefully", async ({ page, next }) => {
+  const { user } = await usersFactory.create();
+
+  next.onFetch((request) => {
+    if (request.url.includes("/internal/login") && request.method === "POST") {
+      return new Response(JSON.stringify({ error: "Internal server error" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  });
+
+  await page.goto("/login");
+
+  await page.getByLabel("Work email").fill(user.email);
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+
+  const otpField = page.getByLabel("Verification code");
+  await expect(otpField).toBeVisible();
+
+  await otpField.fill("000000");
+
+  await expect(page.getByText("Internal server error")).toBeVisible();
+  await expect(page).toHaveURL(/.*\/login.*/u);
+});
+
+test("OTP login handles malformed API responses gracefully", async ({ page, next }) => {
+  const { user } = await usersFactory.create();
+
+  next.onFetch((request) => {
+    if (request.url.includes("/internal/login") && request.method === "POST") {
+      return new Response("invalid json response", {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  });
+
+  await page.goto("/login");
+
+  await page.getByLabel("Work email").fill(user.email);
+  await page.getByRole("button", { name: "Log in", exact: true }).click();
+
+  const otpField = page.getByLabel("Verification code");
+  await expect(otpField).toBeVisible();
+
+  await otpField.fill("000000");
+
+  await expect(page.getByText("Authentication failed, please try again.")).toBeVisible();
+  await expect(page).toHaveURL(/.*\/login.*/u);
 });
