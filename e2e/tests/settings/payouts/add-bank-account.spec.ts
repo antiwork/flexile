@@ -205,11 +205,12 @@ test.describe("Bank account settings", () => {
   });
 
   test.describe("when the user is a business entity", () => {
-    test.beforeEach(async () => {
+    test.beforeEach(async ({ page }) => {
       await userComplianceInfosFactory.create({
         userId: onboardingUser.id,
         businessEntity: true,
       });
+      await login(page, onboardingUser, "/settings/payouts");
     });
 
     test("shows relevant account types", async ({ page }) => {
@@ -225,6 +226,7 @@ test.describe("Bank account settings", () => {
         .update(userComplianceInfos)
         .set({ businessName: "Business Inc." })
         .where(eq(userComplianceInfos.userId, onboardingUser.id));
+      await login(page, onboardingUser, "/settings/payouts");
       await page.getByRole("button", { name: "Add bank account" }).click();
       await selectComboboxOption(page, "Currency", "USD (United States Dollar)");
       await expect(page.getByLabel("Name of the business / organisation")).toHaveValue("Business Inc.");
