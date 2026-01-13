@@ -68,7 +68,6 @@ export const authOptions = {
             }),
           });
         } catch (error) {
-          // Network/technical error - log and throw generic message
           const err = error instanceof Error ? error : new Error(String(error));
           Bugsnag.notify(err, (event) => {
             event.addMetadata("auth", {
@@ -81,16 +80,13 @@ export const authOptions = {
         }
 
         if (!response.ok) {
-          // API error - throw user-safe message from backend
           let errorMessage = "Authentication failed, please try again.";
           try {
             const parsed = z.object({ error: z.string() }).safeParse(await response.json());
             if (parsed.success) {
               errorMessage = parsed.data.error;
             }
-          } catch {
-            // Response body wasn't valid JSON, use default message
-          }
+          } catch {}
           throw new Error(errorMessage);
         }
 
@@ -117,7 +113,6 @@ export const authOptions = {
             jwt: data.jwt,
           };
         } catch (error) {
-          // Parse error - log and throw generic message
           const err = error instanceof Error ? error : new Error(String(error));
           Bugsnag.notify(err, (event) => {
             event.addMetadata("auth", {

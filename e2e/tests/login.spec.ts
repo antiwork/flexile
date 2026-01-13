@@ -18,7 +18,6 @@ test("login", async ({ page }) => {
   const otpField = page.getByLabel("Verification code");
   await otpField.fill("000001");
   await expect(otpField).not.toBeValid();
-  // Backend returns non-JSON response for invalid OTP in test mode, so we get generic error
   await expect(page.getByText("Authentication failed, please try again.")).toBeVisible();
   await fillOtp(page);
 
@@ -114,7 +113,6 @@ test("login description updates with last used sign-in method", async ({ page })
 });
 
 test("login shows error for non-existent user", async ({ page, next }) => {
-  // Mock the send OTP endpoint to return user not found
   next.onFetch((request) => {
     if (request.url.includes("/internal/email_otp") && request.method === "POST") {
       return new Response(JSON.stringify({ error: "User not found" }), {
@@ -132,7 +130,6 @@ test("login shows error for non-existent user", async ({ page, next }) => {
 
   await expect(page.getByText("User not found")).toBeVisible();
   await expect(page).toHaveURL(/.*\/login.*/u);
-  // Email field should retain value so user can try a different email
   await expect(emailField).toHaveValue("nonexistent@example.com");
 });
 
@@ -183,7 +180,6 @@ test("OTP input validation and auto-submit behavior", async ({ page }) => {
 test("OTP login handles network errors gracefully", async ({ page, next }) => {
   const { user } = await usersFactory.create();
 
-  // Intercept server-side fetch to /internal/login and simulate network failure
   next.onFetch((request) => {
     if (request.url.includes("/internal/login") && request.method === "POST") {
       return Response.error();
