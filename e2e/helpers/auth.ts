@@ -15,10 +15,30 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
   const pageURL = redirectTo ? redirectTo : "/login";
   await page.goto(pageURL);
 
-  await page.getByLabel("Work email").fill(user.email);
-  await page.getByRole("button", { name: "Log in", exact: true }).click();
-  await fillOtp(page);
+  // Retry login up to 3 times in case of backend issues
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    await page.getByLabel("Work email").fill(user.email);
+    await page.getByRole("button", { name: "Log in", exact: true }).click();
 
+    // Wait for either OTP form or error
+    const otpHeading = page.getByText("Check your email for a code");
+    const loginButton = page.getByRole("button", { name: "Log in", exact: true });
+
+    try {
+      await expect(otpHeading).toBeVisible({ timeout: 10000 });
+      break; // Success - OTP form appeared
+    } catch {
+      // Check if we're still on login page (backend error case)
+      if (await loginButton.isVisible()) {
+        if (attempt === 3) throw new Error("Login failed after 3 attempts");
+        await page.reload();
+        continue;
+      }
+      throw new Error("Unexpected state during login");
+    }
+  }
+
+  await fillOtp(page);
   await page.waitForURL(/^(?!.*\/login$).*/u);
 };
 

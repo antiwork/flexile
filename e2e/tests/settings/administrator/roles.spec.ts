@@ -434,7 +434,7 @@ test.describe("Roles page invite functionality", () => {
     await login(page, adminUser);
 
     await page.goto("/settings/administrator/roles");
-
+    await expect(page.getByRole("button", { name: "Add member" })).toBeVisible();
     await page.getByRole("button", { name: "Add member" }).click();
 
     await expect(page.getByRole("button", { name: "Add member" })).toBeDisabled();
@@ -448,7 +448,6 @@ test.describe("Roles page invite functionality", () => {
     const { company: otherCompany } = await companiesFactory.createCompletedOnboarding();
     const { user: existingUser } = await usersFactory.create({
       legalName: "Existing User",
-      email: "existinguser@example.com",
     });
     await companyContractorsFactory.create({
       userId: existingUser.id,
@@ -461,7 +460,7 @@ test.describe("Roles page invite functionality", () => {
     await login(page, adminUser);
 
     await page.goto("/settings/administrator/roles");
-
+    await expect(page.getByRole("button", { name: "Add member" })).toBeVisible();
     await page.getByRole("button", { name: "Add member" }).click();
 
     await withinModal(
