@@ -73,7 +73,7 @@ export function AuthPage({
 
       const result = await signIn("otp", { email, otp: values.otp, redirect: false });
 
-      if (result?.error) throw new Error("Invalid verification code");
+      if (result?.error) throw new Error(result.error);
 
       const session = await getSession();
       if (!session?.user.email) throw new Error("Invalid verification code");

@@ -56,8 +56,9 @@ export const authOptions = {
 
         if (!validation.success) throw new Error("Invalid email or OTP");
 
+        let response: Response;
         try {
-          const response = await fetch(`${assertDefined(req.headers?.origin)}/internal/login`, {
+          response = await fetch(`${assertDefined(req.headers?.origin)}/internal/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -66,14 +67,34 @@ export const authOptions = {
               token: env.API_SECRET_TOKEN,
             }),
           });
+        } catch (error) {
+          // Network/technical error - log and throw generic message
+          const err = error instanceof Error ? error : new Error(String(error));
+          Bugsnag.notify(err, (event) => {
+            event.addMetadata("auth", {
+              stage: "otp-login-fetch",
+              email: validation.data.email,
+              reason: "network-error",
+            });
+          });
+          throw new Error("Authentication failed, please try again.");
+        }
 
-          if (!response.ok) {
-            throw new Error(
-              z.object({ error: z.string() }).safeParse(await response.json()).data?.error ||
-                "Authentication failed, please try again.",
-            );
+        if (!response.ok) {
+          // API error - throw user-safe message from backend
+          let errorMessage = "Authentication failed, please try again.";
+          try {
+            const parsed = z.object({ error: z.string() }).safeParse(await response.json());
+            if (parsed.success) {
+              errorMessage = parsed.data.error;
+            }
+          } catch {
+            // Response body wasn't valid JSON, use default message
           }
+          throw new Error(errorMessage);
+        }
 
+        try {
           const data = z
             .object({
               user: z.object({
@@ -95,8 +116,17 @@ export const authOptions = {
             preferredName: data.user.preferred_name ?? "",
             jwt: data.jwt,
           };
-        } catch {
-          return null;
+        } catch (error) {
+          // Parse error - log and throw generic message
+          const err = error instanceof Error ? error : new Error(String(error));
+          Bugsnag.notify(err, (event) => {
+            event.addMetadata("auth", {
+              stage: "otp-login-parse",
+              email: validation.data.email,
+              reason: "response-parse-error",
+            });
+          });
+          throw new Error("Authentication failed, please try again.");
         }
       },
     }),

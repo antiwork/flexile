@@ -1,5 +1,6 @@
 import "server-only";
 import { S3Client } from "@aws-sdk/client-s3";
+import Bugsnag from "@bugsnag/js";
 import { getSchema } from "@tiptap/core";
 import { generateHTML, generateJSON } from "@tiptap/html";
 import { Node } from "@tiptap/pm/model";
@@ -70,7 +71,15 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
       });
 
       return impersonatedUser ? Number(impersonatedUser.id) : null;
-    } catch {
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      Bugsnag.notify(err, (event) => {
+        event.addMetadata("auth", {
+          stage: "resolve-user-id",
+          jwtUserId,
+          reason: "user-lookup-failed",
+        });
+      });
       return null;
     }
   };
@@ -90,7 +99,15 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
           userId = await resolveUserId(payload.data.user_id);
         }
       }
-    } catch {}
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      Bugsnag.notify(err, (event) => {
+        event.addMetadata("auth", {
+          stage: "jwt-parse",
+          reason: "invalid-or-expired-token",
+        });
+      });
+    }
   }
 
   return {
