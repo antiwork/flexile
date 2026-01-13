@@ -28,6 +28,7 @@ class CreateInvestorsAndDividends
 
     def process_sheet
       @data = {}
+      validation_errors = []
       puts "Processing CSV data"
 
       CSV.parse(csv_data, headers: true).each do |row|
@@ -35,8 +36,16 @@ class CreateInvestorsAndDividends
 
         email = row["email"]
         email = test_email_for(email) if !Rails.env.production?
-        puts "Processing email #{email}"
 
+        if row["full_legal_name"].present? && !valid_legal_name?(row["full_legal_name"])
+          validation_errors << {
+            email: row["email"],
+            error_message: "Legal name requires at least two parts.",
+          }
+          next
+        end
+
+        puts "Processing email #{email}"
         street_address = [row["investment_address_1"], row["investment_address_2"]].compact.join(", ")
         @data[email] = {
           user_params: {
@@ -59,8 +68,23 @@ class CreateInvestorsAndDividends
           },
         }
       end
+
+      if validation_errors.any?
+        @data = {}
+        @errors.concat(validation_errors)
+        puts "Validation failed. Found #{validation_errors.size} error(s). No data will be processed."
+        validation_errors.each do |error|
+          puts "  - #{error[:email]}: #{error[:error_message]}"
+        end
+        return
+      end
+
       puts "Done processing CSV data. Processed #{@data.size} rows"
       @data
+    end
+
+    def valid_legal_name?(name)
+      name.match?(User::LEGAL_NAME_FORMAT)
     end
 
     def create_investors
