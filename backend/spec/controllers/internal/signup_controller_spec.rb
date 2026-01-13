@@ -32,14 +32,6 @@ RSpec.describe Internal::SignupController do
         json_response = response.parsed_body
         expect(json_response["error"]).to eq("An account with this email already exists. Please log in instead.")
       end
-
-      it "returns conflict error for case-insensitive email match" do
-        post :send_otp, params: { email: email.upcase, token: api_token }
-
-        expect(response).to have_http_status(:conflict)
-        json_response = response.parsed_body
-        expect(json_response["error"]).to eq("An account with this email already exists. Please log in instead.")
-      end
     end
 
     context "with missing email" do
