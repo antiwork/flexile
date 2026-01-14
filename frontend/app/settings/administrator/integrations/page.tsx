@@ -348,7 +348,7 @@ const GitHubIntegrationSection = () => {
                   }`}
                 >
                   <Avatar className="size-8">
-                    <AvatarImage src={org.avatar_url} alt={org.login} />
+                    <AvatarImage src={org.avatar_url} alt="" />
                     <AvatarFallback>{org.login.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <span className="font-medium">{org.login}</span>

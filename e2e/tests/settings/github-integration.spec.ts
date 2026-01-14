@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { db } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
+import { companyAdministratorsFactory } from "@test/factories/companyAdministrators";
 import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { invoicesFactory } from "@test/factories/invoices";
 import { usersFactory } from "@test/factories/users";
@@ -103,19 +104,19 @@ test.describe("GitHub integration", () => {
     });
 
     test("admin can connect GitHub organization", async ({ page }) => {
-      const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
+      const { company } = await companiesFactory.createCompletedOnboarding();
+      // Create admin user with GitHub username set (to skip OAuth flow for fetching orgs)
+      // NOTE: Don't set githubAccessToken - Rails encrypts this field and plaintext via Drizzle causes errors
+      const { user: adminUser } = await usersFactory.create({
+        githubUid: faker.string.numeric(10),
+        githubUsername: "admin-user",
+      });
+      await companyAdministratorsFactory.create({
+        companyId: company.id,
+        userId: adminUser.id,
+      });
 
-      // Set up admin with GitHub already connected (to skip OAuth flow)
-      await db
-        .update(users)
-        .set({
-          githubUid: faker.string.numeric(10),
-          githubUsername: "admin-user",
-          githubAccessToken: "gho_test_token",
-        })
-        .where(eq(users.id, adminUser.id));
-
-      // Mock the GitHub orgs API endpoint
+      // Mock the GitHub orgs API endpoint (since user has no real GitHub token)
       await page.route("**/internal/github/orgs", async (route) => {
         await route.fulfill({
           status: 200,
@@ -144,6 +145,9 @@ test.describe("GitHub integration", () => {
       // Select an organization from the list
       await modal.getByRole("button", { name: "test-org" }).click();
       await modal.getByRole("button", { name: "Connect" }).click();
+
+      // Wait for the API call to complete
+      await page.waitForTimeout(2000);
 
       // Verify connected state - shows org name in dropdown button
       await expect(page.getByRole("button", { name: "test-org" })).toBeVisible();
