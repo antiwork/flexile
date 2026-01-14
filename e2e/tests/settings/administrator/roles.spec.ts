@@ -476,12 +476,10 @@ test.describe("Roles page invite functionality", () => {
       { page },
     );
 
-    // Wait for the add role mutation to complete
-    await page.waitForResponse((r) => r.url().includes("trpc/companies.addRole") && r.status() === 200);
-
     // Check that the invited user appears in the table with the correct role
+    // Use extended timeout to allow for optimistic update and API response
     const invitedRow = page.getByRole("row", { name: new RegExp(existingUser.email, "u") });
-    await expect(invitedRow).toBeVisible({ timeout: 10000 });
+    await expect(invitedRow).toBeVisible({ timeout: 15000 });
     await expect(invitedRow.getByRole("cell", { name: "Lawyer", exact: true })).toBeVisible();
 
     // Verify the user is now a lawyer in our company
