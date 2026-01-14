@@ -356,7 +356,10 @@ test.describe("Invoices admin flow", () => {
       .update(companyContractors)
       .set({ payRateInSubunits: null })
       .where(eq(companyContractors.id, companyContractor.id));
-    await page.reload();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("invoices") && r.status() >= 200 && r.status() < 300),
+      page.reload(),
+    ]);
     await page.getByRole("link", { name: "Invoices" }).click();
     await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
     await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
@@ -366,7 +369,10 @@ test.describe("Invoices admin flow", () => {
       .update(companyContractors)
       .set({ payRateInSubunits: 60000 })
       .where(eq(companyContractors.id, companyContractor.id));
-    await page.reload();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("invoices") && r.status() >= 200 && r.status() < 300),
+      page.reload(),
+    ]);
     await page.getByRole("link", { name: "Invoices" }).click();
     await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
     await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();

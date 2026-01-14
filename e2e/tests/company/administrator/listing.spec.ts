@@ -38,6 +38,9 @@ test.describe("People table sorting", () => {
 
     await login(page, adminUser, "/people");
 
+    // Wait for the table to be populated with data
+    await expect(page.locator("tbody tr")).toHaveCount(5, { timeout: 10000 });
+
     const statusHeader = page.getByRole("columnheader", { name: "Status" });
 
     await statusHeader.click();

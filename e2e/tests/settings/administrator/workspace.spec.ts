@@ -8,7 +8,10 @@ import { companies } from "@/db/schema";
 test.describe("Workspace settings", () => {
   test("allows updating workspace settings", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
-    await login(page, adminUser);
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("currentUserWithCompanies") && r.status() === 200),
+      login(page, adminUser),
+    ]);
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Workspace settings" }).click();
 
