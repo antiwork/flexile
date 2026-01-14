@@ -4,7 +4,7 @@ import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
-import { CircleAlert, Loader2, Plus, Upload } from "lucide-react";
+import { CircleAlert, Loader2, Plus, RotateCcw, Upload } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
@@ -175,7 +175,7 @@ const PRLineItemCell = ({
 
   const {
     data: prDetails,
-    isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
@@ -228,7 +228,7 @@ const PRLineItemCell = ({
     );
   }
 
-  // Default: show input field with optional loading spinner
+  // Default: show input field with optional loading spinner or retry button
   return (
     <div className="relative flex items-center">
       <Input
@@ -238,9 +238,25 @@ const PRLineItemCell = ({
         onChange={(e) => onChange(e.target.value)}
         onFocus={onEdit}
         onBlur={onBlur}
-        className={isLoading ? "pr-8" : ""}
+        className={isFetching || error ? "pr-20" : ""}
       />
-      {isLoading ? <Loader2 className="text-muted-foreground absolute right-2 size-4 animate-spin" /> : null}
+      {/* Delay showing spinner by 300ms to avoid flicker on fast requests */}
+      {isFetching ? (
+        <span className="animate-in fade-in absolute right-2 opacity-0 [animation-delay:300ms] [animation-fill-mode:forwards]">
+          <Loader2 className="text-muted-foreground size-4 animate-spin" />
+        </span>
+      ) : null}
+      {error && !isFetching ? (
+        <Button
+          variant="link"
+          size="small"
+          className="text-muted-foreground absolute right-1 h-auto gap-1 px-1"
+          onClick={() => void refetch()}
+        >
+          <RotateCcw className="size-3" />
+          Retry
+        </Button>
+      ) : null}
     </div>
   );
 };

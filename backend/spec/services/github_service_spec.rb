@@ -1,6 +1,34 @@
 # frozen_string_literal: true
 
 RSpec.describe GithubService do
+  # Helper to stub GraphQL requests for linked issues
+  def stub_graphql_linked_issues(owner:, repo:, pr_number:, issues: [])
+    graphql_response = {
+      "data" => {
+        "repository" => {
+          "pullRequest" => {
+            "closingIssuesReferences" => {
+              "nodes" => issues.map do |issue|
+                {
+                  "number" => issue[:number],
+                  "labels" => {
+                    "nodes" => (issue[:labels] || []).map { |l| { "name" => l } },
+                  },
+                }
+              end,
+            },
+          },
+        },
+      },
+    }
+
+    stub_request(:post, "https://api.github.com/graphql")
+      .to_return(
+        status: 200,
+        body: graphql_response.to_json,
+        headers: { "Content-Type" => "application/json" }
+      )
+  end
   describe ".oauth_url" do
     it "generates a valid OAuth URL with required parameters" do
       allow(GlobalConfig).to receive(:get).with("GH_CLIENT_ID").and_return("test_client_id")
@@ -24,6 +52,17 @@ RSpec.describe GithubService do
       expect do
         described_class.oauth_url(state: "test_state", redirect_uri: "https://example.com/callback")
       end.to raise_error(GithubService::ConfigurationError, "GH_CLIENT_ID is not configured")
+    end
+
+    it "includes read:org scope when include_orgs is true" do
+      allow(GlobalConfig).to receive(:get).with("GH_CLIENT_ID").and_return("test_client_id")
+
+      url = described_class.oauth_url(state: "test_state", redirect_uri: "https://example.com/callback", include_orgs: true)
+
+      uri = URI.parse(url)
+      params = CGI.parse(uri.query)
+
+      expect(params["scope"]).to eq(["read:user user:email read:org"])
     end
   end
 
@@ -119,6 +158,76 @@ RSpec.describe GithubService do
     end
   end
 
+  describe ".fetch_user_orgs" do
+    it "fetches user organizations from GitHub API" do
+      stub_request(:get, "https://api.github.com/user/orgs")
+        .with(headers: { "Authorization" => "Bearer test_token" })
+        .to_return(
+          status: 200,
+          body: [
+            {
+              id: 12345,
+              login: "antiwork",
+              avatar_url: "https://avatars.githubusercontent.com/u/12345",
+            },
+            {
+              id: 67890,
+              login: "another-org",
+              avatar_url: "https://avatars.githubusercontent.com/u/67890",
+            },
+          ].to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      orgs = described_class.fetch_user_orgs(access_token: "test_token")
+
+      expect(orgs).to eq([
+                           { login: "antiwork", id: 12345, avatar_url: "https://avatars.githubusercontent.com/u/12345" },
+                           { login: "another-org", id: 67890, avatar_url: "https://avatars.githubusercontent.com/u/67890" },
+                         ])
+    end
+
+    it "returns empty array when user has no organizations" do
+      stub_request(:get, "https://api.github.com/user/orgs")
+        .with(headers: { "Authorization" => "Bearer test_token" })
+        .to_return(
+          status: 200,
+          body: [].to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      orgs = described_class.fetch_user_orgs(access_token: "test_token")
+
+      expect(orgs).to eq([])
+    end
+
+    it "raises ApiError when token lacks read:org scope" do
+      stub_request(:get, "https://api.github.com/user/orgs")
+        .to_return(
+          status: 403,
+          body: { message: "Resource not accessible by integration" }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      expect do
+        described_class.fetch_user_orgs(access_token: "token_without_org_scope")
+      end.to raise_error(GithubService::ApiError, "Resource not accessible by integration")
+    end
+
+    it "raises ApiError when token is invalid" do
+      stub_request(:get, "https://api.github.com/user/orgs")
+        .to_return(
+          status: 401,
+          body: { message: "Bad credentials" }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      expect do
+        described_class.fetch_user_orgs(access_token: "invalid_token")
+      end.to raise_error(GithubService::ApiError, "Bad credentials")
+    end
+  end
+
   describe ".fetch_pr_details" do
     let(:pr_response) do
       {
@@ -145,6 +254,9 @@ RSpec.describe GithubService do
           body: pr_response.to_json,
           headers: { "Content-Type" => "application/json" }
         )
+
+      # Stub GraphQL for linked issues (returns empty by default)
+      stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 123, issues: [])
     end
 
     it "fetches PR details from GitHub API" do
@@ -174,6 +286,7 @@ RSpec.describe GithubService do
           ).to_json,
           headers: { "Content-Type" => "application/json" }
         )
+      stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 456, issues: [])
 
       pr_details = described_class.fetch_pr_details(
         access_token: "test_token",
@@ -196,6 +309,7 @@ RSpec.describe GithubService do
           ).to_json,
           headers: { "Content-Type" => "application/json" }
         )
+      stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 789, issues: [])
 
       pr_details = described_class.fetch_pr_details(
         access_token: "test_token",
@@ -373,7 +487,10 @@ RSpec.describe GithubService do
           headers: { "Content-Type" => "application/json" }
         )
 
-      # Issue with bounty label
+      # GraphQL returns no UI-linked issues, so it falls back to parsing PR body
+      stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 123, issues: [])
+
+      # Issue with bounty label (fetched via REST after parsing PR body)
       stub_request(:get, "https://api.github.com/repos/owner/repo/issues/42")
         .to_return(
           status: 200,
@@ -444,6 +561,8 @@ RSpec.describe GithubService do
           headers: { "Content-Type" => "application/json" }
         )
 
+      stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 123, issues: [])
+
       stub_request(:get, "https://api.github.com/repos/owner/repo/issues/42")
         .to_return(
           status: 200,
@@ -479,6 +598,8 @@ RSpec.describe GithubService do
           }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
+
+      stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 123, issues: [])
 
       stub_request(:get, "https://api.github.com/repos/owner/repo/issues/42")
         .to_return(
@@ -516,6 +637,8 @@ RSpec.describe GithubService do
           headers: { "Content-Type" => "application/json" }
         )
 
+      stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 123, issues: [])
+
       stub_request(:get, "https://api.github.com/repos/owner/repo/issues/42")
         .to_return(
           status: 200,
@@ -552,6 +675,8 @@ RSpec.describe GithubService do
           headers: { "Content-Type" => "application/json" }
         )
 
+      stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 123, issues: [])
+
       pr_details = described_class.fetch_pr_details(
         access_token: "test_token",
         owner: "owner",
@@ -581,6 +706,8 @@ RSpec.describe GithubService do
           headers: { "Content-Type" => "application/json" }
         )
 
+      stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 123, issues: [])
+
       pr_details = described_class.fetch_pr_details(
         access_token: "test_token",
         owner: "owner",
@@ -589,6 +716,144 @@ RSpec.describe GithubService do
       )
 
       expect(pr_details[:bounty_cents]).to be_nil
+    end
+
+    it "fetches bounty from UI-linked issue (via GraphQL)" do
+      # PR without bounty label and no issue reference in body
+      stub_request(:get, "https://api.github.com/repos/owner/repo/pulls/123")
+        .to_return(
+          status: 200,
+          body: {
+            html_url: "https://github.com/owner/repo/pull/123",
+            number: 123,
+            title: "Fix bug",
+            state: "open",
+            body: "Just a description, no issue keywords",
+            user: { login: "contributor", avatar_url: "https://example.com/avatar" },
+            labels: [],
+            created_at: "2024-01-15T10:00:00Z",
+            merged_at: nil,
+            closed_at: nil,
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      # GraphQL returns UI-linked issue with bounty label
+      stub_graphql_linked_issues(
+        owner: "owner",
+        repo: "repo",
+        pr_number: 123,
+        issues: [{ number: 42, labels: ["$500"] }]
+      )
+
+      pr_details = described_class.fetch_pr_details(
+        access_token: "test_token",
+        owner: "owner",
+        repo: "repo",
+        pr_number: 123
+      )
+
+      # Should get bounty from UI-linked issue without needing to parse body
+      expect(pr_details[:bounty_cents]).to eq(50000)
+    end
+
+    it "avoids duplicate API calls when issue is both UI-linked and in PR body" do
+      # PR with issue reference in body
+      stub_request(:get, "https://api.github.com/repos/owner/repo/pulls/123")
+        .to_return(
+          status: 200,
+          body: {
+            html_url: "https://github.com/owner/repo/pull/123",
+            number: 123,
+            title: "Fix bug",
+            state: "open",
+            body: "Fixes #42",
+            user: { login: "contributor", avatar_url: "https://example.com/avatar" },
+            labels: [],
+            created_at: "2024-01-15T10:00:00Z",
+            merged_at: nil,
+            closed_at: nil,
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      # GraphQL returns the same issue (UI-linked) with bounty
+      stub_graphql_linked_issues(
+        owner: "owner",
+        repo: "repo",
+        pr_number: 123,
+        issues: [{ number: 42, labels: ["$500"] }]
+      )
+
+      # Should NOT make a REST call for issue #42 since GraphQL already returned it
+      # (No stub_request for issues/42, so test would fail if it tries to fetch)
+
+      pr_details = described_class.fetch_pr_details(
+        access_token: "test_token",
+        owner: "owner",
+        repo: "repo",
+        pr_number: 123
+      )
+
+      expect(pr_details[:bounty_cents]).to eq(50000)
+    end
+  end
+
+  describe ".fetch_linked_issues" do
+    it "fetches UI-linked issues via GraphQL API" do
+      stub_graphql_linked_issues(
+        owner: "owner",
+        repo: "repo",
+        pr_number: 123,
+        issues: [
+          { number: 42, labels: ["$500", "bug"] },
+          { number: 99, labels: ["enhancement"] },
+        ]
+      )
+
+      issues = described_class.fetch_linked_issues(
+        access_token: "test_token",
+        owner: "owner",
+        repo: "repo",
+        pr_number: 123
+      )
+
+      expect(issues.length).to eq(2)
+      expect(issues[0][:number]).to eq(42)
+      expect(issues[0][:labels]).to eq([{ "name" => "$500" }, { "name" => "bug" }])
+      expect(issues[1][:number]).to eq(99)
+      expect(issues[1][:labels]).to eq([{ "name" => "enhancement" }])
+    end
+
+    it "returns empty array when no issues are linked" do
+      stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 123, issues: [])
+
+      issues = described_class.fetch_linked_issues(
+        access_token: "test_token",
+        owner: "owner",
+        repo: "repo",
+        pr_number: 123
+      )
+
+      expect(issues).to eq([])
+    end
+
+    it "returns empty array when GraphQL request fails" do
+      stub_request(:post, "https://api.github.com/graphql")
+        .to_return(
+          status: 401,
+          body: { message: "Bad credentials" }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      issues = described_class.fetch_linked_issues(
+        access_token: "invalid_token",
+        owner: "owner",
+        repo: "repo",
+        pr_number: 123
+      )
+
+      expect(issues).to eq([])
     end
   end
 
@@ -627,6 +892,96 @@ RSpec.describe GithubService do
       )
 
       expect(result).to be_nil
+    end
+  end
+
+  describe ".extract_linked_issue_numbers" do
+    let(:owner) { "antiwork" }
+    let(:repo) { "gumroad" }
+
+    it "extracts issue numbers from 'fixes #123' format" do
+      body = "This PR fixes #42"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([42])
+    end
+
+    it "extracts issue numbers from 'closes #123' format" do
+      body = "Closes #99"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([99])
+    end
+
+    it "extracts issue numbers from 'resolves #123' format" do
+      body = "Resolves #7"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([7])
+    end
+
+    it "handles various verb tenses (fix, fixed, fixes)" do
+      body = "Fix #1, fixed #2, fixes #3"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to contain_exactly(1, 2, 3)
+    end
+
+    it "extracts issue numbers from cross-repo references" do
+      body = "Fixes antiwork/gumroad#123"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([123])
+    end
+
+    it "extracts issue numbers from 'Issue: #123' format (PR template)" do
+      body = "Issue: #456\n\n# Description\nSome description here"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([456])
+    end
+
+    it "handles 'Issue: #' format case-insensitively" do
+      body = "issue: #789"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([789])
+    end
+
+    it "handles 'Issue:' with varying whitespace" do
+      body = "Issue:   #321"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([321])
+    end
+
+    it "extracts issue numbers from full GitHub issue URLs" do
+      body = "Issue: https://github.com/antiwork/gumroad/issues/42"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([42])
+    end
+
+    it "handles https and http URLs" do
+      body = "http://github.com/antiwork/gumroad/issues/42"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([42])
+    end
+
+    it "only matches URLs for the same owner/repo" do
+      body = "https://github.com/other/repo/issues/42"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([])
+    end
+
+    it "extracts multiple issue numbers from mixed formats" do
+      body = <<~BODY
+        Issue: #1
+
+        # Description
+        This also fixes #2 and closes #3
+
+        Related: https://github.com/antiwork/gumroad/issues/4
+      BODY
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to contain_exactly(1, 2, 3, 4)
+    end
+
+    it "returns unique issue numbers when duplicates exist" do
+      body = "Fixes #42, also closes #42"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([42])
+    end
+
+    it "returns empty array when no issues are linked" do
+      body = "This is just a description with no issue references"
+      expect(described_class.send(:extract_linked_issue_numbers, body, owner, repo)).to eq([])
+    end
+
+    it "handles nil body" do
+      expect(described_class.send(:extract_linked_issue_numbers, nil.to_s, owner, repo)).to eq([])
+    end
+
+    it "handles empty body" do
+      expect(described_class.send(:extract_linked_issue_numbers, "", owner, repo)).to eq([])
     end
   end
 end

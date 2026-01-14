@@ -1,7 +1,7 @@
 "use client";
 
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
-import { BadgeDollarSign, CheckCircle2, CircleAlert, GitMerge, GitPullRequest } from "lucide-react";
+import { BadgeDollarSign, CheckCircle2, CircleAlert } from "lucide-react";
 import Link from "next/link";
 import React, { useCallback, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -95,30 +95,28 @@ export function GitHubPRHoverCard({
           sideOffset={5}
           align="start"
         >
-          <div className="grid gap-3">
+          <div className="group grid cursor-pointer gap-3">
             {/* Header: repo · author */}
             <div className="text-muted-foreground text-sm">
               {pr.repo} · {pr.author}
             </div>
 
-            {/* Title and PR number - clickable link */}
+            {/* Title and PR number - clickable link, shows active state on card hover */}
             <div>
-              <a href={pr.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                <span className="line-clamp-2 font-semibold">{pr.title}</span>
+              <a href={pr.url} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
+                <span className="font-semibold group-hover:text-blue-600 group-hover:underline">{pr.title}</span>
+                <span className="text-muted-foreground ml-1 font-normal">#{pr.number}</span>
               </a>
-              <span className="text-muted-foreground ml-1">#{pr.number}</span>
             </div>
 
             {/* Status badge */}
             <div>
               {isMerged ? (
-                <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
-                  <GitMerge className="mr-1 size-3" />
+                <Badge className="rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
                   Merged
                 </Badge>
               ) : (
-                <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                  <GitPullRequest className="mr-1 size-3" />
+                <Badge className="rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                   Open
                 </Badge>
               )}

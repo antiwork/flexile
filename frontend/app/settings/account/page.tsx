@@ -142,8 +142,12 @@ const GitHubIntegrationSection = () => {
                 <span className="font-medium">GitHub</span>
                 <span className="text-muted-foreground text-sm">
                   {user.githubUsername
-                    ? "Your account is linked for verifying pull requests and bounties."
-                    : "Link your GitHub account to verify ownership of your work."}
+                    ? user.roles.administrator
+                      ? "Your GitHub account is connected for sign-in."
+                      : "Your account is linked for verifying pull requests and bounties."
+                    : user.roles.administrator
+                      ? "Connect your GitHub account to use it for sign-in."
+                      : "Link your GitHub account to verify ownership of your work."}
                 </span>
               </div>
             </div>
@@ -158,7 +162,7 @@ const GitHubIntegrationSection = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
+                    className="hover:text-destructive focus:text-destructive"
                     onClick={() => {
                       setIsDropdownOpen(false);
                       setIsDisconnectModalOpen(true);
@@ -180,7 +184,7 @@ const GitHubIntegrationSection = () => {
       <AlertDialog open={isDisconnectModalOpen} onOpenChange={handleDisconnectModalOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Disconnect Github account?</AlertDialogTitle>
+            <AlertDialogTitle>Disconnect GitHub account?</AlertDialogTitle>
             <AlertDialogDescription>Disconnecting stops us from verifying your GitHub work.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

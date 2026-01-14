@@ -20,6 +20,7 @@ scope path: :internal, module: :internal do
     post :callback
     delete :disconnect
     get :pr
+    get :orgs
   end
 
   resource :settings, only: [:update]

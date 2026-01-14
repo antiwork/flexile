@@ -67,10 +67,10 @@ test.describe("GitHub integration", () => {
       await page.getByRole("button", { name: githubUsername }).click();
       await page.getByRole("menuitem", { name: "Disconnect" }).click();
 
-      // Per design: modal title "Disconnect Github account?" and description (AlertDialog)
+      // Per design: modal title "Disconnect GitHub account?" and description (AlertDialog)
       const modal = page.getByRole("alertdialog");
       await expect(modal).toBeVisible();
-      await expect(modal.getByText("Disconnect Github account?")).toBeVisible();
+      await expect(modal.getByText("Disconnect GitHub account?")).toBeVisible();
       await expect(modal.getByText("Disconnecting stops us from verifying your GitHub work.")).toBeVisible();
       await modal.getByRole("button", { name: "Disconnect" }).click();
 
@@ -105,6 +105,30 @@ test.describe("GitHub integration", () => {
     test("admin can connect GitHub organization", async ({ page }) => {
       const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
 
+      // Set up admin with GitHub already connected (to skip OAuth flow)
+      await db
+        .update(users)
+        .set({
+          githubUid: faker.string.numeric(10),
+          githubUsername: "admin-user",
+          githubAccessToken: "gho_test_token",
+        })
+        .where(eq(users.id, adminUser.id));
+
+      // Mock the GitHub orgs API endpoint
+      await page.route("**/internal/github/orgs", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            orgs: [
+              { login: "test-org", id: 12345, avatar_url: "https://avatars.githubusercontent.com/u/12345" },
+              { login: "another-org", id: 67890, avatar_url: "https://avatars.githubusercontent.com/u/67890" },
+            ],
+          }),
+        });
+      });
+
       await login(page, adminUser, "/people");
       await page.getByRole("link", { name: "Settings" }).click();
       await page.getByRole("link", { name: "Integrations" }).click();
@@ -112,11 +136,13 @@ test.describe("GitHub integration", () => {
       // Click Connect button in the GitHub card (first Connect button on page)
       await page.getByRole("button", { name: "Connect" }).first().click();
 
-      // Modal uses Dialog component
+      // Modal shows organization selector
       const modal = page.getByRole("dialog");
       await expect(modal).toBeVisible();
-      await expect(modal.getByText("Connect GitHub organization")).toBeVisible();
-      await modal.getByLabel("Organization name").fill("test-org");
+      await expect(modal.getByText("Select GitHub organization")).toBeVisible();
+
+      // Select an organization from the list
+      await modal.getByRole("button", { name: "test-org" }).click();
       await modal.getByRole("button", { name: "Connect" }).click();
 
       // Verify connected state - shows org name in dropdown button
@@ -139,10 +165,10 @@ test.describe("GitHub integration", () => {
       await page.getByRole("button", { name: "connected-org" }).click();
       await page.getByRole("menuitem", { name: "Disconnect" }).click();
 
-      // Per design: "Disconnect Github organization?" with specific description (AlertDialog)
+      // Per design: "Disconnect GitHub organization?" with specific description (AlertDialog)
       const modal = page.getByRole("alertdialog");
       await expect(modal).toBeVisible();
-      await expect(modal.getByText("Disconnect Github organization?")).toBeVisible();
+      await expect(modal.getByText("Disconnect GitHub organization?")).toBeVisible();
       await expect(
         modal.getByText(
           "This will prevent contractors from verifying Pull Request ownership and disable automatic bounty checks.",

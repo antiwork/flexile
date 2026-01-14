@@ -6,9 +6,12 @@ class GithubService
 
   GITHUB_OAUTH_URL = "https://github.com/login/oauth/authorize"
   GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
+  GITHUB_GRAPHQL_URL = "https://api.github.com/graphql"
 
   # Scopes needed for user authentication and PR access
   USER_SCOPES = "read:user user:email"
+  # Extended scopes that include organization access (for company org selection)
+  ORG_SCOPES = "read:user user:email read:org"
 
   # Patterns for extracting bounty amounts from labels
   # Note: These patterns capture the raw value; conversion to cents happens in extract_bounty_from_labels
@@ -26,11 +29,11 @@ class GithubService
   class ApiError < Error; end
 
   class << self
-    def oauth_url(state:, redirect_uri:)
+    def oauth_url(state:, redirect_uri:, include_orgs: false)
       params = {
         client_id: client_id,
         redirect_uri: redirect_uri,
-        scope: USER_SCOPES,
+        scope: include_orgs ? ORG_SCOPES : USER_SCOPES,
         state: state,
       }
 
@@ -66,18 +69,28 @@ class GithubService
       }
     end
 
+    def fetch_user_orgs(access_token:)
+      orgs_response = api_request(access_token:, path: "/user/orgs")
+
+      orgs_response.map do |org|
+        {
+          login: org["login"],
+          id: org["id"],
+          avatar_url: org["avatar_url"],
+        }
+      end
+    end
+
     def fetch_pr_details(access_token:, owner:, repo:, pr_number:)
       pr_response = api_request(access_token:, path: "/repos/#{owner}/#{repo}/pulls/#{pr_number}")
 
-      # Try to extract bounty from PR labels first
       bounty_cents = extract_bounty_from_labels(pr_response["labels"])
-
-      # If no bounty on PR, try to find it on a linked issue
       if bounty_cents.nil?
         bounty_cents = fetch_bounty_from_linked_issue(
           access_token: access_token,
           owner: owner,
           repo: repo,
+          pr_number: pr_number,
           pr_body: pr_response["body"]
         )
       end
@@ -103,6 +116,45 @@ class GithubService
     rescue ApiError
       # Issue might not exist or be inaccessible
       nil
+    end
+
+    def fetch_linked_issues(access_token:, owner:, repo:, pr_number:)
+      query = <<~GRAPHQL
+        query($owner: String!, $repo: String!, $number: Int!) {
+          repository(owner: $owner, name: $repo) {
+            pullRequest(number: $number) {
+              closingIssuesReferences(first: 10) {
+                nodes {
+                  number
+                  labels(first: 20) {
+                    nodes {
+                      name
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      GRAPHQL
+
+      response = graphql_request(
+        access_token: access_token,
+        query: query,
+        variables: { owner: owner, repo: repo, number: pr_number }
+      )
+
+      pull_request = response.dig("data", "repository", "pullRequest")
+      return [] unless pull_request
+
+      issues = pull_request.dig("closingIssuesReferences", "nodes") || []
+      issues.map do |issue|
+        labels = (issue.dig("labels", "nodes") || []).map { |l| { "name" => l["name"] } }
+        { number: issue["number"], labels: labels }
+      end
+    rescue ApiError
+      # GraphQL request failed, return empty array
+      []
     end
 
     def fetch_pr_details_from_url(access_token:, url:)
@@ -201,6 +253,28 @@ class GithubService
         response.parsed_response
       end
 
+      def graphql_request(access_token:, query:, variables: {})
+        headers = {
+          "Authorization" => "Bearer #{access_token}",
+          "Content-Type" => "application/json",
+        }
+
+        body = { query: query, variables: variables }.to_json
+
+        response = HTTParty.post(GITHUB_GRAPHQL_URL, headers: headers, body: body)
+
+        unless response.success?
+          error_message = response.dig("errors", 0, "message") || response["message"] || "GitHub GraphQL error: #{response.code}"
+          raise ApiError, error_message
+        end
+
+        if response["errors"].present?
+          raise ApiError, response["errors"].first["message"]
+        end
+
+        response.parsed_response
+      end
+
       def pr_state(pr_response)
         if pr_response["merged_at"].present?
           "merged"
@@ -211,15 +285,28 @@ class GithubService
         end
       end
 
-      def fetch_bounty_from_linked_issue(access_token:, owner:, repo:, pr_body:)
+      def fetch_bounty_from_linked_issue(access_token:, owner:, repo:, pr_number:, pr_body:)
+        # Check UI-linked issues first (via GraphQL, which includes labels)
+        linked_issues = fetch_linked_issues(
+          access_token: access_token,
+          owner: owner,
+          repo: repo,
+          pr_number: pr_number
+        )
+
+        linked_issues.each do |issue|
+          bounty_cents = extract_bounty_from_labels(issue[:labels])
+          return bounty_cents if bounty_cents.present?
+        end
+
+        # Fall back to parsing PR body for references not caught by GraphQL (e.g., "Issue: #123")
         return nil if pr_body.blank?
 
-        # Find linked issue numbers from PR body
-        # Matches: fixes #123, closes #123, resolves #123 (case insensitive)
-        # Also matches: fixes owner/repo#123 for cross-repo references
-        issue_numbers = extract_linked_issue_numbers(pr_body, owner, repo)
+        issue_numbers_from_body = extract_linked_issue_numbers(pr_body, owner, repo)
+        linked_issue_numbers = linked_issues.map { |i| i[:number] }
+        new_issue_numbers = issue_numbers_from_body - linked_issue_numbers
 
-        issue_numbers.each do |issue_number|
+        new_issue_numbers.each do |issue_number|
           labels = fetch_issue_labels(
             access_token: access_token,
             owner: owner,
@@ -247,6 +334,18 @@ class GithubService
         # Pattern for cross-repo references: "fixes owner/repo#123"
         cross_repo_pattern = /(?:fix(?:e[sd])?|close[sd]?|resolve[sd]?)\s+#{Regexp.escape(owner)}\/#{Regexp.escape(repo)}#(\d+)/i
         pr_body.scan(cross_repo_pattern) do |match|
+          issue_numbers << match[0].to_i
+        end
+
+        # Pattern for "Issue: #123" format (common in PR templates)
+        issue_label_pattern = /Issue:\s*#(\d+)/i
+        pr_body.scan(issue_label_pattern) do |match|
+          issue_numbers << match[0].to_i
+        end
+
+        # Pattern for full GitHub issue URLs: "https://github.com/owner/repo/issues/123"
+        url_pattern = %r{https?://github\.com/#{Regexp.escape(owner)}/#{Regexp.escape(repo)}/issues/(\d+)}i
+        pr_body.scan(url_pattern) do |match|
           issue_numbers << match[0].to_i
         end
 

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import type { PRDetails } from "@/utils/github";
+import { type PRDetails, truncatePRTitle } from "@/utils/github";
 
 interface GitHubPRLineItemProps {
   pr: PRDetails;
@@ -25,10 +25,6 @@ interface GitHubPRLineItemProps {
   hoverCardEnabled?: boolean;
 }
 
-/**
- * Renders a prettified GitHub PR line item
- * Shows: [Icon] repo Title... #123 [Bounty Badge] [Status Dot]
- */
 export function GitHubPRLineItem({
   pr,
   error,
@@ -57,10 +53,7 @@ export function GitHubPRLineItem({
   const isMerged = pr.state === "merged";
   const Icon = isMerged ? GitMerge : GitPullRequest;
 
-  // Truncate title but preserve PR number
-  const maxTitleLength = 40;
-  const truncatedTitle =
-    pr.title.length > maxTitleLength ? `${pr.title.substring(0, maxTitleLength).trim()}...` : pr.title;
+  const truncatedTitle = truncatePRTitle(pr.title, 40);
 
   const content = (
     <button
@@ -82,11 +75,8 @@ export function GitHubPRLineItem({
         <span className="text-muted-foreground ml-1">#{pr.number}</span>
       </span>
       {pr.bounty_cents ? (
-        <Badge
-          variant="secondary"
-          className="shrink-0 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-        >
-          {formatMoneyFromCents(pr.bounty_cents)}
+        <Badge variant="secondary" className="text-foreground shrink-0 bg-black/[0.03] dark:bg-white/[0.08]">
+          {formatMoneyFromCents(pr.bounty_cents, { compact: true })}
         </Badge>
       ) : null}
       {showStatusDot ? (

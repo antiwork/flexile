@@ -25,7 +25,7 @@ import { PayRateType, trpc } from "@/trpc/client";
 import { cn } from "@/utils";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { parsePRState, type PRDetails } from "@/utils/github";
+import { parsePRState, type PRDetails, truncatePRTitle } from "@/utils/github";
 import { formatDate, formatDuration } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 import {
@@ -396,14 +396,14 @@ export default function InvoicePage() {
                                     )}
                                     <span className="text-muted-foreground shrink-0">{prDetails.repo}</span>
                                     <span className="truncate">
-                                      {prDetails.title} #{prDetails.number}
+                                      {truncatePRTitle(prDetails.title, 40)} #{prDetails.number}
                                     </span>
                                     {prDetails.bounty_cents ? (
                                       <Badge
                                         variant="secondary"
-                                        className="shrink-0 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                                        className="text-foreground shrink-0 bg-black/[0.03] dark:bg-white/[0.08]"
                                       >
-                                        {formatMoneyFromCents(prDetails.bounty_cents)}
+                                        {formatMoneyFromCents(prDetails.bounty_cents, { compact: true })}
                                       </Badge>
                                     ) : null}
                                     {showStatusDot ? (

@@ -14,9 +14,11 @@ class Internal::GithubController < Internal::BaseController
 
     redirect_uri = params[:redirect_uri] || github_callback_url
 
+    include_orgs = ActiveModel::Type::Boolean.new.cast(params[:include_orgs])
+
     begin
       render json: {
-        url: GithubService.oauth_url(state: state, redirect_uri: redirect_uri),
+        url: GithubService.oauth_url(state: state, redirect_uri: redirect_uri, include_orgs: include_orgs),
       }
     rescue GithubService::ConfigurationError
       render json: { error: "GitHub integration is not configured" }, status: :service_unavailable
@@ -110,6 +112,21 @@ class Internal::GithubController < Internal::BaseController
       end
 
       render json: { pr: pr_details }
+    rescue GithubService::ApiError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    end
+  end
+
+  # GET /internal/github/orgs
+  # Fetches the list of organizations the current user belongs to
+  def orgs
+    authorize :github, :list_orgs?
+
+    access_token = Current.user.github_access_token
+
+    begin
+      organizations = GithubService.fetch_user_orgs(access_token: access_token)
+      render json: { orgs: organizations }
     rescue GithubService::ApiError => e
       render json: { error: e.message }, status: :unprocessable_entity
     end

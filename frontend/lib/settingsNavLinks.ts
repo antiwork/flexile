@@ -3,9 +3,9 @@ import {
   Briefcase,
   Building,
   CreditCard,
+  Fingerprint,
   FolderClosed,
   Landmark,
-  Link,
   PieChart,
   ScrollText,
   ShieldUser,
@@ -25,8 +25,8 @@ export const settingsNavLinks = [
   {
     label: "Account",
     route: "/settings/account" as const,
-    icon: Link,
-    isVisible: (_user: CurrentUser) => true,
+    icon: Fingerprint,
+    isVisible: () => true,
     category: "personal",
   },
   {

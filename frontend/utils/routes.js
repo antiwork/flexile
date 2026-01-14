@@ -2035,6 +2035,22 @@ export const oauth_url_github_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,
 
 /**
  * Generates rails route to
+ * /internal/github/orgs(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const orgs_github_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github"],[2,[7,"/"],[2,[6,"orgs"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github/orgs(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const orgs_github_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github"],[2,[7,"/"],[2,[6,"orgs"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /internal/github/pr(.:format)
  * @param {object | undefined} options
  * @returns {string} route path

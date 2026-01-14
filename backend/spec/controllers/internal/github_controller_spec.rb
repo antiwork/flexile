@@ -29,6 +29,24 @@ RSpec.describe Internal::GithubController do
       expect(session[:github_oauth_state]).to be_present
     end
 
+    it "includes read:org scope when include_orgs is true" do
+      get :oauth_url, params: { include_orgs: "true" }
+
+      expect(response).to have_http_status(:ok)
+
+      json_response = response.parsed_body
+      expect(json_response["url"]).to include("read%3Aorg")
+    end
+
+    it "does not include read:org scope by default" do
+      get :oauth_url
+
+      expect(response).to have_http_status(:ok)
+
+      json_response = response.parsed_body
+      expect(json_response["url"]).not_to include("read%3Aorg")
+    end
+
     context "without authentication" do
       before do
         request.headers["x-flexile-auth"] = nil
@@ -255,6 +273,79 @@ RSpec.describe Internal::GithubController do
 
         json_response = response.parsed_body
         expect(json_response["error"]).to eq("GitHub account not connected")
+      end
+    end
+  end
+
+  describe "GET #orgs" do
+    before do
+      user.update!(github_access_token: "gho_test_token")
+    end
+
+    it "fetches user organizations from GitHub" do
+      stub_request(:get, "https://api.github.com/user/orgs")
+        .with(headers: { "Authorization" => "Bearer gho_test_token" })
+        .to_return(
+          status: 200,
+          body: [
+            { id: 12345, login: "antiwork", avatar_url: "https://avatars.githubusercontent.com/u/12345" },
+            { id: 67890, login: "another-org", avatar_url: "https://avatars.githubusercontent.com/u/67890" },
+          ].to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      get :orgs
+
+      expect(response).to have_http_status(:ok)
+
+      json_response = response.parsed_body
+      expect(json_response["orgs"]).to eq([
+                                            { "id" => 12345, "login" => "antiwork", "avatar_url" => "https://avatars.githubusercontent.com/u/12345" },
+                                            { "id" => 67890, "login" => "another-org", "avatar_url" => "https://avatars.githubusercontent.com/u/67890" },
+                                          ])
+    end
+
+    it "returns empty array when user has no organizations" do
+      stub_request(:get, "https://api.github.com/user/orgs")
+        .to_return(
+          status: 200,
+          body: [].to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      get :orgs
+
+      expect(response).to have_http_status(:ok)
+
+      json_response = response.parsed_body
+      expect(json_response["orgs"]).to eq([])
+    end
+
+    it "returns error when token lacks read:org scope" do
+      stub_request(:get, "https://api.github.com/user/orgs")
+        .to_return(
+          status: 403,
+          body: { message: "Resource not accessible by integration" }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      get :orgs
+
+      expect(response).to have_http_status(:unprocessable_entity)
+
+      json_response = response.parsed_body
+      expect(json_response["error"]).to eq("Resource not accessible by integration")
+    end
+
+    context "when user has no GitHub connection" do
+      before do
+        user.update!(github_access_token: nil)
+      end
+
+      it "returns forbidden" do
+        get :orgs
+
+        expect(response).to have_http_status(:forbidden)
       end
     end
   end

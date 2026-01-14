@@ -1,11 +1,9 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import React, { useCallback, useState } from "react";
 import { z } from "zod";
 import { MutationStatusButton } from "@/components/MutationButton";
 import {
@@ -18,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import {
@@ -34,12 +33,31 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useCurrentCompany } from "@/global";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import githubMark from "@/images/github-mark.svg";
 import { request } from "@/utils/request";
-import { connect_company_github_path, disconnect_company_github_path } from "@/utils/routes";
+import {
+  connect_company_github_path,
+  disconnect_company_github_path,
+  oauth_url_github_path,
+  orgs_github_path,
+} from "@/utils/routes";
+
+interface GitHubOrg {
+  login: string;
+  id: number;
+  avatar_url: string;
+}
+
+const orgsResponseSchema = z.object({
+  orgs: z.array(
+    z.object({
+      login: z.string(),
+      id: z.number(),
+      avatar_url: z.string(),
+    }),
+  ),
+});
 
 export default function IntegrationsPage() {
   return (
@@ -53,31 +71,42 @@ export default function IntegrationsPage() {
   );
 }
 
-const connectFormSchema = z.object({
-  githubOrgName: z.string().min(1, "Organization name is required"),
-});
-
 const GitHubIntegrationSection = () => {
   const company = useCurrentCompany();
+  const user = useCurrentUser();
   const queryClient = useQueryClient();
-  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+  const [isOrgSelectorOpen, setIsOrgSelectorOpen] = useState(false);
   const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [organizations, setOrganizations] = useState<GitHubOrg[]>([]);
+  const [selectedOrg, setSelectedOrg] = useState<GitHubOrg | null>(null);
+  const [isLoadingOrgs, setIsLoadingOrgs] = useState(false);
+  const [orgsError, setOrgsError] = useState<string | null>(null);
+  const [isReauthenticating, setIsReauthenticating] = useState(false);
 
-  const form = useForm<z.infer<typeof connectFormSchema>>({
-    resolver: zodResolver(connectFormSchema),
-    defaultValues: {
-      githubOrgName: "",
-    },
-  });
+  const fetchOrganizations = useCallback(async (): Promise<GitHubOrg[]> => {
+    const response = await request({
+      method: "GET",
+      url: orgs_github_path(),
+      accept: "json",
+    });
+
+    if (!response.ok) {
+      const errorData = z.object({ error: z.string().optional() }).safeParse(await response.json());
+      throw new Error(errorData.data?.error ?? "Failed to fetch organizations");
+    }
+
+    const data = orgsResponseSchema.parse(await response.json());
+    return data.orgs;
+  }, []);
 
   const connectMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof connectFormSchema>) => {
+    mutationFn: async (org: GitHubOrg) => {
       const response = await request({
         method: "POST",
         url: connect_company_github_path(company.id),
         accept: "json",
-        jsonData: { github_org_name: values.githubOrgName },
+        jsonData: { github_org_name: org.login, github_org_id: org.id },
       });
 
       if (!response.ok) {
@@ -87,10 +116,95 @@ const GitHubIntegrationSection = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      setIsConnectModalOpen(false);
-      form.reset();
+      setIsOrgSelectorOpen(false);
+      setSelectedOrg(null);
     },
   });
+
+  const triggerOAuthPopup = useCallback(async () => {
+    const response = await request({
+      method: "GET",
+      url: oauth_url_github_path({ include_orgs: "true" }),
+      accept: "json",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to get OAuth URL");
+    }
+
+    const data = z.object({ url: z.string() }).parse(await response.json());
+
+    const width = 600;
+    const height = 700;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+
+    const popup = window.open(
+      data.url,
+      "github-oauth",
+      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`,
+    );
+
+    return new Promise<void>((resolve, reject) => {
+      const handleMessage = (event: MessageEvent<unknown>) => {
+        const messageData = event.data;
+        if (
+          typeof messageData === "object" &&
+          messageData !== null &&
+          "type" in messageData &&
+          messageData.type === "github-oauth-success"
+        ) {
+          void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+          popup?.close();
+          window.removeEventListener("message", handleMessage);
+          resolve();
+        }
+      };
+
+      window.addEventListener("message", handleMessage);
+
+      // Poll for popup close (in case user closes it manually)
+      const pollTimer = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(pollTimer);
+          window.removeEventListener("message", handleMessage);
+          reject(new Error("OAuth popup was closed"));
+        }
+      }, 500);
+    });
+  }, [queryClient]);
+
+  const handleConnect = useCallback(async () => {
+    setOrgsError(null);
+    setIsLoadingOrgs(true);
+    connectMutation.reset();
+
+    try {
+      // Try to fetch orgs with existing token first
+      if (user.githubUsername) {
+        try {
+          const orgs = await fetchOrganizations();
+          setOrganizations(orgs);
+          setSelectedOrg(null);
+          setIsOrgSelectorOpen(true);
+          setIsLoadingOrgs(false);
+          return;
+        } catch {
+          // Token might lack read:org scope, need to re-auth
+        }
+      }
+
+      await triggerOAuthPopup();
+      const orgs = await fetchOrganizations();
+      setOrganizations(orgs);
+      setSelectedOrg(null);
+      setIsOrgSelectorOpen(true);
+    } catch (error) {
+      setOrgsError(error instanceof Error ? error.message : "Failed to connect GitHub");
+    } finally {
+      setIsLoadingOrgs(false);
+    }
+  }, [connectMutation, user.githubUsername, fetchOrganizations, triggerOAuthPopup]);
 
   const disconnectMutation = useMutation({
     mutationFn: async () => {
@@ -118,18 +232,39 @@ const GitHubIntegrationSection = () => {
     setIsDisconnectModalOpen(open);
   };
 
-  const handleConnectSubmit = form.handleSubmit((values) => {
-    connectMutation.mutate(values);
-  });
-
-  const handleConnectModalOpenChange = (open: boolean) => {
+  const handleOrgSelectorOpenChange = (open: boolean) => {
     if (open) {
+      // Reset mutation state when opening the modal
       connectMutation.reset();
     } else {
-      form.reset();
-      connectMutation.reset();
+      setSelectedOrg(null);
+      setOrgsError(null);
     }
-    setIsConnectModalOpen(open);
+    setIsOrgSelectorOpen(open);
+  };
+
+  const handleOrgSelect = (org: GitHubOrg) => {
+    setSelectedOrg(org);
+  };
+
+  const handleConfirmOrg = () => {
+    if (selectedOrg) {
+      connectMutation.mutate(selectedOrg);
+    }
+  };
+
+  const handleReauthenticate = async () => {
+    setIsReauthenticating(true);
+    try {
+      await triggerOAuthPopup();
+      const orgs = await fetchOrganizations();
+      setOrganizations(orgs);
+      setSelectedOrg(null);
+    } catch (error) {
+      setOrgsError(error instanceof Error ? error.message : "Failed to re-authenticate");
+    } finally {
+      setIsReauthenticating(false);
+    }
   };
 
   return (
@@ -156,7 +291,7 @@ const GitHubIntegrationSection = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
+                  className="hover:text-destructive focus:text-destructive"
                   onClick={() => {
                     setIsDropdownOpen(false);
                     setIsDisconnectModalOpen(true);
@@ -167,53 +302,95 @@ const GitHubIntegrationSection = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleConnectModalOpenChange(true)}>
-              Connect
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => void handleConnect()}
+              disabled={isLoadingOrgs}
+            >
+              {isLoadingOrgs ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                "Connect"
+              )}
             </Button>
           )}
         </CardHeader>
       </Card>
 
-      {/* Connect Modal */}
-      <Dialog open={isConnectModalOpen} onOpenChange={handleConnectModalOpenChange}>
+      {orgsError && !isOrgSelectorOpen ? <p className="text-destructive text-sm">{orgsError}</p> : null}
+
+      {/* Organization Selector Modal */}
+      <Dialog open={isOrgSelectorOpen} onOpenChange={handleOrgSelectorOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Connect GitHub organization</DialogTitle>
+            <DialogTitle>Select GitHub organization</DialogTitle>
             <DialogDescription>
-              Enter the name of your GitHub organization to enable automatic verification of pull requests and bounty
-              claims.
+              Choose which organization to connect for PR verification and bounty tracking.
             </DialogDescription>
           </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={(e) => void handleConnectSubmit(e)} className="grid gap-4">
-              <FormField
-                control={form.control}
-                name="githubOrgName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Organization name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. antiwork" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => handleConnectModalOpenChange(false)}>
-                  Cancel
-                </Button>
-                <MutationStatusButton
-                  type="submit"
-                  mutation={connectMutation}
-                  loadingText="Connecting..."
-                  successText="Connected!"
+          <div className="grid gap-2 py-4">
+            {organizations.length === 0 ? (
+              <p className="text-muted-foreground text-center text-sm">
+                You are not a member of any GitHub organizations.
+              </p>
+            ) : (
+              organizations.map((org) => (
+                <button
+                  key={org.id}
+                  type="button"
+                  onClick={() => handleOrgSelect(org)}
+                  className={`hover:bg-accent flex items-center gap-3 rounded-lg border p-3 text-left transition-colors ${
+                    selectedOrg?.id === org.id ? "border-primary bg-accent" : "border-border"
+                  }`}
                 >
-                  Connect
-                </MutationStatusButton>
-              </DialogFooter>
-            </form>
-          </Form>
+                  <Avatar className="size-8">
+                    <AvatarImage src={org.avatar_url} alt={org.login} />
+                    <AvatarFallback>{org.login.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium">{org.login}</span>
+                </button>
+              ))
+            )}
+            <p className="text-muted-foreground mt-2 text-center text-sm">
+              Don't see your organization?{" "}
+              <a
+                href="https://github.com/settings/applications"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-link hover:underline"
+              >
+                Grant access on GitHub
+              </a>
+              , then{" "}
+              <button
+                type="button"
+                onClick={() => void handleReauthenticate()}
+                disabled={isReauthenticating}
+                className="text-link hover:underline disabled:opacity-50"
+              >
+                {isReauthenticating ? "refreshing..." : "refresh the list"}
+              </button>
+              .
+            </p>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => handleOrgSelectorOpenChange(false)}>
+              Cancel
+            </Button>
+            <MutationStatusButton
+              mutation={connectMutation}
+              onClick={handleConfirmOrg}
+              disabled={!selectedOrg}
+              loadingText="Connecting..."
+              successText="Connected!"
+            >
+              Connect
+            </MutationStatusButton>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -221,7 +398,7 @@ const GitHubIntegrationSection = () => {
       <AlertDialog open={isDisconnectModalOpen} onOpenChange={handleDisconnectModalOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Disconnect Github organization?</AlertDialogTitle>
+            <AlertDialogTitle>Disconnect GitHub organization?</AlertDialogTitle>
             <AlertDialogDescription>
               This will prevent contractors from verifying Pull Request ownership and disable automatic bounty checks.
             </AlertDialogDescription>

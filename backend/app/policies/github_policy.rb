@@ -14,6 +14,10 @@ class GithubPolicy < ApplicationPolicy
     user.present?
   end
 
+  def list_orgs?
+    user.present? && user.github_access_token.present?
+  end
+
   # Company-level GitHub organization management
   def manage_org?
     company_administrator?
