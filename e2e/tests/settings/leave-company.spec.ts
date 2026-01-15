@@ -15,8 +15,12 @@ test.describe("Leave company", () => {
     await login(page, adminUser);
 
     await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("link", { name: "Account" }).click();
 
+    // Administrators should not see the Account link at all
+    await expect(page.getByRole("link", { name: "Account" })).not.toBeVisible();
+
+    // Verify they cannot access the page directly either
+    await page.goto("/settings/account");
     await expect(page.getByText("Leave workspace")).not.toBeVisible();
   });
 

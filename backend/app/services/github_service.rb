@@ -41,7 +41,7 @@ class GithubService
 
     def app_installation_url(state:, org_id: nil, redirect_uri: nil)
       app_slug = GlobalConfig.get("GH_APP_SLUG")
-      return nil if app_slug.blank?
+      raise ConfigurationError, "GitHub App not configured" if app_slug.blank?
 
       url = "#{APP_INSTALLATION_URL}/#{app_slug}/installations/new?state=#{state}"
       url += "&suggested_target_id=#{org_id}" if org_id.present?

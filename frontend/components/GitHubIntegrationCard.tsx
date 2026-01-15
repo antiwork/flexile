@@ -50,7 +50,7 @@ export function GitHubIntegrationCard({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const disconnectMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<unknown> => {
       const response = await request({
         method: "DELETE",
         url: disconnectEndpoint,
@@ -59,7 +59,7 @@ export function GitHubIntegrationCard({
 
       if (!response.ok) {
         const errorData = z.object({ error: z.string().optional() }).safeParse(await response.json());
-        throw new Error(errorData.data?.error ?? "Failed to disconnect GitHub");
+        throw new Error(errorData.success ? errorData.data.error : "Failed to disconnect GitHub");
       }
 
       if (response.status === 204) {

@@ -60,8 +60,8 @@ RSpec.describe Webhooks::GithubController do
       describe "pull_request event" do
         let(:company) { create(:company, github_org_name: "antiwork") }
         let(:contractor) { create(:user) }
-        let!(:company_contractor) { create(:company_contractor, company: company, user: contractor) }
-        let!(:invoice) { create(:invoice, company_contractor: company_contractor) }
+        let!(:company_worker) { create(:company_worker, company: company, user: contractor) }
+        let!(:invoice) { create(:invoice, company_worker: company_worker) }
         let!(:line_item) do
           invoice.invoice_line_items.first.update!(
             github_pr_url: "https://github.com/antiwork/flexile/pull/123",
@@ -72,6 +72,11 @@ RSpec.describe Webhooks::GithubController do
             github_pr_author: "contributor"
           )
           invoice.invoice_line_items.first
+        end
+
+        before do
+          # Mock the GitHub API call that would happen during bounty refresh
+          allow(GithubService).to receive(:fetch_pr_details_from_url_with_app).and_return(nil)
         end
 
         it "updates line item when PR is opened" do
@@ -365,8 +370,8 @@ RSpec.describe Webhooks::GithubController do
       describe "issues event" do
         let(:company) { create(:company, github_org_name: "antiwork") }
         let(:contractor) { create(:user) }
-        let!(:company_contractor) { create(:company_contractor, company: company, user: contractor) }
-        let!(:invoice) { create(:invoice, company_contractor: company_contractor) }
+        let!(:company_worker) { create(:company_worker, company: company, user: contractor) }
+        let!(:invoice) { create(:invoice, company_worker: company_worker) }
         let!(:line_item) do
           invoice.invoice_line_items.first.update!(
             github_pr_url: "https://github.com/antiwork/flexile/pull/123",

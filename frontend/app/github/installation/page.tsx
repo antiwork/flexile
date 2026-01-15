@@ -42,11 +42,12 @@ function GitHubInstallationContent() {
           jsonData: { installation_id, setup_action: setupAction, state, code },
         });
 
-        const responseBody = await response.json();
+        const responseBody: unknown = await response.json();
 
         if (!response.ok) {
-          const errorMsg = responseBody?.error ?? "Failed to process GitHub App installation";
-          throw new Error(errorMsg);
+          const errorData = z.object({ error: z.string().optional() }).safeParse(responseBody);
+          const errorMsg = errorData.success ? errorData.data.error : undefined;
+          throw new Error(errorMsg ?? "Failed to process GitHub App installation");
         }
 
         z.object({
