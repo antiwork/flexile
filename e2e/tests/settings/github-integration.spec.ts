@@ -105,8 +105,6 @@ test.describe("GitHub integration", () => {
 
     test("admin can connect GitHub organization", async ({ page }) => {
       const { company } = await companiesFactory.createCompletedOnboarding();
-      // Create admin user with GitHub username set (to skip OAuth flow for fetching orgs)
-      // NOTE: Don't set githubAccessToken - Rails encrypts this field and plaintext via Drizzle causes errors
       const { user: adminUser } = await usersFactory.create({
         githubUid: faker.string.numeric(10),
         githubUsername: "admin-user",
@@ -116,45 +114,56 @@ test.describe("GitHub integration", () => {
         userId: adminUser.id,
       });
 
-      // Mock the GitHub orgs API endpoint (since user has no real GitHub token)
-      await page.route("**/internal/github/orgs", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            orgs: [
-              { login: "test-org", id: 12345, avatar_url: "https://avatars.githubusercontent.com/u/12345" },
-              { login: "another-org", id: 67890, avatar_url: "https://avatars.githubusercontent.com/u/67890" },
-            ],
-          }),
-        });
-      });
-
       await login(page, adminUser, "/people");
       await page.getByRole("link", { name: "Settings" }).click();
       await page.getByRole("link", { name: "Integrations" }).click();
 
-      // Click Connect button in the GitHub card (first Connect button on page)
-      await page.getByRole("button", { name: "Connect" }).first().click();
+      let installationUrlCalled = false;
+      await page.route("**/internal/github/app_installation_url", async (route) => {
+        installationUrlCalled = true;
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            url: "/github/installation?installation_id=12345678&setup_action=install&state=test-state&code=test-code",
+          }),
+        });
+      });
 
-      // Modal shows organization selector
-      const modal = page.getByRole("dialog");
-      await expect(modal).toBeVisible();
-      await expect(modal.getByText("Select GitHub organization")).toBeVisible();
+      await page.route("**/internal/github/installation_callback", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            success: true,
+            installation_id: "12345678",
+            company_id: company.externalId,
+            auto_connected: true,
+            org_name: "test-org",
+          }),
+        });
 
-      // Select an organization from the list
-      await modal.getByRole("button", { name: "test-org" }).click();
-      await modal.getByRole("button", { name: "Connect" }).click();
+        await db
+          .update(companies)
+          .set({ githubOrgName: "test-org", githubOrgId: BigInt(12345) })
+          .where(eq(companies.id, company.id));
+      });
 
-      // Wait for the API call to complete
-      await page.waitForTimeout(2000);
+      const connectButton = page.getByRole("button", { name: "Connect" }).first();
+      await expect(connectButton).toBeVisible();
+      await connectButton.click();
 
-      // Verify connected state - shows org name in dropdown button
-      await expect(page.getByRole("button", { name: "test-org" })).toBeVisible();
+      await page.waitForTimeout(500);
+      expect(installationUrlCalled).toBe(true);
 
-      // Verify database was updated
+      await expect(page.getByText("GitHub App Installed!")).toBeVisible({ timeout: 10000 });
+      await page.waitForURL("**/settings/administrator/integrations", { timeout: 10000 });
+
+      await expect(page.getByRole("button", { name: "test-org" })).toBeVisible({ timeout: 5000 });
+
       const updatedCompany = await db.query.companies.findFirst({ where: eq(companies.id, company.id) });
       expect(updatedCompany?.githubOrgName).toBe("test-org");
+      expect(updatedCompany?.githubOrgId).toBe(BigInt(12345));
     });
 
     test("admin can disconnect GitHub organization with confirmation", async ({ page }) => {
