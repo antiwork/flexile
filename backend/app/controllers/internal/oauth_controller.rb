@@ -13,7 +13,13 @@ class Internal::OauthController < Internal::BaseController
       return
     end
 
-    user = User.find_by(email: email)
+    user = nil
+    if github_params_present?
+      user = User.find_by(github_uid: params[:github_uid])
+    end
+
+    user ||= User.find_by(email: email)
+
     if user
       user.update!(current_sign_in_at: Time.current)
       update_github_info(user) if github_params_present?

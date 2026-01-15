@@ -111,6 +111,11 @@ export const authOptions = {
       GitHubProvider({
         clientId: env.GH_CLIENT_ID,
         clientSecret: env.GH_CLIENT_SECRET,
+        authorization: {
+          params: {
+            scope: "read:user user:email",
+          },
+        },
       }),
     ),
   ],

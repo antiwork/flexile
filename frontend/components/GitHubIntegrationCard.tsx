@@ -62,6 +62,10 @@ export function GitHubIntegrationCard({
         throw new Error(errorData.data?.error ?? "Failed to disconnect GitHub");
       }
 
+      if (response.status === 204) {
+        return null;
+      }
+
       return response.json();
     },
     onSuccess: () => {
