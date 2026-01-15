@@ -5,7 +5,7 @@ import { Suspense, useEffect, useState } from "react";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { request } from "@/utils/request";
-import { callback_github_path } from "@/utils/routes";
+import { callback_github_path, installation_callback_github_path } from "@/utils/routes";
 
 function GitHubCallbackContent() {
   const searchParams = useSearchParams();
@@ -16,6 +16,8 @@ function GitHubCallbackContent() {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const error = searchParams.get("error");
+    const installationId = searchParams.get("installation_id");
+    const setupAction = searchParams.get("setup_action");
 
     if (error) {
       setStatus("error");
@@ -31,6 +33,7 @@ function GitHubCallbackContent() {
 
     const exchangeCode = async () => {
       try {
+        // First, exchange OAuth code for user authentication
         const response = await request({
           method: "POST",
           url: callback_github_path(),
@@ -41,6 +44,22 @@ function GitHubCallbackContent() {
         if (!response.ok) {
           const errorData = z.object({ error: z.string().optional() }).safeParse(await response.json());
           throw new Error(errorData.data?.error ?? "Failed to connect GitHub account");
+        }
+
+        // If this is a GitHub App installation (has installation_id)
+        if (installationId && setupAction === "install") {
+          // Process the installation
+          const installResponse = await request({
+            method: "POST",
+            url: installation_callback_github_path(),
+            accept: "json",
+            jsonData: { installation_id: installationId, setup_action: setupAction, state, code },
+          });
+
+          if (!installResponse.ok) {
+            const errorData = z.object({ error: z.string().optional() }).safeParse(await installResponse.json());
+            throw new Error(errorData.data?.error ?? "Failed to process GitHub App installation");
+          }
         }
 
         setStatus("success");
@@ -55,6 +74,11 @@ function GitHubCallbackContent() {
           }
           // Small delay before closing to ensure message is sent
           setTimeout(() => window.close(), 100);
+        } else if (installationId) {
+          // If installation and not a popup, redirect to integrations
+          setTimeout(() => {
+            window.location.href = "/settings/administrator/integrations";
+          }, 1000);
         }
       } catch (err) {
         setStatus("error");

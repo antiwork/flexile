@@ -148,12 +148,13 @@ class CreateOrUpdateInvoiceService
       # Skip if we already have PR data for this exact URL
       return if line_item.github_pr_url == description && line_item.github_pr_number.present?
 
-      # Need user's GitHub token to fetch PR details
-      return unless user.github_access_token.present?
+      # Require company GitHub App to be connected
+      return unless invoice.company.github_org_name.present?
 
       begin
-        pr_details = GithubService.fetch_pr_details_from_url(
-          access_token: user.github_access_token,
+        # Fetch PR details using company's GitHub App installation
+        pr_details = GithubService.fetch_pr_details_from_url_with_app(
+          org_name: invoice.company.github_org_name,
           url: description
         )
 

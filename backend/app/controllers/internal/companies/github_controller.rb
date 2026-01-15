@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class Internal::Companies::GithubController < Internal::Companies::BaseController
-  # POST /internal/companies/:company_id/github/connect
-  # Connects a GitHub organization to the company
   def connect
     authorize :github, :manage_org?
 
@@ -25,16 +23,27 @@ class Internal::Companies::GithubController < Internal::Companies::BaseControlle
     }
   end
 
-  # DELETE /internal/companies/:company_id/github/disconnect
-  # Removes GitHub organization connection from the company
   def disconnect
     authorize :github, :manage_org?
 
+    org_name = Current.company.github_org_name
+    app_uninstalled = false
+
+    if org_name.present? && GithubService.app_configured?
+      installation = GithubService.find_installation_by_account(account_login: org_name)
+      if installation.present?
+        app_uninstalled = GithubService.delete_installation(installation_id: installation[:id])
+      end
+    end
+
     Current.company.update!(
       github_org_name: nil,
-      github_org_id: nil
+      github_org_id: nil,
     )
 
-    head :no_content
+    render json: {
+      success: true,
+      app_uninstalled: app_uninstalled,
+    }
   end
 end

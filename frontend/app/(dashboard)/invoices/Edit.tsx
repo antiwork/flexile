@@ -36,7 +36,7 @@ import githubMark from "@/images/github-mark.svg";
 import { trpc } from "@/trpc/client";
 import { assert, assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { isGitHubPRUrl, parseGitHubPRUrl, parsePRState, type PRDetails } from "@/utils/github";
+import { isGitHubPRUrl, parseGitHubPRUrl, parsePRState, type PRDetails, prDetailsSchema } from "@/utils/github";
 import { request } from "@/utils/request";
 import {
   company_invoice_path,
@@ -48,17 +48,6 @@ import {
 } from "@/utils/routes";
 import QuantityInput from "./QuantityInput";
 import { LegacyAddress as Address, Totals, useCanSubmitInvoices } from ".";
-
-// Schema for PR details returned from the API
-const prDetailsSchema = z.object({
-  url: z.string(),
-  number: z.number(),
-  title: z.string(),
-  state: z.enum(["open", "merged", "closed"]),
-  author: z.string(),
-  repo: z.string(),
-  bounty_cents: z.number().nullable(),
-});
 
 const addressSchema = z.object({
   street_address: z.string(),
@@ -196,7 +185,9 @@ const PRLineItemCell = ({
       return data.pr;
     },
     enabled: shouldFetch,
-    staleTime: Infinity,
+    staleTime: Infinity, // Successful data never goes stale
+    retry: 2, // Retry failed requests up to 2 times
+    retryDelay: 1000, // Wait 1 second between retries
   });
 
   // Use fetched data, or fall back to stored data from backend

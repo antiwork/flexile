@@ -1,13 +1,14 @@
 "use client";
 
 import { ArrowLeftIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { Ban, CircleAlert, GitMerge, GitPullRequest, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
+import { Ban, CircleAlert, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import AttachmentListCard from "@/components/AttachmentsList";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { GitHubPRHoverCard } from "@/components/GitHubPRHoverCard";
+import { GitHubPRIcon } from "@/components/GitHubPRIcon";
 import { linkClasses } from "@/components/Link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -372,8 +373,6 @@ export default function InvoicePage() {
                           (isVerified === false || paidInvoices.length > 0) &&
                           invoice.status !== "paid";
 
-                        const isMerged = prDetails?.state === "merged";
-
                         return (
                           <TableRow key={index}>
                             <PrintTableCell className="w-[50%] align-top md:w-[60%] print:align-top">
@@ -389,11 +388,7 @@ export default function InvoicePage() {
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-2 hover:underline"
                                   >
-                                    {isMerged ? (
-                                      <GitMerge className="size-4 shrink-0 text-purple-500" />
-                                    ) : (
-                                      <GitPullRequest className="size-4 shrink-0 text-green-500" />
-                                    )}
+                                    <GitHubPRIcon state={prDetails.state} />
                                     <span className="text-muted-foreground shrink-0">{prDetails.repo}</span>
                                     <span className="truncate">
                                       {truncatePRTitle(prDetails.title, 40)} #{prDetails.number}

@@ -1,8 +1,9 @@
 "use client";
 
-import { GitMerge, GitPullRequest, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import React from "react";
 import { GitHubPRHoverCard, type PaidInvoiceInfo } from "@/components/GitHubPRHoverCard";
+import { GitHubPRIcon } from "@/components/GitHubPRIcon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils";
@@ -15,13 +16,9 @@ interface GitHubPRLineItemProps {
   onRetry?: () => void;
   onClick?: () => void;
   className?: string;
-  /** Current user's GitHub username for verification display */
   currentUserGitHubUsername?: string | null;
-  /** List of invoices where this PR was previously paid */
   paidInvoices?: PaidInvoiceInfo[];
-  /** Show amber status dot for items needing attention */
   showStatusDot?: boolean;
-  /** Whether hover card is enabled (default true) */
   hoverCardEnabled?: boolean;
 }
 
@@ -50,9 +47,6 @@ export function GitHubPRLineItem({
     );
   }
 
-  const isMerged = pr.state === "merged";
-  const Icon = isMerged ? GitMerge : GitPullRequest;
-
   const truncatedTitle = truncatePRTitle(pr.title, 40);
 
   const content = (
@@ -65,10 +59,7 @@ export function GitHubPRLineItem({
         className,
       )}
     >
-      <Icon
-        className={cn("size-4 shrink-0", isMerged ? "text-purple-500" : "text-green-500")}
-        aria-label={isMerged ? "Merged" : "Open"}
-      />
+      <GitHubPRIcon state={pr.state} />
       <span className="text-muted-foreground shrink-0">{pr.repo}</span>
       <span className="min-w-0 flex-1 truncate">
         <span className="text-foreground">{truncatedTitle}</span>

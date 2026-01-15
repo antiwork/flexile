@@ -33,10 +33,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useCurrentCompany, useCurrentUser } from "@/global";
+import { useCurrentCompany } from "@/global";
 import githubMark from "@/images/github-mark.svg";
 import { request } from "@/utils/request";
 import {
+  app_installation_url_github_path,
   connect_company_github_path,
   disconnect_company_github_path,
   oauth_url_github_path,
@@ -73,7 +74,6 @@ export default function IntegrationsPage() {
 
 const GitHubIntegrationSection = () => {
   const company = useCurrentCompany();
-  const user = useCurrentUser();
   const queryClient = useQueryClient();
   const [isOrgSelectorOpen, setIsOrgSelectorOpen] = useState(false);
   const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
@@ -180,31 +180,27 @@ const GitHubIntegrationSection = () => {
     connectMutation.reset();
 
     try {
-      // Try to fetch orgs with existing token first
-      if (user.githubUsername) {
-        try {
-          const orgs = await fetchOrganizations();
-          setOrganizations(orgs);
-          setSelectedOrg(null);
-          setIsOrgSelectorOpen(true);
-          setIsLoadingOrgs(false);
-          return;
-        } catch {
-          // Token might lack read:org scope, need to re-auth
-        }
+      // Redirect directly to GitHub App installation
+      // GitHub will show organization selector and handle OAuth
+      const response = await request({
+        method: "GET",
+        url: app_installation_url_github_path(),
+        accept: "json",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get GitHub App installation URL");
       }
 
-      await triggerOAuthPopup();
-      const orgs = await fetchOrganizations();
-      setOrganizations(orgs);
-      setSelectedOrg(null);
-      setIsOrgSelectorOpen(true);
+      const data = z.object({ url: z.string() }).parse(await response.json());
+
+      // Full page redirect to GitHub
+      window.location.href = data.url;
     } catch (error) {
       setOrgsError(error instanceof Error ? error.message : "Failed to connect GitHub");
-    } finally {
       setIsLoadingOrgs(false);
     }
-  }, [connectMutation, user.githubUsername, fetchOrganizations, triggerOAuthPopup]);
+  }, []);
 
   const disconnectMutation = useMutation({
     mutationFn: async () => {
@@ -218,6 +214,15 @@ const GitHubIntegrationSection = () => {
         const errorData = z.object({ error: z.string().optional() }).safeParse(await response.json());
         throw new Error(errorData.data?.error ?? "Failed to disconnect GitHub organization");
       }
+
+      const data = z
+        .object({
+          success: z.boolean(),
+          app_uninstalled: z.boolean().optional(),
+        })
+        .parse(await response.json());
+
+      return data;
     },
     onSuccess: () => {
       setIsDisconnectModalOpen(false);
@@ -247,9 +252,28 @@ const GitHubIntegrationSection = () => {
     setSelectedOrg(org);
   };
 
-  const handleConfirmOrg = () => {
+  const handleConfirmOrg = async () => {
     if (selectedOrg) {
-      connectMutation.mutate(selectedOrg);
+      try {
+        // Redirect to GitHub with selected org pre-selected
+        const response = await request({
+          method: "GET",
+          url: app_installation_url_github_path({
+            org_id: selectedOrg.id.toString(),
+            org_name: selectedOrg.login,
+          }),
+          accept: "json",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to get GitHub App installation URL");
+        }
+
+        const data = z.object({ url: z.string() }).parse(await response.json());
+        window.location.href = data.url;
+      } catch (error) {
+        setOrgsError(error instanceof Error ? error.message : "Failed to connect GitHub");
+      }
     }
   };
 
@@ -381,15 +405,9 @@ const GitHubIntegrationSection = () => {
             <Button type="button" variant="outline" onClick={() => handleOrgSelectorOpenChange(false)}>
               Cancel
             </Button>
-            <MutationStatusButton
-              mutation={connectMutation}
-              onClick={handleConfirmOrg}
-              disabled={!selectedOrg}
-              loadingText="Connecting..."
-              successText="Connected!"
-            >
-              Connect
-            </MutationStatusButton>
+            <Button type="button" onClick={() => void handleConfirmOrg()} disabled={!selectedOrg}>
+              Continue to GitHub
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -400,7 +418,8 @@ const GitHubIntegrationSection = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect GitHub organization?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will prevent contractors from verifying Pull Request ownership and disable automatic bounty checks.
+              This will disconnect {company.githubOrgName} from Flexile and uninstall the GitHub App from the
+              organization. Contractors will no longer be able to verify Pull Request ownership.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

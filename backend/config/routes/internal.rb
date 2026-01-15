@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# Note: Route helpers don't have `internal_` prefix
 scope path: :internal, module: :internal do
   resources :login, only: :create
   resources :email_otp, only: :create
@@ -14,10 +13,11 @@ scope path: :internal, module: :internal do
   resources :oauth, only: :create
   resource :current_user, only: :show
 
-  # GitHub OAuth routes for user-level connection
   resource :github, only: [], controller: "github" do
     get :oauth_url
+    get :app_installation_url
     post :callback
+    post :installation_callback
     delete :disconnect
     get :pr
     get :orgs
@@ -33,9 +33,7 @@ scope path: :internal, module: :internal do
 
   resources :roles, only: [:index, :show]
 
-  # Company portal routes
   resources :companies, only: [], module: :companies do
-    # Accessible by company administrator
     namespace :administrator do
       namespace :settings do
         resource :equity, only: [:show, :update], controller: "equity"
@@ -51,7 +49,6 @@ scope path: :internal, module: :internal do
     resource :switch, only: :create, controller: "switch"
     resource :leave, only: [:destroy], controller: "leave_company"
 
-    # GitHub organization management
     resource :github, only: [], controller: "github" do
       post :connect
       delete :disconnect

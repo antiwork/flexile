@@ -6,9 +6,9 @@ import Link from "next/link";
 import React, { useCallback, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/utils";
-import type { PRDetails } from "@/utils/github";
+import { getPRStateStyle, type PRDetails } from "@/utils/github";
 
-const LONG_PRESS_DURATION = 500; // ms
+const LONG_PRESS_DURATION = 500;
 
 export interface PaidInvoiceInfo {
   invoiceId: string;
@@ -17,21 +17,12 @@ export interface PaidInvoiceInfo {
 
 export interface GitHubPRHoverCardProps {
   pr: PRDetails;
-  /** The GitHub username of the current user (for verification) */
   currentUserGitHubUsername?: string | null | undefined;
-  /** List of invoices where this PR was previously paid */
   paidInvoices?: PaidInvoiceInfo[];
   children: React.ReactNode;
-  /** Whether to show the hover card (default true) */
   enabled?: boolean;
 }
 
-/**
- * Hover card that shows detailed PR information
- * - Open delay: 300ms
- * - Close delay: 150ms
- * - Max width: 360px
- */
 export function GitHubPRHoverCard({
   pr,
   currentUserGitHubUsername,
@@ -67,10 +58,11 @@ export function GitHubPRHoverCard({
     return children;
   }
 
-  const isMerged = pr.state === "merged";
   const isVerified = currentUserGitHubUsername
     ? pr.author.toLowerCase() === currentUserGitHubUsername.toLowerCase()
     : null;
+
+  const stateStyle = getPRStateStyle(pr.state);
 
   return (
     <HoverCardPrimitive.Root openDelay={300} closeDelay={150} open={open} onOpenChange={setOpen}>
@@ -96,12 +88,10 @@ export function GitHubPRHoverCard({
           align="start"
         >
           <div className="group grid cursor-pointer gap-3">
-            {/* Header: repo · author */}
             <div className="text-muted-foreground text-sm">
               {pr.repo} · {pr.author}
             </div>
 
-            {/* Title and PR number - clickable link, shows active state on card hover */}
             <div>
               <a href={pr.url} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
                 <span className="font-semibold group-hover:text-blue-600 group-hover:underline">{pr.title}</span>
@@ -109,20 +99,10 @@ export function GitHubPRHoverCard({
               </a>
             </div>
 
-            {/* Status badge */}
             <div>
-              {isMerged ? (
-                <Badge className="rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
-                  Merged
-                </Badge>
-              ) : (
-                <Badge className="rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                  Open
-                </Badge>
-              )}
+              <Badge className={stateStyle.badgeClassName}>{stateStyle.label}</Badge>
             </div>
 
-            {/* Verification status */}
             {isVerified !== null ? (
               <div className="flex items-center gap-1.5 text-sm">
                 {isVerified ? (
@@ -142,7 +122,6 @@ export function GitHubPRHoverCard({
               </div>
             ) : null}
 
-            {/* Paid status */}
             {paidInvoices.length > 0 ? (
               <div className="flex items-center gap-1.5 text-sm">
                 <BadgeDollarSign className="size-4 text-blue-600" />
