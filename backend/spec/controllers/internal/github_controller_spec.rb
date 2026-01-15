@@ -69,6 +69,11 @@ RSpec.describe Internal::GithubController do
 
     before do
       allow(GlobalConfig).to receive(:get).with("GH_APP_ID").and_return("123456")
+      Current.company = company
+    end
+
+    after do
+      Current.company = nil
     end
 
     it "returns a GitHub App installation URL" do
@@ -80,15 +85,12 @@ RSpec.describe Internal::GithubController do
       expect(json_response["url"]).to include("github.com/apps")
     end
 
-    it "returns error when user is not an administrator of any company" do
+    it "returns forbidden when user is not a company administrator" do
       company_administrator.destroy!
 
       get :app_installation_url
 
-      expect(response).to have_http_status(:unprocessable_entity)
-
-      json_response = response.parsed_body
-      expect(json_response["error"]).to eq("No company found where you are an administrator")
+      expect(response).to have_http_status(:forbidden)
     end
 
     context "when GitHub App is not configured" do
@@ -102,7 +104,7 @@ RSpec.describe Internal::GithubController do
         expect(response).to have_http_status(:service_unavailable)
 
         json_response = response.parsed_body
-        expect(json_response["error"]).to eq("GitHub App is not configured")
+        expect(json_response["error"]).to eq("GitHub integration is not configured")
       end
     end
 
@@ -361,20 +363,12 @@ RSpec.describe Internal::GithubController do
           headers: { "Content-Type" => "application/json" }
         )
 
-      stub_request(:get, "https://api.github.com/user/installations")
-        .to_return(
-          status: 200,
-          body: {
-            total_count: 1,
-            installations: [
-              {
-                id: installation_id.to_i,
-                account: { login: "test-org", id: 99999 },
-              },
-            ],
-          }.to_json,
-          headers: { "Content-Type" => "application/json" }
-        )
+      allow(GithubService).to receive(:fetch_installation).with(installation_id: installation_id).and_return(
+        {
+          id: installation_id.to_i,
+          account: { login: "test-org", id: 99999 },
+        }
+      )
 
       post :installation_callback, params: {
         installation_id: installation_id,
@@ -483,6 +477,36 @@ RSpec.describe Internal::GithubController do
 
       json_response = response.parsed_body
       expect(json_response["error"]).to include("not an administrator")
+    end
+
+    it "returns error when installation is not found" do
+      stub_request(:post, "https://github.com/login/oauth/access_token")
+        .to_return(
+          status: 200,
+          body: { access_token: "gho_test_token" }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      stub_request(:get, "https://api.github.com/user")
+        .to_return(
+          status: 200,
+          body: { id: 12345, login: "testuser" }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      allow(GithubService).to receive(:fetch_installation).with(installation_id: installation_id).and_return(nil)
+
+      post :installation_callback, params: {
+        installation_id: installation_id,
+        setup_action: "install",
+        state: state_token,
+        code: "test_oauth_code",
+      }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+
+      json_response = response.parsed_body
+      expect(json_response["error"]).to include("Could not find the GitHub App installation")
     end
   end
 end
