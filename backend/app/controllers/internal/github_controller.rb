@@ -135,19 +135,6 @@ class Internal::GithubController < Internal::BaseController
     end
   end
 
-  def orgs
-    authorize :github, :list_orgs?
-
-    access_token = Current.user.github_access_token
-
-    begin
-      organizations = GithubService.fetch_user_orgs(access_token: access_token)
-      render json: { orgs: organizations }
-    rescue GithubService::ApiError => e
-      render json: { error: e.message }, status: :unprocessable_entity
-    end
-  end
-
   def installation_callback
     installation_id = params[:installation_id]
     setup_action = params[:setup_action]

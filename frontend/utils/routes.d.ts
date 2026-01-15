@@ -2060,26 +2060,6 @@ export const oauth_url_github_path: ((
 
 /**
  * Generates rails route to
- * /internal/github/orgs(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const orgs_github_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
- * /internal/github/orgs(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const orgs_github_path: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /internal/github/pr(.:format)
  * @param {object | undefined} options
  * @returns {string} route path
