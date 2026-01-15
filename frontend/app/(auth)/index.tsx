@@ -217,7 +217,7 @@ export function AuthPage({
                   <Button
                     type="button"
                     variant="default"
-                    className="font-base mt-2 flex h-11 w-full items-center justify-center gap-2 bg-black text-white hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+                    className="font-base mt-4 flex h-11 w-full items-center justify-center gap-2 bg-black text-white hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
                     onClick={() => providerSignIn(SignInMethod.GitHub)}
                   >
                     <Image src={githubMark} alt="GitHub" width={20} height={20} className="invert dark:invert-0" />

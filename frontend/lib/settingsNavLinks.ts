@@ -26,7 +26,7 @@ export const settingsNavLinks = [
     label: "Account",
     route: "/settings/account" as const,
     icon: Fingerprint,
-    isVisible: () => true,
+    isVisible: (user: CurrentUser) => !user.roles.administrator,
     category: "personal",
   },
   {

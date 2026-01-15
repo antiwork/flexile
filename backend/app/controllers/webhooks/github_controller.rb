@@ -4,245 +4,135 @@ class Webhooks::GithubController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   PR_UPDATE_ACTIONS = %w[
-    opened
-    closed
-    reopened
-    edited
-    labeled
-    unlabeled
-    converted_to_draft
-    ready_for_review
-    synchronize
+    opened closed reopened edited labeled unlabeled
+    converted_to_draft ready_for_review
   ].freeze
 
-  ISSUE_UPDATE_ACTIONS = %w[
-    labeled
-    unlabeled
-  ].freeze
+  ISSUE_UPDATE_ACTIONS = %w[labeled unlabeled].freeze
 
   def create
-    payload = request.raw_post
-    signature = request.env["HTTP_X_HUB_SIGNATURE_256"]
+    return head :unauthorized unless verify_signature(request.raw_post, request.env["HTTP_X_HUB_SIGNATURE_256"])
+
+    event = JSON.parse(request.raw_post)
     event_type = request.env["HTTP_X_GITHUB_EVENT"]
 
-    unless verify_signature(payload, signature)
-      Rails.logger.warn "[GitHub Webhook] Invalid signature"
-      head :unauthorized
-      return
-    end
-
-    event = JSON.parse(payload)
-    Rails.logger.info "[GitHub Webhook] Received event: #{event_type}"
-
     case event_type
-    when "pull_request", "pull_request_target"
-      handle_pull_request_event(event)
-    when "issues"
-      handle_issue_event(event)
-    when "installation"
-      handle_installation_event(event)
-    when "ping"
-      Rails.logger.info "[GitHub Webhook] Ping received"
-    else
-      Rails.logger.debug "[GitHub Webhook] Ignoring event type: #{event_type}"
+    when "pull_request", "pull_request_target" then handle_pull_request_event(event)
+    when "issues" then handle_issue_event(event)
+    when "installation" then handle_installation_event(event)
     end
 
     head :ok
-  rescue JSON::ParserError => e
-    Rails.logger.error "[GitHub Webhook] Invalid JSON payload: #{e.message}"
+  rescue JSON::ParserError
     head :bad_request
-  rescue => e
-    Rails.logger.error "[GitHub Webhook] Error processing webhook: #{e.message}"
-    Rails.logger.error e.backtrace.first(10).join("\n")
+  rescue StandardError => e
+    Rails.logger.error "[GitHub Webhook] #{e.class}: #{e.message}"
     head :internal_server_error
   end
 
   private
     def verify_signature(payload, signature)
-      webhook_secret = GlobalConfig.get("GH_WEBHOOK_SECRET")
-
-      # If no secret configured, skip verification (development only)
-      if webhook_secret.blank?
-        Rails.logger.warn "[GitHub Webhook] No webhook secret configured, skipping verification"
-        return !Rails.env.production?
-      end
-
+      secret = GlobalConfig.get("GH_WEBHOOK_SECRET")
+      return !Rails.env.production? if secret.blank?
       return false if signature.blank?
 
-      expected_signature = "sha256=" + OpenSSL::HMAC.hexdigest(
-        OpenSSL::Digest.new("sha256"),
-        webhook_secret,
-        payload
-      )
-
-      ActiveSupport::SecurityUtils.secure_compare(expected_signature, signature)
+      expected = "sha256=#{OpenSSL::HMAC.hexdigest('sha256', secret, payload)}"
+      ActiveSupport::SecurityUtils.secure_compare(expected, signature)
     end
 
     def handle_pull_request_event(event)
-      action = event["action"]
       pr = event["pull_request"]
+      return unless pr
 
-      return unless pr.present?
-
+      action = event["action"]
       pr_url = pr["html_url"]
-      pr_number = pr["number"]
-      repo_full_name = event.dig("repository", "full_name")
 
-      Rails.logger.info "[GitHub Webhook] PR ##{pr_number} action: #{action} (#{repo_full_name})"
-
-      if action == "deleted"
-        handle_pr_deleted(pr_url, pr_number)
-        return
-      end
-
+      return clear_pr_data(pr_url) if action == "deleted"
       return unless PR_UPDATE_ACTIONS.include?(action)
 
-      body_changed = action == "edited" && event.dig("changes", "body").present?
-
-      update_line_items_for_pr(pr_url, pr_number, pr, repo_full_name, fetch_linked_issues: body_changed)
+      update_pr_line_items(
+        pr_url: pr_url,
+        pr: pr,
+        fetch_bounty: action == "edited" && event.dig("changes", "body").present?
+      )
     end
 
     def handle_issue_event(event)
-      action = event["action"]
-      return unless ISSUE_UPDATE_ACTIONS.include?(action)
+      return unless ISSUE_UPDATE_ACTIONS.include?(event["action"])
+      return unless event["issue"]
 
-      issue = event["issue"]
-      return unless issue.present?
-
-      issue_number = issue["number"]
-      repo_full_name = event.dig("repository", "full_name")
-
-      Rails.logger.info "[GitHub Webhook] Issue ##{issue_number} action: #{action} (#{repo_full_name})"
-
-      refresh_pr_bounties_for_repo(repo_full_name)
+      refresh_repo_bounties(event.dig("repository", "full_name"))
     end
 
     def handle_installation_event(event)
-      action = event["action"]
-      installation = event["installation"]
-      account = installation&.dig("account", "login")
+      return unless %w[deleted suspend].include?(event["action"])
 
-      Rails.logger.info "[GitHub Webhook] Installation #{action} for #{account}"
-
-      case action
-      when "deleted", "suspend"
-        company = Company.find_by(github_org_name: account)
-        if company.present?
-          company.update!(github_org_name: nil, github_org_id: nil)
-          Rails.logger.info "[GitHub Webhook] Cleared GitHub connection for company: #{company.name}"
-        end
-      end
+      account = event.dig("installation", "account", "login")
+      Company.where(github_org_name: account).update_all(github_org_name: nil, github_org_id: nil)
     end
 
-    def update_line_items_for_pr(pr_url, pr_number, pr, repo_full_name, fetch_linked_issues: false)
+    def update_pr_line_items(pr_url:, pr:, fetch_bounty: false)
       line_items = InvoiceLineItem.where(github_pr_url: pr_url)
+      return if line_items.none?
 
-      if line_items.empty?
-        Rails.logger.debug "[GitHub Webhook] No invoice line items found for PR: #{pr_url}"
-        return
-      end
+      bounty = GithubService.extract_bounty_from_labels(pr["labels"])
+      bounty = fetch_pr_bounty(pr_url) || bounty if bounty.nil? || fetch_bounty
 
-      pr_state = GithubService.pr_state(pr)
-      bounty_cents = GithubService.extract_bounty_from_labels(pr["labels"])
-
-      if bounty_cents.nil? || fetch_linked_issues
-        bounty_cents = fetch_bounty_for_line_item(pr_url) || bounty_cents
-      end
-
-      updated_count = 0
-      line_items.find_each do |line_item|
-        line_item.update!(
-          github_pr_title: pr["title"],
-          github_pr_state: pr_state,
-          github_pr_author: pr.dig("user", "login"),
-          github_pr_bounty_cents: bounty_cents
-        )
-        updated_count += 1
-      end
-
-      Rails.logger.info "[GitHub Webhook] Updated #{updated_count} invoice line items for PR ##{pr_number} (bounty: #{bounty_cents || 'none'})"
+      line_items.update_all(
+        github_pr_title: pr["title"],
+        github_pr_state: GithubService.pr_state(pr),
+        github_pr_author: pr.dig("user", "login"),
+        github_pr_bounty_cents: bounty
+      )
     end
 
-    def fetch_bounty_for_line_item(pr_url)
+    def fetch_pr_bounty(pr_url)
       line_item = InvoiceLineItem.where(github_pr_url: pr_url).includes(invoice: :company).first
-      return nil unless line_item
+      return unless line_item
 
-      company = line_item.invoice.company
-      return nil unless company&.github_org_name.present?
+      org_name = line_item.invoice.company&.github_org_name
+      return unless org_name
 
-      begin
-        pr_details = GithubService.fetch_pr_details_from_url_with_app(
-          org_name: company.github_org_name,
-          url: pr_url
-        )
-        pr_details&.dig(:bounty_cents)
-      rescue GithubService::ApiError => e
-        Rails.logger.warn "[GitHub Webhook] Failed to fetch bounty for #{pr_url}: #{e.message}"
-        nil
-      end
+      pr_details = GithubService.fetch_pr_details_from_url_with_app(org_name: org_name, url: pr_url)
+      pr_details&.dig(:bounty_cents)
+    rescue GithubService::ApiError
+      nil
     end
 
-    def handle_pr_deleted(pr_url, pr_number)
-      line_items = InvoiceLineItem.where(github_pr_url: pr_url)
-
-      if line_items.empty?
-        Rails.logger.debug "[GitHub Webhook] No invoice line items found for deleted PR: #{pr_url}"
-        return
-      end
-
-      updated_count = 0
-      line_items.find_each do |line_item|
-        line_item.update!(
-          github_pr_url: nil,
-          github_pr_number: nil,
-          github_pr_title: nil,
-          github_pr_state: nil,
-          github_pr_author: nil,
-          github_pr_repo: nil,
-          github_pr_bounty_cents: nil
-        )
-        updated_count += 1
-      end
-
-      Rails.logger.info "[GitHub Webhook] Cleared PR data from #{updated_count} invoice line items for deleted PR ##{pr_number}"
+    def clear_pr_data(pr_url)
+      InvoiceLineItem.where(github_pr_url: pr_url).update_all(
+        github_pr_url: nil,
+        github_pr_number: nil,
+        github_pr_title: nil,
+        github_pr_state: nil,
+        github_pr_author: nil,
+        github_pr_repo: nil,
+        github_pr_bounty_cents: nil
+      )
     end
 
-    def refresh_pr_bounties_for_repo(repo_full_name)
+    def refresh_repo_bounties(repo_name)
       line_items = InvoiceLineItem
-        .where(github_pr_repo: repo_full_name)
+        .where(github_pr_repo: repo_name)
         .where.not(github_pr_url: nil)
         .includes(invoice: :company)
 
-      return if line_items.empty?
+      return if line_items.none?
 
-      Rails.logger.info "[GitHub Webhook] Refreshing bounties for #{line_items.count} line items in #{repo_full_name}"
+      line_items.find_each do |item|
+        org_name = item.invoice.company&.github_org_name
+        next unless org_name
 
-      line_items.find_each do |line_item|
-        company = line_item.invoice.company
-        next unless company&.github_org_name.present?
+        pr = GithubService.fetch_pr_details_from_url_with_app(org_name: org_name, url: item.github_pr_url)
+        next unless pr && pr[:bounty_cents] != item.github_pr_bounty_cents
 
-        begin
-          pr_details = GithubService.fetch_pr_details_from_url_with_app(
-            org_name: company.github_org_name,
-            url: line_item.github_pr_url
-          )
-
-          if pr_details
-            old_bounty = line_item.github_pr_bounty_cents
-            new_bounty = pr_details[:bounty_cents]
-
-            if old_bounty != new_bounty
-              line_item.update!(
-                github_pr_bounty_cents: new_bounty,
-                github_pr_title: pr_details[:title],
-                github_pr_state: pr_details[:state]
-              )
-              Rails.logger.info "[GitHub Webhook] Updated bounty for PR ##{line_item.github_pr_number}: #{old_bounty} -> #{new_bounty}"
-            end
-          end
-        rescue GithubService::ApiError => e
-          Rails.logger.warn "[GitHub Webhook] Failed to refresh bounty for #{line_item.github_pr_url}: #{e.message}"
-        end
+        item.update!(
+          github_pr_bounty_cents: pr[:bounty_cents],
+          github_pr_title: pr[:title],
+          github_pr_state: pr[:state]
+        )
+      rescue GithubService::ApiError
+        next
       end
     end
 end

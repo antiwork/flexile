@@ -144,13 +144,11 @@ export const authOptions = {
       if (account.type !== "oauth" && !isTestEnv) return true;
 
       try {
-        // Build request body with email and optional GitHub info
         const requestBody: Record<string, string | undefined> = {
           email: user.email,
           token: env.API_SECRET_TOKEN,
         };
 
-        // If signing in with GitHub, include GitHub-specific info
         if (account.provider === "github" && profile) {
           const githubProfile = z.object({ id: z.number(), login: z.string() }).safeParse(profile);
           if (githubProfile.success) {

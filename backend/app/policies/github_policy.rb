@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class GithubPolicy < ApplicationPolicy
-  # User-level GitHub connection policies
   def connect?
     user.present?
   end
@@ -14,7 +13,6 @@ class GithubPolicy < ApplicationPolicy
     user.present?
   end
 
-  # Company-level GitHub organization management
   def manage_org?
     company_administrator?
   end

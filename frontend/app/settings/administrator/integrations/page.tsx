@@ -54,8 +54,6 @@ const GitHubIntegrationSection = () => {
     setIsLoadingConnect(true);
 
     try {
-      // Redirect directly to GitHub App installation
-      // GitHub will show organization selector and handle OAuth
       const response = await request({
         method: "GET",
         url: app_installation_url_github_path(),
@@ -68,7 +66,6 @@ const GitHubIntegrationSection = () => {
 
       const data = z.object({ url: z.string() }).parse(await response.json());
 
-      // Full page redirect to GitHub
       window.location.href = data.url;
     } catch (error) {
       setConnectError(error instanceof Error ? error.message : "Failed to connect GitHub");
@@ -167,7 +164,6 @@ const GitHubIntegrationSection = () => {
 
       {connectError ? <p className="text-destructive text-sm">{connectError}</p> : null}
 
-      {/* Disconnect Modal */}
       <AlertDialog open={isDisconnectModalOpen} onOpenChange={handleDisconnectModalOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>

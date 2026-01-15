@@ -10,7 +10,6 @@ import type { PRDetails, PRState } from "@/utils/github";
 
 const LONG_PRESS_DURATION = 500;
 
-// Use explicit classes so Tailwind doesn't purge them
 const PR_STATE_BADGES: Record<PRState, { className: string; label: string }> = {
   merged: {
     className: "rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",

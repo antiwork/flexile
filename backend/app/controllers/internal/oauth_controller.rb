@@ -52,7 +52,6 @@ class Internal::OauthController < Internal::BaseController
     end
 
     def update_github_info(user)
-      # Only update if user doesn't have GitHub connected, or if the same GitHub account
       return if user.github_uid.present? && user.github_uid != params[:github_uid]
 
       user.update!(github_attributes)

@@ -33,7 +33,6 @@ function GitHubCallbackContent() {
 
     const exchangeCode = async () => {
       try {
-        // First, exchange OAuth code for user authentication
         const response = await request({
           method: "POST",
           url: callback_github_path(),
@@ -46,9 +45,7 @@ function GitHubCallbackContent() {
           throw new Error(errorData.data?.error ?? "Failed to connect GitHub account");
         }
 
-        // If this is a GitHub App installation (has installation_id)
         if (installationId && setupAction === "install") {
-          // Process the installation
           const installResponse = await request({
             method: "POST",
             url: installation_callback_github_path(),
@@ -64,7 +61,6 @@ function GitHubCallbackContent() {
 
         setStatus("success");
 
-        // Notify opener window and close if this was opened as a popup
         if (window.opener) {
           try {
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- window.opener is not typed correctly
@@ -72,10 +68,8 @@ function GitHubCallbackContent() {
           } catch {
             // Cross-origin access may fail, but that's ok
           }
-          // Small delay before closing to ensure message is sent
           setTimeout(() => window.close(), 100);
         } else if (installationId) {
-          // If installation and not a popup, redirect to integrations
           setTimeout(() => {
             window.location.href = "/settings/administrator/integrations";
           }, 1000);

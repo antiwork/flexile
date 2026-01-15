@@ -49,7 +49,6 @@ function GitHubInstallationContent() {
           throw new Error(errorMsg);
         }
 
-        // Validate response structure
         z.object({
           success: z.boolean(),
           installation_id: z.string(),
@@ -58,7 +57,6 @@ function GitHubInstallationContent() {
           org_name: z.string().optional(),
         }).parse(responseBody);
 
-        // GitHub App installation successful
         setStatus("success");
         setTimeout(() => {
           window.location.href = "/settings/administrator/integrations";

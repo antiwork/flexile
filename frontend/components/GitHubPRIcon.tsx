@@ -11,7 +11,6 @@ const PR_STATE_ICONS: Record<PRState, React.ComponentType<{ className?: string }
   open: GitPullRequest,
 };
 
-// Use explicit classes so Tailwind doesn't purge them
 const PR_STATE_COLORS: Record<PRState, string> = {
   merged: "text-purple-500",
   closed: "text-red-500",

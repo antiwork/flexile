@@ -353,20 +353,17 @@ export default function InvoicePage() {
                             }
                           : null;
 
-                        // Check if author is verified (matches invoice contractor's GitHub)
                         const contractorGithubUsername = invoice.contractor.user.githubUsername;
                         const isVerified =
                           hasPR && contractorGithubUsername
                             ? prDetails?.author.toLowerCase() === contractorGithubUsername.toLowerCase()
                             : null;
 
-                        // Get paid invoices for this PR
                         const paidInvoices = lineItem.paidInvoices.map((inv) => ({
                           invoiceId: inv.invoiceId,
                           invoiceNumber: inv.invoiceNumber,
                         }));
 
-                        // Show status dot if unverified OR paid before (only for admins, and not on paid invoices)
                         const showStatusDot =
                           user.roles.administrator &&
                           hasPR &&

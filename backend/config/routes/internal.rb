@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Note: Route helpers don't have `internal_` prefix
 scope path: :internal, module: :internal do
   resources :login, only: :create
   resources :email_otp, only: :create
@@ -32,7 +33,9 @@ scope path: :internal, module: :internal do
 
   resources :roles, only: [:index, :show]
 
+  # Company portal routes
   resources :companies, only: [], module: :companies do
+    # Accessible by company administrator
     namespace :administrator do
       namespace :settings do
         resource :equity, only: [:show, :update], controller: "equity"

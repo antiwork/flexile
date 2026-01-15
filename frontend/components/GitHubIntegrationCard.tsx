@@ -88,7 +88,6 @@ export function GitHubIntegrationCard({
 
     const data = z.object({ url: z.string() }).parse(await response.json());
 
-    // Open popup for OAuth
     const width = 600;
     const height = 700;
     const left = window.screenX + (window.outerWidth - width) / 2;
@@ -100,7 +99,6 @@ export function GitHubIntegrationCard({
       `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`,
     );
 
-    // Listen for OAuth completion
     const handleMessage = (event: MessageEvent<unknown>) => {
       const messageData = event.data;
       if (
@@ -117,7 +115,6 @@ export function GitHubIntegrationCard({
 
     window.addEventListener("message", handleMessage);
 
-    // Poll for popup close (in case user closes it manually)
     const pollTimer = setInterval(() => {
       if (popup?.closed) {
         clearInterval(pollTimer);

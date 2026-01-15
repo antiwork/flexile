@@ -87,7 +87,6 @@ const dataSchema = z.object({
         quantity: z.string().nullable(),
         hourly: z.boolean(),
         pay_rate_in_subunits: z.number(),
-        // GitHub PR fields (returned from backend for saved invoices)
         github_pr_url: z.string().nullable().optional(),
         github_pr_number: z.number().nullable().optional(),
         github_pr_title: z.string().nullable().optional(),
@@ -124,7 +123,6 @@ type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & {
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
 type InvoiceFormDocument = Data["invoice"]["attachment"] & { errors?: string[] | null; blob?: File | null };
 
-// Fetches and displays PR details for a line item (display only - backend handles storage)
 const PRLineItemCell = ({
   description,
   storedPRData,
@@ -159,7 +157,6 @@ const PRLineItemCell = ({
   const isCompanyOrgPR =
     parsedPR && companyGithubOrg && parsedPR.owner.toLowerCase() === companyGithubOrg.toLowerCase();
 
-  // Only fetch PR details for company org PRs when user is connected
   const shouldFetch = Boolean(hasPRUrl && isCompanyOrgPR && githubUsername && !storedPRData.url);
 
   const {
@@ -185,12 +182,9 @@ const PRLineItemCell = ({
       return data.pr;
     },
     enabled: shouldFetch,
-    staleTime: Infinity, // Successful data never goes stale
-    retry: 2, // Retry failed requests up to 2 times
-    retryDelay: 1000, // Wait 1 second between retries
+    staleTime: Infinity,
   });
 
-  // Use fetched data, or fall back to stored data from backend
   const displayPR: PRDetails | null =
     prDetails ??
     (storedPRData.url
@@ -205,8 +199,7 @@ const PRLineItemCell = ({
         }
       : null);
 
-  // Show prettified view ONLY when we have PR data to display and not editing
-  if (!isEditing && displayPR) {
+  if (!isEditing && displayPR && hasPRUrl) {
     return (
       <GitHubPRLineItem
         pr={displayPR}
@@ -219,7 +212,6 @@ const PRLineItemCell = ({
     );
   }
 
-  // Default: show input field with optional loading spinner or retry button
   return (
     <div className="relative flex items-center">
       <Input
@@ -229,11 +221,10 @@ const PRLineItemCell = ({
         onChange={(e) => onChange(e.target.value)}
         onFocus={onEdit}
         onBlur={onBlur}
-        className={isFetching || error ? "pr-20" : ""}
+        className={isFetching ? "pr-8" : error ? "pr-20" : ""}
       />
-      {/* Delay showing spinner by 300ms to avoid flicker on fast requests */}
       {isFetching ? (
-        <span className="animate-in fade-in absolute right-2 opacity-0 [animation-delay:300ms] [animation-fill-mode:forwards]">
+        <span className="animate-in fade-in absolute right-2 [animation-delay:300ms] [animation-fill-mode:forwards]">
           <Loader2 className="text-muted-foreground size-4 animate-spin" />
         </span>
       ) : null}
@@ -310,10 +301,8 @@ const Edit = () => {
   const showExpensesTable = showExpenses || expenses.size > 0;
   const actionColumnClass = "w-12";
 
-  // GitHub PR integration state
   const [editingLineItemIndex, setEditingLineItemIndex] = useState<number | null>(null);
 
-  // Check if any PR URLs belong to the company's configured GitHub org
   const hasCompanyOrgPRUrls = company.githubOrgName
     ? lineItems.some((item) => {
         const parsed = parseGitHubPRUrl(item.description);
@@ -321,10 +310,8 @@ const Edit = () => {
       })
     : false;
 
-  // Only show connect alert if user has PR URLs from company's org but no GitHub connection
   const showGitHubConnectAlert = hasCompanyOrgPRUrls && !user.githubUsername;
 
-  // Handle GitHub OAuth connection via popup
   const handleConnectGitHub = useCallback(async () => {
     const response = await request({
       method: "GET",
@@ -358,7 +345,6 @@ const Edit = () => {
         popup?.close();
         window.removeEventListener("message", handleMessage);
         toast.success("GitHub successfully connected.");
-        // Invalidate queries to refetch user data and trigger PR detail fetching
         void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
         void queryClient.invalidateQueries({ queryKey: ["pr-details"] });
       }
@@ -399,7 +385,6 @@ const Edit = () => {
         formData.append("invoice_line_items[][quantity]", lineItem.quantity.toString());
         formData.append("invoice_line_items[][hourly]", lineItem.hourly.toString());
         formData.append("invoice_line_items[][pay_rate_in_subunits]", lineItem.pay_rate_in_subunits.toString());
-        // Note: github_pr_* fields are NOT submitted - backend fetches them
       }
       for (const expense of expenses) {
         if (expense.id) {
