@@ -300,12 +300,10 @@ class Internal::GithubController < Internal::BaseController
 
   private
     def github_callback_url
-      # This should be configured to point to the frontend callback handler
       "#{request.base_url}/github/callback"
     end
 
     def github_installation_callback_url
-      # This should point to the frontend installation callback page
       "#{request.base_url}/github/installation"
     end
 end

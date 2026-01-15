@@ -19,6 +19,8 @@ class GithubService
   OAUTH_STATE_EXPIRATION = 30.minutes
 
   BOUNTY_PATTERNS = [
+    /\$(\d+(?:\.\d+)?)\s*k/i,                  # $3K, $3.5K, $3k
+    /\$(\d+(?:\.\d+)?)\s*m/i,                  # $1M, $1.5M, $1m
     /\$(\d+(?:,\d{3})*(?:\.\d{2})?)/,          # $100, $1,000, $100.00
     /bounty[:\-_\s]*(\d+(?:,\d{3})*)/i,        # bounty:100, bounty-100, bounty_100, bounty 100
     /(\d+(?:,\d{3})*)\s*(?:usd|dollars?)/i,    # 100 USD, 100 dollars

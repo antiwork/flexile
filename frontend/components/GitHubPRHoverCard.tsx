@@ -6,9 +6,29 @@ import Link from "next/link";
 import React, { useCallback, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/utils";
-import { getPRStateStyle, type PRDetails } from "@/utils/github";
+import type { PRDetails, PRState } from "@/utils/github";
 
 const LONG_PRESS_DURATION = 500;
+
+// Use explicit classes so Tailwind doesn't purge them
+const PR_STATE_BADGES: Record<PRState, { className: string; label: string }> = {
+  merged: {
+    className: "rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+    label: "Merged",
+  },
+  closed: {
+    className: "rounded-full bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+    label: "Closed",
+  },
+  draft: {
+    className: "rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+    label: "Draft",
+  },
+  open: {
+    className: "rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+    label: "Open",
+  },
+};
 
 export interface PaidInvoiceInfo {
   invoiceId: string;
@@ -62,7 +82,7 @@ export function GitHubPRHoverCard({
     ? pr.author.toLowerCase() === currentUserGitHubUsername.toLowerCase()
     : null;
 
-  const stateStyle = getPRStateStyle(pr.state);
+  const badgeStyle = PR_STATE_BADGES[pr.state];
 
   return (
     <HoverCardPrimitive.Root openDelay={300} closeDelay={150} open={open} onOpenChange={setOpen}>
@@ -100,7 +120,7 @@ export function GitHubPRHoverCard({
             </div>
 
             <div>
-              <Badge className={stateStyle.badgeClassName}>{stateStyle.label}</Badge>
+              <Badge className={badgeStyle.className}>{badgeStyle.label}</Badge>
             </div>
 
             {isVerified !== null ? (
