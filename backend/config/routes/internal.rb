@@ -50,7 +50,6 @@ scope path: :internal, module: :internal do
     resource :leave, only: [:destroy], controller: "leave_company"
 
     resource :github, only: [], controller: "github" do
-      post :connect
       delete :disconnect
     end
 

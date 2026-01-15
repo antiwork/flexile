@@ -13,10 +13,12 @@ class GithubService
   ORG_SCOPES = "read:user user:email read:org"
 
   JWT_EXPIRATION = 10.minutes
+  API_VERSION = "2022-11-28"
+  GITHUB_ACCEPT_HEADER = "application/vnd.github+json"
+
+  OAUTH_STATE_EXPIRATION = 30.minutes
 
   BOUNTY_PATTERNS = [
-    /\$(\d+(?:\.\d+)?)\s*k/i,                  # $3K, $3.5K, $3k
-    /\$(\d+(?:\.\d+)?)\s*m/i,                  # $1M, $1.5M, $1m
     /\$(\d+(?:,\d{3})*(?:\.\d{2})?)/,          # $100, $1,000, $100.00
     /bounty[:\-_\s]*(\d+(?:,\d{3})*)/i,        # bounty:100, bounty-100, bounty_100, bounty 100
     /(\d+(?:,\d{3})*)\s*(?:usd|dollars?)/i,    # 100 USD, 100 dollars
@@ -266,11 +268,10 @@ class GithubService
           return (amount * 100).to_i
         end
 
-        # Check other patterns
+        # Check standard patterns
         BOUNTY_PATTERNS.each do |pattern|
           match = label_name.match(pattern)
           if match
-            # Remove commas and convert to cents
             amount = match[1].delete(",").to_f
             return (amount * 100).to_i
           end
@@ -312,11 +313,7 @@ class GithubService
 
       response = HTTParty.post(
         "https://api.github.com/app/installations/#{installation_id}/access_tokens",
-        headers: {
-          "Authorization" => "Bearer #{jwt}",
-          "Accept" => "application/vnd.github+json",
-          "X-GitHub-Api-Version" => "2022-11-28",
-        },
+        headers: github_app_headers(jwt),
       )
 
       unless response.success?
@@ -335,11 +332,7 @@ class GithubService
 
       response = HTTParty.get(
         "https://api.github.com/app/installations/#{installation_id}",
-        headers: {
-          "Authorization" => "Bearer #{jwt}",
-          "Accept" => "application/vnd.github+json",
-          "X-GitHub-Api-Version" => "2022-11-28",
-        },
+        headers: github_app_headers(jwt),
       )
 
       unless response.success?
@@ -370,11 +363,7 @@ class GithubService
 
       response = HTTParty.delete(
         "https://api.github.com/app/installations/#{installation_id}",
-        headers: {
-          "Authorization" => "Bearer #{jwt}",
-          "Accept" => "application/vnd.github+json",
-          "X-GitHub-Api-Version" => "2022-11-28",
-        },
+        headers: github_app_headers(jwt),
       )
 
       if response.code == 204
@@ -395,11 +384,7 @@ class GithubService
 
       response = HTTParty.get(
         "https://api.github.com/app/installations",
-        headers: {
-          "Authorization" => "Bearer #{jwt}",
-          "Accept" => "application/vnd.github+json",
-          "X-GitHub-Api-Version" => "2022-11-28",
-        },
+        headers: github_app_headers(jwt),
       )
 
       unless response.success?
@@ -470,7 +455,48 @@ class GithubService
       end
     end
 
+    # Generate a signed state token for OAuth/installation flows
+    def generate_state_token(**params)
+      random_token = SecureRandom.hex(16)
+      timestamp = Time.current.to_i
+      state_data = ([random_token] + params.values.map(&:to_s) + [timestamp]).join(":")
+      signature = OpenSSL::HMAC.hexdigest("SHA256", Rails.application.secret_key_base, state_data)
+      "#{state_data}:#{signature}"
+    end
+
+    # Verify a state token and return the embedded parameters
+    # Returns nil if invalid or expired
+    def verify_state_token(state, *expected_keys)
+      return nil if state.blank?
+
+      parts = state.split(":")
+      expected_parts_count = 2 + expected_keys.length + 1 # random + params + timestamp + signature
+      return nil if parts.length != expected_parts_count
+
+      signature = parts.pop
+      timestamp_str = parts.pop
+      params_values = parts[1..] # Skip random token
+
+      state_data = (parts + [timestamp_str]).join(":")
+      expected_signature = OpenSSL::HMAC.hexdigest("SHA256", Rails.application.secret_key_base, state_data)
+
+      return nil unless ActiveSupport::SecurityUtils.secure_compare(signature, expected_signature)
+
+      timestamp = timestamp_str.to_i
+      return nil if Time.current.to_i - timestamp > OAUTH_STATE_EXPIRATION.to_i
+
+      expected_keys.zip(params_values).to_h
+    end
+
     private
+      def github_app_headers(jwt)
+        {
+          "Authorization" => "Bearer #{jwt}",
+          "Accept" => GITHUB_ACCEPT_HEADER,
+          "X-GitHub-Api-Version" => API_VERSION,
+        }
+      end
+
       def app_id
         GlobalConfig.get("GH_APP_ID")
       end
@@ -500,7 +526,7 @@ class GithubService
         headers = {
           "Authorization" => "Bearer #{access_token}",
           "Accept" => "application/vnd.github.v3+json",
-          "X-GitHub-Api-Version" => "2022-11-28",
+          "X-GitHub-Api-Version" => API_VERSION,
         }
 
         response = case method

@@ -143,11 +143,10 @@ class Webhooks::GithubController < ApplicationController
       end
 
       pr_state = GithubService.pr_state(pr)
-
       bounty_cents = GithubService.extract_bounty_from_labels(pr["labels"])
 
       if bounty_cents.nil? || fetch_linked_issues
-        bounty_cents = fetch_bounty_from_linked_issues(pr_url, repo_full_name, pr["body"]) || bounty_cents
+        bounty_cents = fetch_bounty_for_line_item(pr_url) || bounty_cents
       end
 
       updated_count = 0
@@ -164,7 +163,7 @@ class Webhooks::GithubController < ApplicationController
       Rails.logger.info "[GitHub Webhook] Updated #{updated_count} invoice line items for PR ##{pr_number} (bounty: #{bounty_cents || 'none'})"
     end
 
-    def fetch_bounty_from_linked_issues(pr_url, repo_full_name, pr_body)
+    def fetch_bounty_for_line_item(pr_url)
       line_item = InvoiceLineItem.where(github_pr_url: pr_url).includes(invoice: :company).first
       return nil unless line_item
 
@@ -178,7 +177,7 @@ class Webhooks::GithubController < ApplicationController
         )
         pr_details&.dig(:bounty_cents)
       rescue GithubService::ApiError => e
-        Rails.logger.warn "[GitHub Webhook] Failed to fetch linked issues bounty for #{pr_url}: #{e.message}"
+        Rails.logger.warn "[GitHub Webhook] Failed to fetch bounty for #{pr_url}: #{e.message}"
         nil
       end
     end
@@ -212,12 +211,13 @@ class Webhooks::GithubController < ApplicationController
       line_items = InvoiceLineItem
         .where(github_pr_repo: repo_full_name)
         .where.not(github_pr_url: nil)
+        .includes(invoice: :company)
 
       return if line_items.empty?
 
       Rails.logger.info "[GitHub Webhook] Refreshing bounties for #{line_items.count} line items in #{repo_full_name}"
 
-      line_items.includes(invoice: :company).find_each do |line_item|
+      line_items.find_each do |line_item|
         company = line_item.invoice.company
         next unless company&.github_org_name.present?
 

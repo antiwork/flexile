@@ -1,12 +1,11 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { z } from "zod";
+import { GitHubIntegrationCard } from "@/components/GitHubIntegrationCard";
 import { MutationStatusButton } from "@/components/MutationButton";
 import {
   AlertDialog,
@@ -21,17 +20,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useCurrentCompany, useCurrentUser, useUserStore } from "@/global";
 import defaultLogo from "@/images/default-company-logo.svg";
-import githubMark from "@/images/github-mark.svg";
 import { request } from "@/utils/request";
-import { disconnect_github_path, oauth_url_github_path, unimpersonate_admin_users_path } from "@/utils/routes";
+import { disconnect_github_path, unimpersonate_admin_users_path } from "@/utils/routes";
 
 export default function AccountPage() {
   return (
@@ -48,164 +40,26 @@ export default function AccountPage() {
 
 const GitHubIntegrationSection = () => {
   const user = useCurrentUser();
-  const queryClient = useQueryClient();
-  const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const disconnectMutation = useMutation({
-    mutationFn: async () => {
-      const response = await request({
-        method: "DELETE",
-        url: disconnect_github_path(),
-        accept: "json",
-      });
-
-      if (!response.ok) {
-        const errorData = z.object({ error: z.string().optional() }).safeParse(await response.json());
-        throw new Error(errorData.data?.error ?? "Failed to disconnect GitHub");
-      }
-    },
-    onSuccess: () => {
-      setIsDisconnectModalOpen(false);
-      void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-    },
-  });
-
-  const handleDisconnectModalOpenChange = (open: boolean) => {
-    if (!open) {
-      disconnectMutation.reset();
-    }
-    setIsDisconnectModalOpen(open);
-  };
-
-  const handleConnect = useCallback(async () => {
-    // Get the OAuth URL from the backend
-    const response = await request({
-      method: "GET",
-      url: oauth_url_github_path(),
-      accept: "json",
-    });
-
-    if (!response.ok) {
-      return;
-    }
-
-    const data = z.object({ url: z.string() }).parse(await response.json());
-
-    // Open popup for OAuth
-    const width = 600;
-    const height = 700;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-
-    const popup = window.open(
-      data.url,
-      "github-oauth",
-      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`,
-    );
-
-    // Listen for OAuth completion
-    const handleMessage = (event: MessageEvent<unknown>) => {
-      const messageData = event.data;
-      if (
-        typeof messageData === "object" &&
-        messageData !== null &&
-        "type" in messageData &&
-        messageData.type === "github-oauth-success"
-      ) {
-        void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-        popup?.close();
-        window.removeEventListener("message", handleMessage);
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    // Poll for popup close (in case user closes it manually)
-    const pollTimer = setInterval(() => {
-      if (popup?.closed) {
-        clearInterval(pollTimer);
-        window.removeEventListener("message", handleMessage);
-      }
-    }, 500);
-  }, [queryClient]);
+  const description = user.githubUsername
+    ? user.roles.administrator
+      ? "Your GitHub account is connected for sign-in."
+      : "Your account is linked for verifying pull requests and bounties."
+    : user.roles.administrator
+      ? "Connect your GitHub account to use it for sign-in."
+      : "Link your GitHub account to verify ownership of your work.";
 
   return (
-    <>
-      <div className="grid gap-4">
-        <h3 className="mt-4 font-medium">Integrations</h3>
-        <Card>
-          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <Image src={githubMark} alt="GitHub" width={32} height={32} className="dark:invert" />
-              <div className="flex flex-col">
-                <span className="font-medium">GitHub</span>
-                <span className="text-muted-foreground text-sm">
-                  {user.githubUsername
-                    ? user.roles.administrator
-                      ? "Your GitHub account is connected for sign-in."
-                      : "Your account is linked for verifying pull requests and bounties."
-                    : user.roles.administrator
-                      ? "Connect your GitHub account to use it for sign-in."
-                      : "Link your GitHub account to verify ownership of your work."}
-                </span>
-              </div>
-            </div>
-            {user.githubUsername ? (
-              <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full gap-2 sm:w-auto">
-                    <span className="size-2 rounded-full bg-green-500" />
-                    {user.githubUsername}
-                    <ChevronDown className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    className="hover:text-destructive focus:text-destructive"
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      setIsDisconnectModalOpen(true);
-                    }}
-                  >
-                    Disconnect
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button variant="outline" className="w-full sm:w-auto" onClick={() => void handleConnect()}>
-                Connect
-              </Button>
-            )}
-          </CardHeader>
-        </Card>
-      </div>
-
-      <AlertDialog open={isDisconnectModalOpen} onOpenChange={handleDisconnectModalOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Disconnect GitHub account?</AlertDialogTitle>
-            <AlertDialogDescription>Disconnecting stops us from verifying your GitHub work.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <MutationStatusButton
-                idleVariant="critical"
-                mutation={disconnectMutation}
-                onClick={(e) => {
-                  e.preventDefault();
-                  disconnectMutation.mutate();
-                }}
-                loadingText="Disconnecting..."
-              >
-                Disconnect
-              </MutationStatusButton>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    <div className="grid gap-4">
+      <h3 className="mt-4 font-medium">Integrations</h3>
+      <GitHubIntegrationCard
+        connectedIdentifier={user.githubUsername}
+        description={description}
+        disconnectEndpoint={disconnect_github_path()}
+        disconnectModalTitle="Disconnect GitHub account?"
+        disconnectModalDescription="Disconnecting stops us from verifying your GitHub work."
+      />
+    </div>
   );
 };
 

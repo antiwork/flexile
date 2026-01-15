@@ -3,13 +3,13 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GitHubStatusCard, type GitHubStatusType } from "@/components/GitHubStatusCard";
 import { request } from "@/utils/request";
 import { callback_github_path, installation_callback_github_path } from "@/utils/routes";
 
 function GitHubCallbackContent() {
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<GitHubStatusType>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -89,47 +89,13 @@ function GitHubCallbackContent() {
     void exchangeCode();
   }, [searchParams]);
 
-  return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>
-          {status === "loading" && "Connecting GitHub..."}
-          {status === "success" && "GitHub Connected!"}
-          {status === "error" && "Connection Failed"}
-        </CardTitle>
-        <CardDescription>
-          {status === "loading" && "Please wait while we connect your GitHub account."}
-          {status === "success" &&
-            "Your GitHub account has been connected. This window will close automatically, or you may close it manually."}
-          {status === "error" && errorMessage}
-        </CardDescription>
-      </CardHeader>
-      {(status === "error" || status === "success") && (
-        <CardContent>
-          <button onClick={() => window.close()} className="text-primary text-sm underline hover:no-underline">
-            Close this window
-          </button>
-        </CardContent>
-      )}
-    </Card>
-  );
-}
-
-function GitHubCallbackLoading() {
-  return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Connecting GitHub...</CardTitle>
-        <CardDescription>Please wait while we connect your GitHub account.</CardDescription>
-      </CardHeader>
-    </Card>
-  );
+  return <GitHubStatusCard status={status} errorMessage={errorMessage} />;
 }
 
 export default function GitHubCallbackPage() {
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <Suspense fallback={<GitHubCallbackLoading />}>
+      <Suspense fallback={<GitHubStatusCard status="loading" />}>
         <GitHubCallbackContent />
       </Suspense>
     </div>

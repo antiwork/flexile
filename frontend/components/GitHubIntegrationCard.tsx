@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import React, { useCallback, useState } from "react";
 import { z } from "zod";
@@ -24,85 +24,103 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useCurrentCompany } from "@/global";
 import githubMark from "@/images/github-mark.svg";
 import { request } from "@/utils/request";
-import { app_installation_url_github_path, disconnect_company_github_path } from "@/utils/routes";
+import { oauth_url_github_path } from "@/utils/routes";
 
-export default function IntegrationsPage() {
-  return (
-    <div className="grid gap-8">
-      <hgroup>
-        <h2 className="mb-1 text-3xl font-bold">Integrations</h2>
-        <p className="text-muted-foreground text-base">Connect Flexile to your company's favorite tools.</p>
-      </hgroup>
-      <GitHubIntegrationSection />
-    </div>
-  );
+interface GitHubIntegrationCardProps {
+  connectedIdentifier?: string | null;
+  description: string;
+  disconnectEndpoint: string;
+  disconnectModalTitle: string;
+  disconnectModalDescription: string;
+  onDisconnectSuccess?: () => void;
 }
 
-const GitHubIntegrationSection = () => {
-  const company = useCurrentCompany();
+export function GitHubIntegrationCard({
+  connectedIdentifier,
+  description,
+  disconnectEndpoint,
+  disconnectModalTitle,
+  disconnectModalDescription,
+  onDisconnectSuccess,
+}: GitHubIntegrationCardProps) {
   const queryClient = useQueryClient();
   const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isLoadingConnect, setIsLoadingConnect] = useState(false);
-  const [connectError, setConnectError] = useState<string | null>(null);
-
-  const handleConnect = useCallback(async () => {
-    setConnectError(null);
-    setIsLoadingConnect(true);
-
-    try {
-      // Redirect directly to GitHub App installation
-      // GitHub will show organization selector and handle OAuth
-      const response = await request({
-        method: "GET",
-        url: app_installation_url_github_path(),
-        accept: "json",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get GitHub App installation URL");
-      }
-
-      const data = z.object({ url: z.string() }).parse(await response.json());
-
-      // Full page redirect to GitHub
-      window.location.href = data.url;
-    } catch (error) {
-      setConnectError(error instanceof Error ? error.message : "Failed to connect GitHub");
-      setIsLoadingConnect(false);
-    }
-  }, []);
 
   const disconnectMutation = useMutation({
     mutationFn: async () => {
       const response = await request({
         method: "DELETE",
-        url: disconnect_company_github_path(company.id),
+        url: disconnectEndpoint,
         accept: "json",
       });
 
       if (!response.ok) {
         const errorData = z.object({ error: z.string().optional() }).safeParse(await response.json());
-        throw new Error(errorData.data?.error ?? "Failed to disconnect GitHub organization");
+        throw new Error(errorData.data?.error ?? "Failed to disconnect GitHub");
       }
 
-      const data = z
-        .object({
-          success: z.boolean(),
-          app_uninstalled: z.boolean().optional(),
-        })
-        .parse(await response.json());
-
-      return data;
+      return response.json();
     },
     onSuccess: () => {
       setIsDisconnectModalOpen(false);
       void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      onDisconnectSuccess?.();
     },
   });
+
+  const handleConnect = useCallback(async () => {
+    const response = await request({
+      method: "GET",
+      url: oauth_url_github_path(),
+      accept: "json",
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const data = z.object({ url: z.string() }).parse(await response.json());
+
+    // Open popup for OAuth
+    const width = 600;
+    const height = 700;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+
+    const popup = window.open(
+      data.url,
+      "github-oauth",
+      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`,
+    );
+
+    // Listen for OAuth completion
+    const handleMessage = (event: MessageEvent<unknown>) => {
+      const messageData = event.data;
+      if (
+        typeof messageData === "object" &&
+        messageData !== null &&
+        "type" in messageData &&
+        messageData.type === "github-oauth-success"
+      ) {
+        void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+        popup?.close();
+        window.removeEventListener("message", handleMessage);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    // Poll for popup close (in case user closes it manually)
+    const pollTimer = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(pollTimer);
+        window.removeEventListener("message", handleMessage);
+      }
+    }, 500);
+  }, [queryClient]);
 
   const handleDisconnectModalOpenChange = (open: boolean) => {
     if (!open) {
@@ -119,17 +137,15 @@ const GitHubIntegrationSection = () => {
             <Image src={githubMark} alt="GitHub" width={32} height={32} className="dark:invert" />
             <div className="flex flex-col">
               <span className="font-medium">GitHub</span>
-              <span className="text-muted-foreground text-sm">
-                Automatically verify contractor pull requests and bounty claims.
-              </span>
+              <span className="text-muted-foreground text-sm">{description}</span>
             </div>
           </div>
-          {company.githubOrgName ? (
+          {connectedIdentifier ? (
             <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full gap-2 sm:w-auto">
                   <span className="size-2 rounded-full bg-green-500" />
-                  {company.githubOrgName}
+                  {connectedIdentifier}
                   <ChevronDown className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -146,36 +162,18 @@ const GitHubIntegrationSection = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto"
-              onClick={() => void handleConnect()}
-              disabled={isLoadingConnect}
-            >
-              {isLoadingConnect ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                "Connect"
-              )}
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => void handleConnect()}>
+              Connect
             </Button>
           )}
         </CardHeader>
       </Card>
 
-      {connectError ? <p className="text-destructive text-sm">{connectError}</p> : null}
-
-      {/* Disconnect Modal */}
       <AlertDialog open={isDisconnectModalOpen} onOpenChange={handleDisconnectModalOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Disconnect GitHub organization?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will disconnect {company.githubOrgName} from Flexile and uninstall the GitHub App from the
-              organization. Contractors will no longer be able to verify Pull Request ownership.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{disconnectModalTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{disconnectModalDescription}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -197,4 +195,4 @@ const GitHubIntegrationSection = () => {
       </AlertDialog>
     </>
   );
-};
+}

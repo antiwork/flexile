@@ -1,28 +1,6 @@
 # frozen_string_literal: true
 
 class Internal::Companies::GithubController < Internal::Companies::BaseController
-  def connect
-    authorize :github, :manage_org?
-
-    github_org_name = params[:github_org_name]
-    github_org_id = params[:github_org_id]
-
-    if github_org_name.blank?
-      render json: { error: "GitHub organization name is required" }, status: :bad_request
-      return
-    end
-
-    Current.company.update!(
-      github_org_name: github_org_name,
-      github_org_id: github_org_id
-    )
-
-    render json: {
-      success: true,
-      github_org_name: github_org_name,
-    }
-  end
-
   def disconnect
     authorize :github, :manage_org?
 
