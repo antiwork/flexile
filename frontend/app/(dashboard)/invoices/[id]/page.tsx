@@ -386,7 +386,12 @@ export default function InvoicePage() {
                                     className="flex items-center gap-2 hover:underline"
                                   >
                                     <GitHubPRIcon state={prDetails.state} />
-                                    <span className="text-muted-foreground shrink-0">{prDetails.repo}</span>
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-foreground shrink-0 bg-black/[0.03] dark:bg-white/[0.08]"
+                                    >
+                                      {prDetails.repo}
+                                    </Badge>
                                     <span className="truncate">
                                       {truncatePRTitle(prDetails.title, 40)} #{prDetails.number}
                                     </span>

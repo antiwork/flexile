@@ -175,7 +175,11 @@ const LeaveWorkspaceSection = () => {
           </AlertDialogHeader>
           {errorMessage ? <p className="text-destructive text-sm">{errorMessage}</p> : null}
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => handleModalOpenChange(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel asChild>
+              <Button variant="outline" onClick={() => handleModalOpenChange(false)}>
+                Cancel
+              </Button>
+            </AlertDialogCancel>
             <AlertDialogAction asChild>
               <MutationStatusButton
                 idleVariant="critical"

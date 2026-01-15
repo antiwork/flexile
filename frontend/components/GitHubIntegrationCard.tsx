@@ -145,7 +145,7 @@ export function GitHubIntegrationCard({
             <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full gap-2 sm:w-auto">
-                  <span className="size-2 rounded-full bg-green-500" />
+                  <span className="size-2 rounded-full bg-green-700" />
                   {connectedIdentifier}
                   <ChevronDown className="size-4" />
                 </Button>
@@ -158,7 +158,7 @@ export function GitHubIntegrationCard({
                     setIsDisconnectModalOpen(true);
                   }}
                 >
-                  Disconnect
+                  Disconnect account
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -177,7 +177,9 @@ export function GitHubIntegrationCard({
             <AlertDialogDescription>{disconnectModalDescription}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel asChild>
+              <Button variant="outline">Cancel</Button>
+            </AlertDialogCancel>
             <AlertDialogAction asChild>
               <MutationStatusButton
                 idleVariant="critical"

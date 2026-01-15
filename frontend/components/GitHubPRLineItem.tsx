@@ -60,7 +60,9 @@ export function GitHubPRLineItem({
       )}
     >
       <GitHubPRIcon state={pr.state} />
-      <span className="text-muted-foreground shrink-0">{pr.repo}</span>
+      <Badge variant="secondary" className="text-foreground shrink-0 bg-black/[0.03] dark:bg-white/[0.08]">
+        {pr.repo}
+      </Badge>
       <span className="min-w-0 flex-1 truncate">
         <span className="text-foreground">{truncatedTitle}</span>
         <span className="text-muted-foreground ml-1">#{pr.number}</span>

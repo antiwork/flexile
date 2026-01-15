@@ -125,14 +125,14 @@ const GitHubIntegrationSection = () => {
             <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full gap-2 sm:w-auto">
-                  <span className="size-2 rounded-full bg-green-500" />
+                  <span className="size-2 rounded-full bg-green-700" />
                   {company.githubOrgName}
                   <ChevronDown className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  className="hover:text-destructive focus:text-destructive"
+                  className="hover:text-destructive focus:text-destructive justify-center"
                   onClick={() => {
                     setIsDropdownOpen(false);
                     setIsDisconnectModalOpen(true);
@@ -169,12 +169,13 @@ const GitHubIntegrationSection = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect GitHub organization?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will disconnect {company.githubOrgName} from Flexile and uninstall the GitHub App from the
-              organization. Contractors will no longer be able to verify Pull Request ownership.
+              This will prevent contractors from verifying Pull Request ownership and disable automatic bounty checks.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel asChild>
+              <Button variant="outline">Cancel</Button>
+            </AlertDialogCancel>
             <AlertDialogAction asChild>
               <MutationStatusButton
                 idleVariant="critical"
