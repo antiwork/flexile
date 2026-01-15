@@ -9,6 +9,9 @@ RSpec.describe Internal::GithubController do
     allow(GlobalConfig).to receive(:get).and_call_original
     allow(GlobalConfig).to receive(:get).with("GH_CLIENT_ID").and_return("test_client_id")
     allow(GlobalConfig).to receive(:get).with("GH_CLIENT_SECRET").and_return("test_client_secret")
+    allow(GlobalConfig).to receive(:get).with("GH_APP_ID").and_return("123456")
+    allow(GlobalConfig).to receive(:get).with("GH_APP_PRIVATE_KEY").and_return(nil)
+    allow(GlobalConfig).to receive(:get).with("GH_WEBHOOK_SECRET").and_return("test_webhook_secret")
   end
 
   describe "GET #oauth_url" do
@@ -54,6 +57,62 @@ RSpec.describe Internal::GithubController do
 
       it "returns unauthorized" do
         get :oauth_url
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
+  describe "GET #app_installation_url" do
+    let(:company) { create(:company) }
+    let!(:company_administrator) { create(:company_administrator, company: company, user: user) }
+
+    before do
+      allow(GlobalConfig).to receive(:get).with("GH_APP_ID").and_return("123456")
+    end
+
+    it "returns a GitHub App installation URL" do
+      get :app_installation_url
+
+      expect(response).to have_http_status(:ok)
+
+      json_response = response.parsed_body
+      expect(json_response["url"]).to include("github.com/apps")
+    end
+
+    it "returns error when user is not an administrator of any company" do
+      company_administrator.destroy!
+
+      get :app_installation_url
+
+      expect(response).to have_http_status(:unprocessable_entity)
+
+      json_response = response.parsed_body
+      expect(json_response["error"]).to eq("No company found where you are an administrator")
+    end
+
+    context "when GitHub App is not configured" do
+      before do
+        allow(GlobalConfig).to receive(:get).with("GH_APP_ID").and_return(nil)
+      end
+
+      it "returns service unavailable" do
+        get :app_installation_url
+
+        expect(response).to have_http_status(:service_unavailable)
+
+        json_response = response.parsed_body
+        expect(json_response["error"]).to eq("GitHub App is not configured")
+      end
+    end
+
+    context "without authentication" do
+      before do
+        request.headers["x-flexile-auth"] = nil
+      end
+
+      it "returns unauthorized" do
+        get :app_installation_url
 
         expect(response).to have_http_status(:unauthorized)
       end
@@ -347,6 +406,156 @@ RSpec.describe Internal::GithubController do
 
         expect(response).to have_http_status(:forbidden)
       end
+    end
+  end
+
+  describe "POST #installation_callback" do
+    let(:company) { create(:company) }
+    let!(:company_administrator) { create(:company_administrator, company: company, user: user) }
+    let(:installation_id) { "12345678" }
+    let(:state_token) { GithubService.generate_state_token(user_id: user.id, company_id: company.id) }
+
+    before do
+      request.headers["x-flexile-auth"] = nil
+    end
+
+    it "processes GitHub App installation and connects organization" do
+      stub_request(:post, "https://github.com/login/oauth/access_token")
+        .to_return(
+          status: 200,
+          body: { access_token: "gho_test_token" }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      stub_request(:get, "https://api.github.com/user")
+        .to_return(
+          status: 200,
+          body: { id: 12345, login: "testuser" }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      stub_request(:get, "https://api.github.com/user/installations")
+        .to_return(
+          status: 200,
+          body: {
+            total_count: 1,
+            installations: [
+              {
+                id: installation_id.to_i,
+                account: { login: "test-org", id: 99999 },
+              },
+            ],
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+
+      post :installation_callback, params: {
+        installation_id: installation_id,
+        setup_action: "install",
+        state: state_token,
+        code: "test_oauth_code",
+      }
+
+      expect(response).to have_http_status(:ok)
+
+      json_response = response.parsed_body
+      expect(json_response["success"]).to be true
+      expect(json_response["installation_id"]).to eq(installation_id)
+      expect(json_response["auto_connected"]).to be true
+      expect(json_response["org_name"]).to eq("test-org")
+
+      company.reload
+      expect(company.github_org_name).to eq("test-org")
+      expect(company.github_org_id).to eq(99999)
+
+      user.reload
+      expect(user.github_username).to eq("testuser")
+    end
+
+    it "returns error when state is missing" do
+      post :installation_callback, params: {
+        installation_id: installation_id,
+        setup_action: "install",
+        code: "test_oauth_code",
+      }
+
+      expect(response).to have_http_status(:bad_request)
+
+      json_response = response.parsed_body
+      expect(json_response["error"]).to eq("Missing state parameter")
+    end
+
+    it "returns error when state is invalid" do
+      post :installation_callback, params: {
+        installation_id: installation_id,
+        setup_action: "install",
+        state: "invalid_state_token",
+        code: "test_oauth_code",
+      }
+
+      expect(response).to have_http_status(:bad_request)
+
+      json_response = response.parsed_body
+      expect(json_response["error"]).to include("Invalid or expired")
+    end
+
+    it "returns error when setup_action is not install" do
+      post :installation_callback, params: {
+        installation_id: installation_id,
+        setup_action: "request",
+        state: state_token,
+        code: "test_oauth_code",
+      }
+
+      expect(response).to have_http_status(:bad_request)
+
+      json_response = response.parsed_body
+      expect(json_response["error"]).to eq("GitHub App installation was not completed")
+    end
+
+    it "returns error when code is missing" do
+      post :installation_callback, params: {
+        installation_id: installation_id,
+        setup_action: "install",
+        state: state_token,
+      }
+
+      expect(response).to have_http_status(:bad_request)
+
+      json_response = response.parsed_body
+      expect(json_response["error"]).to eq("OAuth code not received from GitHub")
+    end
+
+    it "returns error when user from state is not found" do
+      invalid_state = GithubService.generate_state_token(user_id: 999999, company_id: company.id)
+
+      post :installation_callback, params: {
+        installation_id: installation_id,
+        setup_action: "install",
+        state: invalid_state,
+        code: "test_oauth_code",
+      }
+
+      expect(response).to have_http_status(:not_found)
+
+      json_response = response.parsed_body
+      expect(json_response["error"]).to include("User not found")
+    end
+
+    it "returns error when user is not an administrator of the company" do
+      company_administrator.destroy!
+
+      post :installation_callback, params: {
+        installation_id: installation_id,
+        setup_action: "install",
+        state: state_token,
+        code: "test_oauth_code",
+      }
+
+      expect(response).to have_http_status(:forbidden)
+
+      json_response = response.parsed_body
+      expect(json_response["error"]).to include("not an administrator")
     end
   end
 end
