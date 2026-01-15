@@ -51,18 +51,7 @@ RSpec.describe GithubService do
 
       expect do
         described_class.oauth_url(state: "test_state", redirect_uri: "https://example.com/callback")
-      end.to raise_error(GithubService::ConfigurationError, "GH_CLIENT_ID is not configured")
-    end
-
-    it "includes read:org scope when include_orgs is true" do
-      allow(GlobalConfig).to receive(:get).with("GH_CLIENT_ID").and_return("test_client_id")
-
-      url = described_class.oauth_url(state: "test_state", redirect_uri: "https://example.com/callback", include_orgs: true)
-
-      uri = URI.parse(url)
-      params = CGI.parse(uri.query)
-
-      expect(params["scope"]).to eq(["read:user user:email read:org"])
+      end.to raise_error(GithubService::ConfigurationError, "GH_CLIENT_ID not configured")
     end
   end
 
@@ -115,7 +104,7 @@ RSpec.describe GithubService do
 
       expect do
         described_class.exchange_code_for_token(code: "test_code", redirect_uri: "https://example.com/callback")
-      end.to raise_error(GithubService::ConfigurationError, "GH_CLIENT_SECRET is not configured")
+      end.to raise_error(GithubService::ConfigurationError, "GH_CLIENT_SECRET not configured")
     end
   end
 
@@ -158,75 +147,6 @@ RSpec.describe GithubService do
     end
   end
 
-  describe ".fetch_user_orgs" do
-    it "fetches user organizations from GitHub API" do
-      stub_request(:get, "https://api.github.com/user/orgs")
-        .with(headers: { "Authorization" => "Bearer test_token" })
-        .to_return(
-          status: 200,
-          body: [
-            {
-              id: 12345,
-              login: "antiwork",
-              avatar_url: "https://avatars.githubusercontent.com/u/12345",
-            },
-            {
-              id: 67890,
-              login: "another-org",
-              avatar_url: "https://avatars.githubusercontent.com/u/67890",
-            },
-          ].to_json,
-          headers: { "Content-Type" => "application/json" }
-        )
-
-      orgs = described_class.fetch_user_orgs(access_token: "test_token")
-
-      expect(orgs).to eq([
-                           { login: "antiwork", id: 12345, avatar_url: "https://avatars.githubusercontent.com/u/12345" },
-                           { login: "another-org", id: 67890, avatar_url: "https://avatars.githubusercontent.com/u/67890" },
-                         ])
-    end
-
-    it "returns empty array when user has no organizations" do
-      stub_request(:get, "https://api.github.com/user/orgs")
-        .with(headers: { "Authorization" => "Bearer test_token" })
-        .to_return(
-          status: 200,
-          body: [].to_json,
-          headers: { "Content-Type" => "application/json" }
-        )
-
-      orgs = described_class.fetch_user_orgs(access_token: "test_token")
-
-      expect(orgs).to eq([])
-    end
-
-    it "raises ApiError when token lacks read:org scope" do
-      stub_request(:get, "https://api.github.com/user/orgs")
-        .to_return(
-          status: 403,
-          body: { message: "Resource not accessible by integration" }.to_json,
-          headers: { "Content-Type" => "application/json" }
-        )
-
-      expect do
-        described_class.fetch_user_orgs(access_token: "token_without_org_scope")
-      end.to raise_error(GithubService::ApiError, "Resource not accessible by integration")
-    end
-
-    it "raises ApiError when token is invalid" do
-      stub_request(:get, "https://api.github.com/user/orgs")
-        .to_return(
-          status: 401,
-          body: { message: "Bad credentials" }.to_json,
-          headers: { "Content-Type" => "application/json" }
-        )
-
-      expect do
-        described_class.fetch_user_orgs(access_token: "invalid_token")
-      end.to raise_error(GithubService::ApiError, "Bad credentials")
-    end
-  end
 
   describe ".fetch_pr_details" do
     let(:pr_response) do
@@ -425,46 +345,6 @@ RSpec.describe GithubService do
     end
   end
 
-  describe ".fetch_issue_labels" do
-    it "fetches issue labels from GitHub API" do
-      stub_request(:get, "https://api.github.com/repos/owner/repo/issues/42")
-        .to_return(
-          status: 200,
-          body: {
-            number: 42,
-            labels: [{ "name" => "$500" }, { "name" => "bug" }],
-          }.to_json,
-          headers: { "Content-Type" => "application/json" }
-        )
-
-      labels = described_class.fetch_issue_labels(
-        access_token: "test_token",
-        owner: "owner",
-        repo: "repo",
-        issue_number: 42
-      )
-
-      expect(labels).to eq([{ "name" => "$500" }, { "name" => "bug" }])
-    end
-
-    it "returns nil when issue is not found" do
-      stub_request(:get, "https://api.github.com/repos/owner/repo/issues/999")
-        .to_return(
-          status: 404,
-          body: { message: "Not Found" }.to_json,
-          headers: { "Content-Type" => "application/json" }
-        )
-
-      labels = described_class.fetch_issue_labels(
-        access_token: "test_token",
-        owner: "owner",
-        repo: "repo",
-        issue_number: 999
-      )
-
-      expect(labels).to be_nil
-    end
-  end
 
   describe "issue label fallback for bounty" do
     it "fetches bounty from linked issue when PR has no bounty label" do

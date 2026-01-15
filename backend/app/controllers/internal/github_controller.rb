@@ -9,15 +9,10 @@ class Internal::GithubController < Internal::BaseController
 
     state = SecureRandom.hex(32)
     session[:github_oauth_state] = state
-
     redirect_uri = params[:redirect_uri] || github_callback_url
 
-    include_orgs = ActiveModel::Type::Boolean.new.cast(params[:include_orgs])
-
     begin
-      render json: {
-        url: GithubService.oauth_url(state: state, redirect_uri: redirect_uri, include_orgs: include_orgs),
-      }
+      render json: { url: GithubService.oauth_url(state: state, redirect_uri: redirect_uri) }
     rescue GithubService::ConfigurationError
       render json: { error: "GitHub integration is not configured" }, status: :service_unavailable
     end

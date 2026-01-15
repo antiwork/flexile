@@ -10,6 +10,7 @@ RSpec.describe Internal::GithubController do
     allow(GlobalConfig).to receive(:get).with("GH_CLIENT_ID").and_return("test_client_id")
     allow(GlobalConfig).to receive(:get).with("GH_CLIENT_SECRET").and_return("test_client_secret")
     allow(GlobalConfig).to receive(:get).with("GH_APP_ID").and_return("123456")
+    allow(GlobalConfig).to receive(:get).with("GH_APP_SLUG").and_return("test-app")
     allow(GlobalConfig).to receive(:get).with("GH_APP_PRIVATE_KEY").and_return(nil)
     allow(GlobalConfig).to receive(:get).with("GH_WEBHOOK_SECRET").and_return("test_webhook_secret")
   end
@@ -32,23 +33,6 @@ RSpec.describe Internal::GithubController do
       expect(session[:github_oauth_state]).to be_present
     end
 
-    it "includes read:org scope when include_orgs is true" do
-      get :oauth_url, params: { include_orgs: "true" }
-
-      expect(response).to have_http_status(:ok)
-
-      json_response = response.parsed_body
-      expect(json_response["url"]).to include("read%3Aorg")
-    end
-
-    it "does not include read:org scope by default" do
-      get :oauth_url
-
-      expect(response).to have_http_status(:ok)
-
-      json_response = response.parsed_body
-      expect(json_response["url"]).not_to include("read%3Aorg")
-    end
 
     context "without authentication" do
       before do
@@ -69,11 +53,12 @@ RSpec.describe Internal::GithubController do
 
     before do
       allow(GlobalConfig).to receive(:get).with("GH_APP_ID").and_return("123456")
-      Current.company = company
-    end
-
-    after do
-      Current.company = nil
+      allow(controller).to receive(:current_context) do
+        Current.user = user
+        Current.company = company
+        Current.company_administrator = company_administrator
+        CurrentContext.new(user: user, company: company)
+      end
     end
 
     it "returns a GitHub App installation URL" do
@@ -95,7 +80,7 @@ RSpec.describe Internal::GithubController do
 
     context "when GitHub App is not configured" do
       before do
-        allow(GlobalConfig).to receive(:get).with("GH_APP_ID").and_return(nil)
+        allow(GlobalConfig).to receive(:get).with("GH_APP_SLUG").and_return(nil)
       end
 
       it "returns service unavailable" do
@@ -111,6 +96,7 @@ RSpec.describe Internal::GithubController do
     context "without authentication" do
       before do
         request.headers["x-flexile-auth"] = nil
+        allow(controller).to receive(:current_context).and_call_original
       end
 
       it "returns unauthorized" do
@@ -281,31 +267,35 @@ RSpec.describe Internal::GithubController do
   end
 
   describe "GET #pr" do
+    let(:company) { create(:company, github_org_name: "owner") }
+
     before do
-      user.update!(github_access_token: "gho_test_token")
+      allow(controller).to receive(:current_context) do
+        Current.user = user
+        Current.company = company
+        CurrentContext.new(user: user, company: company)
+      end
     end
 
-    it "fetches PR details from GitHub" do
-      stub_request(:get, "https://api.github.com/repos/owner/repo/pulls/123")
-        .to_return(
-          status: 200,
-          body: {
-            html_url: "https://github.com/owner/repo/pull/123",
-            number: 123,
-            title: "Fix bug",
-            state: "open",
-            user: { login: "contributor", avatar_url: "https://example.com/avatar" },
-            labels: [{ name: "$100" }],
-            created_at: "2024-01-15T10:00:00Z",
-            merged_at: nil,
-            closed_at: nil,
-          }.to_json,
-          headers: { "Content-Type" => "application/json" }
-        )
+    it "fetches PR details using GitHub App" do
+      allow(GithubService).to receive(:fetch_pr_details_from_url_with_app).and_return({
+        url: "https://github.com/owner/repo/pull/123",
+        number: 123,
+        title: "Fix bug",
+        state: "open",
+        author: "contributor",
+        author_avatar_url: "https://example.com/avatar",
+        repo: "owner/repo",
+        bounty_cents: 10000,
+        created_at: "2024-01-15T10:00:00Z",
+        merged_at: nil,
+        closed_at: nil,
+      })
 
       get :pr, params: { url: "https://github.com/owner/repo/pull/123" }
 
       expect(response).to have_http_status(:ok)
+      expect(GithubService).to have_received(:fetch_pr_details_from_url_with_app).with(org_name: "owner", url: "https://github.com/owner/repo/pull/123")
 
       json_response = response.parsed_body
       expect(json_response["pr"]["number"]).to eq(123)
@@ -322,9 +312,9 @@ RSpec.describe Internal::GithubController do
       expect(json_response["error"]).to eq("Invalid GitHub PR URL")
     end
 
-    context "when user has no GitHub connection" do
+    context "when GitHub App is not connected" do
       before do
-        user.update!(github_access_token: nil)
+        company.update!(github_org_name: nil)
       end
 
       it "returns error" do
@@ -333,7 +323,7 @@ RSpec.describe Internal::GithubController do
         expect(response).to have_http_status(:unprocessable_entity)
 
         json_response = response.parsed_body
-        expect(json_response["error"]).to eq("GitHub account not connected")
+        expect(json_response["error"]).to eq("GitHub App not connected. Please connect GitHub in Settings > Integrations.")
       end
     end
   end

@@ -35,15 +35,6 @@ export function parseGitHubPRUrl(url: string): ParsedPRUrl | null {
   };
 }
 
-export function isOnlyGitHubPRUrl(description: string): boolean {
-  return isGitHubPRUrl(description.trim());
-}
-
-export function extractGitHubPRUrl(description: string): string | null {
-  const match = GITHUB_PR_URL_REGEX.exec(description);
-  return match ? match[0] : null;
-}
-
 export interface PRDetails {
   url: string;
   number: number;
@@ -71,8 +62,4 @@ export function parsePRState(state: string | null | undefined): PRState {
 
 export function truncatePRTitle(title: string, maxLength = 50): string {
   return title.length > maxLength ? `${title.substring(0, maxLength).trim()}...` : title;
-}
-
-export function formatPRDisplay(pr: PRDetails, maxTitleLength = 50): string {
-  return `${truncatePRTitle(pr.title, maxTitleLength)} #${pr.number}`;
 }
