@@ -73,6 +73,7 @@ class InvoicePresenter
         billing_entity_name: user.billing_entity_name,
         pay_rate_in_subunits: contractor.pay_rate_in_subunits,
         project_based: contractor.project_based?,
+        github_username: user.github_username,
       }
     end
 

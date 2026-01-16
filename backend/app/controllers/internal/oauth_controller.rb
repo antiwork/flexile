@@ -13,18 +13,43 @@ class Internal::OauthController < Internal::BaseController
       return
     end
 
-    user = User.find_by(email: email)
-    if user
-      user.update!(current_sign_in_at: Time.current)
-      return success_response_with_jwt(user)
-    end
+    provider = params[:provider].to_s.downcase
+    user = nil
 
-    result = SignUpUser.new(user_attributes: { email: email, confirmed_at: Time.current }, ip_address: request.remote_ip).perform
+    if provider == "github"
+      github_uid = params[:github_uid]
+      user = User.find_by(github_uid: github_uid) if github_uid.present?
 
-    if result[:success]
-      success_response_with_jwt(result[:user], :created)
+      if user.blank?
+        user = User.find_by(email: email)
+        if user.present?
+          user.update!(
+            github_uid: github_uid,
+            github_username: params[:github_username]
+          )
+        end
+      end
+
+      unless user
+        render json: { error: "Account not found. Please sign up with email first or ensure your GitHub email matches your account." }, status: :not_found
+        return
+      end
+
+      user.update!(github_username: params[:github_username]) if params[:github_username].present?
     else
-      render json: { error: result[:error_message] }, status: :unprocessable_entity
+      user = User.find_by(email: email)
+      unless user
+        result = SignUpUser.new(user_attributes: { email: email, confirmed_at: Time.current }, ip_address: request.remote_ip).perform
+        if result[:success]
+          user = result[:user]
+        else
+          render json: { error: result[:error_message] }, status: :unprocessable_entity
+          return
+        end
+      end
     end
+
+    user.update!(current_sign_in_at: Time.current)
+    success_response_with_jwt(user, :ok)
   end
 end

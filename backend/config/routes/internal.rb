@@ -11,6 +11,19 @@ scope path: :internal, module: :internal do
     end
   end
 
+  resource :github_connection, only: [] do
+    post :start
+    get :callback
+    delete :disconnect
+  end
+  resource :github_organization_connection, only: [:destroy], module: :companies do
+    post :start
+    get :callback
+  end
+  resources :github_pull_requests, only: [] do
+    post :fetch, on: :collection
+  end
+
   resources :oauth, only: :create
   resource :current_user, only: :show
 
