@@ -57,6 +57,8 @@ class User < ApplicationRecord
   validates :minimum_dividend_payment_in_cents, presence: true
   validate :minimum_dividend_payment_in_cents_is_within_range
   validates :preferred_name, length: { maximum: MAX_PREFERRED_NAME_LENGTH }, allow_nil: true
+  validates :github_uid, uniqueness: true, allow_nil: true
+  validates :github_username, presence: true, if: -> { github_uid.present? }
 
   before_save :normalize_email
 
@@ -64,6 +66,14 @@ class User < ApplicationRecord
                       if: -> { current_sign_in_at_previously_changed? && current_sign_in_at_previously_was.nil? }
 
   delegate(*TAX_ATTRIBUTES, to: :compliance_info, allow_nil: true)
+
+  def github_connected?
+    github_uid.present? && github_username.present?
+  end
+
+  def github_display
+    github_connected? ? github_username : "Not connected"
+  end
 
   def name
     preferred_name.presence || legal_name.presence

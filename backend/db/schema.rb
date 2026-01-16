@@ -145,6 +145,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_12_034436) do
     t.index ["user_id"], name: "index_company_contractors_on_user_id"
   end
 
+  create_table "company_github_connections", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.bigint "connected_by_id", null: false
+    t.string "github_org_id", null: false
+    t.string "github_org_login", null: false
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "installation_id"
+    t.index ["company_id"], name: "index_company_github_connections_on_company_id", unique: true, where: "(revoked_at IS NULL)"
+    t.index ["connected_by_id"], name: "index_company_github_connections_on_connected_by_id"
+    t.index ["github_org_id"], name: "index_company_github_connections_on_github_org_id", unique: true, where: "(revoked_at IS NULL)"
+    t.index ["installation_id"], name: "index_company_github_connections_on_installation_id"
+  end
+
   create_table "company_investor_entities", force: :cascade do |t|
     t.string "external_id", null: false
     t.bigint "company_id", null: false
@@ -865,10 +880,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_12_034436) do
     t.string "otp_secret_key"
     t.integer "otp_failed_attempts_count", default: 0, null: false
     t.datetime "otp_first_failed_at"
+    t.string "github_uid"
+    t.string "github_username"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["external_id"], name: "index_users_on_external_id", unique: true
+    t.index ["github_username"], name: "index_users_on_github_username", unique: true
     t.index ["invitation_token"], name: "index_users_on_invitation_token", unique: true
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
     t.index ["invited_by_type", "invited_by_id"], name: "index_users_on_invited_by"
@@ -944,4 +962,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_12_034436) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "company_github_connections", "companies"
+  add_foreign_key "company_github_connections", "users", column: "connected_by_id"
 end

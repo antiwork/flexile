@@ -86,6 +86,11 @@ class Company < ApplicationRecord
   has_one_attached :full_logo
   has_many :document_templates
 
+  has_one :github_connection,
+          -> { active },
+          class_name: "CompanyGithubConnection",
+          dependent: :destroy
+
   validates :name, presence: true, on: :update, if: :name_changed?
   validates :email, presence: true
   validates :country_code, presence: true
@@ -121,6 +126,10 @@ class Company < ApplicationRecord
   def active? = deactivated_at.nil?
 
   def primary_admin = super || company_administrators.order(:id).first
+
+  def github_connected?
+    github_connection.present?
+  end
 
   def logo_url
     return logo.url if logo.attached?
