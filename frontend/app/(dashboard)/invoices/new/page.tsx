@@ -1,3 +1,5 @@
+"use client";
+
 import Edit from "@/app/(dashboard)/invoices/Edit";
 
 export default function Page() {

@@ -84,7 +84,7 @@ const __jsr = (
         },
         NIL: {
             define() {
-                // Defined using const __jsr = 
+                // Defined using const __jsr =
             },
             isSupported() {
                 return true;
@@ -935,6 +935,38 @@ export const balance_credit_webhooks_wise_index_path = /*#__PURE__*/ __jsr.r({"f
 
 /**
  * Generates rails route to
+ * /internal/github_connection/callback(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const callback_github_connection_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_connection"],[2,[7,"/"],[2,[6,"callback"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github_connection/callback(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const callback_github_connection_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_connection"],[2,[7,"/"],[2,[6,"callback"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/github_organization_connection/callback(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const callback_github_organization_connection_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_organization_connection"],[2,[7,"/"],[2,[6,"callback"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github_organization_connection/callback(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const callback_github_organization_connection_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_organization_connection"],[2,[7,"/"],[2,[6,"callback"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /internal/companies/:company_id/administrator/cap_table(.:format)
  * @param {any} company_id
  * @param {object | undefined} options
@@ -1503,6 +1535,22 @@ export const current_user_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"]
 
 /**
  * Generates rails route to
+ * /internal/github_connection/disconnect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const disconnect_github_connection_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_connection"],[2,[7,"/"],[2,[6,"disconnect"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github_connection/disconnect(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const disconnect_github_connection_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_connection"],[2,[7,"/"],[2,[6,"disconnect"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
  * /admin/companies/:id/edit(.:format)
  * @param {any} id
  * @param {object | undefined} options
@@ -1700,6 +1748,38 @@ export const export_company_invoices_url = /*#__PURE__*/ __jsr.r({"company_id":{
  * @returns {string} route path
  */
 export const export_company_invoices_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"invoices"],[2,[7,"/"],[2,[6,"export"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/github_pull_requests/fetch(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const fetch_github_pull_requests_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_pull_requests"],[2,[7,"/"],[2,[6,"fetch"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github_pull_requests/fetch(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const fetch_github_pull_requests_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_pull_requests"],[2,[7,"/"],[2,[6,"fetch"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/github_organization_connection(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_organization_connection_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_organization_connection"],[1,[2,[8,"."],[3,"format"]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github_organization_connection(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const github_organization_connection_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_organization_connection"],[1,[2,[8,"."],[3,"format"]]]]]]]);
 
 /**
  * Generates rails route to
@@ -2249,6 +2329,37 @@ export const signed_company_document_url = /*#__PURE__*/ __jsr.r({"company_id":{
  */
 export const signed_company_document_path = /*#__PURE__*/ __jsr.r({"company_id":{"r":true},"id":{"r":true},"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"companies"],[2,[7,"/"],[2,[3,"company_id"],[2,[7,"/"],[2,[6,"documents"],[2,[7,"/"],[2,[3,"id"],[2,[7,"/"],[2,[6,"signed"],[1,[2,[8,"."],[3,"format"]]]]]]]]]]]]]]]);
 
+/**
+ * Generates rails route to
+ * /internal/github_connection/start(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const start_github_connection_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_connection"],[2,[7,"/"],[2,[6,"start"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github_connection/start(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const start_github_connection_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_connection"],[2,[7,"/"],[2,[6,"start"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
+/**
+ * Generates rails route to
+ * /internal/github_organization_connection/start(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const start_github_organization_connection_url = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_organization_connection"],[2,[7,"/"],[2,[6,"start"],[1,[2,[8,"."],[3,"format"]]]]]]]]], true);
+
+/**
+ * Generates rails route to
+ * /internal/github_organization_connection/start(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const start_github_organization_connection_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_organization_connection"],[2,[7,"/"],[2,[6,"start"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
 /**
  * Generates rails route to
  * /webhooks/wise/transfer_state_change(.:format)

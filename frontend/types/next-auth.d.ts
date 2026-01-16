@@ -8,6 +8,8 @@ declare module "next-auth" {
     legalName?: string;
     preferredName?: string;
     jwt: string;
+    githubUid?: string;
+    githubUsername?: string;
   }
 
   interface Session {
@@ -17,6 +19,8 @@ declare module "next-auth" {
       name: string;
       legalName?: string;
       preferredName?: string;
+      githubUid?: string;
+      githubUsername?: string;
       jwt: string;
     };
   }

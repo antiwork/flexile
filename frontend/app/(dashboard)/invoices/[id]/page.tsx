@@ -1,7 +1,9 @@
 "use client";
 
 import { ArrowLeftIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { Ban, CircleAlert, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { Ban, CircleAlert, LoaderCircle, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -9,6 +11,7 @@ import AttachmentListCard from "@/components/AttachmentsList";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { linkClasses } from "@/components/Link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,8 +20,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import githubMerge from "@/images/github-merge.svg";
+import paidDollar from "@/images/paid-dollar.svg";
+import unverifiedAuthor from "@/images/unverified-author.svg";
+import verifiedAuthor from "@/images/verified-author.svg";
+import { FORMATTED_PR_REGEX, GITHUB_PR_REGEX } from "@/lib/regex";
+import type { RouterOutput } from "@/trpc";
 import { PayRateType, trpc } from "@/trpc/client";
 import { cn } from "@/utils";
 import { assert } from "@/utils/assert";
@@ -63,7 +75,6 @@ const getInvoiceStatusText = (
     case "rejected":
       return "Rejected";
     case "failed":
-      return "Failed";
   }
 };
 
@@ -88,7 +99,202 @@ const PrintTableCell = ({ children, className }: { children: React.ReactNode; cl
   </TableCell>
 );
 
-export default function InvoicePage() {
+const PrintTotalRow = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <div
+    className={cn(
+      "flex justify-between gap-2 print:my-1 print:flex print:items-center print:justify-between print:text-xs",
+      className,
+    )}
+  >
+    {children}
+  </div>
+);
+
+interface ViewLineItemDescriptionProps {
+  description: string;
+  contractorGithubUsername: string | null;
+}
+
+const ViewLineItemDescription = ({ description, contractorGithubUsername }: ViewLineItemDescriptionProps) => {
+  const company = useCurrentCompany();
+  const user = useCurrentUser();
+  const isAdmin = !!user.roles.administrator;
+
+  const prMatch = description.match(GITHUB_PR_REGEX);
+  const formattedMatch = description.match(FORMATTED_PR_REGEX);
+
+  const prUrl = prMatch
+    ? prMatch[0]
+    : formattedMatch
+      ? `https://github.com/${formattedMatch[1]}/pull/${formattedMatch[2]}`
+      : null;
+
+  if (!prUrl) return;
+
+  const { data: prResult, isLoading: isFetchingPR } = trpc.github.fetchPullRequest.useQuery(
+    { url: prUrl, companyId: company.id, targetUsername: contractorGithubUsername },
+    { enabled: !!prUrl, retry: false },
+  );
+
+  if (!prUrl || !prResult) {
+    return <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">{description}</div>;
+  }
+
+  return <ResponsivePRCardView prUrl={prUrl} prResult={prResult} isFetchingPR={isFetchingPR} isAdmin={isAdmin} />;
+};
+
+interface ResponsivePRCardViewProps {
+  prUrl: string | null;
+  prResult: RouterOutput["github"]["fetchPullRequest"] | undefined | null;
+  isFetchingPR: boolean;
+  isAdmin: boolean;
+}
+
+const ResponsivePRCardView = ({ prUrl, prResult, isFetchingPR, isAdmin }: ResponsivePRCardViewProps) => {
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const TriggerContent = (
+    <div className="border-input hover:bg-accent focus-within:ring-ring flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm focus-within:ring-2">
+      <Image src={githubMerge} alt="GitHub PR" width={16} height={16} />
+      {prResult ? (
+        <>
+          <span className="bg-secondary truncate rounded-sm px-2 py-0.5 text-xs font-medium">
+            {prResult.pr.repository}
+          </span>
+          <span className="max-w-[200px] truncate font-normal">{prResult.pr.title}</span>
+          <span className="text-muted-foreground font-light">#{prResult.pr.number}</span>
+          {prResult.pr.bounty_cents ? (
+            <div className="flex items-center gap-1.5">
+              <Badge variant="secondary" className="border">
+                ${prResult.pr.bounty_cents / 100}
+              </Badge>
+              {prResult.pr.paid_invoice_numbers && prResult.pr.paid_invoice_numbers.length > 0 ? (
+                <div className="size-1.5 rounded-full bg-[#D97706]" title="Paid" />
+              ) : null}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div className="flex flex-1 items-center gap-2 overflow-hidden">
+          <span className="text-muted-foreground truncate opacity-70">{prUrl}</span>
+        </div>
+      )}
+      {isFetchingPR ? (
+        <div className="ml-auto">
+          <LoaderCircle className="text-muted-foreground size-4 animate-spin" />
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const DetailsContent = prResult && (
+    <div className="flex flex-col">
+      <div className="bg-muted/10 flex items-center px-4 py-2">
+        <div className="flex items-center gap-1.5 overflow-hidden text-sm font-medium">
+          <span className="text-foreground shrink-0">{prResult.pr.repository}</span>
+          <span className="text-muted-foreground">⋅</span>
+          <span className="text-muted-foreground truncate">{prResult.pr.author}</span>
+        </div>
+      </div>
+
+      <Separator className="my-0" />
+
+      <div className="px-4 py-4">
+        <a
+          href={prResult.pr.html_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-baseline gap-1.5"
+        >
+          <h4 className="text-[15px] leading-snug font-semibold decoration-blue-500/10 underline-offset-4 group-hover:text-blue-600 group-hover:underline">
+            {prResult.pr.title}
+          </h4>
+          <span className="text-muted-foreground text-xs font-medium">#{prResult.pr.number}</span>
+        </a>
+
+        <div className="mt-4 flex items-center justify-between">
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-white ${
+              prResult.pr.merged ? "bg-purple-600" : prResult.pr.state === "open" ? "bg-green-600" : "bg-gray-500"
+            }`}
+          >
+            {prResult.pr.merged ? "Merged" : prResult.pr.state === "open" ? "Open" : "Closed"}
+          </span>
+        </div>
+      </div>
+
+      <Separator className="my-0" />
+
+      <div className="bg-muted/50 flex flex-col gap-0">
+        {isAdmin && prResult.pr.paid_invoice_numbers && prResult.pr.paid_invoice_numbers.length > 0 ? (
+          <div className="border-border/20 flex items-center gap-3 border-b px-4 py-2">
+            <div className="text-muted-foreground flex items-center gap-2.5 text-[12px] font-medium">
+              <Image src={paidDollar} alt="" width={16} height={16} className="shrink-0" />
+              <span>
+                <span className="font-bold text-blue-600">Paid</span> on invoice
+                {prResult.pr.paid_invoice_numbers.length > 1 ? "s" : ""}{" "}
+                {prResult.pr.paid_invoice_numbers.map((invoice, idx) => (
+                  <React.Fragment key={invoice.external_id}>
+                    {idx > 0 && (idx === prResult.pr.paid_invoice_numbers.length - 1 ? " and " : ", ")}
+                    <Link
+                      href={`/invoices/${invoice.external_id}`}
+                      className="text-muted-foreground underline transition-colors hover:text-blue-600"
+                    >
+                      #{invoice.invoice_number}
+                    </Link>
+                  </React.Fragment>
+                ))}
+              </span>
+            </div>
+          </div>
+        ) : null}
+        <div className="flex items-center gap-3 px-4 py-2">
+          {prResult.pr.verified_author ? (
+            <div className="text-muted-foreground flex items-center gap-2.5 text-[12px] font-medium">
+              <Image src={verifiedAuthor} alt="" width={16} height={16} className="shrink-0" />
+              <span>
+                <span className="font-bold text-green-600">Verified author</span> of this pull request.
+              </span>
+            </div>
+          ) : (
+            <div className="text-muted-foreground flex items-center gap-2.5 text-[12px] font-medium">
+              <Image src={unverifiedAuthor} alt="" width={16} height={16} className="shrink-0" />
+              <span>
+                <span className="font-bold">Unverified author</span> of this pull request.
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>{TriggerContent}</PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="border-border/50 w-[calc(100vw-32px)] max-w-[340px] overflow-hidden p-0 shadow-2xl"
+        >
+          {DetailsContent}
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  return (
+    <HoverCard openDelay={100}>
+      <HoverCardTrigger asChild>{TriggerContent}</HoverCardTrigger>
+      {prResult ? (
+        <HoverCardContent align="start" className="border-border/50 w-[340px] overflow-hidden p-0 shadow-2xl">
+          {DetailsContent}
+        </HoverCardContent>
+      ) : null}
+    </HoverCard>
+  );
+};export default function InvoicePage() {
   const { id } = useParams<{ id: string }>();
   const user = useCurrentUser();
   const company = useCurrentCompany();
@@ -337,9 +543,10 @@ export default function InvoicePage() {
                       {invoice.lineItems.map((lineItem, index) => (
                         <TableRow key={index}>
                           <PrintTableCell className="w-[50%] align-top md:w-[60%] print:align-top">
-                            <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">
-                              {lineItem.description}
-                            </div>
+                            <ViewLineItemDescription
+                              description={lineItem.description}
+                              contractorGithubUsername={invoice.contractor.user.githubUsername}
+                            />
                           </PrintTableCell>
                           <PrintTableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%] print:text-right print:align-top">
                             {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}

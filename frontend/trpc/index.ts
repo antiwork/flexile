@@ -96,6 +96,7 @@ export const createContext = cache(async ({ req }: FetchCreateContextFnOptions) 
   return {
     userId,
     headers,
+    db,
   };
 });
 export type Context = Awaited<ReturnType<typeof createContext>>;

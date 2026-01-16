@@ -19,70 +19,104 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useCurrentCompany, useCurrentUser } from "@/global";
 import githubLogo from "@/images/github.svg";
 import { trpc } from "@/trpc/client";
 import { request } from "@/utils/request";
-import { disconnect_github_connection_path, start_github_connection_path } from "@/utils/routes";
+import {
+  callback_github_organization_connection_path,
+  github_organization_connection_path,
+  start_github_organization_connection_path,
+} from "@/utils/routes";
 
-export default function AccountPage() {
-  return (
-    <div className="grid gap-8">
-      <hgroup>
-        <h1 className="mb-1 text-3xl font-bold">Account</h1>
-        <p className="text-muted-foreground text-base">Manage your linked accounts and workspace access.</p>
-      </hgroup>
-      <IntegrationsSection />
-    </div>
-  );
-}
-
-const IntegrationsSection = () => {
-  const { data: githubUsername, isLoading: githubLoading } = trpc.github.getUserConnection.useQuery();
-  const utils = trpc.useUtils();
-  const [isConnecting, setIsConnecting] = useState(false);
+export default function IntegrationsPage() {
+  const company = useCurrentCompany();
+  const user = useCurrentUser();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const utils = trpc.useUtils();
+
+  const { data: connection, isLoading } = trpc.github.getCompanyConnection.useQuery({ companyId: company.id });
+  const [isConnecting, setIsConnecting] = useState(false);
   const hasShownToast = useRef(false);
 
   useEffect(() => {
-    if (searchParams.get("github") === "success" && !hasShownToast.current) {
-      hasShownToast.current = true;
-      toast.success("GitHub account successfully linked.");
-      router.replace("/settings/account");
+    if (!user.roles.administrator) {
+      router.replace("/settings");
     }
-  }, [searchParams, router]);
+  }, [user, router]);
 
-  const handleConnectGitHub = async () => {
+  useEffect(() => {
+    const installationId = searchParams.get("installation_id");
+    const state = searchParams.get("state");
+
+    if (installationId && state && !hasShownToast.current) {
+      hasShownToast.current = true;
+      const handleCallback = async () => {
+        try {
+          await request({
+            method: "GET",
+            accept: "json",
+            url: callback_github_organization_connection_path({ installation_id: installationId, state }),
+            assertOk: true,
+          });
+          await utils.github.getCompanyConnection.invalidate();
+          toast.success("GitHub organization successfully connected.");
+          router.replace("/settings/administrator/integrations");
+        } catch {
+          toast.error("Failed to connect GitHub organization.");
+          hasShownToast.current = false;
+        }
+      };
+      void handleCallback();
+    } else if (searchParams.get("github_org") === "success" && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success("GitHub organization successfully connected.");
+      router.replace("/settings/administrator/integrations");
+    }
+  }, [searchParams, utils, router]);
+
+  const handleConnect = async () => {
     setIsConnecting(true);
     try {
       const response = await request({
         method: "POST",
         accept: "json",
-        url: start_github_connection_path(),
+        url: start_github_organization_connection_path({
+          company_id: company.externalId,
+          redirect_url: window.location.href,
+        }),
         assertOk: true,
       });
       const data: { url: string } = await response.json(),
         { url } = data;
       window.location.href = url;
-    } finally {
+    } catch {
       setIsConnecting(false);
     }
   };
 
-  const handleDisconnectGitHub = async () => {
-    await request({
-      method: "DELETE",
-      accept: "json",
-      url: disconnect_github_connection_path(),
-      assertOk: true,
-    });
-    await utils.github.getUserConnection.invalidate();
-    toast.info("GitHub account disconnected.");
+  const handleDisconnect = async () => {
+    try {
+      await request({
+        method: "DELETE",
+        accept: "json",
+        url: github_organization_connection_path(),
+        assertOk: true,
+      });
+      await utils.github.getCompanyConnection.invalidate();
+      toast.info("GitHub organization disconnected.");
+    } catch {
+      toast.error("Failed to disconnect GitHub organization.");
+    }
   };
 
   return (
-    <div className="grid gap-4">
-      <h2 className="font-bold">Integrations</h2>
+    <div className="grid gap-8">
+      <hgroup>
+        <h1 className="mb-1 text-3xl font-bold">Integrations</h1>
+        <p className="text-muted-foreground text-base">Connect Flexile to your company's favorite tools.</p>
+      </hgroup>
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -94,21 +128,19 @@ const IntegrationsSection = () => {
             <div className="flex flex-col">
               <span className="font-bold">GitHub</span>
               <span className="text-muted-foreground text-sm">
-                {githubUsername
-                  ? "Your account is linked for verifying pull requests and bounties."
-                  : "Link your GitHub account to verify ownership of your work."}
+                Automatically verify contractor pull requests and bounty claims.
               </span>
             </div>
           </div>
 
-          {githubLoading ? (
+          {isLoading ? (
             <Loader2 className="text-muted-foreground animate-spin" />
-          ) : githubUsername ? (
+          ) : connection ? (
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
                   <span className="block h-1.5 w-1.5 rounded-full bg-green-500" />
-                  <span>{githubUsername}</span>
+                  <span>{connection.githubOrgLogin}</span>
                   <ChevronDown className="text-muted-foreground size-4" />
                 </Button>
               </PopoverTrigger>
@@ -116,15 +148,16 @@ const IntegrationsSection = () => {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" className="w-full justify-start rounded-none">
-                      Disconnect account
+                      Disconnect
                     </Button>
                   </AlertDialogTrigger>
 
                   <AlertDialogContent>
                     <AlertDialogHeader className="mb-4">
-                      <AlertDialogTitle>Disconnect Github account?</AlertDialogTitle>
+                      <AlertDialogTitle>Disconnect Github organization?</AlertDialogTitle>
                       <AlertDialogDescription className="text-muted-foreground mt-2 text-base">
-                        Disconnecting stops us from verifying your GitHub work.
+                        This will prevent contractors from verifying Pull Request ownership and disable automatic bounty
+                        checks.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -132,7 +165,7 @@ const IntegrationsSection = () => {
                         <Button variant="outline">Cancel</Button>
                       </AlertDialogCancel>
                       <AlertDialogAction asChild>
-                        <Button variant="critical" onClick={() => void handleDisconnectGitHub()}>
+                        <Button variant="critical" onClick={() => void handleDisconnect()}>
                           Disconnect
                         </Button>
                       </AlertDialogAction>
@@ -146,7 +179,7 @@ const IntegrationsSection = () => {
               variant="outline"
               className="w-full text-base sm:w-auto"
               disabled={isConnecting}
-              onClick={() => void handleConnectGitHub()}
+              onClick={() => void handleConnect()}
             >
               {isConnecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Connect
@@ -156,4 +189,4 @@ const IntegrationsSection = () => {
       </Card>
     </div>
   );
-};
+}

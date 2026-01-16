@@ -1,12 +1,13 @@
 import Bugsnag from "@bugsnag/js";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import GithubProvider from "next-auth/providers/github";
-import GoogleProvider from "next-auth/providers/google";
+import GithubProvider, { type GithubProfile } from "next-auth/providers/github";
+import GoogleProvider, { type GoogleProfile } from "next-auth/providers/google";
 import type { Provider } from "next-auth/providers/index";
 import { z } from "zod";
 import env from "@/env";
 import { assertDefined } from "@/utils/assert";
+import { oauth_index_path } from "@/utils/routes";
 
 const otpLoginSchema = z.object({
   email: z.string().email(),
@@ -25,12 +26,22 @@ const ExternalProvider = (provider: Provider) => {
     },
     authorize(credentials) {
       if (!credentials?.email) return null;
-      return {
+
+      const baseUser = {
         email: credentials.email,
         jwt: "test-jwt-token",
         id: "test-user-id",
         name: "Test User",
       };
+
+      if (provider.id === "github") {
+        return {
+          ...baseUser,
+          githubUsername: "github_dev_user",
+          githubUid: "123456",
+        };
+      }
+      return baseUser;
     },
   });
 };
@@ -122,9 +133,10 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
       if (!user) return token;
+
       token.jwt = user.jwt;
       token.legalName = user.legalName ?? "";
       token.preferredName = user.preferredName ?? "";
@@ -133,16 +145,54 @@ export const authOptions = {
     session({ session, token }) {
       return { ...session, user: { ...session.user, ...token, id: token.sub } };
     },
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (!account) return false;
 
       if (account.type !== "oauth" && !isTestEnv) return true;
 
       try {
-        const response = await fetch(`${process.env.NEXTAUTH_URL}/internal/oauth`, {
+        const isGithub = account.provider === "github";
+        const isGoogle = account.provider === "google";
+
+        if (isGithub && account.access_token) {
+          const res = await fetch("https://api.github.com/user/emails", {
+            headers: { Authorization: `Bearer ${account.access_token}` },
+          });
+
+          if (res.ok) {
+            const emails: { email: string; verified: boolean; primary: boolean }[] = await res.json();
+            const primaryEmail = emails.find((e) => e.primary);
+            if (!primaryEmail?.verified) {
+              return false;
+            }
+          }
+        }
+
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        if (isGoogle && !(profile as GoogleProfile | undefined)?.email_verified) {
+          return false;
+        }
+
+        let githubParams = {};
+
+        if (isGithub) {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          const ghProfile = profile as GithubProfile | undefined;
+          githubParams = {
+            github_uid: account.providerAccountId || user.githubUid,
+            github_username: ghProfile?.login || user.githubUsername,
+          };
+        }
+
+        const response = await fetch(`${process.env.NEXTAUTH_URL}/${oauth_index_path()}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: user.email, token: env.API_SECRET_TOKEN }),
+          body: JSON.stringify({
+            email: user.email,
+            token: env.API_SECRET_TOKEN,
+            provider: account.provider,
+            ...githubParams,
+          }),
         });
 
         if (!response.ok) {
@@ -160,6 +210,8 @@ export const authOptions = {
               name: z.string().nullable(),
               legal_name: z.string().nullable(),
               preferred_name: z.string().nullable(),
+              github_uid: z.number().nullable().optional(),
+              github_username: z.string().nullable().optional(),
             }),
             jwt: z.string(),
           })
@@ -169,6 +221,16 @@ export const authOptions = {
         user.legalName = data.user.legal_name ?? "";
         user.preferredName = data.user.preferred_name ?? "";
 
+        if (isGithub) {
+          user.githubUid = account.providerAccountId;
+
+          if (isTestEnv) {
+            user.githubUsername = "github_dev_user";
+          } else {
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+            user.githubUsername = (profile as GithubProfile).login;
+          }
+        }
         return true;
       } catch (error) {
         Bugsnag.notify(
