@@ -84,7 +84,7 @@ const __jsr = (
         },
         NIL: {
             define() {
-                // Defined using const __jsr =
+                // Defined using const __jsr = 
             },
             isSupported() {
                 return true;
@@ -2360,6 +2360,7 @@ export const start_github_organization_connection_url = /*#__PURE__*/ __jsr.r({"
  * @returns {string} route path
  */
 export const start_github_organization_connection_path = /*#__PURE__*/ __jsr.r({"format":{}}, [2,[7,"/"],[2,[6,"internal"],[2,[7,"/"],[2,[6,"github_organization_connection"],[2,[7,"/"],[2,[6,"start"],[1,[2,[8,"."],[3,"format"]]]]]]]]]);
+
 /**
  * Generates rails route to
  * /webhooks/wise/transfer_state_change(.:format)

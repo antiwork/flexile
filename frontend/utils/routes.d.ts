@@ -2418,16 +2418,6 @@ export const signed_company_document_url: ((
 
 /**
  * Generates rails route to
- * /internal/github_connection/start(.:format)
- * @param {object | undefined} options
- * @returns {string} route path
- */
-export const start_github_connection_url: ((
-  options?: {format?: OptionalRouteParameter} & RouteOptions
-) => string) & RouteHelperExtras;
-
-/**
- * Generates rails route to
  * /internal/companies/:company_id/documents/:id/signed(.:format)
  * @param {any} company_id
  * @param {any} id
@@ -2437,6 +2427,16 @@ export const start_github_connection_url: ((
 export const signed_company_document_path: ((
   company_id: RequiredRouteParameter,
   id: RequiredRouteParameter,
+  options?: {format?: OptionalRouteParameter} & RouteOptions
+) => string) & RouteHelperExtras;
+
+/**
+ * Generates rails route to
+ * /internal/github_connection/start(.:format)
+ * @param {object | undefined} options
+ * @returns {string} route path
+ */
+export const start_github_connection_url: ((
   options?: {format?: OptionalRouteParameter} & RouteOptions
 ) => string) & RouteHelperExtras;
 
