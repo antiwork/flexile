@@ -365,6 +365,21 @@ const Edit = () => {
       }),
     );
 
+  const startGithubConnection = async (): Promise<void> => {
+    const response = await request({
+      method: "POST",
+      accept: "json",
+      url: start_github_connection_url(),
+      jsonData: { redirect_url: window.location.href },
+      assertOk: true,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    const { url } = (await response.json()) as { url: string };
+
+    window.location.href = url;
+  };
+
   return (
     <>
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
@@ -405,19 +420,8 @@ const Edit = () => {
           </AlertTitle>
           <Button
             variant="outline"
-            onClick={async () => {
-              const response = await request({
-                method: "POST",
-                accept: "json",
-                url: start_github_connection_url(),
-                jsonData: { redirect_url: window.location.href },
-                assertOk: true,
-              });
-
-              const data: { url: string } = await response.json();
-              const { url } = data;
-
-              window.location.href = url;
+            onClick={() => {
+              void startGithubConnection();
             }}
             className="h-9 cursor-pointer bg-white/80 text-black hover:bg-white hover:text-black dark:bg-white/70 dark:hover:bg-white"
           >
@@ -787,10 +791,10 @@ const LineItem = ({
                     className="group text-muted-foreground hover:bg-accent/50 hover:text-foreground flex h-7 items-center gap-1.5 px-2 text-xs font-bold"
                     onClick={(e) => {
                       e.stopPropagation();
-                      refetch();
+                      void refetch();
                     }}
                   >
-                    <RefreshCw className={`size-3.5 ${isFetchingPR ? "animate-spin" : ""}`} />
+                    <RefreshCw className="size-3.5 animate-spin" />
                     <span className="group-hover:underline group-hover:underline-offset-2">Retry</span>
                   </Button>
                 ) : null}

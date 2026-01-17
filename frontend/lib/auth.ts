@@ -133,7 +133,7 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user }) {
+    jwt({ token, user }) {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- next-auth types are wrong
       if (!user) return token;
 
@@ -160,7 +160,8 @@ export const authOptions = {
           });
 
           if (res.ok) {
-            const emails: { email: string; verified: boolean; primary: boolean }[] = await res.json();
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+            const emails = (await res.json()) as { email: string; verified: boolean; primary: boolean }[];
             const primaryEmail = emails.find((e) => e.primary);
             if (!primaryEmail?.verified) {
               return false;

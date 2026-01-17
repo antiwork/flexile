@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowLeftIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Ban, CircleAlert, LoaderCircle, MoreHorizontal, Printer, SquarePen, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -99,17 +98,6 @@ const PrintTableCell = ({ children, className }: { children: React.ReactNode; cl
   </TableCell>
 );
 
-const PrintTotalRow = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <div
-    className={cn(
-      "flex justify-between gap-2 print:my-1 print:flex print:items-center print:justify-between print:text-xs",
-      className,
-    )}
-  >
-    {children}
-  </div>
-);
-
 interface ViewLineItemDescriptionProps {
   description: string;
   contractorGithubUsername: string | null;
@@ -169,7 +157,7 @@ const ResponsivePRCardView = ({ prUrl, prResult, isFetchingPR, isAdmin }: Respon
               <Badge variant="secondary" className="border">
                 ${prResult.pr.bounty_cents / 100}
               </Badge>
-              {prResult.pr.paid_invoice_numbers && prResult.pr.paid_invoice_numbers.length > 0 ? (
+              {prResult.pr.paid_invoice_numbers.length > 0 ? (
                 <div className="size-1.5 rounded-full bg-[#D97706]" title="Paid" />
               ) : null}
             </div>
@@ -227,7 +215,7 @@ const ResponsivePRCardView = ({ prUrl, prResult, isFetchingPR, isAdmin }: Respon
       <Separator className="my-0" />
 
       <div className="bg-muted/50 flex flex-col gap-0">
-        {isAdmin && prResult.pr.paid_invoice_numbers && prResult.pr.paid_invoice_numbers.length > 0 ? (
+        {isAdmin && prResult.pr.paid_invoice_numbers.length > 0 ? (
           <div className="border-border/20 flex items-center gap-3 border-b px-4 py-2">
             <div className="text-muted-foreground flex items-center gap-2.5 text-[12px] font-medium">
               <Image src={paidDollar} alt="" width={16} height={16} className="shrink-0" />
@@ -294,7 +282,8 @@ const ResponsivePRCardView = ({ prUrl, prResult, isFetchingPR, isAdmin }: Respon
       ) : null}
     </HoverCard>
   );
-};export default function InvoicePage() {
+};
+export default function InvoicePage() {
   const { id } = useParams<{ id: string }>();
   const user = useCurrentUser();
   const company = useCurrentCompany();

@@ -61,7 +61,8 @@ const IntegrationsSection = () => {
         url: start_github_connection_path(),
         assertOk: true,
       });
-      const data: { url: string } = await response.json(),
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const data = (await response.json()) as { url: string },
         { url } = data;
       window.location.href = url;
     } finally {

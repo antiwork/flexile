@@ -41,8 +41,9 @@ export const githubRouter = createRouter({
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to fetch PR details");
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        const error = (await response.json()) as { error?: string };
+        throw new Error(error.error ?? "Failed to fetch PR details");
       }
 
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
