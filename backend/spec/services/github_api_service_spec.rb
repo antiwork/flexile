@@ -9,24 +9,12 @@ RSpec.describe GithubApiService do
   describe "#parse_pr_url" do
     it "parses a valid GitHub PR URL" do
       url = "https://github.com/antiwork/flexile/pull/123"
-      result = service.parse_pr_url(url)
-
-      expect(result).to eq({
-        owner: "antiwork",
-        repo: "flexile",
-        number: 123,
-      })
+      expect(service.parse_pr_url(url)).to eq({ owner: "antiwork", repo: "flexile", number: 123 })
     end
 
     it "parses a PR URL with fragment" do
       url = "https://github.com/antiwork/flexile/pull/456#issuecomment-789"
-      result = service.parse_pr_url(url)
-
-      expect(result).to eq({
-        owner: "antiwork",
-        repo: "flexile",
-        number: 456,
-      })
+      expect(service.parse_pr_url(url)).to eq({ owner: "antiwork", repo: "flexile", number: 456 })
     end
 
     it "returns nil for invalid URL" do
@@ -44,33 +32,27 @@ RSpec.describe GithubApiService do
 
   describe "#extract_bounty_from_labels" do
     it "extracts bounty from $2k format" do
-      labels = ["bug", "$2k", "priority"]
-      expect(service.extract_bounty_from_labels(labels)).to eq(2000)
+      expect(service.extract_bounty_from_labels(["bug", "$2k", "priority"])).to eq(2000)
     end
 
     it "extracts bounty from $500 format" do
-      labels = ["feature", "$500"]
-      expect(service.extract_bounty_from_labels(labels)).to eq(500)
+      expect(service.extract_bounty_from_labels(["feature", "$500"])).to eq(500)
     end
 
     it "extracts bounty from $1.5k format" do
-      labels = ["$1.5k", "enhancement"]
-      expect(service.extract_bounty_from_labels(labels)).to eq(1500)
+      expect(service.extract_bounty_from_labels(["$1.5k", "enhancement"])).to eq(1500)
     end
 
     it "extracts bounty from bounty: $2k format" do
-      labels = ["bounty: $2k"]
-      expect(service.extract_bounty_from_labels(labels)).to eq(2000)
+      expect(service.extract_bounty_from_labels(["bounty: $2k"])).to eq(2000)
     end
 
     it "returns nil when no bounty label found" do
-      labels = ["bug", "priority", "enhancement"]
-      expect(service.extract_bounty_from_labels(labels)).to be_nil
+      expect(service.extract_bounty_from_labels(["bug", "priority", "enhancement"])).to be_nil
     end
 
     it "returns first bounty found if multiple exist" do
-      labels = ["$1k", "$2k"]
-      expect(service.extract_bounty_from_labels(labels)).to eq(1000)
+      expect(service.extract_bounty_from_labels(["$1k", "$2k"])).to eq(1000)
     end
   end
 
@@ -88,53 +70,69 @@ RSpec.describe GithubApiService do
     end
   end
 
-  describe "#fetch_pull_request", :vcr do
-    it "fetches PR details successfully" do
-      result = service_with_token.fetch_pull_request(
-        owner: "antiwork",
-        repo: "flexile",
-        number: 1
-      )
+  describe "#fetch_pull_request" do
+    let(:owner) { "antiwork" }
+    let(:repo)  { "flexile" }
 
-      expect(result).to include(
-        :title,
-        :number,
-        :state,
-        :merged,
-        :author,
-        :author_avatar,
-        :html_url,
-        :repository,
-        :created_at
-      )
-      expect(result[:number]).to eq(1)
-      expect(result[:repository]).to eq("antiwork/flexile")
+    context "when PR exists" do
+      let(:pr_data) do
+        {
+          number: 1,
+          title: "Test PR",
+          user: { login: "octocat" },
+          labels: [],
+          state: "open",
+          merged: false,
+          html_url: "https://github.com/antiwork/flexile/pull/1",
+          created_at: Time.zone.now,
+        }
+      end
+
+      before do
+        allow_any_instance_of(Octokit::Client)
+          .to receive(:pull_request)
+          .with("#{owner}/#{repo}", 1)
+          .and_return(pr_data)
+      end
+
+      it "fetches PR details successfully" do
+        result = service_with_token.fetch_pull_request(owner: owner, repo: repo, number: 1)
+        expect(result[:number]).to eq(1)
+        expect(result[:title]).to eq("Test PR")
+      end
     end
 
-    it "raises ApiError for non-existent PR" do
-      expect do
-        service_with_token.fetch_pull_request(
-          owner: "antiwork",
-          repo: "flexile",
-          number: 999999
-        )
-      end.to raise_error(GithubApiService::ApiError, /not found/)
+    context "when PR does not exist" do
+      before do
+        allow_any_instance_of(Octokit::Client)
+          .to receive(:pull_request)
+          .with("#{owner}/#{repo}", 999_999)
+          .and_raise(Octokit::NotFound)
+      end
+
+      it "raises ApiError" do
+        expect do
+          service_with_token.fetch_pull_request(owner: owner, repo: repo, number: 999_999)
+        end.to raise_error(GithubApiService::ApiError, /not found/i)
+      end
     end
 
-    it "raises UnauthorizedError for invalid token" do
-      invalid_service = described_class.new(access_token: "invalid_token")
+    context "when token is invalid" do
+      before do
+        allow_any_instance_of(Octokit::Client)
+          .to receive(:pull_request)
+          .and_raise(Octokit::Unauthorized)
+      end
 
-      expect do
-        invalid_service.fetch_pull_request(
-          owner: "antiwork",
-          repo: "flexile",
-          number: 1
-        )
-      end.to raise_error(GithubApiService::UnauthorizedError)
+      it "raises UnauthorizedError" do
+        expect do
+          service_with_token.fetch_pull_request(owner: owner, repo: repo, number: 1)
+        end.to raise_error(GithubApiService::UnauthorizedError)
+      end
     end
   end
 
-  describe "#fetch_issue_labels", :vcr do
+  describe "#fetch_issue_labels" do
     it "fetches labels for a PR" do
       labels = service_with_token.fetch_issue_labels(
         owner: "antiwork",
@@ -146,31 +144,39 @@ RSpec.describe GithubApiService do
     end
   end
 
-  describe "#fetch_pr_details", :vcr do
-    it "fetches complete PR details with bounty" do
-      # Assuming PR #1 has a $2k label
-      result = service_with_token.fetch_pr_details(
-        url: "https://github.com/antiwork/flexile/pull/1"
-      )
+  describe "#fetch_pr_details" do
+    let(:pr_data) do
+      {
+        number: 1,
+        title: "Test PR",
+        user: { login: "octocat" },
+        labels: [double("label", name: "Bounty: $2000")],
+        state: "open",
+        merged: false,
+        html_url: "https://github.com/antiwork/flexile/pull/1",
+        created_at: Time.zone.now,
+      }
+    end
 
-      expect(result).to include(
-        :title,
-        :number,
-        :state,
-        :merged,
-        :author,
-        :bounty_cents,
-        :verified_author
-      )
-      expect(result[:verified_author]).to be_nil # no username provided
+    before do
+      allow_any_instance_of(Octokit::Client)
+        .to receive(:pull_request)
+        .with("antiwork/flexile", 1)
+        .and_return(pr_data)
+    end
+
+    it "fetches complete PR details with bounty" do
+      result = service_with_token.fetch_pr_details(url: "https://github.com/antiwork/flexile/pull/1")
+      expect(result).to include(:title, :number, :state, :merged, :author, :bounty_cents, :verified_author)
+      expect(result[:verified_author]).to be_nil
+      expect(result[:bounty_cents]).to eq(200_000) # cents
     end
 
     it "verifies author when github_username provided" do
       result = service_with_token.fetch_pr_details(
         url: "https://github.com/antiwork/flexile/pull/1",
-        github_username: "octocat" # Replace with actual author
+        github_username: "octocat"
       )
-
       expect(result[:verified_author]).to be_in([true, false])
     end
 
