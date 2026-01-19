@@ -213,6 +213,9 @@ test.describe("Bank account settings", () => {
     });
 
     test("shows relevant account types", async ({ page }) => {
+      // Reload page to pick up the beforeEach factory change
+      await page.reload();
+      await page.waitForLoadState("networkidle");
       await page.getByRole("button", { name: "Add bank account" }).click();
       await selectComboboxOption(page, "Currency", "KRW (South Korean Won)");
       await expect(page.getByLabel("Name of the business / organisation")).toBeVisible();
