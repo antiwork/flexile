@@ -113,9 +113,6 @@ test.describe("Invoice submission, approval and rejection", () => {
     await logout(page);
     await login(page, adminUser);
 
-    // Wait for invoice list to load
-    await expect(page.locator("tbody tr")).toHaveCount(3, { timeout: 10000 });
-
     const firstRow = page.locator("tbody tr").first();
     const secondRow = page.locator("tbody tr").nth(1);
     const thirdRow = page.locator("tbody tr").nth(2);

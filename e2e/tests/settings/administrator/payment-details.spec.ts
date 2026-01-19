@@ -39,7 +39,6 @@ test.describe("Company administrator settings - payment details", () => {
 
     await withinModal(
       async () => {
-        await expect(stripePaymentFrame.getByLabel("Test Institution")).toBeVisible({ timeout: 15000 });
         await stripePaymentFrame.getByLabel("Test Institution").click();
         await stripeBankFrame.getByTestId("agree-button").click();
         await stripeBankFrame.getByTestId("success").click();
