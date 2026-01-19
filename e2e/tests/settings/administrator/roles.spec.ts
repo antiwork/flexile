@@ -436,8 +436,10 @@ test.describe("Roles page invite functionality", () => {
     await page.goto("/settings/administrator/roles");
 
     await page.getByRole("button", { name: "Add member" }).click();
+    const modal = page.getByRole("dialog");
+    await expect(modal).toBeVisible();
 
-    await expect(page.getByRole("button", { name: "Add member" })).toBeDisabled();
+    await expect(modal.getByRole("button", { name: "Add member" })).toBeDisabled();
 
     await page.getByPlaceholder("Search by name or enter email...").fill("invalid_name");
 
@@ -475,8 +477,9 @@ test.describe("Roles page invite functionality", () => {
     );
 
     // Check that the invited user appears in the table with the correct role
+    // Use extended timeout to allow for optimistic update and API response
     const invitedRow = page.getByRole("row", { name: new RegExp(existingUser.email, "u") });
-    await expect(invitedRow).toBeVisible();
+    await expect(invitedRow).toBeVisible({ timeout: 15000 });
     await expect(invitedRow.getByRole("cell", { name: "Lawyer", exact: true })).toBeVisible();
 
     // Verify the user is now a lawyer in our company

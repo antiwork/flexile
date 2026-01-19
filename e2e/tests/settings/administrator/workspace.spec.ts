@@ -9,6 +9,9 @@ test.describe("Workspace settings", () => {
   test("allows updating workspace settings", async ({ page }) => {
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
     await login(page, adminUser);
+
+    // Wait for navigation to complete and sidebar to be ready
+    await expect(page.getByRole("link", { name: "Settings" })).toBeVisible({ timeout: 10000 });
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Workspace settings" }).click();
 
