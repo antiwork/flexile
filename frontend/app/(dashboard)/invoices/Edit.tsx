@@ -553,7 +553,7 @@ const Edit = () => {
             <span>
               You linked a Pull Request from {company.githubOrgName}. Connect GitHub to verify your ownership.
             </span>
-            <Button variant="outline" size="small" onClick={() => void handleConnectGitHub()}>
+            <Button variant="outline" size="small" onClick={() => handleConnectGitHub()}>
               <Image src={githubMark} alt="" className="size-4 dark:invert" />
               Connect GitHub
             </Button>
