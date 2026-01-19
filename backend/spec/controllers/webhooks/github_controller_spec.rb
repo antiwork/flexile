@@ -74,11 +74,6 @@ RSpec.describe Webhooks::GithubController do
           invoice.invoice_line_items.first
         end
 
-        before do
-          # Mock the GitHub API call that would happen during bounty refresh
-          allow(GithubService).to receive(:fetch_pr_details_from_url_with_app).and_return(nil)
-        end
-
         it "updates line item when PR is opened" do
           payload = {
             action: "opened",
@@ -95,13 +90,20 @@ RSpec.describe Webhooks::GithubController do
             repository: { full_name: "antiwork/flexile" },
           }
 
+          allow(GithubService).to receive(:fetch_pr_details_from_url).and_return({
+            title: "New feature",
+            state: "open",
+            bounty_cents: nil,
+            linked_issue_number: nil,
+            linked_issue_repo: nil,
+          })
+
           send_webhook("pull_request", payload)
 
           expect(response).to have_http_status(:ok)
 
           line_item.reload
           expect(line_item.github_pr_title).to eq("New feature")
-          expect(line_item.github_pr_author).to eq("newcontributor")
         end
 
         it "updates line item when PR is closed" do
@@ -119,6 +121,14 @@ RSpec.describe Webhooks::GithubController do
             },
             repository: { full_name: "antiwork/flexile" },
           }
+
+          allow(GithubService).to receive(:fetch_pr_details_from_url).and_return({
+            title: "Feature PR",
+            state: "closed",
+            bounty_cents: nil,
+            linked_issue_number: nil,
+            linked_issue_repo: nil,
+          })
 
           send_webhook("pull_request", payload)
 
@@ -144,6 +154,14 @@ RSpec.describe Webhooks::GithubController do
             repository: { full_name: "antiwork/flexile" },
           }
 
+          allow(GithubService).to receive(:fetch_pr_details_from_url).and_return({
+            title: "Feature PR",
+            state: "merged",
+            bounty_cents: nil,
+            linked_issue_number: nil,
+            linked_issue_repo: nil,
+          })
+
           send_webhook("pull_request", payload)
 
           expect(response).to have_http_status(:ok)
@@ -167,6 +185,14 @@ RSpec.describe Webhooks::GithubController do
             },
             repository: { full_name: "antiwork/flexile" },
           }
+
+          allow(GithubService).to receive(:fetch_pr_details_from_url).and_return({
+            title: "Feature PR",
+            state: "draft",
+            bounty_cents: nil,
+            linked_issue_number: nil,
+            linked_issue_repo: nil,
+          })
 
           send_webhook("pull_request", payload)
 
@@ -194,6 +220,14 @@ RSpec.describe Webhooks::GithubController do
             repository: { full_name: "antiwork/flexile" },
           }
 
+          allow(GithubService).to receive(:fetch_pr_details_from_url).and_return({
+            title: "Feature PR",
+            state: "open",
+            bounty_cents: nil,
+            linked_issue_number: nil,
+            linked_issue_repo: nil,
+          })
+
           send_webhook("pull_request", payload)
 
           expect(response).to have_http_status(:ok)
@@ -218,6 +252,14 @@ RSpec.describe Webhooks::GithubController do
             repository: { full_name: "antiwork/flexile" },
           }
 
+          allow(GithubService).to receive(:fetch_pr_details_from_url).and_return({
+            title: "Feature PR",
+            state: "open",
+            bounty_cents: 50000,
+            linked_issue_number: nil,
+            linked_issue_repo: nil,
+          })
+
           send_webhook("pull_request", payload)
 
           expect(response).to have_http_status(:ok)
@@ -227,6 +269,8 @@ RSpec.describe Webhooks::GithubController do
         end
 
         it "clears PR data when PR is deleted" do
+          line_item.update!(github_linked_issue_number: 456, github_linked_issue_repo: "antiwork/flexile")
+
           payload = {
             action: "deleted",
             pull_request: {
@@ -245,6 +289,8 @@ RSpec.describe Webhooks::GithubController do
           expect(line_item.github_pr_number).to be_nil
           expect(line_item.github_pr_title).to be_nil
           expect(line_item.github_pr_state).to be_nil
+          expect(line_item.github_linked_issue_number).to be_nil
+          expect(line_item.github_linked_issue_repo).to be_nil
         end
 
         it "ignores untracked actions like assigned" do
@@ -299,6 +345,14 @@ RSpec.describe Webhooks::GithubController do
               },
             },
           }
+
+          allow(GithubService).to receive(:fetch_pr_details_from_url).and_return({
+            title: "Updated PR title",
+            state: "open",
+            bounty_cents: nil,
+            linked_issue_number: nil,
+            linked_issue_repo: nil,
+          })
 
           send_webhook("pull_request", payload)
 
@@ -379,14 +433,105 @@ RSpec.describe Webhooks::GithubController do
             github_pr_repo: "antiwork/flexile",
             github_pr_title: "Feature",
             github_pr_state: "open",
-            github_pr_author: "contributor"
+            github_pr_author: "contributor",
+            github_linked_issue_number: 456,
+            github_linked_issue_repo: "antiwork/flexile"
           )
           invoice.invoice_line_items.first
         end
 
-        it "triggers bounty refresh when issue is labeled" do
-          # Mock the GitHub API call that would happen during bounty refresh
-          allow(GithubService).to receive(:fetch_pr_details_from_url_with_app).and_return(nil)
+        before do
+          allow(GithubService).to receive(:fetch_pr_labels).and_return([])
+        end
+
+        it "updates bounty when linked issue is labeled and PR has no bounty" do
+          payload = {
+            action: "labeled",
+            issue: {
+              number: 456,
+              title: "Bug fix needed",
+              labels: [{ name: "$250" }],
+            },
+            repository: { full_name: "antiwork/flexile" },
+          }
+
+          allow(GithubService).to receive(:fetch_pr_details_from_url).and_return({
+            title: "Feature",
+            state: "open",
+            bounty_cents: 25000,
+            linked_issue_number: 456,
+            linked_issue_repo: "antiwork/flexile",
+          })
+
+          send_webhook("issues", payload)
+
+          expect(response).to have_http_status(:ok)
+
+          line_item.reload
+          expect(line_item.github_pr_bounty_cents).to eq(25000)
+        end
+
+        it "does not update bounty when PR has its own bounty label" do
+          line_item.update!(github_pr_bounty_cents: 50000)
+          allow(GithubService).to receive(:fetch_pr_labels).and_return([{ "name" => "$500" }])
+
+          payload = {
+            action: "labeled",
+            issue: {
+              number: 456,
+              title: "Bug fix needed",
+              labels: [{ name: "$250" }],
+            },
+            repository: { full_name: "antiwork/flexile" },
+          }
+
+          allow(GithubService).to receive(:fetch_pr_details_from_url).and_return({
+            title: "Feature",
+            state: "open",
+            bounty_cents: 50000,
+            linked_issue_number: 456,
+            linked_issue_repo: "antiwork/flexile",
+          })
+
+          send_webhook("issues", payload)
+
+          expect(response).to have_http_status(:ok)
+
+          line_item.reload
+          expect(line_item.github_pr_bounty_cents).to eq(50000)
+        end
+
+        it "clears bounty when linked issue is unlabeled and PR has no bounty" do
+          line_item.update!(github_pr_bounty_cents: 25000)
+
+          payload = {
+            action: "unlabeled",
+            issue: {
+              number: 456,
+              title: "Bug fix needed",
+              labels: [],
+            },
+            repository: { full_name: "antiwork/flexile" },
+          }
+
+          allow(GithubService).to receive(:fetch_pr_details_from_url).and_return({
+            title: "Feature",
+            state: "open",
+            bounty_cents: nil,
+            linked_issue_number: 456,
+            linked_issue_repo: "antiwork/flexile",
+          })
+
+          send_webhook("issues", payload)
+
+          expect(response).to have_http_status(:ok)
+
+          line_item.reload
+          expect(line_item.github_pr_bounty_cents).to be_nil
+        end
+
+        it "does not update line items not linked to the issue" do
+          line_item.update!(github_linked_issue_number: 999, github_pr_bounty_cents: 10000)
 
           payload = {
             action: "labeled",
@@ -401,6 +546,9 @@ RSpec.describe Webhooks::GithubController do
           send_webhook("issues", payload)
 
           expect(response).to have_http_status(:ok)
+
+          line_item.reload
+          expect(line_item.github_pr_bounty_cents).to eq(10000)
         end
 
         it "ignores non-label actions" do

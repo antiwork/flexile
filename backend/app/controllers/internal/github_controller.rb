@@ -100,7 +100,7 @@ class Internal::GithubController < Internal::BaseController
     end
 
     begin
-      pr_details = GithubService.fetch_pr_details_from_url_with_app(
+      pr_details = GithubService.fetch_pr_details_from_url(
         org_name: Current.company.github_org_name,
         url: url
       )

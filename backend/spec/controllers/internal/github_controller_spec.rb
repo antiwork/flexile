@@ -278,7 +278,7 @@ RSpec.describe Internal::GithubController do
     end
 
     it "fetches PR details using GitHub App" do
-      allow(GithubService).to receive(:fetch_pr_details_from_url_with_app).and_return({
+      allow(GithubService).to receive(:fetch_pr_details_from_url).and_return({
         url: "https://github.com/owner/repo/pull/123",
         number: 123,
         title: "Fix bug",
@@ -295,7 +295,7 @@ RSpec.describe Internal::GithubController do
       get :pr, params: { url: "https://github.com/owner/repo/pull/123" }
 
       expect(response).to have_http_status(:ok)
-      expect(GithubService).to have_received(:fetch_pr_details_from_url_with_app).with(org_name: "owner", url: "https://github.com/owner/repo/pull/123")
+      expect(GithubService).to have_received(:fetch_pr_details_from_url).with(org_name: "owner", url: "https://github.com/owner/repo/pull/123")
 
       json_response = response.parsed_body
       expect(json_response["pr"]["number"]).to eq(123)

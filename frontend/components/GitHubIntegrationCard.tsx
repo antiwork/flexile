@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import Image from "next/image";
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { z } from "zod";
 import { MutationStatusButton } from "@/components/MutationButton";
 import {
@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import githubMark from "@/images/github-mark.svg";
 import { request } from "@/utils/request";
-import { oauth_url_github_path } from "@/utils/routes";
+import { useGitHubOAuth } from "@/utils/useGitHubOAuth";
 
 interface GitHubIntegrationCardProps {
   connectedIdentifier?: string | null;
@@ -48,6 +48,7 @@ export function GitHubIntegrationCard({
   const queryClient = useQueryClient();
   const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { openOAuthPopup } = useGitHubOAuth();
 
   const disconnectMutation = useMutation({
     mutationFn: async (): Promise<unknown> => {
@@ -74,54 +75,6 @@ export function GitHubIntegrationCard({
       onDisconnectSuccess?.();
     },
   });
-
-  const handleConnect = useCallback(async () => {
-    const response = await request({
-      method: "GET",
-      url: oauth_url_github_path(),
-      accept: "json",
-    });
-
-    if (!response.ok) {
-      return;
-    }
-
-    const data = z.object({ url: z.string() }).parse(await response.json());
-
-    const width = 600;
-    const height = 700;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-
-    const popup = window.open(
-      data.url,
-      "github-oauth",
-      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`,
-    );
-
-    const handleMessage = (event: MessageEvent<unknown>) => {
-      const messageData = event.data;
-      if (
-        typeof messageData === "object" &&
-        messageData !== null &&
-        "type" in messageData &&
-        messageData.type === "github-oauth-success"
-      ) {
-        void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-        popup?.close();
-        window.removeEventListener("message", handleMessage);
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    const pollTimer = setInterval(() => {
-      if (popup?.closed) {
-        clearInterval(pollTimer);
-        window.removeEventListener("message", handleMessage);
-      }
-    }, 500);
-  }, [queryClient]);
 
   const handleDisconnectModalOpenChange = (open: boolean) => {
     if (!open) {
@@ -163,7 +116,7 @@ export function GitHubIntegrationCard({
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => void handleConnect()}>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => void openOAuthPopup()}>
               Connect
             </Button>
           )}

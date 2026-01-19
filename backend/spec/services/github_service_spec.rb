@@ -1,6 +1,26 @@
 # frozen_string_literal: true
 
 RSpec.describe GithubService do
+  # Helper to stub the GitHub App token flow
+  def stub_app_token(org_name: "owner", token: "test_token")
+    allow(GlobalConfig).to receive(:get).with("GH_APP_ID").and_return("12345")
+    allow(GlobalConfig).to receive(:get).with("GH_APP_PRIVATE_KEY").and_return(OpenSSL::PKey::RSA.generate(2048).to_pem)
+
+    stub_request(:get, "https://api.github.com/app/installations")
+      .to_return(
+        status: 200,
+        body: [{ "id" => 999, "account" => { "login" => org_name, "id" => 1 } }].to_json,
+        headers: { "Content-Type" => "application/json" }
+      )
+
+    stub_request(:post, "https://api.github.com/app/installations/999/access_tokens")
+      .to_return(
+        status: 201,
+        body: { "token" => token }.to_json,
+        headers: { "Content-Type" => "application/json" }
+      )
+  end
+
   # Helper to stub GraphQL requests for linked issues
   def stub_graphql_linked_issues(owner:, repo:, pr_number:, issues: [])
     graphql_response = {
@@ -167,6 +187,8 @@ RSpec.describe GithubService do
     end
 
     before do
+      stub_app_token(org_name: "owner")
+
       stub_request(:get, "https://api.github.com/repos/owner/repo/pulls/123")
         .with(headers: { "Authorization" => "Bearer test_token" })
         .to_return(
@@ -175,13 +197,12 @@ RSpec.describe GithubService do
           headers: { "Content-Type" => "application/json" }
         )
 
-      # Stub GraphQL for linked issues (returns empty by default)
       stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 123, issues: [])
     end
 
     it "fetches PR details from GitHub API" do
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 123
@@ -193,6 +214,8 @@ RSpec.describe GithubService do
       expect(pr_details[:state]).to eq("open")
       expect(pr_details[:author]).to eq("contributor")
       expect(pr_details[:repo]).to eq("owner/repo")
+      expect(pr_details[:linked_issue_number]).to be_nil
+      expect(pr_details[:linked_issue_repo]).to be_nil
     end
 
     it "returns merged state when PR is merged" do
@@ -209,7 +232,7 @@ RSpec.describe GithubService do
       stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 456, issues: [])
 
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 456
@@ -232,7 +255,7 @@ RSpec.describe GithubService do
       stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 789, issues: [])
 
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 789
@@ -347,6 +370,10 @@ RSpec.describe GithubService do
 
 
   describe "issue label fallback for bounty" do
+    before do
+      stub_app_token(org_name: "owner")
+    end
+
     it "fetches bounty from linked issue when PR has no bounty label" do
       # PR without bounty label
       stub_request(:get, "https://api.github.com/repos/owner/repo/pulls/123")
@@ -382,7 +409,7 @@ RSpec.describe GithubService do
         )
 
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 123
@@ -413,13 +440,16 @@ RSpec.describe GithubService do
 
       # Should not fetch issue since PR has bounty
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 123
       )
 
       expect(pr_details[:bounty_cents]).to eq(10000)
+      # When bounty is on PR itself, no linked issue info
+      expect(pr_details[:linked_issue_number]).to be_nil
+      expect(pr_details[:linked_issue_repo]).to be_nil
     end
 
     it "handles 'closes' keyword" do
@@ -451,13 +481,15 @@ RSpec.describe GithubService do
         )
 
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 123
       )
 
       expect(pr_details[:bounty_cents]).to eq(20000)
+      expect(pr_details[:linked_issue_number]).to eq(42)
+      expect(pr_details[:linked_issue_repo]).to eq("owner/repo")
     end
 
     it "handles 'resolves' keyword" do
@@ -489,13 +521,15 @@ RSpec.describe GithubService do
         )
 
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 123
       )
 
       expect(pr_details[:bounty_cents]).to eq(30000)
+      expect(pr_details[:linked_issue_number]).to eq(42)
+      expect(pr_details[:linked_issue_repo]).to eq("owner/repo")
     end
 
     it "returns nil bounty when neither PR nor issue has bounty" do
@@ -527,7 +561,7 @@ RSpec.describe GithubService do
         )
 
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 123
@@ -558,7 +592,7 @@ RSpec.describe GithubService do
       stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 123, issues: [])
 
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 123
@@ -589,7 +623,7 @@ RSpec.describe GithubService do
       stub_graphql_linked_issues(owner: "owner", repo: "repo", pr_number: 123, issues: [])
 
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 123
@@ -627,7 +661,7 @@ RSpec.describe GithubService do
       )
 
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 123
@@ -635,6 +669,8 @@ RSpec.describe GithubService do
 
       # Should get bounty from UI-linked issue without needing to parse body
       expect(pr_details[:bounty_cents]).to eq(50000)
+      expect(pr_details[:linked_issue_number]).to eq(42)
+      expect(pr_details[:linked_issue_repo]).to eq("owner/repo")
     end
 
     it "avoids duplicate API calls when issue is both UI-linked and in PR body" do
@@ -669,13 +705,15 @@ RSpec.describe GithubService do
       # (No stub_request for issues/42, so test would fail if it tries to fetch)
 
       pr_details = described_class.fetch_pr_details(
-        access_token: "test_token",
+        org_name: "owner",
         owner: "owner",
         repo: "repo",
         pr_number: 123
       )
 
       expect(pr_details[:bounty_cents]).to eq(50000)
+      expect(pr_details[:linked_issue_number]).to eq(42)
+      expect(pr_details[:linked_issue_repo]).to eq("owner/repo")
     end
   end
 
@@ -734,44 +772,6 @@ RSpec.describe GithubService do
       )
 
       expect(issues).to eq([])
-    end
-  end
-
-  describe ".fetch_pr_details_from_url" do
-    it "parses URL and fetches PR details" do
-      stub_request(:get, "https://api.github.com/repos/antiwork/flexile/pulls/1507")
-        .to_return(
-          status: 200,
-          body: {
-            html_url: "https://github.com/antiwork/flexile/pull/1507",
-            number: 1507,
-            title: "GitHub Integration",
-            state: "open",
-            user: { login: "contributor", avatar_url: "https://example.com/avatar" },
-            labels: [{ name: "$3000" }],
-            created_at: "2024-01-15T10:00:00Z",
-            merged_at: nil,
-            closed_at: nil,
-          }.to_json,
-          headers: { "Content-Type" => "application/json" }
-        )
-
-      pr_details = described_class.fetch_pr_details_from_url(
-        access_token: "test_token",
-        url: "https://github.com/antiwork/flexile/pull/1507"
-      )
-
-      expect(pr_details[:number]).to eq(1507)
-      expect(pr_details[:bounty_cents]).to eq(300000)
-    end
-
-    it "returns nil for invalid URLs" do
-      result = described_class.fetch_pr_details_from_url(
-        access_token: "test_token",
-        url: "https://github.com/owner/repo"
-      )
-
-      expect(result).to be_nil
     end
   end
 

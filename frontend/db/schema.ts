@@ -753,6 +753,8 @@ export const invoiceLineItems = pgTable(
     githubPrAuthor: varchar("github_pr_author"),
     githubPrRepo: varchar("github_pr_repo"),
     githubPrBountyCents: integer("github_pr_bounty_cents"),
+    githubLinkedIssueNumber: integer("github_linked_issue_number"),
+    githubLinkedIssueRepo: varchar("github_linked_issue_repo"),
   },
   (table) => [
     index("index_invoice_line_items_on_invoice_id").using("btree", table.invoiceId.asc().nullsLast().op("int8_ops")),

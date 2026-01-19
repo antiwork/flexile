@@ -2,14 +2,13 @@
 
 import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
-import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert, Loader2, Plus, RotateCcw, Upload } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useRef, useState } from "react";
-import { toast } from "sonner";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -43,9 +42,9 @@ import {
   company_invoices_path,
   edit_company_invoice_path,
   new_company_invoice_path,
-  oauth_url_github_path,
   pr_github_path,
 } from "@/utils/routes";
+import { useGitHubOAuth } from "@/utils/useGitHubOAuth";
 import QuantityInput from "./QuantityInput";
 import { LegacyAddress as Address, Totals, useCanSubmitInvoices } from ".";
 
@@ -256,7 +255,6 @@ const Edit = () => {
   const worker = user.roles.worker;
   assert(worker != null);
 
-  const queryClient = useQueryClient();
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
@@ -312,53 +310,14 @@ const Edit = () => {
 
   const showGitHubConnectAlert = hasCompanyOrgPRUrls && !user.githubUsername;
 
-  const handleConnectGitHub = useCallback(async () => {
-    const response = await request({
-      method: "GET",
-      url: oauth_url_github_path(),
-      accept: "json",
+  const { openOAuthPopup } = useGitHubOAuth();
+
+  const handleConnectGitHub = useCallback(() => {
+    void openOAuthPopup({
+      showSuccessToast: true,
+      invalidateQueries: [["currentUser"], ["pr-details"]],
     });
-
-    if (!response.ok) return;
-
-    const data = z.object({ url: z.string() }).parse(await response.json());
-
-    const width = 600;
-    const height = 700;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-
-    const popup = window.open(
-      data.url,
-      "github-oauth",
-      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`,
-    );
-
-    const handleMessage = (event: MessageEvent<unknown>) => {
-      const messageData = event.data;
-      if (
-        typeof messageData === "object" &&
-        messageData !== null &&
-        "type" in messageData &&
-        messageData.type === "github-oauth-success"
-      ) {
-        popup?.close();
-        window.removeEventListener("message", handleMessage);
-        toast.success("GitHub successfully connected.");
-        void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-        void queryClient.invalidateQueries({ queryKey: ["pr-details"] });
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    const pollTimer = setInterval(() => {
-      if (popup?.closed) {
-        clearInterval(pollTimer);
-        window.removeEventListener("message", handleMessage);
-      }
-    }, 500);
-  }, [queryClient]);
+  }, [openOAuthPopup]);
 
   const validate = () => {
     setErrorField(null);

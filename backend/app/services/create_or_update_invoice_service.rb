@@ -148,12 +148,8 @@ class CreateOrUpdateInvoiceService
       # Skip if we already have PR data for this exact URL
       return if line_item.github_pr_url == description && line_item.github_pr_number.present?
 
-      # Require company GitHub App to be connected
-      return unless invoice.company.github_org_name.present?
-
       begin
-        # Fetch PR details using company's GitHub App installation
-        pr_details = GithubService.fetch_pr_details_from_url_with_app(
+        pr_details = GithubService.fetch_pr_details_from_url(
           org_name: invoice.company.github_org_name,
           url: description
         )
@@ -166,26 +162,15 @@ class CreateOrUpdateInvoiceService
             github_pr_state: pr_details[:state],
             github_pr_author: pr_details[:author],
             github_pr_repo: pr_details[:repo],
-            github_pr_bounty_cents: pr_details[:bounty_cents]
+            github_pr_bounty_cents: pr_details[:bounty_cents],
+            github_linked_issue_number: pr_details[:linked_issue_number],
+            github_linked_issue_repo: pr_details[:linked_issue_repo],
           )
         end
       rescue GithubService::ApiError => e
-        # Log but don't fail the invoice creation
         Rails.logger.warn("Failed to fetch GitHub PR details for #{description}: #{e.message}")
         clear_github_pr_fields(line_item)
       end
-    end
-
-    def clear_github_pr_fields(line_item)
-      line_item.assign_attributes(
-        github_pr_url: nil,
-        github_pr_number: nil,
-        github_pr_title: nil,
-        github_pr_state: nil,
-        github_pr_author: nil,
-        github_pr_repo: nil,
-        github_pr_bounty_cents: nil
-      )
     end
 
     def invoice_expenses_params
@@ -193,5 +178,9 @@ class CreateOrUpdateInvoiceService
 
       params.permit(invoice_expenses: [:id, :description, :expense_category_id, :total_amount_in_cents, :attachment])
             .fetch(:invoice_expenses)
+    end
+
+    def clear_github_pr_fields(line_item)
+      line_item.assign_attributes(InvoiceLineItem::GITHUB_PR_FIELDS.index_with { nil })
     end
 end

@@ -68,11 +68,11 @@ class GithubService
       }
     end
 
-    def fetch_pr_details(access_token:, owner:, repo:, pr_number:)
-      pr = api_request(access_token: access_token, path: "/repos/#{owner}/#{repo}/pulls/#{pr_number}")
+    def fetch_pr_details(org_name:, owner:, repo:, pr_number:)
+      token = get_app_token(org_name)
+      pr = api_request(access_token: token, path: "/repos/#{owner}/#{repo}/pulls/#{pr_number}")
 
-      bounty = extract_bounty_from_labels(pr["labels"]) ||
-               fetch_bounty_from_linked_issue(access_token: access_token, owner: owner, repo: repo, pr_number: pr_number, pr_body: pr["body"])
+      bounty_info = fetch_bounty_with_issue_info(access_token: token, owner: owner, repo: repo, pr_number: pr_number, pr_body: pr["body"], pr_labels: pr["labels"])
 
       {
         url: pr["html_url"],
@@ -82,11 +82,27 @@ class GithubService
         author: pr["user"]["login"],
         author_avatar_url: pr["user"]["avatar_url"],
         repo: "#{owner}/#{repo}",
-        bounty_cents: bounty,
+        bounty_cents: bounty_info[:bounty_cents],
+        linked_issue_number: bounty_info[:linked_issue_number],
+        linked_issue_repo: bounty_info[:linked_issue_repo],
         created_at: pr["created_at"],
         merged_at: pr["merged_at"],
         closed_at: pr["closed_at"],
       }
+    end
+
+    def fetch_pr_details_from_url(org_name:, url:)
+      parsed = parse_pr_url(url)
+      parsed ? fetch_pr_details(org_name: org_name, **parsed) : nil
+    end
+
+    def fetch_pr_labels(org_name:, url:)
+      parsed = parse_pr_url(url)
+      return nil unless parsed
+
+      token = get_app_token(org_name)
+      pr = api_request(access_token: token, path: "/repos/#{parsed[:owner]}/#{parsed[:repo]}/pulls/#{parsed[:pr_number]}")
+      pr["labels"]
     end
 
     def fetch_linked_issues(access_token:, owner:, repo:, pr_number:)
@@ -112,11 +128,6 @@ class GithubService
       issues.map { |i| { number: i["number"], labels: (i.dig("labels", "nodes") || []).map { |l| { "name" => l["name"] } } } }
     rescue ApiError
       []
-    end
-
-    def fetch_pr_details_from_url(access_token:, url:)
-      parsed = parse_pr_url(url)
-      parsed ? fetch_pr_details(access_token: access_token, **parsed) : nil
     end
 
     def parse_pr_url(url)
@@ -208,17 +219,11 @@ class GithubService
       list_app_installations.find { |i| i.dig(:account, :login)&.downcase == account_login.downcase }
     end
 
-    def fetch_pr_details_with_app(org_name:, owner:, repo:, pr_number:)
+    def get_app_token(org_name)
       installation = find_installation_by_account(account_login: org_name)
       raise ApiError, "GitHub App not installed on #{org_name}" unless installation
 
-      token = get_installation_access_token(installation_id: installation[:id])
-      fetch_pr_details(access_token: token, owner: owner, repo: repo, pr_number: pr_number)
-    end
-
-    def fetch_pr_details_from_url_with_app(org_name:, url:)
-      parsed = parse_pr_url(url)
-      parsed ? fetch_pr_details_with_app(org_name: org_name, **parsed) : nil
+      get_installation_access_token(installation_id: installation[:id])
     end
 
     def pr_state(pr)
@@ -305,24 +310,30 @@ class GithubService
         response.parsed_response
       end
 
-      def fetch_bounty_from_linked_issue(access_token:, owner:, repo:, pr_number:, pr_body:)
+      def fetch_bounty_with_issue_info(access_token:, owner:, repo:, pr_number:, pr_body:, pr_labels:)
+        # First check if bounty is on the PR itself
+        pr_bounty = extract_bounty_from_labels(pr_labels)
+        return { bounty_cents: pr_bounty, linked_issue_number: nil, linked_issue_repo: nil } if pr_bounty
+
+        # Then check linked issues via GraphQL
         linked = fetch_linked_issues(access_token: access_token, owner: owner, repo: repo, pr_number: pr_number)
 
         linked.each do |issue|
           bounty = extract_bounty_from_labels(issue[:labels])
-          return bounty if bounty
+          return { bounty_cents: bounty, linked_issue_number: issue[:number], linked_issue_repo: "#{owner}/#{repo}" } if bounty
         end
 
-        return nil if pr_body.blank?
+        return { bounty_cents: nil, linked_issue_number: nil, linked_issue_repo: nil } if pr_body.blank?
 
+        # Finally check issues referenced in PR body
         new_numbers = extract_linked_issue_numbers(pr_body, owner, repo) - linked.map { |i| i[:number] }
         new_numbers.each do |num|
           labels = fetch_issue_labels(access_token: access_token, owner: owner, repo: repo, issue_number: num)
           bounty = extract_bounty_from_labels(labels)
-          return bounty if bounty
+          return { bounty_cents: bounty, linked_issue_number: num, linked_issue_repo: "#{owner}/#{repo}" } if bounty
         end
 
-        nil
+        { bounty_cents: nil, linked_issue_number: nil, linked_issue_repo: nil }
       end
 
       def fetch_issue_labels(access_token:, owner:, repo:, issue_number:)
