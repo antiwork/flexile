@@ -229,7 +229,7 @@ RSpec.describe Internal::GithubController do
       expect(response).to have_http_status(:bad_request)
 
       json_response = response.parsed_body
-      expect(json_response["error"]).to eq("The code is invalid")
+      expect(json_response["error"]).to eq("GitHub authentication failed. Please try again.")
     end
   end
 
