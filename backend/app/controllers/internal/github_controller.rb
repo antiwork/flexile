@@ -66,9 +66,11 @@ class Internal::GithubController < Internal::BaseController
     rescue GithubService::ConfigurationError
       render json: { error: "GitHub integration is not configured" }, status: :service_unavailable
     rescue GithubService::OAuthError => e
-      render json: { error: e.message }, status: :bad_request
+      Rails.logger.error "[GitHub OAuth] Authentication failed for user #{Current.user.id}: #{e.message}"
+      render json: { error: "GitHub authentication failed. Please try again." }, status: :bad_request
     rescue GithubService::ApiError => e
-      render json: { error: e.message }, status: :unprocessable_entity
+      Rails.logger.error "[GitHub API] Error fetching user info for user #{Current.user.id}: #{e.message}"
+      render json: { error: "Unable to fetch data from GitHub. Please try again." }, status: :unprocessable_entity
     end
   end
 
@@ -112,7 +114,8 @@ class Internal::GithubController < Internal::BaseController
 
       render json: { pr: pr_details }
     rescue GithubService::ApiError => e
-      render json: { error: e.message }, status: :unprocessable_entity
+      Rails.logger.error "[GitHub PR] API error fetching PR #{url} for user #{Current.user.id}: #{e.message}"
+      render json: { error: "Unable to fetch PR details from GitHub. Please try again." }, status: :unprocessable_entity
     end
   end
 
@@ -135,6 +138,12 @@ class Internal::GithubController < Internal::BaseController
       redirect_uri: github_installation_callback_url
     )
     user_info = GithubService.fetch_user_info(access_token: access_token)
+
+    existing_user = User.where(github_uid: user_info[:uid]).where.not(id: user.id).first
+    if existing_user.present?
+      return render json: { error: "This GitHub account is already connected to another user" }, status: :conflict
+    end
+
     user.update!(
       github_uid: user_info[:uid],
       github_username: user_info[:username],
@@ -162,9 +171,11 @@ class Internal::GithubController < Internal::BaseController
       message: "Successfully connected to #{account[:login]}",
     }
   rescue GithubService::OAuthError => e
-    render json: { error: "GitHub authentication failed: #{e.message}" }, status: :bad_request
+    Rails.logger.error "[GitHub Installation] OAuth error for user #{state_params&.dig(:user_id)}: #{e.message}"
+    render json: { error: "GitHub authentication failed. Please try again." }, status: :bad_request
   rescue GithubService::ApiError => e
-    render json: { error: "GitHub API error: #{e.message}" }, status: :unprocessable_entity
+    Rails.logger.error "[GitHub Installation] API error for user #{state_params&.dig(:user_id)}: #{e.message}"
+    render json: { error: "Unable to fetch data from GitHub. Please try again." }, status: :unprocessable_entity
   rescue StandardError => e
     Rails.logger.error "[GitHub Installation] Unexpected error: #{e.class} - #{e.message}\n#{e.backtrace.first(5).join("\n")}"
     render json: { error: "An unexpected error occurred. Please try again." }, status: :internal_server_error

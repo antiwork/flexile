@@ -24,7 +24,10 @@ class Webhooks::GithubController < ApplicationController
   private
     def verify_signature(payload, signature)
       secret = GlobalConfig.get("GH_WEBHOOK_SECRET")
-      return !Rails.env.production? if secret.blank?
+      if secret.blank?
+        # Allow in development/test only; production and staging require the secret
+        return Rails.env.local?
+      end
       return false if signature.blank?
 
       expected = "sha256=#{OpenSSL::HMAC.hexdigest('sha256', secret, payload)}"

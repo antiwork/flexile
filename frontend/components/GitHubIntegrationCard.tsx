@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
 import { z } from "zod";
@@ -34,6 +34,10 @@ interface GitHubIntegrationCardProps {
   disconnectEndpoint: string;
   disconnectModalTitle: string;
   disconnectModalDescription: string;
+  disconnectButtonText?: string;
+  onConnect?: () => void | Promise<void>;
+  isConnecting?: boolean;
+  connectError?: string | null;
   onDisconnectSuccess?: () => void;
 }
 
@@ -43,12 +47,18 @@ export function GitHubIntegrationCard({
   disconnectEndpoint,
   disconnectModalTitle,
   disconnectModalDescription,
+  disconnectButtonText = "Disconnect account",
+  onConnect,
+  isConnecting = false,
+  connectError,
   onDisconnectSuccess,
 }: GitHubIntegrationCardProps) {
   const queryClient = useQueryClient();
   const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { openOAuthPopup } = useGitHubOAuth();
+
+  const handleConnect = onConnect ?? (() => void openOAuthPopup());
 
   const disconnectMutation = useMutation({
     mutationFn: async (): Promise<unknown> => {
@@ -105,23 +115,37 @@ export function GitHubIntegrationCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  className="hover:text-destructive focus:text-destructive"
+                  className="hover:text-destructive focus:text-destructive justify-center"
                   onClick={() => {
                     setIsDropdownOpen(false);
                     setIsDisconnectModalOpen(true);
                   }}
                 >
-                  Disconnect account
+                  {disconnectButtonText}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => void openOAuthPopup()}>
-              Connect
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => void handleConnect()}
+              disabled={isConnecting}
+            >
+              {isConnecting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                "Connect"
+              )}
             </Button>
           )}
         </CardHeader>
       </Card>
+
+      {connectError ? <p className="text-destructive text-sm">{connectError}</p> : null}
 
       <AlertDialog open={isDisconnectModalOpen} onOpenChange={handleDisconnectModalOpenChange}>
         <AlertDialogContent>

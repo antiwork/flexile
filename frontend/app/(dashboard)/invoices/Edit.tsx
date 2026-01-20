@@ -2,9 +2,9 @@
 
 import { PaperClipIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type DateValue, parseDate } from "@internationalized/date";
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
-import { CircleAlert, Loader2, Plus, RotateCcw, Upload } from "lucide-react";
+import { CircleAlert, Plus, Upload } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
@@ -13,7 +13,6 @@ import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import DatePicker from "@/components/DatePicker";
-import { GitHubPRLineItem } from "@/components/GitHubPRLineItem";
 import NumberInput from "@/components/NumberInput";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -35,16 +34,16 @@ import githubMark from "@/images/github-mark.svg";
 import { trpc } from "@/trpc/client";
 import { assert, assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
-import { isGitHubPRUrl, parseGitHubPRUrl, parsePRState, type PRDetails, prDetailsSchema } from "@/utils/github";
+import { parseGitHubPRUrl } from "@/utils/github";
 import { request } from "@/utils/request";
 import {
   company_invoice_path,
   company_invoices_path,
   edit_company_invoice_path,
   new_company_invoice_path,
-  pr_github_path,
 } from "@/utils/routes";
 import { useGitHubOAuth } from "@/utils/useGitHubOAuth";
+import { PRLineItemCell } from "./PRLineItemCell";
 import QuantityInput from "./QuantityInput";
 import { LegacyAddress as Address, Totals, useCanSubmitInvoices } from ".";
 
@@ -121,126 +120,6 @@ type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & {
 };
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
 type InvoiceFormDocument = Data["invoice"]["attachment"] & { errors?: string[] | null; blob?: File | null };
-
-const PRLineItemCell = ({
-  description,
-  storedPRData,
-  githubUsername,
-  companyGithubOrg,
-  isEditing,
-  onEdit,
-  onChange,
-  onBlur,
-  hasError,
-}: {
-  description: string;
-  storedPRData: {
-    url: string | null;
-    number: number | null;
-    title: string | null;
-    state: string | null;
-    author: string | null;
-    repo: string | null;
-    bounty_cents: number | null;
-  };
-  githubUsername: string | null;
-  companyGithubOrg: string | null;
-  isEditing: boolean;
-  onEdit: () => void;
-  onChange: (value: string) => void;
-  onBlur: () => void;
-  hasError: boolean;
-}) => {
-  const hasPRUrl = isGitHubPRUrl(description);
-  const parsedPR = hasPRUrl ? parseGitHubPRUrl(description) : null;
-  const isCompanyOrgPR =
-    parsedPR && companyGithubOrg && parsedPR.owner.toLowerCase() === companyGithubOrg.toLowerCase();
-
-  const shouldFetch = Boolean(hasPRUrl && isCompanyOrgPR && githubUsername && !storedPRData.url);
-
-  const {
-    data: prDetails,
-    isFetching,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["pr-details", description],
-    queryFn: async () => {
-      const response = await request({
-        method: "GET",
-        url: `${pr_github_path()}?url=${encodeURIComponent(description)}`,
-        accept: "json",
-      });
-
-      if (!response.ok) {
-        const errorData = z.object({ error: z.string().optional() }).safeParse(await response.json());
-        throw new Error(errorData.data?.error ?? "Failed to fetch PR details");
-      }
-
-      const data = z.object({ pr: prDetailsSchema }).parse(await response.json());
-      return data.pr;
-    },
-    enabled: shouldFetch,
-    staleTime: Infinity,
-  });
-
-  const displayPR: PRDetails | null =
-    prDetails ??
-    (storedPRData.url
-      ? {
-          url: storedPRData.url,
-          number: storedPRData.number ?? 0,
-          title: storedPRData.title ?? "",
-          state: parsePRState(storedPRData.state),
-          author: storedPRData.author ?? "",
-          repo: storedPRData.repo ?? "",
-          bounty_cents: storedPRData.bounty_cents,
-        }
-      : null);
-
-  if (!isEditing && displayPR && hasPRUrl) {
-    return (
-      <GitHubPRLineItem
-        pr={displayPR}
-        error={error?.message ?? null}
-        onRetry={() => void refetch()}
-        onClick={onEdit}
-        currentUserGitHubUsername={githubUsername}
-        hoverCardEnabled
-      />
-    );
-  }
-
-  return (
-    <div className="relative flex items-center">
-      <Input
-        value={description}
-        placeholder="Description or GitHub PR link..."
-        aria-invalid={hasError}
-        onChange={(e) => onChange(e.target.value)}
-        onFocus={onEdit}
-        onBlur={onBlur}
-        className={isFetching ? "pr-8" : error ? "pr-20" : ""}
-      />
-      {isFetching ? (
-        <span className="animate-in fade-in absolute right-2 [animation-delay:300ms] [animation-fill-mode:forwards]">
-          <Loader2 className="text-muted-foreground size-4 animate-spin" />
-        </span>
-      ) : null}
-      {error && !isFetching ? (
-        <Button
-          variant="link"
-          size="small"
-          className="text-muted-foreground absolute right-1 h-auto gap-1 px-1"
-          onClick={() => void refetch()}
-        >
-          <RotateCcw className="size-3" />
-          Retry
-        </Button>
-      ) : null}
-    </div>
-  );
-};
 
 const Edit = () => {
   const user = useCurrentUser();
