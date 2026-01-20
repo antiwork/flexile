@@ -112,6 +112,8 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     await logout(page);
     await login(page, adminUser);
+    // Wait for invoice table to populate after login
+    await expect(page.locator("tbody tr")).toHaveCount(3, { timeout: 15000 });
 
     const firstRow = page.locator("tbody tr").first();
     const secondRow = page.locator("tbody tr").nth(1);
