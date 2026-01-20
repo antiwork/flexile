@@ -11,6 +11,7 @@ test.describe("Workspace settings", () => {
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Workspace settings" }).click();
+    await page.waitForURL(/.*\/settings\/administrator\/workspace.*/u);
 
     await expect(page.getByLabel("Company name")).toHaveValue(company.name ?? "");
     await expect(page.getByLabel("Company website")).toHaveValue(company.website ?? "");
