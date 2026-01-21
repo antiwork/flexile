@@ -62,10 +62,7 @@ function ViewUpdateDialog({ updateId, onOpenChange }: { updateId: string; onOpen
           ) : isError ? (
             "Something went wrong. Please try again later."
           ) : (
-            <>
-              <RichText content={update.body} />
-              <p>{company.primaryAdminName}</p>
-            </>
+            <RichText content={update.body} />
           )}
         </div>
         {!isLoading && !isError && !update.sentAt && (
