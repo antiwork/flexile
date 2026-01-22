@@ -437,11 +437,14 @@ test.describe("Roles page invite functionality", () => {
 
     await page.getByRole("button", { name: "Add member" }).click();
 
-    await expect(page.getByRole("button", { name: "Add member" })).toBeDisabled();
-
-    await page.getByPlaceholder("Search by name or enter email...").fill("invalid_name");
-
-    await expect(page.getByRole("button", { name: "Add member" })).toBeDisabled();
+    await withinModal(
+      async (modal) => {
+        await expect(modal.getByRole("button", { name: "Add member" })).toBeDisabled();
+        await modal.getByPlaceholder("Search by name or enter email...").fill("invalid_name");
+        await expect(modal.getByRole("button", { name: "Add member" })).toBeDisabled();
+      },
+      { page, assertClosed: false },
+    );
   });
 
   test("should be able to invite existing user from another company as lawyer", async ({ page }) => {
