@@ -38,9 +38,13 @@ test.describe("People table sorting", () => {
 
     await login(page, adminUser, "/people");
 
-    const statusHeader = page.getByRole("columnheader", { name: "Status" });
+    await expect(page.locator("tbody tr")).toHaveCount(5);
+    await expect(page.locator("tbody tr").first()).not.toBeEmpty();
 
+    const statusHeader = page.getByRole("columnheader", { name: "Status" });
+    await expect(statusHeader).toBeVisible();
     await statusHeader.click();
+    await expect(page.locator("tbody tr").first()).toContainText("Alumni - ended at 2023-01-01");
 
     let rows = await page.locator("tbody tr").allInnerTexts();
     expect(rows[0]).toContain("Alumni - ended at 2023-01-01");
@@ -50,6 +54,7 @@ test.describe("People table sorting", () => {
     expect(rows[4]).toContain("Invited");
 
     await statusHeader.click();
+    await expect(page.locator("tbody tr").first()).toContainText("Invited");
 
     rows = await page.locator("tbody tr").allInnerTexts();
     expect(rows[0]).toContain("Invited");
