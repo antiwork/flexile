@@ -205,11 +205,12 @@ test.describe("Bank account settings", () => {
   });
 
   test.describe("when the user is a business entity", () => {
-    test.beforeEach(async () => {
+    test.beforeEach(async ({ page }) => {
       await userComplianceInfosFactory.create({
         userId: onboardingUser.id,
         businessEntity: true,
       });
+      await page.reload();
     });
 
     test("shows relevant account types", async ({ page }) => {
