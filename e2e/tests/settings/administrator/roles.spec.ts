@@ -466,6 +466,7 @@ test.describe("Roles page invite functionality", () => {
 
     await withinModal(
       async (modal) => {
+        // Use the email of the user who already exists in another company
         await modal.getByPlaceholder("Search by name or enter email...").fill(existingUser.email);
         await modal.getByRole("combobox", { name: "Role" }).click();
         await page.getByRole("option", { name: "Lawyer", exact: true }).first().click();
@@ -474,6 +475,7 @@ test.describe("Roles page invite functionality", () => {
       { page },
     );
 
+    // Check that the invited user appears in the table with the correct role
     const invitedRow = page.getByRole("row", { name: new RegExp(existingUser.email, "u") });
     await expect(invitedRow).toBeVisible();
     await expect(invitedRow.getByRole("cell", { name: "Lawyer", exact: true })).toBeVisible();
