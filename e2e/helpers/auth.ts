@@ -15,8 +15,17 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
   const pageURL = redirectTo ? redirectTo : "/login";
   await page.goto(pageURL);
 
-  await page.getByLabel("Work email").fill(user.email);
-  await page.getByRole("button", { name: "Log in", exact: true }).click();
+  const emailField = page.getByLabel("Work email");
+  await expect(emailField).toBeVisible();
+  await emailField.fill(user.email);
+
+  const loginButton = page.getByRole("button", { name: "Log in", exact: true });
+  await expect(loginButton).toBeVisible();
+  await loginButton.click();
+
+  // Wait for the OTP screen to appear (title changes when sendOtp.isSuccess is true)
+  await expect(page.getByText("Check your email for a code")).toBeVisible();
+
   await fillOtp(page);
 
   await page.waitForURL(/^(?!.*\/login$).*/u);
