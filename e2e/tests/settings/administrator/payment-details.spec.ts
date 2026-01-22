@@ -39,9 +39,13 @@ test.describe("Company administrator settings - payment details", () => {
 
     await withinModal(
       async () => {
+        await expect(stripePaymentFrame.getByLabel("Test Institution")).toBeVisible();
         await stripePaymentFrame.getByLabel("Test Institution").click();
+        await expect(stripeBankFrame.getByTestId("agree-button")).toBeVisible();
         await stripeBankFrame.getByTestId("agree-button").click();
+        await expect(stripeBankFrame.getByTestId("success")).toBeVisible();
         await stripeBankFrame.getByTestId("success").click();
+        await expect(stripeBankFrame.getByTestId("select-button")).toBeVisible();
         await stripeBankFrame.getByTestId("select-button").click();
         await finishStripeBankLinking(stripeBankFrame);
       },
@@ -62,9 +66,13 @@ test.describe("Company administrator settings - payment details", () => {
     await page.getByRole("button", { name: "Edit" }).click();
     await withinModal(
       async () => {
+        await expect(stripePaymentFrame.getByLabel("Test Institution")).toBeVisible();
         await stripePaymentFrame.getByLabel("Test Institution").click();
+        await expect(stripeBankFrame.getByTestId("agree-button")).toBeVisible();
         await stripeBankFrame.getByTestId("agree-button").click();
+        await expect(stripeBankFrame.getByTestId("high balance")).toBeVisible();
         await stripeBankFrame.getByTestId("high balance").click();
+        await expect(stripeBankFrame.getByTestId("select-button")).toBeVisible();
         await stripeBankFrame.getByTestId("select-button").click();
         await finishStripeBankLinking(stripeBankFrame);
       },
@@ -100,15 +108,15 @@ test.describe("Company administrator settings - payment details", () => {
 
     await withinModal(
       async () => {
-        await page
-          .frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']")
-          .getByRole("button", { name: "Enter bank details manually" })
-          .click();
+        const stripePaymentFrame = page.frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']");
+        await expect(stripePaymentFrame.getByRole("button", { name: "Enter bank details manually" })).toBeVisible();
+        await stripePaymentFrame.getByRole("button", { name: "Enter bank details manually" }).click();
         const stripeBankFrame = page.frameLocator("[src^='https://js.stripe.com/v3/linked-accounts-inner']");
         await expect(stripeBankFrame.getByLabel("Routing number")).toBeVisible();
         await stripeBankFrame.getByTestId("manualEntry-routingNumber-input").fill("110000000");
         await stripeBankFrame.getByTestId("manualEntry-accountNumber-input").fill("000123456789");
         await stripeBankFrame.getByTestId("manualEntry-confirmAccountNumber-input").fill("000123456789");
+        await expect(stripeBankFrame.getByTestId("continue-button")).toBeVisible();
         await stripeBankFrame.getByTestId("continue-button").click();
         await finishStripeBankLinking(stripeBankFrame);
       },
