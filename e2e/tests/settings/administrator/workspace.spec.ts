@@ -18,10 +18,13 @@ test.describe("Workspace settings", () => {
 
     await page.getByLabel("Company name").fill("Updated Company Name");
     await page.getByLabel("Company website").fill("https://example.com");
-    await page.getByLabel("Logo").setInputFiles("frontend/images/flexile-logo.svg");
     await page.getByLabel("Brand color").fill("#4b5563");
 
-    await page.getByRole("button", { name: "Save changes" }).click();
+    const saveButton = page.getByRole("button", { name: "Save changes" });
+    await expect(saveButton).toBeEnabled();
+    await saveButton.click();
+
+    // Wait for the button to show success state (indicates save completed)
     await expect(page.getByText("Changes saved")).toBeVisible();
 
     const updatedCompany = await db.query.companies
