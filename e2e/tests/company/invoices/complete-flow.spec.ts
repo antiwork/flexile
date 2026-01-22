@@ -39,6 +39,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByLabel("Invoice ID").fill("CUSTOM-1");
     await fillDatePicker(page, "Date", "11/01/2024");
+    await expect(page.getByRole("group", { name: "Invoice date" })).toContainText("2024");
     await page.getByPlaceholder("Description").fill("first item");
     await fillByLabel(page, "Hours / Qty", "01:23", { index: 0 });
     await page.getByRole("button", { name: "Add line item" }).click();
@@ -59,6 +60,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await fillByLabel(page, "Hours / Qty", "0:23", { index: 0 });
     await page.getByLabel("Invoice ID").fill("CUSTOM-2");
     await fillDatePicker(page, "Date", "12/01/2024");
+    await expect(page.getByRole("group", { name: "Invoice date" })).toContainText("2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
@@ -82,6 +84,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await fillByLabel(page, "Hours / Qty", "0:33", { index: 0 });
     await page.getByLabel("Invoice ID").fill("CUSTOM-3");
     await fillDatePicker(page, "Date", "12/01/2024");
+    await expect(page.getByRole("group", { name: "Invoice date" })).toContainText("2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByRole("cell", { name: "CUSTOM-3" })).toBeVisible();
@@ -106,6 +109,7 @@ test.describe("Invoice submission, approval and rejection", () => {
     await page.getByPlaceholder("Description").fill("line item");
     await fillByLabel(page, "Hours / Qty", "10:23", { index: 0 });
     await fillDatePicker(page, "Date", "11/20/2024");
+    await expect(page.getByRole("group", { name: "Invoice date" })).toContainText("2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
     await expect(page.getByText("Awaiting approval")).toBeVisible();
