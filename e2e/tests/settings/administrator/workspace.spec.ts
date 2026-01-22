@@ -23,8 +23,6 @@ test.describe("Workspace settings", () => {
     const saveButton = page.getByRole("button", { name: "Save changes" });
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
-
-    // Wait for the button to show success state (indicates save completed)
     await expect(page.getByText("Changes saved")).toBeVisible();
 
     const updatedCompany = await db.query.companies
