@@ -347,7 +347,9 @@ test.describe("Invoices admin flow", () => {
 
     await login(page, adminUser);
     await page.getByRole("link", { name: "Invoices" }).click();
-    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
+    const invoiceRow = page.getByRole("row").filter({ hasText: "Awaiting approval" });
+    await expect(invoiceRow).toBeVisible();
+    await invoiceRow.click();
 
     await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).toBeVisible();
@@ -356,9 +358,9 @@ test.describe("Invoices admin flow", () => {
       .update(companyContractors)
       .set({ payRateInSubunits: null })
       .where(eq(companyContractors.id, companyContractor.id));
-    await page.reload();
-    await page.getByRole("link", { name: "Invoices" }).click();
-    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
+    await page.goto("/invoices");
+    await expect(invoiceRow).toBeVisible();
+    await invoiceRow.click();
     await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
 
@@ -366,9 +368,9 @@ test.describe("Invoices admin flow", () => {
       .update(companyContractors)
       .set({ payRateInSubunits: 60000 })
       .where(eq(companyContractors.id, companyContractor.id));
-    await page.reload();
-    await page.getByRole("link", { name: "Invoices" }).click();
-    await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
+    await page.goto("/invoices");
+    await expect(invoiceRow).toBeVisible();
+    await invoiceRow.click();
     await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
   });
