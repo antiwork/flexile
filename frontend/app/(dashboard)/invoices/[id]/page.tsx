@@ -101,9 +101,14 @@ const PrintTableCell = ({ children, className }: { children: React.ReactNode; cl
 interface ViewLineItemDescriptionProps {
   description: string;
   contractorGithubUsername: string | null;
+  currentInvoiceId: string;
 }
 
-const ViewLineItemDescription = ({ description, contractorGithubUsername }: ViewLineItemDescriptionProps) => {
+const ViewLineItemDescription = ({
+  description,
+  contractorGithubUsername,
+  currentInvoiceId,
+}: ViewLineItemDescriptionProps) => {
   const company = useCurrentCompany();
   const user = useCurrentUser();
   const isAdmin = !!user.roles.administrator;
@@ -117,10 +122,8 @@ const ViewLineItemDescription = ({ description, contractorGithubUsername }: View
       ? `https://github.com/${formattedMatch[1]}/pull/${formattedMatch[2]}`
       : null;
 
-  if (!prUrl) return;
-
   const { data: prResult, isLoading: isFetchingPR } = trpc.github.fetchPullRequest.useQuery(
-    { url: prUrl, companyId: company.id, targetUsername: contractorGithubUsername },
+    { url: prUrl ?? "", companyId: company.id, targetUsername: contractorGithubUsername },
     { enabled: !!prUrl, retry: false },
   );
 
@@ -128,7 +131,15 @@ const ViewLineItemDescription = ({ description, contractorGithubUsername }: View
     return <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">{description}</div>;
   }
 
-  return <ResponsivePRCardView prUrl={prUrl} prResult={prResult} isFetchingPR={isFetchingPR} isAdmin={isAdmin} />;
+  return (
+    <ResponsivePRCardView
+      prUrl={prUrl}
+      prResult={prResult}
+      isFetchingPR={isFetchingPR}
+      isAdmin={isAdmin}
+      currentInvoiceId={currentInvoiceId}
+    />
+  );
 };
 
 interface ResponsivePRCardViewProps {
@@ -136,9 +147,16 @@ interface ResponsivePRCardViewProps {
   prResult: RouterOutput["github"]["fetchPullRequest"] | undefined | null;
   isFetchingPR: boolean;
   isAdmin: boolean;
+  currentInvoiceId: string;
 }
 
-const ResponsivePRCardView = ({ prUrl, prResult, isFetchingPR, isAdmin }: ResponsivePRCardViewProps) => {
+const ResponsivePRCardView = ({
+  prUrl,
+  prResult,
+  isFetchingPR,
+  isAdmin,
+  currentInvoiceId,
+}: ResponsivePRCardViewProps) => {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -157,7 +175,7 @@ const ResponsivePRCardView = ({ prUrl, prResult, isFetchingPR, isAdmin }: Respon
               <Badge variant="secondary" className="border">
                 ${prResult.pr.bounty_cents / 100}
               </Badge>
-              {prResult.pr.paid_invoice_numbers.length > 0 ? (
+              {prResult.pr.paid_invoice_numbers.filter((i) => i.external_id !== currentInvoiceId).length > 0 ? (
                 <div className="size-1.5 rounded-full bg-[#D97706]" title="Paid" />
               ) : null}
             </div>
@@ -215,24 +233,28 @@ const ResponsivePRCardView = ({ prUrl, prResult, isFetchingPR, isAdmin }: Respon
       <Separator className="my-0" />
 
       <div className="bg-muted/50 flex flex-col gap-0">
-        {isAdmin && prResult.pr.paid_invoice_numbers.length > 0 ? (
+        {isAdmin && prResult.pr.paid_invoice_numbers.filter((i) => i.external_id !== currentInvoiceId).length > 0 ? (
           <div className="border-border/20 flex items-center gap-3 border-b px-4 py-2">
             <div className="text-muted-foreground flex items-center gap-2.5 text-[12px] font-medium">
               <Image src={paidDollar} alt="" width={16} height={16} className="shrink-0" />
               <span>
                 <span className="font-bold text-blue-600">Paid</span> on invoice
-                {prResult.pr.paid_invoice_numbers.length > 1 ? "s" : ""}{" "}
-                {prResult.pr.paid_invoice_numbers.map((invoice, idx) => (
-                  <React.Fragment key={invoice.external_id}>
-                    {idx > 0 && (idx === prResult.pr.paid_invoice_numbers.length - 1 ? " and " : ", ")}
-                    <Link
-                      href={`/invoices/${invoice.external_id}`}
-                      className="text-muted-foreground underline transition-colors hover:text-blue-600"
-                    >
-                      #{invoice.invoice_number}
-                    </Link>
-                  </React.Fragment>
-                ))}
+                {prResult.pr.paid_invoice_numbers.filter((i) => i.external_id !== currentInvoiceId).length > 1
+                  ? "s"
+                  : ""}{" "}
+                {prResult.pr.paid_invoice_numbers
+                  .filter((i) => i.external_id !== currentInvoiceId)
+                  .map((invoice, idx, filtered) => (
+                    <React.Fragment key={invoice.external_id}>
+                      {idx > 0 && (idx === filtered.length - 1 ? " and " : ", ")}
+                      <Link
+                        href={`/invoices/${invoice.external_id}`}
+                        className="text-muted-foreground underline transition-colors hover:text-blue-600"
+                      >
+                        #{invoice.invoice_number}
+                      </Link>
+                    </React.Fragment>
+                  ))}
               </span>
             </div>
           </div>
@@ -535,6 +557,7 @@ export default function InvoicePage() {
                             <ViewLineItemDescription
                               description={lineItem.description}
                               contractorGithubUsername={invoice.contractor.user.githubUsername}
+                              currentInvoiceId={invoice.id}
                             />
                           </PrintTableCell>
                           <PrintTableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%] print:text-right print:align-top">

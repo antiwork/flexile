@@ -154,18 +154,22 @@ export const authOptions = {
         const isGithub = account.provider === "github";
         const isGoogle = account.provider === "google";
 
+        let primaryEmailAddress = user.email;
+
         if (isGithub && account.access_token) {
           const res = await fetch("https://api.github.com/user/emails", {
             headers: { Authorization: `Bearer ${account.access_token}` },
           });
-
           if (res.ok) {
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             const emails = (await res.json()) as { email: string; verified: boolean; primary: boolean }[];
-            const primaryEmail = emails.find((e) => e.primary);
-            if (!primaryEmail?.verified) {
+            const primaryEmail = emails.find((e) => e.primary && e.verified);
+            if (!primaryEmail) {
               return false;
             }
+            primaryEmailAddress = primaryEmail.email;
+          } else {
+            return false;
           }
         }
 
@@ -189,7 +193,7 @@ export const authOptions = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: user.email,
+            email: primaryEmailAddress,
             token: env.API_SECRET_TOKEN,
             provider: account.provider,
             ...githubParams,

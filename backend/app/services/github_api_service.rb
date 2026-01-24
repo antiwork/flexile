@@ -8,8 +8,11 @@ class GithubApiService
 
   GITHUB_API_BASE = "https://api.github.com"
 
-  def initialize(client: nil, access_token: nil)
+  attr_reader :using_installation
+
+  def initialize(client: nil, access_token: nil, using_installation: false)
     @client = client || Octokit::Client.new(access_token: access_token)
+    @using_installation = using_installation
   end
 
   def self.for_company(company)
@@ -23,7 +26,7 @@ class GithubApiService
         # Test connection
         client.rate_limit
         Rails.logger.info("[GithubApiService] Using installation client for company=#{company.id}")
-        return new(client: client)
+        return new(client: client, using_installation: true)
       rescue => e
         Rails.logger.warn("[GithubApiService] Installation client failed for company=#{company.id}: #{e.message}")
       end
@@ -32,7 +35,7 @@ class GithubApiService
     # For public repos, use anonymous client (60 req/hr)
     # Note: GitHub App JWT can't be used directly for repo access - it's only for getting installation tokens
     Rails.logger.info("[GithubApiService] No installation found. Using anonymous client for public repos (60 req/hr limit).")
-    new
+    new(using_installation: false)
   end
 
   # Parse a GitHub PR URL and return owner, repo, and PR number
@@ -148,9 +151,13 @@ class GithubApiService
       end
 
       Rails.logger.info("[GithubApiService] PR details fetched: #{repo_path}##{parsed[:number]} (merged=#{is_merged})")
+    rescue Octokit::NotFound
+      raise ApiError, "Pull request not found"
     rescue Octokit::Unauthorized => e
       Rails.logger.error("[GithubApiService] Unauthorized access: #{e.message}")
       raise UnauthorizedError, "GitHub API authentication failed"
+    rescue Octokit::Error => e
+      raise ApiError, "GitHub API request failed: #{e.message}"
     end
 
     pr_details = {

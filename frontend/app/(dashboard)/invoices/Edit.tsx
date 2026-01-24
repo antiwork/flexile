@@ -37,6 +37,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import githubMerge from "@/images/github-merge.svg";
 import githubLogo from "@/images/github.svg";
+import paidDollar from "@/images/paid-dollar.svg";
 import unverifiedAuthor from "@/images/unverified-author.svg";
 import verifiedAuthor from "@/images/verified-author.svg";
 import { FORMATTED_PR_REGEX, GITHUB_PR_REGEX } from "@/lib/regex";
@@ -412,24 +413,27 @@ const Edit = () => {
         }
       />
 
-      {userConnection === null && lineItems.some((item) => GITHUB_PR_REGEX.test(item.description)) && (
-        <Alert className="mx-4 mb-4 flex items-center justify-between border-sky-600 bg-blue-500/10 [&>svg]:translate-y-0">
-          <CircleAlert />
-          <AlertTitle className="flex-1 text-sm font-normal">
-            You linked a Pull Request. Connect GitHub to verify your ownership and check for bounties.
-          </AlertTitle>
-          <Button
-            variant="outline"
-            onClick={() => {
-              void startGithubConnection();
-            }}
-            className="h-9 cursor-pointer bg-white/80 text-black hover:bg-white hover:text-black dark:bg-white/70 dark:hover:bg-white"
-          >
-            <Image src={githubLogo} alt="Github" width={20} height={20} />
-            Connect GitHub
-          </Button>
-        </Alert>
-      )}
+      {userConnection === null &&
+        lineItems.some(
+          (item) => GITHUB_PR_REGEX.test(item.description) || FORMATTED_PR_REGEX.test(item.description),
+        ) && (
+          <Alert className="mx-4 mb-4 flex items-center justify-between border-sky-600 bg-blue-500/10 [&>svg]:translate-y-0">
+            <CircleAlert />
+            <AlertTitle className="flex-1 text-sm font-normal">
+              You linked a Pull Request. Connect GitHub to verify your ownership and check for bounties.
+            </AlertTitle>
+            <Button
+              variant="outline"
+              onClick={() => {
+                void startGithubConnection();
+              }}
+              className="h-9 cursor-pointer bg-white/80 text-black hover:bg-white hover:text-black dark:bg-white/70 dark:hover:bg-white"
+            >
+              <Image src={githubLogo} alt="Github" width={20} height={20} />
+              Connect GitHub
+            </Button>
+          </Alert>
+        )}
 
       {payRateInSubunits && lineItems.some((lineItem) => lineItem.pay_rate_in_subunits > payRateInSubunits) ? (
         <Alert className="mx-4" variant="warning">
@@ -723,35 +727,42 @@ const LineItem = ({
       ? `https://github.com/${formattedMatch[1]}/pull/${formattedMatch[2]}`
       : null;
 
-  if (!prUrl) return;
-
   const {
     data: prResult,
     isLoading: isFetchingPR,
     isError,
     refetch,
   } = trpc.github.fetchPullRequest.useQuery(
-    { url: prUrl, companyId: company.id, targetUsername: invoiceOwnerGithubUsername },
+    { url: prUrl ?? "", companyId: company.id, targetUsername: invoiceOwnerGithubUsername },
     { enabled: !!prUrl, retry: false },
   );
 
   useEffect(() => {
-    if (prResult?.pr.bounty_cents) {
-      if (
-        item.pay_rate_in_subunits !== prResult.pr.bounty_cents ||
-        item.description !== `[${prResult.pr.repository} #${prResult.pr.number}] ${prResult.pr.title}`
-      ) {
-        updateLineItem(rowIndex, {
-          pay_rate_in_subunits: prResult.pr.bounty_cents,
-          hourly: false,
-          quantity: "1",
-          description: `[${prResult.pr.repository} #${prResult.pr.number}] ${prResult.pr.title}`,
-        });
-        toast.success(`Applied $${prResult.pr.bounty_cents / 100} bounty`);
-        setIsEditing(false);
+    if (prResult) {
+      const prettifiedDescription = `[${prResult.pr.repository} #${prResult.pr.number}] ${prResult.pr.title}`;
+      const updates: Partial<InvoiceFormLineItem> = {};
+
+      const shouldApplyBounty = prResult.pr.bounty_cents && item.pay_rate_in_subunits !== prResult.pr.bounty_cents;
+
+      if (shouldApplyBounty) {
+        updates.pay_rate_in_subunits = prResult.pr.bounty_cents ?? 0;
+        updates.hourly = false;
+        updates.quantity = "1";
+      }
+
+      if (item.description !== prettifiedDescription) {
+        updates.description = prettifiedDescription;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updateLineItem(rowIndex, updates);
+        if (shouldApplyBounty) {
+          toast.success(`Applied $${prResult.pr.bounty_cents ?? 0 / 100} bounty`);
+          setIsEditing(false);
+        }
       }
     }
-  }, [prResult, updateLineItem, rowIndex, item.pay_rate_in_subunits, item.description]);
+  }, [prResult, rowIndex, updateLineItem, item.pay_rate_in_subunits, item.description]);
 
   return (
     <TableRow>
@@ -794,7 +805,7 @@ const LineItem = ({
                       void refetch();
                     }}
                   >
-                    <RefreshCw className="size-3.5 animate-spin" />
+                    <RefreshCw className="size-3.5" />
                     <span className="group-hover:underline group-hover:underline-offset-2">Retry</span>
                   </Button>
                 ) : null}
@@ -806,6 +817,8 @@ const LineItem = ({
               prResult={prResult}
               isFetchingPR={isFetchingPR}
               setIsEditing={setIsEditing}
+              rowIndex={rowIndex}
+              updateLineItem={updateLineItem}
             />
           )}
         </div>
@@ -852,9 +865,20 @@ interface ResponsivePRCardProps {
   prResult: RouterOutput["github"]["fetchPullRequest"] | undefined | null;
   isFetchingPR: boolean;
   setIsEditing: (isEditing: boolean) => void;
+  rowIndex: number;
+  updateLineItem: (index: number, update: Partial<InvoiceFormLineItem>) => void;
 }
 
-const ResponsivePRCard = ({ prUrl, prResult, isFetchingPR, setIsEditing }: ResponsivePRCardProps) => {
+const ResponsivePRCard = ({
+  prUrl,
+  prResult,
+  isFetchingPR,
+  setIsEditing,
+  rowIndex,
+  updateLineItem,
+}: ResponsivePRCardProps) => {
+  const user = useCurrentUser();
+  const isAdmin = user.roles.administrator != null;
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -869,9 +893,16 @@ const ResponsivePRCard = ({ prUrl, prResult, isFetchingPR, setIsEditing }: Respo
           <span className="max-w-[200px] truncate font-normal">{prResult.pr.title}</span>
           <span className="text-muted-foreground font-light">#{prResult.pr.number}</span>
           {prResult.pr.bounty_cents ? (
-            <Badge variant="secondary" className="border">
-              ${prResult.pr.bounty_cents / 100}
-            </Badge>
+            <div className="flex items-center gap-1.5">
+              <Badge variant="secondary" className="border">
+                ${prResult.pr.bounty_cents / 100}
+              </Badge>
+              {isAdmin && prResult.pr.belongs_to_company && prResult.pr.paid_invoice_numbers.length > 0 ? (
+                <div className="size-1.5 rounded-full bg-[#D97706]" title="Paid" />
+              ) : null}
+            </div>
+          ) : isAdmin && prResult.pr.belongs_to_company && prResult.pr.paid_invoice_numbers.length > 0 ? (
+            <div className="size-1.5 rounded-full bg-[#D97706]" title="Paid" />
           ) : null}
         </>
       ) : (
@@ -896,6 +927,9 @@ const ResponsivePRCard = ({ prUrl, prResult, isFetchingPR, setIsEditing }: Respo
           className="h-7 px-2 text-xs font-medium opacity-50 hover:opacity-100"
           onClick={(e) => {
             e.stopPropagation();
+            if (prUrl) {
+              updateLineItem(rowIndex, { description: prUrl });
+            }
             setIsEditing(true);
           }}
         >
@@ -944,6 +978,28 @@ const ResponsivePRCard = ({ prUrl, prResult, isFetchingPR, setIsEditing }: Respo
       <Separator className="my-0" />
 
       <div className="bg-muted/50 flex flex-col gap-0">
+        {isAdmin && prResult.pr.belongs_to_company && prResult.pr.paid_invoice_numbers.length > 0 ? (
+          <div className="border-border/20 flex items-center gap-3 border-b px-4 py-2">
+            <div className="text-muted-foreground flex items-center gap-2.5 text-[12px] font-medium">
+              <Image src={paidDollar} alt="" width={16} height={16} className="shrink-0" />
+              <span>
+                <span className="font-bold text-blue-600">Paid</span> on invoice
+                {prResult.pr.paid_invoice_numbers.length > 1 ? "s" : ""}{" "}
+                {prResult.pr.paid_invoice_numbers.map((invoice, idx) => (
+                  <React.Fragment key={invoice.external_id}>
+                    {idx > 0 && (idx === prResult.pr.paid_invoice_numbers.length - 1 ? " and " : ", ")}
+                    <Link
+                      href={`/invoices/${invoice.external_id}`}
+                      className="text-muted-foreground underline transition-colors hover:text-blue-600"
+                    >
+                      #{invoice.invoice_number}
+                    </Link>
+                  </React.Fragment>
+                ))}
+              </span>
+            </div>
+          </div>
+        ) : null}
         <div className="flex items-center gap-3 px-4 py-2">
           {prResult.pr.verified_author ? (
             <div className="text-muted-foreground flex items-center gap-2.5 text-[12px] font-medium">

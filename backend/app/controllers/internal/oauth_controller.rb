@@ -28,10 +28,15 @@ class Internal::OauthController < Internal::BaseController
             github_username: params[:github_username]
           )
         end
+      else
+        unless User.exists?(email: email)
+          render json: { error: "Login failed. The verified primary GitHub email (#{email}) is not registered in Flexile." }, status: :not_found
+          return
+        end
       end
 
       unless user
-        render json: { error: "Account not found. Please sign up with email first or ensure your GitHub email matches your account." }, status: :not_found
+        render json: { error: "Account not found. Please ensure your primary verified GitHub email (#{email}) matches your Flexile account." }, status: :not_found
         return
       end
 

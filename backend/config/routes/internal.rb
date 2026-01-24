@@ -16,7 +16,7 @@ scope path: :internal, module: :internal do
     get :callback
     delete :disconnect
   end
-  resource :github_organization_connection, only: [:destroy], module: :companies do
+  resource :github_organization_connection, only: [:create, :destroy], module: :companies do
     post :start
     get :callback
   end

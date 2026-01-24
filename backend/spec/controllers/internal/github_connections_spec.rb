@@ -5,65 +5,72 @@ require "rails_helper"
 
 RSpec.describe "Internal::GithubConnections", type: :request do
   let(:user) { create(:user) }
-  let(:state) { "random_secure_state_string" }
+  let(:state) { "random_secure_state_string".dup }
+  let(:user_jwt) { JwtService.generate_token(user) }
+  let(:auth_headers) { { "x-flexile-auth" => "Bearer #{user_jwt}" } }
 
   before do
-    # Assuming a helper method to sign in users for JSON requests
-    sign_in(user)
-    allow(SecureRandom).to receive(:hex).and_return(state)
+    allow(JwtService).to receive(:generate_oauth_state).and_return(state)
+    allow(JwtService).to receive(:decode_oauth_state).with(state).and_return({ user_id: user.id })
+    allow(ENV).to receive(:[]).and_call_original
     allow(ENV).to receive(:[]).with("GH_CLIENT_ID").and_return("test_id")
     allow(ENV).to receive(:[]).with("GH_CLIENT_SECRET").and_return("test_secret")
+    allow(ENV).to receive(:[]).with("PROTOCOL").and_return("http")
+    allow(ENV).to receive(:[]).with("DOMAIN").and_return("localhost:3100")
+    allow(ENV).to receive(:[]).with("APP_DOMAIN").and_return("localhost:3100")
+    allow(ENV).to receive(:[]).with("API_DOMAIN").and_return("localhost:3101")
   end
 
   describe "POST /start" do
-    it "returns a github authorization url and sets an encrypted cookie" do
-      post "/internal/github_connection/start"
-
+    it "returns a github authorization url and sets a cookie" do
+      post "/internal/github_connection/start", headers: auth_headers
       expect(response).to have_http_status(:ok)
-      expect(json_response["url"]).to include("state=#{state}")
+
+      json_response = JSON.parse(response.body)
+      expect(json_response["url"]).to include("github.com/login/oauth/authorize")
       expect(json_response["url"]).to include("client_id=test_id")
-      expect(cookies.encrypted[:github_oauth_state]).to eq(state)
+
+      expected_callback = callback_github_connection_url(protocol: PROTOCOL, host: API_DOMAIN)
+      expect(json_response["url"]).to include("redirect_uri=#{CGI.escape(expected_callback)}")
+      expect(json_response["url"]).to include("state=#{state}")
     end
   end
 
-  describe "POST /callback" do
+  describe "GET /internal/github_connection/callback" do
     let(:code) { "valid_code" }
+    let(:github_user) { double("GithubUser", id: 12345, login: "github_dev_user") }
+    let(:token_response) { { access_token: "gh_token" } }
+
+    before do
+      allow(Octokit).to receive(:exchange_code_for_token).and_return(token_response)
+      allow(Octokit::Client).to receive(:new).and_return(double(user: github_user))
+    end
 
     context "with valid state and code" do
-      before do
-        # Manually set the encrypted cookie for the request
-        cookies.encrypted[:github_oauth_state] = state
+      it "updates the user and redirects to frontend" do
+        get "/internal/github_connection/callback", params: { code: code, state: state }
 
-        # Mock Octokit Token Exchange
-        allow(Octokit).to receive(:exchange_code_for_token).and_return({ access_token: "gh_token" })
-
-        # Mock Octokit User Info
-        mock_gh_user = double(id: 12345, login: "github_dev_user")
-        allow_any_instance_of(Octokit::Client).to receive(:user).and_return(mock_gh_user)
-      end
-
-      it "updates the user and returns success" do
-        post "/internal/github_connection/callback", params: { code: code, state: state }
-
-        expect(response).to have_http_status(:ok)
-        expect(json_response["success"]).to be true
-        expect(json_response["github_username"]).to eq("github_dev_user")
+        expect(response).to have_http_status(:redirect)
+        expect(response).to redirect_to("#{PROTOCOL}://#{DOMAIN}/settings/account?github=success")
 
         user.reload
-        expect(user.github_uid).to eq(12345)
+        expect(user.github_uid.to_s).to eq("12345")
         expect(user.github_username).to eq("github_dev_user")
-        expect(cookies[:github_oauth_state]).to be_nil # Check cleanup
+      end
+
+      it "redirects to custom redirect_url if provided" do
+        custom_url = "#{PROTOCOL}://#{DOMAIN}/custom"
+        cookies[:github_oauth_redirect_url] = custom_url
+        get "/internal/github_connection/callback", params: { code: code, state: state }
+        expect(response).to redirect_to(custom_url)
       end
     end
 
     context "with invalid state" do
       it "returns unauthorized status" do
-        cookies.encrypted[:github_oauth_state] = "different_state"
-
-        post "/internal/github_connection/callback", params: { code: code, state: state }
-
+        allow(JwtService).to receive(:decode_oauth_state).with("different_state").and_return(nil)
+        get "/internal/github_connection/callback", params: { code: code, state: "different_state" }
         expect(response).to have_http_status(:unauthorized)
-        expect(json_response["error"]).to eq("Invalid state")
       end
     end
   end
@@ -74,7 +81,7 @@ RSpec.describe "Internal::GithubConnections", type: :request do
     end
 
     it "clears github info from user" do
-      delete "/internal/github_connection/disconnect"
+      delete "/internal/github_connection/disconnect", headers: auth_headers
 
       expect(response).to have_http_status(:ok)
       user.reload

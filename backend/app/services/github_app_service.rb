@@ -11,11 +11,7 @@ class GithubAppService
     return if content.blank?
 
     begin
-      if content.include?("-----BEGIN")
-        @private_key_content = content
-      else
-        @private_key_content = Base64.decode64(content)
-      end
+      @private_key_content = Base64.decode64(content)
       @private_key = OpenSSL::PKey::RSA.new(@private_key_content)
     rescue OpenSSL::PKey::RSAError, ArgumentError => e
       Rails.logger.error("[GithubAppService] Failed to parse GH_APP_PRIVATE_KEY (length: #{content&.length}): #{e.message}")

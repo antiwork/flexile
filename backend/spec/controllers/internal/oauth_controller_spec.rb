@@ -72,5 +72,65 @@ RSpec.describe Internal::OauthController, type: :controller do
         expect(payload["exp"]).to be <= 1.month.from_now.to_i
       end
     end
+
+    context "with github provider" do
+      let(:github_uid) { "123456" }
+      let(:github_username) { "github_user" }
+
+      it "successfully logs in if user exists with the primary email" do
+        User.create!(email: email)
+        post :create, params: {
+          email: email,
+          token: api_token,
+          provider: "github",
+          github_uid: github_uid,
+          github_username: github_username,
+        }
+        expect(response).to have_http_status(:ok)
+        user = User.find_by(email: email)
+        expect(user.github_uid).to eq(github_uid)
+      end
+
+      it "fails if primary github email does not exist in Flexile" do
+        post :create, params: {
+          email: "unknown@example.com",
+          token: api_token,
+          provider: "github",
+          github_uid: github_uid,
+          github_username: github_username,
+        }
+        expect(response).to have_http_status(:not_found)
+        expect(JSON.parse(response.body)["error"]).to include("Account not found")
+      end
+
+      it "allows login if UID matches and current primary email exists in Flexile for someone else" do
+        # This covers the "email changed but still exists in system" case
+        User.create!(email: "original@example.com", github_uid: github_uid, github_username: "old_user")
+        User.create!(email: "new@example.com") # The new primary email exists in system
+
+        post :create, params: {
+          email: "new@example.com",
+          token: api_token,
+          provider: "github",
+          github_uid: github_uid,
+          github_username: github_username,
+        }
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "blocks login if UID matches but current primary email IS NOT in Flexile" do
+        User.create!(email: "original@example.com", github_uid: github_uid, github_username: "old_user")
+
+        post :create, params: {
+          email: "stranger@example.com",
+          token: api_token,
+          provider: "github",
+          github_uid: github_uid,
+          github_username: github_username,
+        }
+        expect(response).to have_http_status(:not_found)
+        expect(JSON.parse(response.body)["error"]).to include("not registered in Flexile")
+      end
+    end
   end
 end

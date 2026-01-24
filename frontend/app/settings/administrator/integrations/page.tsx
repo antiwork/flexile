@@ -36,7 +36,10 @@ export default function IntegrationsPage() {
   const searchParams = useSearchParams();
   const utils = trpc.useUtils();
 
-  const { data: connection, isLoading } = trpc.github.getCompanyConnection.useQuery({ companyId: company.id });
+  const { data: connection, isLoading } = trpc.github.getCompanyConnection.useQuery(
+    { companyId: company.id },
+    { enabled: !!user.roles.administrator },
+  );
   const [isConnecting, setIsConnecting] = useState(false);
   const hasShownToast = useRef(false);
 
@@ -155,7 +158,7 @@ export default function IntegrationsPage() {
 
                   <AlertDialogContent>
                     <AlertDialogHeader className="mb-4">
-                      <AlertDialogTitle>Disconnect Github organization?</AlertDialogTitle>
+                      <AlertDialogTitle>Disconnect GitHub organization?</AlertDialogTitle>
                       <AlertDialogDescription className="text-muted-foreground mt-2 text-base">
                         This will prevent contractors from verifying Pull Request ownership and disable automatic bounty
                         checks.

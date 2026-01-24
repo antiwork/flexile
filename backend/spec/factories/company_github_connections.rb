@@ -2,10 +2,11 @@
 
 FactoryBot.define do
   factory :company_github_connection do
-    company { nil }
-    connected_by { nil }
-    github_org_id { "MyString" }
-    github_org_login { "MyString" }
-    revoked_at { "2025-12-28 07:17:57" }
+    association :company
+    association :connected_by, factory: :user
+    github_org_id { "12345" }
+    github_org_login { "test-org" }
+    installation_id { "67890" }
+    revoked_at { nil }
   end
 end
