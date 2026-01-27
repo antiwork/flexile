@@ -163,7 +163,8 @@ test.describe("Invoice GitHub PR Enrichment", () => {
 
   test("displays orange dot indicator for paid PRs with bounties", async ({ page }) => {
     const bountyPr = "https://github.com/mock-org/mock-repo/pull/1";
-    const paidInvoice = await invoicesFactory.create(
+    // First invoice is paid
+    await invoicesFactory.create(
       {
         companyId: company.company.id,
         companyContractorId: contractor.id,
@@ -174,8 +175,20 @@ test.describe("Invoice GitHub PR Enrichment", () => {
       },
     );
 
-    await login(page, contractorUser);
-    await page.goto(`/invoices/${paidInvoice.invoice.externalId}`);
+    // Second invoice (currently viewing) also contains the PR
+    const currentInvoice = await invoicesFactory.create(
+      {
+        companyId: company.company.id,
+        companyContractorId: contractor.id,
+        status: "received",
+      },
+      {
+        lineItems: [{ description: bountyPr }],
+      },
+    );
+
+    await login(page, adminUser);
+    await page.goto(`/invoices/${currentInvoice.invoice.externalId}`);
 
     const orangeDot = page.locator("div.bg-\\[\\#D97706\\]");
     await expect(orangeDot).toBeVisible();

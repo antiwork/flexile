@@ -15,7 +15,7 @@ test.describe("GitHub Account and Organization Connections", () => {
     adminUser = setup.adminUser;
 
     // Create contractor (unlinked)
-    const contractorResult = await usersFactory.create();
+    const contractorResult = await usersFactory.createContractor();
     contractorUser = contractorResult.user;
   });
 

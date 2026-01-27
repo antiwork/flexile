@@ -101,7 +101,7 @@ RSpec.describe "Internal::CompanyGithubConnections", type: :request do
       get "/internal/github_organization_connection/callback",
           params: { state: "mock_signed_state", installation_id: "install-999" }
 
-      expect(response).to redirect_to("#{PROTOCOL}://#{DOMAIN}/custom-integrations")
+      expect(response).to redirect_to("#{PROTOCOL}://#{DOMAIN}/custom-integrations?github_org=success")
     end
 
     it "redirects to error page on failure" do

@@ -10,6 +10,7 @@ RSpec.describe "Internal::GithubConnections", type: :request do
   let(:auth_headers) { { "x-flexile-auth" => "Bearer #{user_jwt}" } }
 
   before do
+    create(:company_worker, user: user)
     allow(JwtService).to receive(:generate_oauth_state).and_return(state)
     allow(JwtService).to receive(:decode_oauth_state).with(state).and_return({ user_id: user.id })
     allow(ENV).to receive(:[]).and_call_original
@@ -62,7 +63,7 @@ RSpec.describe "Internal::GithubConnections", type: :request do
         custom_url = "#{PROTOCOL}://#{DOMAIN}/custom"
         cookies[:github_oauth_redirect_url] = custom_url
         get "/internal/github_connection/callback", params: { code: code, state: state }
-        expect(response).to redirect_to(custom_url)
+        expect(response).to redirect_to("#{custom_url}?github=success")
       end
     end
 

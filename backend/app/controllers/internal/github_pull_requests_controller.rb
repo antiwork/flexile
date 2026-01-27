@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Internal::GithubPullRequestsController < Internal::BaseController
+  before_action :authenticate_user_json!
+
   # POST /internal/github_pull_requests/fetch
   def fetch
     url = params[:url]

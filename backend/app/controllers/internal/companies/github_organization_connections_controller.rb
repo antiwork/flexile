@@ -65,15 +65,23 @@ class Internal::Companies::GithubOrganizationConnectionsController < Internal::C
 
     # Determine redirect URL
     redirect_url = cookies.delete(:github_oauth_redirect_url) ||
-                   "#{PROTOCOL}://#{DOMAIN}/settings/administrator/integrations?github_org=success"
+                   "#{PROTOCOL}://#{DOMAIN}/settings/administrator/integrations"
+
+    separator = redirect_url.include?("?") ? "&" : "?"
+    redirect_url = "#{redirect_url}#{separator}github_org=success"
 
     redirect_to redirect_url, allow_other_host: true
   rescue StandardError => e
     Rails.logger.error("GitHub Org OAuth callback error: #{e.message}")
     Rails.logger.error(e.backtrace.join("\n"))
 
-    error_redirect_url = "#{PROTOCOL}://#{DOMAIN}/settings/administrator/integrations?github_org=error"
-    redirect_to error_redirect_url, allow_other_host: true
+    default_error_url = "#{PROTOCOL}://#{DOMAIN}/settings/administrator/integrations"
+    redirect_url = cookies.delete(:github_oauth_redirect_url) || default_error_url
+
+    separator = redirect_url.include?("?") ? "&" : "?"
+    redirect_url = "#{redirect_url}#{separator}github_org=error"
+
+    redirect_to redirect_url, allow_other_host: true
   end
 
   # POST /internal/github_organization_connection
@@ -139,7 +147,7 @@ class Internal::Companies::GithubOrganizationConnectionsController < Internal::C
 
   private
     def set_company
-      @company = Current.user&.all_companies&.first
+      @company = Current.company
 
       unless @company
         render json: { error: "No company found" }, status: :not_found
@@ -172,5 +180,6 @@ class Internal::Companies::GithubOrganizationConnectionsController < Internal::C
       end
 
       Current.authenticated_user = user
+      reset_current
     end
 end

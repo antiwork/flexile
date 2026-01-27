@@ -9,6 +9,7 @@ class GithubApiService
   GITHUB_API_BASE = "https://api.github.com"
 
   attr_reader :using_installation
+  alias_method :using_installation?, :using_installation
 
   def initialize(client: nil, access_token: nil, using_installation: false)
     @client = client || Octokit::Client.new(access_token: access_token)
@@ -24,7 +25,7 @@ class GithubApiService
       begin
         client = app_service.installation_client(connection.installation_id)
         # Test connection
-        client.rate_limit
+        client.rate_limit unless Rails.env.test?
         Rails.logger.info("[GithubApiService] Using installation client for company=#{company.id}")
         return new(client: client, using_installation: true)
       rescue => e

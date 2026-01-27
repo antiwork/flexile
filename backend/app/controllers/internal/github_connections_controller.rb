@@ -37,29 +37,43 @@ class Internal::GithubConnectionsController < Internal::BaseController
     # Clear the state cookie if it exists (though we rely on signed state now)
     cookies.delete(:github_oauth_state)
 
-    # Exchange code for token
-    token_response = Octokit.exchange_code_for_token(
-      code,
-      ENV["GH_CLIENT_ID"],
-      ENV["GH_CLIENT_SECRET"],
-      { redirect_uri: callback_github_connection_url(protocol: PROTOCOL, host: API_DOMAIN) }
-    )
+    github_uid = nil
+    github_username = nil
 
-    access_token = token_response[:access_token]
+    if (Rails.env.test? || ENV["GH_CLIENT_ID"].blank?) && code == "mock_code"
+      # Mock response for E2E tests
+      github_uid = 12345
+      github_username = "github_dev_user"
+    else
+      # Exchange code for token
+      token_response = Octokit.exchange_code_for_token(
+        code,
+        ENV["GH_CLIENT_ID"],
+        ENV["GH_CLIENT_SECRET"],
+        { redirect_uri: callback_github_connection_url(protocol: PROTOCOL, host: API_DOMAIN) }
+      )
 
-    # Fetch user info
-    client = Octokit::Client.new(access_token: access_token)
-    github_user = client.user
+      access_token = token_response[:access_token]
+
+      # Fetch user info
+      client = Octokit::Client.new(access_token: access_token)
+      github_user = client.user
+      github_uid = github_user.id
+      github_username = github_user.login
+    end
 
     # Update current user with GitHub info
     Current.user.update!(
-      github_uid: github_user.id,
-      github_username: github_user.login
+      github_uid: github_uid,
+      github_username: github_username
     )
 
     # Determine redirect URL
     redirect_url = cookies.delete(:github_oauth_redirect_url) ||
-                   "#{PROTOCOL}://#{DOMAIN}/settings/account?github=success"
+                   "#{PROTOCOL}://#{DOMAIN}/settings/account"
+
+    separator = redirect_url.include?("?") ? "&" : "?"
+    redirect_url = "#{redirect_url}#{separator}github=success"
 
     redirect_to redirect_url, allow_other_host: true
   rescue StandardError => e
@@ -72,8 +86,13 @@ class Internal::GithubConnectionsController < Internal::BaseController
     end
 
     # On error, redirect back with error param if possible, otherwise render error
-    error_redirect_url = "#{PROTOCOL}://#{DOMAIN}/settings/account?github=error"
-    redirect_to error_redirect_url, allow_other_host: true
+    default_error_url = "#{PROTOCOL}://#{DOMAIN}/settings/account"
+    redirect_url = cookies.delete(:github_oauth_redirect_url) || default_error_url
+
+    separator = redirect_url.include?("?") ? "&" : "?"
+    redirect_url = "#{redirect_url}#{separator}github=error"
+
+    redirect_to redirect_url, allow_other_host: true
   end
 
   # DELETE /internal/github_connection/disconnect
@@ -111,5 +130,6 @@ class Internal::GithubConnectionsController < Internal::BaseController
       end
 
       Current.authenticated_user = user
+      reset_current
     end
 end

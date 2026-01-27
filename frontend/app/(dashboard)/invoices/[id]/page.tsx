@@ -175,7 +175,9 @@ const ResponsivePRCardView = ({
               <Badge variant="secondary" className="border">
                 ${prResult.pr.bounty_cents / 100}
               </Badge>
-              {prResult.pr.paid_invoice_numbers.filter((i) => i.external_id !== currentInvoiceId).length > 0 ? (
+              {isAdmin &&
+              prResult.pr.belongs_to_company &&
+              prResult.pr.paid_invoice_numbers.filter((i) => i.external_id !== currentInvoiceId).length > 0 ? (
                 <div className="size-1.5 rounded-full bg-[#D97706]" title="Paid" />
               ) : null}
             </div>

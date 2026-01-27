@@ -901,8 +901,6 @@ const ResponsivePRCard = ({
                 <div className="size-1.5 rounded-full bg-[#D97706]" title="Paid" />
               ) : null}
             </div>
-          ) : isAdmin && prResult.pr.belongs_to_company && prResult.pr.paid_invoice_numbers.length > 0 ? (
-            <div className="size-1.5 rounded-full bg-[#D97706]" title="Paid" />
           ) : null}
         </>
       ) : (
