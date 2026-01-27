@@ -57,16 +57,7 @@ module User::OtpAuthentication
         return true
       end
 
-      result = self.authenticate_otp(code.to_s, drift: OTP_DRIFT)
-
-      # TODO (jyo): Added to debug login issue, remove this later
-      # Reference: https://github.com/antiwork/flexile/pull/1523
-      unless result
-        expired_code_check = authenticate_otp(code.to_s, drift: 24.hours)
-        Bugsnag.notify("OTP authentication failed: user #{id}, valid_with_extended_drift_24_hours: #{expired_code_check}")
-      end
-
-      result
+      self.authenticate_otp(code.to_s, drift: OTP_DRIFT)
     end
 
     def record_otp_failure!
