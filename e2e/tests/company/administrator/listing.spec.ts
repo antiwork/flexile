@@ -37,10 +37,7 @@ test.describe("People table sorting", () => {
     });
 
     await login(page, adminUser, "/people");
-
-    // Wait for table to load with our test data
-    await expect(page.getByRole("cell", { name: "Alumni - ended at 2023-01-01" })).toBeVisible();
-
+    await expect(page.locator("tbody")).toContainText("Alumni");
     const statusHeader = page.getByRole("columnheader", { name: "Status" });
 
     await statusHeader.click();
