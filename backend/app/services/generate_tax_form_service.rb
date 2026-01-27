@@ -2,7 +2,7 @@
 
 class GenerateTaxFormService
   def initialize(user_compliance_info:, document_type:, tax_year:, company:)
-    raise ArgumentError, "Invalid form" unless Document::TAX_FORM_TYPES.include?(document_type)
+    raise ArgumentError, "Invalid form" unless Document::TAX_FORM_TYPES.include?(document_type.to_s)
 
     @user_compliance_info = user_compliance_info
     @tax_year = tax_year

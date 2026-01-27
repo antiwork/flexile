@@ -61,6 +61,24 @@ RSpec.describe GenerateTaxFormService do
       end
     end
 
+    context "when document_type is passed as a symbol" do
+      let(:document_type) { :form_1099nec }
+      let(:business_entity) { false }
+      let(:business_name) { nil }
+      let(:business_type) { nil }
+      let(:tax_classification) { nil }
+      let(:user_compliance_info) do
+        create(:user_compliance_info, :us_resident, :confirmed, user:, tax_id: "123456789",
+                                                                business_entity:, business_name:, business_type:, tax_classification:)
+      end
+
+      before { create(:company_worker, company:, user:) }
+
+      it "accepts the symbol and creates the tax document" do
+        expect { generate_tax_form_service.process }.to change { user_compliance_info.documents.tax_document.count }.by(1)
+      end
+    end
+
     context "when form is a W-8BEN" do
       let(:business_entity) { false }
       let(:business_name) { nil }
