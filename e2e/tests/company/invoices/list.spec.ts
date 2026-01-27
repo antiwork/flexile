@@ -357,7 +357,7 @@ test.describe("Invoices admin flow", () => {
       .set({ payRateInSubunits: null })
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
-    await page.getByRole("link", { name: "Invoices", exact: true }).click();
+    await page.getByRole("link", { name: "Invoices" }).click();
     await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
     await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
@@ -367,7 +367,7 @@ test.describe("Invoices admin flow", () => {
       .set({ payRateInSubunits: 60000 })
       .where(eq(companyContractors.id, companyContractor.id));
     await page.reload();
-    await page.getByRole("link", { name: "Invoices", exact: true }).click();
+    await page.getByRole("link", { name: "Invoices" }).click();
     await page.getByRole("row").filter({ hasText: "Awaiting approval" }).click();
     await expect(page.getByRole("heading", { name: "INV-123456" })).toBeVisible();
     await expect(page.getByText("This invoice includes rates above the default of $60/hour.")).not.toBeVisible();
