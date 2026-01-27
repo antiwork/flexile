@@ -366,9 +366,7 @@ test.describe("Manage roles access", () => {
 test.describe("Roles page invite functionality", () => {
   test("should be able to invite admin by email", async ({ page }) => {
     const { adminUser, company } = await companiesFactory.createCompletedOnboarding();
-    await login(page, adminUser);
-
-    await page.goto("/settings/administrator/roles");
+    await login(page, adminUser, "/settings/administrator/roles");
 
     await page.getByRole("button", { name: "Add member" }).click();
     const invitedEmail = "testadmin@example.com";
@@ -398,9 +396,7 @@ test.describe("Roles page invite functionality", () => {
 
   test("should be able to invite lawyer by email", async ({ page }) => {
     const { adminUser, company } = await companiesFactory.createCompletedOnboarding();
-    await login(page, adminUser);
-
-    await page.goto("/settings/administrator/roles");
+    await login(page, adminUser, "/settings/administrator/roles");
 
     await page.getByRole("button", { name: "Add member" }).click();
 
@@ -431,9 +427,7 @@ test.describe("Roles page invite functionality", () => {
 
   test("should show proper form validation", async ({ page }) => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding();
-    await login(page, adminUser);
-
-    await page.goto("/settings/administrator/roles");
+    await login(page, adminUser, "/settings/administrator/roles");
 
     await page.getByRole("button", { name: "Add member" }).click();
 
@@ -458,9 +452,7 @@ test.describe("Roles page invite functionality", () => {
 
     // Now try to invite this existing user as a lawyer to our current company
     const { adminUser, company } = await companiesFactory.createCompletedOnboarding();
-    await login(page, adminUser);
-
-    await page.goto("/settings/administrator/roles");
+    await login(page, adminUser, "/settings/administrator/roles");
 
     await page.getByRole("button", { name: "Add member" }).click();
 
