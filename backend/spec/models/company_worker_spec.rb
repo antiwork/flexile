@@ -143,6 +143,31 @@ RSpec.describe CompanyWorker do
           [company_worker_1, company_worker_2, company_worker_8]
         )
       end
+
+      context "when a worker is excluded from 1099-NEC" do
+        before do
+          company_worker_1.update!(exclude_from_1099nec: true)
+        end
+
+        it "does not include the excluded worker" do
+          expect(described_class.with_required_tax_info_for(tax_year:)).to match_array(
+            [company_worker_2, company_worker_8]
+          )
+        end
+      end
+    end
+
+    describe ".excluded_from_1099nec" do
+      let(:company) { create(:company) }
+      let!(:included_worker) { create(:company_worker, company:) }
+      let!(:excluded_worker) do
+        create(:company_worker, company:, exclude_from_1099nec: true,
+                                exclude_from_1099nec_reason: "Test exclusion")
+      end
+
+      it "returns only workers excluded from 1099-NEC" do
+        expect(described_class.excluded_from_1099nec).to contain_exactly(excluded_worker)
+      end
     end
   end
 
@@ -299,6 +324,40 @@ RSpec.describe CompanyWorker do
         end.to have_enqueued_mail(CompanyWorkerMailer, :equity_percent_selection).with(contractor.id)
            .and change { contractor.sent_equity_percent_selection_email? }.from(false).to(true)
       end
+    end
+  end
+
+  describe "#exclude_from_1099nec!" do
+    let(:worker) { create(:company_worker) }
+    let(:admin) { create(:user) }
+    let(:reason) { "Dual-status resident. Filing manually." }
+
+    it "sets the exclusion flag with audit trail", :freeze_time do
+      expect do
+        worker.exclude_from_1099nec!(reason: reason, set_by_user: admin)
+      end.to change { worker.reload.exclude_from_1099nec }.from(false).to(true)
+        .and change { worker.exclude_from_1099nec_reason }.from(nil).to(reason)
+        .and change { worker.exclude_from_1099nec_set_by_user_id }.from(nil).to(admin.id)
+        .and change { worker.exclude_from_1099nec_set_at }.from(nil).to(Time.current)
+    end
+  end
+
+  describe "#include_in_1099nec!" do
+    let(:worker) do
+      create(:company_worker,
+             exclude_from_1099nec: true,
+             exclude_from_1099nec_reason: "Previous reason",
+             exclude_from_1099nec_set_at: 1.day.ago)
+    end
+    let(:admin) { create(:user) }
+
+    it "clears the exclusion flag with audit trail", :freeze_time do
+      expect do
+        worker.include_in_1099nec!(set_by_user: admin)
+      end.to change { worker.reload.exclude_from_1099nec }.from(true).to(false)
+        .and change { worker.exclude_from_1099nec_reason }.to(nil)
+        .and change { worker.exclude_from_1099nec_set_by_user_id }.to(admin.id)
+        .and change { worker.exclude_from_1099nec_set_at }.to(Time.current)
     end
   end
 end

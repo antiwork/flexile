@@ -246,6 +246,19 @@ RSpec.describe Irs::Form1099necDataGenerator do
       it "returns an array of user ids" do
         expect(service.payee_ids).to match_array([us_resident.id])
       end
+
+      context "when a worker is excluded from 1099-NEC" do
+        before do
+          us_resident_company_worker.update!(
+            exclude_from_1099nec: true,
+            exclude_from_1099nec_reason: "Dual-status resident"
+          )
+        end
+
+        it "does not include the excluded worker" do
+          expect(service.payee_ids).to eq([])
+        end
+      end
     end
 
     context "when there are no invoices" do
