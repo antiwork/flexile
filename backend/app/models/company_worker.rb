@@ -64,6 +64,8 @@ class CompanyWorker < ApplicationRecord
       .where(documents[:company_id].eq(company_workers[:company_id]))
       .distinct
   end
+  scope :excluded_from_1099nec, -> { where(exclude_from_1099nec: true) }
+
   scope :with_required_tax_info_for, -> (tax_year:) do
     invoices_subquery = Invoice.alive.select("company_contractor_id")
                                .for_tax_year(tax_year)
@@ -72,6 +74,7 @@ class CompanyWorker < ApplicationRecord
     joins(:company).merge(Company.active)
       .joins(user: :compliance_info).merge(User.where(country_code: "US"))
       .where(id: invoices_subquery)
+      .where(exclude_from_1099nec: false)
   end
 
   after_commit :notify_rate_updated, on: :update, if: -> { saved_change_to_pay_rate_in_subunits? }
@@ -96,6 +99,23 @@ class CompanyWorker < ApplicationRecord
           .exists?
   end
 
+  def exclude_from_1099nec!(reason:, set_by_user:)
+    update!(
+      exclude_from_1099nec: true,
+      exclude_from_1099nec_reason: reason,
+      exclude_from_1099nec_set_by_user_id: set_by_user.id,
+      exclude_from_1099nec_set_at: Time.current
+    )
+  end
+
+  def include_in_1099nec!(set_by_user:)
+    update!(
+      exclude_from_1099nec: false,
+      exclude_from_1099nec_reason: nil,
+      exclude_from_1099nec_set_by_user_id: set_by_user.id,
+      exclude_from_1099nec_set_at: Time.current
+    )
+  end
 
   def unique_unvested_equity_grant_for_year(year)
     company_investors = user.company_investors.where(company:)
