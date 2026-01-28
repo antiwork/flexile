@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_19_025548) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_28_070657) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -640,6 +640,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_19_025548) do
     t.integer "github_pr_bounty_cents"
     t.integer "github_linked_issue_number"
     t.string "github_linked_issue_repo"
+    t.index ["github_pr_url"], name: "index_invoice_line_items_on_github_pr_url", where: "(github_pr_url IS NOT NULL)"
     t.index ["invoice_id"], name: "index_invoice_line_items_on_invoice_id"
   end
 
