@@ -11,7 +11,7 @@ test.describe("Workspace settings", () => {
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Workspace settings" }).click();
-
+    await expect(page.getByLabel("Company name")).toBeVisible();
     await expect(page.getByLabel("Company name")).toHaveValue(company.name ?? "");
     await expect(page.getByLabel("Company website")).toHaveValue(company.website ?? "");
     await expect(page.getByLabel("Brand color")).toHaveValue(company.brandColor ?? "");
