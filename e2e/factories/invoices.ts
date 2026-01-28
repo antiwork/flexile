@@ -3,7 +3,7 @@ import { companyContractorsFactory } from "@test/factories/companyContractors";
 import { invoiceLineItemsFactory } from "@test/factories/invoiceLineItems";
 import { format, subDays } from "date-fns";
 import { eq } from "drizzle-orm";
-import { companies, companyContractors, invoices, users } from "@/db/schema";
+import { companies, companyContractors, invoiceLineItems, invoices, users } from "@/db/schema";
 import { assert } from "@/utils/assert";
 
 const BASE_FLEXILE_FEE_CENTS = 50;
@@ -15,7 +15,10 @@ const calculateFlexileFeeCents = (totalAmountInUsdCents: number) => {
 };
 
 export const invoicesFactory = {
-  create: async (overrides: Partial<typeof invoices.$inferInsert> = {}) => {
+  create: async (
+    overrides: Partial<typeof invoices.$inferInsert> = {},
+    options: { lineItems?: Partial<typeof invoiceLineItems.$inferInsert>[] } = {},
+  ) => {
     const contractor = overrides.companyContractorId
       ? await db.query.companyContractors.findFirst({
           where: eq(companyContractors.id, overrides.companyContractorId),
@@ -52,6 +55,15 @@ export const invoicesFactory = {
 
     const invoiceDate = format(subDays(new Date(), 3), "yyyy-MM-dd");
 
+    const cashAmountInCents =
+      overrides.cashAmountInCents ??
+      (options.lineItems
+        ? options.lineItems.reduce(
+            (acc, li) => acc + BigInt((li.payRateInSubunits ?? 0) * Number(li.quantity ?? 1)),
+            0n,
+          )
+        : BigInt(600_00));
+
     const [invoice] = await db
       .insert(invoices)
       .values({
@@ -64,9 +76,9 @@ export const invoicesFactory = {
         equityPercentage: 0,
         equityAmountInCents: BigInt(0),
         equityAmountInOptions: 0,
-        cashAmountInCents: BigInt(600_00),
+        cashAmountInCents,
         invoiceNumber: "INV-123456",
-        totalAmountInUsdCents: BigInt(600_00),
+        totalAmountInUsdCents: cashAmountInCents,
         billFrom: user.legalName ?? "Test user",
         billTo: company.name ?? "N/A",
         dueOn: invoiceDate,
@@ -75,17 +87,26 @@ export const invoicesFactory = {
         streetAddress: user.streetAddress,
         city: user.city,
         zipCode: user.zipCode,
-        flexileFeeCents: BigInt(calculateFlexileFeeCents(600_00)),
+        flexileFeeCents: BigInt(calculateFlexileFeeCents(Number(cashAmountInCents))),
         ...overrides,
       })
       .returning();
     assert(invoice != null);
 
-    await invoiceLineItemsFactory.create({
-      invoiceId: invoice.id,
-      payRateInSubunits: Number(invoice.totalAmountInUsdCents),
-      quantity: "1",
-    });
+    if (options.lineItems) {
+      for (const lineItem of options.lineItems) {
+        await invoiceLineItemsFactory.create({
+          invoiceId: invoice.id,
+          ...lineItem,
+        });
+      }
+    } else {
+      await invoiceLineItemsFactory.create({
+        invoiceId: invoice.id,
+        payRateInSubunits: Number(invoice.totalAmountInUsdCents),
+        quantity: "1",
+      });
+    }
 
     return { invoice };
   },

@@ -155,3 +155,39 @@ test("OTP input validation and auto-submit behavior", async ({ page }) => {
   // Wait for redirect
   await page.waitForURL(/.*\/invoices.*/u);
 });
+
+test("login with GitHub", async ({ page }) => {
+  const { user } = await usersFactory.create({
+    githubUid: "888888",
+    githubUsername: "github_dev_user",
+  });
+
+  await page.goto("/login");
+
+  await externalProviderMock(page, String(SignInMethod.Github), { email: user.email });
+
+  await page.getByRole("button", { name: "Log in with Github" }).click();
+  await page.waitForURL(/.*\/invoices.*/u);
+
+  await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
+  const updatedUser = await db.query.users.findFirst({ where: eq(users.id, user.id) });
+  expect(updatedUser?.currentSignInAt).not.toBeNull();
+  expect(updatedUser?.githubUsername).toBe("github_dev_user");
+});
+
+test("login description updates for GitHub sign-in", async ({ page }) => {
+  const { user } = await usersFactory.create({
+    githubUid: "999999",
+    githubUsername: "test-description-user",
+  });
+
+  await page.goto("/login");
+
+  await externalProviderMock(page, String(SignInMethod.Github), { email: user.email });
+
+  await page.getByRole("button", { name: "Log in with Github" }).click();
+  await page.waitForURL(/.*\/invoices.*/u);
+  await logout(page);
+
+  await expect(page.getByText("you used Github to log in last time")).toBeVisible();
+});

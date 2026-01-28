@@ -256,6 +256,35 @@ export const consolidatedPayments = pgTable(
   ],
 );
 
+export const companyGithubConnections = pgTable(
+  "company_github_connections",
+  {
+    id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+    companyId: bigint("company_id", { mode: "bigint" }).notNull(),
+    connectedById: bigint("connected_by_id", { mode: "bigint" }).notNull(),
+    githubOrgId: varchar("github_org_id").notNull(),
+    githubOrgLogin: varchar("github_org_login").notNull(),
+    installationId: varchar("installation_id"),
+    revokedAt: timestamp("revoked_at", { precision: 6, mode: "date" }),
+    createdAt: timestamp("created_at", { precision: 6, mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { precision: 6, mode: "date" })
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("index_company_github_connections_on_connected_by_id").using(
+      "btree",
+      table.connectedById.asc().nullsLast().op("int8_ops"),
+    ),
+    uniqueIndex("index_company_github_connections_on_company_id")
+      .using("btree", table.companyId.asc().nullsLast().op("int8_ops"))
+      .where(sql`(revoked_at IS NULL)`),
+    uniqueIndex("index_company_github_connections_on_github_org_id")
+      .using("btree", table.githubOrgId.asc().nullsLast().op("text_ops"))
+      .where(sql`(revoked_at IS NULL)`),
+  ],
+);
+
 export const convertibleInvestments = pgTable(
   "convertible_investments",
   {
@@ -1695,6 +1724,8 @@ export const users = pgTable(
     sentInvalidTaxIdEmail: boolean("sent_invalid_tax_id_email").notNull().default(false),
     clerkId: varchar("clerk_id"),
     otpSecretKey: varchar("otp_secret_key"),
+    githubUid: text("github_uid"),
+    githubUsername: varchar("github_username"),
   },
   (table) => [
     index("index_users_on_confirmation_token").using("btree", table.confirmationToken.asc().nullsLast().op("text_ops")),
@@ -1748,7 +1779,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   documentSignatures: many(documentSignatures),
 }));
 
-export const companiesRelations = relations(companies, ({ many }) => ({
+export const companiesRelations = relations(companies, ({ one, many }) => ({
   administrators: many(companyAdministrators),
   contractors: many(companyContractors),
   investors: many(companyInvestors),
@@ -1759,6 +1790,7 @@ export const companiesRelations = relations(companies, ({ many }) => ({
   invoices: many(invoices),
   integrations: many(integrations),
   optionPools: many(optionPools),
+  githubConnection: one(companyGithubConnections),
 }));
 
 export const companyContractorsRelations = relations(companyContractors, ({ one, many }) => ({
@@ -2119,6 +2151,7 @@ export const userComplianceInfosRelations = relations(userComplianceInfos, ({ on
   }),
   documents: many(documents),
   dividends: many(dividends),
+  companyGithubConnections: many(companyGithubConnections),
 }));
 
 export const wiseCredentialsRelations = relations(wiseCredentials, ({ many }) => ({
@@ -2276,5 +2309,16 @@ export const companyUpdatesRelations = relations(companyUpdates, ({ one }) => ({
   company: one(companies, {
     fields: [companyUpdates.companyId],
     references: [companies.id],
+  }),
+}));
+
+export const companyGithubConnectionsRelations = relations(companyGithubConnections, ({ one }) => ({
+  company: one(companies, {
+    fields: [companyGithubConnections.companyId],
+    references: [companies.id],
+  }),
+  connectedBy: one(users, {
+    fields: [companyGithubConnections.connectedById],
+    references: [users.id],
   }),
 }));

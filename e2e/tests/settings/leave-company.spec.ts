@@ -15,6 +15,7 @@ test.describe("Leave company", () => {
     await login(page, adminUser);
 
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Account" }).click();
 
     await expect(page.getByText("Leave workspace")).not.toBeVisible();
   });
@@ -30,6 +31,7 @@ test.describe("Leave company", () => {
 
     await login(page, user);
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Account" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
@@ -55,6 +57,7 @@ test.describe("Leave company", () => {
 
     await login(page, user);
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Account" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
@@ -90,6 +93,7 @@ test.describe("Leave company", () => {
 
     await login(page, user);
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Account" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
@@ -124,6 +128,7 @@ test.describe("Leave company", () => {
 
     await login(page, user);
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Account" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
@@ -156,6 +161,7 @@ test.describe("Leave company", () => {
 
     await expect(page.getByRole("button", { name: "Company A" })).toBeVisible();
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Account" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
     await expect(page.getByText("Leave this workspace?")).toBeVisible();

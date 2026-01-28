@@ -24,8 +24,8 @@ module PunditAuthorization
     def debug_message(exception)
       if Current.user
         "Pundit::NotAuthorizedError for #{exception.policy.class} " \
-        "by User ID #{pundit_user.user.id} " \
-        "#{pundit_user.company.present? ? "for Company ID #{pundit_user.company.id}" : "without a company (signed up as contractor)"} " \
+        "by User ID #{pundit_user&.user&.id || "nil"} " \
+        "#{pundit_user&.company.present? ? "for Company ID #{pundit_user.company.id}" : "without a company"} " \
         ": #{exception.message}"
       else
         "Pundit::NotAuthorizedError for #{exception.policy.class} by unauthenticated user: #{exception.message}"

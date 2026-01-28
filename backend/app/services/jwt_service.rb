@@ -31,6 +31,23 @@ class JwtService
       JWT.encode(payload, jwt_secret, "HS256")
     end
 
+    def generate_oauth_state(payload)
+      # Short lived state for OAuth flows
+      data = payload.merge(exp: 15.minutes.from_now.to_i)
+      JWT.encode(data, jwt_secret, "HS256")
+    end
+
+    def decode_oauth_state(state)
+      return nil unless state
+
+      begin
+        decoded = JWT.decode(state, jwt_secret, true, { algorithm: "HS256" })
+        decoded[0].with_indifferent_access
+      rescue JWT::DecodeError, JWT::ExpiredSignature
+        nil
+      end
+    end
+
     def token_present_in_request?(request)
       authorization_header = request.headers["x-flexile-auth"]
       authorization_header.present? && authorization_header.start_with?("Bearer ")

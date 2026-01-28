@@ -10,12 +10,14 @@ import { withinModal } from "@test/index";
 
 test.describe("view company updates", () => {
   let company: Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["company"];
+  let adminUser: Awaited<ReturnType<typeof companiesFactory.createCompletedOnboarding>>["adminUser"];
   let user: Awaited<ReturnType<typeof usersFactory.create>>["user"];
+  const adminUserpreferredName = "Test Admin";
 
   test.beforeEach(async () => {
     const result = await companiesFactory.create();
     company = result.company;
-    const adminUser = (await usersFactory.create()).user;
+    adminUser = (await usersFactory.create({ preferredName: adminUserpreferredName })).user;
     await companyAdministratorsFactory.create({
       companyId: company.id,
       userId: adminUser.id,
@@ -42,6 +44,7 @@ test.describe("view company updates", () => {
     await withinModal(
       async (modal) => {
         await expect(modal.getByText("Test contractor view content for body.")).toBeVisible();
+        await expect(modal.getByText(adminUserpreferredName)).toBeVisible();
       },
       { page, title: companyUpdate.title, assertClosed: false },
     );
@@ -62,6 +65,7 @@ test.describe("view company updates", () => {
     await withinModal(
       async (modal) => {
         await expect(modal.getByText("Test investor view content for body.")).toBeVisible();
+        await expect(modal.getByText(adminUserpreferredName)).toBeVisible();
       },
       { page, title: companyUpdate.title, assertClosed: false },
     );

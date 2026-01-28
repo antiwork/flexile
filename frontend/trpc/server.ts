@@ -1,5 +1,6 @@
 import { createHydrationHelpers } from "@trpc/react-query/rsc";
 import { cache } from "react";
+import { db } from "@/db";
 import { capTableRouter } from "@/trpc/routes/capTable";
 import { companiesRouter } from "@/trpc/routes/companies";
 import { equityCalculationsRouter } from "@/trpc/routes/equityCalculations";
@@ -17,6 +18,7 @@ import { documentsRouter } from "./routes/documents";
 import { equityGrantExercisesRouter } from "./routes/equityGrantExercises";
 import { equityGrantsRouter } from "./routes/equityGrants";
 import { expenseCategoriesRouter } from "./routes/expenseCategories";
+import { githubRouter } from "./routes/github";
 import { investorsRouter } from "./routes/investors";
 import { invoicesRouter } from "./routes/invoices";
 import { lawyersRouter } from "./routes/lawyers";
@@ -58,11 +60,12 @@ export const appRouter = createRouter({
   administrators: administratorsRouter,
   companyInviteLinks: companyInviteLinksRouter,
   support: supportRouter,
+  github: githubRouter,
 });
 export type AppRouter = typeof appRouter;
 
 export const getQueryClient = cache(createClient);
 const createCaller = createCallerFactory(appRouter);
-const caller = createCaller({ userId: null, headers: {} });
+const caller = createCaller({ userId: null, headers: {}, db });
 export const { trpc, HydrateClient } = createHydrationHelpers<typeof appRouter>(caller, getQueryClient);
-export const createServerCaller = ({ userId }: { userId: number }) => createCaller({ userId, headers: {} });
+export const createServerCaller = ({ userId }: { userId: number }) => createCaller({ userId, headers: {}, db });
