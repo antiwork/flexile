@@ -7,8 +7,11 @@ import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import AttachmentListCard from "@/components/AttachmentsList";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import { GitHubPRHoverCard } from "@/components/GitHubPRHoverCard";
+import { GitHubPRIcon } from "@/components/GitHubPRIcon";
 import { linkClasses } from "@/components/Link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,6 +26,7 @@ import { PayRateType, trpc } from "@/trpc/client";
 import { cn } from "@/utils";
 import { assert } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { parsePRState, type PRDetails, truncatePRTitle } from "@/utils/github";
 import { formatDate, formatDuration } from "@/utils/time";
 import { useIsMobile } from "@/utils/use-mobile";
 import {
@@ -334,35 +338,110 @@ export default function InvoicePage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {invoice.lineItems.map((lineItem, index) => (
-                        <TableRow key={index}>
-                          <PrintTableCell className="w-[50%] align-top md:w-[60%] print:align-top">
-                            <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">
-                              {lineItem.description}
-                            </div>
-                          </PrintTableCell>
-                          <PrintTableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%] print:text-right print:align-top">
-                            {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
-                          </PrintTableCell>
-                          <PrintTableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%] print:text-right print:align-top">
-                            {lineItem.payRateInSubunits ? (
-                              <>
-                                <div className="hidden print:inline">
-                                  {formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}
+                      {invoice.lineItems.map((lineItem, index) => {
+                        const hasPR = !!lineItem.githubPrUrl;
+
+                        const prDetails: PRDetails | null = hasPR
+                          ? {
+                              url: lineItem.githubPrUrl ?? "",
+                              number: lineItem.githubPrNumber ?? 0,
+                              title: lineItem.githubPrTitle ?? "",
+                              state: parsePRState(lineItem.githubPrState),
+                              author: lineItem.githubPrAuthor ?? "",
+                              repo: lineItem.githubPrRepo ?? "",
+                              bounty_cents: lineItem.githubPrBountyCents ?? null,
+                            }
+                          : null;
+
+                        const contractorGithubUsername = invoice.contractor.user.githubUsername;
+                        const isVerified =
+                          hasPR && contractorGithubUsername
+                            ? prDetails?.author.toLowerCase() === contractorGithubUsername.toLowerCase()
+                            : null;
+
+                        const paidInvoices = lineItem.paidInvoices.map((inv) => ({
+                          invoiceId: inv.invoiceId,
+                          invoiceNumber: inv.invoiceNumber,
+                        }));
+
+                        const showStatusDot =
+                          user.roles.administrator &&
+                          hasPR &&
+                          (isVerified === false || paidInvoices.length > 0) &&
+                          invoice.status !== "paid";
+
+                        return (
+                          <TableRow key={index}>
+                            <PrintTableCell className="w-[50%] align-top md:w-[60%] print:align-top">
+                              {hasPR && prDetails ? (
+                                <GitHubPRHoverCard
+                                  pr={prDetails}
+                                  currentUserGitHubUsername={contractorGithubUsername}
+                                  paidInvoices={paidInvoices}
+                                >
+                                  <a
+                                    href={prDetails.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 hover:underline"
+                                  >
+                                    <GitHubPRIcon state={prDetails.state} />
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-foreground shrink-0 bg-black/[0.03] dark:bg-white/[0.08]"
+                                    >
+                                      {prDetails.repo}
+                                    </Badge>
+                                    <span className="truncate">
+                                      {truncatePRTitle(prDetails.title, 40)} #{prDetails.number}
+                                    </span>
+                                    {prDetails.bounty_cents ? (
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-foreground shrink-0 bg-black/[0.03] dark:bg-white/[0.08]"
+                                      >
+                                        {formatMoneyFromCents(prDetails.bounty_cents, { compact: true })}
+                                      </Badge>
+                                    ) : null}
+                                    {showStatusDot ? (
+                                      <span
+                                        className="size-2 shrink-0 rounded-full bg-amber-500"
+                                        aria-label="Needs attention"
+                                      />
+                                    ) : null}
+                                  </a>
+                                </GitHubPRHoverCard>
+                              ) : (
+                                <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">
+                                  {lineItem.description}
                                 </div>
-                                <span className="print:hidden">{formatMoneyFromCents(lineItem.payRateInSubunits)}</span>
-                                <span>{lineItem.hourly ? " / hour" : ""}</span>
-                              </>
-                            ) : null}
-                          </PrintTableCell>
-                          <PrintTableCell className="w-[10%] text-right align-top tabular-nums print:text-right print:align-top">
-                            <span className="hidden print:inline">
-                              {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
-                            </span>
-                            <span className="print:hidden">{formatMoneyFromCents(lineItemTotal(lineItem))}</span>
-                          </PrintTableCell>
-                        </TableRow>
-                      ))}
+                              )}
+                            </PrintTableCell>
+                            <PrintTableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%] print:text-right print:align-top">
+                              {lineItem.hourly ? formatDuration(Number(lineItem.quantity)) : lineItem.quantity}
+                            </PrintTableCell>
+                            <PrintTableCell className="w-[20%] text-right align-top tabular-nums md:w-[15%] print:text-right print:align-top">
+                              {lineItem.payRateInSubunits ? (
+                                <>
+                                  <div className="hidden print:inline">
+                                    {formatMoneyFromCents(lineItem.payRateInSubunits * cashFactor)}
+                                  </div>
+                                  <span className="print:hidden">
+                                    {formatMoneyFromCents(lineItem.payRateInSubunits)}
+                                  </span>
+                                  <span>{lineItem.hourly ? " / hour" : ""}</span>
+                                </>
+                              ) : null}
+                            </PrintTableCell>
+                            <PrintTableCell className="w-[10%] text-right align-top tabular-nums print:text-right print:align-top">
+                              <span className="hidden print:inline">
+                                {formatMoneyFromCents(lineItemTotal(lineItem) * cashFactor)}
+                              </span>
+                              <span className="print:hidden">{formatMoneyFromCents(lineItemTotal(lineItem))}</span>
+                            </PrintTableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
