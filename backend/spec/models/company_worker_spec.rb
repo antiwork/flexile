@@ -156,19 +156,6 @@ RSpec.describe CompanyWorker do
         end
       end
     end
-
-    describe ".excluded_from_1099nec" do
-      let(:company) { create(:company) }
-      let!(:included_worker) { create(:company_worker, company:) }
-      let!(:excluded_worker) do
-        create(:company_worker, company:, exclude_from_1099nec: true,
-                                exclude_from_1099nec_reason: "Test exclusion")
-      end
-
-      it "returns only workers excluded from 1099-NEC" do
-        expect(described_class.excluded_from_1099nec).to contain_exactly(excluded_worker)
-      end
-    end
   end
 
   describe "callbacks" do

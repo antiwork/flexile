@@ -64,7 +64,6 @@ class CompanyWorker < ApplicationRecord
       .where(documents[:company_id].eq(company_workers[:company_id]))
       .distinct
   end
-  scope :excluded_from_1099nec, -> { where(exclude_from_1099nec: true) }
 
   scope :with_required_tax_info_for, -> (tax_year:) do
     invoices_subquery = Invoice.alive.select("company_contractor_id")
