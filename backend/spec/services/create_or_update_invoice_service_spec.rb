@@ -679,5 +679,194 @@ RSpec.describe CreateOrUpdateInvoiceService do
         end
       end
     end
+
+    describe "GitHub PR details population" do
+      let(:invoice) { nil }
+      let(:pr_url) { "https://github.com/acme-org/project/pull/123" }
+      let(:pr_details) do
+        {
+          url: pr_url,
+          number: 123,
+          title: "Add new feature",
+          state: "merged",
+          author: "developer",
+          repo: "acme-org/project",
+          bounty_cents: 50000,
+          linked_issue_number: 42,
+          linked_issue_repo: "acme-org/project",
+        }
+      end
+      let(:params) do
+        ActionController::Parameters.new({
+          **invoice_params,
+          invoice_line_items: [
+            {
+              description: pr_url,
+              pay_rate_in_subunits: 10000,
+              quantity: 1,
+              hourly: false,
+            }
+          ],
+        })
+      end
+
+      before do
+        company.update!(github_org_name: "acme-org")
+      end
+
+      it "fetches and stores PR details when description is a valid PR URL from company org" do
+        expect(GithubService).to receive(:valid_pr_url?).with(pr_url).and_return(true)
+        expect(GithubService).to receive(:parse_pr_url).with(pr_url).and_return({ owner: "acme-org", repo: "project", pr_number: 123 })
+        expect(GithubService).to receive(:fetch_pr_details_from_url).with(org_name: "acme-org", url: pr_url).and_return(pr_details)
+
+        result = invoice_service.process
+        expect(result[:success]).to be(true)
+
+        line_item = result[:invoice].invoice_line_items.first
+        expect(line_item.github_pr_url).to eq(pr_url)
+        expect(line_item.github_pr_number).to eq(123)
+        expect(line_item.github_pr_title).to eq("Add new feature")
+        expect(line_item.github_pr_state).to eq("merged")
+        expect(line_item.github_pr_author).to eq("developer")
+        expect(line_item.github_pr_repo).to eq("acme-org/project")
+        expect(line_item.github_pr_bounty_cents).to eq(50000)
+        expect(line_item.github_linked_issue_number).to eq(42)
+        expect(line_item.github_linked_issue_repo).to eq("acme-org/project")
+      end
+
+      it "does not fetch PR details for non-PR URLs" do
+        params[:invoice_line_items][0][:description] = "Regular work description"
+
+        expect(GithubService).to receive(:valid_pr_url?).with("Regular work description").and_return(false)
+        expect(GithubService).not_to receive(:fetch_pr_details_from_url)
+
+        result = invoice_service.process
+        expect(result[:success]).to be(true)
+
+        line_item = result[:invoice].invoice_line_items.first
+        expect(line_item.github_pr_url).to be_nil
+      end
+
+      it "does not fetch PR details for PRs from different organizations" do
+        params[:invoice_line_items][0][:description] = "https://github.com/other-org/project/pull/456"
+
+        expect(GithubService).to receive(:valid_pr_url?).with("https://github.com/other-org/project/pull/456").and_return(true)
+        expect(GithubService).to receive(:parse_pr_url).with("https://github.com/other-org/project/pull/456").and_return({ owner: "other-org", repo: "project", pr_number: 456 })
+        expect(GithubService).not_to receive(:fetch_pr_details_from_url)
+
+        result = invoice_service.process
+        expect(result[:success]).to be(true)
+
+        line_item = result[:invoice].invoice_line_items.first
+        expect(line_item.github_pr_url).to be_nil
+      end
+
+      it "does not fetch PR details when company has no GitHub org configured" do
+        company.update!(github_org_name: nil)
+
+        expect(GithubService).to receive(:valid_pr_url?).with(pr_url).and_return(true)
+        expect(GithubService).to receive(:parse_pr_url).with(pr_url).and_return({ owner: "acme-org", repo: "project", pr_number: 123 })
+        expect(GithubService).not_to receive(:fetch_pr_details_from_url)
+
+        result = invoice_service.process
+        expect(result[:success]).to be(true)
+
+        line_item = result[:invoice].invoice_line_items.first
+        expect(line_item.github_pr_url).to be_nil
+      end
+
+      it "clears PR data when description changes from PR URL to regular text" do
+        expect(GithubService).to receive(:valid_pr_url?).with(pr_url).and_return(true)
+        expect(GithubService).to receive(:parse_pr_url).with(pr_url).and_return({ owner: "acme-org", repo: "project", pr_number: 123 })
+        expect(GithubService).to receive(:fetch_pr_details_from_url).with(org_name: "acme-org", url: pr_url).and_return(pr_details)
+
+        result = invoice_service.process
+        created_invoice = result[:invoice]
+        line_item = created_invoice.invoice_line_items.first
+        expect(line_item.github_pr_url).to eq(pr_url)
+
+        # Now update with regular description
+        update_params = ActionController::Parameters.new({
+          **invoice_params,
+          invoice_line_items: [
+            {
+              id: line_item.id,
+              description: "Regular work",
+              pay_rate_in_subunits: 10000,
+              quantity: 1,
+              hourly: false,
+            }
+          ],
+        })
+
+        expect(GithubService).to receive(:valid_pr_url?).with("Regular work").and_return(false)
+
+        update_service = described_class.new(params: update_params, user: user, company: company, contractor: contractor, invoice: created_invoice)
+        update_result = update_service.process
+        expect(update_result[:success]).to be(true)
+
+        line_item.reload
+        expect(line_item.github_pr_url).to be_nil
+        expect(line_item.github_pr_number).to be_nil
+        expect(line_item.github_pr_title).to be_nil
+      end
+
+      it "skips fetching when PR data already exists for the same URL" do
+        expect(GithubService).to receive(:valid_pr_url?).with(pr_url).and_return(true)
+        expect(GithubService).to receive(:parse_pr_url).with(pr_url).and_return({ owner: "acme-org", repo: "project", pr_number: 123 })
+        expect(GithubService).to receive(:fetch_pr_details_from_url).once.and_return(pr_details)
+
+        result = invoice_service.process
+        created_invoice = result[:invoice]
+        line_item = created_invoice.invoice_line_items.first
+
+        # Update with same PR URL - should skip fetching
+        update_params = ActionController::Parameters.new({
+          **invoice_params,
+          invoice_line_items: [
+            {
+              id: line_item.id,
+              description: pr_url,
+              pay_rate_in_subunits: 15000, # different rate
+              quantity: 1,
+              hourly: false,
+            }
+          ],
+        })
+
+        expect(GithubService).to receive(:valid_pr_url?).with(pr_url).and_return(true)
+        expect(GithubService).to receive(:parse_pr_url).with(pr_url).and_return({ owner: "acme-org", repo: "project", pr_number: 123 })
+        expect(GithubService).not_to receive(:fetch_pr_details_from_url) # Should not fetch again
+
+        update_service = described_class.new(params: update_params, user: user, company: company, contractor: contractor, invoice: created_invoice)
+        update_result = update_service.process
+        expect(update_result[:success]).to be(true)
+      end
+
+      it "handles GitHub API errors gracefully and clears PR fields" do
+        expect(GithubService).to receive(:valid_pr_url?).with(pr_url).and_return(true)
+        expect(GithubService).to receive(:parse_pr_url).with(pr_url).and_return({ owner: "acme-org", repo: "project", pr_number: 123 })
+        expect(GithubService).to receive(:fetch_pr_details_from_url).and_raise(GithubService::ApiError, "Rate limited")
+
+        result = invoice_service.process
+        expect(result[:success]).to be(true)
+
+        line_item = result[:invoice].invoice_line_items.first
+        expect(line_item.github_pr_url).to be_nil
+        expect(line_item.github_pr_number).to be_nil
+      end
+
+      it "handles case-insensitive org name comparison" do
+        company.update!(github_org_name: "ACME-ORG")
+
+        expect(GithubService).to receive(:valid_pr_url?).with(pr_url).and_return(true)
+        expect(GithubService).to receive(:parse_pr_url).with(pr_url).and_return({ owner: "acme-org", repo: "project", pr_number: 123 })
+        expect(GithubService).to receive(:fetch_pr_details_from_url).with(org_name: "ACME-ORG", url: pr_url).and_return(pr_details)
+
+        result = invoice_service.process
+        expect(result[:success]).to be(true)
+        expect(result[:invoice].invoice_line_items.first.github_pr_url).to eq(pr_url)
+      end
+    end
   end
 end

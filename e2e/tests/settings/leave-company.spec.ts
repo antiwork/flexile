@@ -16,6 +16,11 @@ test.describe("Leave company", () => {
 
     await page.getByRole("link", { name: "Settings" }).click();
 
+    // Administrators should not see the Account link at all
+    await expect(page.getByRole("link", { name: "Account" })).not.toBeVisible();
+
+    // Verify they cannot access the page directly either
+    await page.goto("/settings/account");
     await expect(page.getByText("Leave workspace")).not.toBeVisible();
   });
 
@@ -30,6 +35,7 @@ test.describe("Leave company", () => {
 
     await login(page, user);
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Account" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
@@ -55,6 +61,7 @@ test.describe("Leave company", () => {
 
     await login(page, user);
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Account" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
@@ -90,6 +97,7 @@ test.describe("Leave company", () => {
 
     await login(page, user);
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Account" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
@@ -124,6 +132,7 @@ test.describe("Leave company", () => {
 
     await login(page, user);
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Account" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
 
@@ -156,6 +165,7 @@ test.describe("Leave company", () => {
 
     await expect(page.getByRole("button", { name: "Company A" })).toBeVisible();
     await page.getByRole("link", { name: "Settings" }).click();
+    await page.getByRole("link", { name: "Account" }).click();
 
     await page.getByRole("button", { name: "Leave workspace" }).click();
     await expect(page.getByText("Leave this workspace?")).toBeVisible();

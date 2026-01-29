@@ -19,7 +19,7 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
   await page.getByRole("button", { name: "Log in", exact: true }).click();
   await fillOtp(page);
 
-  await page.waitForURL(/^(?!.*\/login$).*/u);
+  await page.waitForURL(/^(?!.*\/login).*/u);
 };
 
 export const logout = async (page: Page) => {
