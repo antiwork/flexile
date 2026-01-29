@@ -47,7 +47,7 @@ export const PRLineItemCell = ({
   const isCompanyOrgPR =
     parsedPR && companyGithubOrg && parsedPR.owner.toLowerCase() === companyGithubOrg.toLowerCase();
 
-  const shouldFetch = Boolean(hasPRUrl && isCompanyOrgPR && githubUsername && !storedPRData.url);
+  const shouldFetch = Boolean(hasPRUrl && isCompanyOrgPR && githubUsername && storedPRData.url !== description);
 
   const {
     data: prDetails,
@@ -77,7 +77,7 @@ export const PRLineItemCell = ({
 
   const displayPR: PRDetails | null =
     prDetails ??
-    (storedPRData.url
+    (storedPRData.url === description
       ? {
           url: storedPRData.url,
           number: storedPRData.number ?? 0,
