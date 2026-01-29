@@ -7,6 +7,7 @@ import React, { useCallback, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentUser } from "@/global";
 import { cn } from "@/utils";
+import { formatMoneyFromCents } from "@/utils/formatMoney";
 import type { PRDetails, PRState } from "@/utils/github";
 
 const LONG_PRESS_DURATION = 500;
@@ -39,6 +40,7 @@ export interface GitHubPRHoverCardProps {
   pr: PRDetails;
   currentUserGitHubUsername?: string | null | undefined;
   paidInvoices?: PaidInvoiceInfo[];
+  lineItemTotal?: number | null;
   children: React.ReactNode;
   enabled?: boolean;
 }
@@ -47,6 +49,7 @@ export function GitHubPRHoverCard({
   pr,
   currentUserGitHubUsername,
   paidInvoices = [],
+  lineItemTotal,
   children,
   enabled = true,
 }: GitHubPRHoverCardProps) {
@@ -83,6 +86,11 @@ export function GitHubPRHoverCard({
   const isVerified = currentUserGitHubUsername
     ? pr.author.toLowerCase() === currentUserGitHubUsername.toLowerCase()
     : null;
+
+  const bountyMismatch =
+    pr.bounty_cents != null && lineItemTotal != null && pr.bounty_cents !== lineItemTotal
+      ? { bounty: pr.bounty_cents, lineTotal: lineItemTotal }
+      : null;
 
   const badgeStyle = PR_STATE_BADGES[pr.state];
 
@@ -167,6 +175,20 @@ export function GitHubPRHoverCard({
                       <span className="text-muted-foreground">Unverified author of this pull request.</span>
                     </>
                   )}
+                </div>
+              ) : null}
+
+              {bountyMismatch ? (
+                <div className="flex items-center gap-1.5 text-sm">
+                  <BadgeDollarSign className="size-4 text-amber-500" />
+                  <span>
+                    <span className="font-medium text-amber-500">Bounty mismatch</span>
+                    <span className="text-muted-foreground">
+                      {" "}
+                      — GitHub label is {formatMoneyFromCents(bountyMismatch.bounty)}, invoice line is{" "}
+                      {formatMoneyFromCents(bountyMismatch.lineTotal)}.
+                    </span>
+                  </span>
                 </div>
               ) : null}
             </div>

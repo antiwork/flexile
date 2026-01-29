@@ -364,10 +364,13 @@ export default function InvoicePage() {
                           invoiceNumber: inv.invoiceNumber,
                         }));
 
+                        const total = lineItemTotal(lineItem);
+                        const hasBountyMismatch = prDetails?.bounty_cents != null && prDetails.bounty_cents !== total;
+
                         const showStatusDot =
                           user.roles.administrator &&
                           hasPR &&
-                          (isVerified === false || paidInvoices.length > 0) &&
+                          (isVerified === false || paidInvoices.length > 0 || hasBountyMismatch) &&
                           invoice.status !== "paid";
 
                         return (
@@ -378,6 +381,7 @@ export default function InvoicePage() {
                                   pr={prDetails}
                                   currentUserGitHubUsername={contractorGithubUsername}
                                   paidInvoices={paidInvoices}
+                                  lineItemTotal={total}
                                 >
                                   <a
                                     href={prDetails.url}
