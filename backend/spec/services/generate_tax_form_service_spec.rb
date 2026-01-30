@@ -61,6 +61,24 @@ RSpec.describe GenerateTaxFormService do
       end
     end
 
+    context "when document_type is passed as a symbol" do
+      let(:document_type) { :form_1099nec }
+      let(:business_entity) { false }
+      let(:business_name) { nil }
+      let(:business_type) { nil }
+      let(:tax_classification) { nil }
+      let(:user_compliance_info) do
+        create(:user_compliance_info, :us_resident, :confirmed, user:, tax_id: "123456789",
+                                                                business_entity:, business_name:, business_type:, tax_classification:)
+      end
+
+      before { create(:company_worker, company:, user:) }
+
+      it "accepts the symbol and creates the tax document" do
+        expect { generate_tax_form_service.process }.to change { user_compliance_info.documents.tax_document.count }.by(1)
+      end
+    end
+
     context "when form is a W-8BEN" do
       let(:business_entity) { false }
       let(:business_name) { nil }
@@ -388,6 +406,38 @@ RSpec.describe GenerateTaxFormService do
           expect(text).to include("400") # total dividend amount
           expect(text).to include("200") # qualified dividend amount
           expect(text).to include("96") # tax withheld for all dividends
+        end
+      end
+
+      context "when dividends have nil withheld_tax_cents" do
+        before do
+          Dividend.destroy_all
+          create(:dividend, :paid, :qualified, company_investor: company_investor_2,
+                                               total_amount_in_cents: 50_00,
+                                               net_amount_in_cents: 50_00,
+                                               withheld_tax_cents: nil,
+                                               withholding_percentage: 0,
+                                               created_at: Date.new(tax_year, 1, 1),
+                                               paid_at: Date.new(tax_year, 1, 1))
+        end
+
+        it "creates a tax document without errors" do
+          expect do
+            expect(generate_tax_form_service.process).to be_an_instance_of(Document)
+          end.to change { user_compliance_info.documents.tax_document.count }.by(1)
+
+          tax_document = user_compliance_info.documents.tax_document.last
+          expect(tax_document.document_type).to eq(document_type)
+
+          tax_document.live_attachment.open do |file|
+            pdf = HexaPDF::Document.new(io: file)
+            processor = CustomPDFTextExtractor.new
+            pdf.pages.each { _1.process_contents(processor) }
+
+            text = processor.texts.join("\n")
+            expect(text).to include("50") # total dividend amount
+            expect(text).to include("50") # qualified dividend amount
+          end
         end
       end
     end

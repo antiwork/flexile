@@ -45,6 +45,14 @@ class CreateInvestorsAndDividends
           next
         end
 
+        if row["name"].present? && row["name"].length > User::MAX_PREFERRED_NAME_LENGTH
+          validation_errors << {
+            email: row["email"],
+            error_message: "Preferred name is too long (maximum is #{User::MAX_PREFERRED_NAME_LENGTH} characters)",
+          }
+          next
+        end
+
         puts "Processing email #{email}"
         street_address = [row["investment_address_1"], row["investment_address_2"]].compact.join(", ")
         @data[email] = {
