@@ -5,9 +5,10 @@ import { type DateValue, parseDate } from "@internationalized/date";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { List } from "immutable";
 import { CircleAlert, Plus, Upload } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect, useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { z } from "zod";
 import ComboBox from "@/components/ComboBox";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -29,9 +30,11 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentCompany, useCurrentUser } from "@/global";
+import githubMark from "@/images/github-mark.svg";
 import { trpc } from "@/trpc/client";
 import { assert, assertDefined } from "@/utils/assert";
 import { formatMoneyFromCents } from "@/utils/formatMoney";
+import { parseGitHubPRUrl } from "@/utils/github";
 import { request } from "@/utils/request";
 import {
   company_invoice_path,
@@ -39,6 +42,8 @@ import {
   edit_company_invoice_path,
   new_company_invoice_path,
 } from "@/utils/routes";
+import { useGitHubOAuth } from "@/utils/useGitHubOAuth";
+import { PRLineItemCell } from "./PRLineItemCell";
 import QuantityInput from "./QuantityInput";
 import { LegacyAddress as Address, Totals, useCanSubmitInvoices } from ".";
 
@@ -80,6 +85,13 @@ const dataSchema = z.object({
         quantity: z.string().nullable(),
         hourly: z.boolean(),
         pay_rate_in_subunits: z.number(),
+        github_pr_url: z.string().nullable().optional(),
+        github_pr_number: z.number().nullable().optional(),
+        github_pr_title: z.string().nullable().optional(),
+        github_pr_state: z.string().nullable().optional(),
+        github_pr_author: z.string().nullable().optional(),
+        github_pr_repo: z.string().nullable().optional(),
+        github_pr_bounty_cents: z.number().nullable().optional(),
       }),
     ),
     expenses: z.array(
@@ -103,7 +115,9 @@ const dataSchema = z.object({
 });
 type Data = z.infer<typeof dataSchema>;
 
-type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & { errors?: string[] | null };
+type InvoiceFormLineItem = Data["invoice"]["line_items"][number] & {
+  errors?: string[] | null;
+};
 type InvoiceFormExpense = Data["invoice"]["expenses"][number] & { errors?: string[] | null; blob?: File | null };
 type InvoiceFormDocument = Data["invoice"]["attachment"] & { errors?: string[] | null; blob?: File | null };
 
@@ -163,6 +177,26 @@ const Edit = () => {
   const [document, setDocument] = useState<InvoiceFormDocument | null>(data.invoice.attachment);
   const showExpensesTable = showExpenses || expenses.size > 0;
   const actionColumnClass = "w-12";
+
+  const [editingLineItemIndex, setEditingLineItemIndex] = useState<number | null>(null);
+
+  const hasCompanyOrgPRUrls = company.githubOrgName
+    ? lineItems.some((item) => {
+        const parsed = parseGitHubPRUrl(item.description);
+        return Boolean(parsed && parsed.owner.toLowerCase() === company.githubOrgName?.toLowerCase());
+      })
+    : false;
+
+  const showGitHubConnectAlert = hasCompanyOrgPRUrls && !user.githubUsername;
+
+  const { openOAuthPopup } = useGitHubOAuth();
+
+  const handleConnectGitHub = useCallback(() => {
+    void openOAuthPopup({
+      showSuccessToast: true,
+      invalidateQueries: [["currentUser"], ["pr-details"]],
+    });
+  }, [openOAuthPopup]);
 
   const validate = () => {
     setErrorField(null);
@@ -329,7 +363,8 @@ const Edit = () => {
   const updateLineItem = (index: number, update: Partial<InvoiceFormLineItem>) =>
     setLineItems((lineItems) =>
       lineItems.update(index, (lineItem) => {
-        const updated = { ...assertDefined(lineItem), ...update };
+        const current = assertDefined(lineItem);
+        const updated = { ...current, ...update };
         updated.errors = [];
         if (updated.description.length === 0) updated.errors.push("description");
         if (!updated.quantity || parseQuantity(updated.quantity) < 0.01) updated.errors.push("quantity");
@@ -390,6 +425,21 @@ const Edit = () => {
         </Alert>
       ) : null}
 
+      {showGitHubConnectAlert ? (
+        <Alert className="mx-4">
+          <CircleAlert className="size-4" />
+          <AlertDescription className="flex flex-1 items-center justify-between gap-2">
+            <span>
+              You linked a Pull Request from {company.githubOrgName}. Connect GitHub to verify your ownership.
+            </span>
+            <Button variant="outline" size="small" onClick={() => handleConnectGitHub()}>
+              <Image src={githubMark} alt="" className="size-4 dark:invert" />
+              Connect GitHub
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <section>
         <div className="grid gap-4">
           <div className="mx-4 grid auto-cols-fr gap-3 md:grid-flow-col">
@@ -440,53 +490,70 @@ const Edit = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {lineItems.toArray().map((item, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  <TableCell>
-                    <Input
-                      value={item.description}
-                      placeholder="Description"
-                      aria-invalid={item.errors?.includes("description")}
-                      onChange={(e) => updateLineItem(rowIndex, { description: e.target.value })}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <QuantityInput
-                      value={item.quantity ? { quantity: parseQuantity(item.quantity), hourly: item.hourly } : null}
-                      aria-label="Hours / Qty"
-                      aria-invalid={item.errors?.includes("quantity")}
-                      onChange={(value) =>
-                        updateLineItem(rowIndex, {
-                          quantity: value?.quantity.toString() ?? null,
-                          hourly: value?.hourly ?? false,
-                        })
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <NumberInput
-                      value={item.pay_rate_in_subunits / 100}
-                      onChange={(value: number | null) =>
-                        updateLineItem(rowIndex, { pay_rate_in_subunits: (value ?? 0) * 100 })
-                      }
-                      aria-label="Rate"
-                      placeholder="0"
-                      prefix="$"
-                      decimal
-                    />
-                  </TableCell>
-                  <TableCell>{formatMoneyFromCents(lineItemTotal(item))}</TableCell>
-                  <TableCell className={actionColumnClass}>
-                    <Button
-                      variant="link"
-                      aria-label="Remove"
-                      onClick={() => setLineItems((lineItems) => lineItems.delete(rowIndex))}
-                    >
-                      <TrashIcon className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {lineItems.toArray().map((item, rowIndex) => {
+                const isEditing = editingLineItemIndex === rowIndex;
+
+                return (
+                  <TableRow key={rowIndex}>
+                    <TableCell>
+                      <PRLineItemCell
+                        description={item.description}
+                        storedPRData={{
+                          url: item.github_pr_url ?? null,
+                          number: item.github_pr_number ?? null,
+                          title: item.github_pr_title ?? null,
+                          state: item.github_pr_state ?? null,
+                          author: item.github_pr_author ?? null,
+                          repo: item.github_pr_repo ?? null,
+                          bounty_cents: item.github_pr_bounty_cents ?? null,
+                        }}
+                        githubUsername={user.githubUsername}
+                        companyGithubOrg={company.githubOrgName}
+                        isEditing={isEditing}
+                        onEdit={() => setEditingLineItemIndex(rowIndex)}
+                        onChange={(value) => updateLineItem(rowIndex, { description: value })}
+                        onBlur={() => setEditingLineItemIndex(null)}
+                        hasError={item.errors?.includes("description") ?? false}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <QuantityInput
+                        value={item.quantity ? { quantity: parseQuantity(item.quantity), hourly: item.hourly } : null}
+                        aria-label="Hours / Qty"
+                        aria-invalid={item.errors?.includes("quantity")}
+                        onChange={(value) =>
+                          updateLineItem(rowIndex, {
+                            quantity: value?.quantity.toString() ?? null,
+                            hourly: value?.hourly ?? false,
+                          })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <NumberInput
+                        value={item.pay_rate_in_subunits / 100}
+                        onChange={(value: number | null) =>
+                          updateLineItem(rowIndex, { pay_rate_in_subunits: (value ?? 0) * 100 })
+                        }
+                        aria-label="Rate"
+                        placeholder="0"
+                        prefix="$"
+                        decimal
+                      />
+                    </TableCell>
+                    <TableCell>{formatMoneyFromCents(lineItemTotal(item))}</TableCell>
+                    <TableCell className={actionColumnClass}>
+                      <Button
+                        variant="link"
+                        aria-label="Remove"
+                        onClick={() => setLineItems((lineItems) => lineItems.delete(rowIndex))}
+                      >
+                        <TrashIcon className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
             <TableFooter>
               <TableRow>

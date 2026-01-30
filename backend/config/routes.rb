@@ -63,6 +63,7 @@ Rails.application.routes.draw do
     end
 
     resources :stripe, controller: :stripe, only: [:create]
+    resources :github, controller: :github, only: [:create]
   end
 
   scope module: :api, as: :api do

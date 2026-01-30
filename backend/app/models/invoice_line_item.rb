@@ -3,6 +3,18 @@
 class InvoiceLineItem < ApplicationRecord
   include Serializable
 
+  GITHUB_PR_FIELDS = %i[
+    github_pr_url
+    github_pr_number
+    github_pr_title
+    github_pr_state
+    github_pr_author
+    github_pr_repo
+    github_pr_bounty_cents
+    github_linked_issue_number
+    github_linked_issue_repo
+  ].freeze
+
   belongs_to :invoice
 
   validates :description, presence: true
