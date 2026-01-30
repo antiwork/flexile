@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_12_034436) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_28_070657) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -106,8 +106,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_12_034436) do
     t.jsonb "json_data", default: {"flags" => []}, null: false
     t.boolean "equity_enabled", default: false, null: false
     t.string "invite_link"
+    t.string "github_org_name"
+    t.bigint "github_org_id"
     t.bigint "primary_admin_id"
     t.index ["external_id"], name: "index_companies_on_external_id", unique: true
+    t.index ["github_org_id"], name: "index_companies_on_github_org_id", unique: true, where: "(github_org_id IS NOT NULL)"
     t.index ["invite_link"], name: "index_companies_on_invite_link", unique: true
     t.index ["primary_admin_id"], name: "index_companies_on_primary_admin_id"
   end
@@ -139,7 +142,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_12_034436) do
     t.string "role"
     t.boolean "contract_signed_elsewhere", default: false, null: false
     t.integer "equity_percentage", default: 0, null: false
+    t.boolean "exclude_from_1099nec", default: false, null: false
+    t.text "exclude_from_1099nec_reason"
+    t.bigint "exclude_from_1099nec_set_by_user_id"
+    t.datetime "exclude_from_1099nec_set_at"
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
+    t.index ["exclude_from_1099nec"], name: "index_company_contractors_on_exclude_from_1099nec"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_contractors_on_user_id_and_company_id", unique: true
     t.index ["user_id"], name: "index_company_contractors_on_user_id"
@@ -628,6 +636,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_12_034436) do
     t.integer "pay_rate_in_subunits", null: false
     t.string "pay_rate_currency", default: "usd", null: false
     t.boolean "hourly", default: false, null: false
+    t.string "github_pr_url"
+    t.integer "github_pr_number"
+    t.string "github_pr_title"
+    t.string "github_pr_state"
+    t.string "github_pr_author"
+    t.string "github_pr_repo"
+    t.integer "github_pr_bounty_cents"
+    t.integer "github_linked_issue_number"
+    t.string "github_linked_issue_repo"
+    t.index ["github_pr_url"], name: "index_invoice_line_items_on_github_pr_url", where: "(github_pr_url IS NOT NULL)"
     t.index ["invoice_id"], name: "index_invoice_line_items_on_invoice_id"
   end
 
@@ -865,10 +883,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_12_034436) do
     t.string "otp_secret_key"
     t.integer "otp_failed_attempts_count", default: 0, null: false
     t.datetime "otp_first_failed_at"
+    t.string "github_uid"
+    t.string "github_username"
+    t.string "github_access_token"
     t.index ["clerk_id"], name: "index_users_on_clerk_id", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["external_id"], name: "index_users_on_external_id", unique: true
+    t.index ["github_uid"], name: "index_users_on_github_uid", unique: true, where: "(github_uid IS NOT NULL)"
     t.index ["invitation_token"], name: "index_users_on_invitation_token", unique: true
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
     t.index ["invited_by_type", "invited_by_id"], name: "index_users_on_invited_by"

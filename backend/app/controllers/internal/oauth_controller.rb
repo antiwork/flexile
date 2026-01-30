@@ -13,13 +13,23 @@ class Internal::OauthController < Internal::BaseController
       return
     end
 
-    user = User.find_by(email: email)
+    user = nil
+    if github_params_present?
+      user = User.find_by(github_uid: params[:github_uid])
+    end
+
+    user ||= User.find_by(email: email)
+
     if user
       user.update!(current_sign_in_at: Time.current)
+      update_github_info(user) if github_params_present?
       return success_response_with_jwt(user)
     end
 
-    result = SignUpUser.new(user_attributes: { email: email, confirmed_at: Time.current }, ip_address: request.remote_ip).perform
+    user_attributes = { email: email, confirmed_at: Time.current }
+    user_attributes.merge!(github_attributes) if github_params_present?
+
+    result = SignUpUser.new(user_attributes: user_attributes, ip_address: request.remote_ip).perform
 
     if result[:success]
       success_response_with_jwt(result[:user], :created)
@@ -27,4 +37,23 @@ class Internal::OauthController < Internal::BaseController
       render json: { error: result[:error_message] }, status: :unprocessable_entity
     end
   end
+
+  private
+    def github_params_present?
+      params[:github_uid].present? && params[:github_username].present?
+    end
+
+    def github_attributes
+      {
+        github_uid: params[:github_uid],
+        github_username: params[:github_username],
+        github_access_token: params[:github_access_token],
+      }
+    end
+
+    def update_github_info(user)
+      return if user.github_uid.present? && user.github_uid != params[:github_uid]
+
+      user.update!(github_attributes)
+    end
 end

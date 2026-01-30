@@ -746,6 +746,15 @@ export const invoiceLineItems = pgTable(
       .$onUpdate(() => new Date()),
     payRateInSubunits: integer("pay_rate_in_subunits").notNull(),
     payRateCurrency: varchar("pay_rate_currency").default("usd").notNull(),
+    githubPrUrl: varchar("github_pr_url"),
+    githubPrNumber: integer("github_pr_number"),
+    githubPrTitle: varchar("github_pr_title"),
+    githubPrState: varchar("github_pr_state"),
+    githubPrAuthor: varchar("github_pr_author"),
+    githubPrRepo: varchar("github_pr_repo"),
+    githubPrBountyCents: integer("github_pr_bounty_cents"),
+    githubLinkedIssueNumber: integer("github_linked_issue_number"),
+    githubLinkedIssueRepo: varchar("github_linked_issue_repo"),
   },
   (table) => [
     index("index_invoice_line_items_on_invoice_id").using("btree", table.invoiceId.asc().nullsLast().op("int8_ops")),
@@ -1638,11 +1647,16 @@ export const companies = pgTable(
     conversionSharePriceUsd: numeric("conversion_share_price_usd"),
     jsonData: jsonb("json_data").notNull().$type<{ flags: string[] }>().default({ flags: [] }),
     inviteLink: varchar("invite_link"),
+    githubOrgName: varchar("github_org_name"),
+    githubOrgId: bigint("github_org_id", { mode: "bigint" }),
     primaryAdminId: bigint("primary_admin_id", { mode: "bigint" }),
   },
   (table) => [
     index("index_companies_on_external_id").using("btree", table.externalId.asc().nullsLast().op("text_ops")),
     uniqueIndex("index_companies_on_invite_link").using("btree", table.inviteLink.asc().nullsLast().op("text_ops")),
+    uniqueIndex("index_companies_on_github_org_id")
+      .using("btree", table.githubOrgId.asc().nullsLast().op("int8_ops"))
+      .where(sql`(github_org_id IS NOT NULL)`),
   ],
 );
 
@@ -1695,6 +1709,9 @@ export const users = pgTable(
     sentInvalidTaxIdEmail: boolean("sent_invalid_tax_id_email").notNull().default(false),
     clerkId: varchar("clerk_id"),
     otpSecretKey: varchar("otp_secret_key"),
+    githubUid: varchar("github_uid"),
+    githubUsername: varchar("github_username"),
+    githubAccessToken: varchar("github_access_token"),
   },
   (table) => [
     index("index_users_on_confirmation_token").using("btree", table.confirmationToken.asc().nullsLast().op("text_ops")),
@@ -1712,6 +1729,9 @@ export const users = pgTable(
       table.resetPasswordToken.asc().nullsLast().op("text_ops"),
     ),
     index("index_users_on_clerk_id").using("btree", table.clerkId.asc().nullsLast().op("text_ops")),
+    uniqueIndex("index_users_on_github_uid")
+      .using("btree", table.githubUid.asc().nullsLast().op("text_ops"))
+      .where(sql`(github_uid IS NOT NULL)`),
   ],
 );
 
