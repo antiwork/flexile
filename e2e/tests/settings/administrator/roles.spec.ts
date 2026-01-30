@@ -431,9 +431,10 @@ test.describe("Roles page invite functionality", () => {
 
   test("should show proper form validation", async ({ page }) => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding();
-    await login(page, adminUser);
-
-    await page.goto("/settings/administrator/roles");
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("listCompanyUsers") && r.status() >= 200 && r.status() < 300),
+      login(page, adminUser, "/settings/administrator/roles"),
+    ]);
 
     await page.getByRole("button", { name: "Add member" }).click();
 
