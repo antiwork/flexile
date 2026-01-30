@@ -408,6 +408,38 @@ RSpec.describe GenerateTaxFormService do
           expect(text).to include("96") # tax withheld for all dividends
         end
       end
+
+      context "when dividends have nil withheld_tax_cents" do
+        before do
+          Dividend.destroy_all
+          create(:dividend, :paid, :qualified, company_investor: company_investor_2,
+                                               total_amount_in_cents: 50_00,
+                                               net_amount_in_cents: 50_00,
+                                               withheld_tax_cents: nil,
+                                               withholding_percentage: 0,
+                                               created_at: Date.new(tax_year, 1, 1),
+                                               paid_at: Date.new(tax_year, 1, 1))
+        end
+
+        it "creates a tax document without errors" do
+          expect do
+            expect(generate_tax_form_service.process).to be_an_instance_of(Document)
+          end.to change { user_compliance_info.documents.tax_document.count }.by(1)
+
+          tax_document = user_compliance_info.documents.tax_document.last
+          expect(tax_document.document_type).to eq(document_type)
+
+          tax_document.live_attachment.open do |file|
+            pdf = HexaPDF::Document.new(io: file)
+            processor = CustomPDFTextExtractor.new
+            pdf.pages.each { _1.process_contents(processor) }
+
+            text = processor.texts.join("\n")
+            expect(text).to include("50") # total dividend amount
+            expect(text).to include("50") # qualified dividend amount
+          end
+        end
+      end
     end
 
     context "when form is a 1099-NEC" do

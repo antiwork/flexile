@@ -90,8 +90,9 @@ test.describe("Documents", () => {
     await documentsFactory.create({ companyId: company.id, text: "Test document text" });
     const { user: recipient } = await usersFactory.create({ legalName: "Recipient 1" });
     await companyContractorsFactory.create({ companyId: company.id, userId: recipient.id }, { withoutContract: true });
+
+    // Admin shares document with recipient
     await login(page, adminUser, "/documents");
-    await logout(page);
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
     await expect(page.locator("tbody tr")).toHaveCount(1);
     await page.getByRole("row").filter({ hasText: "Consulting agreement" }).click({ button: "right" });
@@ -102,6 +103,7 @@ test.describe("Documents", () => {
     await page.getByRole("button", { name: "Send" }).click();
     await expect(page.locator("tbody tr")).toHaveCount(2);
 
+    // Recipient signs the shared document
     await logout(page);
     await login(page, recipient, "/documents");
     await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
@@ -111,6 +113,12 @@ test.describe("Documents", () => {
     await page.getByRole("button", { name: "Add your signature" }).click();
     await page.getByRole("button", { name: "Agree & Submit" }).click();
 
+    // Wait for sign mutation to complete (modal closes)
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+
+    // Verify document shows as signed
+    await page.goto("/documents");
+    await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
     await expect(page.getByText("No results.")).toBeVisible();
     await page.locator("main").getByRole("button", { name: "Filter" }).click();
     await page.getByRole("menuitem", { name: "Status" }).click();

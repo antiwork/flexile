@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { SignInMethod } from "@/db/enums";
+import githubMark from "@/images/github-mark.svg";
 import googleLogoLight from "@/images/google-light.svg";
 import logo from "@/public/logo-icon.svg";
 import { request } from "@/utils/request";
@@ -206,12 +207,21 @@ export function AuthPage({
                   ) : null}
                   <Button
                     type="button"
-                    variant="primary"
+                    variant="accent"
                     className="font-base flex h-11 w-full items-center justify-center gap-2"
                     onClick={() => providerSignIn(SignInMethod.Google)}
                   >
                     <Image src={googleLogoLight} alt="Google" width={20} height={20} />
                     {sendOtpText} with Google
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="default"
+                    className="font-base mt-4 flex h-11 w-full items-center justify-center gap-2 bg-black text-white hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+                    onClick={() => providerSignIn(SignInMethod.GitHub)}
+                  >
+                    <Image src={githubMark} alt="GitHub" width={20} height={20} className="invert dark:invert-0" />
+                    {sendOtpText} with GitHub
                   </Button>
                   <div className="my-3 flex w-full items-center gap-2">
                     <div className="bg-muted h-px flex-1" />
