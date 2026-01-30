@@ -39,6 +39,7 @@ test.describe("Company administrator settings - payment details", () => {
 
     await withinModal(
       async () => {
+        await expect(stripePaymentFrame.getByLabel("Test Institution")).toBeVisible();
         await stripePaymentFrame.getByLabel("Test Institution").click();
         await stripeBankFrame.getByTestId("agree-button").click();
         await stripeBankFrame.getByTestId("success").click();
@@ -62,6 +63,7 @@ test.describe("Company administrator settings - payment details", () => {
     await page.getByRole("button", { name: "Edit" }).click();
     await withinModal(
       async () => {
+        await expect(stripePaymentFrame.getByLabel("Test Institution")).toBeVisible();
         await stripePaymentFrame.getByLabel("Test Institution").click();
         await stripeBankFrame.getByTestId("agree-button").click();
         await stripeBankFrame.getByTestId("high balance").click();
