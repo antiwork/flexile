@@ -2,8 +2,9 @@
 
 RSpec.describe Irs::BaseFormDataGenerator do
   let(:company) { build(:company) }
+  let(:transmitter_company) { build(:company) }
   let(:tax_year) { 2023 }
-  let(:service) { described_class.new(company:, tax_year:) }
+  let(:service) { described_class.new(company:, transmitter_company:, tax_year:) }
 
   describe "#process" do
     it "raises NotImplementedError" do

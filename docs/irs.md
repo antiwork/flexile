@@ -55,9 +55,10 @@ Need to use the **1099 TCC** to file via FIRE
 
 ```ruby
 company = Company.find(company_id)
+transmitter_company = Company.find(transmitter_company_id)
 tax_year = 2025
 is_test = false
-attached = { "IRS-1099-NEC-#{tax_year}.txt" => Irs::Form1099necDataGenerator.new(company:, tax_year:, is_test:).process }
+attached = { "IRS-1099-NEC-#{tax_year}.txt" => Irs::Form1099necDataGenerator.new(company:, transmitter_company:, tax_year:, is_test:).process }
 AdminMailer.custom(to: ["your-email@example.com"], subject: "[Flexile] #{company.name} 1099-NEC #{tax_year} IRS FIRE tax report #{is_test ? "test " : ""}file", body: "Attached", attached:).deliver_now
 ```
 
@@ -74,9 +75,10 @@ Need to use the **1042 TCC** to file via FIRE.
 
 ```ruby
 company = Company.find(company_id)
+transmitter_company = Company.find(transmitter_company_id)
 tax_year = 2025
 is_test = false
-attached = { "IRS-1042-S-#{tax_year}.txt" => Irs::Form1042sDataGenerator.new(company:, tax_year:, is_test:).process }
+attached = { "IRS-1042-S-#{tax_year}.txt" => Irs::Form1042sDataGenerator.new(company:, transmitter_company:, tax_year:, is_test:).process }
 AdminMailer.custom(to: ["your-email@example.com"], subject: "[Flexile] #{company.name} 1042-S #{tax_year} IRS FIRE tax report #{is_test ? "test " : ""}file", body: "Attached", attached:).deliver_now
 ```
 
