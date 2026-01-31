@@ -61,7 +61,7 @@ RSpec.describe Irs::Form1099divDataGenerator do
   end
   let!(:non_us_user_compliance_info) { create(:user_compliance_info, :non_us_resident, :confirmed, user: non_us_resident_2) }
 
-  subject(:service) { described_class.new(company:, tax_year:) }
+  subject(:service) { described_class.new(company:, transmitter_company:, tax_year:) }
 
   before do
     non_us_compliance_info_1 = create(:user_compliance_info, :us_resident, :confirmed, user: non_us_resident_1)
@@ -277,7 +277,7 @@ RSpec.describe Irs::Form1099divDataGenerator do
         context "when it is a test file" do
           it "includes the test file indicator in the transmitter record" do
             expect(
-              described_class.new(company:, tax_year:, is_test: true).process
+              described_class.new(company:, transmitter_company:, tax_year:, is_test: true).process
             ).to start_with("T#{tax_year}#{required_blanks(1)}#{transmitter_company.tax_id}#{GlobalConfig.dig("irs", "tcc_1099")}#{required_blanks(7)}T")
           end
         end

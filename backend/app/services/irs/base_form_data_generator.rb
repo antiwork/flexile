@@ -4,9 +4,10 @@ class Irs::BaseFormDataGenerator
   INVALID_CHARACTERS_REGEX = /[^0-9A-Za-z\s]/
   private_constant :INVALID_CHARACTERS_REGEX
 
-  def initialize(company:, tax_year:, is_test: false)
+  def initialize(company:, tax_year:, transmitter_company:, is_test: false)
     @company = company
     @tax_year = tax_year
+    @transmitter_company = transmitter_company
     @is_test = is_test
   end
 
@@ -36,9 +37,7 @@ class Irs::BaseFormDataGenerator
   end
 
   private
-    attr_reader :company, :tax_year, :is_test
-
-    def transmitter_company = Company.find_by(name: "Gumroad") || Company.find_by(name: "Gumroad, Inc.") || Company.find_by(name: "Gumroad Demo, Inc.")
+    attr_reader :company, :tax_year, :transmitter_company, :is_test
 
     def test_file_indicator = is_test ? "T" : " "
 
