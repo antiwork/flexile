@@ -60,11 +60,20 @@ class Irs::BaseFormDataGenerator
     end
 
     def transmitter_administrator_legal_name
-      @_transmitter_administrator_legal_name ||= normalized_tax_field(transmitter_company.primary_admin.user.legal_name)
+      @_transmitter_administrator_legal_name ||= normalized_tax_field(administrator_name_for(transmitter_company))
     end
 
     def company_administrator_legal_name
-      @_company_administrator_legal_name ||= normalized_tax_field(company.primary_admin.user.legal_name)
+      @_company_administrator_legal_name ||= normalized_tax_field(administrator_name_for(company))
+    end
+
+    def administrator_name_for(record)
+      name = record.primary_admin&.user&.legal_name.presence ||
+             record.primary_admin&.user&.name.presence
+
+      raise "No administrator name found for company #{record.id}" unless name.present?
+
+      name
     end
 
     def transmitter_record
