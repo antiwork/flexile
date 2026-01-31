@@ -35,4 +35,40 @@ RSpec.describe Irs::BaseFormDataGenerator do
       expect { service.serialize_form_data }.to raise_error(NotImplementedError)
     end
   end
+
+  describe "#administrator_name_for" do
+    let(:company) { create(:company, :completed_onboarding, name: "Test Company") }
+
+    it "returns admin legal_name when present" do
+      admin_user = company.primary_admin.user
+      admin_user.update!(legal_name: "John Doe")
+
+      result = service.send(:administrator_name_for, company)
+      expect(result).to eq("John Doe")
+    end
+
+    it "falls back to admin preferred_name when legal_name is nil" do
+      admin_user = company.primary_admin.user
+      admin_user.update!(legal_name: nil, preferred_name: "Jane Smith")
+
+      result = service.send(:administrator_name_for, company)
+      expect(result).to eq("Jane Smith")
+    end
+
+    it "falls back to admin preferred_name when legal_name is blank" do
+      admin_user = company.primary_admin.user
+      admin_user.update_columns(legal_name: "", preferred_name: "Jane Smith")
+
+      result = service.send(:administrator_name_for, company)
+      expect(result).to eq("Jane Smith")
+    end
+
+    it "falls back to company name when both legal_name and preferred_name are nil" do
+      admin_user = company.primary_admin.user
+      admin_user.update!(legal_name: nil, preferred_name: nil)
+
+      result = service.send(:administrator_name_for, company)
+      expect(result).to eq("Test Company")
+    end
+  end
 end
