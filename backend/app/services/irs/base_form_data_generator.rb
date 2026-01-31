@@ -68,9 +68,12 @@ class Irs::BaseFormDataGenerator
     end
 
     def administrator_name_for(record)
-      record.primary_admin&.user&.legal_name.presence ||
-        record.primary_admin&.user&.name.presence ||
-        record.name
+      name = record.primary_admin&.user&.legal_name.presence ||
+             record.primary_admin&.user&.name.presence
+
+      raise "No administrator name found for company #{record.id}" unless name.present?
+
+      name
     end
 
     def transmitter_record

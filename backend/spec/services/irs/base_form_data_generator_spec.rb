@@ -63,12 +63,12 @@ RSpec.describe Irs::BaseFormDataGenerator do
       expect(result).to eq("Jane Smith")
     end
 
-    it "falls back to company name when both legal_name and preferred_name are nil" do
+    it "raises an error when both legal_name and preferred_name are nil" do
       admin_user = company.primary_admin.user
       admin_user.update!(legal_name: nil, preferred_name: nil)
 
-      result = service.send(:administrator_name_for, company)
-      expect(result).to eq("Test Company")
+      expect { service.send(:administrator_name_for, company) }
+        .to raise_error("No administrator name found for company #{company.id}")
     end
   end
 end
