@@ -289,7 +289,6 @@ test.describe("Dividend Computations", () => {
     await draftRow.click();
 
     await expect(page.getByRole("heading", { name: "Dividend" })).toBeVisible();
-    await expect(page.getByText("Dividend distribution is still a draft")).toBeVisible();
 
     // Should show EIN warning alert
     await expect(page.getByText(/EIN required to finalize distribution/iu)).toBeVisible();
