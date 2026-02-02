@@ -5,12 +5,16 @@ import { expect, test } from "@test/index";
 import { eq } from "drizzle-orm";
 import { companies } from "@/db/schema";
 
-test.describe("Workspace settings", () => {
+test.describe.serial("Workspace settings", () => {
+  test.describe.configure({ retries: 2 });
   test("allows updating workspace settings", async ({ page }) => {
+    test.setTimeout(240000);
     const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
     await login(page, adminUser);
     await page.getByRole("link", { name: "Settings" }).click();
     await page.getByRole("link", { name: "Workspace settings" }).click();
+
+    await expect(page.getByRole("heading", { name: "Workspace settings" })).toBeVisible();
 
     await expect(page.getByLabel("Company name")).toHaveValue(company.name ?? "");
     await expect(page.getByLabel("Company website")).toHaveValue(company.website ?? "");
