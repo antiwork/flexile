@@ -14,6 +14,15 @@ scope path: :internal, module: :internal do
   resources :oauth, only: :create
   resource :current_user, only: :show
 
+  resource :github, only: [], controller: "github" do
+    get :oauth_url
+    get :app_installation_url
+    post :callback
+    post :installation_callback
+    delete :disconnect
+    get :pr
+  end
+
   resource :settings, only: [:update]
   namespace :settings do
     resource :dividend, only: [:show, :update], controller: "dividend"
@@ -41,6 +50,10 @@ scope path: :internal, module: :internal do
 
     resource :switch, only: :create, controller: "switch"
     resource :leave, only: [:destroy], controller: "leave_company"
+
+    resource :github, only: [], controller: "github" do
+      delete :disconnect
+    end
 
     resources :company_updates do
       post :send_test_email, on: :member
