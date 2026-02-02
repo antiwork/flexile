@@ -231,5 +231,48 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(locateOpenInvoicesBadge(page)).not.toBeVisible();
   });
 
+  test("prevents approving invoice when company EIN is not configured", async ({ page }) => {
+    const companyWithoutEin = await companiesFactory.create({
+      requiredInvoiceApprovalCount: 1,
+      isTrusted: true,
+      taxId: null,
+    });
+    const adminUserLocal = (await usersFactory.create()).user;
+    const workerUserLocal = (await usersFactory.create()).user;
+
+    await companyAdministratorsFactory.create({
+      companyId: companyWithoutEin.company.id,
+      userId: adminUserLocal.id,
+    });
+    await companyContractorsFactory.create({
+      companyId: companyWithoutEin.company.id,
+      userId: workerUserLocal.id,
+    });
+
+    // Contractor submits an invoice
+    await login(page, workerUserLocal);
+    await page.locator("header").getByRole("link", { name: "New invoice" }).click();
+    await page.getByLabel("Invoice ID").fill("TEST-001");
+    await fillDatePicker(page, "Date", "11/01/2024");
+    await page.getByPlaceholder("Description").fill("Test work");
+    await fillByLabel(page, "Hours / Qty", "10:00", { index: 0 });
+    await page.getByRole("button", { name: "Send invoice" }).click();
+
+    await expect(page.getByRole("cell", { name: "TEST-001" })).toBeVisible();
+    await expect(page.getByText("Awaiting approval")).toBeVisible();
+
+    // Admin views invoices page - should see EIN warning
+    await logout(page);
+    await login(page, adminUserLocal);
+
+    // Should show EIN warning alert
+    await expect(page.getByText(/EIN required to initiate payments/iu)).toBeVisible();
+
+    // Pay Now button should be disabled
+    const invoiceRow = page.locator("tbody tr").first();
+    await expect(invoiceRow).toContainText("Awaiting approval");
+    await expect(invoiceRow.getByRole("button", { name: /Approve/u })).toBeDisabled();
+  });
+
   const locateOpenInvoicesBadge = (page: Page) => page.getByRole("link", { name: "Invoices" }).getByRole("status");
 });

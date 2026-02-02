@@ -261,4 +261,40 @@ test.describe("Dividend Computations", () => {
     await expect(tableFooter).toContainText("$3,000");
     await expect(tableFooter).toContainText("$60,000");
   });
+
+  test("prevents finalizing distribution when company EIN is not configured", async ({ page }) => {
+    const { company, adminUser } = await companiesFactory.createCompletedOnboarding({
+      equityEnabled: true,
+      taxId: null,
+    });
+
+    const dividendComputation = await dividendComputationsFactory.create({
+      companyId: company.id,
+    });
+
+    await login(page, adminUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Dividends" }).first().click();
+
+    const draftRow = page
+      .getByRole("row")
+      .filter({
+        has: page.getByText("Draft"),
+      })
+      .filter({
+        has: page.getByText(formatMoney(dividendComputation.totalAmountInUsd)),
+      });
+
+    await expect(draftRow).toBeVisible();
+    await draftRow.click();
+
+    await expect(page.getByRole("heading", { name: "Dividend" })).toBeVisible();
+    await expect(page.getByText("Dividend distribution is still a draft")).toBeVisible();
+
+    // Should show EIN warning alert
+    await expect(page.getByText(/EIN required to finalize distribution/iu)).toBeVisible();
+
+    // Button should be disabled when EIN is missing
+    await expect(page.getByRole("button", { name: "Finalize distribution" })).toBeDisabled();
+  });
 });
