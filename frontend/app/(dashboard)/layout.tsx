@@ -80,6 +80,20 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
     logout();
   };
 
+  React.useEffect(() => {
+    if (user.requiresTinReverification && pathname !== "/settings/tax") {
+      router.replace("/settings/tax");
+    }
+  }, [user.requiresTinReverification, pathname, router]);
+
+  if (user.requiresTinReverification && pathname !== "/settings/tax") {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-muted-foreground">Redirecting...</p>
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <Sidebar collapsible="offcanvas" mobileSidebar={<MobileBottomNav />}>

@@ -86,7 +86,10 @@ class UserComplianceInfo < ApplicationRecord
       tax_status_related_attributes = %w[legal_name business_name business_entity tax_id]
 
       if persisted?
-        self.tax_id_status = nil if tax_status_related_attributes.any? { send("#{_1}_changed?") }
+        if tax_status_related_attributes.any? { send("#{_1}_changed?") }
+          self.tax_id_status = nil
+          self.requires_tin_reverification = false if requires_tin_reverification?
+        end
       elsif prior_compliance_info.present? && prior_compliance_info.attributes.values_at(*tax_status_related_attributes) == attributes.values_at(*tax_status_related_attributes)
         self.tax_id_status = prior_compliance_info.tax_id_status
       end

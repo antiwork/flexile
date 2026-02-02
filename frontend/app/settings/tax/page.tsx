@@ -203,6 +203,20 @@ export default function TaxPage() {
             </p>
           </hgroup>
           <div className="grid gap-4">
+            {user.requiresTinReverification ? (
+              <Alert variant="destructive">
+                <AlertTriangle />
+                <AlertTitle>IRS Notice: Action Required</AlertTitle>
+                <AlertDescription>
+                  We received a notice from the IRS that the name and/or TIN on file may not match their records. Please
+                  re-enter your information below. The name <strong>must match exactly</strong> the name under which
+                  your TIN was issued by the IRS.
+                  <br />
+                  <strong className="mt-2 block">You will not receive any payments until this is resolved.</strong>
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
             {!isTaxInfoConfirmed && (
               <Alert variant="destructive">
                 <AlertTriangle />
