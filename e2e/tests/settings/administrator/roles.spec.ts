@@ -261,8 +261,7 @@ test.describe("Manage roles access", () => {
 
   test.describe("Lawyer Role Management", () => {
     test("allows revoking lawyer access", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/roles");
+      await login(page, primaryAdmin, "/settings/administrator/roles");
 
       // Find lawyer row and click ellipsis menu
       const lawyerRow = page.getByRole("row", { name: new RegExp(lawyerUser.legalName || "", "u") });
@@ -290,8 +289,7 @@ test.describe("Manage roles access", () => {
     });
 
     test("shows remove admin option for multi-role user when they have admin role", async ({ page }) => {
-      await login(page, primaryAdmin);
-      await page.goto("/settings/administrator/roles");
+      await login(page, primaryAdmin, "/settings/administrator/roles");
 
       // Multi-role user should show "Admin" role
       const multiRoleRow = page.getByRole("row", { name: new RegExp(multiRoleUser.legalName || "", "u") });

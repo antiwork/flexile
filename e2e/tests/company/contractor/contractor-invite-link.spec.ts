@@ -35,9 +35,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
       inviteLink: faker.string.alpha(10),
     });
 
-    await login(page, adminUser);
-
-    await page.goto(`/invite/${company.inviteLink}`);
+    await login(page, adminUser, `/invite/${company.inviteLink}`);
 
     await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
     await page.getByRole("button", { name: "close" }).click();
@@ -60,9 +58,7 @@ test.describe("Contractor Invite Link Joining flow", () => {
     const { adminUser } = await companiesFactory.createCompletedOnboarding();
     const { company } = await companiesFactory.createCompletedOnboarding({ inviteLink: faker.string.alpha(10) });
 
-    await login(page, adminUser);
-
-    await page.goto(`/invite/${company.inviteLink}`);
+    await login(page, adminUser, `/invite/${company.inviteLink}`);
 
     await expect(page.getByText(/What will you be doing at/iu)).toBeVisible();
 
