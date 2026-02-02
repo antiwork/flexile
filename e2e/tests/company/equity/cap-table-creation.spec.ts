@@ -32,8 +32,7 @@ test.describe("Cap table creation", () => {
       userId: investor2.id,
     });
 
-    await login(page, adminUser);
-    await page.goto("/equity/investors");
+    await login(page, adminUser, "/equity/investors");
 
     await expect(page.getByText("Add your cap table to start managing equity and ownership records.")).toBeVisible();
     await expect(page.getByRole("link", { name: "Add cap table" })).toBeVisible();
@@ -99,8 +98,7 @@ test.describe("Cap table creation", () => {
       equityEnabled: true,
     });
 
-    await login(page, adminUser);
-    await page.goto("/equity/investors/add");
+    await login(page, adminUser, "/equity/investors/add");
 
     await page.getByRole("button", { name: "Finalize cap table" }).click();
 
@@ -119,8 +117,7 @@ test.describe("Cap table creation", () => {
       userId: investor.id,
     });
 
-    await login(page, adminUser);
-    await page.goto("/equity/investors/add");
+    await login(page, adminUser, "/equity/investors/add");
 
     await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText("Test Investor").click();
@@ -152,8 +149,7 @@ test.describe("Cap table creation", () => {
       totalShares: BigInt(10000),
     });
 
-    await login(page, adminUser);
-    await page.goto("/equity/investors/add");
+    await login(page, adminUser, "/equity/investors/add");
 
     await page.getByRole("textbox", { name: "Type to search investors..." }).last().click();
     await page.getByText("Test Investor").click();
