@@ -26,6 +26,13 @@ class UserMailer < ApplicationMailer
     mail(to: @user.email, subject: "✅ Thanks for updating your tax information")
   end
 
+  def tin_reverification_required(user_id)
+    @user = User.find(user_id)
+    @settings_url = "#{PROTOCOL}://#{DOMAIN}/settings/tax"
+
+    mail(to: @user.email, subject: "Action required: Update your tax information")
+  end
+
   def tax_form_review_reminder(user_compliance_info_id, company_id, tax_year)
     @user_compliance_info = UserComplianceInfo.find(user_compliance_info_id)
     @company = Company.find(company_id)

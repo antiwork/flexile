@@ -6,7 +6,7 @@ class UserPresenter
            :legal_name, :preferred_name, :display_name, :billing_entity_name, :unconfirmed_email,
            :created_at, :state, :city, :zip_code, :street_address, :bank_account, :contracts, :tax_id, :birth_date,
            :requires_w9?, :tax_information_confirmed_at, :minimum_dividend_payment_in_cents, :bank_accounts,
-           :tax_id_status, private: true, to: :user, allow_nil: true
+           :tax_id_status, :requires_tin_reverification, private: true, to: :user, allow_nil: true
 
   def initialize(current_context:)
     @current_context = current_context
@@ -118,6 +118,7 @@ class UserPresenter
       email: user.display_email,
       onboardingPath: worker && worker.role.nil? ? "/documents" : nil,
       taxInformationConfirmedAt: tax_information_confirmed_at&.iso8601,
+      requiresTinReverification: !!requires_tin_reverification,
       isImpersonating: Current.impersonated_user.present?,
       githubUsername: user.github_username,
     }

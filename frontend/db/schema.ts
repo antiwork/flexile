@@ -1600,6 +1600,7 @@ export const userComplianceInfos = pgTable(
     businessEntity: boolean("business_entity").default(false),
     businessType: integer("business_type").$type<BusinessType>(),
     taxClassification: integer("tax_classification").$type<TaxClassification>(),
+    requiresTinReverification: boolean("requires_tin_reverification").notNull().default(false),
   },
   (table) => [
     index("index_user_compliance_infos_on_user_id").using("btree", table.userId.asc().nullsLast().op("int8_ops")),

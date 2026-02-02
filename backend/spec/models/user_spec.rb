@@ -365,6 +365,12 @@ RSpec.describe User do
         user.compliance_info.save(validate: false) # bypass validation
         expect(user.reload.has_verified_tax_id?).to eq false
       end
+
+      it "returns false if the user is flagged for TIN re-verification" do
+        user.compliance_info.update!(tax_id_status: UserComplianceInfo::TAX_ID_STATUS_VERIFIED)
+        user.compliance_info.update!(requires_tin_reverification: true, tax_id_status: nil)
+        expect(user.reload.has_verified_tax_id?).to eq false
+      end
     end
 
     context "for users outside of the US" do
@@ -381,6 +387,11 @@ RSpec.describe User do
       it "returns false if the user does not have a tax id" do
         user.compliance_info.tax_id = nil
         user.compliance_info.save(validate: false) # bypass validation
+        expect(user.reload.has_verified_tax_id?).to eq false
+      end
+
+      it "returns false if the user is flagged for TIN re-verification" do
+        user.compliance_info.update!(requires_tin_reverification: true, tax_id_status: nil)
         expect(user.reload.has_verified_tax_id?).to eq false
       end
     end
