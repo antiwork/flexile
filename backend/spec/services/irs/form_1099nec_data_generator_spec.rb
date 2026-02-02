@@ -36,7 +36,7 @@ RSpec.describe Irs::Form1099necDataGenerator do
   let(:us_resident_2) { create(:user, :without_compliance_info) }
   let(:us_resident_3) { create(:user, :without_compliance_info) }
   let(:non_us_resident) { create(:user, :without_compliance_info, country_code: "FR") }
-  let(:service) { described_class.new(company:, tax_year:) }
+  let(:service) { described_class.new(company:, transmitter_company:, tax_year:) }
 
   let!(:us_resident_company_worker) { create(:company_worker, company:, user: us_resident) }
   let!(:us_resident_2_company_worker) { create(:company_worker, company:, user: us_resident_2) }
@@ -214,7 +214,7 @@ RSpec.describe Irs::Form1099necDataGenerator do
       context "when it is a test file" do
         it "includes the test file indicator in the transmitter record" do
           expect(
-            described_class.new(company:, tax_year:, is_test: true).process
+            described_class.new(company:, transmitter_company:, tax_year:, is_test: true).process
           ).to start_with("T#{tax_year}#{required_blanks(1)}#{transmitter_company.tax_id}#{GlobalConfig.dig("irs", "tcc_1099")}#{required_blanks(7)}T")
         end
       end
