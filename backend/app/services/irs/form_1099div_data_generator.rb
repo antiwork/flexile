@@ -107,9 +107,10 @@ end
 
 ### Usage:
 =begin
-company = Company.find(5)
+company = Company.find(company_id)
+transmitter_company = Company.find(transmitter_company_id)
 tax_year = 2023
 is_test = false
-attached = { "IRS-1099-DIV-#{tax_year}.txt" => Irs::Form1099divDataGenerator.new(company:, tax_year:, is_test:).process }
+attached = { "IRS-1099-DIV-#{tax_year}.txt" => Irs::Form1099divDataGenerator.new(company:, transmitter_company:, tax_year:, is_test:).process }
 AdminMailer.custom(to: ["raulp@hey.com"], subject: "[Flexile] 1099-DIV 2023 IRS FIRE tax report #{is_test ? "test " : ""}file", body: "Attached", attached:).deliver_now
 =end

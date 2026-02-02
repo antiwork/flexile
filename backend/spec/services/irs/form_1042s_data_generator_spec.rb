@@ -81,7 +81,7 @@ RSpec.describe Irs::Form1042sDataGenerator do
     create(:user_compliance_info, :non_us_resident, :confirmed, user: non_us_resident_4, country_code: "RO")
   end
 
-  subject(:service) { described_class.new(company:, tax_year:) }
+  subject(:service) { described_class.new(company:, transmitter_company:, tax_year:) }
 
   before do
     create(:user_compliance_info, :us_resident, user: us_resident, tax_information_confirmed_at: 1.day.ago, deleted_at: 1.hour.ago)
@@ -318,7 +318,7 @@ RSpec.describe Irs::Form1042sDataGenerator do
 
         context "when it is a test file" do
           it "includes the test file indicator in the transmitter record" do
-            transmitter_record, _ = described_class.new(company:, tax_year:, is_test: true).process.split("\n\n")
+            transmitter_record, _ = described_class.new(company:, transmitter_company:, tax_year:, is_test: true).process.split("\n\n")
             expect(transmitter_record).to end_with("#{GlobalConfig.dig("irs", "tcc_1042")}TEST#{required_blanks(812)}00000001")
           end
         end

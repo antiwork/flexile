@@ -48,15 +48,15 @@ class TaxDocuments::Form1099divSerializer < TaxDocuments::BaseSerializer
     end
 
     def dividends_amount_in_usd
-      @_dividend_amount_in_usd ||= (dividend_amounts_for_tax_year[0] / 100.to_d).round
+      @_dividend_amount_in_usd ||= ((dividend_amounts_for_tax_year[0] || 0) / 100.to_d).round
     end
 
     def dividends_tax_amount_withheld_in_usd
-      @_dividend_tax_withheld_amount ||= (dividend_amounts_for_tax_year[1] / 100.to_d).round
+      @_dividend_tax_withheld_amount ||= ((dividend_amounts_for_tax_year[1] || 0) / 100.to_d).round
     end
 
     def qualified_amount_in_usd
-      @_qualified_amount_in_usd ||= (dividend_amounts_for_tax_year[2] / 100.to_d).round
+      @_qualified_amount_in_usd ||= ((dividend_amounts_for_tax_year[2] || 0) / 100.to_d).round
     end
 
     def investor
