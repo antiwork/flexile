@@ -180,8 +180,7 @@ test.describe("company update creation", () => {
     const content = "Check out this link";
     const linkUrl = "https://example.com";
 
-    await login(page, adminUser);
-    await page.goto("/updates/company");
+    await login(page, adminUser, "/updates/company");
 
     await page.getByRole("button", { name: "New update" }).click();
     await expect(page.getByRole("dialog", { name: "New company update" })).toBeVisible();
