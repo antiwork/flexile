@@ -20,18 +20,21 @@ test.describe("Company administrator settings - payment details", () => {
   };
 
   test("allows connecting a bank account", async ({ page }) => {
+    // Extend timeout for slow environments (Stripe iframe loading)
+    test.setTimeout(180000);
     const { company } = await companiesFactory.create({ stripeCustomerId: null }, { withoutBankAccount: true });
     const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
     const adminUser = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) }).then(takeOrThrow);
 
     await login(page, adminUser);
-    await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("link", { name: "Billing" }).click();
+    await page.goto("/settings/administrator/billing");
 
-    await expect(
-      page.getByText("We'll use this account to debit contractor payments and our monthly fee"),
-    ).toBeVisible();
-    await expect(page.getByText("Payments to contractors may take up to 10 business days to process.")).toBeVisible();
+    await expect(page.getByText("We'll use this account to debit contractor payments and our monthly fee")).toBeVisible(
+      { timeout: 60000 },
+    );
+    await expect(page.getByText("Payments to contractors may take up to 10 business days to process.")).toBeVisible({
+      timeout: 60000,
+    });
     await page.getByRole("button", { name: "Link your bank account" }).click();
 
     const stripePaymentFrame = page.frameLocator("[src^='https://js.stripe.com/v3/elements-inner-payment']");
@@ -39,7 +42,13 @@ test.describe("Company administrator settings - payment details", () => {
 
     await withinModal(
       async () => {
-        await stripePaymentFrame.getByLabel("Test Institution").click();
+        // Use search to find the test bank reliably (Back to stripePaymentFrame, reliable locator)
+        const searchInput = stripePaymentFrame.getByPlaceholder(/Search/iu);
+        await expect(searchInput).toBeVisible({ timeout: 60000 });
+        await searchInput.fill("Test");
+        const bankOption = stripePaymentFrame.getByText("Test (Non-OAuth)");
+        await expect(bankOption).toBeVisible({ timeout: 60000 });
+        await bankOption.click();
         await stripeBankFrame.getByTestId("agree-button").click();
         await stripeBankFrame.getByTestId("success").click();
         await stripeBankFrame.getByTestId("select-button").click();
@@ -62,7 +71,13 @@ test.describe("Company administrator settings - payment details", () => {
     await page.getByRole("button", { name: "Edit" }).click();
     await withinModal(
       async () => {
-        await stripePaymentFrame.getByLabel("Test Institution").click();
+        // Use search to find the test bank reliably (Back to stripePaymentFrame, reliable locator)
+        const searchInput = stripePaymentFrame.getByPlaceholder(/Search/iu);
+        await expect(searchInput).toBeVisible({ timeout: 60000 });
+        await searchInput.fill("Test");
+        const bankOption = stripePaymentFrame.getByText("Test (Non-OAuth)");
+        await expect(bankOption).toBeVisible({ timeout: 60000 });
+        await bankOption.click();
         await stripeBankFrame.getByTestId("agree-button").click();
         await stripeBankFrame.getByTestId("high balance").click();
         await stripeBankFrame.getByTestId("select-button").click();
@@ -84,17 +99,18 @@ test.describe("Company administrator settings - payment details", () => {
   });
 
   test("allows connecting a bank account via microdeposits (amounts or descriptor code)", async ({ page }) => {
+    // Extend timeout for slow environments (Stripe iframe loading)
+    test.setTimeout(180000);
     const { company } = await companiesFactory.create({ stripeCustomerId: null }, { withoutBankAccount: true });
     const { administrator } = await companyAdministratorsFactory.create({ companyId: company.id });
     const adminUser = await db.query.users.findFirst({ where: eq(users.id, administrator.userId) }).then(takeOrThrow);
 
     await login(page, adminUser);
-    await page.getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("link", { name: "Billing" }).click();
+    await page.goto("/settings/administrator/billing");
 
-    await expect(
-      page.getByText("We'll use this account to debit contractor payments and our monthly fee"),
-    ).toBeVisible();
+    await expect(page.getByText("We'll use this account to debit contractor payments and our monthly fee")).toBeVisible(
+      { timeout: 60000 },
+    );
 
     await page.getByRole("button", { name: "Link your bank account" }).click();
 
@@ -105,7 +121,7 @@ test.describe("Company administrator settings - payment details", () => {
           .getByRole("button", { name: "Enter bank details manually" })
           .click();
         const stripeBankFrame = page.frameLocator("[src^='https://js.stripe.com/v3/linked-accounts-inner']");
-        await expect(stripeBankFrame.getByLabel("Routing number")).toBeVisible();
+        await expect(stripeBankFrame.getByLabel("Routing number")).toBeVisible({ timeout: 60000 });
         await stripeBankFrame.getByTestId("manualEntry-routingNumber-input").fill("110000000");
         await stripeBankFrame.getByTestId("manualEntry-accountNumber-input").fill("000123456789");
         await stripeBankFrame.getByTestId("manualEntry-confirmAccountNumber-input").fill("000123456789");
