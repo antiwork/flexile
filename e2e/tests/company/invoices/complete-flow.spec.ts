@@ -49,10 +49,11 @@ test.describe("Invoice submission, approval and rejection", () => {
     await expect(page.getByText("$683", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-1" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Nov 1, 2024");
-    await expect(page.locator("tbody")).toContainText("$683");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    const custom1Row = page.locator("tbody tr").filter({ hasText: "CUSTOM-1" });
+    await expect(custom1Row).toBeVisible();
+    await expect(custom1Row).toContainText("Nov 1, 2024");
+    await expect(custom1Row).toContainText("$683");
+    await expect(custom1Row).toContainText("Awaiting approval");
 
     await page.locator("header").getByRole("link", { name: "New invoice" }).click();
     await page.getByPlaceholder("Description").fill("woops too little time");
@@ -61,10 +62,11 @@ test.describe("Invoice submission, approval and rejection", () => {
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-2" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
-    await expect(page.locator("tbody")).toContainText("$23");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    const custom2Row = page.locator("tbody tr").filter({ hasText: "CUSTOM-2" });
+    await expect(custom2Row).toBeVisible();
+    await expect(custom2Row).toContainText("Dec 1, 2024");
+    await expect(custom2Row).toContainText("$23");
+    await expect(custom2Row).toContainText("Awaiting approval");
 
     await page.getByRole("cell", { name: "CUSTOM-1" }).click();
     await page.getByRole("link", { name: "Edit invoice" }).click();
@@ -84,12 +86,13 @@ test.describe("Invoice submission, approval and rejection", () => {
     await fillDatePicker(page, "Date", "12/01/2024");
     await page.getByRole("button", { name: "Send invoice" }).click();
 
-    await expect(page.getByRole("cell", { name: "CUSTOM-3" })).toBeVisible();
-    await expect(page.locator("tbody")).toContainText("Dec 1, 2024");
-    await expect(page.locator("tbody")).toContainText("$33");
-    await expect(page.locator("tbody")).toContainText("Awaiting approval");
+    const custom3Row = page.locator("tbody tr").filter({ hasText: "CUSTOM-3" });
+    await expect(custom3Row).toBeVisible();
+    await expect(custom3Row).toContainText("Dec 1, 2024");
+    await expect(custom3Row).toContainText("$33");
+    await expect(custom3Row).toContainText("Awaiting approval");
 
-    await page.getByRole("cell", { name: "CUSTOM-3" }).click({ button: "right" });
+    await custom3Row.click({ button: "right" });
     await page.getByRole("menuitem", { name: "Delete" }).click();
     await withinModal(
       async (modal) => {
