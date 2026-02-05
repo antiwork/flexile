@@ -5,6 +5,9 @@ import { users } from "@/db/schema";
 const TEST_OTP_CODE = "000000";
 
 export const fillOtp = async (page: Page) => {
+  // Wait for the OTP screen to appear (indicates the email_otp request completed successfully)
+  await expect(page.getByText("Check your email for a code")).toBeVisible();
+
   // Wait for the OTP input to be visible before filling
   const otp = page.getByRole("textbox", { name: "Verification code" });
   await expect(otp).toBeVisible();
