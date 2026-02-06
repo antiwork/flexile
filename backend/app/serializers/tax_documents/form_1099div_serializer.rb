@@ -14,7 +14,7 @@ class TaxDocuments::Form1099divSerializer < TaxDocuments::BaseSerializer
       page_number = tax_form_copy == "A" ? "1" : "2"
 
       result = {
-        "topmostSubform[0].Copy#{tax_form_copy}[0].Copy#{tax_form_copy}Header[0].CalendarYear[0].f#{page_number}_1[0]" => formatted_tax_year,
+        "topmostSubform[0].Copy#{tax_form_copy}[0].CopyHeader[0].CalendarYear[0].f#{page_number}_1[0]" => tax_year.to_s,
         # Payer information
         "topmostSubform[0].Copy#{tax_form_copy}[0].LeftCol[0].f#{page_number}_2[0]" => payer_details,
         "topmostSubform[0].Copy#{tax_form_copy}[0].LeftCol[0].f#{page_number}_3[0]" => payer_tin,
