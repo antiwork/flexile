@@ -20,6 +20,7 @@ export const companiesFactory = {
       .values({
         name: faker.company.name(),
         email: faker.internet.email(),
+        taxId: faker.string.numeric(9),
         registrationNumber: faker.string.numeric(9),
         registrationState: "DE",
         streetAddress: faker.location.streetAddress(),

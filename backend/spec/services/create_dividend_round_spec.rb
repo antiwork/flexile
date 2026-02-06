@@ -43,6 +43,22 @@ RSpec.describe CreateDividendRound do
       end
     end
 
+    context "when company EIN is not configured" do
+      before do
+        dividend_computation_output
+        company.update!(tax_id: nil)
+      end
+
+      it "returns error and does not create dividend round or finalize computation" do
+        result = service.process
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq("EIN must be configured before issuing dividends")
+        expect(DividendRound.count).to eq(0)
+        expect(dividend_computation.reload.finalized_at).to be_nil
+      end
+    end
+
     context "when unexpected errors occur" do
       before do
         dividend_computation_output

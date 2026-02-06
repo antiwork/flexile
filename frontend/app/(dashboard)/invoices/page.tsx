@@ -124,9 +124,9 @@ export default function InvoicesPage() {
   const isPayNowDisabled = useCallback(
     (invoice: Invoice) => {
       const payable = isPayable(invoice);
-      return payable && (!company.completedPaymentMethodSetup || !company.isTrusted);
+      return payable && (!company.completedPaymentMethodSetup || !company.isTrusted || !company.taxId);
     },
-    [isPayable, company.completedPaymentMethodSetup, company.isTrusted],
+    [isPayable, company.completedPaymentMethodSetup, company.isTrusted, company.taxId],
   );
   const actionConfig = useMemo(
     (): ActionConfig<Invoice> => ({
@@ -530,6 +530,21 @@ export default function InvoicesPage() {
               <AlertDescription>
                 You can approve invoices, but cannot initiate immediate payments until your account is verified. Email
                 us at <Link href="/support">Write to us</Link> to complete verification.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
+          {company.completedPaymentMethodSetup && company.isTrusted && !company.taxId ? (
+            <Alert className="mx-4" variant="destructive">
+              <AlertTriangle className="my-auto max-h-4 max-w-4" />
+              <AlertTitle>EIN required to initiate payments.</AlertTitle>
+              <AlertDescription>
+                You can approve invoices, but cannot initiate immediate payments until your EIN is configured. Please
+                add your EIN in{" "}
+                <Link href="/settings/administrator/details" className={linkClasses}>
+                  Settings → Company details
+                </Link>
+                .
               </AlertDescription>
             </Alert>
           ) : null}

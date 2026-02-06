@@ -9,6 +9,7 @@ class CreateDividendRound
 
   def process
     return { success: false, error: "Dividend computation is already finalized" } if @dividend_computation.finalized?
+    return { success: false, error: "EIN must be configured before issuing dividends" } unless @dividend_computation.company.tax_id.present?
 
     ApplicationRecord.transaction do
       dividend_round = @dividend_computation.finalize_and_create_dividend_round

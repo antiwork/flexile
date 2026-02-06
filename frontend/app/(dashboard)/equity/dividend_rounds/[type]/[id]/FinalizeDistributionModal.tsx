@@ -60,7 +60,9 @@ const FinalizeDistributionModal = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="primary">Finalize distribution</Button>
+        <Button variant="primary" disabled={!company.taxId}>
+          Finalize distribution
+        </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>

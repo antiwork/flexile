@@ -10,6 +10,10 @@ class PayInvoiceJob
       Rails.logger.info("PayInvoiceJob: Skipping payment for non-trusted company #{invoice.company.id}")
       return
     end
+    unless invoice.company.tax_id.present?
+      Rails.logger.info("PayInvoiceJob: Skipping payment for company #{invoice.company.id} without EIN")
+      return
+    end
     PayInvoice.new(invoice_id).process
   end
 end
