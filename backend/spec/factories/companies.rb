@@ -4,6 +4,7 @@ FactoryBot.define do
   factory :company do
     name { Faker::Company.name }
     email { Faker::Internet.unique.email }
+    tax_id { Faker::Number.number(digits: 9).to_s }
     registration_number { Faker::Company.duns_number }
     registration_state { "DE" }
     street_address { Faker::Address.street_address }

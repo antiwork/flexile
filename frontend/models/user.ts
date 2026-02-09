@@ -31,6 +31,7 @@ const companySchema = z.object({
   investorCount: z.number().nullable(),
   primaryAdminName: z.string().nullable(),
   isTrusted: z.boolean(),
+  taxId: z.string().nullable(),
   externalId: z.string(),
   checklistItems: z.array(
     z.object({
