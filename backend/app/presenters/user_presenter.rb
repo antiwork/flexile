@@ -92,9 +92,11 @@ class UserPresenter
           primaryAdminName: company.primary_admin.user.name,
           completedPaymentMethodSetup: company.bank_account_ready?,
           isTrusted: company.is_trusted,
+          taxId: company.tax_id,
           checklistItems: company.checklist_items(user),
           checklistCompletionPercentage: company.checklist_completion_percentage(user),
           externalId: company.external_id,
+          githubOrgName: company.github_org_name,
         }
       end,
       id: user.external_id,
@@ -118,6 +120,7 @@ class UserPresenter
       onboardingPath: worker && worker.role.nil? ? "/documents" : nil,
       taxInformationConfirmedAt: tax_information_confirmed_at&.iso8601,
       isImpersonating: Current.impersonated_user.present?,
+      githubUsername: user.github_username,
     }
   end
 

@@ -19,7 +19,7 @@ company_worker_tax_info_reminder_email_job:
   description: Sends reminder email to company workers to add/update their tax info
 
 tax_form_review_job:
-  cron: "0 10 31 1 *" # the 31st of January at UTC 10:00
+  cron: "0 10 15 1 *" # the 15th of January at UTC 10:00
   class: TaxFormReviewJob
   description: Sends reminder emails to review their tax forms
 

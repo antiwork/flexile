@@ -31,6 +31,9 @@ class CreateOrUpdateInvoiceService
             invoice_line_item.assign_attributes(**line_item.except(:id))
           end
 
+          # Auto-fetch GitHub PR details if description is a PR URL
+          populate_github_pr_details(invoice_line_item)
+
           line_items_to_keep << invoice_line_item
           invoice.total_amount_in_usd_cents += invoice_line_item.total_amount_cents
         end
@@ -122,8 +125,52 @@ class CreateOrUpdateInvoiceService
 
     def invoice_line_items_params
       permitted_params = [:id, :description, :quantity, :pay_rate_in_subunits, :hourly]
-
       params.permit(invoice_line_items: permitted_params).fetch(:invoice_line_items, [])
+    end
+
+    def populate_github_pr_details(line_item)
+      description = line_item.description.to_s
+
+      # Clear existing PR data if description is no longer a PR URL
+      unless GithubService.valid_pr_url?(description)
+        clear_github_pr_fields(line_item)
+        return
+      end
+
+      # Only fetch PR details for PRs belonging to the company's configured GitHub org
+      parsed_pr = GithubService.parse_pr_url(description)
+      company_org = invoice.company.github_org_name
+      unless company_org.present? && parsed_pr && parsed_pr[:owner].downcase == company_org.downcase
+        clear_github_pr_fields(line_item)
+        return
+      end
+
+      # Skip if we already have PR data for this exact URL
+      return if line_item.github_pr_url == description && line_item.github_pr_number.present?
+
+      begin
+        pr_details = GithubService.fetch_pr_details_from_url(
+          org_name: invoice.company.github_org_name,
+          url: description
+        )
+
+        if pr_details
+          line_item.assign_attributes(
+            github_pr_url: pr_details[:url],
+            github_pr_number: pr_details[:number],
+            github_pr_title: pr_details[:title],
+            github_pr_state: pr_details[:state],
+            github_pr_author: pr_details[:author],
+            github_pr_repo: pr_details[:repo],
+            github_pr_bounty_cents: pr_details[:bounty_cents],
+            github_linked_issue_number: pr_details[:linked_issue_number],
+            github_linked_issue_repo: pr_details[:linked_issue_repo],
+          )
+        end
+      rescue GithubService::ApiError => e
+        Rails.logger.warn("Failed to fetch GitHub PR details for #{description}: #{e.message}")
+        clear_github_pr_fields(line_item)
+      end
     end
 
     def invoice_expenses_params
@@ -131,5 +178,9 @@ class CreateOrUpdateInvoiceService
 
       params.permit(invoice_expenses: [:id, :description, :expense_category_id, :total_amount_in_cents, :attachment])
             .fetch(:invoice_expenses)
+    end
+
+    def clear_github_pr_fields(line_item)
+      line_item.assign_attributes(InvoiceLineItem::GITHUB_PR_FIELDS.index_with { nil })
     end
 end

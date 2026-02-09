@@ -232,8 +232,7 @@ test.describe("Investors", () => {
         .set({ totalShares: BigInt(60000) })
         .where(eq(companyInvestors.id, companyInvestor.id));
 
-      await login(page, adminUser);
-      await page.goto("/equity/investors");
+      await login(page, adminUser, "/equity/investors");
 
       await expect(page.getByRole("table")).toBeVisible();
       await expect(page.getByText("Test Investor")).toBeVisible();
@@ -282,8 +281,7 @@ test.describe("Investors", () => {
         fullyDilutedShares: BigInt(1000000),
       });
 
-      await login(page, adminUser);
-      await page.goto("/equity/investors");
+      await login(page, adminUser, "/equity/investors");
 
       await expect(page.getByRole("button", { name: /Columns/u })).not.toBeVisible();
     });
