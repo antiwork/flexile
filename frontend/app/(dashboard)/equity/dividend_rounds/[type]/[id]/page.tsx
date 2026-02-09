@@ -2,7 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
-import { Circle, Info } from "lucide-react";
+import { AlertTriangle, Circle, Info } from "lucide-react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { z } from "zod";
@@ -217,7 +218,20 @@ const DividendComputation = ({ id }: { id: string }) => {
 
   return (
     <>
-      <DistributionDraftNotice />
+      {!company.taxId && (
+        <Alert className="mx-4" variant="destructive">
+          <AlertTriangle className="size-4" />
+          <AlertTitle>EIN required to finalize distribution.</AlertTitle>
+          <AlertDescription>
+            You cannot finalize this distribution until your EIN is configured. Please add your EIN in{" "}
+            <Link href="/settings/administrator/details" className="underline">
+              Company details
+            </Link>
+            .
+          </AlertDescription>
+        </Alert>
+      )}
+      {company.taxId ? <DistributionDraftNotice /> : null}
       <DataTable
         table={table}
         actions={
