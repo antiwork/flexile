@@ -542,7 +542,7 @@ export default function InvoicesPage() {
                 You can approve invoices, but cannot initiate immediate payments until your EIN is configured. Please
                 add your EIN in{" "}
                 <Link href="/settings/administrator/details" className={linkClasses}>
-                  Settings → Company details
+                  Company details
                 </Link>
                 .
               </AlertDescription>

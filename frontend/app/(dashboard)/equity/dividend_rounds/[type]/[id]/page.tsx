@@ -225,7 +225,7 @@ const DividendComputation = ({ id }: { id: string }) => {
           <AlertDescription>
             You cannot finalize this distribution until your EIN is configured. Please add your EIN in{" "}
             <Link href="/settings/administrator/details" className="underline">
-              Settings → Company details
+              Company details
             </Link>
             .
           </AlertDescription>
