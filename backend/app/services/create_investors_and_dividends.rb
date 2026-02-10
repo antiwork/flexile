@@ -153,6 +153,7 @@ class CreateInvestorsAndDividends
             status: user.current_sign_in_at.nil? ? Dividend::PENDING_SIGNUP : Dividend::ISSUED,
             total_amount_in_cents: dividend_cents,
             qualified_amount_cents: dividend_cents,
+            investment_amount_cents: company_investor.investment_amount_in_cents,
           )
         end
       rescue => e
