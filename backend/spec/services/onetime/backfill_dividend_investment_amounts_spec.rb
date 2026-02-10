@@ -51,7 +51,7 @@ RSpec.describe Onetime::BackfillDividendInvestmentAmounts do
       end
 
       let!(:dividend) do
-        create(:dividend, company:, company_investor:, dividend_round:, number_of_shares: nil, total_amount_in_cents: 5000).tap do |d|
+        create(:dividend, company:, company_investor:, dividend_round:, number_of_shares: nil, total_amount_in_cents: 5000, investment_amount_cents: 0).tap do |d|
           d.update_columns(investment_amount_cents: nil)
         end
       end
@@ -79,7 +79,7 @@ RSpec.describe Onetime::BackfillDividendInvestmentAmounts do
       let(:company_investor) { create(:company_investor, company:, investment_amount_in_cents: 0) }
 
       let!(:dividend) do
-        create(:dividend, company:, company_investor:, dividend_round:, number_of_shares: nil, total_amount_in_cents: 1000).tap do |d|
+        create(:dividend, company:, company_investor:, dividend_round:, number_of_shares: nil, total_amount_in_cents: 1000, investment_amount_cents: 0).tap do |d|
           d.update_columns(investment_amount_cents: nil)
         end
       end
@@ -109,7 +109,7 @@ RSpec.describe Onetime::BackfillDividendInvestmentAmounts do
       end
 
       let!(:safe_dividend) do
-        create(:dividend, company:, company_investor: safe_investor, dividend_round:, number_of_shares: nil, total_amount_in_cents: 5000).tap do |d|
+        create(:dividend, company:, company_investor: safe_investor, dividend_round:, number_of_shares: nil, total_amount_in_cents: 5000, investment_amount_cents: 0).tap do |d|
           d.update_columns(investment_amount_cents: nil)
         end
       end
