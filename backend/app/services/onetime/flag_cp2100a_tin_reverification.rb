@@ -77,7 +77,7 @@ class Onetime::FlagCp2100aTinReverification
       puts "\n=== NOT FOUND TINS (#{not_found_tins.count}) ==="
       puts "================================================================================"
       not_found_tins.each do |tin|
-        puts "   ***#{tin[-4..]}"
+        puts "   #{tin}"
       end
     end
 
