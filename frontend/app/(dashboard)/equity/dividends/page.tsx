@@ -131,7 +131,12 @@ export default function Dividends() {
         value ? "Return of capital" : "Dividend",
       ),
       columnHelper.simple("numberOfShares", "Shares held", (value) => value?.toLocaleString() ?? "N/A", "numeric"),
-      columnHelper.simple("investmentAmountCents", "Investment amount", (value) => formatMoneyFromCents(value), "numeric"),
+      columnHelper.simple(
+        "investmentAmountCents",
+        "Investment amount",
+        (value) => formatMoneyFromCents(value),
+        "numeric",
+      ),
       columnHelper.simple("totalAmountInCents", "Gross amount", (value) => formatMoneyFromCents(value), "numeric"),
       columnHelper.simple("withheldTaxCents", "Withheld taxes", (value) => formatMoneyFromCents(value ?? 0), "numeric"),
       columnHelper.simple("netAmountInCents", "Net amount", (value) => formatMoneyFromCents(value ?? 0), "numeric"),
