@@ -340,7 +340,7 @@ const BankAccountsSection = () => {
             sanctioned countries are unable to receive payments through our platform.
           </AlertDescription>
         </Alert>
-      ) : bankAccounts.length === 0 && (user.roles.investor || user.roles.worker) ? (
+      ) : bankAccounts.length === 0 && (user.roles.investor || user.roles.worker || user.roles.administrator) ? (
         <Placeholder icon={CircleDollarSign}>
           <p>Set up your bank account to receive payouts.</p>
           <Button onClick={() => setAddingBankAccount(true)} variant="outline">
@@ -419,7 +419,7 @@ const BankAccountsSection = () => {
               ))}
             </CardContent>
           </Card>
-          {user.roles.investor || user.roles.worker ? (
+          {user.roles.investor || user.roles.worker || user.roles.administrator ? (
             <div>
               <Button variant="outline" onClick={() => setAddingBankAccount(true)}>
                 <Plus className="size-4" />
