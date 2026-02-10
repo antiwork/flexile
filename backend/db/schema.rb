@@ -377,7 +377,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_28_070657) do
     t.bigint "user_compliance_info_id"
     t.bigint "qualified_amount_cents", null: false
     t.datetime "signed_release_at"
-    t.bigint "investment_amount_cents"
+    t.bigint "investment_amount_cents", null: false
     t.string "external_id", null: false
     t.index ["company_id"], name: "index_dividends_on_company_id"
     t.index ["company_investor_id"], name: "index_dividends_on_company_investor_id"
