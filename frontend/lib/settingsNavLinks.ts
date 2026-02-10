@@ -33,14 +33,14 @@ export const settingsNavLinks = [
     label: "Payouts",
     route: "/settings/payouts" as const,
     icon: Landmark,
-    isVisible: (user: CurrentUser) => !!user.roles.worker || !!user.roles.investor,
+    isVisible: (user: CurrentUser) => !!user.roles.worker || !!user.roles.investor || !!user.roles.administrator,
     category: "personal",
   },
   {
     label: "Tax information",
     route: "/settings/tax" as const,
     icon: ScrollText,
-    isVisible: (user: CurrentUser) => !!user.roles.worker || !!user.roles.investor,
+    isVisible: (user: CurrentUser) => !!user.roles.worker || !!user.roles.investor || !!user.roles.administrator,
     category: "personal",
   },
   // Company links
