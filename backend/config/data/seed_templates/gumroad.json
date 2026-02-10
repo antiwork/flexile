@@ -243,6 +243,7 @@
             "withheld_tax_cents": 0,
             "qualified_amount_cents": 0,
             "number_of_shares": 1230,
+            "investment_amount_cents": 317340,
             "status": "Paid"
           },
           "convertible_securities": [

@@ -7,6 +7,23 @@ RSpec.describe Onetime::BackfillDividendInvestmentAmounts do
     let(:company) { create(:company) }
     let(:dividend_round) { create(:dividend_round, company:) }
 
+    # The column is NOT NULL in schema.rb (post-migration state), but the backfill
+    # script runs before the migration. Temporarily drop the constraint to simulate.
+    before do
+      ActiveRecord::Base.connection.execute(
+        "ALTER TABLE dividends ALTER COLUMN investment_amount_cents DROP NOT NULL"
+      )
+    end
+
+    after do
+      ActiveRecord::Base.connection.execute(
+        "UPDATE dividends SET investment_amount_cents = 0 WHERE investment_amount_cents IS NULL"
+      )
+      ActiveRecord::Base.connection.execute(
+        "ALTER TABLE dividends ALTER COLUMN investment_amount_cents SET NOT NULL"
+      )
+    end
+
     context "when dividends are share-based" do
       let(:company_investor) { create(:company_investor, company:, investment_amount_in_cents: 500_00) }
 
