@@ -58,6 +58,7 @@ export const currentUserSchema = z.object({
   hasPayoutMethodForInvoices: z.boolean(),
   hasPayoutMethodForDividends: z.boolean(),
   taxInformationConfirmedAt: z.string().nullable(),
+  requiresTinReverification: z.boolean(),
   isImpersonating: z.boolean(),
   githubUsername: z.string().nullable(),
   roles: z.object({

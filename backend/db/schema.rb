@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_28_070657) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_02_034515) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -836,6 +836,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_28_070657) do
     t.boolean "business_entity", default: false
     t.integer "business_type"
     t.integer "tax_classification"
+    t.boolean "requires_tin_reverification", default: false, null: false
     t.index ["user_id"], name: "index_user_compliance_infos_on_user_id"
   end
 
