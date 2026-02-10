@@ -570,7 +570,7 @@ export default function InvoicesPage() {
 
       <QuickInvoicesSection />
 
-      {data.length > 0 || isLoading ? (
+      {data.length > 0 || isLoading || columnFilters.length > 0 ? (
         <DataTable
           table={table}
           searchColumn={user.roles.administrator ? "billFrom" : undefined}
