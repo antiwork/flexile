@@ -1,12 +1,26 @@
 {
   "extends": "../frontend/tsconfig.json",
   "compilerOptions": {
-    "types": ["node", "@playwright/test"],
+    "types": [
+      "node",
+      "@playwright/test"
+    ],
     "baseUrl": ".",
+    "lib": [
+      "ES2017",
+      "DOM"
+    ],
     "paths": {
-      "@test/*": ["./*"],
-      "@/*": ["../frontend/*"]
+      "@test/*": [
+        "./*"
+      ],
+      "@/*": [
+        "../frontend/*"
+      ]
     }
   },
-  "include": ["./**/*.ts", "../frontend/types/*.d.ts"]
+  "include": [
+    "./**/*.ts",
+    "../frontend/types/*.d.ts"
+  ]
 }

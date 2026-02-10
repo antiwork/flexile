@@ -24,12 +24,14 @@ test.describe("Workspace settings", () => {
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page.getByText("Changes saved")).toBeVisible();
 
-    const updatedCompany = await db.query.companies
-      .findFirst({ where: eq(companies.id, company.id) })
-      .then(takeOrThrow);
+    await expect(async () => {
+      const updatedCompany = await db.query.companies
+        .findFirst({ where: eq(companies.id, company.id) })
+        .then(takeOrThrow);
 
-    expect(updatedCompany.publicName).toBe("Updated Company Name");
-    expect(updatedCompany.website).toBe("https://example.com");
-    expect(updatedCompany.brandColor).toBe("#4b5563");
+      expect(updatedCompany.publicName).toBe("Updated Company Name");
+      expect(updatedCompany.website).toBe("https://example.com");
+      expect(updatedCompany.brandColor).toBe("#4b5563");
+    }).toPass();
   });
 });

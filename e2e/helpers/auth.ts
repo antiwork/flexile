@@ -17,6 +17,7 @@ export const login = async (page: Page, user: typeof users.$inferSelect, redirec
 
   await page.getByLabel("Work email").fill(user.email);
   await page.getByRole("button", { name: "Log in", exact: true }).click();
+  await page.waitForLoadState("networkidle");
   await fillOtp(page);
 
   await page.waitForURL(/^(?!.*\/login).*/u);
