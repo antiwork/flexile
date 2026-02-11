@@ -1,0 +1,8 @@
+<h1>IRS Notice: Action Required</h1>
+<p>We received a <strong>CP 2100A notice from the IRS</strong> regarding a mismatch between your <%= @user.business_entity? ? "business name" : "legal name" %> and <%= @user.tax_id_name %> on file.</p>
+
+<p>To continue receiving payments without tax withholding, please log in to Flexile and re-enter your tax information. <strong>Your legal name must match your IRS records exactly.</strong></p>
+
+<p><strong>Important:</strong> Until you update your information, you will not be able to receive payments.</p>
+
+<%= link_to "Update your tax info", @settings_url, class: "button" %>

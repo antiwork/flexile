@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
+import { type ColumnFiltersState, getFilteredRowModel, getSortedRowModel } from "@tanstack/react-table";
 import {
   AlertTriangle,
   Ban,
@@ -56,6 +56,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
+import { invoiceStatuses } from "@/db/enums";
 import { useCurrentCompany, useCurrentUser } from "@/global";
 import { storageKeys } from "@/models/constants";
 import type { RouterOutput } from "@/trpc";
@@ -68,7 +69,8 @@ import { useIsMobile } from "@/utils/use-mobile";
 import QuantityInput from "./QuantityInput";
 import { useCanSubmitInvoices } from ".";
 
-const statusNames = {
+type InvoiceStatus = (typeof invoiceStatuses)[number];
+const statusNames: Record<InvoiceStatus, string> = {
   received: "Awaiting approval",
   approved: "Awaiting approval",
   processing: "Processing",
@@ -79,6 +81,11 @@ const statusNames = {
 };
 
 const statusFilterOptions = [...new Set(Object.values(statusNames))];
+const displayNameToDbStatuses = invoiceStatuses.reduce<Record<string, InvoiceStatus[]>>((acc, status) => {
+  const name = statusNames[status];
+  (acc[name] ??= []).push(status);
+  return acc;
+}, {});
 const getInvoiceStatusText = (invoice: Invoice, company: { requiredInvoiceApprovals: number }) => {
   switch (invoice.status) {
     case "received":
@@ -114,9 +121,19 @@ export default function InvoicesPage() {
   const isActionable = useIsActionable();
   const isPayable = useIsPayable();
   const isDeletable = useIsDeletable();
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
+    user.roles.administrator ? [{ id: "status", value: ["Awaiting approval", "Failed"] }] : [],
+  );
+  const statusFilter = useMemo(() => {
+    const names = columnFilters.find((f) => f.id === "status")?.value;
+    if (!Array.isArray(names) || names.length === 0) return undefined;
+    const statuses = names.flatMap((name: string) => displayNameToDbStatuses[name] ?? []);
+    return statuses.length > 0 ? statuses : undefined;
+  }, [columnFilters]);
   const { data = [], isLoading } = trpc.invoices.list.useQuery({
     companyId: company.id,
     contractorId: user.roles.administrator ? undefined : user.roles.worker?.id,
+    status: statusFilter,
   });
 
   const { canSubmitInvoices, hasLegalDetails, unsignedContractId } = useCanSubmitInvoices();
@@ -380,13 +397,13 @@ export default function InvoicesPage() {
     getRowId: (invoice) => invoice.id,
     initialState: {
       sorting: [{ id: user.roles.administrator ? "status" : "invoiceDate", desc: !user.roles.administrator }],
-      columnFilters: user.roles.administrator ? [{ id: "status", value: ["Awaiting approval", "Failed"] }] : [],
     },
-    state: { rowSelection },
+    state: { rowSelection, columnFilters },
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     enableRowSelection: true,
     enableGlobalFilter: !!user.roles.administrator,
+    onColumnFiltersChange: setColumnFilters,
     onRowSelectionChange: (rowSelection) => {
       setRowSelection((old) => {
         const value = typeof rowSelection === "function" ? rowSelection(old) : rowSelection;
@@ -553,7 +570,7 @@ export default function InvoicesPage() {
 
       <QuickInvoicesSection />
 
-      {data.length > 0 || isLoading ? (
+      {data.length > 0 || isLoading || columnFilters.length > 0 ? (
         <DataTable
           table={table}
           searchColumn={user.roles.administrator ? "billFrom" : undefined}
