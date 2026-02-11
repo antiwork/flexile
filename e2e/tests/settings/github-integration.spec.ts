@@ -314,7 +314,7 @@ test.describe("GitHub integration", () => {
       await page.getByRole("row", { name: new RegExp(user.legalName ?? "", "u") }).click();
 
       // Should display prettified PR info per design
-      await expect(page.getByText("antiwork/flexile")).toBeVisible();
+      await expect(page.getByRole("link", { name: /antiwork\/flexile/u })).toBeVisible();
       await expect(page.getByText("#242")).toBeVisible();
       // Bounty badge - use more specific selector to avoid matching the rate warning alert
       await expect(page.locator("[data-slot='badge']").getByText("$250")).toBeVisible();
@@ -557,7 +557,7 @@ test.describe("GitHub integration", () => {
       await page.getByRole("row", { name: new RegExp(invoice.invoiceNumber, "u") }).click();
 
       // Verify the PR line item is displayed
-      await expect(page.getByText("antiwork/gumroad")).toBeVisible();
+      await expect(page.getByRole("link", { name: /antiwork\/gumroad/u })).toBeVisible();
       await expect(page.getByText("#333")).toBeVisible();
 
       // Per design: status dot is NOT shown on paid invoices (only visible to admins anyway,
