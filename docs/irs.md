@@ -51,13 +51,14 @@ Need to use the **1099 TCC** to file via FIRE
 
 </aside>
 
-- Upload generated text file from https://github.com/antiwork/flexile/blob/main/apps/rails/app/services/irs/form_1099nec_data_generator.rb or https://github.com/antiwork/flexile/blob/main/apps/rails/app/services/irs/form_1099div_data_generator.rb
+- Upload generated text file from https://github.com/antiwork/flexile/blob/main/backend/app/services/irs/form_1099nec_data_generator.rb or https://github.com/antiwork/flexile/blob/main/backend/app/services/irs/form_1099div_data_generator.rb
 
 ```ruby
 company = Company.find(company_id)
+transmitter_company = Company.find(transmitter_company_id)
 tax_year = 2025
 is_test = false
-attached = { "IRS-1099-NEC-#{tax_year}.txt" => Irs::Form1099necDataGenerator.new(company:, tax_year:, is_test:).process }
+attached = { "IRS-1099-NEC-#{tax_year}.txt" => Irs::Form1099necDataGenerator.new(company:, transmitter_company:, tax_year:, is_test:).process }
 AdminMailer.custom(to: ["your-email@example.com"], subject: "[Flexile] #{company.name} 1099-NEC #{tax_year} IRS FIRE tax report #{is_test ? "test " : ""}file", body: "Attached", attached:).deliver_now
 ```
 
@@ -70,13 +71,14 @@ Need to use the **1042 TCC** to file via FIRE.
 
 </aside>
 
-- Upload generated text file from https://github.com/antiwork/flexile/blob/main/apps/rails/app/services/irs/form_1042s_data_generator.rb
+- Upload generated text file from https://github.com/antiwork/flexile/blob/main/backend/app/services/irs/form_1042s_data_generator.rb
 
 ```ruby
 company = Company.find(company_id)
+transmitter_company = Company.find(transmitter_company_id)
 tax_year = 2025
 is_test = false
-attached = { "IRS-1042-S-#{tax_year}.txt" => Irs::Form1042sDataGenerator.new(company:, tax_year:, is_test:).process }
+attached = { "IRS-1042-S-#{tax_year}.txt" => Irs::Form1042sDataGenerator.new(company:, transmitter_company:, tax_year:, is_test:).process }
 AdminMailer.custom(to: ["your-email@example.com"], subject: "[Flexile] #{company.name} 1042-S #{tax_year} IRS FIRE tax report #{is_test ? "test " : ""}file", body: "Attached", attached:).deliver_now
 ```
 
@@ -126,13 +128,14 @@ Flexile automatically generates and prefills IRS tax forms for contractors and i
 2. **Form Data Generation**:
 
    ```ruby
-   # Example for 1099-NEC
-   user_compliance_info = UserComplianceInfo.find(user_compliance_info_id)
-   company = company_id ? Company.find(company_id) : user_compliance_info.user.company_workers.first.company
+   # Example for 1099-NEC FIRE file generation
+   company = Company.find(company_id)
+   transmitter_company = Company.find(transmitter_company_id)
+   tax_year = 2025
 
-   # Generate form data
-   generator = Irs::Form1099necDataGenerator.new(user_compliance_info:, company:, tax_year:)
-   form_data = generator.generate
+   # Generate IRS FIRE format data
+   generator = Irs::Form1099necDataGenerator.new(company:, transmitter_company:, tax_year:)
+   fire_data = generator.process
 
    ```
 
@@ -174,15 +177,17 @@ Flexile automatically generates and prefills IRS tax forms for contractors and i
 
    ```ruby
    # Run generator for appropriate form
-   generator = Irs::Form1099necDataGenerator.new(company: company, tax_year: tax_year)
-   output_file = generator.generate_combined_irs_file
+   company = Company.find(company_id)
+   transmitter_company = Company.find(transmitter_company_id)
+   tax_year = 2025
+   is_test = false
 
-   # Download file
-   File.open(output_file, "r") do |file|
-     send_data file.read,
-               filename: "1099NEC_#{company.name}_#{tax_year}.txt",
-               type: "text/plain"
-   end
+   generator = Irs::Form1099necDataGenerator.new(company:, transmitter_company:, tax_year:, is_test:)
+   fire_data = generator.process
+
+   # Email the file
+   attached = { "IRS-1099-NEC-#{tax_year}.txt" => fire_data }
+   AdminMailer.custom(to: ["your-email@example.com"], subject: "[Flexile] #{company.name} 1099-NEC #{tax_year} IRS FIRE tax report file", body: "Attached", attached:).deliver_now
 
    ```
 
@@ -270,4 +275,4 @@ This dashboard will streamline the entire tax form filing process, reducing manu
 
 ## Troubleshooting
 
-- Whenever a contractor/investor needs their tax form adjusted or regenerated, it's best to just mark the old document as deleted via `document.mark_deleted!` and regenerate a new one using the https://github.com/antiwork/flexile/blob/main/apps/rails/app/services/generate_tax_form_service.rb.
+- Whenever a contractor/investor needs their tax form adjusted or regenerated, it's best to just mark the old document as deleted via `document.mark_deleted!` and regenerate a new one using the https://github.com/antiwork/flexile/blob/main/backend/app/services/generate_tax_form_service.rb.

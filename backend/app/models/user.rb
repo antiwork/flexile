@@ -11,7 +11,7 @@ class User < ApplicationRecord
 
   NON_TAX_COMPLIANCE_ATTRIBUTES = %i[legal_name birth_date country_code citizenship_country_code street_address city state zip_code]
   USER_PROVIDED_TAX_ATTRIBUTES = %i[tax_id business_entity business_name business_type tax_classification]
-  TAX_ATTRIBUTES = USER_PROVIDED_TAX_ATTRIBUTES + %i[tax_id_status tax_information_confirmed_at]
+  TAX_ATTRIBUTES = USER_PROVIDED_TAX_ATTRIBUTES + %i[tax_id_status tax_information_confirmed_at requires_tin_reverification]
   COMPLIANCE_ATTRIBUTES = NON_TAX_COMPLIANCE_ATTRIBUTES + USER_PROVIDED_TAX_ATTRIBUTES
   CONSULTING_CONTRACT_ATTRIBUTES = %i[email legal_name business_entity business_name street_address city state zip_code country_code citizenship_country_code] # should include all attributes that are referenced in the consulting contract
   MAX_MINIMUM_DIVIDEND_PAYMENT_IN_CENTS = 1_000_00
@@ -110,7 +110,7 @@ class User < ApplicationRecord
   end
 
   def has_verified_tax_id?
-    tax_id.present? && (!requires_w9? || tax_id_status == UserComplianceInfo::TAX_ID_STATUS_VERIFIED)
+    tax_id.present? && (!requires_w9? || tax_id_status == UserComplianceInfo::TAX_ID_STATUS_VERIFIED) && !requires_tin_reverification
   end
 
   def company_administrator_for(company)

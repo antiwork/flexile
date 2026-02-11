@@ -100,6 +100,7 @@ export default function InvoicePage() {
   const payRateInSubunits = invoice.contractor.payRateInSubunits;
   const complianceInfo = invoice.contractor.user.complianceInfo;
   const [expenseCategories] = trpc.expenseCategories.list.useSuspenseQuery({ companyId: company.id });
+  const [{ invoice: consolidatedInvoice }] = trpc.consolidatedInvoices.last.useSuspenseQuery({ companyId: company.id });
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -260,7 +261,7 @@ export default function InvoicePage() {
             <AlertDescription>Invoice is not payable until contractor provides tax information.</AlertDescription>
           </Alert>
         )}
-        <StatusDetails invoice={invoice} className="mx-4 mb-4 print:hidden" />
+        <StatusDetails invoice={invoice} consolidatedInvoice={consolidatedInvoice} className="mx-4 mb-4 print:hidden" />
 
         <div className="mx-4 print:hidden">
           <div className="text-sm text-gray-500">Status</div>

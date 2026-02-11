@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_28_070657) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_02_034515) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -142,7 +142,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_28_070657) do
     t.string "role"
     t.boolean "contract_signed_elsewhere", default: false, null: false
     t.integer "equity_percentage", default: 0, null: false
+    t.boolean "exclude_from_1099nec", default: false, null: false
+    t.text "exclude_from_1099nec_reason"
+    t.bigint "exclude_from_1099nec_set_by_user_id"
+    t.datetime "exclude_from_1099nec_set_at"
     t.index ["company_id"], name: "index_company_contractors_on_company_id"
+    t.index ["exclude_from_1099nec"], name: "index_company_contractors_on_exclude_from_1099nec"
     t.index ["external_id"], name: "index_company_contractors_on_external_id", unique: true
     t.index ["user_id", "company_id"], name: "index_company_contractors_on_user_id_and_company_id", unique: true
     t.index ["user_id"], name: "index_company_contractors_on_user_id"
@@ -831,6 +836,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_28_070657) do
     t.boolean "business_entity", default: false
     t.integer "business_type"
     t.integer "tax_classification"
+    t.boolean "requires_tin_reverification", default: false, null: false
     t.index ["user_id"], name: "index_user_compliance_infos_on_user_id"
   end
 
