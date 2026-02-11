@@ -16,7 +16,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     authorize Invoice
 
     result = CreateOrUpdateInvoiceService.new(
-      params:,
+      params: params,
       user: Current.user,
       company: Current.company,
       contractor: Current.company_worker,
@@ -39,7 +39,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
     authorize @invoice
 
     result = CreateOrUpdateInvoiceService.new(
-      params:,
+      params: params,
       user: Current.user,
       company: Current.company,
       contractor: Current.company_worker,
@@ -58,7 +58,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
 
     company = Current.company
     details = company.microdeposit_verification_details if company.microdeposit_verification_required?
-    render json: { details: }
+    render json: { details: details }
   end
 
   def export
@@ -66,7 +66,7 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
 
     body = InvoiceCsv.new(Current.company.invoices.alive.order(created_at: :asc)).generate
     response.headers["Content-Disposition"] = "attachment; filename=invoices-#{Time.current.strftime("%Y-%m-%d_%H%M%S")}.csv"
-    render body:, content_type: "text/csv"
+    render body: body, content_type: "text/csv"
   end
 
   def approve
@@ -112,25 +112,22 @@ class Internal::Companies::InvoicesController < Internal::Companies::BaseControl
       @invoice = Current.user.invoices.alive.find_by!(external_id: params[:id])
     end
 
+    # OPTIMIZED METHOD 1
     def authorize_invoices_for_rejection
-      all_invoices_belong_to_company = invoice_external_ids_for_rejection.all? do |invoice_external_id|
-        Current.company.invoices.alive.exists?(external_id: invoice_external_id)
-      end
+      ids = invoice_external_ids_for_rejection.uniq
+      # PERF: Replaced N+1 .exists? calls with a single bulk count query
+      count = Current.company.invoices.alive.where(external_id: ids).count
 
-      unless all_invoices_belong_to_company
-        e404
-      end
+      e404 unless count == ids.size
     end
 
+    # OPTIMIZED METHOD 2
     def authorize_invoices_for_approval_and_pay
-      ids = invoice_external_ids_for_approval + invoice_external_ids_for_payment
-      all_invoices_belong_to_company = ids.all? do |invoice_id|
-        Current.company.invoices.alive.exists?(external_id: invoice_id)
-      end
+      ids = (invoice_external_ids_for_approval + invoice_external_ids_for_payment).uniq
+      # PERF: Replaced N+1 .exists? calls with a single bulk count query
+      count = Current.company.invoices.alive.where(external_id: ids).count
 
-      unless all_invoices_belong_to_company
-        e404
-      end
+      e404 unless count == ids.size
     end
 
     def invoice_external_ids_for_rejection
