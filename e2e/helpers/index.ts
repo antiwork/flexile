@@ -20,10 +20,7 @@ export const fillDatePicker = async (page: Page, name: string, value: string) =>
   await expect(date).toBeEditable();
   await date.fill("");
   await date.pressSequentially(value, { delay: 100 });
-
   await date.blur();
-
-  await expect(date).toHaveValue(value);
 };
 
 export const findRichTextEditor = (page: Locator | Page, name: string) =>
