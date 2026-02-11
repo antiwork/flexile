@@ -18,8 +18,12 @@ export const fillDatePicker = async (page: Page, name: string, value: string) =>
   const date = page.getByRole("spinbutton", { name }).first();
   // Wait for the field to be interactive before typing to avoid lost keystrokes
   await expect(date).toBeEditable();
-  // 150ms delay ensures React commits DOM updates before focus transitions between segments
-  await date.pressSequentially(value, { delay: 150 });
+  await date.fill("");
+  await date.pressSequentially(value, { delay: 100 });
+
+  await date.blur();
+
+  await expect(date).toHaveValue(value);
 };
 
 export const findRichTextEditor = (page: Locator | Page, name: string) =>
