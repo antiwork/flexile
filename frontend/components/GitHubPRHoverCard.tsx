@@ -139,10 +139,10 @@ export function GitHubPRHoverCard({
 
             <div className="border-border border-t" />
 
-            <div className="gap-3 p-4 pt-3">
+            <div className="grid gap-1.5 p-4 pt-3">
               {isAdmin && paidInvoices.length > 0 ? (
                 <div className="flex items-center gap-1.5 text-sm">
-                  <BadgeDollarSign className="size-4 text-blue-600" />
+                  <BadgeDollarSign className="size-4 shrink-0 text-blue-600" />
                   <span>
                     <span className="font-medium text-blue-600">Paid</span>
                     <span className="text-muted-foreground"> on invoice </span>
@@ -163,7 +163,7 @@ export function GitHubPRHoverCard({
                 <div className="flex items-center gap-1.5 text-sm">
                   {isVerified ? (
                     <>
-                      <BadgeCheck className="size-4 text-green-600" />
+                      <BadgeCheck className="size-4 shrink-0 text-green-600" />
                       <span>
                         <span className="font-medium text-green-600">Verified author</span>
                         <span className="text-muted-foreground"> of this pull request.</span>
@@ -171,7 +171,7 @@ export function GitHubPRHoverCard({
                     </>
                   ) : (
                     <>
-                      <BadgeHelp className="text-muted-foreground size-4" />
+                      <BadgeHelp className="text-muted-foreground size-4 shrink-0" />
                       <span className="text-muted-foreground">Unverified author of this pull request.</span>
                     </>
                   )}
@@ -180,13 +180,13 @@ export function GitHubPRHoverCard({
 
               {bountyMismatch ? (
                 <div className="flex items-center gap-1.5 text-sm">
-                  <BadgeDollarSign className="size-4 text-amber-500" />
+                  <BadgeDollarSign className="size-4 shrink-0 text-amber-500" />
                   <span>
                     <span className="font-medium text-amber-500">Bounty mismatch</span>
                     <span className="text-muted-foreground">
                       {" "}
-                      — GitHub label is {formatMoneyFromCents(bountyMismatch.bounty)}, invoice line is{" "}
-                      {formatMoneyFromCents(bountyMismatch.lineTotal)}.
+                      — label {formatMoneyFromCents(bountyMismatch.bounty)} vs line{" "}
+                      {formatMoneyFromCents(bountyMismatch.lineTotal)}
                     </span>
                   </span>
                 </div>
