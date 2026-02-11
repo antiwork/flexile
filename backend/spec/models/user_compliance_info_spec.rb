@@ -303,6 +303,24 @@ RSpec.describe UserComplianceInfo do
             user_compliance_info.update!(legal_name: "Elmer Fudd")
           end.to change { user_compliance_info.reload.tax_id_status }.from(UserComplianceInfo::TAX_ID_STATUS_INVALID).to(nil)
         end
+
+        context "when user is flagged for TIN re-verification" do
+          it "clears the re-verification flag when tax-related attributes are updated" do
+            user_compliance_info.update!(requires_tin_reverification: true, tax_id_status: nil)
+
+            expect do
+              user_compliance_info.update!(legal_name: "New Name")
+            end.to change { user_compliance_info.reload.requires_tin_reverification }.from(true).to(false)
+          end
+
+          it "does not clear the flag if tax-related attributes are unchanged" do
+            user_compliance_info.update!(requires_tin_reverification: true, tax_id_status: nil)
+
+            expect do
+              user_compliance_info.update!(street_address: "456 New St")
+            end.not_to change { user_compliance_info.reload.requires_tin_reverification }
+          end
+        end
       end
     end
   end

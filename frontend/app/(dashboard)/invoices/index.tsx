@@ -170,7 +170,7 @@ export const ApproveButton = ({
       param={{ [pay ? "pay_ids" : "approve_ids"]: [invoice.id] }}
       successText={pay ? "Payment initiated" : "Approved!"}
       loadingText={pay ? "Sending payment..." : "Approving..."}
-      disabled={!!pay && (!company.completedPaymentMethodSetup || !company.isTrusted)}
+      disabled={!!pay && (!company.completedPaymentMethodSetup || !company.isTrusted || !company.taxId)}
     >
       Approve
     </MutationButton>
@@ -310,10 +310,17 @@ export const DeleteModal = ({
   );
 };
 
-export function StatusDetails({ invoice, className }: { invoice: Invoice; className?: string }) {
+export function StatusDetails({
+  invoice,
+  className,
+  consolidatedInvoice,
+}: {
+  invoice: Invoice;
+  className?: string;
+  consolidatedInvoice?: { createdAt: Date } | null | undefined;
+}) {
   const user = useCurrentUser();
   const company = useCurrentCompany();
-  const [{ invoice: consolidatedInvoice }] = trpc.consolidatedInvoices.last.useSuspenseQuery({ companyId: company.id });
 
   const getDetails = () => {
     let details = null;

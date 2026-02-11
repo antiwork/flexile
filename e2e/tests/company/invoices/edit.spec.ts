@@ -124,9 +124,7 @@ test.describe("invoice editing", () => {
       })
       .where(eq(invoiceLineItems.id, existingLineItem.id));
 
-    await login(page, contractorUser);
-
-    await page.goto("/invoices");
+    await login(page, contractorUser, "/invoices");
     await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
     await expect(page.getByRole("cell", { name: "INV-FRESH-DATA-TEST" })).toBeVisible();
 
