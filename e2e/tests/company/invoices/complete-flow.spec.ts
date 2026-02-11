@@ -51,7 +51,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     const custom1Row = page.locator("tbody tr").filter({ hasText: "CUSTOM-1" });
     await expect(custom1Row).toBeVisible();
-    await expect(custom1Row).toContainText("Nov 1, 2024");
+    await expect(custom1Row.getByRole("cell", { name: "Nov 1, 2024" })).toBeVisible();
     await expect(custom1Row).toContainText("$683");
     await expect(custom1Row).toContainText("Awaiting approval");
 
@@ -64,7 +64,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     const custom2Row = page.locator("tbody tr").filter({ hasText: "CUSTOM-2" });
     await expect(custom2Row).toBeVisible();
-    await expect(custom2Row).toContainText("Dec 1, 2024");
+    await expect(custom2Row.getByRole("cell", { name: "Dec 1, 2024" })).toBeVisible();
     await expect(custom2Row).toContainText("$23");
     await expect(custom2Row).toContainText("Awaiting approval");
 
@@ -88,7 +88,7 @@ test.describe("Invoice submission, approval and rejection", () => {
 
     const custom3Row = page.locator("tbody tr").filter({ hasText: "CUSTOM-3" });
     await expect(custom3Row).toBeVisible();
-    await expect(custom3Row).toContainText("Dec 1, 2024");
+    await expect(custom3Row.getByRole("cell", { name: "Dec 1, 2024" })).toBeVisible();
     await expect(custom3Row).toContainText("$33");
     await expect(custom3Row).toContainText("Awaiting approval");
 
@@ -122,15 +122,15 @@ test.describe("Invoice submission, approval and rejection", () => {
     const openInvoicesBadge = locateOpenInvoicesBadge(page);
 
     await expect(openInvoicesBadge).toContainText("3");
-    await expect(firstRow).toContainText("Dec 1, 2024");
+    await expect(firstRow.getByRole("cell", { name: "Dec 1, 2024" })).toBeVisible();
     await expect(firstRow).toContainText("$23");
     await expect(firstRow).toContainText("Awaiting approval");
     await expect(firstRow.getByRole("button", { name: "Approve" })).toBeVisible();
-    await expect(secondRow).toContainText("Nov 20, 2024");
+    await expect(secondRow.getByRole("cell", { name: "Nov 20, 2024" })).toBeVisible();
     await expect(secondRow).toContainText("$623");
     await expect(secondRow).toContainText("Awaiting approval");
     await expect(secondRow.getByRole("button", { name: "Approve" })).toBeVisible();
-    await expect(thirdRow).toContainText("Nov 1, 2024");
+    await expect(thirdRow.getByRole("cell", { name: "Nov 1, 2024" })).toBeVisible();
     await expect(thirdRow).toContainText("$870");
     await expect(thirdRow).toContainText("Awaiting approval");
     await thirdRow.getByRole("button", { name: "Approve" }).click();
