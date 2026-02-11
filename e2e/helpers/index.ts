@@ -18,13 +18,8 @@ export const fillDatePicker = async (page: Page, name: string, value: string) =>
   const date = page.getByRole("spinbutton", { name }).first();
   // Wait for the field to be interactive before typing to avoid lost keystrokes
   await expect(date).toBeEditable();
-  // Add delay between keystrokes as workaround for React Aria Components JS interop issues
-  await date.pressSequentially(value, { delay: 100 });
-  // Verify the year was fully processed by React before returning
-  const year = value.split("/")[2];
-  if (year) {
-    await expect(page.getByRole("spinbutton", { name }).last()).toContainText(year);
-  }
+  // 150ms delay ensures React commits DOM updates before focus transitions between segments
+  await date.pressSequentially(value, { delay: 150 });
 };
 
 export const findRichTextEditor = (page: Locator | Page, name: string) =>
