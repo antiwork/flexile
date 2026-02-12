@@ -124,13 +124,16 @@ export default function Dividends() {
   });
 
   const hasLegalDetails = user.legalName && user.address.street_address && user.taxInformationConfirmedAt;
+  const hasAnyShares = data.some((d) => d.numberOfShares != null);
   const columns = useMemo(
     () => [
       columnHelper.simple("dividendRound.issuedAt", "Issue date", formatDate),
       columnHelper.simple("dividendRound.returnOfCapital", "Type", (value) =>
         value ? "Return of capital" : "Dividend",
       ),
-      columnHelper.simple("numberOfShares", "Shares held", (value) => value?.toLocaleString() ?? "N/A", "numeric"),
+      ...(hasAnyShares
+        ? [columnHelper.simple("numberOfShares", "Shares held", (value) => value?.toLocaleString() ?? "N/A", "numeric")]
+        : []),
       columnHelper.simple(
         "investmentAmountCents",
         "Investment amount",
@@ -161,7 +164,7 @@ export default function Dividends() {
         ),
       }),
     ],
-    [],
+    [hasAnyShares],
   );
   const table = useTable({ columns, data });
   return (

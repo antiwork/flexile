@@ -147,12 +147,14 @@ class CreateInvestorsAndDividends
         info[:investment].tap do |investment|
           puts "Creating dividend for #{email}"
           dividend_cents = ((investment[:dividend_amount]&.to_d || 0) * 100).to_i
+          investment_amount_cents = ((investment[:amount]&.to_d || 0) * 100).to_i
           company_investor.dividends.create!(
             dividend_round:,
             company:,
             status: user.current_sign_in_at.nil? ? Dividend::PENDING_SIGNUP : Dividend::ISSUED,
             total_amount_in_cents: dividend_cents,
             qualified_amount_cents: dividend_cents,
+            investment_amount_cents:,
           )
         end
       rescue => e
