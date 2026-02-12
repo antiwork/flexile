@@ -7,6 +7,7 @@ import React, { useCallback, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentUser } from "@/global";
 import { cn } from "@/utils";
+import { formatMoneyFromCents } from "@/utils/formatMoney";
 import type { PRDetails, PRState } from "@/utils/github";
 
 const LONG_PRESS_DURATION = 500;
@@ -39,6 +40,7 @@ export interface GitHubPRHoverCardProps {
   pr: PRDetails;
   currentUserGitHubUsername?: string | null | undefined;
   paidInvoices?: PaidInvoiceInfo[];
+  lineItemTotal?: number | null;
   children: React.ReactNode;
   enabled?: boolean;
 }
@@ -47,6 +49,7 @@ export function GitHubPRHoverCard({
   pr,
   currentUserGitHubUsername,
   paidInvoices = [],
+  lineItemTotal,
   children,
   enabled = true,
 }: GitHubPRHoverCardProps) {
@@ -83,6 +86,11 @@ export function GitHubPRHoverCard({
   const isVerified = currentUserGitHubUsername
     ? pr.author.toLowerCase() === currentUserGitHubUsername.toLowerCase()
     : null;
+
+  const bountyMismatch =
+    pr.bounty_cents != null && lineItemTotal != null && pr.bounty_cents !== lineItemTotal
+      ? { bounty: pr.bounty_cents, lineTotal: lineItemTotal }
+      : null;
 
   const badgeStyle = PR_STATE_BADGES[pr.state];
 
@@ -131,10 +139,10 @@ export function GitHubPRHoverCard({
 
             <div className="border-border border-t" />
 
-            <div className="gap-3 p-4 pt-3">
+            <div className="grid gap-1.5 p-4 pt-3">
               {isAdmin && paidInvoices.length > 0 ? (
                 <div className="flex items-center gap-1.5 text-sm">
-                  <BadgeDollarSign className="size-4 text-blue-600" />
+                  <BadgeDollarSign className="size-4 shrink-0 text-blue-600" />
                   <span>
                     <span className="font-medium text-blue-600">Paid</span>
                     <span className="text-muted-foreground"> on invoice </span>
@@ -155,7 +163,7 @@ export function GitHubPRHoverCard({
                 <div className="flex items-center gap-1.5 text-sm">
                   {isVerified ? (
                     <>
-                      <BadgeCheck className="size-4 text-green-600" />
+                      <BadgeCheck className="size-4 shrink-0 text-green-600" />
                       <span>
                         <span className="font-medium text-green-600">Verified author</span>
                         <span className="text-muted-foreground"> of this pull request.</span>
@@ -163,10 +171,24 @@ export function GitHubPRHoverCard({
                     </>
                   ) : (
                     <>
-                      <BadgeHelp className="text-muted-foreground size-4" />
+                      <BadgeHelp className="text-muted-foreground size-4 shrink-0" />
                       <span className="text-muted-foreground">Unverified author of this pull request.</span>
                     </>
                   )}
+                </div>
+              ) : null}
+
+              {bountyMismatch ? (
+                <div className="flex items-center gap-1.5 text-sm">
+                  <BadgeDollarSign className="size-4 shrink-0 text-amber-500" />
+                  <span>
+                    <span className="font-medium text-amber-500">Bounty mismatch</span>
+                    <span className="text-muted-foreground">
+                      {" "}
+                      — label {formatMoneyFromCents(bountyMismatch.bounty)} vs line{" "}
+                      {formatMoneyFromCents(bountyMismatch.lineTotal)}
+                    </span>
+                  </span>
                 </div>
               ) : null}
             </div>
