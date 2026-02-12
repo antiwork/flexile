@@ -647,6 +647,154 @@ test.describe("GitHub integration", () => {
       await expect(page.getByText("#2025-21")).toBeVisible();
     });
 
+    test("shows bounty mismatch alert in hover card when bounty differs from line total", async ({ page }) => {
+      const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
+      const { user } = await usersFactory.create({
+        githubUid: faker.string.numeric(10),
+        githubUsername: "prauthor",
+      });
+      const { companyContractor } = await companyContractorsFactory.create({
+        companyId: company.id,
+        userId: user.id,
+        payRateInSubunits: 60000, // $600/hr rate
+      });
+
+      const { invoice } = await invoicesFactory.create({
+        companyContractorId: companyContractor.id,
+        invoiceNumber: `INV-MISMATCH-${faker.string.alphanumeric(6)}`,
+        status: "received",
+      });
+
+      // Line item: quantity=1, rate=60000 => total = 60000 cents ($600)
+      // Bounty: 25000 cents ($250) - different from line total
+      await db
+        .update(invoiceLineItems)
+        .set({
+          description: "https://github.com/antiwork/flexile/pull/500",
+          githubPrUrl: "https://github.com/antiwork/flexile/pull/500",
+          githubPrNumber: 500,
+          githubPrTitle: "Add new feature",
+          githubPrState: "merged",
+          githubPrAuthor: "prauthor",
+          githubPrRepo: "antiwork/flexile",
+          githubPrBountyCents: 25000, // $250 bounty != $600 line total
+        })
+        .where(eq(invoiceLineItems.invoiceId, invoice.id));
+
+      await login(page, adminUser, "/people");
+      await page.getByRole("link", { name: "Invoices" }).click();
+      await page.getByRole("row", { name: new RegExp(user.legalName ?? "", "u") }).click();
+
+      // Hover to see bounty mismatch in hover card
+      const prLink = page.getByRole("link", { name: /antiwork\/flexile.*#500/u });
+      await prLink.hover();
+
+      const hoverCardContent = page.locator("[data-radix-popper-content-wrapper]");
+      await expect(hoverCardContent.getByText("Bounty mismatch")).toBeVisible({ timeout: 5000 });
+      await expect(hoverCardContent.getByText(/label \$250/u)).toBeVisible();
+      await expect(hoverCardContent.getByText(/line \$600/u)).toBeVisible();
+
+      // Status dot should also be visible for admin on pending invoice
+      await expect(page.locator(".bg-amber-500")).toBeVisible();
+    });
+
+    test("does not show bounty mismatch when bounty matches line total", async ({ page }) => {
+      const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
+      const { user } = await usersFactory.create({
+        githubUid: faker.string.numeric(10),
+        githubUsername: "matchauthor",
+      });
+      const { companyContractor } = await companyContractorsFactory.create({
+        companyId: company.id,
+        userId: user.id,
+        payRateInSubunits: 25000,
+      });
+
+      const { invoice } = await invoicesFactory.create({
+        companyContractorId: companyContractor.id,
+        invoiceNumber: `INV-MATCH-${faker.string.alphanumeric(6)}`,
+        status: "received",
+      });
+
+      // invoicesFactory creates a line item with payRateInSubunits = totalAmountInUsdCents = 60000, quantity=1
+      // So lineItemTotal = Math.ceil((1 / 1) * 60000) = 60000
+      // Set bounty to match: 60000 cents ($600)
+      await db
+        .update(invoiceLineItems)
+        .set({
+          description: "https://github.com/antiwork/flexile/pull/501",
+          githubPrUrl: "https://github.com/antiwork/flexile/pull/501",
+          githubPrNumber: 501,
+          githubPrTitle: "Fix minor bug",
+          githubPrState: "merged",
+          githubPrAuthor: "matchauthor",
+          githubPrRepo: "antiwork/flexile",
+          githubPrBountyCents: 60000, // $600 bounty == $600 line total (quantity=1, rate=60000)
+        })
+        .where(eq(invoiceLineItems.invoiceId, invoice.id));
+
+      await login(page, adminUser, "/people");
+      await page.getByRole("link", { name: "Invoices" }).click();
+      await page.getByRole("row", { name: new RegExp(user.legalName ?? "", "u") }).click();
+
+      // Hover over the PR
+      const prLink = page.getByRole("link", { name: /antiwork\/flexile.*#501/u });
+      await prLink.hover();
+
+      const hoverCardContent = page.locator("[data-radix-popper-content-wrapper]");
+      // Should show verified author (author matches), but NOT bounty mismatch
+      await expect(hoverCardContent.getByText("Verified author")).toBeVisible({ timeout: 5000 });
+      await expect(hoverCardContent.getByText("Bounty mismatch")).not.toBeVisible();
+
+      // No status dot since author is verified, bounty matches, and no paid duplicates
+      await expect(page.locator(".bg-amber-500")).not.toBeVisible();
+    });
+
+    test("does not show bounty mismatch status dot on paid invoices", async ({ page }) => {
+      const { company } = await companiesFactory.createCompletedOnboarding();
+      const { user } = await usersFactory.create({
+        githubUid: faker.string.numeric(10),
+        githubUsername: "paidauthor",
+      });
+      const { companyContractor } = await companyContractorsFactory.create({
+        companyId: company.id,
+        userId: user.id,
+        payRateInSubunits: 60000,
+      });
+
+      // Create a PAID invoice with a bounty mismatch
+      const { invoice } = await invoicesFactory.create({
+        companyContractorId: companyContractor.id,
+        invoiceNumber: `INV-PAID-MM-${faker.string.alphanumeric(6)}`,
+        status: "paid",
+      });
+
+      await db
+        .update(invoiceLineItems)
+        .set({
+          description: "https://github.com/antiwork/flexile/pull/502",
+          githubPrUrl: "https://github.com/antiwork/flexile/pull/502",
+          githubPrNumber: 502,
+          githubPrTitle: "Refactor module",
+          githubPrState: "merged",
+          githubPrAuthor: "paidauthor",
+          githubPrRepo: "antiwork/flexile",
+          githubPrBountyCents: 10000, // $100 bounty != $600 line total — mismatch, but paid
+        })
+        .where(eq(invoiceLineItems.invoiceId, invoice.id));
+
+      // Login as contractor to view the paid invoice (contractor sees all their invoices)
+      await login(page, user);
+      await page.getByRole("link", { name: "Invoices" }).click();
+      await page.getByRole("row", { name: new RegExp(invoice.invoiceNumber, "u") }).click();
+
+      await expect(page.getByText("antiwork/flexile")).toBeVisible();
+      await expect(page.getByText("#502")).toBeVisible();
+
+      // No status dot on paid invoices even with bounty mismatch
+      await expect(page.locator(".bg-amber-500")).not.toBeVisible();
+    });
+
     test("does not show status dot on paid invoices", async ({ page }) => {
       const { company } = await companiesFactory.createCompletedOnboarding();
       const { user } = await usersFactory.create({
