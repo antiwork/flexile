@@ -274,6 +274,137 @@ test.describe("GitHub integration", () => {
       await expect(page.getByRole("heading", { name: "Invoices" })).toBeVisible();
       await expect(page.getByRole("cell", { name: "Awaiting approval" })).toBeVisible();
     });
+
+    test("re-fetches PR details when PR URL is changed on invoice edit", async ({ page }) => {
+      const { company } = await companiesFactory.createCompletedOnboarding();
+      await db.update(companies).set({ githubOrgName: "antiwork" }).where(eq(companies.id, company.id));
+      const { user } = await usersFactory.create({
+        githubUid: faker.string.numeric(10),
+        githubUsername: "testcontractor",
+      });
+      const { companyContractor } = await companyContractorsFactory.create({
+        companyId: company.id,
+        userId: user.id,
+        payRateInSubunits: 25000,
+      });
+
+      // Create an invoice with an existing PR line item
+      const { invoice } = await invoicesFactory.create({
+        companyContractorId: companyContractor.id,
+        invoiceNumber: "INV-PR-EDIT-TEST",
+      });
+      await db
+        .update(invoiceLineItems)
+        .set({
+          description: "https://github.com/antiwork/flexile/pull/100",
+          githubPrUrl: "https://github.com/antiwork/flexile/pull/100",
+          githubPrNumber: 100,
+          githubPrTitle: "Original PR title",
+          githubPrState: "merged",
+          githubPrAuthor: "testcontractor",
+          githubPrRepo: "antiwork/flexile",
+          githubPrBountyCents: 10000,
+        })
+        .where(eq(invoiceLineItems.invoiceId, invoice.id));
+
+      await login(page, user);
+      await page.goto("/invoices");
+      await page.getByRole("cell", { name: "INV-PR-EDIT-TEST" }).click();
+      await page.getByRole("link", { name: "Edit invoice" }).click();
+      await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
+
+      // Verify the stored PR data renders as a prettified PR line item (not raw URL)
+      await expect(page.getByText("antiwork/flexile")).toBeVisible();
+      await expect(page.getByText("#100")).toBeVisible();
+      await expect(page.getByText("Original PR title")).toBeVisible();
+
+      // Intercept the PR details API to return data for the new PR URL
+      let prFetchUrl = "";
+      await page.route("**/internal/github/pr**", async (route) => {
+        prFetchUrl = route.request().url();
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            pr: {
+              url: "https://github.com/antiwork/flexile/pull/200",
+              number: 200,
+              title: "Updated PR title",
+              state: "open",
+              author: "testcontractor",
+              repo: "antiwork/flexile",
+              bounty_cents: 20000,
+            },
+          }),
+        });
+      });
+
+      // Click on the PR line item to enter edit mode, then change the URL
+      await page.getByText("Original PR title").click();
+      const descriptionInput = page.getByPlaceholder("Description or GitHub PR link...");
+      await expect(descriptionInput).toBeVisible();
+      await descriptionInput.fill("https://github.com/antiwork/flexile/pull/200");
+      await descriptionInput.blur();
+
+      // Verify the new PR details are fetched and displayed
+      await expect(page.getByText("#200")).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText("Updated PR title")).toBeVisible();
+      expect(prFetchUrl).toContain("pull%2F200");
+    });
+
+    test("uses stored PR data without re-fetching when URL has not changed on edit", async ({ page }) => {
+      const { company } = await companiesFactory.createCompletedOnboarding();
+      await db.update(companies).set({ githubOrgName: "antiwork" }).where(eq(companies.id, company.id));
+      const { user } = await usersFactory.create({
+        githubUid: faker.string.numeric(10),
+        githubUsername: "testcontractor",
+      });
+      const { companyContractor } = await companyContractorsFactory.create({
+        companyId: company.id,
+        userId: user.id,
+        payRateInSubunits: 25000,
+      });
+
+      // Create an invoice with an existing PR line item
+      const { invoice } = await invoicesFactory.create({
+        companyContractorId: companyContractor.id,
+        invoiceNumber: "INV-PR-NO-REFETCH",
+      });
+      await db
+        .update(invoiceLineItems)
+        .set({
+          description: "https://github.com/antiwork/flexile/pull/300",
+          githubPrUrl: "https://github.com/antiwork/flexile/pull/300",
+          githubPrNumber: 300,
+          githubPrTitle: "Stored PR title",
+          githubPrState: "merged",
+          githubPrAuthor: "testcontractor",
+          githubPrRepo: "antiwork/flexile",
+        })
+        .where(eq(invoiceLineItems.invoiceId, invoice.id));
+
+      // Track whether the PR API is called
+      let prApiFetched = false;
+      await page.route("**/internal/github/pr**", async (route) => {
+        prApiFetched = true;
+        await route.abort();
+      });
+
+      await login(page, user);
+      await page.goto("/invoices");
+      await page.getByRole("cell", { name: "INV-PR-NO-REFETCH" }).click();
+      await page.getByRole("link", { name: "Edit invoice" }).click();
+      await expect(page.getByRole("heading", { name: "Edit invoice" })).toBeVisible();
+
+      // Stored PR data should display without any API fetch
+      await expect(page.getByText("antiwork/flexile")).toBeVisible();
+      await expect(page.getByText("#300")).toBeVisible();
+      await expect(page.getByText("Stored PR title")).toBeVisible();
+
+      // Wait a moment to confirm no API call was made
+      await page.waitForTimeout(500);
+      expect(prApiFetched).toBe(false);
+    });
   });
 
   test.describe("admin invoice view", () => {
