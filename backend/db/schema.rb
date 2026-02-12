@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_02_034515) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_12_085651) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -377,7 +377,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_02_034515) do
     t.bigint "user_compliance_info_id"
     t.bigint "qualified_amount_cents", null: false
     t.datetime "signed_release_at"
-    t.bigint "investment_amount_cents"
+    t.bigint "investment_amount_cents", null: false
     t.string "external_id", null: false
     t.index ["company_id"], name: "index_dividends_on_company_id"
     t.index ["company_investor_id"], name: "index_dividends_on_company_investor_id"

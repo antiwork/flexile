@@ -29,6 +29,7 @@ class Dividend < ApplicationRecord
   validates :withholding_percentage, numericality: { greater_than_or_equal_to: 0, only_integer: true }, allow_nil: true
   validates :net_amount_in_cents, numericality: { greater_than_or_equal_to: 0, only_integer: true }, allow_nil: true
   validates :qualified_amount_cents, numericality: { greater_than_or_equal_to: 0, only_integer: true }
+  validates :investment_amount_cents, numericality: { greater_than_or_equal_to: 0, only_integer: true }
 
   scope :pending_signup, -> { where(status: PENDING_SIGNUP) }
   scope :paid, -> { where(status: PAID) }
