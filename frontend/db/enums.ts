@@ -15,6 +15,7 @@ export enum DocumentType {
   FormW9,
   FormW8BEN,
   FormW8BENE,
+  Form1099B,
 }
 
 export enum DocumentTemplateType {

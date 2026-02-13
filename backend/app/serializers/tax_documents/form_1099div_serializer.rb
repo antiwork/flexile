@@ -43,7 +43,8 @@ class TaxDocuments::Form1099divSerializer < TaxDocuments::BaseSerializer
     def dividend_amounts_for_tax_year
       @_dividend_amounts_for_tax_year ||= investor.dividends
                                                   .for_tax_year(tax_year)
-                                                  .pluck("SUM(total_amount_in_cents), SUM(withheld_tax_cents), SUM(qualified_amount_cents)")
+                                                  .not_return_of_capital
+                                                  .pluck("SUM(dividends.total_amount_in_cents), SUM(dividends.withheld_tax_cents), SUM(dividends.qualified_amount_cents)")
                                                   .flatten
     end
 

@@ -55,6 +55,8 @@ const documentName = (document: Document) => {
       return "1099-NEC";
     case DocumentType.Form1099DIV:
       return "1099-DIV";
+    case DocumentType.Form1099B:
+      return "1099-B";
     case DocumentType.Form1042S:
       return "1042-S";
     case DocumentType.FormW9:
@@ -91,6 +93,7 @@ function getStatus(document: Document): { name: string; text: string } {
       return { name: "Signed", text: "Signed" };
     case DocumentType.Form1099NEC:
     case DocumentType.Form1099DIV:
+    case DocumentType.Form1099B:
     case DocumentType.Form1042S:
       return completedAt
         ? { name: "Signed", text: `Filed on ${formatDate(completedAt)}` }
@@ -412,10 +415,11 @@ export default function DocumentsPage() {
           )}
           {user.roles.administrator && new Date() <= filingDueDateFor1099DIV ? (
             <Alert className="mx-4">
-              <AlertTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, and 1042-S</AlertTitle>
+              <AlertTitle>Upcoming filing dates for 1099-NEC, 1099-DIV, 1099-B, and 1042-S</AlertTitle>
               <AlertDescription>
                 We will submit form 1099-NEC to the IRS on {formatDate(new Date(currentYear, 0, 31))}, form 1042-S on{" "}
-                {formatDate(new Date(currentYear, 2, 15))}, and form 1099-DIV on {formatDate(filingDueDateFor1099DIV)}.
+                {formatDate(new Date(currentYear, 2, 15))}, and forms 1099-DIV and 1099-B on{" "}
+                {formatDate(filingDueDateFor1099DIV)}.
               </AlertDescription>
             </Alert>
           ) : null}

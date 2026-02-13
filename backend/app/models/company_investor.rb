@@ -28,11 +28,21 @@ class CompanyInvestor < ApplicationRecord
   scope :with_required_tax_info_for, -> (tax_year:) do
     dividends_subquery = Dividend.select("company_investor_id")
                                  .for_tax_year(tax_year)
+                                 .not_return_of_capital
                                  .group("company_investor_id")
-                                 .having("SUM(total_amount_in_cents) >= ?", MIN_DIVIDENDS_AMOUNT_FOR_TAX_FORMS)
+                                 .having("SUM(dividends.total_amount_in_cents) >= ?", MIN_DIVIDENDS_AMOUNT_FOR_TAX_FORMS)
 
     joins(:company).merge(Company.active)
       .where(id: dividends_subquery)
+  end
+
+  scope :with_return_of_capital_dividends_for, -> (tax_year:) do
+    roc_dividends_subquery = Dividend.select("company_investor_id")
+                                     .for_tax_year(tax_year)
+                                     .return_of_capital
+
+    joins(:company).merge(Company.active)
+      .where(id: roc_dividends_subquery)
   end
 
   def cumulative_dividends_roi

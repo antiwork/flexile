@@ -505,6 +505,67 @@ RSpec.describe GenerateTaxFormService do
       end
     end
 
+    context "when form is a 1099-B" do
+      let(:document_type) { "form_1099b" }
+      let(:business_entity) { false }
+      let(:business_name) { nil }
+      let(:business_type) { nil }
+      let(:tax_classification) { nil }
+      let(:user_compliance_info) do
+        create(:user_compliance_info, :us_resident, :confirmed, user:, tax_id: "123456789",
+                                                                business_entity:, business_name:, business_type:, tax_classification:)
+      end
+      let!(:company_investor) { create(:company_investor, company:, user:) }
+      let!(:roc_round) { create(:dividend_round, company:, return_of_capital: true) }
+
+      before do
+        create(:share_holding, company_investor:, originally_acquired_at: Date.new(tax_year - 2, 3, 15))
+
+        create(:dividend, :paid, company_investor:, company:, user_compliance_info:,
+                                 dividend_round: roc_round,
+                                 total_amount_in_cents: 500_00,
+                                 number_of_shares: 50,
+                                 investment_amount_cents: 400_00,
+                                 withheld_tax_cents: 0,
+                                 created_at: Date.new(tax_year, 6, 1),
+                                 paid_at: Date.new(tax_year, 6, 15))
+        create(:dividend, :paid, company_investor:, company:, user_compliance_info:,
+                                 dividend_round: roc_round,
+                                 total_amount_in_cents: 300_00,
+                                 number_of_shares: 30,
+                                 investment_amount_cents: 250_00,
+                                 withheld_tax_cents: 0,
+                                 created_at: Date.new(tax_year, 9, 1),
+                                 paid_at: Date.new(tax_year, 9, 15))
+      end
+
+      it_behaves_like "existing tax document"
+
+      it "creates a tax document with the correct attributes" do
+        expect do
+          expect(generate_tax_form_service.process).to be_an_instance_of(Document)
+        end.to change { user_compliance_info.documents.tax_document.count }.by(1)
+
+        tax_document = user_compliance_info.documents.tax_document.last
+        expect(tax_document.document_type).to eq(document_type)
+        expect(tax_document.year).to eq(tax_year)
+        expect(tax_document.company_id).to eq(company.id)
+        expect(tax_document.live_attachment.filename).to eq("#{tax_year}-1099-B-#{company.name.parameterize}-#{user.billing_entity_name.parameterize}.pdf")
+
+        tax_document.live_attachment.open do |file|
+          pdf = HexaPDF::Document.new(io: file)
+          expect(pdf.pages.count).to be > 0
+
+          processor = CustomPDFTextExtractor.new
+          pdf.pages.each { _1.process_contents(processor) }
+
+          text = processor.texts.join("\n")
+          expect(text).to include("45-3361423") # payer TIN
+          expect(text).to include("Jane Flex")
+        end
+      end
+    end
+
     context "when form is a 1042-S" do
       let(:document_type) { "form_1042s" }
       let(:business_entity) { false }

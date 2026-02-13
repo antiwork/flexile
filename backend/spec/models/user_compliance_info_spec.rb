@@ -456,6 +456,29 @@ RSpec.describe UserComplianceInfo do
           end
         end
       end
+
+      context "when there are paid return-of-capital dividends attached to the user compliance info" do
+        let!(:form_1099_b) { create(:document, document_type: :form_1099b, user_compliance_info:) }
+        let(:roc_round) { create(:dividend_round, return_of_capital: true) }
+
+        before { create(:dividend, :paid, user_compliance_info:, dividend_round: roc_round) }
+
+        it "preserves 1099-B documents" do
+          user_compliance_info.mark_deleted!
+          expect(user_compliance_info.reload).to be_deleted
+          expect(form_1099_nec.reload).to be_deleted
+          expect(form_1099_b.reload).to_not be_deleted
+        end
+      end
+
+      context "when there are no return-of-capital dividends" do
+        let!(:form_1099_b) { create(:document, document_type: :form_1099b, user_compliance_info:, signed: false) }
+
+        it "deletes unsigned 1099-B documents" do
+          user_compliance_info.mark_deleted!
+          expect(form_1099_b.reload).to be_deleted
+        end
+      end
     end
 
     let!(:tax_document) { create(:document, document_type: :form_w9, user_compliance_info:) }

@@ -104,6 +104,53 @@ RSpec.describe CompanyInvestor do
           [company_investor_1, company_investor_2, company_investor_3]
         )
       end
+
+      it "excludes investors whose only dividends are return-of-capital" do
+        roc_round = create(:dividend_round, company:, return_of_capital: true)
+        roc_only_investor = create(:company_investor, company:, user: create(:user))
+        create(:dividend, :paid, company_investor: roc_only_investor, company:,
+                                 dividend_round: roc_round, total_amount_in_cents: 500_00)
+
+        expect(described_class.with_required_tax_info_for(tax_year:)).not_to include(roc_only_investor)
+      end
+    end
+
+    describe ".with_return_of_capital_dividends_for" do
+      let(:company) { create(:company) }
+      let(:tax_year) { Date.current.year }
+      let(:roc_round) { create(:dividend_round, company:, return_of_capital: true) }
+      let(:non_roc_round) { create(:dividend_round, company:, return_of_capital: false) }
+
+      let(:company_investor_with_roc) do
+        create(:company_investor, company:, user: create(:user))
+      end
+      let(:company_investor_without_roc) do
+        create(:company_investor, company:, user: create(:user))
+      end
+      let(:company_investor_with_roc_other_year) do
+        create(:company_investor, company:, user: create(:user))
+      end
+
+      before do
+        # Investor with ROC dividend in tax year
+        create(:dividend, :paid, company_investor: company_investor_with_roc, company:,
+                                 dividend_round: roc_round, total_amount_in_cents: 500_00)
+
+        # Investor with non-ROC dividend only
+        create(:dividend, :paid, company_investor: company_investor_without_roc, company:,
+                                 dividend_round: non_roc_round, total_amount_in_cents: 500_00)
+
+        # Investor with ROC dividend in a different year
+        create(:dividend, :paid, company_investor: company_investor_with_roc_other_year, company:,
+                                 dividend_round: roc_round, total_amount_in_cents: 500_00,
+                                 created_at: Date.current.prev_year, paid_at: Date.current.prev_year)
+      end
+
+      it "returns only company investors with return-of-capital dividends for the tax year" do
+        expect(described_class.with_return_of_capital_dividends_for(tax_year:)).to match_array(
+          [company_investor_with_roc]
+        )
+      end
     end
   end
 end
