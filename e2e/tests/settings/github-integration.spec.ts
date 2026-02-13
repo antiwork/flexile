@@ -445,7 +445,7 @@ test.describe("GitHub integration", () => {
       await page.getByRole("row", { name: new RegExp(user.legalName ?? "", "u") }).click();
 
       // Should display prettified PR info per design
-      await expect(page.getByText("antiwork/flexile")).toBeVisible();
+      await expect(page.getByRole("link", { name: /antiwork\/flexile/u })).toBeVisible();
       await expect(page.getByText("#242")).toBeVisible();
       // Bounty badge - use more specific selector to avoid matching the rate warning alert
       await expect(page.locator("[data-slot='badge']").getByText("$250")).toBeVisible();
@@ -788,7 +788,7 @@ test.describe("GitHub integration", () => {
       await page.getByRole("link", { name: "Invoices" }).click();
       await page.getByRole("row", { name: new RegExp(invoice.invoiceNumber, "u") }).click();
 
-      await expect(page.getByText("antiwork/flexile")).toBeVisible();
+      await expect(page.getByRole("link", { name: /antiwork\/flexile/u })).toBeVisible();
       await expect(page.getByText("#502")).toBeVisible();
 
       // No status dot on paid invoices even with bounty mismatch
@@ -836,12 +836,71 @@ test.describe("GitHub integration", () => {
       await page.getByRole("row", { name: new RegExp(invoice.invoiceNumber, "u") }).click();
 
       // Verify the PR line item is displayed
-      await expect(page.getByText("antiwork/gumroad")).toBeVisible();
+      await expect(page.getByRole("link", { name: /antiwork\/gumroad/u })).toBeVisible();
       await expect(page.getByText("#333")).toBeVisible();
 
       // Per design: status dot is NOT shown on paid invoices (only visible to admins anyway,
       // and even for admins it's not shown on paid invoices)
       await expect(page.locator(".bg-amber-500")).not.toBeVisible();
+    });
+  });
+
+  test.describe("print invoice layout", () => {
+    test("stacks repo name and PR title for GitHub PR line items in print view", async ({ page }) => {
+      const { company, adminUser } = await companiesFactory.createCompletedOnboarding();
+      const { user } = await usersFactory.create({
+        githubUid: faker.string.numeric(10),
+        githubUsername: "printauthor",
+      });
+      const { companyContractor } = await companyContractorsFactory.create({
+        companyId: company.id,
+        userId: user.id,
+        payRateInSubunits: 50000,
+      });
+
+      const { invoice } = await invoicesFactory.create({
+        companyContractorId: companyContractor.id,
+        invoiceNumber: `INV-PRINT-${faker.string.alphanumeric(6)}`,
+        status: "received",
+      });
+
+      await db
+        .update(invoiceLineItems)
+        .set({
+          description: "https://github.com/antiwork/medium-editor-insert-plugin/pull/42",
+          githubPrUrl: "https://github.com/antiwork/medium-editor-insert-plugin/pull/42",
+          githubPrNumber: 42,
+          githubPrTitle: "Add hashCode util function and support onImageSelect callback on context",
+          githubPrState: "merged",
+          githubPrAuthor: "printauthor",
+          githubPrRepo: "antiwork/medium-editor-insert-plugin",
+          githubPrBountyCents: 50000,
+        })
+        .where(eq(invoiceLineItems.invoiceId, invoice.id));
+
+      await login(page, adminUser, "/people");
+      await page.getByRole("link", { name: "Invoices" }).click();
+      await page.getByRole("row", { name: new RegExp(user.legalName ?? "", "u") }).click();
+
+      const screenLayout = page.locator(".print\\:hidden").filter({ hasText: "antiwork/medium-editor-insert-plugin" });
+      const printLayout = page.locator(".print\\:block").filter({ hasText: "antiwork/medium-editor-insert-plugin" });
+
+      // In screen mode: single-row layout with badge is visible, print layout is hidden
+      await expect(screenLayout).toBeVisible();
+      await expect(printLayout).not.toBeVisible();
+
+      // Switch to print media
+      await page.emulateMedia({ media: "print" });
+
+      // In print mode: stacked layout visible, screen layout hidden
+      await expect(screenLayout).not.toBeVisible();
+      await expect(printLayout).toBeVisible();
+
+      // Print layout shows repo name (bold) and full PR title stacked
+      await expect(printLayout.locator(".font-semibold")).toHaveText("antiwork/medium-editor-insert-plugin");
+      await expect(
+        printLayout.getByText("Add hashCode util function and support onImageSelect callback on context"),
+      ).toBeVisible();
     });
   });
 });
