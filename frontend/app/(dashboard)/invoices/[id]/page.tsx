@@ -322,7 +322,7 @@ export default function InvoicePage() {
 
               {invoice.lineItems.length > 0 ? (
                 <div className="w-full overflow-x-auto">
-                  <Table className="w-full min-w-fit print:my-3 print:w-full print:border-collapse print:text-xs">
+                  <Table className="w-full min-w-fit print:my-3 print:min-w-0 print:border-collapse print:text-xs">
                     <TableHeader>
                       <TableRow className="print:border-b print:border-gray-300">
                         <PrintTableHeader className="w-[40%] md:w-[50%] print:text-left">
@@ -426,7 +426,7 @@ export default function InvoicePage() {
                                       <GitHubPRIcon state={prDetails.state} />
                                       <span className="font-semibold">{prDetails.repo}</span>
                                     </div>
-                                    <div>{prDetails.title}</div>
+                                    <div className="whitespace-normal">{prDetails.title}</div>
                                   </div>
                                 </>
                               ) : (
