@@ -788,7 +788,7 @@ test.describe("GitHub integration", () => {
       await page.getByRole("link", { name: "Invoices" }).click();
       await page.getByRole("row", { name: new RegExp(invoice.invoiceNumber, "u") }).click();
 
-      await expect(page.getByText("antiwork/flexile")).toBeVisible();
+      await expect(page.getByRole("link", { name: /antiwork\/flexile/u })).toBeVisible();
       await expect(page.getByText("#502")).toBeVisible();
 
       // No status dot on paid invoices even with bounty mismatch
