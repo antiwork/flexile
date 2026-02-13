@@ -72,3 +72,8 @@ vesting_report_csv_email_job:
   cron: "0 16 1 * *" # The 1st day of every month at UTC 16:00
   class: VestingReportCsvEmailJob
   description: Sends monthly vesting report to company admins
+
+reconcile_processing_invoices_job:
+  cron: "0 */4 * * *" # Every 4 hours
+  class: ReconcileProcessingInvoicesJob
+  description: Reconciles invoices stuck in processing by checking transfer status via Wise API

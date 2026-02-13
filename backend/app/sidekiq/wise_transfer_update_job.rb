@@ -26,26 +26,10 @@ class WiseTransferUpdateJob
       end
       return
     end
-    invoice = payment.invoice
-    payment.update!(wise_transfer_status: current_state)
-    api_service = Wise::PayoutApi.new(wise_credential: payment.wise_credential)
-
-    if payment.in_failed_state?
-      unless payment.marked_failed?
-        payment.update!(status: Payment::FAILED)
-        if payment.is_a?(Payment)
-          amount_cents = api_service.get_transfer(transfer_id:)["sourceValue"] * -100
-          payment.balance_transactions.create!(company: payment.company, amount_cents:, transaction_type: BalanceTransaction::PAYMENT_FAILED)
-        end
-      end
-      invoice.update!(status: Invoice::FAILED)
-    elsif payment.in_processing_state?
-      invoice.update!(status: Invoice::PROCESSING)
-    elsif current_state == Payments::Wise::OUTGOING_PAYMENT_SENT
-      amount = api_service.get_transfer(transfer_id:)["targetValue"]
-      estimate = Time.zone.parse(api_service.delivery_estimate(transfer_id:)["estimatedDeliveryDate"])
-      payment.update!(status: Payment::SUCCEEDED, wise_transfer_amount: amount, wise_transfer_estimate: estimate)
-      invoice.mark_as_paid!(timestamp: Time.zone.parse(params.dig("data", "occurred_at")), payment_id: payment.id)
-    end
+    InvoicePaymentTransferUpdate.new(
+      payment,
+      current_state:,
+      occurred_at: Time.zone.parse(params.dig("data", "occurred_at")),
+    ).process
   end
 end
