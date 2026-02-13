@@ -782,7 +782,21 @@ type Dividend = RouterOutput["dividends"]["list"][number];
 const dividendsColumnHelper = createColumnHelper<Dividend>();
 const dividendsColumns = [
   dividendsColumnHelper.simple("dividendRound.issuedAt", "Issue date", formatDate),
-  dividendsColumnHelper.simple("numberOfShares", "Shares", (value) => value?.toLocaleString(), "numeric"),
+  dividendsColumnHelper.accessor("numberOfShares", {
+    header: "Shares",
+    cell: (info) => {
+      const value = info.getValue();
+      const implied = info.row.original.impliedShares;
+      if (value == null) return "N/A";
+      return (
+        <div>
+          <div>{value.toLocaleString()}</div>
+          {implied ? <div className="text-xs text-gray-400">implied</div> : null}
+        </div>
+      );
+    },
+    meta: { numeric: true },
+  }),
   dividendsColumnHelper.simple("totalAmountInCents", "Amount", formatMoneyFromCents, "numeric"),
   dividendsColumnHelper.accessor("status", {
     header: "Status",

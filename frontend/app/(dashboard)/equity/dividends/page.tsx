@@ -130,7 +130,21 @@ export default function Dividends() {
       columnHelper.simple("dividendRound.returnOfCapital", "Type", (value) =>
         value ? "Return of capital" : "Dividend",
       ),
-      columnHelper.simple("numberOfShares", "Shares held", (value) => value?.toLocaleString() ?? "N/A", "numeric"),
+      columnHelper.accessor("numberOfShares", {
+        header: "Shares held",
+        cell: (info) => {
+          const value = info.getValue();
+          const implied = info.row.original.impliedShares;
+          if (value == null) return "N/A";
+          return (
+            <div>
+              <div>{value.toLocaleString()}</div>
+              {implied ? <div className="text-xs text-gray-400">implied</div> : null}
+            </div>
+          );
+        },
+        meta: { numeric: true },
+      }),
       columnHelper.simple(
         "investmentAmountCents",
         "Investment amount",

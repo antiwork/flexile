@@ -1,6 +1,8 @@
 import { db, takeOrThrow } from "@test/db";
 import { companiesFactory } from "@test/factories/companies";
 import { companyInvestorsFactory } from "@test/factories/companyInvestors";
+import { convertibleInvestmentsFactory } from "@test/factories/convertibleInvestments";
+import { convertibleSecuritiesFactory } from "@test/factories/convertibleSecurities";
 import { dividendRoundsFactory } from "@test/factories/dividendRounds";
 import { dividendsFactory } from "@test/factories/dividends";
 import { usersFactory } from "@test/factories/users";
@@ -136,5 +138,72 @@ test.describe("Dividends", () => {
       .filter({ has: page.getByRole("cell", { name: "$100" }) }); // Net amount
 
     await expect(row).toBeVisible();
+    await expect(row.getByText("implied")).not.toBeVisible();
+  });
+
+  test("displays implied shares for convertible dividends", async ({ page }) => {
+    const { company, companyInvestor, investorUser } = await setup();
+
+    const { convertibleInvestment } = await convertibleInvestmentsFactory.create({
+      companyId: company.id,
+      amountInCents: 200_000_00n,
+      impliedShares: 1000n,
+      issuedAt: new Date("2024-01-01"),
+    });
+    await convertibleSecuritiesFactory.create({
+      companyInvestorId: companyInvestor.id,
+      convertibleInvestmentId: convertibleInvestment.id,
+      principalValueInCents: 200_000_00n,
+      impliedShares: "1000",
+      issuedAt: new Date("2024-01-01"),
+    });
+
+    // Convertible dividend with implied shares (post-backfill)
+    const impliedRound = await dividendRoundsFactory.create({ companyId: company.id });
+    await dividendsFactory.create({
+      companyId: company.id,
+      companyInvestorId: companyInvestor.id,
+      dividendRoundId: impliedRound.id,
+      totalAmountInCents: 75000n,
+      withheldTaxCents: 7500n,
+      netAmountInCents: 67500n,
+      numberOfShares: 1000n,
+      impliedShares: true,
+      investmentAmountCents: 200_000_00n,
+      status: "Issued",
+    });
+
+    // Convertible dividend with NULL shares (pre-backfill)
+    const nullRound = await dividendRoundsFactory.create({ companyId: company.id });
+    await dividendsFactory.create({
+      companyId: company.id,
+      companyInvestorId: companyInvestor.id,
+      dividendRoundId: nullRound.id,
+      totalAmountInCents: 30000n,
+      withheldTaxCents: 3000n,
+      netAmountInCents: 27000n,
+      numberOfShares: null,
+      impliedShares: false,
+      investmentAmountCents: 200_000_00n,
+      status: "Issued",
+    });
+
+    await login(page, investorUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Dividends" }).first().click();
+
+    // Implied shares row shows "implied" label
+    const impliedRow = page
+      .getByRole("row")
+      .filter({ has: page.getByRole("cell", { name: "$750" }) })
+      .filter({ has: page.getByText("1,000") });
+    await expect(impliedRow).toBeVisible();
+    await expect(impliedRow.getByText("implied")).toBeVisible();
+
+    // NULL shares row shows "N/A"
+    const naRow = page.getByRole("row").filter({ has: page.getByRole("cell", { name: "$300" }) });
+    await expect(naRow).toBeVisible();
+    await expect(naRow.getByRole("cell", { name: "N/A" })).toBeVisible();
+    await expect(naRow.getByText("implied")).not.toBeVisible();
   });
 });
