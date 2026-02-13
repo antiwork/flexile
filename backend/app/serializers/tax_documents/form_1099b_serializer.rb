@@ -23,12 +23,14 @@ class TaxDocuments::Form1099bSerializer < TaxDocuments::BaseSerializer
         left_col_field(copy, page, "4") => normalized_tax_field(billing_entity_name),
         left_col_field(copy, page, "5") => normalized_street_address,
         left_col_field(copy, page, "6") => normalized_tax_field(full_city_address),
+        # Applicable checkbox on Form 8949
+        right_col_field(copy, page, "15") => "",
         # Box 1a: Description of property
-        right_col_field(copy, page, "15") => property_description,
+        right_col_field(copy, page, "16") => property_description,
         # Box 1b: Date acquired
-        right_col_field(copy, page, "16") => date_acquired_display,
+        right_col_field(copy, page, "17") => date_acquired_display,
         # Box 1c: Date sold or disposed
-        right_col_field(copy, page, "17") => date_sold_display,
+        right_col_field(copy, page, "18") => date_sold_display,
         # Box 1d: Proceeds
         box_field(copy, page, "Box1d", "19") => proceeds_in_usd.to_s,
         # Box 1e: Cost or other basis
@@ -132,16 +134,23 @@ class TaxDocuments::Form1099bSerializer < TaxDocuments::BaseSerializer
 
     def property_description
       total_shares = roc_dividend_amounts_for_tax_year[2] || 0
-      "#{total_shares} sh. #{company.name}"
+      formatted_shares = total_shares == total_shares.to_i ? total_shares.to_i : total_shares
+      if formatted_shares > 0
+        "#{formatted_shares} sh. #{company.name}"
+      else
+        company.name
+      end
     end
 
     def date_acquired_display
-      dates = investor.share_holdings.pluck(:originally_acquired_at).uniq
+      dates = investor.share_holdings.pluck(:originally_acquired_at).compact.uniq
+      return "" if dates.empty?
       dates.size == 1 ? dates.first.strftime("%m/%d/%Y") : "Various"
     end
 
     def date_sold_display
       dates = roc_dividends_for_tax_year.filter_map(&:paid_at).map(&:to_date).uniq
+      return "" if dates.empty?
       dates.size == 1 ? dates.first.strftime("%m/%d/%Y") : "Various"
     end
 
