@@ -322,7 +322,7 @@ export default function InvoicePage() {
 
               {invoice.lineItems.length > 0 ? (
                 <div className="w-full overflow-x-auto">
-                  <Table className="w-full min-w-fit print:my-3 print:w-full print:border-collapse print:text-xs">
+                  <Table className="w-full min-w-fit print:my-3 print:min-w-0 print:border-collapse print:text-xs">
                     <TableHeader>
                       <TableRow className="print:border-b print:border-gray-300">
                         <PrintTableHeader className="w-[40%] md:w-[50%] print:text-left">
@@ -378,44 +378,57 @@ export default function InvoicePage() {
                           <TableRow key={index}>
                             <PrintTableCell className="w-[50%] align-top md:w-[60%] print:align-top">
                               {hasPR && prDetails ? (
-                                <GitHubPRHoverCard
-                                  pr={prDetails}
-                                  currentUserGitHubUsername={contractorGithubUsername}
-                                  paidInvoices={paidInvoices}
-                                  lineItemTotal={total}
-                                >
-                                  <a
-                                    href={prDetails.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 hover:underline"
-                                  >
-                                    <GitHubPRIcon state={prDetails.state} />
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-foreground shrink-0 bg-black/[0.03] dark:bg-white/[0.08]"
+                                <>
+                                  {/* Screen layout: single row with badges */}
+                                  <div className="print:hidden">
+                                    <GitHubPRHoverCard
+                                      pr={prDetails}
+                                      currentUserGitHubUsername={contractorGithubUsername}
+                                      paidInvoices={paidInvoices}
+                                      lineItemTotal={total}
                                     >
-                                      {prDetails.repo}
-                                    </Badge>
-                                    <span className="truncate">
-                                      {truncatePRTitle(prDetails.title, 40)} #{prDetails.number}
-                                    </span>
-                                    {prDetails.bounty_cents ? (
-                                      <Badge
-                                        variant="secondary"
-                                        className="text-foreground shrink-0 bg-black/[0.03] dark:bg-white/[0.08]"
+                                      <a
+                                        href={prDetails.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 hover:underline"
                                       >
-                                        {formatMoneyFromCents(prDetails.bounty_cents, { compact: true })}
-                                      </Badge>
-                                    ) : null}
-                                    {showStatusDot ? (
-                                      <span
-                                        className="size-2 shrink-0 rounded-full bg-amber-500"
-                                        aria-label="Needs attention"
-                                      />
-                                    ) : null}
-                                  </a>
-                                </GitHubPRHoverCard>
+                                        <GitHubPRIcon state={prDetails.state} />
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-foreground shrink-0 bg-black/[0.03] dark:bg-white/[0.08]"
+                                        >
+                                          {prDetails.repo}
+                                        </Badge>
+                                        <span className="truncate">
+                                          {truncatePRTitle(prDetails.title, 40)} #{prDetails.number}
+                                        </span>
+                                        {prDetails.bounty_cents ? (
+                                          <Badge
+                                            variant="secondary"
+                                            className="text-foreground shrink-0 bg-black/[0.03] dark:bg-white/[0.08]"
+                                          >
+                                            {formatMoneyFromCents(prDetails.bounty_cents, { compact: true })}
+                                          </Badge>
+                                        ) : null}
+                                        {showStatusDot ? (
+                                          <span
+                                            className="size-2 shrink-0 rounded-full bg-amber-500"
+                                            aria-label="Needs attention"
+                                          />
+                                        ) : null}
+                                      </a>
+                                    </GitHubPRHoverCard>
+                                  </div>
+                                  {/* Print layout: stacked repo name + title */}
+                                  <div className="hidden print:block">
+                                    <div className="flex items-center gap-1.5">
+                                      <GitHubPRIcon state={prDetails.state} />
+                                      <span className="font-semibold">{prDetails.repo}</span>
+                                    </div>
+                                    <div className="whitespace-normal">{prDetails.title}</div>
+                                  </div>
+                                </>
                               ) : (
                                 <div className="max-w-full overflow-hidden pr-2 break-words whitespace-normal">
                                   {lineItem.description}
