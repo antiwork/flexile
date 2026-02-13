@@ -124,6 +124,7 @@ class DividendComputation < ApplicationRecord
         total_amount_in_cents: (dividend_attrs[:total_amount] * 100.to_d).to_i,
         qualified_amount_cents: (dividend_attrs[:qualified_dividends_amount] * 100.to_d).to_i,
         number_of_shares: dividend_attrs[:number_of_shares],
+        implied_shares: dividend_attrs[:implied_shares] || false,
         investment_amount_cents: dividend_attrs[:investment_amount_cents],
         status: Dividend::ISSUED # TODO (sharang): set `PENDING_SIGNUP` if user.encrypted_password is ""
       )
@@ -178,7 +179,8 @@ class DividendComputation < ApplicationRecord
             company_investor_id: security.company_investor_id,
             qualified_dividends_amount: (info[:qualified_dividends_amount] / investment_in_usd * security_in_usd).round(2),
             total_amount: (info[:total_amount] / investment_in_usd * security_in_usd).round(2),
-            number_of_shares: nil,
+            number_of_shares: security.implied_shares.round,
+            implied_shares: true,
             investment_amount_cents: security.principal_value_in_cents,
           }
         end

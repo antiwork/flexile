@@ -35,6 +35,7 @@ export const dividendsRouter = createRouter({
         columns: {
           id: true,
           numberOfShares: true,
+          impliedShares: true,
           totalAmountInCents: true,
           investmentAmountCents: true,
           retainedReason: true,
