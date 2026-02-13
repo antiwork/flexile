@@ -113,17 +113,17 @@ RSpec.describe DividendComputation do
       expected_result << "Seed & Series A Investor,#{@seed_and_series_A_investor.id},12441,8752.98\n"
       expected_result << "Common Investor,#{@common_investor.id},891,522.34\n"
       expected_result << "All class Investor,#{@all_class_investor.id},25035,17479.75\n"
-      expected_result << "Richie Rich LLC,#{@entire_safe_owner.id},,578982.04\n"
+      expected_result << "Richie Rich LLC,#{@entire_safe_owner.id},987632,578982.04\n"
 
       # ROUND(291411.52/2000000 * 123456.78, 2)
       #   $291,411.52 is dividend for the whole SAFE
       #   $2,000,000 is total investment amount for the whole SAFE
       #   $123,456.78 is the investment amount for the partial SAFE owner
-      expected_result << "#{@partial_safe_owner1.user.legal_name},#{@partial_safe_owner1.id},,17988.36\n"
+      expected_result << "#{@partial_safe_owner1.user.legal_name},#{@partial_safe_owner1.id},30685,17988.36\n"
       # ROUND(291411.52/2000000 * 910234.56, 2)
-      expected_result << "#{@partial_safe_owner2.user.legal_name},#{@partial_safe_owner2.id},,132626.42\n"
+      expected_result << "#{@partial_safe_owner2.user.legal_name},#{@partial_safe_owner2.id},226235,132626.42\n"
       # ROUND(291411.52/2000000 * 966308.66, 2)
-      expected_result << "#{@partial_safe_owner3.user.legal_name},#{@partial_safe_owner3.id},,140796.74\n"
+      expected_result << "#{@partial_safe_owner3.user.legal_name},#{@partial_safe_owner3.id},240172,140796.74\n"
 
       expect(@dividend_computation.to_final_csv).to eq(expected_result)
     end
@@ -138,7 +138,7 @@ RSpec.describe DividendComputation do
 
       dividend_round = company.dividend_rounds.last
       expect(dividend_round.issued_at).to eq(@dividend_computation.dividends_issuance_date)
-      expect(dividend_round.number_of_shares).to eq(183_242) # 111406 + 33469 + 12441 + 891 + 25035; SAFEs are not counted
+      expect(dividend_round.number_of_shares).to eq(1_667_966) # 111406 + 33469 + 12441 + 891 + 25035 + 987632 + 30685 + 226235 + 240172; includes implied shares from SAFEs
       expect(dividend_round.number_of_shareholders).to eq(9)
       expect(dividend_round.status).to eq("Issued")
       expect(dividend_round.total_amount_in_cents).to eq(1_000_000_00)
@@ -150,10 +150,10 @@ RSpec.describe DividendComputation do
         { investor: @seed_and_series_A_investor, total_amount_in_cents: 8_752_98, qualified_amount_cents: 8_752_98, number_of_shares: 12_441, investment_amount_cents: 14_496_00 },
         { investor: @common_investor, total_amount_in_cents: 522_34, qualified_amount_cents: 0, number_of_shares: 891, investment_amount_cents: 1_001_00 },
         { investor: @all_class_investor, total_amount_in_cents: 17_479_75, qualified_amount_cents: 17_479_75, number_of_shares: 25_035, investment_amount_cents: 29_113_00 },
-        { investor: @entire_safe_owner, total_amount_in_cents: 57_8982_04, qualified_amount_cents: 57_8982_04, number_of_shares: nil, investment_amount_cents: 1_000_000_00 },
-        { investor: @partial_safe_owner1, total_amount_in_cents: 17_988_36, qualified_amount_cents: 17_988_36, number_of_shares: nil, investment_amount_cents: 123_456_78 },
-        { investor: @partial_safe_owner2, total_amount_in_cents: 13_2626_42, qualified_amount_cents: 13_2626_42, number_of_shares: nil, investment_amount_cents: 910_234_56 },
-        { investor: @partial_safe_owner3, total_amount_in_cents: 14_0796_74, qualified_amount_cents: 14_0796_74, number_of_shares: nil, investment_amount_cents: 966_308_66 }
+        { investor: @entire_safe_owner, total_amount_in_cents: 57_8982_04, qualified_amount_cents: 57_8982_04, number_of_shares: 987_632, investment_amount_cents: 1_000_000_00 },
+        { investor: @partial_safe_owner1, total_amount_in_cents: 17_988_36, qualified_amount_cents: 17_988_36, number_of_shares: 30_685, investment_amount_cents: 123_456_78 },
+        { investor: @partial_safe_owner2, total_amount_in_cents: 13_2626_42, qualified_amount_cents: 13_2626_42, number_of_shares: 226_235, investment_amount_cents: 910_234_56 },
+        { investor: @partial_safe_owner3, total_amount_in_cents: 14_0796_74, qualified_amount_cents: 14_0796_74, number_of_shares: 240_172, investment_amount_cents: 966_308_66 }
       ]
 
       dividends_data.each do |data|
