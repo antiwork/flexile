@@ -34,7 +34,7 @@ class TaxDocuments::Form1099bSerializer < TaxDocuments::BaseSerializer
         # Box 1d: Proceeds
         box_field(copy, page, "Box1d", "19") => proceeds_in_usd.to_s,
         # Box 1e: Cost or other basis
-        right_col_field(copy, page, "20") => cost_basis_in_usd.to_s,
+        right_col_field(copy, page, "20") => cost_basis_display,
       }
 
       # Box 2: Short-term or Long-term gain or loss
@@ -160,6 +160,10 @@ class TaxDocuments::Form1099bSerializer < TaxDocuments::BaseSerializer
 
     def cost_basis_in_usd
       @_cost_basis_in_usd ||= ((roc_dividend_amounts_for_tax_year[3] || 0) / 100.to_d).round
+    end
+
+    def cost_basis_display
+      cost_basis_in_usd > 0 ? cost_basis_in_usd.to_s : ""
     end
 
     def dividends_tax_amount_withheld_in_usd
