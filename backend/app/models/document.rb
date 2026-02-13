@@ -14,7 +14,7 @@ class Document < ApplicationRecord
   has_many_attached :attachments
 
   SUPPORTED_TAX_INFORMATION_TYPES = %w[form_w9 form_w8ben form_w8bene].freeze
-  TAX_FORM_TYPES = %w[form_1099nec form_1099div form_1042s form_w9 form_w8ben form_w8bene].freeze
+  TAX_FORM_TYPES = %w[form_1099nec form_1099div form_1099b form_1042s form_w9 form_w8ben form_w8bene].freeze
 
   validates_associated :signatures
   validates :document_type, presence: true
@@ -36,9 +36,10 @@ class Document < ApplicationRecord
     form_w9: 8,
     form_w8ben: 9,
     form_w8bene: 10,
+    form_1099b: 11,
   }
 
-  scope :irs_tax_forms, -> { tax_document.where(document_type: %i[form_1099nec form_1099div form_1042s]) }
+  scope :irs_tax_forms, -> { tax_document.where(document_type: %i[form_1099nec form_1099div form_1099b form_1042s]) }
   scope :tax_document, -> { where(document_type: TAX_FORM_TYPES) }
   scope :unsigned, -> { joins(:signatures).where(signatures: { signed_at: nil }) }
 
@@ -74,6 +75,8 @@ class Document < ApplicationRecord
       "Release Agreement"
     when "form_1099div"
       "1099-DIV"
+    when "form_1099b"
+      "1099-B"
     when "form_1042s"
       "1042-S"
     when "form_w9"

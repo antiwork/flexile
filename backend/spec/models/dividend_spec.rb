@@ -58,6 +58,24 @@ RSpec.describe Dividend do
         expect(described_class.for_tax_year(tax_year)).to eq([dividend_in_tax_year])
       end
     end
+
+    describe ".return_of_capital" do
+      let!(:roc_dividend) { create(:dividend, dividend_round: create(:dividend_round, return_of_capital: true)) }
+      let!(:non_roc_dividend) { create(:dividend, dividend_round: create(:dividend_round, return_of_capital: false)) }
+
+      it "returns only dividends from return-of-capital rounds" do
+        expect(described_class.return_of_capital).to eq([roc_dividend])
+      end
+    end
+
+    describe ".not_return_of_capital" do
+      let!(:roc_dividend) { create(:dividend, dividend_round: create(:dividend_round, return_of_capital: true)) }
+      let!(:non_roc_dividend) { create(:dividend, dividend_round: create(:dividend_round, return_of_capital: false)) }
+
+      it "returns only dividends from non-return-of-capital rounds" do
+        expect(described_class.not_return_of_capital).to eq([non_roc_dividend])
+      end
+    end
   end
 
   describe "#external_status" do

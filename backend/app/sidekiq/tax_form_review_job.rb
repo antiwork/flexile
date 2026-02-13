@@ -13,6 +13,7 @@ class TaxFormReviewJob
 
     collect_tax_form_data_for(CompanyWorker, tax_year, user_compliance_info_ids, company_ids, user_compliance_info_company_ids)
     collect_tax_form_data_for(CompanyInvestor, tax_year, user_compliance_info_ids, company_ids, user_compliance_info_company_ids)
+    collect_roc_tax_form_data(tax_year, user_compliance_info_ids, company_ids, user_compliance_info_company_ids)
 
     user_compliance_info_ids.each_slice(BATCH_SIZE) do |batch_ids|
       array_of_args = batch_ids.map { [_1, tax_year] }
@@ -36,6 +37,19 @@ class TaxFormReviewJob
                         .joins(user: company_user_klass.model_name.plural.to_sym)
                         .merge(company_user_klass.with_required_tax_info_for(tax_year:))
                         .select(:id, "#{company_user_klass.table_name}.company_id")
+                        .find_each do |record|
+        user_compliance_info_ids.add(record.id)
+        company_ids.add(record.company_id)
+        user_compliance_info_company_ids.add([record.id, record.company_id])
+      end
+    end
+
+    def collect_roc_tax_form_data(tax_year, user_compliance_info_ids, company_ids, user_compliance_info_company_ids)
+      UserComplianceInfo.alive
+                        .where(country_code: "US")
+                        .joins(user: :company_investors)
+                        .merge(CompanyInvestor.with_return_of_capital_dividends_for(tax_year:))
+                        .select(:id, "company_investors.company_id")
                         .find_each do |record|
         user_compliance_info_ids.add(record.id)
         company_ids.add(record.company_id)

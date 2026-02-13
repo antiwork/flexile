@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-class Irs::Form1099divDataGenerator < Irs::BaseFormDataGenerator
+class Irs::Form1099bDataGenerator < Irs::BaseFormDataGenerator
   def payee_ids
     @_payee_ids ||= total_amounts_for_tax_year_by_user_compliance_info_id.map { _1["id"] }
   end
 
-  def type_of_return = "1".ljust(2) # Dividends
+  def type_of_return = "B ".ljust(2) # Proceeds from broker and barter exchange transactions
 
-  def amount_codes = "12A".ljust(18) # Total ordinary dividends + qualified dividends amount + tax withheld amounts for DIV form
+  def amount_codes = "24".ljust(18) # Amount code 2 = Gross proceeds, Amount code 4 = Federal income tax withheld
 
   def serialize_form_data
     result = ""
@@ -27,7 +27,7 @@ class Irs::Form1099divDataGenerator < Irs::BaseFormDataGenerator
                                                              {
                                                                company:,
                                                                year: tax_year,
-                                                               document_type: :form_1099div,
+                                                               document_type: :form_1099b,
                                                                deleted_at: nil,
                                                              })
                                                     .where(country_code: "US")
@@ -35,10 +35,9 @@ class Irs::Form1099divDataGenerator < Irs::BaseFormDataGenerator
 
     def total_amounts_for_tax_year_by_user_compliance_info_id
       sql = user_compliance_infos.joins(:dividends)
-                                 .merge(Dividend.for_tax_year(tax_year).not_return_of_capital)
+                                 .merge(Dividend.for_tax_year(tax_year).return_of_capital)
                                  .select("user_compliance_infos.id," \
-                                         "SUM(dividends.total_amount_in_cents) AS total_amount_in_cents," \
-                                         "SUM(dividends.qualified_amount_cents) AS qualified_amount_in_cents," \
+                                         "SUM(dividends.total_amount_in_cents) AS total_proceeds_in_cents," \
                                          "SUM(dividends.withheld_tax_cents) AS withheld_tax_in_cents")
                                  .group("user_compliance_infos.id")
                                  .to_sql
@@ -52,9 +51,8 @@ class Irs::Form1099divDataGenerator < Irs::BaseFormDataGenerator
       type_of_tin = user_compliance_info.business_entity? ? "1" : "2"
       name_control = user_compliance_info.business_entity? ? user_compliance_info.business_name.upcase : last_name
       payee_amounts = total_amounts_for_tax_year_by_user_compliance_info_id.find { _1["id"] == user_compliance_info.id }
-      total_amount_for_payee = payee_amounts["total_amount_in_cents"].to_i.to_s.rjust(12, "0")
-      qualified_dividends_amount_for_payee = payee_amounts["qualified_amount_in_cents"].to_i.to_s.rjust(12, "0")
-      withheld_tax_amount_for_payee = payee_amounts["withheld_tax_in_cents"].to_i.to_s.rjust(12, "0")
+      total_proceeds_for_payee = payee_amounts["total_proceeds_in_cents"].to_i.to_s.rjust(12, "0")
+      withheld_tax_for_payee = payee_amounts["withheld_tax_in_cents"].to_i.to_s.rjust(12, "0")
 
       [
         "B",
@@ -65,11 +63,11 @@ class Irs::Form1099divDataGenerator < Irs::BaseFormDataGenerator
         normalized_tax_id_for(user_compliance_info),
         user_compliance_info.id.to_s.rjust(20), # Unique issuer account number for payee
         required_blanks(14),
-        total_amount_for_payee,
-        qualified_dividends_amount_for_payee,
-        "".rjust(84, "0"), # Unused payment amount fields
-        withheld_tax_amount_for_payee,
-        "".rjust(96, "0"), # Unused payment amount fields
+        "".rjust(12, "0"), # Payment amount 1 (unused)
+        total_proceeds_for_payee, # Payment amount 2 (Gross proceeds)
+        "".rjust(12, "0"), # Payment amount 3 (unused)
+        withheld_tax_for_payee, # Payment amount 4 (Federal income tax withheld)
+        "".rjust(144, "0"), # Remaining payment amount fields (5-16)
         required_blanks(17),
         "#{last_name} #{first_name}".ljust(80),
         normalized_tax_field(user_compliance_info.street_address, 40),
@@ -92,11 +90,11 @@ class Irs::Form1099divDataGenerator < Irs::BaseFormDataGenerator
         "C",
         payee_ids.count.to_s.rjust(8, "0"),
         required_blanks(6),
-        total_amounts_for_tax_year_by_user_compliance_info_id.map { _1["total_amount_in_cents"] }.sum.to_i.to_s.rjust(18, "0"), # Total dividends amount
-        total_amounts_for_tax_year_by_user_compliance_info_id.map { _1["qualified_amount_in_cents"] }.sum.to_i.to_s.rjust(18, "0"), # Total qualified dividends amount
-        "".rjust(126, "0"), # Unused amount fields
-        total_amounts_for_tax_year_by_user_compliance_info_id.map { _1["withheld_tax_in_cents"] }.sum.to_i.to_s.rjust(18, "0"), # Total withheld amount
-        "".rjust(144, "0"), # Unused amount fields
+        "".rjust(18, "0"), # Payment amount 1 total (unused)
+        total_amounts_for_tax_year_by_user_compliance_info_id.map { _1["total_proceeds_in_cents"] }.sum.to_i.to_s.rjust(18, "0"), # Payment amount 2 total (Gross proceeds)
+        "".rjust(18, "0"), # Payment amount 3 total (unused)
+        total_amounts_for_tax_year_by_user_compliance_info_id.map { _1["withheld_tax_in_cents"] }.sum.to_i.to_s.rjust(18, "0"), # Payment amount 4 total (Federal income tax withheld)
+        "".rjust(216, "0"), # Remaining amount totals (5-16)
         required_blanks(160),
         sequence_number(payee_ids.count + offset),
         required_blanks(241),
@@ -109,8 +107,8 @@ end
 =begin
 company = Company.find(company_id)
 transmitter_company = Company.find(transmitter_company_id)
-tax_year = 2023
+tax_year = 2025
 is_test = false
-attached = { "IRS-1099-DIV-#{tax_year}.txt" => Irs::Form1099divDataGenerator.new(company:, transmitter_company:, tax_year:, is_test:).process }
-AdminMailer.custom(to: ["raulp@hey.com"], subject: "[Flexile] 1099-DIV 2023 IRS FIRE tax report #{is_test ? "test " : ""}file", body: "Attached", attached:).deliver_now
+attached = { "IRS-1099-B-#{tax_year}.txt" => Irs::Form1099bDataGenerator.new(company:, transmitter_company:, tax_year:, is_test:).process }
+AdminMailer.custom(to: ["admin@example.com"], subject: "[Flexile] 1099-B #{tax_year} IRS FIRE tax report #{is_test ? "test " : ""}file", body: "Attached", attached:).deliver_now
 =end

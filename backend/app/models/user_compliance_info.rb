@@ -62,6 +62,7 @@ class UserComplianceInfo < ApplicationRecord
   def mark_deleted!
     docs = documents.tax_document.unsigned
     docs = docs.where.not(document_type: [:form_1099div, :form_1042s]) if dividends.paid.any?
+    docs = docs.where.not(document_type: :form_1099b) if dividends.paid.return_of_capital.exists?
     docs.each(&:mark_deleted!)
     super
   end

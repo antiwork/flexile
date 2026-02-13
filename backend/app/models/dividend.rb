@@ -33,6 +33,8 @@ class Dividend < ApplicationRecord
   scope :pending_signup, -> { where(status: PENDING_SIGNUP) }
   scope :paid, -> { where(status: PAID) }
   scope :for_tax_year, -> (tax_year) { paid.where("EXTRACT(year from dividends.paid_at) = ?", tax_year) }
+  scope :return_of_capital, -> { joins(:dividend_round).where(dividend_rounds: { return_of_capital: true }) }
+  scope :not_return_of_capital, -> { joins(:dividend_round).where(dividend_rounds: { return_of_capital: false }) }
 
   def external_status = status == PROCESSING ? ISSUED : status
   def issued? = status == ISSUED
