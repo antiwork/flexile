@@ -127,6 +127,7 @@ test.describe("Dividends", () => {
     await page.getByRole("button", { name: "Equity" }).click();
     await page.getByRole("link", { name: "Dividends" }).first().click();
 
+    await expect(page.getByRole("columnheader", { name: "Shares held" })).toBeVisible();
     const row = page
       .getByRole("row")
       .filter({ has: page.getByRole("cell", { name: "$1,000" }) }) // Investment amount
@@ -136,5 +137,33 @@ test.describe("Dividends", () => {
       .filter({ has: page.getByRole("cell", { name: "$100" }) }); // Net amount
 
     await expect(row).toBeVisible();
+  });
+
+  test("hides Shares held column when no dividends have share data", async ({ page }) => {
+    const { company } = await companiesFactory.createCompletedOnboarding({ equityEnabled: true });
+    const { user: investorUser } = await usersFactory.create();
+    const { companyInvestor } = await companyInvestorsFactory.create({
+      companyId: company.id,
+      userId: investorUser.id,
+      investmentAmountInCents: 100000n,
+    });
+    await wiseRecipientsFactory.create({ userId: investorUser.id, usedForDividends: true });
+    const dividendRound = await dividendRoundsFactory.create({ companyId: company.id });
+    await dividendsFactory.create({
+      companyId: company.id,
+      companyInvestorId: companyInvestor.id,
+      dividendRoundId: dividendRound.id,
+      totalAmountInCents: 50000n,
+      numberOfShares: null,
+      status: "Issued",
+    });
+
+    await login(page, investorUser);
+    await page.getByRole("button", { name: "Equity" }).click();
+    await page.getByRole("link", { name: "Dividends" }).first().click();
+
+    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Shares held" })).not.toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Investment amount" })).toBeVisible();
   });
 });
