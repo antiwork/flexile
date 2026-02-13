@@ -134,7 +134,7 @@ export default function Dividends() {
       columnHelper.simple(
         "investmentAmountCents",
         "Investment amount",
-        (value) => (value ? formatMoneyFromCents(value) : "N/A"),
+        (value) => formatMoneyFromCents(value),
         "numeric",
       ),
       columnHelper.simple("totalAmountInCents", "Gross amount", (value) => formatMoneyFromCents(value), "numeric"),

@@ -447,7 +447,7 @@ export const dividends = pgTable(
     userComplianceInfoId: bigint("user_compliance_info_id", { mode: "bigint" }),
     qualifiedAmountCents: bigint("qualified_amount_cents", { mode: "bigint" }).notNull(),
     signedReleaseAt: timestamp("signed_release_at", { precision: 6, mode: "date" }),
-    investmentAmountCents: bigint("investment_amount_cents", { mode: "bigint" }),
+    investmentAmountCents: bigint("investment_amount_cents", { mode: "bigint" }).notNull(),
     externalId: varchar("external_id").$default(nanoid).notNull(),
   },
   (table) => [
