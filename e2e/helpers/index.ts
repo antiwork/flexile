@@ -19,7 +19,14 @@ export const fillDatePicker = async (page: Page, name: string, value: string) =>
   // Wait for the field to be interactive before typing to avoid lost keystrokes
   await expect(date).toBeEditable();
   // Add delay between keystrokes as workaround for React Aria Components JS interop issues
-  return date.pressSequentially(value, { delay: 100 });
+  await date.pressSequentially(value, { delay: 100 });
+  // Blur the field to commit the value and wait for React Aria to finish processing
+  await date.blur();
+  const year = value.split("/")[2];
+  if (year) {
+    const group = page.getByRole("group", { name });
+    await expect(group).toContainText(year);
+  }
 };
 
 export const findRichTextEditor = (page: Locator | Page, name: string) =>
